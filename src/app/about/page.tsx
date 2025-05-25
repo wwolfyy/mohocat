@@ -2,7 +2,7 @@ export default function About() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="prose prose-lg mx-auto">
-        <h1>About Mountain Cats</h1>
+        <h1>산냥이 집냥이 (계양산)</h1>
         <p>
           Mountain Cats is a project that helps you discover and learn about cats
           living in different mountain locations. Using satellite imagery and

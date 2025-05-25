@@ -15,7 +15,7 @@ export default function Navigation() {
         href="/contact"
         className="text-gray-600 hover:text-gray-900 transition-colors"
       >
-        Contact
+        동참
       </Link>
     </nav>
   );
