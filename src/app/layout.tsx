@@ -21,14 +21,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
           <header className="bg-white shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 flex justify-between items-center">
               <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
                 <h1>계양산 고양이들</h1>
               </Link>
               <Navigation />
             </div>
           </header>
-          <main className="py-8">
+          <main className="pb-8">
             {children}
           </main>
         </div>

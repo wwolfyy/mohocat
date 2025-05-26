@@ -9,7 +9,7 @@ export default function Navigation() {
         href="/about"
         className="text-gray-600 hover:text-gray-900 transition-colors"
       >
-        About
+        소개
       </Link>
       <Link
         href="/contact"

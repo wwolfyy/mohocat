@@ -98,21 +98,20 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                   key={cat.id}
                   onClick={() => setSelectedCat(cat)}
                   className={cn(
-                    "cursor-pointer group relative",
-                    "transition-transform duration-200 hover:scale-110 w-36" // Added width for flex items
+                    "cursor-pointer", // Removed 'group' and 'relative'
+                    "transition-transform duration-200 hover:scale-110 w-28" // Reduced width
                   )}
                 >
                   <div className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg">
                     <img
                       src={cat.thumbnailUrl}
                       alt={cat.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
                     />
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-black/50 text-white text-sm font-medium px-2 py-1 rounded-full">
-                      {cat.name}
-                    </div>
+                  {/* Static name display below the thumbnail */}
+                  <div className="mt-1.5 text-center text-sm font-medium text-gray-700 w-full truncate">
+                    {cat.name}
                   </div>
                 </div>
               ))}
@@ -134,21 +133,20 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                   key={cat.id}
                   onClick={() => setSelectedCat(cat)}
                   className={cn(
-                    "cursor-pointer group relative",
-                    "transition-transform duration-200 hover:scale-110 w-36" // Added width for flex items
+                    "cursor-pointer", // Removed 'group' and 'relative'
+                    "transition-transform duration-200 hover:scale-110 w-28" // Reduced width
                   )}
                 >
                   <div className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg">
                     <img
                       src={cat.thumbnailUrl}
                       alt={cat.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
                     />
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-black/50 text-white text-sm font-medium px-2 py-1 rounded-full">
-                      {cat.name}
-                    </div>
+                  {/* Static name display below the thumbnail */}
+                  <div className="mt-1.5 text-center text-sm font-medium text-gray-700 w-full truncate">
+                    {cat.name}
                   </div>
                 </div>
               ))}

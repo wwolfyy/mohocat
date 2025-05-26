@@ -58,7 +58,14 @@ export default function MountainViewer() {
         <img
           src="/images/screenshot_mt_geyang_50.png"
           alt="Satellite view of mountain"
-          className="absolute inset-0 w-full h-full object-contain"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Compass Image */}
+        <img
+          src="/images/arrow_north.svg" // Make sure this path is correct
+          alt="Compass indicating North"
+          className="absolute top-4 left-4 w-8 h-12 z-10" // Adjust w-12 h-12 for size
+          title="North is up"
         />
         {/* Debug info */}
         {/* <div className="absolute top-0 left-0 bg-black/50 text-white p-2 z-50">
