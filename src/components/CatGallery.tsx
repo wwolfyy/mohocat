@@ -161,7 +161,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
         {/* Cat Detail Modal */}
         {selectedCat && (
           <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative max-h-[85vh] overflow-y-auto">
               <button
                 onClick={() => setSelectedCat(null)}
                 className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"

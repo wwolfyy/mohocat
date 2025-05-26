@@ -2,23 +2,18 @@ export default function About() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="prose prose-lg mx-auto">
-        <h1>산냥이 집냥이 (계양산)</h1>
+        <h1><br></br>산냥이 집냥이 (계양산)</h1>
+        <br></br>
         <p>
-          Mountain Cats is a project that helps you discover and learn about cats
-          living in different mountain locations. Using satellite imagery and
-          interactive points, you can explore various mountain areas and see the
-          cats that call these places home.
+          준비중
         </p>
-        <h2>How to Use</h2>
+        <h2></h2>
         <p>
-          Click on the red dots on the mountain image to see cats at that
-          location. Each cat has its own profile with photos and information
-          about their life in the mountains.
+
         </p>
-        <h2>Our Mission</h2>
+        <h2></h2>
         <p>
-          We aim to raise awareness about mountain cats and their habitats while
-          providing an engaging way to learn about these fascinating creatures.
+
         </p>
       </div>
     </div>

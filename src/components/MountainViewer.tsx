@@ -1,5 +1,5 @@
 'use client';
-
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -11,6 +11,14 @@ export default function MountainViewer() {
   const [points, setPoints] = useState<Point[]>([]);
   const [activePoint, setActivePoint] = useState<Point | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
+  const [imageNaturalDimensions, setImageNaturalDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [isLoadingDimensions, setIsLoadingDimensions] = useState(true);
+
+  const [cssVariables, setCssVariables] = useState({
+    // Default values, will be updated once image dimensions are known
+    '--mobile-scale-factor': 1,
+    '--mobile-point-counter-scale-factor': 1,
+  });
 
   useEffect(() => {
     const loadPoints = async () => {
@@ -37,6 +45,49 @@ export default function MountainViewer() {
     loadPoints();
   }, []);
 
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setImageNaturalDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      setIsLoadingDimensions(false);
+    };
+    img.onerror = () => {
+      console.error("Failed to load image for aspect ratio calculation. Using default 16:9 dimensions.");
+      setImageNaturalDimensions({ width: 1600, height: 900 }); // Default to a 16:9 ratio
+      setIsLoadingDimensions(false);
+    };
+    img.src = "/images/screenshot_mt_geyang_50.png"; // Ensure this path is correct
+  }, []);
+
+  useEffect(() => {
+    if (imageNaturalDimensions) {
+      const actualAspectRatio = imageNaturalDimensions.width / imageNaturalDimensions.height;
+
+      // The parent of the scaled image container (ImageAndPointsPositioningContext, or IPPC)
+      // is the CenteringWrapper. Before IPPC's own scale and before rotation,
+      // CenteringWrapper has an aspect ratio of 9/16 (screen_width / (screen_width * 16/9)).
+      const parentPreRotationAspectRatio = 9 / 16;
+      let newMobileScaleFactor;
+
+      if (actualAspectRatio > parentPreRotationAspectRatio) {
+        // Image is wider than its pre-rotation parent container.
+        // Its initial height H_img0 = screen_width / actualAspectRatio.
+        // We want H_img0 * S = screen_width (for the visual width after rotation).
+        // So, S = screen_width / H_img0 = actualAspectRatio.
+        newMobileScaleFactor = actualAspectRatio;
+      } else {
+        // Image is narrower or same aspect ratio as its pre-rotation parent.
+        // Its initial height H_img0 = screen_width * (16/9).
+        // We want H_img0 * S = screen_width. So, S = screen_width / (screen_width * 16/9) = 9/16.
+        newMobileScaleFactor = 9 / 16;
+      }
+      setCssVariables({
+        '--mobile-scale-factor': newMobileScaleFactor,
+        '--mobile-point-counter-scale-factor': newMobileScaleFactor > 0 ? 1 / newMobileScaleFactor : 9/16,
+      });
+    }
+  }, [imageNaturalDimensions]);
+
   const handleMouseOver = (point: Point) => {
     console.log('MouseOver triggered for point:', point.id);
     setActivePoint(point);
@@ -53,74 +104,135 @@ export default function MountainViewer() {
   };
 
   return (
-    <div className="relative w-full">
-      <div className="w-full aspect-[16/9] relative">
-        <img
-          src="/images/screenshot_mt_geyang_50.png"
-          alt="Satellite view of mountain"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Compass Image */}
-        <img
-          src="/images/arrow_north.svg" // Make sure this path is correct
-          alt="Compass indicating North"
-          className="absolute top-4 left-4 w-8 h-12 z-10" // Adjust w-12 h-12 for size
-          title="North is up"
-        />
-        {/* Debug info */}
-        {/* <div className="absolute top-0 left-0 bg-black/50 text-white p-2 z-50">
-          Points loaded: {points.length}
-          Active point: {activePoint?.id || 'none'}
-        </div> */}
-
-        {points.map((point) => (
+    <div
+      style={cssVariables as React.CSSProperties} // Apply CSS variables for dynamic scaling
+      className={cn(
+        "relative w-full",
+        "aspect-[9/16]", // Mobile: Portrait aspect ratio (inverse of a 16:9 image)
+        "sm:aspect-[16/9]" // Desktop: Landscape aspect ratio
+      )}
+    >
+      {isLoadingDimensions ? (
+        <div className="w-full h-full flex justify-center items-center bg-gray-100">
+          <p className="text-gray-500">Loading map...</p>
+        </div>
+      ) : (
+        <>
+          {/* This container handles the rotation */}
           <div
-            key={point.id}
-            style={{ left: `${point.x}%`, top: `${point.y}%` }}
-            className="absolute -translate-x-1/2 -translate-y-1/2 group"
-            onMouseEnter={() => handleMouseOver(point)}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => handlePointClick(point)}
-          >
-            {/* Yellow label with point title */}
-            <div
-              className={cn(
-                "bg-yellow-400 text-black text-xs font-semibold px-2 py-1 rounded-md shadow-lg",
-                "cursor-pointer transition-transform duration-200 group-hover:scale-110",
-                "whitespace-nowrap border border-gray-600"
-              )}
-            >
-              {point.title}
-            </div>
-            
-            {/* White circle indicator below the label */}
-            <div
-              className={cn(
-                "w-4 h-4 bg-white rounded-full border-2 border-gray-600 mx-auto mt-1",
-                "transition-transform duration-200 group-hover:scale-110"
-              )}
-            />
-            
-            {/* Hover effect - pulsing circle */}
-            {activePoint?.id === point.id && (
-              <div
-                className={cn(
-                  "absolute w-16 h-16 -translate-x-1/2 -translate-y-1/2",
-                  "border-2 border-yellow-400 rounded-full animate-pulse",
-                  "top-1/2 left-1/2"
-                )}
-              />
+            className={cn(
+              "absolute inset-0 origin-center",
+              "rotate-90", // Mobile: rotate
+              "sm:rotate-0" // Desktop: no rotation
             )}
-          </div>
-        ))}
+          >
+            {/* This div centers the image content */}
+            <div className="relative w-full h-full flex justify-center items-center">
+              {/* This div is scaled and acts as positioning context */}
+              <div className={cn(
+                "relative", // Base
+                "scale-[var(--mobile-scale-factor)]", // Mobile: dynamic scale
+                "sm:scale-100 sm:w-full sm:h-full" // Desktop: normal scale, full width/height of parent
+              )}>
+                <img
+                  src="/images/screenshot_mt_geyang_50.png"
+                  alt="Satellite view of mountain"
+                  className={cn(
+                    "block max-w-full max-h-full", // Mobile: Behaves like object-contain
+                    "sm:w-full sm:h-full sm:object-cover" // Desktop: Cover the container
+                  )}
+                />
+                {/* Compass Image */}
+                <img
+                  src="/images/arrow_north.svg"
+                  alt="Compass indicating North"
+                  className={cn(
+                    "absolute z-10", // Base classes
+                    "w-4 h-6 bottom-4 left-4 top-auto right-auto", // Mobile: Smaller size, positioned relative to original bottom-left
+                    "sm:w-8 sm:h-12 sm:top-4 sm:left-4 sm:right-auto sm:bottom-auto" // Desktop: Original size, top-left position
+                  )}
+                  title="North is up"
+                />
 
-        {selectedPoint && (
-          <CatGallery
-            pointId={selectedPoint.id}
-            onClose={() => setSelectedPoint(null)}
-          />
-        )}
-      </div>
+                {/* Points */}
+                {points.map((point) => (
+                  <div
+                    key={point.id}
+                    style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                    className={cn(
+                      "absolute -translate-x-1/2 -translate-y-1/2 group",
+                      "-rotate-90 origin-center", // Mobile: Counter-rotate point container
+                      "scale-[var(--mobile-point-counter-scale-factor)] sm:scale-100", // Mobile: Counter-scale
+                      "sm:rotate-0" // Desktop: No counter-rotation
+                    )}
+                    onMouseEnter={() => handleMouseOver(point)}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={() => handlePointClick(point)}
+                  >
+                    {/* White circle indicator - always centered in the PointWrapper */}
+                    <div
+                      className={cn(
+                        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                        "w-4 h-4 bg-white rounded-full border-2 border-gray-600",
+                        "transition-transform duration-200 group-hover:scale-110"
+                      )}
+                    />
+
+                    {/* Label - positioned relative to the centered circle */}
+                    <div
+                      className={cn(
+                        "bg-yellow-400 text-black text-xs font-semibold px-2 py-1 rounded-md shadow-lg",
+                        "cursor-pointer transition-transform duration-200 group-hover:scale-110",
+                        "whitespace-nowrap border border-gray-600",
+                        "absolute",
+                        // Conditional positioning:
+                        {
+                          // Default: Label above point
+                          "left-1/2 -translate-x-1/2 bottom-[calc(50%_+_0.75rem)]":
+                            point.title !== "하느재 등산로 입구 부근" && point.title !== "공원 관리소 부근",
+
+                          // "하느재 등산로 입구 부근": Right on mobile, Above on desktop
+                          "top-1/2 -translate-y-1/2 left-[calc(50%_+_0.75rem)] sm:left-1/2 sm:-translate-x-1/2 sm:bottom-[calc(50%_+_0.75rem)] sm:top-auto sm:translate-y-0":
+                            point.title === "하느재 등산로 입구 부근",
+
+                          // "공원 관리소 부근": Lower-Right on mobile, Above on desktop
+                          // No -translate-y-1/2 for top on mobile as we want its top edge to align.
+                          // No -translate-x-1/2 for left on mobile as we want its left edge to align.
+                          "top-[calc(50%_+_0.75rem)] left-[calc(50%_+_0.75rem)] sm:left-1/2 sm:-translate-x-1/2 sm:bottom-[calc(50%_+_0.75rem)] sm:top-auto":
+                            point.title === "공원 관리소 부근",
+                        }
+                      )}
+                    >
+                      {point.title}
+                    </div>
+
+                  {/* 
+                    Hover effect - also centered on the point.
+                    It's larger, so it visually encompasses the circle and label.
+                  */}
+                  {activePoint?.id === point.id && (
+                    <div
+                      className={cn(
+                        "absolute w-16 h-16 -translate-x-1/2 -translate-y-1/2",
+                        "border-2 border-yellow-400 rounded-full animate-pulse",
+                        "top-1/2 left-1/2" // Positioned relative to the main point container
+                      )}
+                    />
+                  )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {selectedPoint && (
+            <CatGallery
+              pointId={selectedPoint.id}
+              onClose={() => setSelectedPoint(null)}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }
