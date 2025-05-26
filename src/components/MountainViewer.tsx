@@ -75,31 +75,34 @@ export default function MountainViewer() {
             onMouseLeave={handleMouseLeave}
             onClick={() => handlePointClick(point)}
           >
+            {/* Yellow label with point title */}
             <div
               className={cn(
-                "w-8 h-8 bg-red-500 rounded-full cursor-pointer ring-4 ring-white",
+                "bg-yellow-400 text-black text-xs font-semibold px-2 py-1 rounded-md shadow-lg",
+                "cursor-pointer transition-transform duration-200 group-hover:scale-110",
+                "whitespace-nowrap border border-gray-600"
+              )}
+            >
+              {point.title}
+            </div>
+            
+            {/* White circle indicator below the label */}
+            <div
+              className={cn(
+                "w-4 h-4 bg-white rounded-full border-2 border-gray-600 mx-auto mt-1",
                 "transition-transform duration-200 group-hover:scale-110"
               )}
             />
+            
+            {/* Hover effect - pulsing circle */}
             {activePoint?.id === point.id && (
-              <>
-                <div
-                  className={cn(
-                    "absolute bottom-full left-1/2 -translate-x-1/2 mb-2",
-                    "text-black font-semibold text-sm whitespace-nowrap",
-                    "bg-yellow-400 rounded-full px-2 py-1 z-10 shadow-lg"
-                  )}
-                >
-                  {point.title}
-                </div>
-                <div
-                  className={cn(
-                    "absolute w-32 h-32 -translate-x-1/2 -translate-y-1/2",
-                    "border-2 border-white rounded-full animate-pulse"
-                  )}
-                  style={{ left: '50%', top: '50%' }}
-                />
-              </>
+              <div
+                className={cn(
+                  "absolute w-16 h-16 -translate-x-1/2 -translate-y-1/2",
+                  "border-2 border-yellow-400 rounded-full animate-pulse",
+                  "top-1/2 left-1/2"
+                )}
+              />
             )}
           </div>
         ))}
