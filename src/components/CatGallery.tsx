@@ -91,15 +91,15 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
         {/* Current Residents Section */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold mb-4 text-center">현재 거주 중</h3>
-          <div className="flex justify-center">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {/* Use flexbox to wrap and center items, including incomplete rows */}
+          <div className="flex flex-wrap justify-center gap-4">
               {currentResidents.map((cat) => (
                 <div
                   key={cat.id}
                   onClick={() => setSelectedCat(cat)}
                   className={cn(
                     "cursor-pointer group relative",
-                    "transition-transform duration-200 hover:scale-110"
+                    "transition-transform duration-200 hover:scale-110 w-36" // Added width for flex items
                   )}
                 >
                   <div className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -116,27 +116,26 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+          </div> {/* Closes "flex flex-wrap justify-center gap-4" for current residents */}
           {currentResidents.length === 0 && (
             <p className="text-gray-500 text-center py-4">
               ...
             </p>
           )}
-        </div>
 
         {/* Former Residents Section */}
+        </div> {/* Closes "mb-8" for Current Residents section */}
         <div>
           <h3 className="text-xl font-semibold mb-4 text-center">예전에 거주</h3>
-          <div className="flex justify-center">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {/* Use flexbox to wrap and center items, including incomplete rows */}
+          <div className="flex flex-wrap justify-center gap-4">
               {formerResidents.map((cat) => (
                 <div
                   key={cat.id}
                   onClick={() => setSelectedCat(cat)}
                   className={cn(
                     "cursor-pointer group relative",
-                    "transition-transform duration-200 hover:scale-110"
+                    "transition-transform duration-200 hover:scale-110 w-36" // Added width for flex items
                   )}
                 >
                   <div className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -153,14 +152,13 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+          </div> {/* Closes "flex flex-wrap justify-center gap-4" for former residents */}
           {formerResidents.length === 0 && (
             <p className="text-gray-500 text-center py-4">
               ...
             </p>
           )}
-        </div>
+        </div> {/* Closes the main div for Former Residents section */}
 
         {/* Cat Detail Modal */}
         {selectedCat && (
