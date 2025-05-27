@@ -140,7 +140,8 @@ export default function MountainViewer() {
                   className={cn(
                     "block max-w-full max-h-full", // Mobile: Behaves like object-contain
                     "sm:w-full sm:h-full sm:object-cover" // Desktop: Cover the container
-                  )}
+ , // Add rounded corners
+ "rounded-lg")}
                 />
                 {/* Compass Image */}
                 <img

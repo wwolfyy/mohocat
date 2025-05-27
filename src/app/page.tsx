@@ -9,7 +9,7 @@ export default function Home() {
                      Bottom padding: pb-4, Desktop bottom padding: md:pb-8.
                      Horizontal padding aligned with header: px-4 (base), sm:px-6, lg:px-8.
                    */}
-      <div className="max-w-7xl mx-auto">
+      <div> 
         {/* <h1 className="text-3xl font-bold mb-8">Mountain Cats</h1> */}
         <MountainViewer />
       </div>
