@@ -49,7 +49,8 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.description && (
           <div className="mt-4">
             <h4 className="font-semibold text-gray-700"></h4>
-            <p className="mt-2 text-gray-600">{cat.description}</p>
+            {/* <p className="mt-2 text-gray-600">{cat.description}</p> */}
+            <p className="mt-2 text-gray-600" style={{ whiteSpace: 'pre-line' }}>{cat.description}</p>
           </div>
         )}
 
@@ -86,7 +87,8 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.character && (
           <div className="mt-4">
             <h4 className="font-semibold text-gray-700">성격:</h4>
-            <p className="text-gray-600">{cat.character}</p>
+            {/* <p className="text-gray-600">{cat.character}</p> */}
+            <p className="mt-2 text-gray-600" style={{ whiteSpace: 'pre-line' }}>{cat.character}</p>
           </div>
         )}
 
@@ -100,13 +102,14 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.offspring && (
           <div className="flex items-center">
             <span className="w-24 font-semibold text-gray-700">애:</span>
-            <span className="text-gray-600">{cat.offspring}</span>
+            <span className="text-gray-600">{cat.offspring}</span>            
           </div>
         )}
 
         <div className="mt-4">
           <h4 className="font-semibold text-gray-700">건강상태:</h4>
-          <p className="text-gray-600">{cat.sickness || 'Unknown'}</p>
+          {/* <p className="text-gray-600">{cat.sickness || 'Unknown'}</p> */}
+          <p className="mt-2 text-gray-600" style={{ whiteSpace: 'pre-line' }}>{cat.sickness || 'Unknown'}</p>
         </div>
 
         <div className="flex items-center">
@@ -116,8 +119,9 @@ export default function CatInfo({ cat }: CatInfoProps) {
 
         {cat.note && (
           <div className="mt-4">
-            <h4 className="font-semibold text-gray-700">특이사항:</h4>
-            <p className="mt-2 text-gray-600">{cat.note}</p>
+            <h4 className="font-semibold text-gray-700">특이사항:</h4>            
+            {/* <p className="mt-2 text-gray-600">{cat.note}</p> */}
+            <p className="mt-2 text-gray-600" style={{ whiteSpace: 'pre-line' }}>{cat.note}</p>
           </div>
         )}
 
