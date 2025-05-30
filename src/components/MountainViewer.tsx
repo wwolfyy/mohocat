@@ -1,14 +1,16 @@
 'use client';
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Point } from '@/types';
+import type { Point, Cat } from '@/types';
 import { cn } from '@/utils/cn';
 import CatGallery from './CatGallery';
 
-export default function MountainViewer() {
-  const [points, setPoints] = useState<Point[]>([]);
+interface MountainViewerProps {
+  points: Point[];
+  cats: Cat[];
+}
+
+export default function MountainViewer({ points, cats }: MountainViewerProps) {
   const [activePoint, setActivePoint] = useState<Point | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
   const [imageNaturalDimensions, setImageNaturalDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -20,30 +22,6 @@ export default function MountainViewer() {
     '--mobile-point-counter-scale-factor': 1,
   });
 
-  useEffect(() => {
-    const loadPoints = async () => {
-      try {
-        console.log('Loading points from Firestore...');
-        const pointsCollection = collection(db, 'points');
-        const pointsSnapshot = await getDocs(pointsCollection);
-        console.log('Points snapshot:', pointsSnapshot);
-        const pointsData = pointsSnapshot.docs.map(doc => {
-          const data = doc.data();
-          console.log('Point document:', { id: doc.id, data });
-          return {
-            id: doc.id,
-            ...data
-          };
-        }) as Point[];
-        console.log('Processed points data:', pointsData);
-        setPoints(pointsData);
-      } catch (error) {
-        console.error('Error loading points:', error);
-      }
-    };
-
-    loadPoints();
-  }, []);
 
   useEffect(() => {
     const img = new Image();
@@ -229,6 +207,7 @@ export default function MountainViewer() {
           {selectedPoint && (
             <CatGallery
               pointId={selectedPoint.id}
+              cats={cats}
               onClose={() => setSelectedPoint(null)}
             />
           )}

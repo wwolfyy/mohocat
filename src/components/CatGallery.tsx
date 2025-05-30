@@ -1,20 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import type { Cat } from '@/types';
 import { cn } from '@/utils/cn';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import CatInfo from './CatInfo';
+import { getCatsByPointId } from '@/lib/static-data';
 
 interface CatGalleryProps {
   pointId: string;
+  cats: Cat[];
   onClose: () => void;
 }
 
-export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
-  const [cats, setCats] = useState<Cat[]>([]);
+export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) {
   const [currentResidents, setCurrentResidents] = useState<Cat[]>([]);
   const [formerResidents, setFormerResidents] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,40 +23,11 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
     const loadCats = async () => {
       try {
         console.log('Loading cats for pointId:', pointId);
-        const catsCollection = collection(db, 'cats');
-
-        // Query for current residents
-        const currentQuery = query(
-          catsCollection,
-          where('dwelling', '==', pointId)
-        );
-
-        // Query for former residents
-        const prevQuery = query(
-          catsCollection,
-          where('prev_dwelling', '==', pointId)
-        );
-
-        const [currentCats, prevCats] = await Promise.all([
-          getDocs(currentQuery),
-          getDocs(prevQuery)
-        ]);
-
-        // Process current residents
-        const currentResidents = currentCats.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Cat[];
-
-        // Process former residents
-        const formerResidents = prevCats.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Cat[];
-
-        setCats([...currentResidents, ...formerResidents]);
-        setCurrentResidents(currentResidents);
-        setFormerResidents(formerResidents);
+        
+        const { current, former } = await getCatsByPointId(pointId, cats);
+        
+        setCurrentResidents(current);
+        setFormerResidents(former);
       } catch (error) {
         console.error('Error loading cats:', error);
       } finally {
@@ -66,7 +36,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
     };
 
     loadCats();
-  }, [pointId]);
+  }, [pointId, cats]);
 
   if (loading) {
     return (
