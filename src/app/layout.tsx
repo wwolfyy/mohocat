@@ -10,12 +10,14 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Mountain Cats',
   description: 'Explore cats living in the mountains',
-  viewport: {
+};
+
+  // Add a new viewport export
+  export const viewport = {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1, // Optional: Prevents user zooming, can improve perceived stability
-  },
-};
+  };
 
 export default function RootLayout({
   children,
