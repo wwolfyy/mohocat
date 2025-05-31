@@ -87,7 +87,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
       className={cn(
         "relative w-screen left-1/2 -translate-x-1/2", // Changed: Fill viewport width and center
         "aspect-[9/16]", // Mobile: Portrait aspect ratio (inverse of a 16:9 image)
-        "sm:aspect-[16/9]" // Desktop: Landscape aspect ratio
+        "md:aspect-[16/9]" // Desktop: Landscape aspect ratio
       )}
     >
       {isLoadingDimensions ? (
@@ -101,7 +101,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
             className={cn(
               "absolute inset-0 origin-center",
               "rotate-90", // Mobile: rotate
-              "sm:rotate-0" // Desktop: no rotation
+              "md:rotate-0" // Desktop: no rotation
             )}
           >
             {/* This div centers the image content */}
@@ -110,14 +110,14 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
               <div className={cn(
                 "relative", // Base
                 "scale-[var(--mobile-scale-factor)]", // Mobile: dynamic scale
-                "sm:scale-100 sm:w-full sm:h-full" // Desktop: normal scale, full width/height of parent
+                "md:scale-100 md:w-full md:h-full" // Desktop: normal scale, full width/height of parent
               )}>
                 <img
                   src="/images/screenshot_mt_geyang_50.png"
                   alt="Satellite view of mountain"
                   className={cn(
                     "block max-w-full max-h-full", // Mobile: Behaves like object-contain
-                    "sm:w-full sm:h-full sm:object-cover"
+                    "md:w-full md:h-full md:object-cover"
  , // Add rounded corners
  "rounded-lg")}
                 />
@@ -128,7 +128,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                   className={cn(
                     "absolute z-10", // Base classes
                     "w-4 h-6 bottom-4 left-4 top-auto right-auto", // Mobile: Smaller size, positioned relative to original bottom-left
-                    "sm:w-8 sm:h-12 sm:top-4 sm:left-4 sm:right-auto sm:bottom-auto" // Desktop: Original size, top-left position
+                    "md:w-8 md:h-12 md:top-4 md:left-4 md:right-auto md:bottom-auto" // Desktop: Original size, top-left position
                   )}
                   title="North is up"
                 />
@@ -141,8 +141,8 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                     className={cn(
                       "absolute -translate-x-1/2 -translate-y-1/2 group",
                       "-rotate-90 origin-center", // Mobile: Counter-rotate point container
-                      "scale-[var(--mobile-point-counter-scale-factor)] sm:scale-100", // Mobile: Counter-scale
-                      "sm:rotate-0" // Desktop: No counter-rotation
+                      "scale-[var(--mobile-point-counter-scale-factor)] md:scale-100", // Mobile: Counter-scale
+                      "md:rotate-0" // Desktop: No counter-rotation
                     )}
                     onMouseEnter={() => handleMouseOver(point)}
                     onMouseLeave={handleMouseLeave}
@@ -171,13 +171,13 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                             point.title !== "하느재 등산로 입구 부근" && point.title !== "공원 관리소 부근",
 
                           // "하느재 등산로 입구 부근": Right on mobile, Above on desktop
-                          "top-1/2 -translate-y-1/2 left-[calc(50%_+_0.75rem)] sm:left-1/2 sm:-translate-x-1/2 sm:bottom-[calc(50%_+_0.75rem)] sm:top-auto sm:translate-y-0":
+                          "top-1/2 -translate-y-1/2 left-[calc(50%_+_0.75rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_0.75rem)] md:top-auto md:translate-y-0":
                             point.title === "하느재 등산로 입구 부근",
 
                           // "공원 관리소 부근": Lower-Right on mobile, Above on desktop
                           // No -translate-y-1/2 for top on mobile as we want its top edge to align.
                           // No -translate-x-1/2 for left on mobile as we want its left edge to align.
-                          "top-[calc(50%_+_0.75rem)] left-[calc(50%_+_0.75rem)] sm:left-1/2 sm:-translate-x-1/2 sm:bottom-[calc(50%_+_0.75rem)] sm:top-auto":
+                          "top-[calc(50%_+_0.75rem)] left-[calc(50%_+_0.75rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_0.75rem)] md:top-auto":
                             point.title === "공원 관리소 부근",
                         }
                       )}
