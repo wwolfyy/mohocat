@@ -29,7 +29,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 overflow-x-hidden">
           <header className="bg-white shadow-sm relative z-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-1 flex justify-between items-center"> {/* Added pb-1 for a small space */}
+            <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4 pb-1 flex justify-between items-center"> {/* Added pb-1 for a small space */}
               <Link href="/" className="hover:text-blue-600 transition-colors">
                 <div className="flex items-center">
                   <Image
