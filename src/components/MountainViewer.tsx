@@ -117,7 +117,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                   alt="Satellite view of mountain"
                   className={cn(
                     "block max-w-full max-h-full", // Mobile: Behaves like object-contain
-                    "sm:w-full sm:h-full sm:object-cover" // Desktop: Cover the container
+                    "sm:w-full sm:h-full sm:object-cover"
  , // Add rounded corners
  "rounded-lg")}
                 />
@@ -192,7 +192,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                   {activePoint?.id === point.id && (
                     <div
                       className={cn(
-                        "absolute w-16 h-16 -translate-x-1/2 -translate-y-1/2",
+                        "absolute w-48 h-48 -translate-x-1/2 -translate-y-1/2",
                         "border-2 border-yellow-400 rounded-full animate-pulse",
                         "top-1/2 left-1/2" // Positioned relative to the main point container
                       )}
