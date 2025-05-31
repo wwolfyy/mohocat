@@ -85,7 +85,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
     <div
       style={cssVariables as React.CSSProperties} // Apply CSS variables for dynamic scaling
       className={cn(
-        "relative w-full",
+        "relative w-screen left-1/2 -translate-x-1/2", // Changed: Fill viewport width and center
         "aspect-[9/16]", // Mobile: Portrait aspect ratio (inverse of a 16:9 image)
         "sm:aspect-[16/9]" // Desktop: Landscape aspect ratio
       )}
