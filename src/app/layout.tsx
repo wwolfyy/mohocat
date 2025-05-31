@@ -33,11 +33,13 @@ export default function RootLayout({
               <Link href="/" className="hover:text-blue-600 transition-colors">
                 <div className="flex items-center">
                   <Image
-                    src="/images/tux_cat_favicon_1.png" // Ensure this path and extension are correct
+                    // src="/images/tux_cat_favicon_1.png" 
+                    // src="/images/tux_cat_favicon_2.png" 
+                    src="/images/black_cat_stealth_favicon.png" 
                     alt="Site Logo"
                     width={28} // Reduced from 32
                     height={28} // Reduced from 32
-                    className="mr-2" // Adds a small margin to the right of the logo
+                    className="mr-2 rounded-full" // Adds a small margin to the right of the logo
                   />
                   <h1 className="text-lg font-semibold text-gray-900">계양산 고양이들</h1>
                 </div>

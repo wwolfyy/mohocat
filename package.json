@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/fetch-static-assets.js && next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
+    "axios": "^1.9.0",
     "clsx": "^2.1.0",
     "firebase": "^10.8.0",
     "firebase-admin": "^13.4.0",

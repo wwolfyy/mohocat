@@ -5,7 +5,7 @@ async function updateCatData() {
   try {
     // Firebase Authentication
     // Use the same service account key file as the Python script
-    const serviceAccount = require('./google_svs_account.json');
+    const serviceAccount = require('../google_svs_account.json');
 
     // Initialize Firebase App
     // Use the same options as the Python script
@@ -33,7 +33,7 @@ async function updateCatData() {
 
     // Google Sheets Authentication
     // Use the same service account credentials file as the Python script
-    const credentials = require('./google_svs_account.json'); // Assuming the same file is used
+    const credentials = require('../google_svs_account.json'); // Assuming the same file is used
     const scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
     const auth = new google.auth.JWT(
       credentials.client_email,
