@@ -19,3 +19,5 @@ export default function About() {
     </div>
   );
 }
+
+// If you use router.push or links to this page elsewhere, update their paths to '/pages/about'.

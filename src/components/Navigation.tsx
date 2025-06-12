@@ -11,16 +11,22 @@ export default function Navigation() {
       {/* Desktop navigation */}
       <nav className="hidden md:flex items-center space-x-6">
         <Link
-          href="/about"
+          href="/pages/about"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           소개
         </Link>
         <Link
-          href="/contact"
+          href="/pages/contact"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           동참
+        </Link>
+        <Link
+          href="/pages/butler_stream"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          급식게시판
         </Link>
       </nav>
 
@@ -48,18 +54,25 @@ export default function Navigation() {
           <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
             <div className="py-1">
               <Link
-                href="/about"
+                href="/pages/about"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 소개
               </Link>
               <Link
-                href="/contact"
+                href="/pages/contact"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
+              </Link>
+              <Link
+                href="/pages/butler_stream"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                집사 스트림
               </Link>
             </div>
           </div>

@@ -135,6 +135,11 @@ export default function Contact() {
           </div>
         )}
       </form>
+
+      {/* Reminder for router.push or links update */}
+      <div className="mt-4 text-center text-sm text-gray-500">
+        If you use router.push or links to this page elsewhere, update their paths to '/pages/contact'.
+      </div>
     </div>
   );
 }
