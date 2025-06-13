@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { uploadVideoToYoutubeClient } from '@/utils/uploadToYoutubeClient';
 import { uploadImageToFirebase } from '@/services/firebase';
 import { v4 as uuidv4 } from 'uuid';
+import { useRouter } from 'next/navigation';
 
 const NewPostForm = () => {
+  const router = useRouter();
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [title, setTitle] = useState('');
@@ -38,8 +40,19 @@ const NewPostForm = () => {
         mediaType = 'video';
       }
       if (imageFiles.length > 0) {
-        // Upload all images, get URLs
-        imageUrls = await Promise.all(imageFiles.map(uploadImageToFirebase));
+        console.log('Uploading images to Firebase:', imageFiles.map(file => file.name));
+        imageUrls = await Promise.all(
+          imageFiles.map(async file => {
+            try {
+              const url = await uploadImageToFirebase(file);
+              console.log('Image uploaded successfully:', file.name, 'URL:', url);
+              return url;
+            } catch (error) {
+              console.error('Error uploading image:', file.name, error);
+              throw error;
+            }
+          })
+        );
         if (!videoThumb && imageUrls.length > 0) {
           videoThumb = imageUrls[0];
         }
@@ -68,6 +81,9 @@ const NewPostForm = () => {
       setTitle('');
       setMessage('');
       alert('Post created!');
+
+      // Redirect to the butler_stream page
+      router.push('/pages/butler_stream');
     } catch (error) {
       console.error('Error uploading post:', error);
     } finally {
