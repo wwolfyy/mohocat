@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { uploadVideoToYoutubeClient } from '@/utils/uploadToYoutubeClient';
-import { uploadImageToFirebase } from '@/services/firebase';
+import { uploadImageToFirebase, db } from '@/services/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation';
+import { collection, addDoc } from 'firebase/firestore';
 
 const NewPostForm = () => {
   const router = useRouter();
@@ -27,40 +28,34 @@ const NewPostForm = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setUploading(true);
-    let videoUrl = '';
-    let videoThumb = '';
-    let imageUrls: string[] = [];
-    let mediaType: 'video' | 'image' = 'image';
+
     try {
+      let videoUrl = '';
+      let videoThumb = '';
+      let imageUrls: string[] = [];
+      let mediaType: 'video' | 'image' = 'image';
+
       if (videoFile) {
-        // Upload video to YouTube via server-side API
         const { videoId } = await uploadVideoToYoutubeClient(videoFile, title, message);
         videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         videoThumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         mediaType = 'video';
       }
+
       if (imageFiles.length > 0) {
-        console.log('Uploading images to Firebase:', imageFiles.map(file => file.name));
         imageUrls = await Promise.all(
           imageFiles.map(async file => {
-            try {
-              const url = await uploadImageToFirebase(file);
-              console.log('Image uploaded successfully:', file.name, 'URL:', url);
-              return url;
-            } catch (error) {
-              console.error('Error uploading image:', file.name, error);
-              throw error;
-            }
+            const url = await uploadImageToFirebase(file);
+            return url;
           })
         );
         if (!videoThumb && imageUrls.length > 0) {
           videoThumb = imageUrls[0];
         }
       }
-      // Save post to localStorage (simulate backend)
+
       const now = new Date();
       const post = {
-        id: uuidv4(),
         title,
         username: 'anonymous',
         date: now.toLocaleDateString(),
@@ -71,11 +66,9 @@ const NewPostForm = () => {
         imageUrls,
         message,
       };
-      const stored = localStorage.getItem('butler_stream_posts');
-      const posts = stored ? JSON.parse(stored) : [];
-      posts.unshift(post);
-      localStorage.setItem('butler_stream_posts', JSON.stringify(posts));
-      // Reset form
+
+      await addDoc(collection(db, 'posts_feeding'), post);
+
       setVideoFile(null);
       setImageFiles([]);
       setTitle('');
@@ -90,6 +83,23 @@ const NewPostForm = () => {
       setUploading(false);
     }
   };
+
+  useEffect(() => {
+    try {
+      console.log('Firestore db object:', db);
+      console.log('Type of db:', typeof db);
+      console.log('useEffect is running');
+
+      if (!db) {
+        console.error('Firestore db object is undefined');
+      }
+
+      const testCollection = collection(db, 'posts_feeding');
+      console.log('Collection reference:', testCollection);
+    } catch (error) {
+      console.error('Error accessing Firestore collection:', error);
+    }
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

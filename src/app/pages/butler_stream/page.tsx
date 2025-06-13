@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/services/firebase';
+import { auth, db } from '@/services/firebase';
 import PostItem from '@/components/PostItem';
 import { User } from 'firebase/auth';
 import Link from 'next/link';
+import { collection, getDocs } from 'firebase/firestore';
 
 const ButlerStream = () => {
   const [posts, setPosts] = useState<any[]>([]);
@@ -25,10 +26,21 @@ const ButlerStream = () => {
   }, [router]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const stored = localStorage.getItem('butler_stream_posts');
-      setPosts(stored ? JSON.parse(stored) : []);
-    }
+    const fetchPosts = async () => {
+      if (isAuthenticated) {
+        const cachedPosts = localStorage.getItem('butler_stream_posts');
+        if (cachedPosts) {
+          setPosts(JSON.parse(cachedPosts));
+        }
+
+        const querySnapshot = await getDocs(collection(db, 'posts_feeding'));
+        const fetchedPosts = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setPosts(fetchedPosts);
+        localStorage.setItem('butler_stream_posts', JSON.stringify(fetchedPosts));
+      }
+    };
+
+    fetchPosts();
   }, [isAuthenticated]);
 
   if (!isAuthenticated) {
