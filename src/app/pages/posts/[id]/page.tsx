@@ -2,17 +2,32 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/services/firebase';
 
 const PostDetailsPage = () => {
   const [post, setPost] = useState<any | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const id = window.location.pathname.split('/').pop();
-    const stored = localStorage.getItem('butler_stream_posts');
-    const posts = stored ? JSON.parse(stored) : [];
-    const foundPost = posts.find((p: any) => p.id === id);
-    setPost(foundPost || null);
+    const fetchPost = async () => {
+      const id = window.location.pathname.split('/').pop();
+      if (!id) return;
+
+      try {
+        const postDoc = await getDoc(doc(db, 'posts_feeding', id));
+        if (postDoc.exists()) {
+          setPost(postDoc.data());
+        } else {
+          setPost(null);
+        }
+      } catch (error) {
+        console.error('Error fetching post:', error);
+        setPost(null);
+      }
+    };
+
+    fetchPost();
   }, []);
 
   if (!post) {

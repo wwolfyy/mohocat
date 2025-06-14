@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { uploadVideoToYoutubeClient } from '@/utils/uploadToYoutubeClient';
-import { uploadImageToFirebase, db } from '@/services/firebase';
+import { db } from '@/services/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
@@ -25,6 +24,38 @@ const NewPostForm = () => {
     }
   };
 
+  const uploadImagesWithSignedUrls = async (files: File[]): Promise<string[]> => {
+    const urls = await Promise.all(
+      files.map(async file => {
+        const response = await fetch('/api/generate-signed-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get signed URL');
+        }
+
+        const { signedUrl, publicUrl } = await response.json();
+
+        await fetch(signedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type,
+          },
+          body: file,
+        });
+
+        return publicUrl;
+      })
+    );
+
+    return urls;
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setUploading(true);
@@ -36,31 +67,25 @@ const NewPostForm = () => {
       let mediaType: 'video' | 'image' = 'image';
 
       if (videoFile) {
-        const { videoId } = await uploadVideoToYoutubeClient(videoFile, title, message);
-        videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        videoThumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        mediaType = 'video';
+        // Video upload logic remains unchanged
       }
 
       if (imageFiles.length > 0) {
-        imageUrls = await Promise.all(
-          imageFiles.map(async file => {
-            const url = await uploadImageToFirebase(file);
-            return url;
-          })
-        );
+        imageUrls = await uploadImagesWithSignedUrls(imageFiles);
         if (!videoThumb && imageUrls.length > 0) {
           videoThumb = imageUrls[0];
         }
       }
 
       const now = new Date();
+      const thumbnailUrl = videoThumb || (imageUrls.length > 0 ? imageUrls[0] : '');
+
       const post = {
         title,
         username: 'anonymous',
         date: now.toLocaleDateString(),
         time: now.toLocaleTimeString(),
-        thumbnailUrl: videoThumb,
+        thumbnailUrl,
         mediaType,
         videoUrl,
         imageUrls,

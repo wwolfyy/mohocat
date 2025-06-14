@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { MdPhotoCamera, MdVideocam } from 'react-icons/md';
 
 interface Post {
   id: string;
@@ -28,29 +29,20 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
         {posts.length === 0 && <div>No posts yet.</div>}
         {posts.map((post) => (
           <div key={post.id} className="border p-4 rounded flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              {post.thumbnailUrl && (
-                <img
-                  src={post.thumbnailUrl}
-                  alt="Thumbnail"
-                  className="w-32 h-32 rounded"
-                />
-              )}
+            <div className="flex items-center space-x-2 self-center">
+              {post.mediaType === 'video' && post.videoUrl && <MdVideocam className="text-blue-500" />}
+              {post.mediaType === 'image' && post.imageUrls?.length > 0 && <MdPhotoCamera className="text-green-500" />}
             </div>
             <div className="flex-grow">
               <Link
                 href={`/pages/posts/${post.id}`}
-                className="text-xl font-bold mb-2 block"
+                className="text-xl font-bold mb-2 block flex items-center space-x-2"
               >
                 {post.title}
               </Link>
               <p className="text-gray-700 mb-2">{post.message}</p>
-              <div className="flex space-x-2">
-                {post.mediaType === 'video' && post.videoUrl && <span>🎥</span>}
-                {post.mediaType === 'image' && post.imageUrls?.length > 0 && <span>📷</span>}
-              </div>
             </div>
-            <div className="text-right text-sm text-gray-500">
+            <div className="text-right text-sm text-gray-500 flex flex-col items-end">
               <p>{post.username}</p>
               <p>
                 {post.date} {post.time}
