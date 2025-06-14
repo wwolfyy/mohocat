@@ -3,14 +3,16 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/services/firebase';
-import PostItem from '@/components/PostItem';
+import PostList from '@/components/PostList';
 import { User } from 'firebase/auth';
-import Link from 'next/link';
 import { collection, getDocs } from 'firebase/firestore';
 
 const ButlerStream = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const postsPerPage = 20;
   const router = useRouter();
 
   useEffect(() => {
@@ -25,23 +27,31 @@ const ButlerStream = () => {
     return () => unsubscribe();
   }, [router]);
 
+  const fetchPosts = async (page = 1) => {
+    if (isAuthenticated) {
+      const querySnapshot = await getDocs(collection(db, 'posts_feeding'));
+      const allPosts = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const sortedPosts = allPosts.sort((a, b) => {
+        const dateA = new Date(`${a.date} ${a.time}`);
+        const dateB = new Date(`${b.date} ${b.time}`);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      const startIndex = (page - 1) * postsPerPage;
+      const paginatedPosts = sortedPosts.slice(startIndex, startIndex + postsPerPage);
+
+      setPosts(paginatedPosts);
+      setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      if (isAuthenticated) {
-        const cachedPosts = localStorage.getItem('butler_stream_posts');
-        if (cachedPosts) {
-          setPosts(JSON.parse(cachedPosts));
-        }
+    fetchPosts(currentPage);
+  }, [isAuthenticated, currentPage]);
 
-        const querySnapshot = await getDocs(collection(db, 'posts_feeding'));
-        const fetchedPosts = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setPosts(fetchedPosts);
-        localStorage.setItem('butler_stream_posts', JSON.stringify(fetchedPosts));
-      }
-    };
-
-    fetchPosts();
-  }, [isAuthenticated]);
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+  };
 
   if (!isAuthenticated) {
     return null; // Prevent rendering until authentication is confirmed
@@ -56,41 +66,12 @@ const ButlerStream = () => {
       >
         Create New Post
       </button>
-      <div className="space-y-4">
-        {posts.length === 0 && <div>No posts yet.</div>}
-        {posts.map((post) => (
-          <div key={post.id} className="border p-4 rounded flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              {post.thumbnailUrl && (
-                <img
-                  src={post.thumbnailUrl}
-                  alt="Thumbnail"
-                  className="w-32 h-32 rounded"
-                />
-              )}
-            </div>
-            <div className="flex-grow">
-              <Link
-                href={`/pages/posts/${post.id}`}
-                className="text-xl font-bold mb-2 block"
-              >
-                {post.title}
-              </Link>
-              <p className="text-gray-700 mb-2">{post.message}</p>
-              <div className="flex space-x-2">
-                {post.mediaType === 'video' && <span>🎥</span>}
-                {post.mediaType === 'image' && <span>📷</span>}
-              </div>
-            </div>
-            <div className="text-right text-sm text-gray-500">
-              <p>{post.username}</p>
-              <p>
-                {post.date} {post.time}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <PostList
+        posts={posts}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageClick}
+      />
     </div>
   );
 };
