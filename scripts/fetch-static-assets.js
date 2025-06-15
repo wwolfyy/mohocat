@@ -5,8 +5,10 @@ const path = require('path');
 const axios = require('axios'); // For downloading images
 
 // --- Configuration ---
-const SERVICE_ACCOUNT_KEY_PATH = './google_svs_account.json'; // Path to your Firebase service account key from project root
+const SERVICE_ACCOUNT_KEY_PATH = './mountaincats-61543-769df223a745.json'; // Updated to use the actual service account file
 const FIREBASE_PROJECT_ID = 'mountaincats-61543'; // Your Firebase Project ID
+const STORAGE_BUCKET = 'mountaincats-61543.firebasestorage.app'; // Your storage bucket
+const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
 const CATS_COLLECTION = 'cats';
 const LOCAL_THUMBNAILS_DIR_RELATIVE = 'public/images/thumbnails'; // Relative to project root
 const STATIC_DATA_JSON_PATH_RELATIVE = 'src/lib/cats-static-data.json'; // Relative to project root
@@ -29,12 +31,16 @@ async function initializeFirebase() {
             admin.initializeApp({
                 credential: admin.credential.cert(serviceAccountKey),
                 projectId: FIREBASE_PROJECT_ID,
+                storageBucket: STORAGE_BUCKET
             });
             console.log(`Firebase App initialized successfully for project '${FIREBASE_PROJECT_ID}'.`);
         } else {
             console.log("Using existing Firebase App.");
         }
-        return admin.firestore();
+        return { 
+            db: admin.firestore(), 
+            storage: admin.storage().bucket() 
+        };
     } catch (error) {
         if (error.code === 'ENOENT') {
             console.error(`ERROR: Service account key not found at ${SERVICE_ACCOUNT_FULL_PATH}.`);
@@ -67,6 +73,58 @@ async function fetchCatsData(db) {
     }
 }
 
+async function fetchThumbnailsFromStorage(bucket) {
+    console.log(`Fetching thumbnails from Firebase Storage folder: '${THUMBNAILS_FOLDER}'...`);
+    try {
+        const [files] = await bucket.getFiles({ prefix: THUMBNAILS_FOLDER });
+        
+        // Filter out directories and get actual image files
+        const imageFiles = files.filter(file => {
+            const fileName = file.name;
+            // Skip directories and non-image files
+            return !fileName.endsWith('/') && 
+                   fileName !== THUMBNAILS_FOLDER.slice(0, -1) &&
+                   /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+        });
+          console.log(`Found ${imageFiles.length} thumbnail images in storage.`);
+        
+        // Debug: Show some example filenames
+        if (imageFiles.length > 0) {
+            const exampleFiles = imageFiles.slice(0, 3).map(f => path.basename(f.name));
+            console.log(`Example filenames: ${exampleFiles.join(', ')}${imageFiles.length > 3 ? '...' : ''}`);
+        }
+        
+        // Create a map of filename (without path) to download URL
+        const thumbnailMap = {};
+        for (const file of imageFiles) {
+            try {
+                const [url] = await file.getSignedUrl({
+                    action: 'read',
+                    expires: Date.now() + 1000 * 60 * 60 * 24 * 7 // 7 days
+                });
+                
+                // Extract just the filename without the thumbnails/ prefix
+                const fileName = path.basename(file.name);
+                thumbnailMap[fileName] = url;
+                
+                // Debug: Show the parts for the first few files
+                if (Object.keys(thumbnailMap).length <= 3) {
+                    const nameWithoutExt = path.parse(fileName).name;
+                    const parts = nameWithoutExt.split('_');
+                    console.log(`File: '${fileName}' -> Parts: [${parts.join(', ')}]`);
+                }
+            } catch (error) {
+                console.error(`Failed to get download URL for ${file.name}:`, error.message);
+            }
+        }
+        
+        return thumbnailMap;
+    } catch (error) {
+        console.error("Error fetching thumbnails from storage:", error);
+        return {};
+    }
+}
+
 async function downloadImage(url, localPath) {
     try {
         const response = await axios({
@@ -96,7 +154,7 @@ async function downloadImage(url, localPath) {
 }
 
 
-async function downloadAndUpdateThumbnails(catsData) {
+async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
     console.log(`Ensuring local thumbnail directory exists: '${LOCAL_THUMBNAILS_DIR}'`);
     await fsPromises.mkdir(LOCAL_THUMBNAILS_DIR, { recursive: true });
 
@@ -104,7 +162,6 @@ async function downloadAndUpdateThumbnails(catsData) {
 
     for (const cat of catsData) {
         const catId = cat.id;
-        const originalThumbnailUrl = cat.thumbnailUrl;
         const catName = cat.name || `ID: ${catId}`;
         let updatedCatEntry = { ...cat };
 
@@ -113,35 +170,47 @@ async function downloadAndUpdateThumbnails(catsData) {
             updatedCatEntry.thumbnailUrl = '';
             updatedCatsList.push(updatedCatEntry);
             continue;
+        }        // Look for thumbnail files that contain this cat's ID
+        // More robust matching: remove extension, split by underscore, check if cat ID is in the parts
+        let foundThumbnail = null;
+        let downloadUrl = null;
+
+        for (const [fileName, url] of Object.entries(thumbnailMap)) {
+            // Remove file extension
+            const nameWithoutExt = path.parse(fileName).name;
+            
+            // Split by underscore and check if any part matches the cat ID
+            const nameParts = nameWithoutExt.split('_');
+            
+            if (nameParts.includes(catId)) {
+                foundThumbnail = fileName;
+                downloadUrl = url;
+                console.log(`Matched cat '${catName}' (ID: ${catId}) to file: '${fileName}' via parts: [${nameParts.join(', ')}]`);
+                break;
+            }
         }
 
-        if (!originalThumbnailUrl || !originalThumbnailUrl.startsWith('http')) {
-            console.warn(`WARNING: Cat '${catName}' has an invalid or missing 'thumbnailUrl': '${originalThumbnailUrl}'. Skipping download.`);
-            updatedCatEntry.thumbnailUrl = ''; 
+        if (!foundThumbnail) {
+            console.warn(`WARNING: No thumbnail found in storage for cat '${catName}' (ID: ${catId}). No files contained '${catId}' in their underscore-separated parts.`);
+            
+            // Debug: show available files for troubleshooting
+            const availableFiles = Object.keys(thumbnailMap).slice(0, 5); // Show first 5 files
+            console.log(`Available files (first 5): ${availableFiles.join(', ')}${Object.keys(thumbnailMap).length > 5 ? '...' : ''}`);
+            
+            updatedCatEntry.thumbnailUrl = '';
             updatedCatsList.push(updatedCatEntry);
             continue;
         }
 
         try {
-            console.log(`Processing cat: '${catName}'. Original URL: '${originalThumbnailUrl}'`);
+            console.log(`Processing cat: '${catName}'. Found thumbnail: '${foundThumbnail}'`);
             
-            let fileExtension = '';
-            try {
-                fileExtension = path.extname(new URL(originalThumbnailUrl).pathname);
-            } catch (urlError) {
-                console.warn(`Could not parse URL to get extension for ${originalThumbnailUrl}. Defaulting extension.`);
-            }
-            
-            if (!fileExtension || fileExtension.length > 5 || fileExtension.length < 3) { 
-                fileExtension = '.jpg'; // Default extension
-            }
-            
-            const localImageFilename = `${catId}${fileExtension}`;
+            const localImageFilename = foundThumbnail; // Use the same filename as in storage
             const localImageFullPath = path.join(LOCAL_THUMBNAILS_DIR, localImageFilename);
             
-            await downloadImage(originalThumbnailUrl, localImageFullPath);
+            await downloadImage(downloadUrl, localImageFullPath);
             
-            // Refactored path generation
+            // Generate web-accessible path
             const relativePath = path.relative(path.join(PROJECT_ROOT, 'public'), localImageFullPath);
             const standardizedPath = relativePath.replace(/\\/g, '/'); // Ensure forward slashes for web
             const webAccessiblePath = `/${standardizedPath}`;
@@ -150,7 +219,7 @@ async function downloadAndUpdateThumbnails(catsData) {
             updatedCatEntry.thumbnailUrl = webAccessiblePath;
 
         } catch (error) {
-            console.error(`Failed to download image for cat '${catName}'.`);
+            console.error(`Failed to download thumbnail for cat '${catName}':`, error.message);
             updatedCatEntry.thumbnailUrl = ''; 
         }
         updatedCatsList.push(updatedCatEntry);
@@ -172,11 +241,13 @@ async function saveStaticDataJson(catsData) {
 async function main() {
     console.log("--- Starting Static Asset Fetching Process (Node.js) ---");
     
-    const db = await initializeFirebase();
-    if (!db) {
+    const firebaseServices = await initializeFirebase();
+    if (!firebaseServices) {
         console.error("Firebase initialization failed. Exiting.");
         process.exit(1); // Exit if Firebase can't be initialized
     }
+
+    const { db, storage } = firebaseServices;
 
     const rawCatsData = await fetchCatsData(db);
     if (rawCatsData.length === 0 && !(await db.collection(CATS_COLLECTION).limit(1).get()).empty) {
@@ -187,7 +258,12 @@ async function main() {
         console.log("No cat data found in Firestore. Process will complete, but no images will be downloaded.");
     }
 
-    const updatedCatsData = await downloadAndUpdateThumbnails(rawCatsData);
+    const thumbnailMap = await fetchThumbnailsFromStorage(storage);
+    if (Object.keys(thumbnailMap).length === 0) {
+        console.log("No thumbnails found in Firebase Storage. Images may not be available.");
+    }
+
+    const updatedCatsData = await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
     await saveStaticDataJson(updatedCatsData);
     console.log("--- Static Asset Fetching Process (Node.js) Completed ---");
 }
