@@ -1,6 +1,6 @@
 import { getStorage } from 'firebase-admin/storage';
 import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app';
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
 if (!getApps().length) {
   initializeApp({
@@ -11,18 +11,14 @@ if (!getApps().length) {
 
 const storage = getStorage().bucket();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { fileName, fileType } = req.body;
-
-  if (!fileName || !fileType) {
-    return res.status(400).json({ error: 'Missing fileName or fileType' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
+    const { fileName, fileType } = await request.json();
+
+    if (!fileName || !fileType) {
+      return NextResponse.json({ error: 'Missing fileName or fileType' }, { status: 400 });
+    }
+
     const file = storage.file(`uploads/${fileName}`);
     const [signedUrl] = await file.getSignedUrl({
       action: 'write',
@@ -32,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/uploads%2F${encodeURIComponent(fileName)}?alt=media`;
 
-    res.status(200).json({ signedUrl, publicUrl });
+    return NextResponse.json({ signedUrl, publicUrl });
   } catch (error) {
     console.error('Error generating signed URL:', error);
-    res.status(500).json({ error: 'Failed to generate signed URL' });
+    return NextResponse.json({ error: 'Failed to generate signed URL' }, { status: 500 });
   }
 }

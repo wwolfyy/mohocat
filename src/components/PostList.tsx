@@ -26,12 +26,47 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
   return (
     <div>
       <div className="space-y-4">
-        {posts.length === 0 && <div>No posts yet.</div>}
-        {posts.map((post) => (
+        {posts.length === 0 && <div>No posts yet.</div>}        {posts.map((post) => (
           <div key={post.id} className="border p-4 rounded flex items-start space-x-4">
-            <div className="flex items-center space-x-2 self-center">
-              {post.mediaType === 'video' && post.videoUrl && <MdVideocam className="text-blue-500" />}
-              {post.mediaType === 'image' && post.imageUrls?.length > 0 && <MdPhotoCamera className="text-green-500" />}
+            <div className="flex-shrink-0">
+              {post.mediaType === 'video' && post.videoUrl && (() => {
+                const match = post.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+                const videoId = match ? match[1] : null;
+                if (videoId) {
+                  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                  return (
+                    <div className="relative">
+                      <img
+                        src={thumbnailUrl}
+                        alt="Video thumbnail"
+                        className="w-20 h-15 object-cover rounded"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-red-600 text-white rounded-full p-1">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return <MdVideocam className="text-blue-500 text-2xl" />;
+                }
+              })()}              {post.mediaType === 'image' && post.imageUrls && post.imageUrls.length > 0 && (
+                post.thumbnailUrl ? (
+                  <img
+                    src={post.thumbnailUrl}
+                    alt="Image thumbnail"
+                    className="w-20 h-15 object-cover rounded"
+                  />
+                ) : (
+                  <MdPhotoCamera className="text-green-500 text-2xl" />
+                )
+              )}
             </div>
             <div className="flex-grow">
               <Link

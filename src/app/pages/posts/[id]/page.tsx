@@ -37,13 +37,50 @@ const PostDetailsPage = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-      <p>{post.message}</p>
-      {post.mediaType === 'video' && (
-        <div>
-          <h2 className="text-xl font-semibold">Video:</h2>
-          <a href={post.videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-            Watch Video
-          </a>
+      <p>{post.message}</p>      {post.mediaType === 'video' && post.videoUrl && (
+        <div className="mt-4">
+          <h2 className="text-xl font-semibold mb-2">Video:</h2>          {(() => {
+            // Extract YouTube video ID from URL
+            const match = post.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+            const videoId = match ? match[1] : null;
+
+            if (videoId) {
+              const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+              return (
+                <a
+                  href={post.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block relative group"
+                >
+                  <img
+                    src={thumbnailUrl}
+                    alt="Video thumbnail"
+                    className="w-full max-w-2xl rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+                    onError={(e) => {
+                      // Fallback to medium quality thumbnail if maxres fails
+                      e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                    }}
+                  />
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg">
+                    <div className="bg-red-600 text-white rounded-full p-4 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </a>
+              );
+            } else {
+              // Fallback for non-YouTube videos or invalid URLs
+              return (
+                <a href={post.videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                  Watch Video
+                </a>
+              );
+            }
+          })()}
         </div>
       )}
       {post.mediaType === 'image' && (

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { db } from '@/services/firebase';
-import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
 
@@ -13,8 +12,11 @@ const NewPostForm = () => {
   const [uploading, setUploading] = useState(false);
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setVideoFile(event.target.files[0]);
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      setVideoFile(file);
+    } else {
+      setVideoFile(null);
     }
   };
 
@@ -47,16 +49,40 @@ const NewPostForm = () => {
             'Content-Type': file.type,
           },
           body: file,
-        });
-
-        return publicUrl;
+        });        return publicUrl;
       })
     );
-
     return urls;
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const uploadVideoToYouTube = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('video', file);
+    formData.append('title', title);
+    formData.append('description', 'Uploaded via Mountain Cats app');
+
+    try {
+      const response = await fetch('/api/upload-youtube', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed with status ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.videoUrl) {
+        throw new Error('No video URL returned from upload');
+      }
+
+      return result.videoUrl;
+    } catch (error) {
+      throw error;
+    }
+  };  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setUploading(true);
 
@@ -66,17 +92,29 @@ const NewPostForm = () => {
       let imageUrls: string[] = [];
       let mediaType: 'video' | 'image' = 'image';
 
+      // Upload video first if present (this takes longer)
       if (videoFile) {
-        // Video upload logic remains unchanged
-      }
-
-      if (imageFiles.length > 0) {
-        imageUrls = await uploadImagesWithSignedUrls(imageFiles);
-        if (!videoThumb && imageUrls.length > 0) {
-          videoThumb = imageUrls[0];
+        try {
+          videoUrl = await uploadVideoToYouTube(videoFile);
+          mediaType = 'video';
+        } catch (videoError) {
+          alert('Video upload failed: ' + (videoError instanceof Error ? videoError.message : 'Unknown error'));
+          return;
         }
       }
 
+      // Upload images
+      if (imageFiles.length > 0) {
+        try {
+          imageUrls = await uploadImagesWithSignedUrls(imageFiles);
+          if (!videoThumb && imageUrls.length > 0) {
+            videoThumb = imageUrls[0];
+          }
+        } catch (imageError) {
+          alert('Image upload failed: ' + (imageError instanceof Error ? imageError.message : 'Unknown error'));
+          return;
+        }
+      }      // Only proceed with post creation if uploads succeeded
       const now = new Date();
       const thumbnailUrl = videoThumb || (imageUrls.length > 0 ? imageUrls[0] : '');
 
@@ -92,39 +130,26 @@ const NewPostForm = () => {
         message,
       };
 
+      // Validate that we have the expected content
+      if (videoFile && !videoUrl) {
+        throw new Error('Video file was selected but no video URL was generated');
+      }
+
       await addDoc(collection(db, 'posts_feeding'), post);
 
       setVideoFile(null);
       setImageFiles([]);
       setTitle('');
       setMessage('');
-      alert('Post created!');
+      alert('Post created successfully!');
 
       // Redirect to the butler_stream page
       router.push('/pages/butler_stream');
     } catch (error) {
-      console.error('Error uploading post:', error);
+      alert('Error creating post: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setUploading(false);
-    }
-  };
-
-  useEffect(() => {
-    try {
-      console.log('Firestore db object:', db);
-      console.log('Type of db:', typeof db);
-      console.log('useEffect is running');
-
-      if (!db) {
-        console.error('Firestore db object is undefined');
-      }
-
-      const testCollection = collection(db, 'posts_feeding');
-      console.log('Collection reference:', testCollection);
-    } catch (error) {
-      console.error('Error accessing Firestore collection:', error);
-    }
-  }, []);
+    }  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,10 +178,18 @@ const NewPostForm = () => {
           className="w-full border rounded p-2"
           rows={4}
         />
-      </div>
-      <button type="submit" disabled={uploading} className="bg-blue-500 text-white p-2 rounded">
-        {uploading ? 'Uploading...' : 'Create Post'}
+      </div>      <button
+        type="submit"
+        disabled={uploading}
+        className="bg-blue-500 text-white p-2 rounded disabled:opacity-50"
+      >
+        {uploading ? 'Uploading... Please wait' : 'Create Post'}
       </button>
+      {uploading && (
+        <p className="text-sm text-gray-600 mt-2">
+          {videoFile ? 'Uploading video to YouTube... This may take a few minutes.' : 'Uploading images...'}
+        </p>
+      )}
     </form>
   );
 };
