@@ -7,8 +7,7 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <>
-      {/* Desktop navigation */}
+    <>      {/* Desktop navigation */}
       <nav className="hidden md:flex items-center space-x-6">
         <Link
           href="/pages/about"
@@ -27,6 +26,12 @@ export default function Navigation() {
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           급식게시판
+        </Link>
+        <Link
+          href="/pages/faq"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          FAQ
         </Link>
       </nav>
 
@@ -66,13 +71,19 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
-              </Link>
-              <Link
+              </Link>              <Link
                 href="/pages/butler_stream"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 집사 스트림
+              </Link>
+              <Link
+                href="/pages/faq"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                FAQ
               </Link>
             </div>
           </div>
