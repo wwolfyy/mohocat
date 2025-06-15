@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { cn } from '@/utils/cn';
 
 interface Post {
   id: string;
@@ -7,7 +8,8 @@ interface Post {
   message: string;
   thumbnailUrl?: string;
   mediaType?: 'video' | 'image';
-  videoUrl?: string;
+  videoUrls?: string[];
+  videoUrl?: string; // Keep for backward compatibility
   imageUrls?: string[];
   username: string;
   date: string;
@@ -27,11 +29,15 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
       <div className="space-y-4">
         {posts.length === 0 && <div>No posts yet.</div>}        {posts.map((post) => (
           <div key={post.id} className="border p-4 rounded flex items-start space-x-4">            <div className="flex-shrink-0">              {/* Show video thumbnail if video exists */}
-              {post.videoUrl && (() => {
-                const match = post.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+              {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (() => {
+                // Support both new videoUrls array and legacy videoUrl
+                const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
+                const match = firstVideoUrl?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
                 const videoId = match ? match[1] : null;
                 if (videoId) {
-                  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;                  return (
+                  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                  const videoCount = post.videoUrls?.length || 1;
+                  return (
                     <Link href={`/pages/posts/${post.id}`}>
                       <div className="relative cursor-pointer">
                         <img
@@ -50,13 +56,20 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
                             </svg>
                           </div>
                         </div>
+                        {/* Video count indicator for multiple videos */}
+                        {videoCount > 1 && (
+                          <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
+                            {videoCount}
+                          </div>
+                        )}
                       </div>
                     </Link>
                   );
                 }
                 return null;
-              })()}              {/* Show image thumbnail only if no video exists */}
-              {!post.videoUrl && post.thumbnailUrl && (
+              })()}
+              {/* Show image thumbnail only if no video exists */}
+              {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && post.thumbnailUrl && (
                 <Link href={`/pages/posts/${post.id}`}>
                   <img
                     src={post.thumbnailUrl}
@@ -84,24 +97,46 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
           </div>
         ))}
       </div>
-      <div className="flex justify-center mt-4">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => onPageChange(index + 1)}
-            className={`px-4 py-2 mx-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>      <div className="flex justify-between mt-4">
-        <div>
+      <div className="flex justify-center mt-4 space-x-2">
+        {Array.from({ length: totalPages }, (_, index) => {
+          const page = index + 1;
+          const isSelected = page === currentPage;
+          return isSelected ? (
+            <button
+              key={page}
+              className={cn(
+                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
+                'border border-yellow-500',
+                'transition-all duration-200'
+              )}
+              disabled
+            >
+              {page}
+            </button>
+          ) : (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={cn(
+                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
+                'transition-all duration-200'
+              )}
+            >
+              {page}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-4">        <div>
           {currentPage > 1 && (
             <button
               onClick={() => onPageChange(currentPage - 1)}
-              className="px-4 py-2 bg-gray-200 rounded"
+              className={cn(
+                "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+              )}
             >
-              Previous
+              previous
             </button>
           )}
         </div>
@@ -109,9 +144,12 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
           {currentPage < totalPages && (
             <button
               onClick={() => onPageChange(currentPage + 1)}
-              className="px-4 py-2 bg-gray-200 rounded"
+              className={cn(
+                "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+              )}
             >
-              Next
+              next
             </button>
           )}
         </div>

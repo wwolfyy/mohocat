@@ -6,7 +6,7 @@ import NewPostForm from '@/components/NewPostForm';
 const NewPostPage = () => {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Create a New Post</h1>
+      <h1 className="text-center text-2xl font-bold mb-4">새글 작성</h1>
       <NewPostForm />
     </div>
   );

@@ -6,6 +6,7 @@ import { auth, db } from '@/services/firebase';
 import PostList from '@/components/PostList';
 import { User } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
+import { cn } from '@/utils/cn';
 
 const ButlerStream = () => {
   const [posts, setPosts] = useState<any[]>([]);
@@ -59,13 +60,18 @@ const ButlerStream = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Butler Stream</h1>
-      <button
-        onClick={() => router.push('/pages/butler_stream/new')}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
-      >
-        Create New Post
-      </button>
+      <h1 className="text-center text-2xl font-bold mb-4 mx-auto">집사게시판</h1>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => router.push('/pages/butler_stream/new')}
+          className={cn(
+            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+          )}
+        >
+          새글 작성
+        </button>
+      </div>
       <PostList
         posts={posts}
         currentPage={currentPage}

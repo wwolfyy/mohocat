@@ -23,9 +23,9 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
     const loadCats = async () => {
       try {
         console.log('Loading cats for pointId:', pointId);
-        
+
         const { current, former } = await getCatsByPointId(pointId, cats);
-        
+
         setCurrentResidents(current);
         setFormerResidents(former);
       } catch (error) {
@@ -51,8 +51,12 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 relative my-auto min-h-fit">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className={cn(
+            "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+            "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+          )}
         >
+          {/* Close */}
           <XMarkIcon className="h-6 w-6" />
         </button>
 
@@ -134,8 +138,12 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit">
               <button
                 onClick={() => setSelectedCat(null)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                className={cn(
+                  "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+                  "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+                )}
               >
+                {/* Close */}
                 <XMarkIcon className="h-6 w-6" />
               </button>
               <CatInfo cat={selectedCat} />

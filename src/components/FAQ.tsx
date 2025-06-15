@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { cn } from '@/utils/cn';
 
 interface FAQItem {
   question: string;
@@ -28,7 +29,10 @@ const FAQAccordion: React.FC<FAQProps> = ({ items }) => {
       {items.map((item, index) => (
         <div key={index} className="border border-gray-200 rounded-lg">
           <button
-            className="w-full px-6 py-4 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 hover:bg-gray-50 transition-colors duration-200"
+            className={cn(
+              "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+              "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+            )}
             onClick={() => toggleItem(index)}
             aria-expanded={openItems.has(index)}
           >

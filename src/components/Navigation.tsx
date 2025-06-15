@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { cn } from '@/utils/cn';
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <>      {/* Desktop navigation */}
+    <>
+      {/* Desktop navigation */}
       <nav className="hidden md:flex items-center space-x-6">
         <Link
           href="/pages/about"
@@ -25,7 +27,7 @@ export default function Navigation() {
           href="/pages/butler_stream"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
-          급식게시판
+          집사게시판
         </Link>
         <Link
           href="/pages/faq"
@@ -39,17 +41,44 @@ export default function Navigation() {
       <div className="md:hidden">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+          className={cn(
+            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+          )}
           aria-expanded="false"
         >
           <span className="sr-only">Open main menu</span>
           {!isMobileMenuOpen ? (
-            <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="block h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           ) : (
-            <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="block h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           )}
         </button>
@@ -71,7 +100,8 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
-              </Link>              <Link
+              </Link>
+              <Link
                 href="/pages/butler_stream"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}

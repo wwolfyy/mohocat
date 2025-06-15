@@ -2,21 +2,20 @@ import React, { useState } from 'react';
 import { db } from '@/services/firebase';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
+import { cn } from '@/utils/cn';
 
 const NewPostForm = () => {
   const router = useRouter();
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
-
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setVideoFile(file);
+      setVideoFiles(Array.from(event.target.files));
     } else {
-      setVideoFile(null);
+      setVideoFiles([]);
     }
   };
 
@@ -54,7 +53,6 @@ const NewPostForm = () => {
     );
     return urls;
   };
-
   const uploadVideoToYouTube = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('video', file);
@@ -82,20 +80,54 @@ const NewPostForm = () => {
     } catch (error) {
       throw error;
     }
+  };
+
+  const uploadVideosToYouTube = async (files: File[]): Promise<string[]> => {
+    const urls = await Promise.all(
+      files.map(async (file, index) => {
+        const formData = new FormData();
+        formData.append('video', file);
+        formData.append('title', `${title} ${files.length > 1 ? `(Part ${index + 1})` : ''}`);
+        formData.append('description', 'Uploaded via Mountain Cats app');
+
+        try {
+          const response = await fetch('/api/upload-youtube', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Upload failed with status ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+
+          if (!result.videoUrl) {
+            throw new Error('No video URL returned from upload');
+          }
+
+          return result.videoUrl;
+        } catch (error) {
+          throw error;
+        }
+      })
+    );
+    return urls;
   };  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setUploading(true);
 
     try {
-      let videoUrl = '';
+      let videoUrls: string[] = [];
       let videoThumb = '';
       let imageUrls: string[] = [];
       let mediaType: 'video' | 'image' = 'image';
 
-      // Upload video first if present (this takes longer)
-      if (videoFile) {
+      // Upload videos first if present (this takes longer)
+      if (videoFiles.length > 0) {
         try {
-          videoUrl = await uploadVideoToYouTube(videoFile);
+          videoUrls = await uploadVideosToYouTube(videoFiles);
           mediaType = 'video';
         } catch (videoError) {
           alert('Video upload failed: ' + (videoError instanceof Error ? videoError.message : 'Unknown error'));
@@ -114,7 +146,9 @@ const NewPostForm = () => {
           alert('Image upload failed: ' + (imageError instanceof Error ? imageError.message : 'Unknown error'));
           return;
         }
-      }      // Only proceed with post creation if uploads succeeded
+      }
+
+      // Only proceed with post creation if uploads succeeded
       const now = new Date();
       const thumbnailUrl = videoThumb || (imageUrls.length > 0 ? imageUrls[0] : '');
 
@@ -125,19 +159,19 @@ const NewPostForm = () => {
         time: now.toLocaleTimeString(),
         thumbnailUrl,
         mediaType,
-        videoUrl,
+        videoUrls,
         imageUrls,
         message,
       };
 
       // Validate that we have the expected content
-      if (videoFile && !videoUrl) {
-        throw new Error('Video file was selected but no video URL was generated');
+      if (videoFiles.length > 0 && videoUrls.length === 0) {
+        throw new Error('Video files were selected but no video URLs were generated');
       }
 
       await addDoc(collection(db, 'posts_feeding'), post);
 
-      setVideoFile(null);
+      setVideoFiles([]);
       setImageFiles([]);
       setTitle('');
       setMessage('');
@@ -149,29 +183,29 @@ const NewPostForm = () => {
       alert('Error creating post: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setUploading(false);
-    }  };
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block font-semibold">Title:</label>
+        <label className="block font-semibold">제목:</label>
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
           required
           className="border p-2 rounded w-full"
         />
+      </div>      <div>
+        <label className="block font-semibold">동영상 업로드:</label>
+        <input type="file" accept="video/*" multiple onChange={handleVideoChange} />
       </div>
       <div>
-        <label className="block font-semibold">Upload Video:</label>
-        <input type="file" accept="video/*" onChange={handleVideoChange} />
-      </div>
-      <div>
-        <label className="block font-semibold">Upload Images:</label>
+        <label className="block font-semibold">사진 업로드:</label>
         <input type="file" accept="image/*" multiple onChange={handleImageChange} />
       </div>
       <div>
-        <label className="block font-semibold">Message:</label>
+        <label className="block font-semibold">내용:</label>
         <textarea
           value={message}
           onChange={e => setMessage(e.target.value)}
@@ -181,13 +215,16 @@ const NewPostForm = () => {
       </div>      <button
         type="submit"
         disabled={uploading}
-        className="bg-blue-500 text-white p-2 rounded disabled:opacity-50"
+        className={cn(
+          "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+          "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
+          uploading && "opacity-50 cursor-not-allowed"
+        )}
       >
-        {uploading ? 'Uploading... Please wait' : 'Create Post'}
+        {uploading ? '새글 작성 중...' : '작성 완료'}
       </button>
-      {uploading && (
-        <p className="text-sm text-gray-600 mt-2">
-          {videoFile ? 'Uploading video to YouTube... This may take a few minutes.' : 'Uploading images...'}
+      {uploading && (        <p className="text-sm text-gray-600 mt-2">
+          {videoFiles.length > 0 ? 'Uploading videos to YouTube... This may take a few minutes.' : 'Uploading images...'}
         </p>
       )}
     </form>

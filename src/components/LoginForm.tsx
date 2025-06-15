@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/services/firebase';
+import { cn } from '@/utils/cn';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -49,7 +50,13 @@ const LoginForm = () => {
         />
       </div>
       {error && <p className="text-red-500">{error}</p>}
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded">
+      <button
+        type="submit"
+        className={cn(
+          'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+          'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+        )}
+      >
         Login
       </button>
     </form>
