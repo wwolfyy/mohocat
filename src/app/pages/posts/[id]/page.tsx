@@ -37,21 +37,22 @@ const PostDetailsPage = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-      <p>{post.message}</p>      {post.mediaType === 'video' && post.videoUrl && (
+      <p>{post.message}</p>      {/* Show video if present */}
+      {post.videoUrl && (
         <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-2">Video:</h2>          {(() => {
+          <h2 className="text-xl font-semibold mb-2">Video:</h2>
+          {(() => {
             // Extract YouTube video ID from URL
             const match = post.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
             const videoId = match ? match[1] : null;
 
             if (videoId) {
               const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-              return (
-                <a
+              return (                <a
                   href={post.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block relative group"
+                  className="inline-block relative group"
                 >
                   <img
                     src={thumbnailUrl}
@@ -83,9 +84,11 @@ const PostDetailsPage = () => {
           })()}
         </div>
       )}
-      {post.mediaType === 'image' && (
-        <div>
-          <h2 className="text-xl font-semibold">Images:</h2>
+
+      {/* Show images if present */}
+      {post.imageUrls && post.imageUrls.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-xl font-semibold mb-2">Images:</h2>
           <div className="space-y-2">
             {post.imageUrls.map((url: string, index: number) => (
               <img key={index} src={url} alt={`Image ${index + 1}`} className="w-full rounded" />
