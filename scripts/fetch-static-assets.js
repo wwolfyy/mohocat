@@ -37,9 +37,9 @@ async function initializeFirebase() {
         } else {
             console.log("Using existing Firebase App.");
         }
-        return { 
-            db: admin.firestore(), 
-            storage: admin.storage().bucket() 
+        return {
+            db: admin.firestore(),
+            storage: admin.storage().bucket()
         };
     } catch (error) {
         if (error.code === 'ENOENT') {
@@ -77,23 +77,23 @@ async function fetchThumbnailsFromStorage(bucket) {
     console.log(`Fetching thumbnails from Firebase Storage folder: '${THUMBNAILS_FOLDER}'...`);
     try {
         const [files] = await bucket.getFiles({ prefix: THUMBNAILS_FOLDER });
-        
+
         // Filter out directories and get actual image files
         const imageFiles = files.filter(file => {
             const fileName = file.name;
             // Skip directories and non-image files
-            return !fileName.endsWith('/') && 
+            return !fileName.endsWith('/') &&
                    fileName !== THUMBNAILS_FOLDER.slice(0, -1) &&
                    /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
         });
           console.log(`Found ${imageFiles.length} thumbnail images in storage.`);
-        
+
         // Debug: Show some example filenames
         if (imageFiles.length > 0) {
             const exampleFiles = imageFiles.slice(0, 3).map(f => path.basename(f.name));
             console.log(`Example filenames: ${exampleFiles.join(', ')}${imageFiles.length > 3 ? '...' : ''}`);
         }
-        
+
         // Create a map of filename (without path) to download URL
         const thumbnailMap = {};
         for (const file of imageFiles) {
@@ -102,11 +102,11 @@ async function fetchThumbnailsFromStorage(bucket) {
                     action: 'read',
                     expires: Date.now() + 1000 * 60 * 60 * 24 * 7 // 7 days
                 });
-                
+
                 // Extract just the filename without the thumbnails/ prefix
                 const fileName = path.basename(file.name);
                 thumbnailMap[fileName] = url;
-                
+
                 // Debug: Show the parts for the first few files
                 if (Object.keys(thumbnailMap).length <= 3) {
                     const nameWithoutExt = path.parse(fileName).name;
@@ -117,7 +117,7 @@ async function fetchThumbnailsFromStorage(bucket) {
                 console.error(`Failed to get download URL for ${file.name}:`, error.message);
             }
         }
-        
+
         return thumbnailMap;
     } catch (error) {
         console.error("Error fetching thumbnails from storage:", error);
@@ -178,10 +178,10 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
         for (const [fileName, url] of Object.entries(thumbnailMap)) {
             // Remove file extension
             const nameWithoutExt = path.parse(fileName).name;
-            
+
             // Split by underscore and check if any part matches the cat ID
             const nameParts = nameWithoutExt.split('_');
-            
+
             if (nameParts.includes(catId)) {
                 foundThumbnail = fileName;
                 downloadUrl = url;
@@ -192,11 +192,11 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
 
         if (!foundThumbnail) {
             console.warn(`WARNING: No thumbnail found in storage for cat '${catName}' (ID: ${catId}). No files contained '${catId}' in their underscore-separated parts.`);
-            
+
             // Debug: show available files for troubleshooting
             const availableFiles = Object.keys(thumbnailMap).slice(0, 5); // Show first 5 files
             console.log(`Available files (first 5): ${availableFiles.join(', ')}${Object.keys(thumbnailMap).length > 5 ? '...' : ''}`);
-            
+
             updatedCatEntry.thumbnailUrl = '';
             updatedCatsList.push(updatedCatEntry);
             continue;
@@ -204,23 +204,23 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
 
         try {
             console.log(`Processing cat: '${catName}'. Found thumbnail: '${foundThumbnail}'`);
-            
+
             const localImageFilename = foundThumbnail; // Use the same filename as in storage
             const localImageFullPath = path.join(LOCAL_THUMBNAILS_DIR, localImageFilename);
-            
+
             await downloadImage(downloadUrl, localImageFullPath);
-            
+
             // Generate web-accessible path
             const relativePath = path.relative(path.join(PROJECT_ROOT, 'public'), localImageFullPath);
             const standardizedPath = relativePath.replace(/\\/g, '/'); // Ensure forward slashes for web
             const webAccessiblePath = `/${standardizedPath}`;
-            
+
             console.log(`Successfully downloaded and saved to: '${localImageFullPath}'. Web path: '${webAccessiblePath}'`);
             updatedCatEntry.thumbnailUrl = webAccessiblePath;
 
         } catch (error) {
             console.error(`Failed to download thumbnail for cat '${catName}':`, error.message);
-            updatedCatEntry.thumbnailUrl = ''; 
+            updatedCatEntry.thumbnailUrl = '';
         }
         updatedCatsList.push(updatedCatEntry);
     }
@@ -240,7 +240,7 @@ async function saveStaticDataJson(catsData) {
 
 async function main() {
     console.log("--- Starting Static Asset Fetching Process (Node.js) ---");
-    
+
     const firebaseServices = await initializeFirebase();
     if (!firebaseServices) {
         console.error("Firebase initialization failed. Exiting.");
