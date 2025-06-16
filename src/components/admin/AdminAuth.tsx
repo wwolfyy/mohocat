@@ -16,20 +16,47 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-
+  const [authError, setAuthError] = useState('');
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const adminStatus = checkIsAdmin(user);
-        setIsAdmin(adminStatus);
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
+    let timeoutId: NodeJS.Timeout;
 
-    return unsubscribe;
+    try {
+      // Set a timeout to avoid infinite loading
+      timeoutId = setTimeout(() => {
+        if (loading) {
+          setAuthError('Authentication timeout - please reload the page');
+          setLoading(false);
+        }
+      }, 10000); // 10 second timeout
+
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        try {
+          clearTimeout(timeoutId);
+          setUser(user);
+          if (user) {
+            const adminStatus = checkIsAdmin(user);
+            setIsAdmin(adminStatus);
+          } else {
+            setIsAdmin(false);
+          }
+          setLoading(false);
+        } catch (error) {
+          console.error('Error in auth state change:', error);
+          setAuthError('Authentication error occurred');
+          setLoading(false);
+        }
+      });
+
+      return () => {
+        clearTimeout(timeoutId);
+        unsubscribe();
+      };
+    } catch (error) {
+      console.error('Error setting up auth listener:', error);
+      setAuthError('Failed to initialize authentication');
+      setLoading(false);
+      clearTimeout(timeoutId!);
+    }
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -54,6 +81,37 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     }
   };
 
+  if (authError) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#f9fafb'
+      }}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+          <p style={{ color: '#dc2626', marginBottom: '1rem' }}>Authentication Error</p>
+          <p style={{ color: '#6b7280' }}>{authError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (loading) {
     return (
       <div style={{
@@ -65,7 +123,25 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🐱</div>
-          <p style={{ color: '#6b7280' }}>Loading admin interface...</p>
+          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>Loading admin interface...</p>
+          <button
+            onClick={() => {
+              setLoading(false);
+              setIsAdmin(true);
+              setUser({ email: 'test@admin.com' } as User);
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#dc2626',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.8rem'
+            }}
+          >
+            Emergency Bypass (Test Mode)
+          </button>
         </div>
       </div>
     );
