@@ -40,6 +40,10 @@ export default function TagVideosPage() {
   const [dateFilterFrom, setDateFilterFrom] = useState('');
   const [dateFilterTo, setDateFilterTo] = useState('');
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [videosPerPage, setVideosPerPage] = useState(25);
+
   useEffect(() => {
     loadVideos();
   }, []);
@@ -164,6 +168,30 @@ export default function TagVideosPage() {
     }
     setSelectedVideos(newSelected);
     setShowBatchActions(newSelected.size > 0);
+  };
+
+  const selectAllVideos = () => {
+    const currentlyVisibleVideos = new Set(filteredVideos.map(video => video.id));
+    const selectedFromVisible = new Set(Array.from(selectedVideos).filter(id => currentlyVisibleVideos.has(id)));
+
+    if (selectedFromVisible.size === filteredVideos.length) {
+      // Deselect all visible videos
+      const newSelection = new Set(Array.from(selectedVideos).filter(id => !currentlyVisibleVideos.has(id)));
+      setSelectedVideos(newSelection);
+      setShowBatchActions(newSelection.size > 0);
+    } else {
+      // Select all visible videos
+      const newSelection = new Set([...Array.from(selectedVideos), ...filteredVideos.map(video => video.id)]);
+      setSelectedVideos(newSelection);
+      setShowBatchActions(true);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedVideos(new Set());
+    setShowBatchActions(false);
+    setBatchTags('');
+    setBatchDescription('');
   };
 
   const handleSave = async () => {
@@ -341,10 +369,19 @@ export default function TagVideosPage() {
         if (dateFilterFrom && recordingDate < dateFilterFrom) return false;
         if (dateFilterTo && recordingDate > dateFilterTo) return false;
       }
-    }
-
-    return true;
+    }    return true;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredVideos.length / videosPerPage);
+  const startIndex = (currentPage - 1) * videosPerPage;
+  const endIndex = startIndex + videosPerPage;
+  const paginatedVideos = filteredVideos.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [showTaggedVideos, showUntaggedVideos, showVideosWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
 
   // Cat selector functions
   const handleCatToggle = (catId: string, catName: string) => {
@@ -580,8 +617,7 @@ export default function TagVideosPage() {
                   enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
                 }`}
               />
-            </div>
-            {enableDateFilter && (dateFilterFrom || dateFilterTo) && (
+            </div>            {enableDateFilter && (dateFilterFrom || dateFilterTo) && (
               <button
                 onClick={() => {
                   setDateFilterFrom('');
@@ -592,6 +628,50 @@ export default function TagVideosPage() {
                 Clear dates
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Selection and Display Controls */}
+        <div className="border-t border-gray-300 pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Selection & Display</h4>
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={selectAllVideos}
+              className={`px-4 py-2 text-white rounded text-sm ${
+                new Set(Array.from(selectedVideos).filter(id => filteredVideos.some(v => v.id === id))).size === filteredVideos.length
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              {new Set(Array.from(selectedVideos).filter(id => filteredVideos.some(v => v.id === id))).size === filteredVideos.length ? 'Deselect All' : 'Select All'}
+            </button>
+            {selectedVideos.size > 0 && (
+              <button
+                onClick={clearSelection}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+              >
+                Clear Selection ({selectedVideos.size})
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700">Videos per page:</label>
+              <select
+                value={videosPerPage}
+                onChange={(e) => {
+                  setVideosPerPage(Number(e.target.value));
+                  setCurrentPage(1); // Reset to first page when changing page size
+                }}
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredVideos.length)} of {filteredVideos.length} videos
+            </div>
           </div>
         </div>
       </div>
@@ -674,9 +754,8 @@ export default function TagVideosPage() {
         </div>
       ) : (        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video List */}
-          <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {filteredVideos.map((video) => (
+          <div className="lg:col-span-2">            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {paginatedVideos.map((video) => (
                 <div
                   key={video.id}                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                     selectedVideo?.id === video.id
@@ -752,11 +831,59 @@ export default function TagVideosPage() {
                           )}
                         </div>
                       )}
-                    </div>
-                  </div>
+                    </div>                  </div>
                 </div>
               ))}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-6 gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-2 text-sm border rounded ${
+                        currentPage === pageNum
+                          ? 'bg-blue-500 text-white border-blue-500'
+                          : 'border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Tagging Panel */}
