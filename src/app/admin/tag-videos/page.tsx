@@ -3,16 +3,16 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/services/firebase';
-import { fetchChannelVideos, YouTubeVideo, batchDeleteYouTubeVideos } from '@/services/youtube';
+import { fetchChannelVideos, YouTubeVideo } from '@/services/youtube';
 import { Cat } from '@/types';
 
 interface TaggedVideo extends Omit<YouTubeVideo, 'description'> {
-  hasMetadata: boolean;
-  firestoreId?: string;
-  tags?: string[];
-  description?: string;
-  catName?: string;
-  needsTagging?: boolean;
+  hasMetadata: true; // Always true now - all videos have metadata entries
+  firestoreId: string; // Always present now
+  tags: string[]; // Always present, can be empty array
+  description: string; // Always present, can be empty string
+  catName: string; // Always present, can be empty string
+  needsTagging: boolean; // Always present
 }
 
 export default function TagVideosPage() {
@@ -55,7 +55,7 @@ export default function TagVideosPage() {
         setVideos([]);
         setError('No videos found in your YouTube channel. Please check your channel ID and make sure your channel has public videos.');
         return;
-      }// Get existing metadata from Firestore
+      }      // Get existing metadata from Firestore
       const firestoreVideos = await getDocs(collection(db, 'cat_videos'));
       const metadataMap = new Map();
       firestoreVideos.docs.forEach(doc => {
@@ -65,17 +65,59 @@ export default function TagVideosPage() {
         }
       });
 
-      // Combine YouTube videos with Firestore metadata
+      // Create Firestore entries for any YouTube videos that don't have them yet
+      const videosToCreate = [];
+      for (const video of youtubeVideos) {
+        if (!metadataMap.has(video.id)) {
+          const videoData = {
+            videoUrl: video.videoUrl,
+            fileName: video.title,
+            storagePath: video.videoUrl,
+            tags: [],
+            uploadDate: new Date(),
+            uploadedBy: 'admin',
+            description: video.description || '',
+            thumbnailUrl: video.thumbnailUrl,
+            duration: video.duration,
+            needsTagging: true,
+            videoType: 'youtube' as const,
+            youtubeId: video.id,
+            title: video.title,
+            publishedAt: video.publishedAt,
+            channelTitle: video.channelTitle,
+            catName: '',
+          };
+          videosToCreate.push({ videoId: video.id, data: videoData });
+        }
+      }
+
+      // Batch create missing entries
+      const createPromises = videosToCreate.map(async ({ videoId, data }) => {
+        const docRef = await addDoc(collection(db, 'cat_videos'), data);
+        return { videoId, id: docRef.id, ...data };
+      });
+
+      const createdEntries = await Promise.all(createPromises);
+
+      // Add newly created entries to metadata map
+      createdEntries.forEach(entry => {
+        metadataMap.set(entry.videoId, entry);
+      });
+
+      console.log(`Created ${createdEntries.length} new cat_videos entries`);
+      console.log(`All ${youtubeVideos.length} YouTube videos now have metadata entries in Firestore (consistent with cat_images collection)`);
+
+      // Combine YouTube videos with Firestore metadata (now all videos have metadata)
       const combinedVideos: TaggedVideo[] = youtubeVideos.map(video => {
         const metadata = metadataMap.get(video.id);
         return {
           ...video,
-          hasMetadata: !!metadata,
-          firestoreId: metadata?.id,
+          hasMetadata: true, // Now all videos have metadata
+          firestoreId: metadata!.id, // Safe to use ! since we created all missing entries
           tags: metadata?.tags || [],
           catName: metadata?.catName || '',
-          needsTagging: !metadata || metadata.needsTagging !== false,
-          description: metadata?.description || video.description,
+          needsTagging: metadata?.needsTagging !== false,
+          description: metadata?.description || video.description || '',
         };
       });
 
@@ -101,12 +143,11 @@ export default function TagVideosPage() {
       setLoading(false);
     }
   };
-
   const handleVideoSelect = (video: TaggedVideo) => {
     setSelectedVideo(video);
-    setTags(video.tags?.join(', ') || '');
-    setDescription(video.description || '');
-    setCatName(video.catName || '');
+    setTags(video.tags.join(', '));
+    setDescription(video.description);
+    setCatName(video.catName);
   };
 
   const handleCheckboxChange = (videoId: string, checked: boolean) => {
@@ -135,7 +176,7 @@ export default function TagVideosPage() {
         description: description,
         thumbnailUrl: selectedVideo.thumbnailUrl,
         duration: selectedVideo.duration,
-        needsTagging: false,
+        needsTagging: false, // Mark as tagged
         videoType: 'youtube' as const,
         // Additional YouTube-specific fields
         youtubeId: selectedVideo.id,
@@ -144,18 +185,17 @@ export default function TagVideosPage() {
         channelTitle: selectedVideo.channelTitle,
         // Custom field for primary cat name
         catName: catName,
-      };if (selectedVideo.hasMetadata && selectedVideo.firestoreId) {
-        // Update existing document
+      };
+
+      // All videos now have metadata entries, so we always update existing documents
+      if (selectedVideo.firestoreId) {
         await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), videoData);
       } else {
-        // Create new document
-        await addDoc(collection(db, 'cat_videos'), videoData);
-      }
-
-      // Update local state
+        throw new Error('Video metadata entry not found - this should not happen');
+      }      // Update local state
       setVideos(prev => prev.map(v =>
         v.id === selectedVideo.id
-          ? { ...v, hasMetadata: true, tags: tagsArray, catName, description, needsTagging: false }
+          ? { ...v, tags: tagsArray, catName, description, needsTagging: false }
           : v
       ));
 
@@ -197,21 +237,21 @@ export default function TagVideosPage() {
           title: video.title,
           publishedAt: video.publishedAt,
           channelTitle: video.channelTitle,
-          // Custom field for primary cat name
-          catName: batchDescription ? '' : video.catName,
-        };if (video.hasMetadata && video.firestoreId) {
+          // Custom field for primary cat name          catName: batchDescription ? '' : video.catName,
+        };
+
+        // All videos now have metadata entries, so we always update existing documents
+        if (video.firestoreId) {
           return updateDoc(doc(db, 'cat_videos', video.firestoreId), videoData);
         } else {
-          return addDoc(collection(db, 'cat_videos'), videoData);
+          throw new Error(`Video metadata entry not found for ${video.id} - this should not happen`);
         }
       });
 
-      await Promise.all(promises);
-
-      // Update local state
+      await Promise.all(promises);      // Update local state
       setVideos(prev => prev.map(v =>
         selectedVideos.has(v.id)
-          ? { ...v, hasMetadata: true, tags: tagsArray, description: batchDescription || v.description, needsTagging: false }
+          ? { ...v, tags: tagsArray, description: batchDescription || v.description, needsTagging: false }
           : v
       ));
 
@@ -249,21 +289,18 @@ export default function TagVideosPage() {
         }
       });
 
-      await Promise.all(firestorePromises.filter(Boolean));
-
-      // Step 3: Update local state - remove videos that were successfully deleted from YouTube
+      await Promise.all(firestorePromises.filter(Boolean));      // Step 3: Update local state - remove videos that were successfully deleted from YouTube
       const successfullyDeleted = new Set(deleteResults.success);
       setVideos(prev => prev.filter(v => !successfullyDeleted.has(v.id)));
 
-      // Step 4: Update metadata-only for videos that failed YouTube deletion
+      // Step 4: For videos that failed YouTube deletion, reload videos to recreate their metadata entries
       if (deleteResults.failed.length > 0) {
-        setVideos(prev => prev.map(v =>
-          deleteResults.failed.includes(v.id)
-            ? { ...v, hasMetadata: false, firestoreId: undefined, tags: [], catName: '', needsTagging: true }
-            : v
-        ));
+        setError(`Note: ${deleteResults.failed.length} video(s) could not be deleted from YouTube (requires OAuth authentication), but their metadata was removed from Firestore. Reloading to recreate metadata entries...`);
 
-        setError(`Note: ${deleteResults.failed.length} video(s) could not be deleted from YouTube (requires OAuth authentication), but their metadata was removed from Firestore. You may need to delete these videos manually from YouTube Studio.`);
+        // Reload videos to recreate metadata for the videos that still exist on YouTube
+        setTimeout(() => {
+          loadVideos();
+        }, 1000);
       }
 
       setSelectedVideos(new Set());
@@ -567,11 +604,10 @@ export default function TagVideosPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {videos.map((video) => (
                 <div
-                  key={video.id}
-                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
+                  key={video.id}                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                     selectedVideo?.id === video.id
                       ? 'border-blue-500'
-                      : video.hasMetadata && !video.needsTagging
+                      : !video.needsTagging
                       ? 'border-green-200'
                       : 'border-gray-200'
                   }`}
@@ -585,11 +621,9 @@ export default function TagVideosPage() {
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       onClick={(e) => e.stopPropagation()}
                     />
-                  </div>
-
-                  {/* Status indicator */}
+                  </div>                  {/* Status indicator */}
                   <div className="absolute top-2 right-2 z-10">
-                    {video.hasMetadata && !video.needsTagging ? (
+                    {!video.needsTagging ? (
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">
                         Tagged
                       </span>
