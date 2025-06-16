@@ -27,13 +27,18 @@ export default function TagVideosPage() {
   const [saving, setSaving] = useState(false);
   const [batchTags, setBatchTags] = useState<string>('');
   const [batchDescription, setBatchDescription] = useState('');  const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
-
   // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
   const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
-  const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');
+  const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');  // Filter states
+  const [showTaggedVideos, setShowTaggedVideos] = useState(true);
+  const [showUntaggedVideos, setShowUntaggedVideos] = useState(true);
+  const [showVideosWithoutTimestamp, setShowVideosWithoutTimestamp] = useState(true);
+  const [enableDateFilter, setEnableDateFilter] = useState(false);
+  const [dateFilterFrom, setDateFilterFrom] = useState('');
+  const [dateFilterTo, setDateFilterTo] = useState('');
 
   useEffect(() => {
     loadVideos();
@@ -81,9 +86,9 @@ export default function TagVideosPage() {
             duration: video.duration,
             needsTagging: true,
             videoType: 'youtube' as const,
-            youtubeId: video.id,
-            title: video.title,
+            youtubeId: video.id,            title: video.title,
             publishedAt: video.publishedAt,
+            recordingDate: video.recordingDate || null,
             channelTitle: video.channelTitle,
             catName: '',
           };
@@ -179,9 +184,9 @@ export default function TagVideosPage() {
         needsTagging: false, // Mark as tagged
         videoType: 'youtube' as const,
         // Additional YouTube-specific fields
-        youtubeId: selectedVideo.id,
-        title: selectedVideo.title,
+        youtubeId: selectedVideo.id,        title: selectedVideo.title,
         publishedAt: selectedVideo.publishedAt,
+        recordingDate: selectedVideo.recordingDate || null,
         channelTitle: selectedVideo.channelTitle,
         // Custom field for primary cat name
         catName: catName,
@@ -233,11 +238,12 @@ export default function TagVideosPage() {
           needsTagging: false,
           videoType: 'youtube' as const,
           // Additional YouTube-specific fields
-          youtubeId: video.id,
-          title: video.title,
+          youtubeId: video.id,          title: video.title,
           publishedAt: video.publishedAt,
+          recordingDate: video.recordingDate || null,
           channelTitle: video.channelTitle,
-          // Custom field for primary cat name          catName: batchDescription ? '' : video.catName,
+          // Custom field for primary cat name
+          catName: batchDescription ? '' : video.catName,
         };
 
         // All videos now have metadata entries, so we always update existing documents
@@ -261,61 +267,10 @@ export default function TagVideosPage() {
       setBatchDescription('');
     } catch (err) {
       console.error('Error batch saving videos:', err);
-      setError('Failed to save batch video metadata');
-    } finally {
+      setError('Failed to save batch video metadata');    } finally {
       setBatchSaving(false);
     }
   };
-  const handleBatchDeleteVideos = async () => {
-    if (selectedVideos.size === 0) return;    const selectedVideoList = Array.from(selectedVideos).map(id => videos.find(v => v.id === id)).filter(Boolean) as TaggedVideo[];
-    const videoLinks = selectedVideoList.map(v => `• ${v.title} (youtu.be/${v.id})`).join('\n');
-
-    if (!confirm(`Are you sure you want to PERMANENTLY DELETE ${selectedVideos.size} video(s) from YouTube AND remove their metadata from Firestore? This action cannot be undone!\n\nVideos to be deleted:\n${videoLinks}`)) {
-      return;
-    }
-
-    try {
-      setBatchSaving(true);
-      setError(null);
-
-      // Step 1: Attempt to delete from YouTube
-      const videoIds = Array.from(selectedVideos);
-      const deleteResults = await batchDeleteYouTubeVideos(videoIds);
-
-      // Step 2: Delete Firestore metadata for all videos (regardless of YouTube deletion success)
-      const firestorePromises = selectedVideoList.map(async (video) => {
-        if (video?.hasMetadata && video.firestoreId) {
-          return deleteDoc(doc(db, 'cat_videos', video.firestoreId));
-        }
-      });
-
-      await Promise.all(firestorePromises.filter(Boolean));      // Step 3: Update local state - remove videos that were successfully deleted from YouTube
-      const successfullyDeleted = new Set(deleteResults.success);
-      setVideos(prev => prev.filter(v => !successfullyDeleted.has(v.id)));
-
-      // Step 4: For videos that failed YouTube deletion, reload videos to recreate their metadata entries
-      if (deleteResults.failed.length > 0) {
-        setError(`Note: ${deleteResults.failed.length} video(s) could not be deleted from YouTube (requires OAuth authentication), but their metadata was removed from Firestore. Reloading to recreate metadata entries...`);
-
-        // Reload videos to recreate metadata for the videos that still exist on YouTube
-        setTimeout(() => {
-          loadVideos();
-        }, 1000);
-      }
-
-      setSelectedVideos(new Set());
-      setShowBatchActions(false);
-
-      // Show success message
-      if (deleteResults.success.length > 0) {
-        alert(`Successfully deleted ${deleteResults.success.length} video(s) from YouTube and removed their metadata.`);
-      }
-    } catch (err) {
-      console.error('Error batch deleting videos:', err);
-      setError('Failed to delete videos. Some videos may have been partially deleted.');
-    } finally {
-      setBatchSaving(false);
-    }  };
 
   const cleanupOrphanedMetadata = async () => {
     const confirmed = confirm('This will remove any database entries for videos that no longer exist on YouTube (either because they were deleted or made private). Continue?');
@@ -367,9 +322,29 @@ export default function TagVideosPage() {
       console.error('Error loading cats:', error);
     }
   };
-
   const untaggedVideos = videos.filter(v => v.needsTagging);
-  const taggedVideos = videos.filter(v => !v.needsTagging);
+  const taggedVideos = videos.filter(v => !v.needsTagging);  // Apply filters to get displayed videos
+  const filteredVideos = videos.filter(video => {
+    // Tag filtering
+    if (video.needsTagging && !showUntaggedVideos) return false;
+    if (!video.needsTagging && !showTaggedVideos) return false;
+
+    // Date filtering (only if enabled)
+    if (enableDateFilter) {
+      const recordingDate = video.recordingDate;
+
+      // Handle videos without recording date
+      if (!recordingDate) {
+        if (!showVideosWithoutTimestamp) return false;
+      } else {
+        // Apply date range filters if they are set
+        if (dateFilterFrom && recordingDate < dateFilterFrom) return false;
+        if (dateFilterTo && recordingDate > dateFilterTo) return false;
+      }
+    }
+
+    return true;
+  });
 
   // Cat selector functions
   const handleCatToggle = (catId: string, catName: string) => {
@@ -524,6 +499,103 @@ export default function TagVideosPage() {
         </div>
       </div>
 
+      {/* Filter Controls */}
+      <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter Videos</h3>
+
+        {/* Tag Filters */}
+        <div className="flex gap-6 mb-4">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showTaggedVideos}
+              onChange={(e) => setShowTaggedVideos(e.target.checked)}
+              className="w-4 h-4 text-green-600 rounded focus:ring-green-500 mr-2"
+            />
+            <span className="text-sm text-gray-700">
+              Show Tagged Videos ({taggedVideos.length})
+            </span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showUntaggedVideos}
+              onChange={(e) => setShowUntaggedVideos(e.target.checked)}
+              className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 mr-2"
+            />
+            <span className="text-sm text-gray-700">
+              Show Untagged Videos ({untaggedVideos.length})
+            </span>
+          </label>
+        </div>        {/* Date Filters */}
+        <div className="border-t border-gray-300 pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Filter by Recording Date</h4>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showVideosWithoutTimestamp}
+                onChange={(e) => setShowVideosWithoutTimestamp(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2"
+              />
+              <span className="text-sm text-gray-700">
+                Show videos without timestamp ({videos.filter(v => !v.recordingDate).length})
+              </span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={enableDateFilter}
+                onChange={(e) => {
+                  setEnableDateFilter(e.target.checked);
+                  if (!e.target.checked) {
+                    setDateFilterFrom('');
+                    setDateFilterTo('');
+                  }
+                }}
+                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mr-2"
+              />
+              <span className="text-sm text-gray-700">Apply date range filter</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <label className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}>From:</label>
+              <input
+                type="date"
+                value={dateFilterFrom}
+                onChange={(e) => setDateFilterFrom(e.target.value)}
+                disabled={!enableDateFilter}
+                className={`border border-gray-300 rounded px-2 py-1 text-sm ${
+                  enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
+                }`}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}>To:</label>
+              <input
+                type="date"
+                value={dateFilterTo}
+                onChange={(e) => setDateFilterTo(e.target.value)}
+                disabled={!enableDateFilter}
+                className={`border border-gray-300 rounded px-2 py-1 text-sm ${
+                  enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
+                }`}
+              />
+            </div>
+            {enableDateFilter && (dateFilterFrom || dateFilterTo) && (
+              <button
+                onClick={() => {
+                  setDateFilterFrom('');
+                  setDateFilterTo('');
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear dates
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Batch Actions */}
       {showBatchActions && (
         <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
@@ -561,21 +633,15 @@ export default function TagVideosPage() {
                 placeholder="Common description..."
                 className="border border-gray-300 rounded px-3 py-2 w-full"
               />
-            </div>
-          </div>          <div className="flex gap-2 flex-wrap">
+            </div>          </div>
+
+          <div className="flex gap-2 flex-wrap items-center">
             <button
               onClick={handleBatchSave}
               disabled={batchSaving || !batchTags.trim()}
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300"
             >
               {batchSaving ? 'Saving...' : 'Save Batch Tags'}
-            </button>
-            <button
-              onClick={handleBatchDeleteVideos}
-              disabled={batchSaving}
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-300 font-semibold"
-            >
-              {batchSaving ? 'Deleting...' : 'Delete Videos from YouTube'}
             </button>
             <button
               onClick={() => {
@@ -586,6 +652,9 @@ export default function TagVideosPage() {
             >
               Cancel
             </button>
+            <div className="text-sm text-gray-600 ml-4">
+              💡 To delete videos, use YouTube Studio - requires OAuth authentication
+            </div>
           </div>
         </div>
       )}      {videos.length === 0 ? (
@@ -594,15 +663,20 @@ export default function TagVideosPage() {
             No videos found. Check your YouTube API configuration.
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      ) : filteredVideos.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600 text-lg">
+            No videos match the current filter settings.
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            Try checking different filter options above.
+          </p>
+        </div>
+      ) : (        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video List */}
           <div className="lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-4">
-              YouTube Videos ({videos.length})
-            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {videos.map((video) => (
+              {filteredVideos.map((video) => (
                 <div
                   key={video.id}                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                     selectedVideo?.id === video.id

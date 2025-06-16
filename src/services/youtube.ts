@@ -7,6 +7,7 @@ export interface YouTubeVideo {
   description: string;
   thumbnailUrl: string;
   publishedAt: string;
+  recordingDate?: string; // Recording date from YouTube metadata
   duration?: string;
   videoUrl: string;
   channelTitle: string;
@@ -74,11 +75,9 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
       return [];
     }
 
-    console.log(`Found ${videoIds.length} videos, fetching details...`);
-
-    // Get detailed video information including duration
+    console.log(`Found ${videoIds.length} videos, fetching details...`);    // Get detailed video information including duration and recording details
     const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
     );
 
     if (!videosResponse.ok) {
@@ -95,6 +94,7 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
                     video.snippet?.thumbnails?.default?.url ||
                     `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`,
       publishedAt: video.snippet?.publishedAt || '',
+      recordingDate: video.recordingDetails?.recordingDate || undefined,
       duration: video.contentDetails?.duration || undefined,
       videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
       channelTitle: video.snippet?.channelTitle || '',
@@ -174,51 +174,5 @@ export const searchYouTubeVideos = async (query: string, maxResults: number = 25
 
 // Simplified upload function
 export const uploadVideoToYouTube = async (videoFile: string, title: string, description: string) => {
-  throw new Error('YouTube upload functionality requires API configuration');
-};
-
-// Delete a YouTube video (requires OAuth authentication)
-export const deleteYouTubeVideo = async (videoId: string): Promise<boolean> => {
-  if (!YOUTUBE_API_KEY) {
-    throw new Error('YouTube API key not configured');
-  }
-
-  try {
-    // Note: This requires OAuth authentication with write permissions
-    // For now, we'll return false to indicate that deletion should be handled manually
-    console.warn(`Video deletion requested for ${videoId}, but requires OAuth authentication`);
-
-    // TODO: Implement OAuth flow for video deletion
-    // const response = await fetch(
-    //   `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${YOUTUBE_API_KEY}`,
-    //   { method: 'DELETE' }
-    // );
-    // return response.ok;
-
-    return false;
-  } catch (error) {
-    console.error('Error deleting YouTube video:', error);
-    return false;
-  }
-};
-
-// Batch delete YouTube videos
-export const batchDeleteYouTubeVideos = async (videoIds: string[]): Promise<{ success: string[], failed: string[] }> => {
-  const results: { success: string[], failed: string[] } = { success: [], failed: [] };
-
-  for (const videoId of videoIds) {
-    try {
-      const success = await deleteYouTubeVideo(videoId);
-      if (success) {
-        results.success.push(videoId);
-      } else {
-        results.failed.push(videoId);
-      }
-    } catch (error) {
-      console.error(`Failed to delete video ${videoId}:`, error);
-      results.failed.push(videoId);
-    }
-  }
-
-  return results;
+  throw new Error('YouTube upload functionality requires OAuth configuration and is not currently supported');
 };
