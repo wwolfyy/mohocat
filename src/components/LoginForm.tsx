@@ -9,11 +9,8 @@ const LoginForm = () => {
   const [error, setError] = useState('');
 
   const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    try {
+    event.preventDefault();    try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('User signed in:', userCredential.user);
       alert('Login successful!');
 
       // Emit custom event for login success
@@ -22,10 +19,7 @@ const LoginForm = () => {
     } catch (err) {
       console.error('Error signing in:', err);
       setError('Failed to login. Please check your credentials.');
-    }
-  };
-
-  console.log('Rendering LoginForm component');
+    }  };
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">

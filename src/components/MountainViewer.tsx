@@ -65,19 +65,13 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
       });
     }
   }, [imageNaturalDimensions]);
-
   const handleMouseOver = (point: Point) => {
-    console.log('MouseOver triggered for point:', point.id);
     setActivePoint(point);
   };
-
   const handleMouseLeave = () => {
-    console.log('MouseLeave triggered');
     setActivePoint(null);
   };
-
   const handlePointClick = (point: Point) => {
-    console.log('Click triggered for point:', point.id);
     setSelectedPoint(point);
   };
 
@@ -185,7 +179,7 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                       {point.title}
                     </div>
 
-                  {/* 
+                  {/*
                     Hover effect - also centered on the point.
                     It's larger, so it visually encompasses the circle and label.
                   */}

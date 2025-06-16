@@ -32,16 +32,11 @@ export default function TagImagesPage() {
     loadImages();
   }, []);
 
-  const loadImages = async () => {
-    try {
+  const loadImages = async () => {    try {
       setLoading(true);
-      console.log('Loading images from Firebase Storage...');
 
       // Get all images from Firebase Storage
-      const storageRef = ref(storage, 'images/');
-      const storageResult = await listAll(storageRef);
-
-      console.log(`Found ${storageResult.items.length} images in storage`);
+      const storageRef = ref(storage, 'images/');      const storageResult = await listAll(storageRef);
 
       // Get existing metadata from Firestore
       const firestoreImages = await getDocs(collection(db, 'images'));
@@ -73,10 +68,7 @@ export default function TagImagesPage() {
         }
       });
 
-      const processedImages = (await Promise.all(imagePromises)).filter(Boolean) as StorageImage[];
-      console.log(`Processed ${processedImages.length} images`);
-
-      setImages(processedImages);
+      const processedImages = (await Promise.all(imagePromises)).filter(Boolean) as StorageImage[];      setImages(processedImages);
     } catch (err: any) {
       console.error('Error loading images:', err);
       setError('Failed to load images from storage');
@@ -209,31 +201,21 @@ export default function TagImagesPage() {
     const confirmed = confirm(`Are you sure you want to permanently delete ${selectedImages.size} images? This will remove them from both Firebase Storage and the database. This action cannot be undone.`);
     if (!confirmed) return;
 
-    try {
-      setBatchSaving(true);
+    try {      setBatchSaving(true);
       const selectedImagesList = images.filter(img => selectedImages.has(img.name));
-      let deletedCount = 0;
-
-      console.log('Starting deletion process...');
-
-      // Delete from Firebase Storage and Firestore
+      let deletedCount = 0;      // Delete from Firebase Storage and Firestore
       for (const image of selectedImagesList) {
         try {
-          console.log(`Deleting ${image.name}...`);
-
           // Delete from Firebase Storage
           const storageRef = ref(storage, image.fullPath);
           await deleteObject(storageRef);
-          console.log(`✅ Deleted from Storage: ${image.name}`);
 
           // Delete from Firestore - try multiple approaches to ensure cleanup
           let firestoreDeleted = false;
 
           // Method 1: Delete using existing metadata ID if available
-          if (image.hasMetadata && image.metadata?.id) {
-            try {
+          if (image.hasMetadata && image.metadata?.id) {            try {
               await deleteDoc(doc(db, 'images', image.metadata.id));
-              console.log(`✅ Deleted from Firestore using ID: ${image.name}`);
               firestoreDeleted = true;
             } catch (error) {
               console.error(`Error deleting by ID for ${image.name}:`, error);
@@ -244,20 +226,15 @@ export default function TagImagesPage() {
           if (!firestoreDeleted) {
             try {
               const firestoreQuery = query(collection(db, 'images'), where('filename', '==', image.name));
-              const querySnapshot = await getDocs(firestoreQuery);
-
-              for (const docSnapshot of querySnapshot.docs) {
+              const querySnapshot = await getDocs(firestoreQuery);              for (const docSnapshot of querySnapshot.docs) {
                 await deleteDoc(doc(db, 'images', docSnapshot.id));
-                console.log(`✅ Deleted from Firestore by filename query: ${image.name}`);
                 firestoreDeleted = true;
               }
             } catch (error) {
               console.error(`Error deleting by filename query for ${image.name}:`, error);
             }
-          }
-
-          if (!firestoreDeleted) {
-            console.log(`⚠️  No Firestore metadata found for: ${image.name}`);
+          }          if (!firestoreDeleted) {
+            // No Firestore metadata found for this image
           }
 
           deletedCount++;
@@ -265,11 +242,9 @@ export default function TagImagesPage() {
           console.error(`Error deleting ${image.name}:`, error);
           // Continue with other images even if one fails
         }
-      }
-
-      console.log(`Deletion complete. Refreshing image list...`);
-      await loadImages();
-      clearSelection();      alert(`Successfully deleted ${deletedCount} images from storage and database!`);
+      }      await loadImages();
+      clearSelection();
+      alert(`Successfully deleted ${deletedCount} images from storage and database!`);
     } catch (err: any) {
       console.error('Error batch deleting:', err);
       alert('Failed to delete images: ' + err.message);
@@ -282,9 +257,7 @@ export default function TagImagesPage() {
     const confirmed = confirm('This will remove any database entries for images that no longer exist in storage. Continue?');
     if (!confirmed) return;
 
-    try {
-      setBatchSaving(true);
-      console.log('Starting orphaned metadata cleanup...');
+    try {      setBatchSaving(true);
 
       // Get all metadata from Firestore
       const firestoreImages = await getDocs(collection(db, 'images'));
@@ -294,9 +267,7 @@ export default function TagImagesPage() {
       for (const docSnapshot of firestoreImages.docs) {
         const data = docSnapshot.data();
         if (data.filename && !storageImageNames.has(data.filename)) {
-          // This metadata has no corresponding storage file
-          await deleteDoc(doc(db, 'images', docSnapshot.id));
-          console.log(`🧹 Cleaned up orphaned metadata: ${data.filename}`);
+          // This metadata has no corresponding storage file          await deleteDoc(doc(db, 'images', docSnapshot.id));
           cleanedCount++;
         }
       }

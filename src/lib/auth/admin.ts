@@ -121,21 +121,10 @@ export async function requireAdminAuth(user: User | null): Promise<AdminUser> {
  */
 export function logAdminAction(
   adminUser: AdminUser,
-  action: string,
-  resource: string,
+  action: string,  resource: string,
   resourceId?: string,
   details?: any
 ) {
-  console.log('Admin Action:', {
-    adminId: adminUser.id,
-    adminEmail: adminUser.email,
-    action,
-    resource,
-    resourceId,
-    details,
-    timestamp: new Date().toISOString(),
-  });
-
   // In production, you might want to store this in Firestore
   // or send to a logging service
 }

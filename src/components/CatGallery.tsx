@@ -19,11 +19,8 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
   const [loading, setLoading] = useState(true);
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
 
-  useEffect(() => {
-    const loadCats = async () => {
+  useEffect(() => {    const loadCats = async () => {
       try {
-        console.log('Loading cats for pointId:', pointId);
-
         const { current, former } = await getCatsByPointId(pointId, cats);
 
         setCurrentResidents(current);

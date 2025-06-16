@@ -26,24 +26,15 @@ export default function AdminDashboard() {  const [stats, setStats] = useState<A
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const fetchStats = async () => {
-      try {
-        setLoading(true);
-        setError(null);        console.log('Fetching stats from Firestore and Storage...');
+      try {        setLoading(true);
+        setError(null);
 
         // Fetch counts from Firestore collections AND Firebase Storage
         const [imagesSnapshot, videosSnapshot, catsSnapshot, storageResult] = await Promise.all([
-          getDocs(query(collection(db, 'images'))),
-          getDocs(query(collection(db, 'videos'))),
+          getDocs(query(collection(db, 'images'))),          getDocs(query(collection(db, 'videos'))),
           getDocs(query(collection(db, 'cats'))),
           listAll(ref(storage, 'images/')).catch(() => ({ items: [] })) // Graceful fallback
         ]);
-
-        console.log('Firestore results:', {
-          images: imagesSnapshot.size,
-          videos: videosSnapshot.size,
-          cats: catsSnapshot.size,
-          storageFiles: storageResult.items.length
-        });
 
         // Count tagged items (images and videos with tags)
         const taggedImages = imagesSnapshot.docs.filter(doc => {
@@ -65,11 +56,9 @@ export default function AdminDashboard() {  const [stats, setStats] = useState<A
           totalVideos: videosSnapshot.size,
           totalCats: catsSnapshot.size,
           taggedItems: taggedImages + taggedVideos,
-          storageImages: storageImageCount,
-          untaggedImages: untaggedCount,
+          storageImages: storageImageCount,          untaggedImages: untaggedCount,
         });
 
-        console.log('Stats updated successfully');
       } catch (err: any) {
         console.error('Error fetching stats:', err);
 
