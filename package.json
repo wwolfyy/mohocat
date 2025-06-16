@@ -9,7 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@heroicons/react": "^2.1.1",
+    "@mui/icons-material": "^7.1.1",
+    "@mui/material": "^7.1.1",
     "axios": "^1.9.0",
     "busboy": "^1.6.0",
     "clsx": "^2.1.0",
@@ -18,8 +25,13 @@
     "firebase-admin": "^13.4.0",
     "googleapis": "^149.0.0",
     "next": "^14.2.29",
+    "ra-data-fakerest": "^5.8.3",
+    "ra-data-firebase-client": "^3.0.0",
+    "ra-ui-materialui": "^5.8.3",
     "react": "^18",
+    "react-admin": "^5.8.3",
     "react-dom": "^18",
+    "react-hook-form": "^7.58.0",
     "react-icons": "^5.5.0",
     "tailwind-merge": "^2.2.1"
   },
