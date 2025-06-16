@@ -26,17 +26,11 @@ export default function TagImagesPage() {
   const [batchTags, setBatchTags] = useState<string>('');
   const [batchDescription, setBatchDescription] = useState('');
   const [showBatchActions, setShowBatchActions] = useState(false);
-  const [batchSaving, setBatchSaving] = useState(false);  // Filter states
+  const [batchSaving, setBatchSaving] = useState(false);
+
+  // Filter states
   const [showTaggedImages, setShowTaggedImages] = useState(true);
   const [showUntaggedImages, setShowUntaggedImages] = useState(true);
-  const [showImagesWithoutTimestamp, setShowImagesWithoutTimestamp] = useState(true);
-  const [enableDateFilter, setEnableDateFilter] = useState(false);
-  const [dateFilterFrom, setDateFilterFrom] = useState('');
-  const [dateFilterTo, setDateFilterTo] = useState('');
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [imagesPerPage, setImagesPerPage] = useState(25);
 
   useEffect(() => {
     loadImages();
@@ -160,6 +154,7 @@ export default function TagImagesPage() {
       setSaving(false);
     }
   };
+
   const toggleImageSelection = (imageName: string) => {
     const newSelection = new Set(selectedImages);
     if (newSelection.has(imageName)) {
@@ -168,21 +163,13 @@ export default function TagImagesPage() {
       newSelection.add(imageName);
     }
     setSelectedImages(newSelection);
-    setShowBatchActions(newSelection.size > 0);
-  };  const selectAllImages = () => {
-    const currentlyVisibleImages = new Set(filteredImages.map(img => img.name));
-    const selectedFromVisible = new Set(Array.from(selectedImages).filter(name => currentlyVisibleImages.has(name)));
+  };
 
-    if (selectedFromVisible.size === filteredImages.length) {
-      // Deselect all visible images
-      const newSelection = new Set(Array.from(selectedImages).filter(name => !currentlyVisibleImages.has(name)));
-      setSelectedImages(newSelection);
-      setShowBatchActions(newSelection.size > 0);
+  const selectAllImages = () => {
+    if (selectedImages.size === images.length) {
+      setSelectedImages(new Set());
     } else {
-      // Select all visible images
-      const newSelection = new Set([...Array.from(selectedImages), ...filteredImages.map(img => img.name)]);
-      setSelectedImages(newSelection);
-      setShowBatchActions(true);
+      setSelectedImages(new Set(images.map(img => img.name)));
     }
   };
 
@@ -297,41 +284,13 @@ export default function TagImagesPage() {
   // Calculate statistics
   const untaggedImages = images.filter(img => !img.hasMetadata);
   const taggedImages = images.filter(img => img.hasMetadata);
+
   // Apply filters to get displayed images
   const filteredImages = images.filter(image => {
-    // Tag filtering
     if (!image.hasMetadata && !showUntaggedImages) return false;
     if (image.hasMetadata && !showTaggedImages) return false;
-
-    // Date filtering (only if enabled)
-    if (enableDateFilter) {
-      const createdDate = image.metadata?.createdDate;
-
-      // Handle images without created date
-      if (!createdDate) {
-        if (!showImagesWithoutTimestamp) return false;
-      } else {
-        // Apply date range filters if they are set
-        if (dateFilterFrom && createdDate < dateFilterFrom) return false;
-        if (dateFilterTo && createdDate > dateFilterTo) return false;
-      }
-    } else {
-      // When date filter is disabled, check if we should show images without timestamp
-      const createdDate = image.metadata?.createdDate;
-      if (!createdDate && !showImagesWithoutTimestamp) return false;
-    }    return true;
+    return true;
   });
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
-  const startIndex = (currentPage - 1) * imagesPerPage;
-  const endIndex = startIndex + imagesPerPage;
-  const paginatedImages = filteredImages.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [showTaggedImages, showUntaggedImages, showImagesWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
 
   if (loading) {
     return (
@@ -412,7 +371,9 @@ export default function TagImagesPage() {
 
       {/* Filter Controls */}
       <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter Images</h3>        {/* Tag Filters */}
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter Images</h3>
+
+        {/* Tag Filters */}
         <div className="flex gap-6 mb-4">
           <label className="flex items-center cursor-pointer">
             <input
@@ -436,117 +397,6 @@ export default function TagImagesPage() {
               Show Untagged Images ({untaggedImages.length})
             </span>
           </label>
-        </div>
-
-        {/* Date Filters */}
-        <div className="border-t border-gray-300 pt-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Filter by Created Date</h4>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showImagesWithoutTimestamp}
-                onChange={(e) => setShowImagesWithoutTimestamp(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2"
-              />
-              <span className="text-sm text-gray-700">
-                Show images without timestamp ({images.filter(img => !img.metadata?.createdDate).length})
-              </span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={enableDateFilter}
-                onChange={(e) => {
-                  setEnableDateFilter(e.target.checked);
-                  if (!e.target.checked) {
-                    setDateFilterFrom('');
-                    setDateFilterTo('');
-                  }
-                }}
-                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mr-2"
-              />
-              <span className="text-sm text-gray-700">Apply date range filter</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <label className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}>From:</label>
-              <input
-                type="date"
-                value={dateFilterFrom}
-                onChange={(e) => setDateFilterFrom(e.target.value)}
-                disabled={!enableDateFilter}
-                className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                  enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
-                }`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}>To:</label>
-              <input
-                type="date"
-                value={dateFilterTo}
-                onChange={(e) => setDateFilterTo(e.target.value)}
-                disabled={!enableDateFilter}
-                className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                  enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
-                }`}
-              />
-            </div>            {enableDateFilter && (dateFilterFrom || dateFilterTo) && (
-              <button
-                onClick={() => {
-                  setDateFilterFrom('');
-                  setDateFilterTo('');
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
-              >
-                Clear dates
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Selection and Display Controls */}
-        <div className="border-t border-gray-300 pt-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Selection & Display</h4>
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              onClick={selectAllImages}
-              className={`px-4 py-2 text-white rounded text-sm ${
-                selectedImages.size === filteredImages.length
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-blue-500 hover:bg-blue-600'
-              }`}
-            >
-              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
-            </button>
-            {selectedImages.size > 0 && (
-              <button
-                onClick={clearSelection}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-              >
-                Clear Selection ({selectedImages.size})
-              </button>
-            )}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-700">Images per page:</label>
-              <select
-                value={imagesPerPage}
-                onChange={(e) => {
-                  setImagesPerPage(Number(e.target.value));
-                  setCurrentPage(1); // Reset to first page when changing page size
-                }}
-                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-            <div className="text-sm text-gray-600">
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredImages.length)} of {filteredImages.length} images
-            </div>
-          </div>
         </div>
       </div>
 
@@ -627,12 +477,46 @@ export default function TagImagesPage() {
             Try checking different filter options above.
           </p>
         </div>
-      ) : (        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Image List */}
           <div className="lg:col-span-2">
+            {/* Multi-select controls */}
+            <div className="flex gap-3 items-center flex-wrap mb-4">
+              <button
+                onClick={selectAllImages}
+                className={`px-4 py-2 text-white rounded text-sm ${
+                  selectedImages.size === images.length
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-blue-500 hover:bg-blue-600'
+                }`}
+              >
+                {selectedImages.size === images.length ? 'Deselect All' : 'Select All'}
+              </button>
+              {selectedImages.size > 0 && (
+                <>
+                  <button
+                    onClick={clearSelection}
+                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+                  >
+                    Clear Selection
+                  </button>
+                  <button
+                    onClick={() => setShowBatchActions(!showBatchActions)}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                  >
+                    Batch Actions
+                  </button>
+                  <span className="px-3 py-2 bg-gray-100 rounded text-sm font-medium">
+                    {selectedImages.size} selected
+                  </span>
+                </>
+              )}
+            </div>
+
             {/* Image Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {paginatedImages.map((image) => (
+              {filteredImages.map((image) => (
                 <div
                   key={image.name}
                   className={`relative border-2 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
@@ -677,57 +561,9 @@ export default function TagImagesPage() {
                       </div>
                     </div>
                   </div>
-                </div>              ))}
+                </div>
+              ))}
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center mt-6 gap-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-
-                {/* Page numbers */}
-                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 7) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 4) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 3) {
-                    pageNum = totalPages - 6 + i;
-                  } else {
-                    pageNum = currentPage - 3 + i;
-                  }
-
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-2 text-sm border rounded ${
-                        currentPage === pageNum
-                          ? 'bg-blue-500 text-white border-blue-500'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Tagging Form */}
