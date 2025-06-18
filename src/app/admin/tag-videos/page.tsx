@@ -13,6 +13,7 @@ interface TaggedVideo extends Omit<YouTubeVideo, 'description'> {
   description: string; // Always present, can be empty string
   catName: string; // Always present, can be empty string
   needsTagging: boolean; // Always present
+  createdTime?: Date | { seconds: number } | any; // Firebase Timestamp or Date
 }
 
 export default function TagVideosPage() {
@@ -77,8 +78,7 @@ export default function TagVideosPage() {
       // Create Firestore entries for any YouTube videos that don't have them yet
       const videosToCreate = [];
       for (const video of youtubeVideos) {
-        if (!metadataMap.has(video.id)) {
-          const videoData = {
+        if (!metadataMap.has(video.id)) {          const videoData = {
             videoUrl: video.videoUrl,
             fileName: video.title,
             storagePath: video.videoUrl,
@@ -95,6 +95,7 @@ export default function TagVideosPage() {
             recordingDate: video.recordingDate || null,
             channelTitle: video.channelTitle,
             catName: '',
+            createdTime: null, // Leave empty for manual entry
           };
           videosToCreate.push({ videoId: video.id, data: videoData });
         }
@@ -114,9 +115,7 @@ export default function TagVideosPage() {
       });
 
       console.log(`Created ${createdEntries.length} new cat_videos entries`);
-      console.log(`All ${youtubeVideos.length} YouTube videos now have metadata entries in Firestore (consistent with cat_images collection)`);
-
-      // Combine YouTube videos with Firestore metadata (now all videos have metadata)
+      console.log(`All ${youtubeVideos.length} YouTube videos now have metadata entries in Firestore (consistent with cat_images collection)`);      // Combine YouTube videos with Firestore metadata (now all videos have metadata)
       const combinedVideos: TaggedVideo[] = youtubeVideos.map(video => {
         const metadata = metadataMap.get(video.id);
         return {
@@ -127,6 +126,7 @@ export default function TagVideosPage() {
           catName: metadata?.catName || '',
           needsTagging: metadata?.needsTagging !== false,
           description: metadata?.description || video.description || '',
+          createdTime: metadata?.createdTime || null,
         };
       });
 
@@ -205,6 +205,7 @@ export default function TagVideosPage() {
         storagePath: selectedVideo.videoUrl,
         tags: tagsArray,
         uploadDate: new Date(),
+        createdTime: selectedVideo.createdTime || null, // Preserve existing or leave null
         uploadedBy: 'admin',
         description: description,
         thumbnailUrl: selectedVideo.thumbnailUrl,
@@ -259,6 +260,7 @@ export default function TagVideosPage() {
           storagePath: video.videoUrl,
           tags: tagsArray,
           uploadDate: new Date(),
+          createdTime: video.createdTime || null, // Preserve existing or leave null
           uploadedBy: 'admin',
           description: batchDescription || video.description,
           thumbnailUrl: video.thumbnailUrl,
@@ -809,7 +811,16 @@ export default function TagVideosPage() {
                         {video.title}
                       </h3>
                       <p className="text-xs text-gray-500 mb-1">
-                        {new Date(video.publishedAt).toLocaleDateString()}
+                        Published: {new Date(video.publishedAt).toLocaleDateString()}
+                      </p>                      {video.recordingDate && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          Recorded: {new Date(video.recordingDate).toLocaleDateString()}
+                        </p>
+                      )}                      <p className="text-xs text-gray-500 mb-1">
+                        Created: {video.createdTime ? 
+                          new Date(video.createdTime.seconds ? video.createdTime.seconds * 1000 : video.createdTime).toLocaleDateString() : 
+                          'null'
+                        }
                       </p>
                       <p className="text-xs text-blue-600 mb-2 font-mono break-all">
                         youtu.be/{video.id}
@@ -899,9 +910,19 @@ export default function TagVideosPage() {
                     className="w-full h-32 object-cover rounded mb-2"
                   />                  <h4 className="font-medium text-sm line-clamp-2">
                     {selectedVideo.title}
-                  </h4>
+                  </h4>                  <p className="text-xs text-gray-500 mb-1">
+                    Published: {new Date(selectedVideo.publishedAt).toLocaleDateString()}
+                  </p>
+                  {selectedVideo.recordingDate && (
+                    <p className="text-xs text-gray-500 mb-1">
+                      Recorded: {new Date(selectedVideo.recordingDate).toLocaleDateString()}
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500 mb-1">
-                    {new Date(selectedVideo.publishedAt).toLocaleDateString()}
+                    Created: {selectedVideo.createdTime ? 
+                      new Date(selectedVideo.createdTime.seconds ? selectedVideo.createdTime.seconds * 1000 : selectedVideo.createdTime).toLocaleDateString() : 
+                      'null'
+                    }
                   </p>
                   <div className="text-xs mb-2">
                     <span className="text-gray-500">YouTube: </span>
