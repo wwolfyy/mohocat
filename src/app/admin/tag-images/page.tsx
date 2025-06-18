@@ -229,10 +229,59 @@ export default function TagImagesPage() {
     const selectedCatNames = cats
       .filter(cat => newSelectedCats.has(cat.id))
       .map(cat => cat.name);
-    setBatchTags(selectedCatNames.join(', '));
+    setBatchTags(selectedCatNames.join(', '));  };
+
+  const removeTag = async (tagToRemove: string) => {
+    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+    const newTagsString = updatedTags.join(', ');
+    setTags(newTagsString);
+
+    // Auto-save the changes if we have a selected image
+    if (selectedImage) {
+      try {
+        const metadata = {
+          fileName: selectedImage.name,
+          imageUrl: selectedImage.url,
+          storagePath: selectedImage.fullPath,
+          tags: updatedTags,
+          uploadDate: selectedImage.metadata?.uploadDate || new Date(),
+          createdTime: selectedImage.metadata?.createdTime || null,
+          uploadedBy: 'admin',
+          description: description,
+          needsTagging: updatedTags.length === 0,
+          autoTagged: false,
+        };
+
+        if (selectedImage.hasMetadata && selectedImage.metadata?.id) {
+          await updateDoc(doc(db, 'cat_images', selectedImage.metadata.id), metadata);
+        } else {
+          await addDoc(collection(db, 'cat_images'), metadata);
+        }
+
+        // Update the local state to reflect the change immediately
+        const updatedImageMetadata = { ...selectedImage.metadata, tags: updatedTags };
+        const updatedImage = { ...selectedImage, metadata: updatedImageMetadata };
+        setImages(images.map(img => img.name === selectedImage.name ? updatedImage : img));
+        setSelectedImage(updatedImage);
+
+      } catch (err: any) {
+        console.error('Error saving after tag removal:', err);
+        // Revert the local state if save failed
+        setTags(tags);
+      }
+    }
   };
 
-  // Filter cats based on search query
+  const addTag = (newTag: string) => {
+    if (!newTag.trim()) return;
+    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    if (!currentTags.includes(newTag.trim())) {
+      currentTags.push(newTag.trim());
+      setTags(currentTags.join(', '));
+    }
+  };
+
   const filteredCats = cats.filter(cat =>
     cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
     cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase())
@@ -855,23 +904,49 @@ export default function TagImagesPage() {
 
                   <div className="space-y-4">                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tags (comma-separated)
+                        Tags
                       </label>
+
+                      {/* Display existing tags as removable buttons */}
+                      {tags && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {tags.split(',').map(tag => tag.trim()).filter(Boolean).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => removeTag(tag)}
+                                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 text-blue-600 hover:text-blue-800"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Hidden input for maintaining the comma-separated value */}
                       <input
-                        type="text"
+                        type="hidden"
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
-                        onClick={handleTagsInputClick}
-                        placeholder="Click to select cats or type manually"
-                        className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                       />
-                      <button
-                        type="button"
+
+                      {/* Click area to open cat selector */}
+                      <div
                         onClick={handleTagsInputClick}
-                        className="absolute right-2 top-8 text-blue-500 hover:text-blue-700 text-sm"
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 cursor-pointer min-h-[40px] flex items-center justify-between bg-gray-50 hover:bg-gray-100"
                       >
-                        🐱 Select Cats
-                      </button>
+                        <span className="text-gray-600 text-sm">
+                          {tags ? 'Click to add more cats' : 'Click to select cats'}
+                        </span>
+                        <span className="text-blue-500 hover:text-blue-700 text-sm">
+                          🐱 Select Cats
+                        </span>
+                      </div>
                     </div><div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Description

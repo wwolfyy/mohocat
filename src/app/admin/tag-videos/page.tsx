@@ -444,6 +444,59 @@ export default function TagVideosPage() {
       .map(cat => cat.name);
     setBatchTags(selectedCatNames.join(', '));
   };
+  const removeTag = async (tagToRemove: string) => {
+    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+    const newTagsString = updatedTags.join(', ');
+    setTags(newTagsString);
+
+    // Auto-save the changes if we have a selected video
+    if (selectedVideo) {
+      try {
+        const videoData = {
+          videoUrl: selectedVideo.videoUrl,
+          fileName: selectedVideo.title,
+          storagePath: selectedVideo.videoUrl,
+          tags: updatedTags,
+          uploadDate: new Date(),
+          createdTime: selectedVideo.createdTime || null,
+          uploadedBy: 'admin',
+          description: description,
+          thumbnailUrl: selectedVideo.thumbnailUrl,
+          duration: selectedVideo.duration,
+          needsTagging: updatedTags.length === 0, // Mark as needs tagging if no tags
+          videoType: 'youtube' as const,
+          youtubeId: selectedVideo.id,
+          title: selectedVideo.title,
+          publishedAt: selectedVideo.publishedAt,
+          recordingDate: selectedVideo.recordingDate || null,
+          channelTitle: selectedVideo.channelTitle,
+          catName: catName,
+        };
+
+        await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), videoData);
+
+        // Update the local state to reflect the change immediately
+        const updatedVideo = { ...selectedVideo, tags: updatedTags, needsTagging: updatedTags.length === 0 };
+        setVideos(videos.map(v => v.id === selectedVideo.id ? updatedVideo : v));
+        setSelectedVideo(updatedVideo);
+
+      } catch (err: any) {
+        console.error('Error saving after tag removal:', err);
+        // Revert the local state if save failed
+        setTags(tags);
+      }
+    }
+  };
+
+  const addTag = (newTag: string) => {
+    if (!newTag.trim()) return;
+    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    if (!currentTags.includes(newTag.trim())) {
+      currentTags.push(newTag.trim());
+      setTags(currentTags.join(', '));
+    }
+  };
 
   const filteredCats = cats.filter(cat =>
     cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
@@ -817,8 +870,8 @@ export default function TagVideosPage() {
                           Recorded: {new Date(video.recordingDate).toLocaleDateString()}
                         </p>
                       )}                      <p className="text-xs text-gray-500 mb-1">
-                        Created: {video.createdTime ? 
-                          new Date(video.createdTime.seconds ? video.createdTime.seconds * 1000 : video.createdTime).toLocaleDateString() : 
+                        Created: {video.createdTime ?
+                          new Date(video.createdTime.seconds ? video.createdTime.seconds * 1000 : video.createdTime).toLocaleDateString() :
                           'null'
                         }
                       </p>
@@ -919,8 +972,8 @@ export default function TagVideosPage() {
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mb-1">
-                    Created: {selectedVideo.createdTime ? 
-                      new Date(selectedVideo.createdTime.seconds ? selectedVideo.createdTime.seconds * 1000 : selectedVideo.createdTime).toLocaleDateString() : 
+                    Created: {selectedVideo.createdTime ?
+                      new Date(selectedVideo.createdTime.seconds ? selectedVideo.createdTime.seconds * 1000 : selectedVideo.createdTime).toLocaleDateString() :
                       'null'
                     }
                   </p>
@@ -943,26 +996,51 @@ export default function TagVideosPage() {
                   >
                     View on YouTube →
                   </a>
-                </div>                <div className="space-y-4">
-                  <div className="relative">
+                </div>                <div className="space-y-4">                  <div className="relative">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tags (comma-separated)
+                      Tags
                     </label>
+
+                    {/* Display existing tags as removable buttons */}
+                    {tags && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {tags.split(',').map(tag => tag.trim()).filter(Boolean).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Hidden input for maintaining the comma-separated value */}
                     <input
-                      type="text"
+                      type="hidden"
                       value={tags}
                       onChange={(e) => setTags(e.target.value)}
-                      onClick={handleTagsInputClick}
-                      placeholder="Click to select cats or type manually"
-                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm cursor-pointer"
                     />
-                    <button
-                      type="button"
+
+                    {/* Click area to open cat selector */}
+                    <div
                       onClick={handleTagsInputClick}
-                      className="absolute right-2 top-8 text-blue-500 hover:text-blue-700 text-sm"
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 cursor-pointer min-h-[40px] flex items-center justify-between bg-gray-50 hover:bg-gray-100"
                     >
-                      🐱 Select Cats
-                    </button>
+                      <span className="text-gray-600 text-sm">
+                        {tags ? 'Click to add more cats' : 'Click to select cats'}
+                      </span>
+                      <span className="text-blue-500 hover:text-blue-700 text-sm">
+                        🐱 Select Cats
+                      </span>
+                    </div>
                   </div>
 
                   <div>
