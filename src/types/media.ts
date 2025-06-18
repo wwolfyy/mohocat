@@ -7,6 +7,7 @@ export interface CatImage {
   storagePath: string;        // Full path in Firebase Storage (e.g., "images/photo.jpg")
   tags: string[];            // Array of cat names/tags
   uploadDate: Date;
+  createdTime?: Date;         // When the image was originally taken/created
   uploadedBy: string;        // User ID or name
   description?: string;      // Optional description
   location?: string;         // Optional location where photo was taken
@@ -27,6 +28,7 @@ export interface CatVideo {
   storagePath: string;       // Full path in Firebase Storage
   tags: string[];            // Array of cat names/tags
   uploadDate: Date;
+  createdTime?: Date;        // When the video was originally created/recorded
   uploadedBy: string;        // User ID or name
   description?: string;      // Optional description
   location?: string;         // Optional location where video was taken
