@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ref, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { storage, db } from '@/services/firebase';
+import { Cat } from '@/types';
 
 interface StorageImage {
   name: string;
@@ -18,15 +19,22 @@ export default function TagImagesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<StorageImage | null>(null);
-  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
-  const [tags, setTags] = useState<string>('');
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());  const [tags, setTags] = useState<string>('');
   const [description, setDescription] = useState('');
-  const [catName, setCatName] = useState('');
   const [saving, setSaving] = useState(false);
   const [batchTags, setBatchTags] = useState<string>('');
   const [batchDescription, setBatchDescription] = useState('');
   const [showBatchActions, setShowBatchActions] = useState(false);
-  const [batchSaving, setBatchSaving] = useState(false);  // Filter states
+  const [batchSaving, setBatchSaving] = useState(false);
+
+  // Cat selector states
+  const [cats, setCats] = useState<Cat[]>([]);
+  const [showCatSelector, setShowCatSelector] = useState(false);
+  const [catSearchQuery, setCatSearchQuery] = useState('');
+  const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
+  const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');
+
+  // Filter states
   const [showTaggedImages, setShowTaggedImages] = useState(true);
   const [showUntaggedImages, setShowUntaggedImages] = useState(true);
   const [showImagesWithoutTimestamp, setShowImagesWithoutTimestamp] = useState(true);
@@ -37,9 +45,9 @@ export default function TagImagesPage() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [imagesPerPage, setImagesPerPage] = useState(25);
-
   useEffect(() => {
     loadImages();
+    loadCats();
   }, []);
 
   const loadImages = async () => {
@@ -49,15 +57,13 @@ export default function TagImagesPage() {
 
       // Get all images from Firebase Storage
       const storageRef = ref(storage, 'images/');
-      const storageResult = await listAll(storageRef);
-
-      // Get existing metadata from Firestore
-      const firestoreImages = await getDocs(collection(db, 'images'));
+      const storageResult = await listAll(storageRef);      // Get existing metadata from Firestore
+      const firestoreImages = await getDocs(collection(db, 'cat_images'));
       const metadataMap = new Map();
       firestoreImages.docs.forEach(doc => {
         const data = doc.data();
-        if (data.filename) {
-          metadataMap.set(data.filename, { id: doc.id, ...data });
+        if (data.fileName) {
+          metadataMap.set(data.fileName, { id: doc.id, ...data });
         }
       });
 
@@ -65,8 +71,7 @@ export default function TagImagesPage() {
       const imageList: StorageImage[] = await Promise.all(
         storageResult.items.map(async (item) => {
           const url = await getDownloadURL(item);
-          const metadata = metadataMap.get(item.name);
-          return {
+          const metadata = metadataMap.get(item.name);          return {
             name: item.name,
             url,
             fullPath: item.fullPath,
@@ -85,16 +90,26 @@ export default function TagImagesPage() {
     }
   };
 
-  const selectImage = (image: StorageImage) => {
-    setSelectedImage(image);
+  const loadCats = async () => {
+    try {
+      const catsSnapshot = await getDocs(collection(db, 'cats'));
+      const catsData = catsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Cat[];
+      setCats(catsData);
+    } catch (error) {
+      console.error('Error loading cats:', error);
+    }
+  };
+
+  const selectImage = (image: StorageImage) => {    setSelectedImage(image);
     if (image.metadata) {
       setTags(image.metadata.tags?.join(', ') || '');
       setDescription(image.metadata.description || '');
-      setCatName(image.metadata.catName || '');
     } else {
       setTags('');
       setDescription('');
-      setCatName('');
     }
   };
 
@@ -102,25 +117,23 @@ export default function TagImagesPage() {
     if (!selectedImage) return;
 
     try {
-      setSaving(true);
-      const metadata = {
-        filename: selectedImage.name,
-        url: selectedImage.url,
-        fullPath: selectedImage.fullPath,
-        title: selectedImage.metadata?.title || selectedImage.name.replace(/\.[^/.]+$/, ''),
-        description,
+      setSaving(true);      const metadata = {
+        fileName: selectedImage.name,
+        imageUrl: selectedImage.url,
+        storagePath: selectedImage.fullPath,
         tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        catName,
-        uploadedAt: selectedImage.metadata?.uploadedAt || new Date(),
+        uploadDate: selectedImage.metadata?.uploadDate || new Date(),
+        createdTime: selectedImage.metadata?.createdTime || null,
         uploadedBy: 'admin',
-        isPublic: true,
-        lastModified: new Date()
+        description: description,
+        needsTagging: false,
+        autoTagged: false,
       };
 
       if (selectedImage.hasMetadata && selectedImage.metadata?.id) {
-        await updateDoc(doc(db, 'images', selectedImage.metadata.id), metadata);
+        await updateDoc(doc(db, 'cat_images', selectedImage.metadata.id), metadata);
       } else {
-        await addDoc(collection(db, 'images'), metadata);
+        await addDoc(collection(db, 'cat_images'), metadata);
       }
 
       await loadImages();
@@ -143,11 +156,9 @@ export default function TagImagesPage() {
 
       // Delete from Storage
       const imageRef = ref(storage, selectedImage.fullPath);
-      await deleteObject(imageRef);
-
-      // Delete metadata from Firestore
+      await deleteObject(imageRef);      // Delete metadata from Firestore
       if (selectedImage.metadata?.id) {
-        await deleteDoc(doc(db, 'images', selectedImage.metadata.id));
+        await deleteDoc(doc(db, 'cat_images', selectedImage.metadata.id));
       }
 
       setSelectedImage(null);
@@ -160,6 +171,73 @@ export default function TagImagesPage() {
       setSaving(false);
     }
   };
+
+  const handleCatToggle = (catId: string, catName: string) => {
+    const newSelectedCats = new Set(selectedCats);
+    if (newSelectedCats.has(catId)) {
+      newSelectedCats.delete(catId);
+    } else {
+      newSelectedCats.add(catId);
+    }
+    setSelectedCats(newSelectedCats);
+
+    // Update tags input with selected cat names
+    const selectedCatNames = cats
+      .filter(cat => newSelectedCats.has(cat.id))
+      .map(cat => cat.name);
+    setTags(selectedCatNames.join(', '));
+  };
+
+  const handleTagsInputClick = () => {
+    setCatSelectorContext('individual');
+    setShowCatSelector(true);
+    // Parse existing tags to pre-select cats
+    const existingTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const preSelectedCats = new Set<string>();
+    cats.forEach(cat => {
+      if (existingTags.includes(cat.name)) {
+        preSelectedCats.add(cat.id);
+      }
+    });
+    setSelectedCats(preSelectedCats);
+  };
+
+  const handleBatchTagsInputClick = () => {
+    setCatSelectorContext('batch');
+    setShowCatSelector(true);
+    // Parse existing batch tags to pre-select cats
+    const existingTags = batchTags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const preSelectedCats = new Set<string>();
+    cats.forEach(cat => {
+      if (existingTags.includes(cat.name)) {
+        preSelectedCats.add(cat.id);
+      }
+    });
+    setSelectedCats(preSelectedCats);
+  };
+
+  const handleCatToggleBatch = (catId: string, catName: string) => {
+    const newSelectedCats = new Set(selectedCats);
+    if (newSelectedCats.has(catId)) {
+      newSelectedCats.delete(catId);
+    } else {
+      newSelectedCats.add(catId);
+    }
+    setSelectedCats(newSelectedCats);
+
+    // Update batch tags input with selected cat names
+    const selectedCatNames = cats
+      .filter(cat => newSelectedCats.has(cat.id))
+      .map(cat => cat.name);
+    setBatchTags(selectedCatNames.join(', '));
+  };
+
+  // Filter cats based on search query
+  const filteredCats = cats.filter(cat =>
+    cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
+    cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase())
+  );
+
   const toggleImageSelection = (imageName: string) => {
     const newSelection = new Set(selectedImages);
     if (newSelection.has(imageName)) {
@@ -200,26 +278,25 @@ export default function TagImagesPage() {
       setBatchSaving(true);
       const selectedImagesList = images.filter(img => selectedImages.has(img.name));
 
-      for (const image of selectedImagesList) {
-        const metadata = {
-          filename: image.name,
-          url: image.url,
-          fullPath: image.fullPath,
-          title: image.metadata?.title || image.name.replace(/\.[^/.]+$/, ''),
-          description: batchDescription || image.metadata?.description || '',
+      for (const image of selectedImagesList) {        const metadata = {
+          fileName: image.name,
+          imageUrl: image.url,
+          storagePath: image.fullPath,
           tags: batchTags ?
             Array.from(new Set([...(image.metadata?.tags || []), ...batchTags.split(',').map(tag => tag.trim()).filter(Boolean)])) :
             image.metadata?.tags || [],
-          uploadedAt: image.metadata?.uploadedAt || new Date(),
+          uploadDate: image.metadata?.uploadDate || new Date(),
+          createdTime: image.metadata?.createdTime || null,
           uploadedBy: 'admin',
-          isPublic: true,
-          lastModified: new Date()
+          description: batchDescription || image.metadata?.description || '',
+          needsTagging: false,
+          autoTagged: false,
         };
 
         if (image.hasMetadata && image.metadata?.id) {
-          await updateDoc(doc(db, 'images', image.metadata.id), metadata);
+          await updateDoc(doc(db, 'cat_images', image.metadata.id), metadata);
         } else {
-          await addDoc(collection(db, 'images'), metadata);
+          await addDoc(collection(db, 'cat_images'), metadata);
         }
       }
 
@@ -269,16 +346,14 @@ export default function TagImagesPage() {
     if (!confirm('This will remove metadata entries that no longer have corresponding images in storage. Continue?')) return;
 
     try {
-      setBatchSaving(true);
-
-      // Get all metadata from Firestore
-      const firestoreImages = await getDocs(collection(db, 'images'));
+      setBatchSaving(true);      // Get all metadata from Firestore
+      const firestoreImages = await getDocs(collection(db, 'cat_images'));
       const storageFilenames = new Set(images.map(img => img.name));
 
       let deletedCount = 0;
       for (const doc of firestoreImages.docs) {
         const data = doc.data();
-        if (data.filename && !storageFilenames.has(data.filename)) {
+        if (data.fileName && !storageFilenames.has(data.fileName)) {
           await deleteDoc(doc.ref);
           deletedCount++;
         }
@@ -293,15 +368,14 @@ export default function TagImagesPage() {
       setBatchSaving(false);
     }
   };
-
   // Calculate statistics
-  const untaggedImages = images.filter(img => !img.hasMetadata);
-  const taggedImages = images.filter(img => img.hasMetadata);
-  // Apply filters to get displayed images
+  const untaggedImages = images.filter(img => !img.hasMetadata || !img.metadata?.tags || img.metadata.tags.length === 0);
+  const taggedImages = images.filter(img => img.hasMetadata && img.metadata?.tags && img.metadata.tags.length > 0);  // Apply filters to get displayed images
   const filteredImages = images.filter(image => {
-    // Tag filtering
-    if (!image.hasMetadata && !showUntaggedImages) return false;
-    if (image.hasMetadata && !showTaggedImages) return false;
+    // Tag filtering - check for actual tags, not just metadata existence
+    const hasActualTags = image.hasMetadata && image.metadata?.tags && image.metadata.tags.length > 0;
+    if (!hasActualTags && !showUntaggedImages) return false;
+    if (hasActualTags && !showTaggedImages) return false;
 
     // Date filtering (only if enabled)
     if (enableDateFilter) {
@@ -556,8 +630,7 @@ export default function TagImagesPage() {
           <h3 className="text-lg font-semibold mb-3">
             Batch Actions ({selectedImages.size} images selected)
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Batch Tags (comma-separated)
               </label>
@@ -565,9 +638,17 @@ export default function TagImagesPage() {
                 type="text"
                 value={batchTags}
                 onChange={(e) => setBatchTags(e.target.value)}
-                placeholder="Enter tags..."
-                className="border border-gray-300 rounded px-3 py-2 w-full"
+                onClick={handleBatchTagsInputClick}
+                placeholder="Click to select cats or type manually"
+                className="border border-gray-300 rounded px-3 py-2 w-full cursor-pointer"
               />
+              <button
+                type="button"
+                onClick={handleBatchTagsInputClick}
+                className="absolute right-2 top-8 text-blue-500 hover:text-blue-700 text-sm"
+              >
+                🐱 Select Cats
+              </button>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -640,21 +721,28 @@ export default function TagImagesPage() {
                       ? 'border-blue-500 shadow-lg'
                       : 'border-gray-200'
                   }`}
-                >
-                  {/* Checkbox */}
-                  <div
-                    className="absolute top-2 right-2 z-10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleImageSelection(image.name);
-                    }}
-                  >
+                >                  {/* Checkbox */}
+                  <div className="absolute top-2 left-2 z-10">
                     <input
                       type="checkbox"
                       checked={selectedImages.has(image.name)}
-                      onChange={() => {}} // Controlled by onClick above
-                      className="w-5 h-5 text-blue-600 bg-white border-2 border-blue-600 rounded focus:ring-blue-500"
+                      onChange={(e) => toggleImageSelection(image.name)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      onClick={(e) => e.stopPropagation()}
                     />
+                  </div>
+
+                  {/* Status indicator */}
+                  <div className="absolute top-2 right-2 z-10">
+                    {(image.hasMetadata && image.metadata?.tags && image.metadata.tags.length > 0) ? (
+                      <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">
+                        Tagged
+                      </span>
+                    ) : (
+                      <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded">
+                        Untagged
+                      </span>
+                    )}
                   </div>
 
                   {/* Image */}
@@ -663,18 +751,22 @@ export default function TagImagesPage() {
                       src={image.url}
                       alt={image.name}
                       className="w-full h-40 object-cover"
-                    />
-                    <div className="p-3">
+                    />                    <div className="p-3">
                       <p className="text-sm font-medium mb-1 break-words">
                         {image.name}
                       </p>
-                      <div className={`inline-block px-2 py-1 rounded-full text-xs ${
-                        image.hasMetadata
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {image.hasMetadata ? '✅ Tagged' : '⚠️ Needs tags'}
-                      </div>
+                      {image.hasMetadata && image.metadata?.uploadDate && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          Uploaded: {new Date(image.metadata.uploadDate.seconds ? image.metadata.uploadDate.seconds * 1000 : image.metadata.uploadDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {image.hasMetadata && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          Created: {image.metadata?.createdTime ?
+                            new Date(image.metadata.createdTime.seconds ? image.metadata.createdTime.seconds * 1000 : image.metadata.createdTime).toLocaleDateString() :
+                            'null'
+                          }                        </p>
+                      )}
                     </div>
                   </div>
                 </div>              ))}
@@ -737,18 +829,31 @@ export default function TagImagesPage() {
                 <>
                   <h3 className="text-lg font-bold mb-4">
                     Tag Image: {selectedImage.name}
-                  </h3>
-
-                  <div className="mb-4">
+                  </h3>                  <div className="mb-4">
                     <img
                       src={selectedImage.url}
                       alt={selectedImage.name}
                       className="w-full h-32 object-cover rounded"
                     />
+                    {/* Date Information */}
+                    <div className="mt-2 text-xs text-gray-600 space-y-1">
+                      {selectedImage.hasMetadata && selectedImage.metadata?.uploadDate && (
+                        <p>
+                          <strong>Uploaded:</strong> {new Date(selectedImage.metadata.uploadDate.seconds ? selectedImage.metadata.uploadDate.seconds * 1000 : selectedImage.metadata.uploadDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {selectedImage.hasMetadata && (
+                        <p>
+                          <strong>Created:</strong> {selectedImage.metadata?.createdTime ?
+                            new Date(selectedImage.metadata.createdTime.seconds ? selectedImage.metadata.createdTime.seconds * 1000 : selectedImage.metadata.createdTime).toLocaleDateString() :
+                            'null'
+                          }
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
+                  <div className="space-y-4">                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Tags (comma-separated)
                       </label>
@@ -756,12 +861,18 @@ export default function TagImagesPage() {
                         type="text"
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
-                        placeholder="Enter tags..."
-                        className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onClick={handleTagsInputClick}
+                        placeholder="Click to select cats or type manually"
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                       />
-                    </div>
-
-                    <div>
+                      <button
+                        type="button"
+                        onClick={handleTagsInputClick}
+                        className="absolute right-2 top-8 text-blue-500 hover:text-blue-700 text-sm"
+                      >
+                        🐱 Select Cats
+                      </button>
+                    </div><div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Description
                       </label>
@@ -770,19 +881,6 @@ export default function TagImagesPage() {
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Describe the image..."
                         rows={3}
-                        className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Cat Name
-                      </label>
-                      <input
-                        type="text"
-                        value={catName}
-                        onChange={(e) => setCatName(e.target.value)}
-                        placeholder="Name of the cat..."
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
@@ -803,17 +901,7 @@ export default function TagImagesPage() {
                         >
                           {saving ? 'Deleting...' : 'Delete'}
                         </button>
-                      )}
-                    </div>
-
-                    {selectedImage.hasMetadata && selectedImage.metadata && (
-                      <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
-                        <h4 className="font-medium mb-2">Current Metadata:</h4>
-                        <p><strong>Tags:</strong> {selectedImage.metadata.tags?.join(', ') || 'None'}</p>
-                        <p><strong>Description:</strong> {selectedImage.metadata.description || 'None'}</p>
-                        <p><strong>Cat Name:</strong> {selectedImage.metadata.catName || 'None'}</p>
-                      </div>
-                    )}
+                      )}                    </div>
                   </div>
                 </>
               ) : (
@@ -822,6 +910,94 @@ export default function TagImagesPage() {
                   <p>Select an image from the grid to start tagging</p>
                 </div>
               )}
+            </div>
+          </div>        </div>
+      )}
+
+      {/* Cat Selector Modal */}
+      {showCatSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                Select Cats {catSelectorContext === 'batch' ? '(Batch Tagging)' : '(Individual Image)'}
+              </h3>
+              <button
+                onClick={() => setShowCatSelector(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Search input */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search cats..."
+                value={catSearchQuery}
+                onChange={(e) => setCatSearchQuery(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+              />
+            </div>
+
+            {/* Cat list */}
+            <div className="flex-1 overflow-y-auto border border-gray-200 rounded">
+              {filteredCats.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  {cats.length === 0 ? 'No cats found in database' : 'No cats match your search'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 p-4">
+                  {filteredCats.map((cat) => (
+                    <label
+                      key={cat.id}
+                      className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
+                        selectedCats.has(cat.id) ? 'bg-blue-50 border border-blue-200' : 'border border-gray-200'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCats.has(cat.id)}
+                        onChange={() => catSelectorContext === 'batch'
+                          ? handleCatToggleBatch(cat.id, cat.name)
+                          : handleCatToggle(cat.id, cat.name)
+                        }
+                        className="mr-2"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{cat.name}</div>
+                        {cat.alt_name && (
+                          <div className="text-xs text-gray-500">({cat.alt_name})</div>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setSelectedCats(new Set());
+                  if (catSelectorContext === 'batch') {
+                    setBatchTags('');
+                  } else {
+                    setTags('');
+                  }
+                }}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowCatSelector(false)}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                Done ({selectedCats.size} selected)
+              </button>
             </div>
           </div>
         </div>
