@@ -44,7 +44,7 @@ next-env.d.ts
 
 **/*.cache
 .vscode/*
-
+.history/
 
 mountaincats-61543-7329e795c352.json
 google_svs_account.json
