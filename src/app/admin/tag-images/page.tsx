@@ -34,31 +34,34 @@ export default function TagImagesPage() {
   const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');
-
   // Filter states
   const [showTaggedImages, setShowTaggedImages] = useState(true);
   const [showUntaggedImages, setShowUntaggedImages] = useState(true);
   const [showImagesWithoutTimestamp, setShowImagesWithoutTimestamp] = useState(true);
-  const [enableDateFilter, setEnableDateFilter] = useState(false);
-  const [dateFilterFrom, setDateFilterFrom] = useState('');
+  const [enableDateFilter, setEnableDateFilter] = useState(false);  const [dateFilterFrom, setDateFilterFrom] = useState('');
   const [dateFilterTo, setDateFilterTo] = useState('');
-
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [imagesPerPage, setImagesPerPage] = useState(25);
-  useEffect(() => {
+  const [imagesPerPage, setImagesPerPage] = useState(25);useEffect(() => {
     loadImages();
     loadCats();
   }, []);
-
   const loadImages = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setError(null);      // Get all images from both Firebase Storage folders
+      const imagesRef = ref(storage, 'images/');
+      const uploadsRef = ref(storage, 'uploads/');
 
-      // Get all images from Firebase Storage
-      const storageRef = ref(storage, 'images/');
-      const storageResult = await listAll(storageRef);      // Get existing metadata from Firestore
+      const [imagesResult, uploadsResult] = await Promise.all([
+        listAll(imagesRef).catch(() => ({ items: [] })), // Handle case where folder doesn't exist
+        listAll(uploadsRef).catch(() => ({ items: [] }))
+      ]);
+
+      // Combine all storage items from both folders
+      const allStorageItems = [...imagesResult.items, ...uploadsResult.items];
+
+      // Get existing metadata from Firestore
       const firestoreImages = await getDocs(collection(db, 'cat_images'));
       const metadataMap = new Map();
       firestoreImages.docs.forEach(doc => {
@@ -68,19 +71,78 @@ export default function TagImagesPage() {
         }
       });
 
-      // Combine storage data with metadata
-      const imageList: StorageImage[] = await Promise.all(
-        storageResult.items.map(async (item) => {
-          const url = await getDownloadURL(item);
-          const metadata = metadataMap.get(item.name);          return {
-            name: item.name,
-            url,
-            fullPath: item.fullPath,
-            hasMetadata: !!metadata,
-            metadata
-          };
-        })
-      );
+      // Process all storage items and create missing metadata
+      const imageList: StorageImage[] = [];
+      const missingMetadataItems = [];
+
+      for (const item of allStorageItems) {
+        const url = await getDownloadURL(item);
+        const metadata = metadataMap.get(item.name);
+
+        const imageData: StorageImage = {
+          name: item.name,
+          url,
+          fullPath: item.fullPath,
+          hasMetadata: !!metadata,
+          metadata
+        };
+
+        imageList.push(imageData);
+
+        // Track items that need metadata creation
+        if (!metadata) {
+          missingMetadataItems.push({
+            fileName: item.name,
+            imageUrl: url,
+            storagePath: item.fullPath
+          });
+        }
+      }
+
+      // Create missing Firestore documents
+      if (missingMetadataItems.length > 0) {
+        console.log(`Creating metadata for ${missingMetadataItems.length} images...`);
+
+        for (const item of missingMetadataItems) {
+          try {
+            const newDoc = await addDoc(collection(db, 'cat_images'), {
+              fileName: item.fileName,
+              imageUrl: item.imageUrl,
+              storagePath: item.storagePath,
+              tags: [],
+              description: '',
+              uploadDate: new Date(),
+              createdTime: null,
+              uploadedBy: 'auto-detected',
+              needsTagging: true,
+              autoTagged: false,
+            });
+
+            // Update the corresponding image in our list with the new metadata
+            const imageIndex = imageList.findIndex(img => img.name === item.fileName);
+            if (imageIndex !== -1) {
+              imageList[imageIndex].hasMetadata = true;
+              imageList[imageIndex].metadata = {
+                id: newDoc.id,
+                fileName: item.fileName,
+                imageUrl: item.imageUrl,
+                storagePath: item.storagePath,
+                tags: [],
+                description: '',
+                uploadDate: new Date(),
+                createdTime: null,
+                uploadedBy: 'auto-detected',
+                needsTagging: true,
+                autoTagged: false,
+              };
+            }
+          } catch (err) {
+            console.error(`Failed to create metadata for ${item.fileName}:`, err);
+          }
+        }
+
+        console.log(`Successfully created metadata for ${missingMetadataItems.length} images.`);
+      }
 
       setImages(imageList);
     } catch (err: any) {
@@ -313,7 +375,52 @@ export default function TagImagesPage() {
     }
     setSelectedImages(newSelection);
     setShowBatchActions(newSelection.size > 0);
-  };  const selectAllImages = () => {
+  };
+
+  // Calculate statistics
+  const untaggedImages = images.filter((img: StorageImage) => !img.hasMetadata || !img.metadata?.tags || img.metadata.tags.length === 0);
+  const taggedImages = images.filter((img: StorageImage) => img.hasMetadata && img.metadata?.tags && img.metadata.tags.length > 0);
+
+  // Apply filters to get displayed images
+  const filteredImages = images.filter((image: StorageImage) => {
+    // Tag filtering - check for actual tags, not just metadata existence
+    const hasActualTags = image.hasMetadata && image.metadata?.tags && image.metadata.tags.length > 0;
+    if (!hasActualTags && !showUntaggedImages) return false;
+    if (hasActualTags && !showTaggedImages) return false;
+
+    // Date filtering (only if enabled)
+    if (enableDateFilter) {
+      const createdDate = image.metadata?.createdDate;
+
+      // Handle images without created date
+      if (!createdDate) {
+        if (!showImagesWithoutTimestamp) return false;
+      } else {
+        // Apply date range filters if they are set
+        if (dateFilterFrom && createdDate < dateFilterFrom) return false;
+        if (dateFilterTo && createdDate > dateFilterTo) return false;
+      }
+    } else {
+      // When date filter is disabled, check if we should show images without timestamp
+      const createdDate = image.metadata?.createdDate;
+      if (!createdDate && !showImagesWithoutTimestamp) return false;
+    }
+
+    return true;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
+  const startIndex = (currentPage - 1) * imagesPerPage;
+  const endIndex = startIndex + imagesPerPage;
+  const paginatedImages = filteredImages.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [showTaggedImages, showUntaggedImages, showImagesWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
+
+  const selectAllImages = () => {
     const currentlyVisibleImages = new Set(filteredImages.map(img => img.name));
     const selectedFromVisible = new Set(Array.from(selectedImages).filter(name => currentlyVisibleImages.has(name)));
 
@@ -407,7 +514,6 @@ export default function TagImagesPage() {
       setBatchSaving(false);
     }
   };
-
   const cleanupOrphanedMetadata = async () => {
     if (!confirm('This will remove metadata entries that no longer have corresponding images in storage. Continue?')) return;
 
@@ -434,45 +540,6 @@ export default function TagImagesPage() {
       setBatchSaving(false);
     }
   };
-  // Calculate statistics
-  const untaggedImages = images.filter(img => !img.hasMetadata || !img.metadata?.tags || img.metadata.tags.length === 0);
-  const taggedImages = images.filter(img => img.hasMetadata && img.metadata?.tags && img.metadata.tags.length > 0);  // Apply filters to get displayed images
-  const filteredImages = images.filter(image => {
-    // Tag filtering - check for actual tags, not just metadata existence
-    const hasActualTags = image.hasMetadata && image.metadata?.tags && image.metadata.tags.length > 0;
-    if (!hasActualTags && !showUntaggedImages) return false;
-    if (hasActualTags && !showTaggedImages) return false;
-
-    // Date filtering (only if enabled)
-    if (enableDateFilter) {
-      const createdDate = image.metadata?.createdDate;
-
-      // Handle images without created date
-      if (!createdDate) {
-        if (!showImagesWithoutTimestamp) return false;
-      } else {
-        // Apply date range filters if they are set
-        if (dateFilterFrom && createdDate < dateFilterFrom) return false;
-        if (dateFilterTo && createdDate > dateFilterTo) return false;
-      }
-    } else {
-      // When date filter is disabled, check if we should show images without timestamp
-      const createdDate = image.metadata?.createdDate;
-      if (!createdDate && !showImagesWithoutTimestamp) return false;
-    }    return true;
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
-  const startIndex = (currentPage - 1) * imagesPerPage;
-  const endIndex = startIndex + imagesPerPage;
-  const paginatedImages = filteredImages.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [showTaggedImages, showUntaggedImages, showImagesWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
-
   if (loading) {
     return (
       <div className="p-6">
@@ -507,9 +574,7 @@ export default function TagImagesPage() {
           <span className="text-blue-700">Storage:</span>{' '}
           <span className="text-green-600">✅ Connected to Firebase Storage</span>
         </div>
-      </div>
-
-      {/* Cleanup and Refresh Actions */}
+      </div>      {/* Cleanup and Refresh Actions */}
       <div className="mb-6">
         <div className="mb-4 flex gap-3">
           <button
@@ -522,16 +587,13 @@ export default function TagImagesPage() {
             }`}
           >
             🧹 {batchSaving ? 'Cleaning...' : 'Cleanup Orphaned Metadata'}
-          </button>
-
-          <button
+          </button>          <button
             onClick={loadImages}
             disabled={loading}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
           >
             {loading ? 'Loading...' : '🔄 Refresh Images'}
-          </button>
-        </div>
+          </button>        </div>
       </div>
 
       {/* Statistics */}
@@ -640,8 +702,7 @@ export default function TagImagesPage() {
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
                 Clear dates
-              </button>
-            )}
+              </button>            )}
           </div>
         </div>
 
@@ -796,9 +857,7 @@ export default function TagImagesPage() {
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       onClick={(e) => e.stopPropagation()}
                     />
-                  </div>
-
-                  {/* Status indicator */}
+                  </div>                  {/* Tag status indicator */}
                   <div className="absolute top-2 right-2 z-10">
                     {(image.hasMetadata && image.metadata?.tags && image.metadata.tags.length > 0) ? (
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">
