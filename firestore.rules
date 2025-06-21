@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Cat videos collection with YouTube read-only field enforcement
+    match /cat_videos/{videoId} {
+      // Allow read access (adjust based on your auth requirements)
+      allow read: if true;
+
+      // Allow creation of new videos (adjust based on your auth requirements)
+      allow create: if true;
+
+      // Allow updates but PREVENT modification of YouTube read-only fields
+      allow update: if
+        // Ensure YouTube read-only fields are not being modified
+        !('tags' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        !('videoUrl' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        !('createdTime' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        !('location' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        // Additional safety check: ensure storagePath (which mirrors videoUrl) is not modified
+        !('storagePath' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // Prevent deletion (adjust based on your requirements)
+      allow delete: if false;
+    }
+
+    // Cat images collection (no YouTube restrictions)
+    match /cat_images/{imageId} {
+      allow read, write: if true; // Adjust based on your auth requirements
+    }
+
+    // Cats collection (no YouTube restrictions)
+    match /cats/{catId} {
+      allow read, write: if true; // Adjust based on your auth requirements
+    }
+
+    // Other collections can be added here as needed
+  }
+}

@@ -36,11 +36,9 @@ export async function POST(request: NextRequest) {
     if (!YOUTUBE_API_KEY) {
       console.log('ERROR: YouTube API key not configured');
       return NextResponse.json({ error: 'YouTube API key not configured' }, { status: 500 });
-    }    console.log(`Refreshing metadata for ${videoIds.length} videos`);
-
-    // Fetch fresh metadata from YouTube API
+    }    console.log(`Refreshing metadata for ${videoIds.length} videos`);    // Fetch fresh metadata from YouTube API - include location data
     const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails,liveStreamingDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
     );
 
     if (!videosResponse.ok) {
@@ -135,12 +133,25 @@ export async function POST(request: NextRequest) {
         title: existingData.title,
         youtubeId: existingData.youtubeId,
         tags: existingData.tags?.length || 0
-      });      // Update ALL fields with fresh YouTube data - complete refresh
+      });      // Extract YouTube data - these fields are now YouTube-sourced and read-only
       const youtubeTitle = video.snippet?.title || 'Untitled';
-      const youtubeTags = video.snippet?.tags || [];
+      const youtubeTags = video.snippet?.tags || []; // YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)
       const youtubeRecordingDate = video.recordingDetails?.recordingDate;
+      const youtubeLocation = video.recordingDetails?.location; // YOUTUBE-SOURCED: location (ALWAYS OVERWRITE)
+      const youtubeVideoUrl = `https://www.youtube.com/watch?v=${videoId}`; // YOUTUBE-SOURCED: videoUrl (ALWAYS OVERWRITE)
       const videoPlaylists = playlistMap.get(videoId) || [];
 
+      console.log(`YouTube-sourced data for ${videoId}:`, {
+        tags: youtubeTags,
+        videoUrl: youtubeVideoUrl,
+        recordingDate: youtubeRecordingDate,
+        location: youtubeLocation || 'No location data',
+        playlistCount: videoPlaylists.length
+      });
+
+      // CRITICAL: These YouTube-sourced fields MUST always be overwritten from YouTube
+      // Any manual edits to these fields in Firebase will be lost during metadata refresh
+      // This is intentional to enforce YouTube as the single source of truth
       const updatedData = {
         // Core YouTube metadata
         title: youtubeTitle,
@@ -151,22 +162,29 @@ export async function POST(request: NextRequest) {
         publishedAt: video.snippet?.publishedAt || '',
         recordingDate: youtubeRecordingDate || null,
         duration: video.contentDetails?.duration || '',
-        channelTitle: video.snippet?.channelTitle || '',        // File/storage related (update with current title)
-        videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
-        storagePath: `https://www.youtube.com/watch?v=${videoId}`,
+        channelTitle: video.snippet?.channelTitle || '',
+
+        // ========================================================================
+        // YOUTUBE READ-ONLY FIELDS - THESE ARE FORCIBLY OVERWRITTEN FROM YOUTUBE
+        // ========================================================================
+        videoUrl: youtubeVideoUrl, // ENFORCED: Always from YouTube, cannot be edited in Firebase
+        storagePath: youtubeVideoUrl, // ENFORCED: Same as videoUrl for YouTube videos
+        tags: youtubeTags, // ENFORCED: Always from YouTube tags, cannot be edited in Firebase
+        createdTime: youtubeRecordingDate ? new Date(youtubeRecordingDate) : null, // ENFORCED: Always from YouTube recordingDate
+        location: youtubeLocation ? {
+          latitude: youtubeLocation.latitude,
+          longitude: youtubeLocation.longitude,
+          altitude: youtubeLocation.altitude
+        } : null, // ENFORCED: Always from YouTube location data
+        // ========================================================================
 
         // YouTube specific fields
         youtubeId: videoId,
         videoType: 'youtube',
 
-        // Tags from YouTube
-        tags: youtubeTags,
-
         // System fields
-        uploadDate: new Date(), // Update to current time        uploadedBy: 'admin',
-
-        // Map YouTube recordingDate to createdTime field
-        createdTime: youtubeRecordingDate ? new Date(youtubeRecordingDate) : null,
+        uploadDate: new Date(), // Update to current time
+        uploadedBy: 'admin',
 
         // Playlist information from YouTube - using allPlaylists as the source of truth
         allPlaylists: videoPlaylists, // Complete playlist information

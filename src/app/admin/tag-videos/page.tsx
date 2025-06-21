@@ -9,31 +9,47 @@ import { Cat } from '@/types';
 interface TaggedVideo extends Omit<YouTubeVideo, 'description'> {
   hasMetadata: true; // Always true now - all videos have metadata entries
   firestoreId: string; // Always present now
-  tags: string[]; // Always present, can be empty array
-  description: string; // Always present, can be empty string
-  createdTime?: Date | { seconds: number } | any; // Firebase Timestamp or Date
-  allPlaylists?: Array<{id: string, title: string}>; // All playlists the video belongs to
+  tags: string[]; // Always present, can be empty array (YouTube-sourced, editable via YouTube)
+  description: string; // YouTube description (YouTube-sourced, editable via YouTube)
+  createdTime?: Date | { seconds: number } | any; // Firebase Timestamp or Date (YouTube-sourced, editable via YouTube)
+  location?: { latitude: number; longitude: number; altitude?: number } | null; // YouTube location data (YouTube-sourced)
+  allPlaylists?: Array<{id: string, title: string}>; // All playlists the video belongs to (YouTube-sourced)
   lastMetadataRefresh?: Date | { seconds: number } | any; // When metadata was last refreshed
+  youtubeId?: string; // YouTube video ID
 }
 
 export default function TagVideosPage() {
   const [videos, setVideos] = useState<TaggedVideo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<TaggedVideo | null>(null);
+  const [error, setError] = useState<string | null>(null);  const [selectedVideo, setSelectedVideo] = useState<TaggedVideo | null>(null);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
-  const [tags, setTags] = useState<string>('');
-  const [description, setDescription] = useState('');
-  const [catName, setCatName] = useState('');  const [saving, setSaving] = useState(false);
-  const [batchTags, setBatchTags] = useState<string>('');
-  const [batchDescription, setBatchDescription] = useState('');  const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
-  const [refreshingMetadata, setRefreshingMetadata] = useState(false);
-  // Cat selector states
+  const [catName, setCatName] = useState('');
+
+  // YouTube-editable fields (these will be updated on YouTube first, then synced to Firebase)
+  const [youtubeTitle, setYoutubeTitle] = useState<string>('');
+  const [youtubeTags, setYoutubeTags] = useState<string>('');
+  const [youtubeDescription, setYoutubeDescription] = useState<string>('');
+  const [youtubeRecordingDate, setYoutubeRecordingDate] = useState<string>('');
+
+  const [saving, setSaving] = useState(false);
+  const [updatingYoutube, setUpdatingYoutube] = useState(false);
+  // Batch YouTube-editable fields
+  const [batchYoutubeTitle, setBatchYoutubeTitle] = useState<string>('');
+  const [batchYoutubeTags, setBatchYoutubeTags] = useState<string>('');
+  const [batchYoutubeDescription, setBatchYoutubeDescription] = useState<string>('');
+  const [batchYoutubeRecordingDate, setBatchYoutubeRecordingDate] = useState<string>('');
+  const [enableBatchYoutubeUpdates, setEnableBatchYoutubeUpdates] = useState(false);const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
+  const [refreshingMetadata, setRefreshingMetadata] = useState(false);  // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
   const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
-  const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');  // Filter states
+  const [catSelectorContext, setCatSelectorContext] = useState<'youtube-individual' | 'youtube-batch'>('youtube-individual');// Playlist selector states
+  const [allPlaylists, setAllPlaylists] = useState<Array<{id: string, title: string, description: string, itemCount: number}>>([]);
+  const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
+  const [selectedPlaylists, setSelectedPlaylists] = useState<Set<string>>(new Set());
+  const [playlistSelectorContext, setPlaylistSelectorContext] = useState<'individual' | 'batch'>('individual');
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false); // Filter states
   const [showTaggedVideos, setShowTaggedVideos] = useState(true);
   const [showUntaggedVideos, setShowUntaggedVideos] = useState(true);
   const [showVideosWithoutTimestamp, setShowVideosWithoutTimestamp] = useState(true);
@@ -47,6 +63,7 @@ export default function TagVideosPage() {
 
   useEffect(() => {
     loadVideos();
+    loadPlaylists();
   }, []);
   const loadVideos = async () => {
     try {
@@ -147,8 +164,25 @@ export default function TagVideosPage() {
     }
   };  const handleVideoSelect = (video: TaggedVideo) => {
     setSelectedVideo(video);
-    setTags(video.tags.join(', '));
-    setDescription(video.description);
+
+    // Populate YouTube-editable fields
+    setYoutubeTitle(video.title || '');
+    setYoutubeTags(video.tags.join(', '));
+    setYoutubeDescription(video.description || ''); // Note: This starts as the current YouTube description
+
+    // Format recording date for input (YYYY-MM-DD)
+    let recordingDateStr = '';
+    if (video.recordingDate) {
+      try {
+        const date = new Date(video.recordingDate);
+        if (!isNaN(date.getTime())) {
+          recordingDateStr = date.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        console.warn('Error parsing recording date:', video.recordingDate);
+      }
+    }
+    setYoutubeRecordingDate(recordingDateStr);
   };
 
   const handleCheckboxChange = (videoId: string, checked: boolean) => {
@@ -178,110 +212,247 @@ export default function TagVideosPage() {
       setShowBatchActions(true);
     }
   };
-
-  const clearSelection = () => {
-    setSelectedVideos(new Set());
-    setShowBatchActions(false);
-    setBatchTags('');
-    setBatchDescription('');
-  };
-
   const handleSave = async () => {
     if (!selectedVideo) return;
 
     try {
       setSaving(true);
-      const tagsArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);      const videoData = {
-        videoUrl: selectedVideo.videoUrl,
-        fileName: selectedVideo.title, // Using title as filename for YouTube videos
-        storagePath: selectedVideo.videoUrl,
-        tags: tagsArray,
+      setUpdatingYoutube(true);
+
+      console.log('Starting YouTube-first save process...');
+
+      // Step 1: Check if we need to update YouTube fields
+      const youtubeUpdates: any = {};
+      let hasYoutubeChanges = false;
+
+      // Check for title changes
+      if (youtubeTitle !== selectedVideo.title) {
+        youtubeUpdates.title = youtubeTitle;
+        hasYoutubeChanges = true;
+      }
+
+      // Check for tag changes
+      const currentTags = selectedVideo.tags.join(', ');
+      if (youtubeTags !== currentTags) {
+        youtubeUpdates.tags = youtubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
+        hasYoutubeChanges = true;
+      }
+
+      // Check for YouTube description changes (different from Firebase description)
+      if (youtubeDescription !== selectedVideo.description) {
+        youtubeUpdates.description = youtubeDescription;
+        hasYoutubeChanges = true;
+      }
+
+      // Check for recording date changes
+      const currentRecordingDate = selectedVideo.recordingDate
+        ? new Date(selectedVideo.recordingDate).toISOString().split('T')[0]
+        : '';
+      if (youtubeRecordingDate !== currentRecordingDate) {
+        youtubeUpdates.recordingDate = youtubeRecordingDate ? new Date(youtubeRecordingDate).toISOString() : undefined;
+        hasYoutubeChanges = true;
+      }
+
+      // Step 2: Update YouTube if there are changes
+      if (hasYoutubeChanges) {
+        console.log('Updating YouTube with changes:', youtubeUpdates);
+
+        const youtubeResponse = await fetch('/api/update-youtube-video', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            videoId: selectedVideo.youtubeId || selectedVideo.id,
+            updates: youtubeUpdates
+          })
+        });
+
+        if (!youtubeResponse.ok) {
+          const errorData = await youtubeResponse.json();
+          throw new Error(`YouTube update failed: ${errorData.error || 'Unknown error'}`);
+        }
+
+        const youtubeResult = await youtubeResponse.json();
+        console.log('✅ YouTube update successful:', youtubeResult);
+
+        // Step 3: Refresh metadata from YouTube to sync changes to Firebase
+        console.log('Refreshing metadata from YouTube...');
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            videoIds: [selectedVideo.youtubeId || selectedVideo.id]
+          })
+        });
+
+        if (!refreshResponse.ok) {
+          console.warn('Failed to refresh metadata, but YouTube update was successful');
+        } else {
+          console.log('✅ Metadata refresh successful');
+        }
+      }      // Step 4: Update Firestore-only fields (cat name, etc.)
+      const videoData = {
         uploadDate: new Date(),
-        createdTime: selectedVideo.createdTime || null, // Preserve existing or leave null
         uploadedBy: 'admin',
-        description: description,
-        thumbnailUrl: selectedVideo.thumbnailUrl,
-        duration: selectedVideo.duration,        videoType: 'youtube' as const,        // Additional YouTube-specific fields
-        youtubeId: selectedVideo.id,        title: selectedVideo.title,
-        publishedAt: selectedVideo.publishedAt,
-        recordingDate: selectedVideo.recordingDate || null,
-        channelTitle: selectedVideo.channelTitle,        // Preserve existing playlists
-        allPlaylists: selectedVideo.allPlaylists || [], // Preserve existing playlists
+        videoType: 'youtube' as const,
+        youtubeId: selectedVideo.youtubeId || selectedVideo.id,
       };
 
-      // All videos now have metadata entries, so we always update existing documents
       if (selectedVideo.firestoreId) {
         await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), videoData);
-      } else {
-        throw new Error('Video metadata entry not found - this should not happen');
-      }      // Update local state
-      setVideos(prev => prev.map(v =>
-        v.id === selectedVideo.id
-          ? { ...v, tags: tagsArray, description, needsTagging: false }
-          : v
-      ));
+        console.log('✅ Updated Firestore-only fields');
+      }      // Step 5: Reload videos to reflect all changes
+      await loadVideos();
 
-      setSelectedVideo(null);      setTags('');
-      setDescription('');
+      setSelectedVideo(null);
+      setYoutubeTitle('');
+      setYoutubeTags('');
+      setYoutubeDescription('');
+      setYoutubeRecordingDate('');
+
+      console.log('✅ Save process completed successfully');
+
     } catch (err) {
-      console.error('Error saving video metadata:', err);
-      setError('Failed to save video metadata');
+      console.error('Error in save process:', err);
+      setError(`Failed to save: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
-    }
-  };
-
+      setUpdatingYoutube(false);
+    }  };
   const handleBatchSave = async () => {
     if (selectedVideos.size === 0) return;
 
     try {
       setBatchSaving(true);
-      const tagsArray = batchTags.split(',').map(tag => tag.trim()).filter(Boolean);
+      setError(null);
 
-      const promises = Array.from(selectedVideos).map(async (videoId) => {
-        const video = videos.find(v => v.id === videoId);
-        if (!video) return;        const videoData = {
-          videoUrl: video.videoUrl,
-          fileName: video.title, // Using title as filename for YouTube videos
-          storagePath: video.videoUrl,
-          tags: tagsArray,
-          uploadDate: new Date(),
-          createdTime: video.createdTime || null, // Preserve existing or leave null          uploadedBy: 'admin',
-          description: batchDescription || video.description,
-          thumbnailUrl: video.thumbnailUrl,
-          duration: video.duration,
-          videoType: 'youtube' as const,          // Additional YouTube-specific fields
-          youtubeId: video.id,          title: video.title,
-          publishedAt: video.publishedAt,
-          recordingDate: video.recordingDate || null,
-          channelTitle: video.channelTitle,          // Preserve existing playlists
-          allPlaylists: video.allPlaylists || [], // Preserve existing playlists
-        };
+      const videoIds = Array.from(selectedVideos);
+      let youtubeUpdateResults = [];
 
-        // All videos now have metadata entries, so we always update existing documents
-        if (video.firestoreId) {
-          return updateDoc(doc(db, 'cat_videos', video.firestoreId), videoData);
-        } else {
-          throw new Error(`Video metadata entry not found for ${video.id} - this should not happen`);
+      // Step 1: Update YouTube fields if batch YouTube updates are enabled
+      if (enableBatchYoutubeUpdates) {
+        console.log('Performing batch YouTube updates...');
+
+        for (const videoId of videoIds) {
+          const video = videos.find(v => v.id === videoId);
+          if (!video) continue;
+
+          const youtubeUpdates: any = {};
+          let hasYoutubeChanges = false;
+
+          // Check for title changes
+          if (batchYoutubeTitle.trim() && batchYoutubeTitle !== video.title) {
+            youtubeUpdates.title = batchYoutubeTitle;
+            hasYoutubeChanges = true;
+          }
+
+          // Check for tag changes
+          if (batchYoutubeTags.trim()) {
+            const newTags = batchYoutubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
+            const currentTags = video.tags.join(', ');
+            if (batchYoutubeTags !== currentTags) {
+              youtubeUpdates.tags = newTags;
+              hasYoutubeChanges = true;
+            }
+          }
+
+          // Check for YouTube description changes
+          if (batchYoutubeDescription.trim() && batchYoutubeDescription !== video.description) {
+            youtubeUpdates.description = batchYoutubeDescription;
+            hasYoutubeChanges = true;
+          }
+
+          // Check for recording date changes
+          if (batchYoutubeRecordingDate.trim()) {
+            const currentRecordingDate = video.recordingDate
+              ? new Date(video.recordingDate).toISOString().split('T')[0]
+              : '';
+            if (batchYoutubeRecordingDate !== currentRecordingDate) {
+              youtubeUpdates.recordingDate = new Date(batchYoutubeRecordingDate).toISOString();
+              hasYoutubeChanges = true;
+            }
+          }
+
+          // Update YouTube if there are changes
+          if (hasYoutubeChanges) {
+            try {
+              const youtubeResponse = await fetch('/api/update-youtube-video', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  videoId: video.youtubeId || video.id,
+                  updates: youtubeUpdates
+                })
+              });
+
+              if (youtubeResponse.ok) {
+                youtubeUpdateResults.push({ videoId, success: true });
+              } else {
+                const errorData = await youtubeResponse.json();
+                youtubeUpdateResults.push({
+                  videoId,
+                  success: false,
+                  error: errorData.error || 'Unknown error'
+                });
+              }
+            } catch (err) {
+              youtubeUpdateResults.push({
+                videoId,
+                success: false,
+                error: err instanceof Error ? err.message : 'Unknown error'
+              });
+            }
+          }
         }
-      });
 
-      await Promise.all(promises);      // Update local state
-      setVideos(prev => prev.map(v =>
-        selectedVideos.has(v.id)
-          ? { ...v, tags: tagsArray, description: batchDescription || v.description, needsTagging: false }
-          : v
-      ));
+        // Refresh metadata for successfully updated videos
+        const successfulUpdates = youtubeUpdateResults.filter(r => r.success);
+        if (successfulUpdates.length > 0) {
+          console.log('Refreshing metadata for updated videos...');
+          try {
+            await fetch('/api/refresh-video-metadata', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                videoIds: successfulUpdates.map(r => r.videoId)
+              })
+            });
+          } catch (err) {
+            console.warn('Failed to refresh metadata after YouTube updates:', err);
+          }
+        }
+      }      // Step 2: Update Firestore-only fields (cat names, etc.) - simplified since no more Firebase-only description
+      // Currently, we don't have any Firestore-only fields to update in batch mode
+      // This section is reserved for future Firebase-only field updates
 
+      // Step 3: Reload videos to reflect all changes
+      await loadVideos();      // Clear selection and reset form
       setSelectedVideos(new Set());
       setShowBatchActions(false);
-      setBatchTags('');
-      setBatchDescription('');
+      setBatchYoutubeTitle('');
+      setBatchYoutubeTags('');
+      setBatchYoutubeDescription('');
+      setBatchYoutubeRecordingDate('');
+      setEnableBatchYoutubeUpdates(false);
+
+      // Show results if YouTube updates were attempted
+      if (youtubeUpdateResults.length > 0) {
+        const successful = youtubeUpdateResults.filter(r => r.success).length;
+        const failed = youtubeUpdateResults.filter(r => !r.success).length;
+
+        let message = `Batch save completed!\n\nFirestore updates: ${videoIds.length} videos`;
+        if (successful > 0) message += `\nYouTube updates: ${successful} successful`;
+        if (failed > 0) message += `, ${failed} failed`;
+
+        alert(message);
+      }
+
     } catch (err) {
       console.error('Error batch saving videos:', err);
-      setError('Failed to save batch video metadata');    } finally {
+      setError('Failed to save batch video metadata');
+    } finally {
       setBatchSaving(false);
-    }  };
+    }
+  };
 
   const handleRefreshMetadata = async () => {
     if (selectedVideos.size === 0) {
@@ -431,6 +602,30 @@ export default function TagVideosPage() {
     } catch (error) {
       console.error('Error loading cats:', error);
     }
+  };  // Load playlists from server
+  const loadPlaylists = async () => {
+    try {
+      setLoadingPlaylists(true);
+      console.log('Loading playlists...');
+
+      const response = await fetch('/api/manage-playlists');
+      if (!response.ok) {
+        throw new Error('Failed to fetch playlists');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setAllPlaylists(data.playlists);
+        console.log(`Loaded ${data.playlists.length} playlists`);
+      } else {
+        throw new Error(data.error || 'Failed to load playlists');
+      }
+    } catch (error) {
+      console.error('Error loading playlists:', error);
+      // Don't set the main error since playlists are optional
+    } finally {
+      setLoadingPlaylists(false);
+    }
   };  // Determine tagged/untagged based on whether video has tags
   const untaggedVideos = videos.filter(v => v.tags.length === 0);
   const taggedVideos = videos.filter(v => v.tags.length > 0);  // Apply filters to get displayed videos
@@ -465,28 +660,12 @@ export default function TagVideosPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [showTaggedVideos, showUntaggedVideos, showVideosWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
-
-  // Cat selector functions
-  const handleCatToggle = (catId: string, catName: string) => {
-    const newSelectedCats = new Set(selectedCats);
-    if (newSelectedCats.has(catId)) {
-      newSelectedCats.delete(catId);
-    } else {
-      newSelectedCats.add(catId);
-    }
-    setSelectedCats(newSelectedCats);
-
-    // Update tags input with selected cat names
-    const selectedCatNames = cats
-      .filter(cat => newSelectedCats.has(cat.id))
-      .map(cat => cat.name);
-    setTags(selectedCatNames.join(', '));
-  };
-  const handleTagsInputClick = () => {
-    setCatSelectorContext('individual');
+  // YouTube tags handlers for individual editing
+  const handleYoutubeTagsInputClick = () => {
+    setCatSelectorContext('youtube-individual');
     setShowCatSelector(true);
-    // Parse existing tags to pre-select cats
-    const existingTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    // Parse existing YouTube tags to pre-select cats
+    const existingTags = youtubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
     const preSelectedCats = new Set<string>();
     cats.forEach(cat => {
       if (existingTags.includes(cat.name)) {
@@ -496,11 +675,28 @@ export default function TagVideosPage() {
     setSelectedCats(preSelectedCats);
   };
 
-  const handleBatchTagsInputClick = () => {
-    setCatSelectorContext('batch');
+  const handleCatToggleYoutubeIndividual = (catId: string, catName: string) => {
+    const newSelectedCats = new Set(selectedCats);
+    if (newSelectedCats.has(catId)) {
+      newSelectedCats.delete(catId);
+    } else {
+      newSelectedCats.add(catId);
+    }
+    setSelectedCats(newSelectedCats);
+
+    // Update YouTube tags input with selected cat names
+    const selectedCatNames = cats
+      .filter(cat => newSelectedCats.has(cat.id))
+      .map(cat => cat.name);
+    setYoutubeTags(selectedCatNames.join(', '));
+  };
+
+  // YouTube tags handlers for batch editing
+  const handleBatchYoutubeTagsInputClick = () => {
+    setCatSelectorContext('youtube-batch');
     setShowCatSelector(true);
-    // Parse existing batch tags to pre-select cats
-    const existingTags = batchTags.split(',').map(tag => tag.trim()).filter(Boolean);
+    // Parse existing batch YouTube tags to pre-select cats
+    const existingTags = batchYoutubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
     const preSelectedCats = new Set<string>();
     cats.forEach(cat => {
       if (existingTags.includes(cat.name)) {
@@ -510,7 +706,7 @@ export default function TagVideosPage() {
     setSelectedCats(preSelectedCats);
   };
 
-  const handleCatToggleBatch = (catId: string, catName: string) => {
+  const handleCatToggleYoutubeBatch = (catId: string, catName: string) => {
     const newSelectedCats = new Set(selectedCats);
     if (newSelectedCats.has(catId)) {
       newSelectedCats.delete(catId);
@@ -519,60 +715,159 @@ export default function TagVideosPage() {
     }
     setSelectedCats(newSelectedCats);
 
-    // Update batch tags input with selected cat names
+    // Update batch YouTube tags input with selected cat names
     const selectedCatNames = cats
       .filter(cat => newSelectedCats.has(cat.id))
       .map(cat => cat.name);
-    setBatchTags(selectedCatNames.join(', '));
-  };
-  const removeTag = async (tagToRemove: string) => {
-    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    setBatchYoutubeTags(selectedCatNames.join(', '));
+  };  // YouTube tag removal handler
+  const removeYoutubeTag = (tagToRemove: string) => {
+    const currentTags = youtubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
     const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
     const newTagsString = updatedTags.join(', ');
-    setTags(newTagsString);
+    setYoutubeTags(newTagsString);
+  };
 
-    // Auto-save the changes if we have a selected video
-    if (selectedVideo) {
-      try {
-        const videoData = {
-          videoUrl: selectedVideo.videoUrl,
-          fileName: selectedVideo.title,
-          storagePath: selectedVideo.videoUrl,
-          tags: updatedTags,
-          uploadDate: new Date(),
-          createdTime: selectedVideo.createdTime || null,
-          uploadedBy: 'admin',
-          description: description,
-          thumbnailUrl: selectedVideo.thumbnailUrl,
-          duration: selectedVideo.duration,
-          needsTagging: updatedTags.length === 0, // Mark as needs tagging if no tags
-          videoType: 'youtube' as const,          youtubeId: selectedVideo.id,
-          title: selectedVideo.title,          publishedAt: selectedVideo.publishedAt,
-          recordingDate: selectedVideo.recordingDate || null,          channelTitle: selectedVideo.channelTitle,
-          allPlaylists: selectedVideo.allPlaylists || [], // Preserve existing playlists
-        };
+  // YouTube tag addition handler
+  const addYoutubeTag = (newTag: string) => {
+    if (!newTag.trim()) return;
+    const currentTags = youtubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
+    if (!currentTags.includes(newTag.trim())) {
+      currentTags.push(newTag.trim());
+      setYoutubeTags(currentTags.join(', '));
+    }
+  };
+  // YouTube tag removal functions
+  const removeBatchYoutubeTag = (tagToRemove: string) => {
+    const currentTags = batchYoutubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+    setBatchYoutubeTags(updatedTags.join(', '));
+  };
 
-        await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), videoData);
-
-        // Update the local state to reflect the change immediately
-        const updatedVideo = { ...selectedVideo, tags: updatedTags };
-        setVideos(videos.map(v => v.id === selectedVideo.id ? updatedVideo : v));
-        setSelectedVideo(updatedVideo);
-
-      } catch (err: any) {
-        console.error('Error saving after tag removal:', err);
-        // Revert the local state if save failed
-        setTags(tags);
-      }
+  const addBatchYoutubeTag = (newTag: string) => {
+    if (!newTag.trim()) return;
+    const currentTags = batchYoutubeTags.split(',').map(tag => tag.trim()).filter(Boolean);    if (!currentTags.includes(newTag.trim())) {
+      currentTags.push(newTag.trim());
+      setBatchYoutubeTags(currentTags.join(', '));
     }
   };
 
-  const addTag = (newTag: string) => {
-    if (!newTag.trim()) return;
-    const currentTags = tags.split(',').map(tag => tag.trim()).filter(Boolean);
-    if (!currentTags.includes(newTag.trim())) {
-      currentTags.push(newTag.trim());
-      setTags(currentTags.join(', '));
+  // Playlist management functions
+  const handlePlaylistSelectorOpen = (context: 'individual' | 'batch') => {
+    setPlaylistSelectorContext(context);
+    setShowPlaylistSelector(true);
+
+    // Pre-select current playlists for the selected video(s)
+    if (context === 'individual' && selectedVideo) {
+      const currentPlaylistIds = new Set(selectedVideo.allPlaylists?.map(p => p.id) || []);
+      setSelectedPlaylists(currentPlaylistIds);
+    } else if (context === 'batch') {
+      // For batch, start with empty selection
+      setSelectedPlaylists(new Set());
+    }
+  };
+
+  const handlePlaylistToggle = (playlistId: string) => {
+    const newSelected = new Set(selectedPlaylists);
+    if (newSelected.has(playlistId)) {
+      newSelected.delete(playlistId);
+    } else {
+      newSelected.add(playlistId);
+    }
+    setSelectedPlaylists(newSelected);
+  };
+
+  const handleSavePlaylistChanges = async () => {
+    try {
+      if (playlistSelectorContext === 'individual' && selectedVideo) {
+        // Update playlists for individual video
+        const response = await fetch('/api/manage-playlists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'batch_update_playlists',
+            videoId: selectedVideo.youtubeId || selectedVideo.id,
+            playlistIds: Array.from(selectedPlaylists)
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update playlists');
+        }
+
+        const result = await response.json();
+        console.log('Playlist update result:', result);
+
+        // Refresh metadata to get updated playlist information
+        await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            videoIds: [selectedVideo.youtubeId || selectedVideo.id]
+          })
+        });
+
+        // Reload videos to reflect changes
+        await loadVideos();
+
+        alert(`Playlist update completed!\nAdded: ${result.summary?.added || 0}\nRemoved: ${result.summary?.removed || 0}`);
+
+      } else if (playlistSelectorContext === 'batch' && selectedVideos.size > 0) {
+        // Update playlists for batch videos
+        const videoIds = Array.from(selectedVideos);
+        const results = [];
+
+        for (const videoId of videoIds) {
+          try {
+            const response = await fetch('/api/manage-playlists', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'batch_update_playlists',
+                videoId: videoId,
+                playlistIds: Array.from(selectedPlaylists)
+              })
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              results.push({ videoId, success: true, result });
+            } else {
+              const errorData = await response.json();
+              results.push({ videoId, success: false, error: errorData.error });
+            }
+          } catch (error) {
+            results.push({
+              videoId,
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+          }
+        }
+
+        // Refresh metadata for all updated videos
+        await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoIds })
+        });
+
+        // Reload videos to reflect changes
+        await loadVideos();
+
+        const successful = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success).length;
+
+        alert(`Batch playlist update completed!\nSuccessful: ${successful}\nFailed: ${failed}`);
+      }
+
+      setShowPlaylistSelector(false);
+      setSelectedPlaylists(new Set());
+
+    } catch (error) {
+      console.error('Error updating playlists:', error);
+      alert(`Failed to update playlists: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -777,10 +1072,12 @@ export default function TagVideosPage() {
               }`}
             >
               {new Set(Array.from(selectedVideos).filter(id => filteredVideos.some(v => v.id === id))).size === filteredVideos.length ? 'Deselect All' : 'Select All'}
-            </button>
-            {selectedVideos.size > 0 && (
+            </button>            {selectedVideos.size > 0 && (
               <button
-                onClick={clearSelection}
+                onClick={() => {
+                  setSelectedVideos(new Set());
+                  setShowBatchActions(false);
+                }}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
               >
                 Clear Selection ({selectedVideos.size})
@@ -807,52 +1104,170 @@ export default function TagVideosPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Batch Actions */}
+      </div>      {/* Batch Actions */}
       {showBatchActions && (
         <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
           <h3 className="text-lg font-semibold mb-3">
             Batch Actions ({selectedVideos.size} videos selected)
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Batch Tags (comma-separated)
-              </label>
+
+          {/* YouTube Update Toggle */}
+          <div className="mb-4">
+            <label className="flex items-center gap-2">
               <input
-                type="text"
-                value={batchTags}
-                onChange={(e) => setBatchTags(e.target.value)}
-                onClick={handleBatchTagsInputClick}
-                placeholder="Click to select cats or type manually"
-                className="border border-gray-300 rounded px-3 py-2 w-full cursor-pointer"
+                type="checkbox"
+                checked={enableBatchYoutubeUpdates}
+                onChange={(e) => setEnableBatchYoutubeUpdates(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
+              <span className="text-sm font-medium text-blue-700">
+                Enable YouTube Field Updates (will update YouTube first, then sync to Firebase)
+              </span>
+            </label>
+          </div>
+
+          {/* YouTube Fields (only shown when enabled) */}
+          {enableBatchYoutubeUpdates && (
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+              <h4 className="text-md font-semibold text-yellow-800 mb-3">
+                YouTube Fields (will be updated on YouTube first)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube Title (leave empty to keep existing)
+                  </label>
+                  <input
+                    type="text"
+                    value={batchYoutubeTitle}
+                    onChange={(e) => setBatchYoutubeTitle(e.target.value)}
+                    placeholder="New title for all selected videos..."
+                    className="border border-gray-300 rounded px-3 py-2 w-full"
+                  />
+                </div>                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube Tags (comma-separated, leave empty to keep existing)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={batchYoutubeTags}
+                      onChange={(e) => setBatchYoutubeTags(e.target.value)}
+                      onClick={handleBatchYoutubeTagsInputClick}
+                      placeholder="Click to select cats or type manually..."
+                      className="border border-gray-300 rounded px-3 py-2 w-full cursor-pointer pr-16"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleBatchYoutubeTagsInputClick}
+                      className="absolute right-2 top-2 text-blue-500 hover:text-blue-700 text-sm"
+                    >
+                      🐱 Select
+                    </button>
+                  </div>
+
+                  {/* Tag chips */}
+                  {batchYoutubeTags && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {batchYoutubeTags.split(',').map((tag, index) => {
+                        const trimmedTag = tag.trim();
+                        if (!trimmedTag) return null;
+                        return (
+                          <span
+                            key={index}
+                            className="inline-flex items-center bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                          >
+                            {trimmedTag}
+                            <button
+                              type="button"
+                              onClick={() => removeBatchYoutubeTag(trimmedTag)}
+                              className="ml-1 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube Description (leave empty to keep existing)
+                  </label>
+                  <textarea
+                    value={batchYoutubeDescription}
+                    onChange={(e) => setBatchYoutubeDescription(e.target.value)}
+                    placeholder="New YouTube description for all selected videos..."
+                    className="border border-gray-300 rounded px-3 py-2 w-full h-20 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube Recording Date (leave empty to keep existing)
+                  </label>
+                  <input
+                    type="date"
+                    value={batchYoutubeRecordingDate}
+                    onChange={(e) => setBatchYoutubeRecordingDate(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 w-full"
+                  />
+                </div>
+              </div>              <p className="text-xs text-yellow-700 mt-2">
+                ⚠️ These changes will be made directly to YouTube and may take time to process.
+              </p>
+            </div>
+          )}
+
+          {/* Playlists selection for batch update */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Playlists (YouTube) - Set for all selected videos
+            </label>
+            <div className="space-y-2">
+              <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border min-h-[2.5rem]">
+                {selectedPlaylists.size > 0 ? (
+                  <div className="space-y-1">
+                    {Array.from(selectedPlaylists).map(playlistId => {
+                      const playlist = allPlaylists.find(p => p.id === playlistId);
+                      return playlist ? (
+                        <div key={playlistId} className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <div className="font-medium text-sm">{playlist.title}</div>
+                            <div className="text-xs text-gray-500">{playlist.itemCount} videos</div>
+                          </div>
+                        </div>
+                      ) : null;
+                    })}
+                    <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                      Selected: {selectedPlaylists.size} playlists
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 italic">No playlists selected (will remove from all playlists)</div>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={handleBatchTagsInputClick}
-                className="absolute right-2 top-8 text-blue-500 hover:text-blue-700 text-sm"
+                onClick={() => handlePlaylistSelectorOpen('batch')}
+                disabled={loadingPlaylists}
+                className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 text-sm"
               >
-                🐱 Select Cats
+                {loadingPlaylists ? 'Loading...' : '✏️ Select Playlists'}
               </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Batch Description (optional)
-              </label>
-              <input
-                type="text"
-                value={batchDescription}
-                onChange={(e) => setBatchDescription(e.target.value)}
-                placeholder="Common description..."
-                className="border border-gray-300 rounded px-3 py-2 w-full"
-              />
-            </div>          </div>          <div className="flex gap-2 flex-wrap items-center">
+            <div className="text-xs text-yellow-600 mt-1">
+              ⚠️ All selected videos will be set to ONLY these playlists (removes from others)
+            </div>
+          </div>
+
+          <div className="flex gap-2 flex-wrap items-center">
             <button
               onClick={handleBatchSave}
-              disabled={batchSaving || !batchTags.trim()}
+              disabled={batchSaving || !enableBatchYoutubeUpdates}
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300"
             >
-              {batchSaving ? 'Saving...' : 'Save Batch Tags'}
+              {batchSaving ? 'Saving...' : 'Save Batch Changes'}
             </button>
             <button
               onClick={handleRefreshMetadata}
@@ -860,21 +1275,26 @@ export default function TagVideosPage() {
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
             >
               {refreshingMetadata ? 'Refreshing...' : 'Refresh Metadata'}
-            </button>
-            <button
+            </button>            <button
               onClick={() => {
                 setSelectedVideos(new Set());
                 setShowBatchActions(false);
+                setBatchYoutubeTitle('');
+                setBatchYoutubeTags('');
+                setBatchYoutubeDescription('');
+                setBatchYoutubeRecordingDate('');
+                setEnableBatchYoutubeUpdates(false);
               }}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
               Cancel
-            </button>            <div className="text-sm text-gray-600 ml-4">
+            </button>
+            <div className="text-sm text-gray-600 ml-4">
               💡 "Refresh Metadata" does a COMPLETE refresh from YouTube, clearing custom cat names and playlist assignments. To delete videos, use YouTube Studio.
             </div>
           </div>
         </div>
-      )}      {videos.length === 0 ? (
+      )}{videos.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg">
             No videos found. Check your YouTube API configuration.
@@ -1083,95 +1503,154 @@ export default function TagVideosPage() {
                   >
                     View on YouTube →
                   </a>
-                </div>                <div className="space-y-4">                  <div className="relative">
+                </div>                <div className="space-y-4">
+                  {/* YouTube Title */}
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tags
+                      Title (YouTube)
                     </label>
+                    <input
+                      type="text"
+                      value={youtubeTitle}
+                      onChange={(e) => setYoutubeTitle(e.target.value)}
+                      placeholder="Video title..."
+                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      ✏️ Changes will be saved to YouTube and synced to Firebase
+                    </div>
+                  </div>                  {/* YouTube Tags */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tags (YouTube)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={youtubeTags}
+                        onChange={(e) => setYoutubeTags(e.target.value)}
+                        onClick={handleYoutubeTagsInputClick}
+                        placeholder="Click to select cats or type manually..."
+                        className="border border-gray-300 rounded px-3 py-2 w-full text-sm cursor-pointer pr-16"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleYoutubeTagsInputClick}
+                        className="absolute right-2 top-2 text-blue-500 hover:text-blue-700 text-sm"
+                      >
+                        🐱 Select
+                      </button>
+                    </div>
 
-                    {/* Display existing tags as removable buttons */}
-                    {tags && (
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {tags.split(',').map(tag => tag.trim()).filter(Boolean).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                          >
-                            {tag}
-                            <button
-                              type="button"
-                              onClick={() => removeTag(tag)}
-                              className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 text-blue-600 hover:text-blue-800"
+                    {/* Tag chips */}
+                    {youtubeTags && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {youtubeTags.split(',').map((tag, index) => {
+                          const trimmedTag = tag.trim();
+                          if (!trimmedTag) return null;
+                          return (
+                            <span
+                              key={index}
+                              className="inline-flex items-center bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
                             >
-                              ×
-                            </button>
-                          </span>
-                        ))}
+                              {trimmedTag}
+                              <button
+                                type="button"
+                                onClick={() => removeYoutubeTag(trimmedTag)}
+                                className="ml-1 text-blue-600 hover:text-blue-800"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
 
-                    {/* Hidden input for maintaining the comma-separated value */}
-                    <input
-                      type="hidden"
-                      value={tags}
-                      onChange={(e) => setTags(e.target.value)}
-                    />
-
-                    {/* Click area to open cat selector */}
-                    <div
-                      onClick={handleTagsInputClick}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 cursor-pointer min-h-[40px] flex items-center justify-between bg-gray-50 hover:bg-gray-100"
-                    >
-                      <span className="text-gray-600 text-sm">
-                        {tags ? 'Click to add more cats' : 'Click to select cats'}
-                      </span>
-                      <span className="text-blue-500 hover:text-blue-700 text-sm">
-                        🐱 Select Cats
-                      </span>
-                    </div>                  </div>                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Playlists
-                    </label>
-                    <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border">
-                      {selectedVideo.allPlaylists && selectedVideo.allPlaylists.length > 0 ? (
-                        <div className="space-y-1">
-                          {selectedVideo.allPlaylists.map((playlist, index) => (
-                            <div key={playlist.id || index} className="flex flex-col">
-                              <div className="font-medium">{playlist.title}</div>
-                              <div className="text-xs text-gray-500">ID: {playlist.id}</div>
-                            </div>
-                          ))}
-                          {selectedVideo.allPlaylists.length > 1 && (
-                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
-                              Total: {selectedVideo.allPlaylists.length} playlists
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        'No playlists'
-                      )}
+                    <div className="text-xs text-gray-500 mt-1">
+                      ✏️ Changes will be saved to YouTube and synced to Firebase
                     </div>
                   </div>
 
+                  {/* YouTube Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
+                      YouTube Description
                     </label>
                     <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Video description..."
+                      value={youtubeDescription}
+                      onChange={(e) => setYoutubeDescription(e.target.value)}
+                      placeholder="YouTube video description..."
                       rows={3}
                       className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      ✏️ Changes will be saved to YouTube and synced to Firebase
+                    </div>
+                  </div>
+
+                  {/* Recording Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Recording Date (YouTube)
+                    </label>
+                    <input
+                      type="date"
+                      value={youtubeRecordingDate}
+                      onChange={(e) => setYoutubeRecordingDate(e.target.value)}
+                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      ✏️ Changes will be saved to YouTube and synced to Firebase
+                    </div>
+                  </div>                  {/* Playlists (YouTube) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Playlists (YouTube)
+                    </label>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border min-h-[2.5rem]">
+                        {selectedVideo.allPlaylists && selectedVideo.allPlaylists.length > 0 ? (
+                          <div className="space-y-1">
+                            {selectedVideo.allPlaylists.map((playlist, index) => (
+                              <div key={playlist.id || index} className="flex items-center justify-between">
+                                <div className="flex flex-col">
+                                  <div className="font-medium text-sm">{playlist.title}</div>
+                                  <div className="text-xs text-gray-500">ID: {playlist.id}</div>
+                                </div>
+                              </div>
+                            ))}
+                            {selectedVideo.allPlaylists.length > 1 && (
+                              <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                                Total: {selectedVideo.allPlaylists.length} playlists
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-gray-500 italic">No playlists</div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handlePlaylistSelectorOpen('individual')}
+                        disabled={loadingPlaylists}
+                        className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 text-sm"
+                      >
+                        {loadingPlaylists ? 'Loading...' : '✏️ Edit Playlists'}
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      ✏️ Changes will be saved to YouTube and synced to Firebase
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
                     <button
                       onClick={handleSave}
-                      disabled={saving}
+                      disabled={saving || updatingYoutube}
                       className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
                     >
-                      {saving ? 'Saving...' : 'Save'}
+                      {updatingYoutube ? 'Updating YouTube...' : saving ? 'Saving...' : 'Save Changes'}
                     </button>
                     <button
                       onClick={() => setSelectedVideo(null)}
@@ -1180,6 +1659,20 @@ export default function TagVideosPage() {
                       Cancel
                     </button>
                   </div>
+
+                  {(saving || updatingYoutube) && (
+                    <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                      <div className="font-medium text-blue-700 mb-1">Save Process:</div>
+                      <div className="space-y-1">
+                        <div className={updatingYoutube ? 'text-blue-600' : 'text-gray-500'}>
+                          1. {updatingYoutube ? '🔄 Updating YouTube...' : '✅ YouTube updated'}
+                        </div>
+                        <div className={saving && !updatingYoutube ? 'text-blue-600' : 'text-gray-500'}>
+                          2. {saving && !updatingYoutube ? '🔄 Syncing to Firebase...' : updatingYoutube ? '⏳ Pending' : '✅ Firebase synced'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -1195,9 +1688,12 @@ export default function TagVideosPage() {
       {/* Cat Selector Modal */}
       {showCatSelector && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col">            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                Select Cats {catSelectorContext === 'batch' ? '(Batch Tagging)' : '(Individual Video)'}
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col">            <div className="flex justify-between items-center mb-4">              <h3 className="text-lg font-semibold">
+                Select Cats {
+                  catSelectorContext === 'youtube-batch' ? '(YouTube Tags - Batch)' :
+                  catSelectorContext === 'youtube-individual' ? '(YouTube Tags - Individual)' :
+                  '(YouTube Tags)'
+                }
               </h3>
               <button
                 onClick={() => setShowCatSelector(false)}
@@ -1235,10 +1731,13 @@ export default function TagVideosPage() {
                     >                      <input
                         type="checkbox"
                         checked={selectedCats.has(cat.id)}
-                        onChange={() => catSelectorContext === 'batch'
-                          ? handleCatToggleBatch(cat.id, cat.name)
-                          : handleCatToggle(cat.id, cat.name)
-                        }
+                        onChange={() => {
+                          if (catSelectorContext === 'youtube-batch') {
+                            handleCatToggleYoutubeBatch(cat.id, cat.name);
+                          } else if (catSelectorContext === 'youtube-individual') {
+                            handleCatToggleYoutubeIndividual(cat.id, cat.name);
+                          }
+                        }}
                         className="mr-2"
                       />
                       <div className="flex-1">
@@ -1257,10 +1756,10 @@ export default function TagVideosPage() {
             <div className="flex justify-end gap-2 mt-4">              <button
                 onClick={() => {
                   setSelectedCats(new Set());
-                  if (catSelectorContext === 'batch') {
-                    setBatchTags('');
-                  } else {
-                    setTags('');
+                  if (catSelectorContext === 'youtube-batch') {
+                    setBatchYoutubeTags('');
+                  } else if (catSelectorContext === 'youtube-individual') {
+                    setYoutubeTags('');
                   }
                 }}
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
@@ -1272,6 +1771,69 @@ export default function TagVideosPage() {
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
               >
                 Done ({selectedCats.size} selected)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Playlist Selector Modal */}
+      {showPlaylistSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col">            <div className="flex justify-between items-center mb-4">              <h3 className="text-lg font-semibold">
+                Manage Playlists {
+                  playlistSelectorContext === 'batch' ? '(Batch Edit)' : '(Individual Edit)'
+                }
+              </h3>
+              <button
+                onClick={() => setShowPlaylistSelector(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Playlist list */}
+            <div className="flex-1 overflow-y-auto border border-gray-200 rounded">
+              {allPlaylists.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No playlists found. Create a playlist in YouTube Studio.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {allPlaylists.map((playlist) => (
+                    <label
+                      key={playlist.id}
+                      className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
+                        selectedPlaylists.has(playlist.id) ? 'bg-blue-50 border border-blue-200' : 'border border-gray-200'
+                      }`}
+                    >                      <input
+                        type="checkbox"
+                        checked={selectedPlaylists.has(playlist.id)}
+                        onChange={() => handlePlaylistToggle(playlist.id)}
+                        className="mr-2"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{playlist.title}</div>
+                        <div className="text-xs text-gray-500">ID: {playlist.id}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>            {/* Action buttons */}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setShowPlaylistSelector(false)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSavePlaylistChanges}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                Save Changes ({selectedPlaylists.size} selected)
               </button>
             </div>
           </div>

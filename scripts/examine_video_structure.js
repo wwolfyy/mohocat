@@ -26,29 +26,33 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Fields that come from YouTube API
+// Fields that MUST come from YouTube API and are READ-ONLY in Firebase
+const YOUTUBE_READONLY_FIELDS = [
+  'tags', // YouTube tags - cannot be edited in Firebase
+  'videoUrl', // YouTube video URL - cannot be edited in Firebase
+  'createdTime', // Mapped from YouTube recordingDate - cannot be edited in Firebase
+  'location' // YouTube video location - cannot be edited in Firebase
+];
+
+// Other fields that come from YouTube API but may be editable
 const YOUTUBE_SOURCED_FIELDS = [
   'title',
-  'description', // YouTube description
+  'description', // YouTube description but may be overridable
   'thumbnailUrl',
   'publishedAt',
   'recordingDate',
   'duration',
   'channelTitle',
   'youtubeId',
-  'allPlaylists', // Derived from YouTube playlists
-  'tags' // Could be from YouTube or user-added
+  'allPlaylists' // Derived from YouTube playlists
 ];
 
-// Fields that are Firestore-only (not available in YouTube)
+// Fields that are Firestore-only (not available in YouTube) and can be edited
 const FIRESTORE_ONLY_FIELDS = [
   'id', // Firestore document ID
-  'videoUrl', // YouTube URL constructed
-  'storagePath', // Same as videoUrl for YouTube videos
+  'storagePath', // May differ from videoUrl for local files
   'uploadDate', // When added to our system
-  'createdTime', // Mapped from YouTube recordingDate but could be manually set
   'uploadedBy', // Our system field
-  'location', // Manual location tagging
   'autoTagged', // Our system flag
   'fileSize', // Not available for YouTube videos
   'videoType', // Our classification
@@ -76,11 +80,15 @@ async function examineVideoStructure() {
       const data = doc.data();
       documents.push({ id: doc.id, data });
       Object.keys(data).forEach(field => allFields.add(field));
+    });    console.log('=== FIELD ANALYSIS ===\n');
+
+    console.log('� YOUTUBE READ-ONLY FIELDS (cannot be edited in Firebase):');
+    YOUTUBE_READONLY_FIELDS.forEach(field => {
+      const hasField = allFields.has(field);
+      console.log(`  ${hasField ? '✅' : '❌'} ${field}`);
     });
 
-    console.log('=== FIELD ANALYSIS ===\n');
-
-    console.log('🔵 YOUTUBE-SOURCED FIELDS (should sync from YouTube):');
+    console.log('\n🔵 OTHER YOUTUBE-SOURCED FIELDS (sync from YouTube):');
     YOUTUBE_SOURCED_FIELDS.forEach(field => {
       const hasField = allFields.has(field);
       console.log(`  ${hasField ? '✅' : '❌'} ${field}`);
@@ -93,7 +101,7 @@ async function examineVideoStructure() {
     });
 
     console.log('\n🟡 UNEXPECTED FIELDS (not in our categories):');
-    const categorizedFields = new Set([...YOUTUBE_SOURCED_FIELDS, ...FIRESTORE_ONLY_FIELDS]);
+    const categorizedFields = new Set([...YOUTUBE_READONLY_FIELDS, ...YOUTUBE_SOURCED_FIELDS, ...FIRESTORE_ONLY_FIELDS]);
     allFields.forEach(field => {
       if (!categorizedFields.has(field)) {
         console.log(`  ⚠️  ${field}`);
@@ -112,23 +120,26 @@ async function examineVideoStructure() {
           ? Array.isArray(value)
             ? `[${value.length} items]`
             : '{object}'
-          : String(value);
-
-        const category = YOUTUBE_SOURCED_FIELDS.includes(field) ? '🔵' :
+          : String(value);        const category = YOUTUBE_READONLY_FIELDS.includes(field) ? '🔴' :
+                        YOUTUBE_SOURCED_FIELDS.includes(field) ? '🔵' :
                         FIRESTORE_ONLY_FIELDS.includes(field) ? '🟢' : '🟡';
 
         console.log(`  ${category} ${field}: (${type}) ${preview}`);
       });
       console.log('');
-    });
-
-    console.log('=== DATA FLOW ANALYSIS ===\n');
+    });    console.log('=== DATA FLOW ANALYSIS ===\n');
     console.log('Based on this analysis:');
     console.log('');
-    console.log('🔵 YOUTUBE-SOURCED fields should be:');
-    console.log('   - Read-only in the admin UI (or sync changes back to YouTube)');
+    console.log('� YOUTUBE READ-ONLY fields MUST be:');
+    console.log('   - NEVER editable in the admin UI');
+    console.log('   - ALWAYS overwritten during metadata sync from YouTube');
+    console.log('   - Source of Truth: YouTube only');
+    console.log('   - Fields: tags, videoUrl, createdTime (from recordingDate), location');
+    console.log('');
+    console.log('🔵 OTHER YOUTUBE-SOURCED fields should be:');
+    console.log('   - Primarily sourced from YouTube');
+    console.log('   - May be overridable in some cases');
     console.log('   - Refreshed when metadata sync runs');
-    console.log('   - NOT directly editable unless we also update YouTube');
     console.log('');
     console.log('🟢 FIRESTORE-ONLY fields can be:');
     console.log('   - Freely edited in admin UI');
@@ -156,4 +167,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { examineVideoStructure, YOUTUBE_SOURCED_FIELDS, FIRESTORE_ONLY_FIELDS };
+module.exports = { examineVideoStructure, YOUTUBE_READONLY_FIELDS, YOUTUBE_SOURCED_FIELDS, FIRESTORE_ONLY_FIELDS };

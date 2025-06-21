@@ -135,15 +135,16 @@ export const updateImageTags = async (imageId: string, tags: string[]): Promise<
   }
 };
 
-// Update tags for a video
-export const updateVideoTags = async (videoId: string, tags: string[]): Promise<boolean> => {  try {
-    const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
-    await updateDoc(videoRef, {
-      tags: tags
-    });
-    return true;
+// Update tags for a video - DEPRECATED: Tags are now YouTube-sourced only
+// This function is kept for backwards compatibility but will not actually update tags
+export const updateVideoTags = async (videoId: string, tags: string[]): Promise<boolean> => {
+  try {
+    console.warn('WARNING: Video tags are now YouTube-sourced only. Cannot update tags directly in Firebase.');
+    console.warn('To update video tags, please edit them in YouTube Studio and then refresh metadata.');
+    console.warn(`Attempted to update video ${videoId} with tags:`, tags);
+    return false; // Always return false to indicate the operation is not allowed
   } catch (error) {
-    console.error('Error updating video tags:', error);
+    console.error('Error in deprecated updateVideoTags function:', error);
     return false;
   }
 };
