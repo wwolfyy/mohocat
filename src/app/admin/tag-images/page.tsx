@@ -21,6 +21,7 @@ export default function TagImagesPage() {
   const [selectedImage, setSelectedImage] = useState<StorageImage | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());  const [tags, setTags] = useState<string>('');
   const [description, setDescription] = useState('');
+  const [createdTime, setCreatedTime] = useState<string>(''); // New state for created date
   const [saving, setSaving] = useState(false);
   const [batchTags, setBatchTags] = useState<string>('');
   const [batchDescription, setBatchDescription] = useState('');
@@ -103,13 +104,29 @@ export default function TagImagesPage() {
     }
   };
 
-  const selectImage = (image: StorageImage) => {    setSelectedImage(image);
+  const selectImage = (image: StorageImage) => {
+    setSelectedImage(image);
     if (image.metadata) {
       setTags(image.metadata.tags?.join(', ') || '');
       setDescription(image.metadata.description || '');
+
+      // Format createdTime for date input (YYYY-MM-DD)
+      let createdTimeStr = '';
+      if (image.metadata.createdTime) {
+        try {
+          const date = new Date(image.metadata.createdTime.seconds ? image.metadata.createdTime.seconds * 1000 : image.metadata.createdTime);
+          if (!isNaN(date.getTime())) {
+            createdTimeStr = date.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.warn('Error parsing createdTime:', image.metadata.createdTime);
+        }
+      }
+      setCreatedTime(createdTimeStr);
     } else {
       setTags('');
       setDescription('');
+      setCreatedTime('');
     }
   };
 
@@ -123,7 +140,7 @@ export default function TagImagesPage() {
         storagePath: selectedImage.fullPath,
         tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
         uploadDate: selectedImage.metadata?.uploadDate || new Date(),
-        createdTime: selectedImage.metadata?.createdTime || null,
+        createdTime: createdTime ? new Date(createdTime) : null,
         uploadedBy: 'admin',
         description: description,
         needsTagging: false,
@@ -945,9 +962,26 @@ export default function TagImagesPage() {
                         </span>
                         <span className="text-blue-500 hover:text-blue-700 text-sm">
                           🐱 Select Cats
-                        </span>
+                        </span>                      </div>
+                    </div>
+
+                    {/* Created Date Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Created Date
+                      </label>
+                      <input
+                        type="date"
+                        value={createdTime}
+                        onChange={(e) => setCreatedTime(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        When the image was originally taken/created
                       </div>
-                    </div><div>
+                    </div>
+
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Description
                       </label>
@@ -1054,8 +1088,7 @@ export default function TagImagesPage() {
 
             {/* Action buttons */}
             <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => {
+              <button                onClick={() => {
                   setSelectedCats(new Set());
                   if (catSelectorContext === 'batch') {
                     setBatchTags('');
