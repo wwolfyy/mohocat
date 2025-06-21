@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '@/services/firebase';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
 import { cn } from '@/utils/cn';
+
+interface Playlist {
+  id: string;
+  title: string;
+  description?: string;
+}
 
 const NewPostForm = () => {
   const router = useRouter();
@@ -11,6 +17,38 @@ const NewPostForm = () => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  // YouTube metadata states
+  const [tags, setTags] = useState('');
+  const [recordingDate, setRecordingDate] = useState('');
+  const [selectedPlaylist, setSelectedPlaylist] = useState('');
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  // Fetch user's YouTube playlists on component mount
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      console.log('Starting to fetch playlists...');
+      setLoadingPlaylists(true);
+      try {
+        const response = await fetch('/api/youtube-playlists');
+        console.log('Playlist fetch response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Playlist data received:', data);
+          setPlaylists(data.playlists || []);
+          console.log('Playlists set to state:', data.playlists || []);
+        } else {
+          const errorText = await response.text();
+          console.warn('Failed to fetch playlists:', response.status, response.statusText, errorText);
+        }
+      } catch (error) {
+        console.error('Error fetching playlists:', error);
+      } finally {
+        setLoadingPlaylists(false);
+      }
+    };
+
+    fetchPlaylists();
+  }, []);
+
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setVideoFiles(Array.from(event.target.files));
@@ -52,12 +90,23 @@ const NewPostForm = () => {
       })
     );
     return urls;
-  };
-  const uploadVideoToYouTube = async (file: File): Promise<string> => {
+  };  const uploadVideoToYouTube = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('video', file);
     formData.append('title', title);
-    formData.append('description', 'Uploaded via Mountain Cats app');
+    formData.append('description', message || 'Uploaded via Mountain Cats app');
+
+    // Add enhanced metadata
+    if (tags.trim()) {
+      formData.append('tags', tags);
+    }
+    if (recordingDate) {
+      console.log('Sending recording date to YouTube:', recordingDate);
+      formData.append('recordingDate', recordingDate);
+    }
+    if (selectedPlaylist) {
+      formData.append('playlistId', selectedPlaylist);
+    }
 
     try {
       const response = await fetch('/api/upload-youtube', {
@@ -81,14 +130,24 @@ const NewPostForm = () => {
       throw error;
     }
   };
-
   const uploadVideosToYouTube = async (files: File[]): Promise<string[]> => {
     const urls = await Promise.all(
       files.map(async (file, index) => {
         const formData = new FormData();
-        formData.append('video', file);
-        formData.append('title', `${title} ${files.length > 1 ? `(Part ${index + 1})` : ''}`);
-        formData.append('description', 'Uploaded via Mountain Cats app');
+        formData.append('video', file);        formData.append('title', `${title} ${files.length > 1 ? `(Part ${index + 1})` : ''}`);
+        formData.append('description', message || 'Uploaded via Mountain Cats app');
+
+        // Add enhanced metadata
+        if (tags.trim()) {
+          formData.append('tags', tags);
+        }
+        if (recordingDate) {
+          console.log('Sending recording date to YouTube:', recordingDate);
+          formData.append('recordingDate', recordingDate);
+        }
+        if (selectedPlaylist) {
+          formData.append('playlistId', selectedPlaylist);
+        }
 
         try {
           const response = await fetch('/api/upload-youtube', {
@@ -205,14 +264,69 @@ const NewPostForm = () => {
         <input type="file" accept="image/*" multiple onChange={handleImageChange} />
       </div>
       <div>
-        <label className="block font-semibold">내용:</label>
-        <textarea
+        <label className="block font-semibold">내용:</label>        <textarea
           value={message}
           onChange={e => setMessage(e.target.value)}
           className="w-full border rounded p-2"
           rows={4}
         />
-      </div>      <button
+      </div>
+
+      {/* YouTube Metadata Section */}
+      {videoFiles.length > 0 && (
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">YouTube 동영상 설정</h3>
+
+          {/* Tags */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">태그 (쉼표로 구분):</label>
+            <input
+              type="text"
+              value={tags}
+              onChange={e => setTags(e.target.value)}
+              placeholder="예: 고양이, 산, 자연"
+              className="border p-2 rounded w-full"
+            />
+            <p className="text-sm text-gray-600 mt-1">태그는 쉼표로 구분하여 입력하세요</p>
+          </div>
+
+          {/* Recording Date */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">촬영 날짜:</label>            <input
+              type="date"
+              value={recordingDate}
+              onChange={e => setRecordingDate(e.target.value)}
+              className="border p-2 rounded"
+            />
+          </div>          {/* Playlist Selection */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">재생목록에 추가:</label>
+            {loadingPlaylists ? (
+              <p className="text-sm text-gray-600">재생목록을 불러오는 중...</p>
+            ) : (
+              <>
+                <select
+                  value={selectedPlaylist}
+                  onChange={e => setSelectedPlaylist(e.target.value)}
+                  className="border p-2 rounded w-full"
+                >
+                  <option value="">재생목록 선택 안함</option>
+                  {playlists.map(playlist => (
+                    <option key={playlist.id} value={playlist.id}>
+                      {playlist.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {playlists.length > 0 ? `${playlists.length}개의 재생목록을 찾았습니다` : '재생목록을 찾을 수 없습니다'}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <button
         type="submit"
         disabled={uploading}
         className={cn(

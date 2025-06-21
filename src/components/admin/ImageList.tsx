@@ -35,7 +35,6 @@ import { Card, CardContent, Grid, Box, Chip, Dialog, DialogTitle, DialogContent,
 // Custom filter for images
 const ImageFilter = (props: any) => (
   <Filter {...props}>
-    <BooleanInput source="needsTagging" label="Needs Tagging" />
     <TextInput source="fileName" label="File Name" />
     <SelectInput
       source="tags"
@@ -73,14 +72,11 @@ const ImageListActions = () => {
     if (selectedIds.length === 0) {
       notify('Please select images to tag', { type: 'warning' });
       return;
-    }
-
-    try {
+    }    try {
       await updateMany('images', {
         ids: selectedIds,
         data: {
           tags: selectedTags,
-          needsTagging: false,
           lastTaggedAt: new Date(),
         },
       });
@@ -176,11 +172,10 @@ const ImageRow = () => {
           </Grid>
           <Grid item xs={12} md={8}>
             <Box>
-              <h3 style={{ margin: '0 0 8px 0' }}>{record.fileName}</h3>
-              <p style={{ margin: '4px 0', fontSize: '14px', color: '#666' }}>
+              <h3 style={{ margin: '0 0 8px 0' }}>{record.fileName}</h3>              <p style={{ margin: '4px 0', fontSize: '14px', color: '#666' }}>
                 Uploaded: {new Date(record.uploadDate).toLocaleDateString()}
               </p>
-              {record.needsTagging ? (
+              {(!record.tags || record.tags.length === 0) ? (
                 <Chip label="Needs Tagging" color="warning" size="small" />
               ) : (
                 <Chip label="Tagged" color="success" size="small" />
@@ -257,11 +252,10 @@ const ImageGrid = () => {
               />
               <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
                 {record.fileName}
-              </h4>
-              <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>
+              </h4>              <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>
                 {new Date(record.uploadDate).toLocaleDateString()}
               </p>
-              {record.needsTagging ? (
+              {(!record.tags || record.tags.length === 0) ? (
                 <Chip label="Needs Tagging" color="warning" size="small" />
               ) : (
                 <Chip label="Tagged" color="success" size="small" />

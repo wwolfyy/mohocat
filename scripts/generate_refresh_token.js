@@ -9,7 +9,11 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.YOUTUBE_REDIRECT_URI // Ensure this matches the registered redirect URI
 );
 
-const SCOPES = ['https://www.googleapis.com/auth/youtube.upload'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/youtube.upload',
+  'https://www.googleapis.com/auth/youtube',
+  'https://www.googleapis.com/auth/youtube.readonly'
+];
 
 console.log('OAuth2 Client Configuration:', {
   clientId: process.env.YOUTUBE_CLIENT_ID,

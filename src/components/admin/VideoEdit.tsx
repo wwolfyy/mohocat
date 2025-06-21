@@ -491,14 +491,8 @@ const VideoEdit = () => {
             label="Description"
             multiline
             rows={3}
-            fullWidth
-          />
+            fullWidth          />
 
-          <BooleanInput
-            source="needsTagging"
-            label="Needs Tagging"
-            helperText="Uncheck this after tagging is complete"
-          />
             {/* Video Type Selection */}
           <TextInput
             source="videoType"

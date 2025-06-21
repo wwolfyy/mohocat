@@ -11,9 +11,9 @@ interface TaggedVideo extends Omit<YouTubeVideo, 'description'> {
   firestoreId: string; // Always present now
   tags: string[]; // Always present, can be empty array
   description: string; // Always present, can be empty string
-  catName: string; // Always present, can be empty string
-  needsTagging: boolean; // Always present
   createdTime?: Date | { seconds: number } | any; // Firebase Timestamp or Date
+  allPlaylists?: Array<{id: string, title: string}>; // All playlists the video belongs to
+  lastMetadataRefresh?: Date | { seconds: number } | any; // When metadata was last refreshed
 }
 
 export default function TagVideosPage() {
@@ -24,10 +24,10 @@ export default function TagVideosPage() {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [tags, setTags] = useState<string>('');
   const [description, setDescription] = useState('');
-  const [catName, setCatName] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [catName, setCatName] = useState('');  const [saving, setSaving] = useState(false);
   const [batchTags, setBatchTags] = useState<string>('');
   const [batchDescription, setBatchDescription] = useState('');  const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
+  const [refreshingMetadata, setRefreshingMetadata] = useState(false);
   // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
@@ -77,10 +77,8 @@ export default function TagVideosPage() {
 
       // Create Firestore entries for any YouTube videos that don't have them yet
       const videosToCreate = [];
-      for (const video of youtubeVideos) {
-        if (!metadataMap.has(video.id)) {          const videoData = {
+      for (const video of youtubeVideos) {        if (!metadataMap.has(video.id)) {          const videoData = {
             videoUrl: video.videoUrl,
-            fileName: video.title,
             storagePath: video.videoUrl,
             tags: [],
             uploadDate: new Date(),
@@ -88,14 +86,11 @@ export default function TagVideosPage() {
             description: video.description || '',
             thumbnailUrl: video.thumbnailUrl,
             duration: video.duration,
-            needsTagging: true,
             videoType: 'youtube' as const,
             youtubeId: video.id,            title: video.title,
             publishedAt: video.publishedAt,
             recordingDate: video.recordingDate || null,
-            channelTitle: video.channelTitle,
-            catName: '',
-            createdTime: null, // Leave empty for manual entry
+            channelTitle: video.channelTitle,            createdTime: null, // Leave empty for manual entry
           };
           videosToCreate.push({ videoId: video.id, data: videoData });
         }
@@ -117,16 +112,15 @@ export default function TagVideosPage() {
       console.log(`Created ${createdEntries.length} new cat_videos entries`);
       console.log(`All ${youtubeVideos.length} YouTube videos now have metadata entries in Firestore (consistent with cat_images collection)`);      // Combine YouTube videos with Firestore metadata (now all videos have metadata)
       const combinedVideos: TaggedVideo[] = youtubeVideos.map(video => {
-        const metadata = metadataMap.get(video.id);
-        return {
+        const metadata = metadataMap.get(video.id);        return {
           ...video,
           hasMetadata: true, // Now all videos have metadata
           firestoreId: metadata!.id, // Safe to use ! since we created all missing entries
           tags: metadata?.tags || [],
-          catName: metadata?.catName || '',
-          needsTagging: metadata?.needsTagging !== false,
           description: metadata?.description || video.description || '',
           createdTime: metadata?.createdTime || null,
+          allPlaylists: metadata?.allPlaylists || [],
+          lastMetadataRefresh: metadata?.lastMetadataRefresh || null,
         };
       });
 
@@ -151,12 +145,10 @@ export default function TagVideosPage() {
     } finally {
       setLoading(false);
     }
-  };
-  const handleVideoSelect = (video: TaggedVideo) => {
+  };  const handleVideoSelect = (video: TaggedVideo) => {
     setSelectedVideo(video);
     setTags(video.tags.join(', '));
     setDescription(video.description);
-    setCatName(video.catName);
   };
 
   const handleCheckboxChange = (videoId: string, checked: boolean) => {
@@ -209,16 +201,12 @@ export default function TagVideosPage() {
         uploadedBy: 'admin',
         description: description,
         thumbnailUrl: selectedVideo.thumbnailUrl,
-        duration: selectedVideo.duration,
-        needsTagging: false, // Mark as tagged
-        videoType: 'youtube' as const,
-        // Additional YouTube-specific fields
+        duration: selectedVideo.duration,        videoType: 'youtube' as const,        // Additional YouTube-specific fields
         youtubeId: selectedVideo.id,        title: selectedVideo.title,
         publishedAt: selectedVideo.publishedAt,
         recordingDate: selectedVideo.recordingDate || null,
-        channelTitle: selectedVideo.channelTitle,
-        // Custom field for primary cat name
-        catName: catName,
+        channelTitle: selectedVideo.channelTitle,        // Preserve existing playlists
+        allPlaylists: selectedVideo.allPlaylists || [], // Preserve existing playlists
       };
 
       // All videos now have metadata entries, so we always update existing documents
@@ -229,14 +217,12 @@ export default function TagVideosPage() {
       }      // Update local state
       setVideos(prev => prev.map(v =>
         v.id === selectedVideo.id
-          ? { ...v, tags: tagsArray, catName, description, needsTagging: false }
+          ? { ...v, tags: tagsArray, description, needsTagging: false }
           : v
       ));
 
-      setSelectedVideo(null);
-      setTags('');
+      setSelectedVideo(null);      setTags('');
       setDescription('');
-      setCatName('');
     } catch (err) {
       console.error('Error saving video metadata:', err);
       setError('Failed to save video metadata');
@@ -260,20 +246,16 @@ export default function TagVideosPage() {
           storagePath: video.videoUrl,
           tags: tagsArray,
           uploadDate: new Date(),
-          createdTime: video.createdTime || null, // Preserve existing or leave null
-          uploadedBy: 'admin',
+          createdTime: video.createdTime || null, // Preserve existing or leave null          uploadedBy: 'admin',
           description: batchDescription || video.description,
           thumbnailUrl: video.thumbnailUrl,
           duration: video.duration,
-          needsTagging: false,
-          videoType: 'youtube' as const,
-          // Additional YouTube-specific fields
+          videoType: 'youtube' as const,          // Additional YouTube-specific fields
           youtubeId: video.id,          title: video.title,
           publishedAt: video.publishedAt,
           recordingDate: video.recordingDate || null,
-          channelTitle: video.channelTitle,
-          // Custom field for primary cat name
-          catName: batchDescription ? '' : video.catName,
+          channelTitle: video.channelTitle,          // Preserve existing playlists
+          allPlaylists: video.allPlaylists || [], // Preserve existing playlists
         };
 
         // All videos now have metadata entries, so we always update existing documents
@@ -299,6 +281,104 @@ export default function TagVideosPage() {
       console.error('Error batch saving videos:', err);
       setError('Failed to save batch video metadata');    } finally {
       setBatchSaving(false);
+    }  };
+
+  const handleRefreshMetadata = async () => {
+    if (selectedVideos.size === 0) {
+      alert('Please select at least one video to refresh metadata.');
+      return;
+    }    const confirmed = confirm(
+      `⚠️ COMPLETE REFRESH for ${selectedVideos.size} selected video(s)\n\n` +
+      'This will RESET ALL data with fresh YouTube metadata:\n' +
+      '• Titles, descriptions, thumbnails, tags, dates\n' +
+      '• Cat names → cleared\n' +
+      '• Playlist assignments → cleared\n' +
+      '• Tagging status → based on YouTube tags\n\n' +
+      'This is a FULL refresh. Continue?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setRefreshingMetadata(true);
+      setError(null);
+
+      const videoIds = Array.from(selectedVideos);
+
+      const response = await fetch('/api/refresh-video-metadata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoIds }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to refresh metadata');
+      }
+
+      // Reload videos to show updated metadata
+      await loadVideos();
+
+      // Clear selection
+      setSelectedVideos(new Set());
+      setShowBatchActions(false);
+
+      alert(
+        `Metadata refresh completed!\n\n` +
+        `Updated: ${result.summary.updated} videos\n` +
+        `Not found: ${result.summary.notFound} videos`
+      );
+
+    } catch (err) {
+      console.error('Error refreshing metadata:', err);
+      setError(`Failed to refresh metadata: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setRefreshingMetadata(false);
+    }
+  };  const handleRefreshSingleMetadata = async (video: TaggedVideo) => {
+    const confirmed = confirm(
+      `⚠️ COMPLETE REFRESH for "${video.title}"\n\n` +
+      'This will RESET ALL data with fresh YouTube metadata:\n' +
+      '• Title, description, thumbnail, tags, dates\n' +
+      '• Cat names → cleared\n' +
+      '• Playlist assignments → cleared\n' +
+      '• Tagging status → based on YouTube tags\n\n' +
+      'This is a FULL refresh. Continue?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setRefreshingMetadata(true);
+      setError(null);
+
+      const response = await fetch('/api/refresh-video-metadata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoIds: [video.id] }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to refresh metadata');
+      }
+
+      // Reload videos to show updated metadata
+      await loadVideos();
+
+      alert('Metadata refreshed successfully!');
+
+    } catch (err) {
+      console.error('Error refreshing metadata:', err);
+      setError(`Failed to refresh metadata: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setRefreshingMetadata(false);
     }
   };
 
@@ -351,13 +431,14 @@ export default function TagVideosPage() {
     } catch (error) {
       console.error('Error loading cats:', error);
     }
-  };
-  const untaggedVideos = videos.filter(v => v.needsTagging);
-  const taggedVideos = videos.filter(v => !v.needsTagging);  // Apply filters to get displayed videos
+  };  // Determine tagged/untagged based on whether video has tags
+  const untaggedVideos = videos.filter(v => v.tags.length === 0);
+  const taggedVideos = videos.filter(v => v.tags.length > 0);  // Apply filters to get displayed videos
   const filteredVideos = videos.filter(video => {
-    // Tag filtering
-    if (video.needsTagging && !showUntaggedVideos) return false;
-    if (!video.needsTagging && !showTaggedVideos) return false;
+    // Tag filtering - check if video has tags instead of needsTagging field
+    const hasNoTags = video.tags.length === 0;
+    if (hasNoTags && !showUntaggedVideos) return false;
+    if (!hasNoTags && !showTaggedVideos) return false;
 
     // Date filtering (only if enabled)
     if (enableDateFilter) {
@@ -465,19 +546,16 @@ export default function TagVideosPage() {
           thumbnailUrl: selectedVideo.thumbnailUrl,
           duration: selectedVideo.duration,
           needsTagging: updatedTags.length === 0, // Mark as needs tagging if no tags
-          videoType: 'youtube' as const,
-          youtubeId: selectedVideo.id,
-          title: selectedVideo.title,
-          publishedAt: selectedVideo.publishedAt,
-          recordingDate: selectedVideo.recordingDate || null,
-          channelTitle: selectedVideo.channelTitle,
-          catName: catName,
+          videoType: 'youtube' as const,          youtubeId: selectedVideo.id,
+          title: selectedVideo.title,          publishedAt: selectedVideo.publishedAt,
+          recordingDate: selectedVideo.recordingDate || null,          channelTitle: selectedVideo.channelTitle,
+          allPlaylists: selectedVideo.allPlaylists || [], // Preserve existing playlists
         };
 
         await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), videoData);
 
         // Update the local state to reflect the change immediately
-        const updatedVideo = { ...selectedVideo, tags: updatedTags, needsTagging: updatedTags.length === 0 };
+        const updatedVideo = { ...selectedVideo, tags: updatedTags };
         setVideos(videos.map(v => v.id === selectedVideo.id ? updatedVideo : v));
         setSelectedVideo(updatedVideo);
 
@@ -768,15 +846,20 @@ export default function TagVideosPage() {
                 placeholder="Common description..."
                 className="border border-gray-300 rounded px-3 py-2 w-full"
               />
-            </div>          </div>
-
-          <div className="flex gap-2 flex-wrap items-center">
+            </div>          </div>          <div className="flex gap-2 flex-wrap items-center">
             <button
               onClick={handleBatchSave}
               disabled={batchSaving || !batchTags.trim()}
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300"
             >
               {batchSaving ? 'Saving...' : 'Save Batch Tags'}
+            </button>
+            <button
+              onClick={handleRefreshMetadata}
+              disabled={refreshingMetadata || selectedVideos.size === 0}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+            >
+              {refreshingMetadata ? 'Refreshing...' : 'Refresh Metadata'}
             </button>
             <button
               onClick={() => {
@@ -786,9 +869,8 @@ export default function TagVideosPage() {
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
               Cancel
-            </button>
-            <div className="text-sm text-gray-600 ml-4">
-              💡 To delete videos, use YouTube Studio - requires OAuth authentication
+            </button>            <div className="text-sm text-gray-600 ml-4">
+              💡 "Refresh Metadata" does a COMPLETE refresh from YouTube, clearing custom cat names and playlist assignments. To delete videos, use YouTube Studio.
             </div>
           </div>
         </div>
@@ -815,7 +897,7 @@ export default function TagVideosPage() {
                   key={video.id}                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                     selectedVideo?.id === video.id
                       ? 'border-blue-500'
-                      : !video.needsTagging
+                      : video.tags.length > 0
                       ? 'border-green-200'
                       : 'border-gray-200'
                   }`}
@@ -830,8 +912,18 @@ export default function TagVideosPage() {
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>                  {/* Status indicator */}
-                  <div className="absolute top-2 right-2 z-10">
-                    {!video.needsTagging ? (
+                  <div className="absolute top-2 right-2 z-10 flex gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRefreshSingleMetadata(video);
+                      }}
+                      disabled={refreshingMetadata}
+                      className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded disabled:bg-gray-300"
+                      title="Refresh metadata from YouTube"
+                    >
+                      🔄
+                    </button>                    {video.tags.length > 0 ? (
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">
                         Tagged
                       </span>
@@ -862,20 +954,15 @@ export default function TagVideosPage() {
                     <div className="p-3">
                       <h3 className="font-medium text-sm line-clamp-2 mb-1">
                         {video.title}
-                      </h3>
-                      <p className="text-xs text-gray-500 mb-1">
+                      </h3>                      <p className="text-xs text-gray-500 mb-1">
                         Published: {new Date(video.publishedAt).toLocaleDateString()}
-                      </p>                      {video.recordingDate && (
-                        <p className="text-xs text-gray-500 mb-1">
-                          Recorded: {new Date(video.recordingDate).toLocaleDateString()}
-                        </p>
-                      )}                      <p className="text-xs text-gray-500 mb-1">
+                      </p>
+                      <p className="text-xs text-gray-500 mb-1">
                         Created: {video.createdTime ?
                           new Date(video.createdTime.seconds ? video.createdTime.seconds * 1000 : video.createdTime).toLocaleDateString() :
                           'null'
                         }
-                      </p>
-                      <p className="text-xs text-blue-600 mb-2 font-mono break-all">
+                      </p><p className="text-xs text-blue-600 mb-2 font-mono break-all">
                         youtu.be/{video.id}
                       </p>
                       {video.tags && video.tags.length > 0 && (
@@ -965,16 +1052,16 @@ export default function TagVideosPage() {
                     {selectedVideo.title}
                   </h4>                  <p className="text-xs text-gray-500 mb-1">
                     Published: {new Date(selectedVideo.publishedAt).toLocaleDateString()}
-                  </p>
-                  {selectedVideo.recordingDate && (
-                    <p className="text-xs text-gray-500 mb-1">
-                      Recorded: {new Date(selectedVideo.recordingDate).toLocaleDateString()}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500 mb-1">
+                  </p>                  <p className="text-xs text-gray-500 mb-1">
                     Created: {selectedVideo.createdTime ?
                       new Date(selectedVideo.createdTime.seconds ? selectedVideo.createdTime.seconds * 1000 : selectedVideo.createdTime).toLocaleDateString() :
                       'null'
+                    }
+                  </p>
+                  <p className="text-xs text-gray-500 mb-1">
+                    Metadata Refreshed: {selectedVideo.lastMetadataRefresh ?
+                      new Date(selectedVideo.lastMetadataRefresh.seconds ? selectedVideo.lastMetadataRefresh.seconds * 1000 : selectedVideo.lastMetadataRefresh).toLocaleDateString() :
+                      'Never'
                     }
                   </p>
                   <div className="text-xs mb-2">
@@ -1040,20 +1127,29 @@ export default function TagVideosPage() {
                       <span className="text-blue-500 hover:text-blue-700 text-sm">
                         🐱 Select Cats
                       </span>
-                    </div>
-                  </div>
-
-                  <div>
+                    </div>                  </div>                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Primary Cat Name
+                      Playlists
                     </label>
-                    <input
-                      type="text"
-                      value={catName}
-                      onChange={(e) => setCatName(e.target.value)}
-                      placeholder="Main cat featured"
-                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
-                    />
+                    <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border">
+                      {selectedVideo.allPlaylists && selectedVideo.allPlaylists.length > 0 ? (
+                        <div className="space-y-1">
+                          {selectedVideo.allPlaylists.map((playlist, index) => (
+                            <div key={playlist.id || index} className="flex flex-col">
+                              <div className="font-medium">{playlist.title}</div>
+                              <div className="text-xs text-gray-500">ID: {playlist.id}</div>
+                            </div>
+                          ))}
+                          {selectedVideo.allPlaylists.length > 1 && (
+                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                              Total: {selectedVideo.allPlaylists.length} playlists
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        'No playlists'
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -1075,7 +1171,7 @@ export default function TagVideosPage() {
                       disabled={saving}
                       className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
                     >
-                      {saving ? 'Saving...' : 'Save Tags'}
+                      {saving ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={() => setSelectedVideo(null)}

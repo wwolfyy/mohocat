@@ -54,7 +54,6 @@ import { PlayArrow, YouTube, CloudQueue } from '@mui/icons-material';
 // Custom filter for videos
 const VideoFilter = (props: any) => (
   <Filter {...props}>
-    <BooleanInput source="needsTagging" label="Needs Tagging" />
     <TextInput source="fileName" label="File Name" />
     <SelectInput
       source="videoType"
@@ -127,14 +126,11 @@ const VideoListActions = () => {
     if (selectedIds.length === 0) {
       notify('Please select videos to tag', { type: 'warning' });
       return;
-    }
-
-    try {
+    }    try {
       await updateMany('videos', {
         ids: selectedIds,
         data: {
           tags: selectedTags,
-          needsTagging: false,
           lastTaggedAt: new Date(),
         },
       });
@@ -342,10 +338,8 @@ const VideoCard = ({ record }: { record: any }) => {
 
         <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
           Uploaded: {new Date(record.uploadDate).toLocaleDateString()}
-        </Typography>
-
-        <Box sx={{ mb: 2 }}>
-          {record.needsTagging ? (
+        </Typography>        <Box sx={{ mb: 2 }}>
+          {(!record.tags || record.tags.length === 0) ? (
             <Chip label="Needs Tagging" color="warning" size="small" />
           ) : (
             <Chip label="Tagged" color="success" size="small" />

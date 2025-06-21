@@ -56,13 +56,7 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
 // Get all images (with optional filtering)
 export const getAllImages = async (options: MediaQueryOptions = {}): Promise<CatImage[]> => {
   try {
-    let q = collection(db, COLLECTIONS.CAT_IMAGES);
-
-    const constraints = [];
-
-    if (options.needsTagging !== undefined) {
-      constraints.push(where('needsTagging', '==', options.needsTagging));
-    }
+    let q = collection(db, COLLECTIONS.CAT_IMAGES);    const constraints = [];
 
     if (options.tags && options.tags.length > 0) {
       // For multiple tags, we'll need to filter client-side or use array-contains-any
@@ -97,13 +91,7 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
 // Get all videos (with optional filtering)
 export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<CatVideo[]> => {
   try {
-    let q = collection(db, COLLECTIONS.CAT_VIDEOS);
-
-    const constraints = [];
-
-    if (options.needsTagging !== undefined) {
-      constraints.push(where('needsTagging', '==', options.needsTagging));
-    }
+    let q = collection(db, COLLECTIONS.CAT_VIDEOS);    const constraints = [];
 
     if (options.tags && options.tags.length > 0) {
       constraints.push(where('tags', 'array-contains-any', options.tags));
@@ -138,8 +126,7 @@ export const updateImageTags = async (imageId: string, tags: string[]): Promise<
   try {
     const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
     await updateDoc(imageRef, {
-      tags: tags,
-      needsTagging: tags.length === 0 // If no tags, it still needs tagging
+      tags: tags
     });
     return true;
   } catch (error) {
@@ -149,12 +136,10 @@ export const updateImageTags = async (imageId: string, tags: string[]): Promise<
 };
 
 // Update tags for a video
-export const updateVideoTags = async (videoId: string, tags: string[]): Promise<boolean> => {
-  try {
+export const updateVideoTags = async (videoId: string, tags: string[]): Promise<boolean> => {  try {
     const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
     await updateDoc(videoRef, {
-      tags: tags,
-      needsTagging: tags.length === 0
+      tags: tags
     });
     return true;
   } catch (error) {

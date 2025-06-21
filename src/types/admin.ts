@@ -75,7 +75,6 @@ export interface AdminImageResource {
   imageUrl: string;
   fileName: string;
   tags: string[];
-  needsTagging: boolean;
   uploadDate: string; // ISO string for React-Admin
   dimensions?: string; // e.g., "1920x1080"
   fileSize?: number;
@@ -86,7 +85,6 @@ export interface AdminVideoResource {
   videoUrl: string;
   fileName: string;
   tags: string[];
-  needsTagging: boolean;
   uploadDate: string; // ISO string for React-Admin
   duration?: number;
   fileSize?: number;
@@ -106,7 +104,6 @@ export interface AdminCatResource {
 
 // Filter and search interfaces
 export interface MediaFilter {
-  needsTagging?: boolean;
   tags?: string[];
   uploadDateFrom?: Date;
   uploadDateTo?: Date;

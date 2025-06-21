@@ -12,7 +12,6 @@ export interface CatImage {
   description?: string;      // Optional description
   location?: string;         // Optional location where photo was taken
   thumbnailUrl?: string;     // Optional smaller thumbnail version
-  needsTagging: boolean;     // Flag indicating if image needs manual tagging
   autoTagged?: boolean;      // Flag indicating if tags were auto-generated
   fileSize?: number;         // File size in bytes
   dimensions?: {             // Image dimensions
@@ -24,7 +23,6 @@ export interface CatImage {
 export interface CatVideo {
   id: string;
   videoUrl: string;          // Firebase Storage URL or YouTube URL
-  fileName: string;          // Original file name
   storagePath: string;       // Full path in Firebase Storage
   tags: string[];            // Array of cat names/tags
   uploadDate: Date;
@@ -34,10 +32,10 @@ export interface CatVideo {
   location?: string;         // Optional location where video was taken
   thumbnailUrl?: string;     // Video thumbnail
   duration?: number;         // Video length in seconds
-  needsTagging: boolean;     // Flag indicating if video needs manual tagging
   autoTagged?: boolean;      // Flag indicating if tags were auto-generated
   fileSize?: number;         // File size in bytes
   videoType: 'storage' | 'youtube'; // Where the video is hosted
+  allPlaylists?: Array<{id: string, title: string}>; // All playlists the video belongs to
 }
 
 export interface MediaCollection {
@@ -59,7 +57,6 @@ export interface TaggingSession {
 export interface MediaQueryOptions {
   catName?: string;
   tags?: string[];
-  needsTagging?: boolean;
   limit?: number;
   orderBy?: 'uploadDate' | 'fileName';
   orderDirection?: 'asc' | 'desc';
