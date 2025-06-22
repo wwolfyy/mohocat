@@ -6,6 +6,80 @@ import { db } from '@/services/firebase';
 import { fetchChannelVideos, YouTubeVideo } from '@/services/youtube';
 import { Cat } from '@/types';
 
+// Helper function to parse recording date from video title
+const parseRecordingDateFromTitle = (title: string): Date | null => {
+  try {
+    // Pattern 1: yyyy-mm-dd hh.MM.ss (with spaces or special chars around)
+    const pattern1 = /(\d{4}-\d{2}-\d{2}\s+\d{2}\.\d{2}\.\d{2})/;
+    const match1 = title.match(pattern1);
+
+    if (match1) {
+      const dateTimeStr = match1[1];
+      // Convert format: "2024-03-15 14.30.45" -> "2024-03-15T14:30:45"
+      const isoFormat = dateTimeStr.replace(/\s+/, 'T').replace(/\./g, ':');
+      const date = new Date(isoFormat);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Pattern 2: yyyymmdd_hhMMss (with spaces or special chars around)
+    const pattern2 = /(\d{8}_\d{6})/;
+    const match2 = title.match(pattern2);
+
+    if (match2) {
+      const dateTimeStr = match2[1];
+      // Convert format: "20240315_143045" -> "2024-03-15T14:30:45"
+      const year = dateTimeStr.substring(0, 4);
+      const month = dateTimeStr.substring(4, 6);
+      const day = dateTimeStr.substring(6, 8);
+      const hour = dateTimeStr.substring(9, 11);
+      const minute = dateTimeStr.substring(11, 13);
+      const second = dateTimeStr.substring(13, 15);
+
+      const isoFormat = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+      const date = new Date(isoFormat);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Additional pattern: yyyy-mm-dd (date only, no time)
+    const pattern3 = /(\d{4}-\d{2}-\d{2})/;
+    const match3 = title.match(pattern3);
+
+    if (match3) {
+      const dateStr = match3[1];
+      const date = new Date(dateStr + 'T00:00:00');
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Additional pattern: yyyymmdd (date only, no time)
+    const pattern4 = /(\d{8})/;
+    const match4 = title.match(pattern4);
+
+    if (match4) {
+      const dateStr = match4[1];
+      const year = dateStr.substring(0, 4);
+      const month = dateStr.substring(4, 6);
+      const day = dateStr.substring(6, 8);
+
+      const isoFormat = `${year}-${month}-${day}T00:00:00`;
+      const date = new Date(isoFormat);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn(`Error parsing date from video title "${title}":`, error);
+    return null;
+  }
+}
+
 interface TaggedVideo extends Omit<YouTubeVideo, 'description'> {
   hasMetadata: true; // Always true now - all videos have metadata entries
   firestoreId: string; // Always present now
@@ -36,10 +110,9 @@ export default function TagVideosPage() {
   // Batch YouTube-editable fields
   const [batchYoutubeTitle, setBatchYoutubeTitle] = useState<string>('');
   const [batchYoutubeTags, setBatchYoutubeTags] = useState<string>('');
-  const [batchYoutubeDescription, setBatchYoutubeDescription] = useState<string>('');
-  const [batchYoutubeRecordingDate, setBatchYoutubeRecordingDate] = useState<string>('');
-  const [enableBatchYoutubeUpdates, setEnableBatchYoutubeUpdates] = useState(false);const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
-  const [refreshingMetadata, setRefreshingMetadata] = useState(false);  // Cat selector states
+  const [batchYoutubeDescription, setBatchYoutubeDescription] = useState<string>('');  const [batchYoutubeRecordingDate, setBatchYoutubeRecordingDate] = useState<string>('');const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
+  const [refreshingMetadata, setRefreshingMetadata] = useState(false);
+  const [parsingDates, setParsingDates] = useState(false);  // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
   const [catSearchQuery, setCatSearchQuery] = useState('');
@@ -323,14 +396,11 @@ export default function TagVideosPage() {
 
     try {
       setBatchSaving(true);
-      setError(null);
-
-      const videoIds = Array.from(selectedVideos);
+      setError(null);      const videoIds = Array.from(selectedVideos);
       let youtubeUpdateResults = [];
 
-      // Step 1: Update YouTube fields if batch YouTube updates are enabled
-      if (enableBatchYoutubeUpdates) {
-        console.log('Performing batch YouTube updates...');
+      // Step 1: Update YouTube fields
+      console.log('Performing batch YouTube updates...');
 
         for (const videoId of videoIds) {
           const video = videos.find(v => v.id === videoId);
@@ -402,9 +472,7 @@ export default function TagVideosPage() {
               });
             }
           }
-        }
-
-        // Refresh metadata for successfully updated videos
+        }        // Refresh metadata for successfully updated videos
         const successfulUpdates = youtubeUpdateResults.filter(r => r.success);
         if (successfulUpdates.length > 0) {
           console.log('Refreshing metadata for updated videos...');
@@ -420,7 +488,8 @@ export default function TagVideosPage() {
             console.warn('Failed to refresh metadata after YouTube updates:', err);
           }
         }
-      }      // Step 2: Update Firestore-only fields (cat names, etc.) - simplified since no more Firebase-only description
+
+      // Step 2: Update Firestore-only fields (cat names, etc.) - simplified since no more Firebase-only description
       // Currently, we don't have any Firestore-only fields to update in batch mode
       // This section is reserved for future Firebase-only field updates
 
@@ -429,10 +498,8 @@ export default function TagVideosPage() {
       setSelectedVideos(new Set());
       setShowBatchActions(false);
       setBatchYoutubeTitle('');
-      setBatchYoutubeTags('');
-      setBatchYoutubeDescription('');
+      setBatchYoutubeTags('');      setBatchYoutubeDescription('');
       setBatchYoutubeRecordingDate('');
-      setEnableBatchYoutubeUpdates(false);
 
       // Show results if YouTube updates were attempted
       if (youtubeUpdateResults.length > 0) {
@@ -550,6 +617,133 @@ export default function TagVideosPage() {
       setError(`Failed to refresh metadata: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setRefreshingMetadata(false);
+    }  };
+
+  const handleAutomaticDateParsing = async () => {
+    // Count videos that could benefit from date parsing
+    const videosNeedingDates = videos.filter(video => {
+      const hasNoRecordingDate = !video.recordingDate;
+      const couldParseDate = parseRecordingDateFromTitle(video.title) !== null;
+      return hasNoRecordingDate && couldParseDate;
+    });
+
+    if (videosNeedingDates.length === 0) {
+      alert('❌ No videos found that need date parsing.\\n\\nEither all videos already have recording dates, or no video titles contain parseable date patterns.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `🤖 Automatic Date Parsing\\n\\n` +
+      `This will parse recording dates from video titles and update:\\n` +
+      `• YouTube recording date field\\n` +
+      `• Firestore createdTime field\\n\\n` +
+      `Found ${videosNeedingDates.length} video(s) that could benefit from date parsing.\\n\\n` +
+      `⚠️ This will make changes to YouTube and may take time to process.\\n\\n` +
+      `Continue?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setParsingDates(true);
+      setError(null);
+
+      let successCount = 0;
+      let failCount = 0;
+      const results = [];
+
+      console.log(`Starting automatic date parsing for ${videosNeedingDates.length} videos...`);
+
+      for (const video of videosNeedingDates) {
+        try {
+          const parsedDate = parseRecordingDateFromTitle(video.title);
+          if (parsedDate) {
+            console.log(`📅 Parsing date for "${video.title}": ${parsedDate.toISOString()}`);            // Update YouTube first
+            try {
+              const response = await fetch('/api/update-youtube-video', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  videoId: video.id,
+                  updates: {
+                    recordingDate: parsedDate.toISOString(),
+                  },
+                }),
+              });
+
+              if (response.ok) {
+                console.log(`✅ YouTube updated for ${video.id}`);
+
+                // Update Firestore createdTime
+                if (video.firestoreId) {
+                  await updateDoc(doc(db, 'cat_videos', video.firestoreId), {
+                    createdTime: parsedDate,
+                    recordingDate: parsedDate.toISOString().split('T')[0],
+                    lastMetadataRefresh: new Date()
+                  });
+                  console.log(`✅ Firestore updated for ${video.id}`);
+                }
+
+                successCount++;
+                results.push({
+                  video: video.title,
+                  date: parsedDate.toISOString().split('T')[0],
+                  success: true
+                });
+              } else {
+                throw new Error(`YouTube API error: ${response.status}`);
+              }
+            } catch (youtubeError) {
+              console.error(`❌ Failed to update YouTube for ${video.id}:`, youtubeError);
+              failCount++;
+              results.push({
+                video: video.title,
+                date: parsedDate.toISOString().split('T')[0],
+                success: false,
+                error: youtubeError instanceof Error ? youtubeError.message : 'Unknown error'
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error processing ${video.title}:`, error);
+          failCount++;
+          results.push({
+            video: video.title,
+            success: false,
+            error: error instanceof Error ? error.message : 'Date parsing failed'
+          });
+        }
+      }
+
+      // Reload videos to reflect changes
+      await loadVideos();
+
+      // Show results
+      let message = `📅 Automatic Date Parsing Complete!\\n\\n`;
+      message += `✅ Successfully processed: ${successCount} videos\\n`;
+      if (failCount > 0) {
+        message += `❌ Failed: ${failCount} videos\\n`;
+      }
+
+      if (results.length > 0) {
+        message += `\\nDetails:\\n`;
+        results.slice(0, 10).forEach(result => {
+          const status = result.success ? '✅' : '❌';
+          const dateInfo = result.date ? ` (${result.date})` : '';
+          message += `${status} ${result.video}${dateInfo}\\n`;
+        });
+        if (results.length > 10) {
+          message += `... and ${results.length - 10} more\\n`;
+        }
+      }
+
+      alert(message);
+
+    } catch (error) {
+      console.error('Error during automatic date parsing:', error);
+      setError(`Failed to parse dates: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setParsingDates(false);
     }
   };
 
@@ -905,7 +1099,7 @@ export default function TagVideosPage() {
         </div>
       )}
 
-      {/* API Configuration Status */}
+      {/* YouTube API Configuration Status */}
       <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
         <h3 className="text-sm font-semibold text-blue-800 mb-2">YouTube API Configuration</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -926,7 +1120,30 @@ export default function TagVideosPage() {
           <div className="mt-2 text-sm text-blue-700">
             <strong>Setup Required:</strong> Please configure your YouTube API credentials in the .env.local file.
           </div>        )}
-      </div>      {/* Video Statistics and Cleanup */}
+      </div>      {/* Date Parsing Configuration Status */}
+      <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6">
+        <h3 className="text-sm font-semibold text-green-800 mb-2">Video Date Parsing</h3>
+        <div className="text-sm space-y-1">
+          <div>
+            <span className="text-green-700">Date Parsing:</span>{' '}
+            <span className="text-green-600">✅ Auto-extracts recording dates from video titles</span>
+          </div>
+          <div>
+            <span className="text-green-700">Individual Videos:</span>{' '}
+            <span className="text-green-600">✅ Parse button available in edit pane</span>
+          </div>
+          <div>
+            <span className="text-green-700">Automatic Processing:</span>{' '}
+            <span className="text-green-600">✅ Bulk automatic date parsing available</span>
+          </div>
+          <div className="text-xs text-green-600 mt-2">
+            Supported date formats: yyyy-mm-dd hh.MM.ss, yyyymmdd_hhMMss, yyyy-mm-dd, yyyymmdd
+          </div>
+          <div className="text-xs text-green-600 mt-1">
+            📅 Use "Automatic Date Parsing" to process all videos with parseable dates
+          </div>
+        </div>
+      </div>{/* Video Statistics and Cleanup */}
       <div className="mb-6">
         {/* Cleanup option */}
         <div className="mb-4 flex gap-3">
@@ -940,14 +1157,20 @@ export default function TagVideosPage() {
             }`}
           >
             🧹 {batchSaving ? 'Cleaning...' : 'Cleanup Orphaned Metadata'}
-          </button>
-
-          <button
+          </button>          <button
             onClick={loadVideos}
             disabled={loading}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
           >
             {loading ? 'Loading...' : '🔄 Refresh Videos'}
+          </button>
+
+          <button
+            onClick={handleAutomaticDateParsing}
+            disabled={parsingDates || loading}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-300 text-sm"
+          >
+            {parsingDates ? 'Parsing Dates...' : '📅 Automatic Date Parsing'}
           </button>
         </div>
       </div>
@@ -1112,27 +1335,10 @@ export default function TagVideosPage() {
       {showBatchActions && (
         <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
           <h3 className="text-lg font-semibold mb-3">
-            Batch Actions ({selectedVideos.size} videos selected)
-          </h3>
+            Batch Actions ({selectedVideos.size} videos selected)          </h3>
 
-          {/* YouTube Update Toggle */}
-          <div className="mb-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={enableBatchYoutubeUpdates}
-                onChange={(e) => setEnableBatchYoutubeUpdates(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm font-medium text-blue-700">
-                Enable YouTube Field Updates (will update YouTube first, then sync to Firebase)
-              </span>
-            </label>
-          </div>
-
-          {/* YouTube Fields (only shown when enabled) */}
-          {enableBatchYoutubeUpdates && (
-            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+          {/* YouTube Fields */}
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
               <h4 className="text-md font-semibold text-yellow-800 mb-3">
                 YouTube Fields (will be updated on YouTube first)
               </h4>
@@ -1205,8 +1411,7 @@ export default function TagVideosPage() {
                     placeholder="New YouTube description for all selected videos..."
                     className="border border-gray-300 rounded px-3 py-2 w-full h-20 resize-none"
                   />
-                </div>
-                <div>
+                </div>                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     YouTube Recording Date (leave empty to keep existing)
                   </label>
@@ -1221,7 +1426,6 @@ export default function TagVideosPage() {
                 ⚠️ These changes will be made directly to YouTube and may take time to process.
               </p>
             </div>
-          )}
 
           {/* Playlists selection for batch update */}
           <div>
@@ -1265,10 +1469,9 @@ export default function TagVideosPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap items-center">
-            <button
+          <div className="flex gap-2 flex-wrap items-center">            <button
               onClick={handleBatchSave}
-              disabled={batchSaving || !enableBatchYoutubeUpdates}
+              disabled={batchSaving}
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300"
             >
               {batchSaving ? 'Saving...' : 'Save Batch Changes'}
@@ -1279,15 +1482,13 @@ export default function TagVideosPage() {
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
             >
               {refreshingMetadata ? 'Refreshing...' : 'Refresh Metadata'}
-            </button>            <button
-              onClick={() => {
+            </button>            <button              onClick={() => {
                 setSelectedVideos(new Set());
                 setShowBatchActions(false);
                 setBatchYoutubeTitle('');
                 setBatchYoutubeTags('');
                 setBatchYoutubeDescription('');
                 setBatchYoutubeRecordingDate('');
-                setEnableBatchYoutubeUpdates(false);
               }}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
@@ -1591,23 +1792,44 @@ export default function TagVideosPage() {
                     <div className="text-xs text-gray-500 mt-1">
                       ✏️ Changes will be saved to YouTube and synced to Firebase
                     </div>
-                  </div>
-
-                  {/* Recording Date */}
+                  </div>                  {/* Recording Date */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Recording Date (YouTube)
                     </label>
-                    <input
-                      type="date"
-                      value={youtubeRecordingDate}
-                      onChange={(e) => setYoutubeRecordingDate(e.target.value)}
-                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
-                    />
+                    <div className="space-y-2">
+                      <input
+                        type="date"
+                        value={youtubeRecordingDate}
+                        onChange={(e) => setYoutubeRecordingDate(e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedVideo) {
+                            const parsedDate = parseRecordingDateFromTitle(selectedVideo.title);
+                            if (parsedDate) {
+                              // Convert to UTC+9 timezone (Korea Standard Time)
+                              const utcTime = parsedDate.getTime();
+                              const utcPlus9Time = new Date(utcTime + (9 * 60 * 60 * 1000));
+                              const dateStr = utcPlus9Time.toISOString().split('T')[0];
+                              setYoutubeRecordingDate(dateStr);
+                              alert(`✅ Parsed date from title: ${dateStr}`);
+                            } else {
+                              alert('❌ Could not parse date from video title');
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 text-sm"
+                      >
+                        📅 Parse Date from Title
+                      </button>
+                    </div>
                     <div className="text-xs text-gray-500 mt-1">
                       ✏️ Changes will be saved to YouTube and synced to Firebase
                     </div>
-                  </div>                  {/* Playlists (YouTube) */}
+                  </div>{/* Playlists (YouTube) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Playlists (YouTube)
