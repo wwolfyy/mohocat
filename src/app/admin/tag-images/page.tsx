@@ -39,10 +39,13 @@ export default function TagImagesPage() {
   const [showUntaggedImages, setShowUntaggedImages] = useState(true);
   const [showImagesWithoutTimestamp, setShowImagesWithoutTimestamp] = useState(true);
   const [enableDateFilter, setEnableDateFilter] = useState(false);  const [dateFilterFrom, setDateFilterFrom] = useState('');
-  const [dateFilterTo, setDateFilterTo] = useState('');
-  // Pagination states
+  const [dateFilterTo, setDateFilterTo] = useState('');  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [imagesPerPage, setImagesPerPage] = useState(25);
+
+  // Sorting states
+  const [sortBy, setSortBy] = useState<'created' | 'uploaded' | 'updated'>('uploaded');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   useEffect(() => {
     loadImages(); // Use default (false) to allow bulk date parsing on initial load
     loadCats();
@@ -537,7 +540,6 @@ export default function TagImagesPage() {
   // Calculate statistics
   const untaggedImages = images.filter((img: StorageImage) => !img.hasMetadata || !img.metadata?.tags || img.metadata.tags.length === 0);
   const taggedImages = images.filter((img: StorageImage) => img.hasMetadata && img.metadata?.tags && img.metadata.tags.length > 0);
-
   // Apply filters to get displayed images
   const filteredImages = images.filter((image: StorageImage) => {
     // Tag filtering - check for actual tags, not just metadata existence
@@ -564,6 +566,30 @@ export default function TagImagesPage() {
     }
 
     return true;
+  }).sort((a, b) => {
+    // Sorting logic
+    let aValue: Date | null = null;
+    let bValue: Date | null = null;
+
+    if (sortBy === 'created') {
+      aValue = a.metadata?.createdTime ? new Date(a.metadata.createdTime.seconds ? a.metadata.createdTime.seconds * 1000 : a.metadata.createdTime) : null;
+      bValue = b.metadata?.createdTime ? new Date(b.metadata.createdTime.seconds ? b.metadata.createdTime.seconds * 1000 : b.metadata.createdTime) : null;
+    } else if (sortBy === 'uploaded') {
+      aValue = a.metadata?.uploadDate ? new Date(a.metadata.uploadDate.seconds ? a.metadata.uploadDate.seconds * 1000 : a.metadata.uploadDate) : null;
+      bValue = b.metadata?.uploadDate ? new Date(b.metadata.uploadDate.seconds ? b.metadata.uploadDate.seconds * 1000 : b.metadata.uploadDate) : null;
+    } else if (sortBy === 'updated') {
+      aValue = a.metadata?.updated ? new Date(a.metadata.updated.seconds ? a.metadata.updated.seconds * 1000 : a.metadata.updated) : null;
+      bValue = b.metadata?.updated ? new Date(b.metadata.updated.seconds ? b.metadata.updated.seconds * 1000 : b.metadata.updated) : null;
+    }
+
+    // Handle null values (images without the sort field)
+    if (aValue === null && bValue === null) return 0;
+    if (aValue === null) return sortOrder === 'asc' ? 1 : -1; // null values go to end for asc, beginning for desc
+    if (bValue === null) return sortOrder === 'asc' ? -1 : 1;
+
+    // Sort by date
+    const comparison = aValue.getTime() - bValue.getTime();
+    return sortOrder === 'asc' ? comparison : -comparison;
   });
 
   // Pagination logic
@@ -571,11 +597,10 @@ export default function TagImagesPage() {
   const startIndex = (currentPage - 1) * imagesPerPage;
   const endIndex = startIndex + imagesPerPage;
   const paginatedImages = filteredImages.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or sorting change
   useEffect(() => {
     setCurrentPage(1);
-  }, [showTaggedImages, showUntaggedImages, showImagesWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
+  }, [showTaggedImages, showUntaggedImages, showImagesWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo, sortBy, sortOrder]);
 
   const selectAllImages = () => {
     const currentlyVisibleImages = new Set(filteredImages.map(img => img.name));
@@ -887,7 +912,26 @@ export default function TagImagesPage() {
               >
                 Clear Selection ({selectedImages.size})
               </button>
-            )}
+            )}            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700">Sort by:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'created' | 'uploaded' | 'updated')}
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+              >
+                <option value="created">Created</option>
+                <option value="uploaded">Uploaded</option>
+                <option value="updated">Updated</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-700">Images per page:</label>
               <select
