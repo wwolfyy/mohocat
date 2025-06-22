@@ -5,9 +5,9 @@
     "dev": "next dev",
     "build": "node scripts/fetch-static-assets.js && next build",
     "start": "next start",
-    "lint": "next lint",
-    "script:add-updated-field": "node scripts/add_updated_field.js",
-    "script:add-updated-field-admin": "node scripts/add_updated_field_admin.js"
+    "lint": "next lint",    "script:add-updated-field": "node scripts/add_updated_field.js",
+    "script:add-updated-field-admin": "node scripts/add_updated_field_admin.js",
+    "script:remove-thumbnailUrl": "node scripts/remove_thumbnailUrl_field.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

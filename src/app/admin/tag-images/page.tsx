@@ -33,7 +33,7 @@ export default function TagImagesPage() {
   const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');
-  
+
   // Lightbox state
   const [showLightbox, setShowLightbox] = useState(false);
   // Filter states
@@ -196,9 +196,7 @@ export default function TagImagesPage() {
           console.log(`Creating metadata for ${missingMetadataItems.length} images...`);for (const item of missingMetadataItems) {
           try {
             // Parse creation date from filename
-            const parsedCreatedTime = parseCreatedDateFromFilename(item.fileName);
-
-            const newDoc = await addDoc(collection(db, 'cat_images'), {
+            const parsedCreatedTime = parseCreatedDateFromFilename(item.fileName);            const newDoc = await addDoc(collection(db, 'cat_images'), {
               fileName: item.fileName,
               imageUrl: item.imageUrl,
               storagePath: item.storagePath,
@@ -207,7 +205,6 @@ export default function TagImagesPage() {
               uploadDate: new Date(),
               createdTime: parsedCreatedTime, // Use parsed date instead of null
               uploadedBy: 'auto-detected',
-              needsTagging: true,
               autoTagged: false,
             });
 
@@ -219,13 +216,11 @@ export default function TagImagesPage() {
                 id: newDoc.id,
                 fileName: item.fileName,
                 imageUrl: item.imageUrl,
-                storagePath: item.storagePath,
-                tags: [],
+                storagePath: item.storagePath,                tags: [],
                 description: '',
                 uploadDate: new Date(),
                 createdTime: parsedCreatedTime, // Use parsed date instead of null
                 uploadedBy: 'auto-detected',
-                needsTagging: true,
                 autoTagged: false,
               };
             }
@@ -351,12 +346,10 @@ export default function TagImagesPage() {
         imageUrl: selectedImage.url,
         storagePath: selectedImage.fullPath,
         tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        uploadDate: selectedImage.metadata?.uploadDate || new Date(),
-        createdTime: createdTime ? new Date(createdTime) : null,
+        uploadDate: selectedImage.metadata?.uploadDate || new Date(),        createdTime: createdTime ? new Date(createdTime) : null,
         updated: new Date(), // Add timestamp for when metadata is updated
         uploadedBy: 'admin',
         description: description,
-        needsTagging: false,
         autoTagged: false,
       };let updatedMetadata;
       if (selectedImage.hasMetadata && selectedImage.metadata?.id) {
@@ -488,10 +481,8 @@ export default function TagImagesPage() {
           tags: updatedTags,
           uploadDate: selectedImage.metadata?.uploadDate || new Date(),
           createdTime: selectedImage.metadata?.createdTime || null,
-          updated: new Date(), // Add timestamp for when metadata is updated
-          uploadedBy: 'admin',
+          updated: new Date(), // Add timestamp for when metadata is updated          uploadedBy: 'admin',
           description: description,
-          needsTagging: updatedTags.length === 0,
           autoTagged: false,
         };
 
@@ -642,13 +633,11 @@ export default function TagImagesPage() {
           storagePath: image.fullPath,
           tags: batchTags ?
             Array.from(new Set([...(image.metadata?.tags || []), ...batchTags.split(',').map(tag => tag.trim()).filter(Boolean)])) :
-            image.metadata?.tags || [],
-          uploadDate: image.metadata?.uploadDate || new Date(),
+            image.metadata?.tags || [],          uploadDate: image.metadata?.uploadDate || new Date(),
           createdTime: image.metadata?.createdTime || null,
           updated: new Date(), // Add timestamp for when metadata is updated
           uploadedBy: 'admin',
           description: batchDescription || image.metadata?.description || '',
-          needsTagging: false,
           autoTagged: false,
         };
 
@@ -1325,14 +1314,14 @@ export default function TagImagesPage() {
             >
               ×
             </button>
-            
+
             {/* Image */}
             <img
               src={selectedImage.url}
               alt={selectedImage.name}
               className="max-w-full max-h-full object-contain"
             />
-            
+
             {/* Image info */}
             <div className="bg-black bg-opacity-75 text-white p-4 mt-2 rounded">
               <p className="text-sm font-medium mb-1">{selectedImage.name}</p>
@@ -1357,9 +1346,9 @@ export default function TagImagesPage() {
               )}
             </div>
           </div>
-          
+
           {/* Click outside to close */}
-          <div 
+          <div
             className="absolute inset-0 -z-10"
             onClick={() => setShowLightbox(false)}
           />
