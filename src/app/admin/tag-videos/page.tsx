@@ -633,9 +633,7 @@ export default function TagVideosPage() {
     // Tag filtering - check if video has tags instead of needsTagging field
     const hasNoTags = video.tags.length === 0;
     if (hasNoTags && !showUntaggedVideos) return false;
-    if (!hasNoTags && !showTaggedVideos) return false;
-
-    // Date filtering (only if enabled)
+    if (!hasNoTags && !showTaggedVideos) return false;    // Date filtering (only if enabled)
     if (enableDateFilter) {
       const recordingDate = video.recordingDate;
 
@@ -643,11 +641,17 @@ export default function TagVideosPage() {
       if (!recordingDate) {
         if (!showVideosWithoutTimestamp) return false;
       } else {
+        // Convert recordingDate to date string for comparison
+        const recordingDateStr = new Date(recordingDate).toISOString().split('T')[0];
         // Apply date range filters if they are set
-        if (dateFilterFrom && recordingDate < dateFilterFrom) return false;
-        if (dateFilterTo && recordingDate > dateFilterTo) return false;
+        if (dateFilterFrom && recordingDateStr < dateFilterFrom) return false;
+        if (dateFilterTo && recordingDateStr > dateFilterTo) return false;
       }
-    }    return true;
+    } else {
+      // When date filter is disabled, check if we should show videos without timestamp
+      const recordingDate = video.recordingDate;
+      if (!recordingDate && !showVideosWithoutTimestamp) return false;
+    }return true;
   });
 
   // Pagination logic
