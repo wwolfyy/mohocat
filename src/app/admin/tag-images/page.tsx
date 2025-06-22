@@ -44,12 +44,13 @@ export default function TagImagesPage() {
   const [dateFilterTo, setDateFilterTo] = useState('');  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [imagesPerPage, setImagesPerPage] = useState(25);
-
   // Sorting states
   const [sortBy, setSortBy] = useState<'created' | 'uploaded' | 'updated'>('uploaded');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  useEffect(() => {
-    loadImages(); // Use default (false) to allow bulk date parsing on initial load
+  // Date parsing state
+  const [parsingDates, setParsingDates] = useState(false);
+  const [processingImages, setProcessingImages] = useState<Set<string>>(new Set());useEffect(() => {
+    loadImages(); // Load images without automatic date parsing
     loadCats();
   }, []);
 
@@ -125,8 +126,7 @@ export default function TagImagesPage() {
       console.warn(`Error parsing date from filename "${filename}":`, error);
       return null;
     }
-  };
-  const loadImages = async (skipBulkDateParsing = false) => {
+  };  const loadImages = async () => {
     try {
       setLoading(true);
       setError(null);// Get all images from both Firebase Storage folders
@@ -151,8 +151,6 @@ export default function TagImagesPage() {
         }
       });      // Process all storage items and create missing metadata
       const imageList: StorageImage[] = [];
-      const missingMetadataItems = [];
-      const missingCreatedTimeItems = [];
 
       for (const item of allStorageItems) {
         const url = await getDownloadURL(item);
@@ -164,129 +162,44 @@ export default function TagImagesPage() {
           fullPath: item.fullPath,
           hasMetadata: !!metadata,
           metadata
-        };        imageList.push(imageData);
+        };
 
-        // Only track items for bulk operations if not skipping bulk date parsing
-        if (!skipBulkDateParsing) {
-          // Track items that need metadata creation
-          if (!metadata) {
-            missingMetadataItems.push({
-              fileName: item.name,
-              imageUrl: url,
-              storagePath: item.fullPath
-            });
-          }
-          // Track items that have metadata but missing createdTime
-          else if (!metadata.createdTime) {
-            missingCreatedTimeItems.push({
+        imageList.push(imageData);
+
+        // Create basic metadata for items that don't have any
+        if (!metadata) {
+          try {
+            const newDoc = await addDoc(collection(db, 'cat_images'), {
               fileName: item.name,
               imageUrl: url,
               storagePath: item.fullPath,
-              metadataId: metadata.id,
-              existingMetadata: metadata
-            });
-          }
-        }
-      }
-
-      // Only perform bulk operations if not skipping
-      if (!skipBulkDateParsing) {
-        // Create missing Firestore documents
-        if (missingMetadataItems.length > 0) {
-          console.log(`Creating metadata for ${missingMetadataItems.length} images...`);for (const item of missingMetadataItems) {
-          try {
-            // Parse creation date from filename
-            const parsedCreatedTime = parseCreatedDateFromFilename(item.fileName);            const newDoc = await addDoc(collection(db, 'cat_images'), {
-              fileName: item.fileName,
-              imageUrl: item.imageUrl,
-              storagePath: item.storagePath,
               tags: [],
               description: '',
               uploadDate: new Date(),
-              createdTime: parsedCreatedTime, // Use parsed date instead of null
+              createdTime: null, // Will be filled by automatic date parsing
               uploadedBy: 'auto-detected',
               autoTagged: false,
             });
 
             // Update the corresponding image in our list with the new metadata
-            const imageIndex = imageList.findIndex(img => img.name === item.fileName);
-            if (imageIndex !== -1) {
-              imageList[imageIndex].hasMetadata = true;
-              imageList[imageIndex].metadata = {
-                id: newDoc.id,
-                fileName: item.fileName,
-                imageUrl: item.imageUrl,
-                storagePath: item.storagePath,                tags: [],
-                description: '',
-                uploadDate: new Date(),
-                createdTime: parsedCreatedTime, // Use parsed date instead of null
-                uploadedBy: 'auto-detected',
-                autoTagged: false,
-              };
-            }
-
-            // Log successful date parsing for debugging
-            if (parsedCreatedTime) {
-              console.log(`✅ Parsed date from "${item.fileName}": ${parsedCreatedTime.toISOString()}`);
-            } else {
-              console.log(`⚠️ Could not parse date from "${item.fileName}"`);
-            }
+            imageList[imageList.length - 1].hasMetadata = true;
+            imageList[imageList.length - 1].metadata = {
+              id: newDoc.id,
+              fileName: item.name,
+              imageUrl: url,
+              storagePath: item.fullPath,
+              tags: [],
+              description: '',
+              uploadDate: new Date(),
+              createdTime: null,
+              uploadedBy: 'auto-detected',
+              autoTagged: false,
+            };
           } catch (err) {
-            console.error(`Failed to create metadata for ${item.fileName}:`, err);
-          }
-        }        console.log(`Successfully created metadata for ${missingMetadataItems.length} images.`);
-
-        // Summary of date parsing results for new metadata
-        const parsedDatesCount = missingMetadataItems.filter(item =>
-          parseCreatedDateFromFilename(item.fileName) !== null
-        ).length;
-
-        if (parsedDatesCount > 0) {
-          console.log(`📅 Successfully parsed creation dates from ${parsedDatesCount} out of ${missingMetadataItems.length} new images.`);
-        }
-      }
-
-      // Update existing metadata documents that are missing createdTime
-      if (missingCreatedTimeItems.length > 0) {
-        console.log(`Updating createdTime for ${missingCreatedTimeItems.length} existing images...`);
-
-        for (const item of missingCreatedTimeItems) {
-          try {
-            // Parse creation date from filename
-            const parsedCreatedTime = parseCreatedDateFromFilename(item.fileName);
-
-            if (parsedCreatedTime) {
-              // Update the existing document with the parsed createdTime
-              await updateDoc(doc(db, 'cat_images', item.metadataId), {
-                createdTime: parsedCreatedTime
-              });
-
-              // Update the corresponding image in our list with the new createdTime
-              const imageIndex = imageList.findIndex(img => img.name === item.fileName);
-              if (imageIndex !== -1) {
-                imageList[imageIndex].metadata = {
-                  ...imageList[imageIndex].metadata,
-                  createdTime: parsedCreatedTime
-                };
-              }
-
-              console.log(`✅ Updated createdTime for "${item.fileName}": ${parsedCreatedTime.toISOString()}`);
-            } else {
-              console.log(`⚠️ Could not parse date from existing image "${item.fileName}"`);
-            }
-          } catch (err) {
-            console.error(`Failed to update createdTime for ${item.fileName}:`, err);
+            console.error(`Failed to create metadata for ${item.name}:`, err);
           }
         }
-
-        // Summary of date parsing results for existing metadata
-        const updatedDatesCount = missingCreatedTimeItems.filter(item =>
-          parseCreatedDateFromFilename(item.fileName) !== null
-        ).length;        if (updatedDatesCount > 0) {
-          console.log(`📅 Successfully updated creation dates for ${updatedDatesCount} out of ${missingCreatedTimeItems.length} existing images.`);
-        }
       }
-      } // End of if (!skipBulkDateParsing)
 
       setImages(imageList);
     } catch (err: any) {
@@ -647,7 +560,7 @@ export default function TagImagesPage() {
           await addDoc(collection(db, 'cat_images'), metadata);
         }      }
 
-      await loadImages(true); // Skip bulk date parsing when batch updating tags
+      await loadImages(); // Refresh images after batch update
       clearSelection();
       alert(`Successfully tagged ${selectedImagesList.length} images!`);
     } catch (err: any) {
@@ -677,7 +590,7 @@ export default function TagImagesPage() {
           await deleteDoc(doc(db, 'images', image.metadata.id));
         }
       }      clearSelection();
-      await loadImages(true); // Skip bulk date parsing when batch deleting images
+      await loadImages(); // Refresh images after batch delete
       alert(`Successfully deleted ${selectedImagesList.length} images!`);
     } catch (err: any) {
       console.error('Error batch deleting:', err);
@@ -702,15 +615,140 @@ export default function TagImagesPage() {
           deletedCount++;
         }      }
 
-      await loadImages(true); // Skip bulk date parsing when cleaning up metadata
+      await loadImages(); // Refresh images after cleanup
       alert(`Cleaned up ${deletedCount} orphaned metadata entries.`);
     } catch (err: any) {
       console.error('Error cleaning up metadata:', err);
       alert('Failed to cleanup metadata: ' + err.message);
     } finally {
-      setBatchSaving(false);
+      setBatchSaving(false);    }
+  };
+
+  const handleAutomaticDateParsing = async () => {
+    // Count images that could benefit from date parsing
+    const imagesNeedingDates = images.filter(image => {
+      const hasNoCreatedTime = !image.metadata?.createdTime;
+      const couldParseDate = parseCreatedDateFromFilename(image.name) !== null;
+      return hasNoCreatedTime && couldParseDate && image.hasMetadata;
+    });
+
+    if (imagesNeedingDates.length === 0) {
+      alert('❌ No images found that need date parsing.\\n\\nEither all images already have creation dates, or no image filenames contain parseable date patterns.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `🤖 Automatic Date Parsing\\n\\n` +
+      `This will parse creation dates from image filenames and update:\\n` +
+      `• Firestore createdTime field\\n\\n` +
+      `Found ${imagesNeedingDates.length} image(s) that could benefit from date parsing.\\n\\n` +
+      `⚠️ This will make changes to Firestore and may take time to process.\\n\\n` +
+      `Continue?`
+    );
+
+    if (!confirmed) return;    try {      setParsingDates(true);
+      setError(null);
+      setProcessingImages(new Set()); // Clear any previous processing state
+
+      let successCount = 0;
+      let failCount = 0;
+      const results = [];
+      const updatedImages = [...images]; // Create a copy to batch updates
+
+      console.log(`Starting automatic date parsing for ${imagesNeedingDates.length} images...`);      for (const image of imagesNeedingDates) {
+        try {          // Add image to processing set to show visual feedback
+          setProcessingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.add(image.name);
+            return newSet;
+          });
+
+          const parsedDate = parseCreatedDateFromFilename(image.name);
+          if (parsedDate && image.metadata?.id) {
+            console.log(`📅 Parsing date for "${image.name}": ${parsedDate.toISOString()}`);
+
+            // Update Firestore createdTime
+            await updateDoc(doc(db, 'cat_images', image.metadata.id), {
+              createdTime: parsedDate,
+              lastMetadataRefresh: new Date()
+            });
+
+            console.log(`✅ Firestore updated for ${image.name}`);
+
+            // Update the local copy
+            const imageIndex = updatedImages.findIndex(img => img.name === image.name);
+            if (imageIndex !== -1) {
+              updatedImages[imageIndex] = {
+                ...updatedImages[imageIndex],
+                metadata: {
+                  ...updatedImages[imageIndex].metadata,
+                  createdTime: parsedDate,
+                  lastMetadataRefresh: new Date()
+                }
+              };
+            }            successCount++;
+            results.push({
+              image: image.name,
+              date: parsedDate.toISOString().split('T')[0],
+              success: true
+            });
+          }
+
+          // Remove image from processing set after completion
+          setProcessingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(image.name);
+            return newSet;
+          });
+
+        } catch (error) {
+          console.error(`❌ Error processing ${image.name}:`, error);
+          failCount++;
+          results.push({
+            image: image.name,
+            success: false,
+            error: error instanceof Error ? error.message : 'Date parsing failed'
+          });
+
+          // Remove image from processing set even on error
+          setProcessingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(image.name);
+            return newSet;
+          });
+        }
+      }
+
+      // Batch update the entire images state once at the end
+      setImages(updatedImages);
+
+      // Show results
+      let resultMessage = `🎉 Automatic Date Parsing Complete!\\n\\n`;
+      resultMessage += `✅ Successfully processed: ${successCount} images\\n`;
+      if (failCount > 0) {
+        resultMessage += `❌ Failed: ${failCount} images\\n`;
+      }
+      resultMessage += `\\n📋 Detailed Results:\\n`;
+
+      results.forEach(result => {
+        if (result.success) {
+          resultMessage += `✅ ${result.image} → ${result.date}\\n`;
+        } else {
+          resultMessage += `❌ ${result.image} → ${result.error}\\n`;
+        }
+      });
+
+      alert(resultMessage);
+      console.log('📊 Date parsing completed:', { successCount, failCount, results });
+
+    } catch (error) {
+      console.error('❌ Error during automatic date parsing:', error);
+      setError('Failed to parse dates: ' + (error instanceof Error ? error.message : 'Unknown error'));    } finally {
+      setParsingDates(false);
+      setProcessingImages(new Set()); // Clear processing state
     }
   };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -765,16 +803,26 @@ export default function TagImagesPage() {
           >
             🧹 {batchSaving ? 'Cleaning...' : 'Cleanup Orphaned Metadata'}
           </button>          <button
-            onClick={() => loadImages(false)} // false = don't skip bulk date parsing for Refresh Images
+            onClick={() => loadImages()} // Refresh images without date parsing
             disabled={loading}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
           >
             {loading ? 'Loading...' : '🔄 Refresh Images'}
-          </button></div>
-      </div>
+          </button>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <button
+            onClick={handleAutomaticDateParsing}
+            disabled={parsingDates || loading}
+            className={`px-4 py-2 text-white rounded text-sm ${
+              parsingDates || loading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-purple-500 hover:bg-purple-600 cursor-pointer'
+            }`}
+          >
+            {parsingDates ? '📅 Parsing...' : '🤖 Automatic Date Parsing'}
+          </button></div>
+      </div>      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-700">Total Images</h3>
           <p className="text-3xl font-bold text-blue-600">{images.length}</p>
@@ -786,6 +834,51 @@ export default function TagImagesPage() {
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-700">Tagged Images</h3>
           <p className="text-3xl font-bold text-green-600">{taggedImages.length}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-700">Need Date Parsing</h3>          <p className="text-3xl font-bold text-purple-600">
+            {images.filter(image => {
+              const hasNoCreatedTime = !image.metadata?.createdTime;
+              const couldParseDate = parseCreatedDateFromFilename(image.name) !== null;
+              return hasNoCreatedTime && couldParseDate && image.hasMetadata;
+            }).length}
+          </p>
+          {processingImages.size > 0 && (
+            <p className="text-sm text-purple-500 mt-1">
+              📅 Processing: {processingImages.size}
+            </p>
+          )}
+        </div></div>
+
+      {/* Configuration & Status */}
+      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+        <h3 className="text-sm font-semibold text-blue-700 mb-3">🤖 Automatic Date Parsing</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-blue-600 mb-2">
+              <strong>Supported Date Formats:</strong>
+            </p>
+            <ul className="text-blue-600 space-y-1 ml-4">
+              <li>• YYYY-MM-DD HH.MM.SS (e.g., "2024-03-15 14.30.45")</li>
+              <li>• YYYYMMDD_HHMMSS (e.g., "20240315_143045")</li>
+              <li>• YYYY-MM-DD (date only, e.g., "2024-03-15")</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-blue-600 mb-2">
+              <strong>Feature Status:</strong>
+            </p>
+            <ul className="text-blue-600 space-y-1">
+              <li>✅ Individual date parsing (edit form)</li>
+              <li>✅ Automatic batch date parsing (button)</li>
+              <li>✅ Separated from "Refresh Images" function</li>
+              <li>📊 {images.filter(image => {
+                const hasNoCreatedTime = !image.metadata?.createdTime;
+                const couldParseDate = parseCreatedDateFromFilename(image.name) !== null;
+                return hasNoCreatedTime && couldParseDate && image.hasMetadata;
+              }).length} images ready for date parsing</li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -1035,15 +1128,24 @@ export default function TagImagesPage() {
           <div className="lg:col-span-2">
             {/* Image Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {paginatedImages.map((image) => (
-                <div
+              {paginatedImages.map((image) => (                <div
                   key={image.name}
                   className={`relative border-2 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                     selectedImage?.name === image.name
                       ? 'border-blue-500 shadow-lg'
+                      : processingImages.has(image.name)
+                      ? 'border-purple-500 shadow-md'
                       : 'border-gray-200'
                   }`}
-                >                  {/* Checkbox */}
+                >
+                  {/* Processing overlay */}
+                  {processingImages.has(image.name) && (
+                    <div className="absolute inset-0 bg-purple-500 bg-opacity-20 z-20 flex items-center justify-center">
+                      <div className="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        📅 Parsing Date...
+                      </div>
+                    </div>
+                  )}{/* Checkbox */}
                   <div className="absolute top-2 left-2 z-10">
                     <input
                       type="checkbox"
@@ -1081,13 +1183,25 @@ export default function TagImagesPage() {
                             <span> ({new Date(image.metadata.updated.seconds ? image.metadata.updated.seconds * 1000 : image.metadata.updated).toLocaleDateString()})</span>
                           )}
                         </p>
-                      )}
-                      {image.hasMetadata && (
+                      )}                      {image.hasMetadata && (
                         <p className="text-xs text-gray-500 mb-1">
-                          Created: {image.metadata?.createdTime ?
-                            new Date(image.metadata.createdTime.seconds ? image.metadata.createdTime.seconds * 1000 : image.metadata.createdTime).toLocaleDateString() :
+                          Created: {image.metadata?.createdTime ? (
+                            <span className={`${
+                              image.metadata?.lastMetadataRefresh &&
+                              new Date(image.metadata.lastMetadataRefresh.seconds ? image.metadata.lastMetadataRefresh.seconds * 1000 : image.metadata.lastMetadataRefresh).getTime() > Date.now() - 10000
+                                ? 'text-green-600 font-medium'
+                                : ''
+                            }`}>
+                              {new Date(image.metadata.createdTime.seconds ? image.metadata.createdTime.seconds * 1000 : image.metadata.createdTime).toLocaleDateString()}
+                              {image.metadata?.lastMetadataRefresh &&
+                               new Date(image.metadata.lastMetadataRefresh.seconds ? image.metadata.lastMetadataRefresh.seconds * 1000 : image.metadata.lastMetadataRefresh).getTime() > Date.now() - 10000 && (
+                                <span className="text-green-600"> ✨</span>
+                              )}
+                            </span>
+                          ) : (
                             'null'
-                          }                        </p>
+                          )}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -1243,20 +1357,20 @@ export default function TagImagesPage() {
                       />
                       <div className="text-xs text-gray-500 mt-1 mb-2">
                         When the image was originally taken/created
-                      </div>
-                      <button
+                      </div>                      <button
                         type="button"
                         onClick={() => {
                           if (selectedImage) {
                             const parsedDate = parseCreatedDateFromFilename(selectedImage.name);
                             if (parsedDate) {
                               setCreatedTime(parsedDate.toISOString().split('T')[0]);
+                              alert(`✅ Parsed date from filename: ${parsedDate.toISOString().split('T')[0]}`);
                             } else {
-                              alert('Could not parse date from filename. Please set the date manually.');
+                              alert('❌ Could not parse date from filename');
                             }
                           }
                         }}
-                        className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 border border-purple-300"
+                        className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 text-sm"
                       >
                         📅 Parse Date from Filename
                       </button>
