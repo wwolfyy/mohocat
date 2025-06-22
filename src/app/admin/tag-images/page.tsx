@@ -27,13 +27,15 @@ export default function TagImagesPage() {
   const [batchDescription, setBatchDescription] = useState('');
   const [showBatchActions, setShowBatchActions] = useState(false);
   const [batchSaving, setBatchSaving] = useState(false);
-
   // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
   const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>('individual');
+  
+  // Lightbox state
+  const [showLightbox, setShowLightbox] = useState(false);
   // Filter states
   const [showTaggedImages, setShowTaggedImages] = useState(true);
   const [showUntaggedImages, setShowUntaggedImages] = useState(true);
@@ -1161,13 +1163,22 @@ export default function TagImagesPage() {
                   <h3 className="text-lg font-bold mb-4">
                     Tag Image: {selectedImage.name}
                   </h3>                  <div className="mb-4">
-                    <img
-                      src={selectedImage.url}
-                      alt={selectedImage.name}
-                      className="w-full h-32 object-cover rounded"
-                    />
+                    <div className="relative">
+                      <img
+                        src={selectedImage.url}
+                        alt={selectedImage.name}
+                        className="w-full h-32 object-cover rounded"
+                      />
+                      <button
+                        onClick={() => setShowLightbox(true)}
+                        className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs hover:bg-opacity-70 transition-all"
+                        title="View full size"
+                      >
+                        🔍 Full Size
+                      </button>
+                    </div>
                     {/* Date Information */}
-                    <div className="mt-2 text-xs text-gray-600 space-y-1">                      {selectedImage.hasMetadata && selectedImage.metadata?.uploadDate && (
+                    <div className="mt-2 text-xs text-gray-600 space-y-1">{selectedImage.hasMetadata && selectedImage.metadata?.uploadDate && (
                         <p>
                           <strong>Uploaded:</strong> {new Date(selectedImage.metadata.uploadDate.seconds ? selectedImage.metadata.uploadDate.seconds * 1000 : selectedImage.metadata.uploadDate).toLocaleDateString()}
                           {selectedImage.metadata?.updated && (
@@ -1300,7 +1311,59 @@ export default function TagImagesPage() {
                 </div>
               )}
             </div>
-          </div>        </div>
+          </div>        </div>      )}
+
+      {/* Lightbox Modal */}
+      {showLightbox && selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col">
+            {/* Close button */}
+            <button
+              onClick={() => setShowLightbox(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all text-xl"
+              title="Close"
+            >
+              ×
+            </button>
+            
+            {/* Image */}
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.name}
+              className="max-w-full max-h-full object-contain"
+            />
+            
+            {/* Image info */}
+            <div className="bg-black bg-opacity-75 text-white p-4 mt-2 rounded">
+              <p className="text-sm font-medium mb-1">{selectedImage.name}</p>
+              {selectedImage.hasMetadata && (
+                <div className="text-xs space-y-1">
+                  {selectedImage.metadata?.uploadDate && (
+                    <p>
+                      Uploaded: {new Date(selectedImage.metadata.uploadDate.seconds ? selectedImage.metadata.uploadDate.seconds * 1000 : selectedImage.metadata.uploadDate).toLocaleDateString()}
+                    </p>
+                  )}
+                  {selectedImage.metadata?.createdTime && (
+                    <p>
+                      Created: {new Date(selectedImage.metadata.createdTime.seconds ? selectedImage.metadata.createdTime.seconds * 1000 : selectedImage.metadata.createdTime).toLocaleDateString()}
+                    </p>
+                  )}
+                  {selectedImage.metadata?.tags && selectedImage.metadata.tags.length > 0 && (
+                    <p>
+                      Tags: {selectedImage.metadata.tags.join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Click outside to close */}
+          <div 
+            className="absolute inset-0 -z-10"
+            onClick={() => setShowLightbox(false)}
+          />
+        </div>
       )}
 
       {/* Cat Selector Modal */}
