@@ -317,15 +317,16 @@ export default function TagImagesPage() {
     setSelectedImage(image);
     if (image.metadata) {
       setTags(image.metadata.tags?.join(', ') || '');
-      setDescription(image.metadata.description || '');
-
-      // Format createdTime for date input (YYYY-MM-DD)
+      setDescription(image.metadata.description || '');      // Format createdTime for date input (YYYY-MM-DD) in UTC+9 timezone
       let createdTimeStr = '';
       if (image.metadata.createdTime) {
         try {
           const date = new Date(image.metadata.createdTime.seconds ? image.metadata.createdTime.seconds * 1000 : image.metadata.createdTime);
           if (!isNaN(date.getTime())) {
-            createdTimeStr = date.toISOString().split('T')[0];
+            // Convert to UTC+9 timezone (Korea Standard Time)
+            const utcTime = date.getTime();
+            const utcPlus9Time = new Date(utcTime + (9 * 60 * 60 * 1000));
+            createdTimeStr = utcPlus9Time.toISOString().split('T')[0];
           }
         } catch (e) {
           console.warn('Error parsing createdTime:', image.metadata.createdTime);
