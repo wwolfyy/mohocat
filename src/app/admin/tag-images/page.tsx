@@ -545,24 +545,24 @@ export default function TagImagesPage() {
     // Tag filtering - check for actual tags, not just metadata existence
     const hasActualTags = image.hasMetadata && image.metadata?.tags && image.metadata.tags.length > 0;
     if (!hasActualTags && !showUntaggedImages) return false;
-    if (hasActualTags && !showTaggedImages) return false;
-
-    // Date filtering (only if enabled)
+    if (hasActualTags && !showTaggedImages) return false;    // Date filtering (only if enabled)
     if (enableDateFilter) {
-      const createdDate = image.metadata?.createdDate;
+      const createdTime = image.metadata?.createdTime;
 
       // Handle images without created date
-      if (!createdDate) {
+      if (!createdTime) {
         if (!showImagesWithoutTimestamp) return false;
       } else {
+        // Convert createdTime to date string for comparison
+        const createdDate = new Date(createdTime.seconds ? createdTime.seconds * 1000 : createdTime).toISOString().split('T')[0];
         // Apply date range filters if they are set
         if (dateFilterFrom && createdDate < dateFilterFrom) return false;
         if (dateFilterTo && createdDate > dateFilterTo) return false;
       }
     } else {
       // When date filter is disabled, check if we should show images without timestamp
-      const createdDate = image.metadata?.createdDate;
-      if (!createdDate && !showImagesWithoutTimestamp) return false;
+      const createdTime = image.metadata?.createdTime;
+      if (!createdTime && !showImagesWithoutTimestamp) return false;
     }
 
     return true;
@@ -835,9 +835,8 @@ export default function TagImagesPage() {
                 checked={showImagesWithoutTimestamp}
                 onChange={(e) => setShowImagesWithoutTimestamp(e.target.checked)}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2"
-              />
-              <span className="text-sm text-gray-700">
-                Show images without timestamp ({images.filter(img => !img.metadata?.createdDate).length})
+              />              <span className="text-sm text-gray-700">
+                Show images without timestamp ({images.filter(img => !img.metadata?.createdTime).length})
               </span>
             </label>
             <label className="flex items-center cursor-pointer">
