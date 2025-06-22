@@ -112,7 +112,10 @@ export default function TagVideosPage() {
   const [batchYoutubeTags, setBatchYoutubeTags] = useState<string>('');
   const [batchYoutubeDescription, setBatchYoutubeDescription] = useState<string>('');  const [batchYoutubeRecordingDate, setBatchYoutubeRecordingDate] = useState<string>('');const [showBatchActions, setShowBatchActions] = useState(false);  const [batchSaving, setBatchSaving] = useState(false);
   const [refreshingMetadata, setRefreshingMetadata] = useState(false);
-  const [parsingDates, setParsingDates] = useState(false);  // Cat selector states
+  const [parsingDates, setParsingDates] = useState(false);
+  const [processingVideos, setProcessingVideos] = useState<Set<string>>(new Set());
+
+  // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
   const [catSearchQuery, setCatSearchQuery] = useState('');
@@ -618,23 +621,20 @@ export default function TagVideosPage() {
     } finally {
       setRefreshingMetadata(false);
     }  };
-
   const handleAutomaticDateParsing = async () => {
     // Count videos that could benefit from date parsing
     const videosNeedingDates = videos.filter(video => {
-      const hasNoRecordingDate = !video.recordingDate;
+      const hasNoCreatedTime = !video.createdTime;
       const couldParseDate = parseRecordingDateFromTitle(video.title) !== null;
-      return hasNoRecordingDate && couldParseDate;
+      return hasNoCreatedTime && couldParseDate;
     });
 
     if (videosNeedingDates.length === 0) {
-      alert('❌ No videos found that need date parsing.\\n\\nEither all videos already have recording dates, or no video titles contain parseable date patterns.');
+      alert('❌ No videos found that need date parsing.\\n\\nEither all videos already have creation dates, or no video titles contain parseable date patterns.');
       return;
-    }
-
-    const confirmed = confirm(
+    }    const confirmed = confirm(
       `🤖 Automatic Date Parsing\\n\\n` +
-      `This will parse recording dates from video titles and update:\\n` +
+      `This will parse creation dates from video titles and update:\\n` +
       `• YouTube recording date field\\n` +
       `• Firestore createdTime field\\n\\n` +
       `Found ${videosNeedingDates.length} video(s) that could benefit from date parsing.\\n\\n` +
@@ -642,20 +642,24 @@ export default function TagVideosPage() {
       `Continue?`
     );
 
-    if (!confirmed) return;
-
-    try {
+    if (!confirmed) return;    try {
       setParsingDates(true);
       setError(null);
+      setProcessingVideos(new Set()); // Clear any previous processing state
 
       let successCount = 0;
       let failCount = 0;
       const results = [];
 
-      console.log(`Starting automatic date parsing for ${videosNeedingDates.length} videos...`);
-
-      for (const video of videosNeedingDates) {
+      console.log(`Starting automatic date parsing for ${videosNeedingDates.length} videos...`);      for (const video of videosNeedingDates) {
         try {
+          // Add video to processing set to show visual feedback
+          setProcessingVideos(prev => {
+            const newSet = new Set(prev);
+            newSet.add(video.id);
+            return newSet;
+          });
+
           const parsedDate = parseRecordingDateFromTitle(video.title);
           if (parsedDate) {
             console.log(`📅 Parsing date for "${video.title}": ${parsedDate.toISOString()}`);            // Update YouTube first
@@ -688,8 +692,7 @@ export default function TagVideosPage() {
                 results.push({
                   video: video.title,
                   date: parsedDate.toISOString().split('T')[0],
-                  success: true
-                });
+                  success: true                });
               } else {
                 throw new Error(`YouTube API error: ${response.status}`);
               }
@@ -704,6 +707,14 @@ export default function TagVideosPage() {
               });
             }
           }
+
+          // Remove video from processing set after completion
+          setProcessingVideos(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(video.id);
+            return newSet;
+          });
+
         } catch (error) {
           console.error(`❌ Error processing ${video.title}:`, error);
           failCount++;
@@ -711,6 +722,13 @@ export default function TagVideosPage() {
             video: video.title,
             success: false,
             error: error instanceof Error ? error.message : 'Date parsing failed'
+          });
+
+          // Remove video from processing set even on error
+          setProcessingVideos(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(video.id);
+            return newSet;
           });
         }
       }
@@ -741,9 +759,9 @@ export default function TagVideosPage() {
 
     } catch (error) {
       console.error('Error during automatic date parsing:', error);
-      setError(`Failed to parse dates: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
+      setError(`Failed to parse dates: ${error instanceof Error ? error.message : 'Unknown error'}`);    } finally {
       setParsingDates(false);
+      setProcessingVideos(new Set()); // Clear processing state
     }
   };
 
@@ -1173,10 +1191,8 @@ export default function TagVideosPage() {
             {parsingDates ? 'Parsing Dates...' : '📅 Automatic Date Parsing'}
           </button>
         </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      </div>      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-700">Total Videos</h3>
           <p className="text-3xl font-bold text-blue-600">{videos.length}</p>
@@ -1188,6 +1204,20 @@ export default function TagVideosPage() {
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-700">Tagged Videos</h3>
           <p className="text-3xl font-bold text-green-600">{taggedVideos.length}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-700">Need Date Parsing</h3>          <p className="text-3xl font-bold text-purple-600">
+            {videos.filter(video => {
+              const hasNoCreatedTime = !video.createdTime;
+              const couldParseDate = parseRecordingDateFromTitle(video.title) !== null;
+              return hasNoCreatedTime && couldParseDate;
+            }).length}
+          </p>
+          {processingVideos.size > 0 && (
+            <p className="text-sm text-purple-500 mt-1">
+              📅 Processing: {processingVideos.size}
+            </p>
+          )}
         </div>
       </div>
 
@@ -1517,16 +1547,26 @@ export default function TagVideosPage() {
       ) : (        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video List */}
           <div className="lg:col-span-2">            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {paginatedVideos.map((video) => (
-                <div
-                  key={video.id}                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
+              {paginatedVideos.map((video) => (                <div
+                  key={video.id}
+                  className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                     selectedVideo?.id === video.id
                       ? 'border-blue-500'
+                      : processingVideos.has(video.id)
+                      ? 'border-purple-500 shadow-md'
                       : video.tags.length > 0
                       ? 'border-green-200'
                       : 'border-gray-200'
                   }`}
                 >
+                  {/* Processing overlay */}
+                  {processingVideos.has(video.id) && (
+                    <div className="absolute inset-0 bg-purple-500 bg-opacity-20 z-30 flex items-center justify-center rounded-lg">
+                      <div className="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        📅 Parsing Date...
+                      </div>
+                    </div>
+                  )}
                   {/* Checkbox for batch selection */}
                   <div className="absolute top-2 left-2 z-10">
                     <input
@@ -1583,10 +1623,22 @@ export default function TagVideosPage() {
                         Published: {new Date(video.publishedAt).toLocaleDateString()}
                       </p>
                       <p className="text-xs text-gray-500 mb-1">
-                        Created: {video.createdTime ?
-                          new Date(video.createdTime.seconds ? video.createdTime.seconds * 1000 : video.createdTime).toLocaleDateString() :
+                        Created: {video.createdTime ? (
+                          <span className={`${
+                            video.lastMetadataRefresh &&
+                            new Date(video.lastMetadataRefresh.seconds ? video.lastMetadataRefresh.seconds * 1000 : video.lastMetadataRefresh).getTime() > Date.now() - 10000
+                              ? 'text-green-600 font-medium'
+                              : ''
+                          }`}>
+                            {new Date(video.createdTime.seconds ? video.createdTime.seconds * 1000 : video.createdTime).toLocaleDateString()}
+                            {video.lastMetadataRefresh &&
+                             new Date(video.lastMetadataRefresh.seconds ? video.lastMetadataRefresh.seconds * 1000 : video.lastMetadataRefresh).getTime() > Date.now() - 10000 && (
+                              <span className="text-green-600"> ✨</span>
+                            )}
+                          </span>
+                        ) : (
                           'null'
-                        }
+                        )}
                       </p><p className="text-xs text-blue-600 mb-2 font-mono break-all">
                         youtu.be/{video.id}
                       </p>
