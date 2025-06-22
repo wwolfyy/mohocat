@@ -1,12 +1,13 @@
 {
   "name": "mtcat_next",
   "version": "0.1.0",
-  "private": true,
-  "scripts": {
+  "private": true,  "scripts": {
     "dev": "next dev",
     "build": "node scripts/fetch-static-assets.js && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "script:add-updated-field": "node scripts/add_updated_field.js",
+    "script:add-updated-field-admin": "node scripts/add_updated_field_admin.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

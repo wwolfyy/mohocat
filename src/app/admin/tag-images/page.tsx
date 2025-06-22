@@ -347,11 +347,12 @@ export default function TagImagesPage() {
         tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
         uploadDate: selectedImage.metadata?.uploadDate || new Date(),
         createdTime: createdTime ? new Date(createdTime) : null,
+        updated: new Date(), // Add timestamp for when metadata is updated
         uploadedBy: 'admin',
         description: description,
         needsTagging: false,
         autoTagged: false,
-      };      let updatedMetadata;
+      };let updatedMetadata;
       if (selectedImage.hasMetadata && selectedImage.metadata?.id) {
         await updateDoc(doc(db, 'cat_images', selectedImage.metadata.id), metadata);
         updatedMetadata = { ...selectedImage.metadata, ...metadata };
@@ -474,14 +475,14 @@ export default function TagImagesPage() {
 
     // Auto-save the changes if we have a selected image
     if (selectedImage) {
-      try {
-        const metadata = {
+      try {        const metadata = {
           fileName: selectedImage.name,
           imageUrl: selectedImage.url,
           storagePath: selectedImage.fullPath,
           tags: updatedTags,
           uploadDate: selectedImage.metadata?.uploadDate || new Date(),
           createdTime: selectedImage.metadata?.createdTime || null,
+          updated: new Date(), // Add timestamp for when metadata is updated
           uploadedBy: 'admin',
           description: description,
           needsTagging: updatedTags.length === 0,
@@ -616,6 +617,7 @@ export default function TagImagesPage() {
             image.metadata?.tags || [],
           uploadDate: image.metadata?.uploadDate || new Date(),
           createdTime: image.metadata?.createdTime || null,
+          updated: new Date(), // Add timestamp for when metadata is updated
           uploadedBy: 'admin',
           description: batchDescription || image.metadata?.description || '',
           needsTagging: false,
@@ -1037,10 +1039,12 @@ export default function TagImagesPage() {
                     />                    <div className="p-3">
                       <p className="text-sm font-medium mb-1 break-words">
                         {image.name}
-                      </p>
-                      {image.hasMetadata && image.metadata?.uploadDate && (
+                      </p>                      {image.hasMetadata && image.metadata?.uploadDate && (
                         <p className="text-xs text-gray-500 mb-1">
                           Uploaded: {new Date(image.metadata.uploadDate.seconds ? image.metadata.uploadDate.seconds * 1000 : image.metadata.uploadDate).toLocaleDateString()}
+                          {image.metadata?.updated && (
+                            <span> ({new Date(image.metadata.updated.seconds ? image.metadata.updated.seconds * 1000 : image.metadata.updated).toLocaleDateString()})</span>
+                          )}
                         </p>
                       )}
                       {image.hasMetadata && (
@@ -1119,10 +1123,12 @@ export default function TagImagesPage() {
                       className="w-full h-32 object-cover rounded"
                     />
                     {/* Date Information */}
-                    <div className="mt-2 text-xs text-gray-600 space-y-1">
-                      {selectedImage.hasMetadata && selectedImage.metadata?.uploadDate && (
+                    <div className="mt-2 text-xs text-gray-600 space-y-1">                      {selectedImage.hasMetadata && selectedImage.metadata?.uploadDate && (
                         <p>
                           <strong>Uploaded:</strong> {new Date(selectedImage.metadata.uploadDate.seconds ? selectedImage.metadata.uploadDate.seconds * 1000 : selectedImage.metadata.uploadDate).toLocaleDateString()}
+                          {selectedImage.metadata?.updated && (
+                            <span> ({new Date(selectedImage.metadata.updated.seconds ? selectedImage.metadata.updated.seconds * 1000 : selectedImage.metadata.updated).toLocaleDateString()})</span>
+                          )}
                         </p>
                       )}
                       {selectedImage.hasMetadata && (
