@@ -90,6 +90,7 @@ interface TaggedVideo extends Omit<YouTubeVideo, 'description'> {
   allPlaylists?: Array<{id: string, title: string}>; // All playlists the video belongs to (YouTube-sourced)
   lastMetadataRefresh?: Date | { seconds: number } | any; // When metadata was last refreshed
   youtubeId?: string; // YouTube video ID
+  catName?: string; // Cat name (Firestore-only, not sourced from YouTube)
 }
 
 export default function TagVideosPage() {
@@ -205,8 +206,7 @@ export default function TagVideosPage() {
       console.log(`Created ${createdEntries.length} new cat_videos entries`);
       console.log(`All ${youtubeVideos.length} YouTube videos now have metadata entries in Firestore (consistent with cat_images collection)`);      // Combine YouTube videos with Firestore metadata (now all videos have metadata)
       const combinedVideos: TaggedVideo[] = youtubeVideos.map(video => {
-        const metadata = metadataMap.get(video.id);        return {
-          ...video,
+        const metadata = metadataMap.get(video.id);        return {          ...video,
           hasMetadata: true, // Now all videos have metadata
           firestoreId: metadata!.id, // Safe to use ! since we created all missing entries
           tags: metadata?.tags || [],
@@ -214,6 +214,7 @@ export default function TagVideosPage() {
           createdTime: metadata?.createdTime || null,
           allPlaylists: metadata?.allPlaylists || [],
           lastMetadataRefresh: metadata?.lastMetadataRefresh || null,
+          catName: metadata?.catName || '', // Firestore-only field
         };
       });
 
@@ -245,6 +246,9 @@ export default function TagVideosPage() {
     setYoutubeTitle(video.title || '');
     setYoutubeTags(video.tags.join(', '));
     setYoutubeDescription(video.description || ''); // Note: This starts as the current YouTube description
+
+    // Populate Firestore-only fields
+    setCatName(video.catName || '');
 
     // Format recording date for input (YYYY-MM-DD)
     let recordingDateStr = '';
@@ -347,11 +351,28 @@ export default function TagVideosPage() {
           throw new Error(`YouTube update failed: ${errorData.error || 'Unknown error'}`);
         }
 
-        const youtubeResult = await youtubeResponse.json();
-        console.log('✅ YouTube update successful:', youtubeResult);
+        const youtubeResult = await youtubeResponse.json();        console.log('✅ YouTube update successful:', youtubeResult);
+      }// Step 4: Update Firestore-only fields (cat name, etc.)
+      const firestoreOnlyUpdates: any = {
+        uploadDate: new Date(),
+        uploadedBy: 'admin',
+        videoType: 'youtube' as const,
+        youtubeId: selectedVideo.youtubeId || selectedVideo.id,
+      };
 
-        // Step 3: Refresh metadata from YouTube to sync changes to Firebase
-        console.log('Refreshing metadata from YouTube...');
+      // Add cat name if provided
+      if (catName.trim()) {
+        firestoreOnlyUpdates.catName = catName.trim();
+      }
+
+      if (selectedVideo.firestoreId) {
+        await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), firestoreOnlyUpdates);
+        console.log('✅ Updated Firestore-only fields:', firestoreOnlyUpdates);
+      }
+
+      // Step 5: Sync Firestore with fresh YouTube metadata (only if YouTube was updated)
+      if (hasYoutubeChanges) {
+        console.log('Syncing Firestore with fresh YouTube metadata...');
         const refreshResponse = await fetch('/api/refresh-video-metadata', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -360,32 +381,52 @@ export default function TagVideosPage() {
           })
         });
 
-        if (!refreshResponse.ok) {
-          console.warn('Failed to refresh metadata, but YouTube update was successful');
+        if (refreshResponse.ok) {
+          console.log('✅ Firestore synced with fresh YouTube metadata');
         } else {
-          console.log('✅ Metadata refresh successful');
+          console.warn('⚠️ Failed to sync Firestore, but YouTube update was successful');
         }
-      }      // Step 4: Update Firestore-only fields (cat name, etc.)
-      const videoData = {
-        uploadDate: new Date(),
-        uploadedBy: 'admin',
-        videoType: 'youtube' as const,
-        youtubeId: selectedVideo.youtubeId || selectedVideo.id,
-      };
-
-      if (selectedVideo.firestoreId) {
-        await updateDoc(doc(db, 'cat_videos', selectedVideo.firestoreId), videoData);
-        console.log('✅ Updated Firestore-only fields');
-      }      // Step 5: Reload videos to reflect all changes
+      }      // Step 6: Update local state by reloading from Firestore (single source of truth)
+      console.log('Reloading videos from Firestore to update local state...');
       await loadVideos();
 
-      setSelectedVideo(null);
-      setYoutubeTitle('');
-      setYoutubeTags('');
-      setYoutubeDescription('');
-      setYoutubeRecordingDate('');
+      // Step 7: Re-select the updated video to maintain UI state
+      // Use a more reliable method to wait for state update
+      const currentVideoId = selectedVideo.id;
 
-      console.log('✅ Save process completed successfully');
+      // Find the updated video from the state that should now be updated
+      // We need to use a callback to ensure we get the updated state
+      setTimeout(() => {
+        setVideos(currentVideos => {
+          const refreshedVideo = currentVideos.find(v => v.id === currentVideoId);
+          if (refreshedVideo) {
+            setSelectedVideo(refreshedVideo);            // Update form fields with the fresh data
+            setYoutubeTitle(refreshedVideo.title || '');
+            setYoutubeTags(refreshedVideo.tags.join(', '));
+            setYoutubeDescription(refreshedVideo.description || '');
+            setCatName(refreshedVideo.catName || '');
+
+            // Format recording date for input
+            let recordingDateStr = '';
+            if (refreshedVideo.recordingDate) {
+              try {
+                const date = new Date(refreshedVideo.recordingDate);
+                if (!isNaN(date.getTime())) {
+                  recordingDateStr = date.toISOString().split('T')[0];
+                }
+              } catch (e) {
+                console.warn('Error parsing recording date:', refreshedVideo.recordingDate);
+              }
+            }
+            setYoutubeRecordingDate(recordingDateStr);
+
+            console.log('✅ UI re-synced with fresh Firestore data');
+          }
+          return currentVideos; // Don't modify the videos array
+        });
+      }, 500); // Increased delay to ensure loadVideos() has completed
+
+      console.log('✅ Save process completed successfully - Data flow: UI → YouTube → Firestore → Local State');
 
     } catch (err) {
       console.error('Error in save process:', err);
@@ -400,14 +441,18 @@ export default function TagVideosPage() {
     try {
       setBatchSaving(true);
       setError(null);      const videoIds = Array.from(selectedVideos);
-      let youtubeUpdateResults = [];
-
-      // Step 1: Update YouTube fields
+      let youtubeUpdateResults = [];      // Step 1: Update YouTube fields
       console.log('Performing batch YouTube updates...');
+      console.log(`Processing ${videoIds.length} selected videos:`, videoIds);
 
         for (const videoId of videoIds) {
           const video = videos.find(v => v.id === videoId);
-          if (!video) continue;
+          if (!video) {
+            console.warn(`Video not found for ID: ${videoId}`);
+            continue;
+          }
+
+          console.log(`Processing video: ${video.title} (${videoId})`);
 
           const youtubeUpdates: any = {};
           let hasYoutubeChanges = false;
@@ -416,13 +461,22 @@ export default function TagVideosPage() {
           if (batchYoutubeTitle.trim() && batchYoutubeTitle !== video.title) {
             youtubeUpdates.title = batchYoutubeTitle;
             hasYoutubeChanges = true;
-          }
-
-          // Check for tag changes
+          }          // Check for tag changes
           if (batchYoutubeTags.trim()) {
             const newTags = batchYoutubeTags.split(',').map(tag => tag.trim()).filter(Boolean);
-            const currentTags = video.tags.join(', ');
-            if (batchYoutubeTags !== currentTags) {
+            const currentTags = video.tags || [];
+
+            console.log(`Tag comparison for ${video.title}:`);
+            console.log('  New tags:', newTags);
+            console.log('  Current tags:', currentTags);
+
+            // Compare arrays properly instead of comparing strings
+            const tagsChanged = newTags.length !== currentTags.length ||
+              !newTags.every((tag, index) => tag === currentTags[index]);
+
+            console.log('  Tags changed:', tagsChanged);
+
+            if (tagsChanged) {
               youtubeUpdates.tags = newTags;
               hasYoutubeChanges = true;
             }
@@ -443,10 +497,9 @@ export default function TagVideosPage() {
               youtubeUpdates.recordingDate = new Date(batchYoutubeRecordingDate).toISOString();
               hasYoutubeChanges = true;
             }
-          }
-
-          // Update YouTube if there are changes
+          }          // Update YouTube if there are changes
           if (hasYoutubeChanges) {
+            console.log(`Updating YouTube for ${video.title} with:`, youtubeUpdates);
             try {
               const youtubeResponse = await fetch('/api/update-youtube-video', {
                 method: 'PUT',
@@ -459,6 +512,7 @@ export default function TagVideosPage() {
 
               if (youtubeResponse.ok) {
                 youtubeUpdateResults.push({ videoId, success: true });
+                console.log(`✅ Successfully updated ${video.title}`);
               } else {
                 const errorData = await youtubeResponse.json();
                 youtubeUpdateResults.push({
@@ -466,6 +520,7 @@ export default function TagVideosPage() {
                   success: false,
                   error: errorData.error || 'Unknown error'
                 });
+                console.error(`❌ Failed to update ${video.title}:`, errorData.error);
               }
             } catch (err) {
               youtubeUpdateResults.push({
@@ -473,45 +528,54 @@ export default function TagVideosPage() {
                 success: false,
                 error: err instanceof Error ? err.message : 'Unknown error'
               });
+              console.error(`❌ Exception updating ${video.title}:`, err);
             }
-          }
-        }        // Refresh metadata for successfully updated videos
-        const successfulUpdates = youtubeUpdateResults.filter(r => r.success);
-        if (successfulUpdates.length > 0) {
-          console.log('Refreshing metadata for updated videos...');
-          try {
-            await fetch('/api/refresh-video-metadata', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                videoIds: successfulUpdates.map(r => r.videoId)
-              })
-            });
-          } catch (err) {
-            console.warn('Failed to refresh metadata after YouTube updates:', err);
-          }
+          } else {
+            console.log(`No changes needed for ${video.title}`);          }
         }
 
-      // Step 2: Update Firestore-only fields (cat names, etc.) - simplified since no more Firebase-only description
-      // Currently, we don't have any Firestore-only fields to update in batch mode
-      // This section is reserved for future Firebase-only field updates
+      // Step 2: Sync Firestore with fresh YouTube metadata for successfully updated videos
+      const successfulVideoIds = youtubeUpdateResults
+        .filter(r => r.success)
+        .map(r => r.videoId);
 
-      // Step 3: Reload videos to reflect all changes
-      await loadVideos();      // Clear selection and reset form
+      if (successfulVideoIds.length > 0) {
+        console.log(`Syncing Firestore for ${successfulVideoIds.length} successfully updated videos...`);
+
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            videoIds: successfulVideoIds
+          })
+        });
+
+        if (refreshResponse.ok) {
+          console.log('✅ Firestore synced with fresh YouTube metadata');
+        } else {
+          console.warn('⚠️ Failed to sync Firestore, but YouTube updates were successful');
+        }
+      }
+
+      // Step 3: Update local state by reloading from Firestore (single source of truth)
+      // This ensures UI reflects the authoritative Firestore data
+      console.log('Reloading videos from Firestore to update local state...');
+      await loadVideos();
+      console.log('✅ Local state updated from Firestore data');// Clear selection and reset form
       setSelectedVideos(new Set());
       setShowBatchActions(false);
       setBatchYoutubeTitle('');
       setBatchYoutubeTags('');      setBatchYoutubeDescription('');
-      setBatchYoutubeRecordingDate('');
-
-      // Show results if YouTube updates were attempted
+      setBatchYoutubeRecordingDate('');      // Show results if YouTube updates were attempted
       if (youtubeUpdateResults.length > 0) {
         const successful = youtubeUpdateResults.filter(r => r.success).length;
         const failed = youtubeUpdateResults.filter(r => !r.success).length;
 
-        let message = `Batch save completed!\n\nFirestore updates: ${videoIds.length} videos`;
-        if (successful > 0) message += `\nYouTube updates: ${successful} successful`;
-        if (failed > 0) message += `, ${failed} failed`;
+        let message = `Batch save completed!\n\n✅ Data flow: UI → YouTube → Firestore → Local State`;
+        if (successful > 0) message += `\n\nYouTube updates: ${successful} successful`;
+        if (failed > 0) message += `\nYouTube failures: ${failed}`;
+        message += `\nFirestore sync: ${successful > 0 ? 'Completed' : 'Skipped (no successful updates)'}`;
+        message += `\nLocal state: Updated from Firestore`;
 
         alert(message);
       }
@@ -1115,9 +1179,7 @@ export default function TagVideosPage() {
             ×
           </button>
         </div>
-      )}
-
-      {/* YouTube API Configuration Status */}
+      )}      {/* YouTube API Configuration Status */}
       <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
         <h3 className="text-sm font-semibold text-blue-800 mb-2">YouTube API Configuration</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1134,11 +1196,29 @@ export default function TagVideosPage() {
             </span>
           </div>
         </div>
+        <div className="mt-3 pt-3 border-t border-blue-300">
+          <div className="text-sm space-y-1">
+            <div>
+              <span className="text-blue-700">Video Refresh:</span>{' '}
+              <span className="text-green-600">✅ Enhanced to fetch ALL videos from channel</span>
+            </div>
+            <div className="text-xs text-blue-600">
+              • Supports pagination (fetches up to 500 videos)
+            </div>
+            <div className="text-xs text-blue-600">
+              • Automatically creates Firestore entries for new videos
+            </div>
+            <div className="text-xs text-blue-600">
+              • May take longer for channels with many videos
+            </div>
+          </div>
+        </div>
         {(!process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || !process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID) && (
           <div className="mt-2 text-sm text-blue-700">
             <strong>Setup Required:</strong> Please configure your YouTube API credentials in the .env.local file.
-          </div>        )}
-      </div>      {/* Date Parsing Configuration Status */}
+          </div>
+        )}
+      </div>{/* Date Parsing Configuration Status */}
       <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6">
         <h3 className="text-sm font-semibold text-green-800 mb-2">Video Date Parsing</h3>
         <div className="text-sm space-y-1">
@@ -1179,8 +1259,9 @@ export default function TagVideosPage() {
             onClick={loadVideos}
             disabled={loading}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
+            title="Fetches all videos from your YouTube channel (may take a moment for channels with many videos)"
           >
-            {loading ? 'Loading...' : '🔄 Refresh Videos'}
+            {loading ? '🔄 Loading All Videos...' : '🔄 Refresh Videos'}
           </button>
 
           <button

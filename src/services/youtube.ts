@@ -13,8 +13,8 @@ export interface YouTubeVideo {
   channelTitle: string;
 }
 
-// Fetch videos from your YouTube channel
-export const fetchChannelVideos = async (channelId?: string, maxResults: number = 50): Promise<YouTubeVideo[]> => {
+// Fetch videos from your YouTube channel with pagination support
+export const fetchChannelVideos = async (channelId?: string, maxResults: number = 500): Promise<YouTubeVideo[]> => {
   if (!YOUTUBE_API_KEY) {
     console.error('YouTube API key not configured');
     throw new Error('YouTube API key not configured. Please set NEXT_PUBLIC_YOUTUBE_API_KEY in your .env.local file.');
@@ -27,7 +27,7 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
   }
 
   try {
-    console.log(`Fetching videos from channel: ${targetChannelId}`);
+    console.log(`Fetching videos from channel: ${targetChannelId} (max: ${maxResults})`);
 
     // First, get the uploads playlist ID for the channel
     const channelResponse = await fetch(
@@ -51,57 +51,106 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
 
     console.log(`Found uploads playlist: ${uploadsPlaylistId}`);
 
-    // Get videos from the uploads playlist
-    const playlistResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`
-    );
+    // Fetch all videos using pagination
+    const allVideoIds: string[] = [];
+    let nextPageToken: string | undefined = undefined;
+    let pageCount = 0;
+    const maxPageSize = 50; // YouTube API max per page
 
-    if (!playlistResponse.ok) {
-      throw new Error(`Failed to fetch playlist items: ${playlistResponse.status} ${playlistResponse.statusText}`);
-    }
+    do {
+      pageCount++;
+      console.log(`Fetching page ${pageCount}${nextPageToken ? ` (token: ${nextPageToken.substring(0, 10)}...)` : ''}`);
 
-    const playlistData = await playlistResponse.json();
+      const url = new URL('https://www.googleapis.com/youtube/v3/playlistItems');
+      url.searchParams.set('part', 'snippet');
+      url.searchParams.set('playlistId', uploadsPlaylistId);
+      url.searchParams.set('maxResults', Math.min(maxPageSize, maxResults - allVideoIds.length).toString());
+      url.searchParams.set('key', YOUTUBE_API_KEY);
+      if (nextPageToken) {
+        url.searchParams.set('pageToken', nextPageToken);
+      }
 
-    if (!playlistData.items || playlistData.items.length === 0) {
+      const playlistResponse = await fetch(url.toString());
+
+      if (!playlistResponse.ok) {
+        throw new Error(`Failed to fetch playlist items (page ${pageCount}): ${playlistResponse.status} ${playlistResponse.statusText}`);
+      }
+
+      const playlistData = await playlistResponse.json();
+
+      if (!playlistData.items || playlistData.items.length === 0) {
+        console.log(`No more videos found on page ${pageCount}`);
+        break;
+      }
+
+      const pageVideoIds = playlistData.items
+        .map((item: any) => item.snippet?.resourceId?.videoId)
+        .filter(Boolean);
+
+      allVideoIds.push(...pageVideoIds);
+      console.log(`Page ${pageCount}: Found ${pageVideoIds.length} videos (total: ${allVideoIds.length})`);
+
+      nextPageToken = playlistData.nextPageToken;
+
+      // Stop if we've reached the maxResults limit or there's no next page
+      if (allVideoIds.length >= maxResults || !nextPageToken) {
+        break;
+      }
+    } while (nextPageToken && allVideoIds.length < maxResults);
+
+    if (allVideoIds.length === 0) {
       console.log('No videos found in channel');
       return [];
     }
 
-    const videoIds = playlistData.items
-      .map((item: any) => item.snippet?.resourceId?.videoId)
-      .filter(Boolean);
+    console.log(`Found ${allVideoIds.length} total videos across ${pageCount} pages, fetching details...`);
 
-    if (videoIds.length === 0) {
-      return [];
+    // Get detailed video information in batches (YouTube API allows max 50 IDs per request)
+    const batchSize = 50;
+    const allVideos: YouTubeVideo[] = [];
+
+    for (let i = 0; i < allVideoIds.length; i += batchSize) {
+      const batchIds = allVideoIds.slice(i, i + batchSize);
+      const batchNumber = Math.floor(i / batchSize) + 1;
+      const totalBatches = Math.ceil(allVideoIds.length / batchSize);
+
+      console.log(`Fetching video details batch ${batchNumber}/${totalBatches} (${batchIds.length} videos)`);
+
+      const videosResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails&id=${batchIds.join(',')}&key=${YOUTUBE_API_KEY}`
+      );
+
+      if (!videosResponse.ok) {
+        throw new Error(`Failed to fetch video details for batch ${batchNumber}: ${videosResponse.status} ${videosResponse.statusText}`);
+      }
+
+      const videosData = await videosResponse.json();
+
+      const batchVideos = videosData.items?.map((video: any) => ({
+        id: video.id,
+        title: video.snippet?.title || 'Untitled',
+        description: video.snippet?.description || '',
+        thumbnailUrl: video.snippet?.thumbnails?.medium?.url ||
+                      video.snippet?.thumbnails?.default?.url ||
+                      `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`,
+        publishedAt: video.snippet?.publishedAt || '',
+        recordingDate: video.recordingDetails?.recordingDate || undefined,
+        duration: video.contentDetails?.duration || undefined,
+        videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
+        channelTitle: video.snippet?.channelTitle || '',
+      })) || [];
+
+      allVideos.push(...batchVideos);
+      console.log(`Batch ${batchNumber} complete: ${batchVideos.length} videos processed (total: ${allVideos.length})`);
+
+      // Add a small delay between batches to avoid rate limiting
+      if (i + batchSize < allVideoIds.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
-    console.log(`Found ${videoIds.length} videos, fetching details...`);    // Get detailed video information including duration and recording details
-    const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
-    );
-
-    if (!videosResponse.ok) {
-      throw new Error(`Failed to fetch video details: ${videosResponse.status} ${videosResponse.statusText}`);
-    }
-
-    const videosData = await videosResponse.json();
-
-    const videos = videosData.items?.map((video: any) => ({
-      id: video.id,
-      title: video.snippet?.title || 'Untitled',
-      description: video.snippet?.description || '',
-      thumbnailUrl: video.snippet?.thumbnails?.medium?.url ||
-                    video.snippet?.thumbnails?.default?.url ||
-                    `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`,
-      publishedAt: video.snippet?.publishedAt || '',
-      recordingDate: video.recordingDetails?.recordingDate || undefined,
-      duration: video.contentDetails?.duration || undefined,
-      videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
-      channelTitle: video.snippet?.channelTitle || '',
-    })) || [];
-
-    console.log(`Successfully fetched ${videos.length} videos from channel`);
-    return videos;
+    console.log(`Successfully fetched details for ${allVideos.length} videos from channel`);
+    return allVideos;
 
   } catch (error) {
     console.error('Error fetching YouTube videos:', error);
