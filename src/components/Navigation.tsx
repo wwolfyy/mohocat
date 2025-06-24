@@ -21,12 +21,17 @@ export default function Navigation() {
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           동참
-        </Link>
-        <Link
+        </Link>        <Link
           href="/pages/photo-album"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           사진첩
+        </Link>
+        <Link
+          href="/pages/video-album"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          동영상
         </Link>
         <Link
           href="/pages/butler_stream"
@@ -104,13 +109,19 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
-              </Link>
-              <Link
+              </Link>              <Link
                 href="/pages/photo-album"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 사진첩
+              </Link>
+              <Link
+                href="/pages/video-album"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                동영상첩
               </Link>
               <Link
                 href="/pages/butler_stream"
