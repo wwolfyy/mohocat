@@ -8,8 +8,7 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <>
-      {/* Desktop navigation */}
+    <>      {/* Desktop navigation */}
       <nav className="hidden md:flex items-center space-x-6">
         <Link
           href="/pages/about"
@@ -22,6 +21,12 @@ export default function Navigation() {
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           동참
+        </Link>
+        <Link
+          href="/pages/photo-album"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          사진첩
         </Link>
         <Link
           href="/pages/butler_stream"
@@ -85,8 +90,7 @@ export default function Navigation() {
 
         {/* Mobile navigation menu */}
         {isMobileMenuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-            <div className="py-1">
+          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">            <div className="py-1">
               <Link
                 href="/pages/about"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -100,6 +104,13 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
+              </Link>
+              <Link
+                href="/pages/photo-album"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                사진첩
               </Link>
               <Link
                 href="/pages/butler_stream"
