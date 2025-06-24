@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { cn } from '@/utils/cn';
+import PhotoAlbum from './PhotoAlbum';
+import VideoAlbum from './VideoAlbum';
 
 interface Cat {
   id: string;
@@ -34,6 +37,9 @@ const getStatusEmoji = (status?: string) => {
 };
 
 export default function CatInfo({ cat }: CatInfoProps) {
+  const [showPhotoAlbum, setShowPhotoAlbum] = useState(false);
+  const [showVideoAlbum, setShowVideoAlbum] = useState(false);
+
   return (
     <div className="p-4">
       <div className="flex justify-center mb-4">
@@ -102,7 +108,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.offspring && (
           <div className="flex items-center">
             <span className="w-24 font-semibold text-gray-700">애:</span>
-            <span className="text-gray-600">{cat.offspring}</span>            
+            <span className="text-gray-600">{cat.offspring}</span>
           </div>
         )}
 
@@ -119,22 +125,40 @@ export default function CatInfo({ cat }: CatInfoProps) {
 
         {cat.note && (
           <div className="mt-4">
-            <h4 className="font-semibold text-gray-700">특이사항:</h4>            
+            <h4 className="font-semibold text-gray-700">특이사항:</h4>
             {/* <p className="mt-2 text-gray-600">{cat.note}</p> */}
             <p className="mt-2 text-gray-600" style={{ whiteSpace: 'pre-line' }}>{cat.note}</p>
           </div>
-        )}
-
-        <div className="flex items-center">
+        )}        <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">사진첩:</span>
-          <span className="text-gray-600">준비 중입니다.</span>
-        </div>
-
-        <div className="flex items-center">
+          <button
+            onClick={() => setShowPhotoAlbum(true)}
+            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+          >
+            사진 보기 📸
+          </button>
+        </div>        <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">동영상:</span>
-          <span className="text-gray-600">준비 중입니다.</span>
+          <button
+            onClick={() => setShowVideoAlbum(true)}
+            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+          >
+            동영상 보기 🎬
+          </button>
         </div>
-      </div>
+      </div>      {/* Photo Album Modal */}
+      <PhotoAlbum
+        isOpen={showPhotoAlbum}
+        onClose={() => setShowPhotoAlbum(false)}
+        catName={cat.name}
+      />
+
+      {/* Video Album Modal */}
+      <VideoAlbum
+        isOpen={showVideoAlbum}
+        onClose={() => setShowVideoAlbum(false)}
+        catName={cat.name}
+      />
     </div>
   );
 }

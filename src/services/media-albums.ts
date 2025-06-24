@@ -14,18 +14,21 @@ export const COLLECTIONS = {
 // Get images for a specific cat
 export const getCatImages = async (catName: string): Promise<CatImage[]> => {
   try {
+    // Use a simpler query to avoid index requirement
     const q = query(
       collection(db, COLLECTIONS.CAT_IMAGES),
-      where('tags', 'array-contains', catName),
-      orderBy('uploadDate', 'desc')
+      where('tags', 'array-contains', catName)
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const images = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       uploadDate: doc.data().uploadDate?.toDate() || new Date()
     })) as CatImage[];
+
+    // Sort client-side by uploadDate descending
+    return images.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
   } catch (error) {
     console.error('Error fetching cat images:', error);
     return [];
@@ -35,18 +38,21 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
 // Get videos for a specific cat
 export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
   try {
+    // Use a simpler query to avoid index requirement
     const q = query(
       collection(db, COLLECTIONS.CAT_VIDEOS),
-      where('tags', 'array-contains', catName),
-      orderBy('uploadDate', 'desc')
+      where('tags', 'array-contains', catName)
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const videos = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       uploadDate: doc.data().uploadDate?.toDate() || new Date()
     })) as CatVideo[];
+
+    // Sort client-side by uploadDate descending
+    return videos.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
   } catch (error) {
     console.error('Error fetching cat videos:', error);
     return [];
@@ -56,18 +62,16 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
 // Get all images (with optional filtering)
 export const getAllImages = async (options: MediaQueryOptions = {}): Promise<CatImage[]> => {
   try {
-    let q = collection(db, COLLECTIONS.CAT_IMAGES);    const constraints = [];
+    let q = collection(db, COLLECTIONS.CAT_IMAGES);
+    const constraints = [];
 
+    // Apply tag filtering if specified
     if (options.tags && options.tags.length > 0) {
-      // For multiple tags, we'll need to filter client-side or use array-contains-any
       constraints.push(where('tags', 'array-contains-any', options.tags));
     }
 
-    const orderField = options.orderBy || 'uploadDate';
-    const direction = options.orderDirection || 'desc';
-    constraints.push(orderBy(orderField, direction));
-
-    const queryRef = query(q, ...constraints);
+    // Create query without orderBy to avoid index issues
+    const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
     const querySnapshot = await getDocs(queryRef);
 
     let results = querySnapshot.docs.map(doc => ({
@@ -75,6 +79,21 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
       ...doc.data(),
       uploadDate: doc.data().uploadDate?.toDate() || new Date()
     })) as CatImage[];
+
+    // Sort client-side
+    const orderField = options.orderBy || 'uploadDate';
+    const direction = options.orderDirection || 'desc';
+
+    results.sort((a, b) => {
+      const aValue = orderField === 'uploadDate' ? a.uploadDate.getTime() : (a as any)[orderField];
+      const bValue = orderField === 'uploadDate' ? b.uploadDate.getTime() : (b as any)[orderField];
+
+      if (direction === 'desc') {
+        return bValue > aValue ? 1 : bValue < aValue ? -1 : 0;
+      } else {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      }
+    });
 
     // Apply limit if specified
     if (options.limit) {
@@ -91,17 +110,16 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
 // Get all videos (with optional filtering)
 export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<CatVideo[]> => {
   try {
-    let q = collection(db, COLLECTIONS.CAT_VIDEOS);    const constraints = [];
+    let q = collection(db, COLLECTIONS.CAT_VIDEOS);
+    const constraints = [];
 
+    // Apply tag filtering if specified
     if (options.tags && options.tags.length > 0) {
       constraints.push(where('tags', 'array-contains-any', options.tags));
     }
 
-    const orderField = options.orderBy || 'uploadDate';
-    const direction = options.orderDirection || 'desc';
-    constraints.push(orderBy(orderField, direction));
-
-    const queryRef = query(q, ...constraints);
+    // Create query without orderBy to avoid index issues
+    const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
     const querySnapshot = await getDocs(queryRef);
 
     let results = querySnapshot.docs.map(doc => ({
@@ -110,6 +128,22 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
       uploadDate: doc.data().uploadDate?.toDate() || new Date()
     })) as CatVideo[];
 
+    // Sort client-side
+    const orderField = options.orderBy || 'uploadDate';
+    const direction = options.orderDirection || 'desc';
+
+    results.sort((a, b) => {
+      const aValue = orderField === 'uploadDate' ? a.uploadDate.getTime() : (a as any)[orderField];
+      const bValue = orderField === 'uploadDate' ? b.uploadDate.getTime() : (b as any)[orderField];
+
+      if (direction === 'desc') {
+        return bValue > aValue ? 1 : bValue < aValue ? -1 : 0;
+      } else {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      }
+    });
+
+    // Apply limit if specified
     if (options.limit) {
       results = results.slice(0, options.limit);
     }
