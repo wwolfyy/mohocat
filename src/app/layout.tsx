@@ -42,7 +42,7 @@ export default function RootLayout({
                     // style={{ width: 'auto', height: 'auto' }} // Maintain aspect ratio
                     className="mr-2 rounded-full" // Adds a small margin to the right of the logo
                   />
-                  <h1 className="text-lg font-semibold text-gray-900">계양산 고양이들</h1>
+                  <h1 className="text-lg font-semibold text-gray-900">산냥이집냥이</h1>
                 </div>
               </Link>
               <Navigation />

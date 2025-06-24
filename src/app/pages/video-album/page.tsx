@@ -356,8 +356,8 @@ export default function VideoAlbumPage() {
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 text-center">동영상첩</h1>
-          <p className="text-gray-600 text-center mt-2">산양이 고양이들의 소중한 동영상 순간들</p>
+          <h1 className="text-3xl font-bold text-gray-900 text-center">동영상</h1>
+          <p className="text-gray-600 text-center mt-2">산냥이 집냥이의 소중한 순간들</p>
         </div>
       </div>
 
