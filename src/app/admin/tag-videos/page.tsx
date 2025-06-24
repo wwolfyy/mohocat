@@ -133,10 +133,13 @@ export default function TagVideosPage() {
   const [enableDateFilter, setEnableDateFilter] = useState(false);
   const [dateFilterFrom, setDateFilterFrom] = useState('');
   const [dateFilterTo, setDateFilterTo] = useState('');
-
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [videosPerPage, setVideosPerPage] = useState(25);
+
+  // Sorting states
+  const [sortBy, setSortBy] = useState<'created' | 'uploaded' | 'updated'>('uploaded');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     loadVideos();
@@ -909,7 +912,9 @@ export default function TagVideosPage() {
     // Tag filtering - check if video has tags instead of needsTagging field
     const hasNoTags = video.tags.length === 0;
     if (hasNoTags && !showUntaggedVideos) return false;
-    if (!hasNoTags && !showTaggedVideos) return false;    // Date filtering (only if enabled)
+    if (!hasNoTags && !showTaggedVideos) return false;
+
+    // Date filtering (only if enabled)
     if (enableDateFilter) {
       const recordingDate = video.recordingDate;
 
@@ -927,7 +932,32 @@ export default function TagVideosPage() {
       // When date filter is disabled, check if we should show videos without timestamp
       const recordingDate = video.recordingDate;
       if (!recordingDate && !showVideosWithoutTimestamp) return false;
-    }return true;
+    }
+
+    return true;
+  }).sort((a, b) => {
+    // Apply sorting
+    let aDate: Date | null = null;
+    let bDate: Date | null = null;
+
+    if (sortBy === 'created') {
+      aDate = a.recordingDate ? new Date(a.recordingDate) : null;
+      bDate = b.recordingDate ? new Date(b.recordingDate) : null;
+    } else if (sortBy === 'uploaded') {
+      aDate = a.publishedAt ? new Date(a.publishedAt) : null;
+      bDate = b.publishedAt ? new Date(b.publishedAt) : null;
+    } else if (sortBy === 'updated') {
+      aDate = a.lastMetadataRefresh ? new Date(a.lastMetadataRefresh) : null;
+      bDate = b.lastMetadataRefresh ? new Date(b.lastMetadataRefresh) : null;
+    }
+
+    // Handle null dates (put them at the end)
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+
+    const comparison = aDate.getTime() - bDate.getTime();
+    return sortOrder === 'desc' ? -comparison : comparison;
   });
 
   // Pagination logic
@@ -935,11 +965,10 @@ export default function TagVideosPage() {
   const startIndex = (currentPage - 1) * videosPerPage;
   const endIndex = startIndex + videosPerPage;
   const paginatedVideos = filteredVideos.slice(startIndex, endIndex);
-
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [showTaggedVideos, showUntaggedVideos, showVideosWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo]);
+  }, [showTaggedVideos, showUntaggedVideos, showVideosWithoutTimestamp, enableDateFilter, dateFilterFrom, dateFilterTo, sortBy, sortOrder]);
   // YouTube tags handlers for individual editing
   const handleYoutubeTagsInputClick = () => {
     setCatSelectorContext('youtube-individual');
@@ -1421,6 +1450,28 @@ export default function TagVideosPage() {
                 Clear Selection ({selectedVideos.size})
               </button>
             )}
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700">Sort by:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'created' | 'uploaded' | 'updated')}
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+              >
+                <option value="created">Created</option>
+                <option value="uploaded">Uploaded</option>
+                <option value="updated">Updated</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
+
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-700">Videos per page:</label>
               <select
