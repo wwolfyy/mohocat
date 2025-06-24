@@ -1,5 +1,13 @@
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-const YOUTUBE_CHANNEL_ID = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
+import { getYouTubeApiKey, getMountainConfig } from '@/utils/config';
+
+// Get YouTube configuration from the centralized config system
+const getYouTubeConfig = () => {
+  const config = getMountainConfig();
+  return {
+    apiKey: getYouTubeApiKey(),
+    channelId: config.social.youtubeChannelId || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID
+  };
+};
 
 export interface YouTubeVideo {
   id: string;
@@ -15,12 +23,14 @@ export interface YouTubeVideo {
 
 // Fetch videos from your YouTube channel with pagination support
 export const fetchChannelVideos = async (channelId?: string, maxResults: number = 500): Promise<YouTubeVideo[]> => {
-  if (!YOUTUBE_API_KEY) {
+  const { apiKey, channelId: defaultChannelId } = getYouTubeConfig();
+
+  if (!apiKey) {
     console.error('YouTube API key not configured');
     throw new Error('YouTube API key not configured. Please set NEXT_PUBLIC_YOUTUBE_API_KEY in your .env.local file.');
   }
 
-  const targetChannelId = channelId || YOUTUBE_CHANNEL_ID;
+  const targetChannelId = channelId || defaultChannelId;
   if (!targetChannelId) {
     console.error('YouTube channel ID not specified');
     throw new Error('YouTube channel ID not specified. Please set NEXT_PUBLIC_YOUTUBE_CHANNEL_ID in your .env.local file.');
@@ -31,7 +41,7 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
 
     // First, get the uploads playlist ID for the channel
     const channelResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${targetChannelId}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${targetChannelId}&key=${apiKey}`
     );
 
     if (!channelResponse.ok) {
@@ -59,13 +69,11 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
 
     do {
       pageCount++;
-      console.log(`Fetching page ${pageCount}${nextPageToken ? ` (token: ${nextPageToken.substring(0, 10)}...)` : ''}`);
-
-      const url = new URL('https://www.googleapis.com/youtube/v3/playlistItems');
+      console.log(`Fetching page ${pageCount}${nextPageToken ? ` (token: ${nextPageToken.substring(0, 10)}...)` : ''}`);      const url = new URL('https://www.googleapis.com/youtube/v3/playlistItems');
       url.searchParams.set('part', 'snippet');
       url.searchParams.set('playlistId', uploadsPlaylistId);
       url.searchParams.set('maxResults', Math.min(maxPageSize, maxResults - allVideoIds.length).toString());
-      url.searchParams.set('key', YOUTUBE_API_KEY);
+      url.searchParams.set('key', apiKey);
       if (nextPageToken) {
         url.searchParams.set('pageToken', nextPageToken);
       }
@@ -114,10 +122,8 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
       const batchNumber = Math.floor(i / batchSize) + 1;
       const totalBatches = Math.ceil(allVideoIds.length / batchSize);
 
-      console.log(`Fetching video details batch ${batchNumber}/${totalBatches} (${batchIds.length} videos)`);
-
-      const videosResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails&id=${batchIds.join(',')}&key=${YOUTUBE_API_KEY}`
+      console.log(`Fetching video details batch ${batchNumber}/${totalBatches} (${batchIds.length} videos)`);      const videosResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails&id=${batchIds.join(',')}&key=${apiKey}`
       );
 
       if (!videosResponse.ok) {
@@ -159,7 +165,9 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
 };
 
 export const searchYouTubeVideos = async (query: string, maxResults: number = 25): Promise<YouTubeVideo[]> => {
-  if (!YOUTUBE_API_KEY) {
+  const { apiKey, channelId: defaultChannelId } = getYouTubeConfig();
+
+  if (!apiKey) {
     throw new Error('YouTube API key not configured');
   }
 
@@ -167,7 +175,7 @@ export const searchYouTubeVideos = async (query: string, maxResults: number = 25
     console.log(`Searching for videos with query: "${query}"`);
 
     const searchResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&channelId=${YOUTUBE_CHANNEL_ID}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&channelId=${defaultChannelId}&key=${apiKey}`
     );
 
     if (!searchResponse.ok) {
@@ -186,11 +194,9 @@ export const searchYouTubeVideos = async (query: string, maxResults: number = 25
 
     if (videoIds.length === 0) {
       return [];
-    }
-
-    // Get detailed video information
+    }    // Get detailed video information
     const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoIds.join(',')}&key=${apiKey}`
     );
 
     if (!videosResponse.ok) {

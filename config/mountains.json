@@ -1,0 +1,24 @@
+{
+  "geyang": {
+    "id": "geyang",
+    "name": "계양산 냥이들",
+    "description": "계양산에서 살고 있는 고양이들의 이야기",
+    "adminEmail": "admin@geyang-cats.com",
+    "theme": {
+      "primaryColor": "#10b981",
+      "secondaryColor": "#059669",
+      "accentColor": "#34d399"
+    },
+    "features": {
+      "videoAlbum": true,
+      "photoAlbum": true,
+      "advancedFiltering": true,
+      "adminPanel": true
+    },
+    "social": {
+      "youtubeChannelId": "",
+      "instagramHandle": "",
+      "facebookPage": ""
+    }
+  }
+}
