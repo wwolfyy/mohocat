@@ -31,7 +31,7 @@ export interface CatVideo {
   description?: string;      // Optional description
   location?: string;         // Optional location where video was taken
   thumbnailUrl?: string;     // Video thumbnail
-  duration?: number;         // Video length in seconds
+  duration?: number | string;   // Video length in seconds (number) or YouTube ISO 8601 format (string)
   autoTagged?: boolean;      // Flag indicating if tags were auto-generated
   fileSize?: number;         // File size in bytes
   videoType: 'storage' | 'youtube'; // Where the video is hosted
