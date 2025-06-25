@@ -5,24 +5,21 @@ import type { Cat } from '@/types';
 import { cn } from '@/utils/cn';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import CatInfo from './CatInfo';
-import { getCatsByPointId } from '@/lib/static-data';
+import { getCatService } from '@/services';
 
 interface CatGalleryProps {
   pointId: string;
-  cats: Cat[];
   onClose: () => void;
 }
 
-export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) {
+export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
   const [currentResidents, setCurrentResidents] = useState<Cat[]>([]);
   const [formerResidents, setFormerResidents] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
-
-  useEffect(() => {    const loadCats = async () => {
+  const [selectedCat, setSelectedCat] = useState<Cat | null>(null);  useEffect(() => {    const loadCats = async () => {
       try {
-        const { current, former } = await getCatsByPointId(pointId, cats);
-
+        const catService = getCatService();
+        const { current, former } = await catService.getCatsByPointId(pointId);
         setCurrentResidents(current);
         setFormerResidents(former);
       } catch (error) {
@@ -33,7 +30,7 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
     };
 
     loadCats();
-  }, [pointId, cats]);
+  }, [pointId]);
 
   if (loading) {
     return (
@@ -62,8 +59,7 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
         {/* Current Residents Section */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold mb-4 text-center">현재 거주 중</h3>
-          {/* Use flexbox to wrap and center items, including incomplete rows */}
-          <div className="flex flex-wrap justify-center gap-4">
+          {/* Use flexbox to wrap and center items, including incomplete rows */}          <div className="flex flex-wrap justify-center gap-4">
               {currentResidents.map((cat) => (
                 <div
                   key={cat.id}
@@ -73,8 +69,7 @@ export default function CatGallery({ pointId, cats, onClose }: CatGalleryProps) 
                     "transition-transform duration-200 hover:scale-110 w-28" // Reduced width
                   )}
                 >
-                  <div className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg">
-                    <img
+                  <div className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg">                    <img
                       src={cat.thumbnailUrl}
                       alt={cat.name}
                       className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"

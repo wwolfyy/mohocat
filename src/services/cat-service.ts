@@ -43,14 +43,12 @@ export class FirebaseCatService implements ICatService {
       console.error('Error fetching cat:', error);
       throw new Error(`Failed to fetch cat with id: ${id}`);
     }
-  }
-
-  async getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }> {
+  }  async getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }> {
     try {
-      // Get current cats
+      // Get current cats - those with dwelling matching pointId
       const currentQuery = query(
         collection(db, this.COLLECTION_NAME),
-        where('current_point_id', '==', pointId)
+        where('dwelling', '==', pointId)
       );
       const currentSnapshot = await getDocs(currentQuery);
       const current = currentSnapshot.docs.map(doc => ({
@@ -58,10 +56,10 @@ export class FirebaseCatService implements ICatService {
         ...doc.data()
       })) as Cat[];
 
-      // Get former cats
+      // Get former cats - those with prev_dwelling matching pointId
       const formerQuery = query(
         collection(db, this.COLLECTION_NAME),
-        where('former_point_ids', 'array-contains', pointId)
+        where('prev_dwelling', '==', pointId)
       );
       const formerSnapshot = await getDocs(formerQuery);
       const former = formerSnapshot.docs.map(doc => ({

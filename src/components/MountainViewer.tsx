@@ -7,10 +7,9 @@ import CatGallery from './CatGallery';
 
 interface MountainViewerProps {
   points: Point[];
-  cats: Cat[];
 }
 
-export default function MountainViewer({ points, cats }: MountainViewerProps) {
+export default function MountainViewer({ points }: MountainViewerProps) {
   const [activePoint, setActivePoint] = useState<Point | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
   const [imageNaturalDimensions, setImageNaturalDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -196,12 +195,9 @@ export default function MountainViewer({ points, cats }: MountainViewerProps) {
                 ))}
               </div>
             </div>
-          </div>
-
-          {selectedPoint && (
+          </div>          {selectedPoint && (
             <CatGallery
               pointId={selectedPoint.id}
-              cats={cats}
               onClose={() => setSelectedPoint(null)}
             />
           )}
