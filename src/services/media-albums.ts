@@ -4,6 +4,43 @@ import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, doc } fr
 import { ref, getDownloadURL } from 'firebase/storage';
 import { CatImage, CatVideo, MediaQueryOptions } from '@/types/media';
 
+// Helper function to safely convert various date formats to a JavaScript Date
+const parseDate = (dateValue: any): Date => {
+  if (!dateValue) return new Date();
+
+  try {
+    // If it's already a Date object
+    if (dateValue instanceof Date) {
+      return dateValue;
+    }
+
+    // If it's a Firebase Timestamp with seconds property
+    if (typeof dateValue === 'object' && dateValue.seconds) {
+      return new Date(dateValue.seconds * 1000);
+    }
+
+    // If it's a Firebase Timestamp with toDate method
+    if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
+      return dateValue.toDate();
+    }
+
+    // If it's a string or number, try to parse it
+    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+      const parsed = new Date(dateValue);
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+
+    // If all else fails, return current date
+    console.warn('Unable to parse date value:', dateValue, 'using current date instead');
+    return new Date();
+  } catch (error) {
+    console.error('Error parsing date:', dateValue, error);
+    return new Date();
+  }
+};
+
 // Collection names
 export const COLLECTIONS = {
   CAT_IMAGES: 'cat_images',
@@ -21,16 +58,21 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
     );
 
     const querySnapshot = await getDocs(q);
-    const images = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      uploadDate: doc.data().uploadDate?.toDate() || new Date()
-    })) as CatImage[];
+
+    const images = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+
+      return {
+        id: doc.id,
+        ...data,
+        uploadDate: parseDate(data.uploadDate)
+      };
+    }) as CatImage[];
 
     // Sort client-side by uploadDate descending
     return images.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
   } catch (error) {
-    console.error('Error fetching cat images:', error);
+    console.error(`Error fetching images for cat "${catName}":`, error);
     return [];
   }
 };
@@ -45,16 +87,21 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
     );
 
     const querySnapshot = await getDocs(q);
-    const videos = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      uploadDate: doc.data().uploadDate?.toDate() || new Date()
-    })) as CatVideo[];
+
+    const videos = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+
+      return {
+        id: doc.id,
+        ...data,
+        uploadDate: parseDate(data.uploadDate)
+      };
+    }) as CatVideo[];
 
     // Sort client-side by uploadDate descending
     return videos.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
   } catch (error) {
-    console.error('Error fetching cat videos:', error);
+    console.error(`Error fetching videos for cat "${catName}":`, error);
     return [];
   }
 };
@@ -74,11 +121,15 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
     const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
     const querySnapshot = await getDocs(queryRef);
 
-    let results = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      uploadDate: doc.data().uploadDate?.toDate() || new Date()
-    })) as CatImage[];
+    let results = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+
+      return {
+        id: doc.id,
+        ...data,
+        uploadDate: parseDate(data.uploadDate)
+      };
+    }) as CatImage[];
 
     // Sort client-side
     const orderField = options.orderBy || 'uploadDate';
@@ -122,11 +173,15 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
     const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
     const querySnapshot = await getDocs(queryRef);
 
-    let results = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      uploadDate: doc.data().uploadDate?.toDate() || new Date()
-    })) as CatVideo[];
+    let results = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+
+      return {
+        id: doc.id,
+        ...data,
+        uploadDate: parseDate(data.uploadDate)
+      };
+    }) as CatVideo[];
 
     // Sort client-side
     const orderField = options.orderBy || 'uploadDate';
