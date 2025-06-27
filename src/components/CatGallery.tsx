@@ -43,15 +43,16 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-4">
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 relative my-auto min-h-fit">
+        {/* Close Button - Top Right Corner */}
         <button
           onClick={onClose}
           className={cn(
-            "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-            "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+            "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
+            "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
+            "flex items-center justify-center z-10"
           )}
         >
-          {/* Close */}
-          <XMarkIcon className="h-6 w-6" />
+          <XMarkIcon className="h-5 w-5" />
         </button>
 
         {/* <h2 className="text-2xl font-bold mb-4">{pointId}</h2> */}
@@ -128,15 +129,16 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
         {selectedCat && (
           <div className="fixed inset-0 bg-black/75 flex items-start justify-center z-[60] overflow-y-auto py-4">
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit">
+              {/* Close Button - Top Right Corner */}
               <button
                 onClick={() => setSelectedCat(null)}
                 className={cn(
-                  "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                  "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+                  "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
+                  "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
+                  "flex items-center justify-center z-10"
                 )}
               >
-                {/* Close */}
-                <XMarkIcon className="h-6 w-6" />
+                <XMarkIcon className="h-5 w-5" />
               </button>
               <CatInfo cat={selectedCat} />
             </div>
