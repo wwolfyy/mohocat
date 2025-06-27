@@ -41,8 +41,14 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-4">
-      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 relative my-auto min-h-fit">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 relative my-auto min-h-fit"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button - Top Right Corner */}
         <button
           onClick={onClose}
@@ -127,8 +133,14 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
 
         {/* Cat Detail Modal */}
         {selectedCat && (
-          <div className="fixed inset-0 bg-black/75 flex items-start justify-center z-[60] overflow-y-auto py-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit">
+          <div
+            className="fixed inset-0 bg-black/75 flex items-start justify-center z-[60] overflow-y-auto py-4"
+            onClick={() => setSelectedCat(null)}
+          >
+            <div
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Close Button - Top Right Corner */}
               <button
                 onClick={() => setSelectedCat(null)}

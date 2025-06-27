@@ -82,7 +82,10 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
     setImageLoading(true);
     setImageError(false);
   }, [image.imageUrl]);  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-90 pt-4 pb-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-90 pt-4 pb-4 overflow-y-auto"
+      onClick={onClose}
+    >
       {/* Close button - fixed to viewport but styled to be clearly visible */}
       <button
         onClick={onClose}
@@ -126,7 +129,10 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
           </div>
         )}
 
-        <div className="relative">
+        <div
+          className="relative"
+          onClick={(e) => e.stopPropagation()}
+        >
           <img
             src={image.imageUrl}
             alt={image.fileName}
@@ -250,8 +256,14 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
   return (
     <>
       {/* Main modal */}
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-75">
-        <div className="bg-white rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden mx-4 relative">
+      <div
+        className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-75"
+        onClick={onClose}
+      >
+        <div
+          className="bg-white rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden mx-4 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close Button - Top Right Corner */}
           <button
             onClick={onClose}

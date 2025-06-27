@@ -124,7 +124,10 @@ function VideoPlayer({ video, onClose, onPrevious, onNext, hasPrevious, hasNext 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+      onClick={onClose}
+    >
       {/* Navigation buttons */}
       {hasPrevious && (
         <button
@@ -159,7 +162,10 @@ function VideoPlayer({ video, onClose, onPrevious, onNext, hasPrevious, hasNext 
         ×
       </button>
 
-      <div className="w-full max-w-4xl max-h-[80vh] mx-4">
+      <div
+        className="w-full max-w-4xl max-h-[80vh] mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Video player */}
         <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
           {videoLoading && (
@@ -203,13 +209,6 @@ function VideoPlayer({ video, onClose, onPrevious, onNext, hasPrevious, hasNext 
           </div>
         )}
       </div>
-
-      {/* Click overlay to close */}
-      <div
-        className="absolute inset-0 -z-10"
-        onClick={onClose}
-        aria-label="Close video player"
-      />
     </div>
   );
 }
@@ -284,8 +283,14 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
   return (
     <>
       {/* Main modal */}
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-75">
-        <div className="bg-white rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden mx-4 relative">
+      <div
+        className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-75"
+        onClick={onClose}
+      >
+        <div
+          className="bg-white rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden mx-4 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close Button - Top Right Corner */}
           <button
             onClick={onClose}
