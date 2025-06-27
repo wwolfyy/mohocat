@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCatImages } from '@/services/media-albums';
+import { getImageService } from '@/services';
 import { CatImage } from '@/types/media';
 import { cn } from '@/utils/cn';
 
@@ -195,15 +195,15 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
       console.log(`Loading images for cat: ${catName}`);
 
       // Try to get cat-specific images first
-      const catImages = await getCatImages(catName);
+      const imageService = getImageService();
+      const catImages = await imageService.getCatImages(catName);
       console.log(`Found ${catImages.length} images for ${catName}`);
 
       if (catImages.length === 0) {
         // If no cat-specific images found, let's try to get all images for debugging
         console.log('No cat-specific images found, checking if there are any images in the database...');
         try {
-          const { getAllImages } = await import('@/services/media-albums');
-          const allImages = await getAllImages({ limit: 10 });
+          const allImages = await imageService.getAllImages({ limit: 10 });
           console.log(`Total images in database: ${allImages.length}`);
 
           if (allImages.length > 0) {

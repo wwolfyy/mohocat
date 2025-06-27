@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllImages } from '@/services/media-albums';
+import { getImageService, getCatService } from '@/services';
 import { CatImage } from '@/types/media';
 import { Cat } from '@/types';
 import { cn } from '@/utils/cn';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -219,7 +217,8 @@ export default function PhotoAlbumPage() {
       setError(null);
       console.log('Loading all images...');
 
-      const allImages = await getAllImages({ limit: 100 }); // Get first 100 images
+      const imageService = getImageService();
+      const allImages = await imageService.getAllImages({ limit: 100 }); // Get first 100 images
       console.log(`Found ${allImages.length} images`);
 
       setImages(allImages);
@@ -233,11 +232,8 @@ export default function PhotoAlbumPage() {
 
   const loadCats = async () => {
     try {
-      const catsSnapshot = await getDocs(collection(db, 'cats'));
-      const catsData = catsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Cat[];
+      const catService = getCatService();
+      const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
       console.error('Error loading cats:', error);

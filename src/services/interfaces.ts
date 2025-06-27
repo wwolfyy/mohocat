@@ -42,6 +42,17 @@ export interface IContactService {
 // Image service interface
 export interface IImageService {
   getAllImages(options?: any): Promise<any[]>;
+  getCatImages(catName: string): Promise<any[]>;
+  updateImageTags(imageId: string, tags: string[]): Promise<boolean>;
+  addImageRecord(imageData: any): Promise<string | null>;
+}
+
+// Video service interface
+export interface IVideoService {
+  getAllVideos(options?: any): Promise<any[]>;
+  getCatVideos(catName: string): Promise<any[]>;
+  updateVideoTags(videoId: string, tags: string[]): Promise<boolean>;
+  addVideoRecord(videoData: any): Promise<string | null>;
 }
 
 // Storage service interface

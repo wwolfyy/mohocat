@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllVideos } from '@/services/media-albums';
+import { getVideoService, getCatService } from '@/services';
 import { CatVideo } from '@/types/media';
 import { Cat } from '@/types';
 import { cn } from '@/utils/cn';
 import { formatDuration } from '@/utils/duration';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -264,7 +262,8 @@ export default function VideoAlbumPage() {
       setError(null);
       console.log('Loading all videos...');
 
-      const allVideos = await getAllVideos({ limit: 100 }); // Get first 100 videos
+      const videoService = getVideoService();
+      const allVideos = await videoService.getAllVideos({ limit: 100 }); // Get first 100 videos
       console.log(`Found ${allVideos.length} videos`);
 
       setVideos(allVideos);
@@ -278,11 +277,8 @@ export default function VideoAlbumPage() {
 
   const loadCats = async () => {
     try {
-      const catsSnapshot = await getDocs(collection(db, 'cats'));
-      const catsData = catsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Cat[];
+      const catService = getCatService();
+      const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
       console.error('Error loading cats:', error);
@@ -428,7 +424,7 @@ export default function VideoAlbumPage() {
                       e.stopPropagation();
                       clearCatFilter();
                     }}
-                    className="absolute -top-2 -right-2 text-gray-500 hover:text-red-600 transition-colors bg-white rounded-full p-1 shadow-sm border"
+                    className="absolute -top-2 -right-2 text-gray-500 hover:text-red-600 transition-colors bg-white rounded-full p-1 shadow"
                     title="필터 초기화"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

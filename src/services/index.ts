@@ -1,24 +1,26 @@
 /**
  * Service Factory - Central service provider for the application
- * 
+ *
  * This file exports service getter functions that return the appropriate
  * service implementation based on the current mountain configuration.
  * This makes it easy to switch implementations or add new service types.
  */
 
-import { 
-  ICatService, 
-  IPointService, 
-  IImageService, 
+import {
+  ICatService,
+  IPointService,
+  IImageService,
+  IVideoService,
   IPostService,
   IContactService,
-  IStorageService, 
-  IAuthService 
+  IStorageService,
+  IAuthService
 } from './interfaces';
 
 import { FirebaseCatService } from './cat-service';
 import { FirebasePointService } from './point-service';
 import { FirebaseImageService } from './image-service';
+import { FirebaseVideoService } from './video-service';
 import { FirebasePostService } from './post-service';
 import { FirebaseContactService } from './contact-service';
 import { FirebaseStorageService } from './storage-service';
@@ -28,6 +30,7 @@ import { FirebaseAuthService } from './auth-service';
 let catServiceInstance: ICatService | null = null;
 let pointServiceInstance: IPointService | null = null;
 let imageServiceInstance: IImageService | null = null;
+let videoServiceInstance: IVideoService | null = null;
 let postServiceInstance: IPostService | null = null;
 let contactServiceInstance: IContactService | null = null;
 let storageServiceInstance: IStorageService | null = null;
@@ -61,6 +64,16 @@ export function getImageService(): IImageService {
     imageServiceInstance = new FirebaseImageService();
   }
   return imageServiceInstance;
+}
+
+/**
+ * Get the video service instance
+ */
+export function getVideoService(): IVideoService {
+  if (!videoServiceInstance) {
+    videoServiceInstance = new FirebaseVideoService();
+  }
+  return videoServiceInstance;
 }
 
 /**
@@ -106,8 +119,9 @@ export function getAuthService(): IAuthService {
 // Export service interfaces for type checking
 export type {
   ICatService,
-  IPointService, 
+  IPointService,
   IImageService,
+  IVideoService,
   IPostService,
   IContactService,
   IStorageService,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCatVideos } from '@/services/media-albums';
+import { getVideoService } from '@/services';
 import { CatVideo } from '@/types/media';
 import { cn } from '@/utils/cn';
 import { formatDuration } from '@/utils/duration';
@@ -241,7 +241,8 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
       setError(null);
       console.log(`Loading videos for cat: ${catName}`);
 
-      const catVideos = await getCatVideos(catName);
+      const videoService = getVideoService();
+      const catVideos = await videoService.getCatVideos(catName);
       console.log(`Found ${catVideos.length} videos for ${catName}`);
 
       if (catVideos.length === 0) {
