@@ -20,9 +20,29 @@ export async function PUT(request: NextRequest) {
       process.env.YOUTUBE_REDIRECT_URI
     );
 
+    // Check if refresh token is available
+    if (!process.env.YOUTUBE_REFRESH_TOKEN) {
+      console.error('YOUTUBE_REFRESH_TOKEN environment variable not set');
+      return NextResponse.json({
+        error: 'YouTube OAuth not configured. YOUTUBE_REFRESH_TOKEN missing.'
+      }, { status: 500 });
+    }
+
     oauth2Client.setCredentials({
       refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
     });
+
+    // Test the credentials by trying to refresh the access token
+    try {
+      await oauth2Client.getAccessToken();
+      console.log('✅ OAuth2 credentials validated successfully');
+    } catch (authError) {
+      console.error('❌ OAuth2 credential validation failed:', authError);
+      return NextResponse.json({
+        error: 'YouTube authentication failed. The refresh token may be expired or invalid. Please re-authorize the application.',
+        details: authError instanceof Error ? authError.message : 'Unknown auth error'
+      }, { status: 401 });
+    }
 
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
@@ -54,16 +74,16 @@ export async function PUT(request: NextRequest) {
       },
     };
 
-    // Handle recording date if provided
-    if (updates.recordingDate !== undefined) {
+    // Handle created time if provided
+    if (updates.createdTime !== undefined) {
       updateData.recordingDetails = {
-        recordingDate: updates.recordingDate,
+        recordingDate: updates.createdTime,
       };
     }
 
     // Determine which parts to update
     const parts = ['snippet'];
-    if (updates.recordingDate !== undefined) {
+    if (updates.createdTime !== undefined) {
       parts.push('recordingDetails');
     }
 

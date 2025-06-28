@@ -6,8 +6,11 @@ import { AdminUser } from '@/types/admin';
 
 // Admin user emails - in production, store this in Firestore or environment variables
 const ADMIN_EMAILS = [
-  'admin@mtcat.com', // Replace with actual admin emails
+  'admin@mtcat.com', // Default admin email
   'jp@mtcat.com', // Add your email here
+  'admin@geyang-cats.com', // From mountains config
+  'test@admin.com', // For testing
+  'emergency@admin.com', // For emergency bypass
   // Add more admin emails as needed
 ];
 

@@ -10,6 +10,13 @@ export default function CreateAdminUserPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const suggestedEmails = [
+    'admin@mtcat.com',
+    'jp@mtcat.com',
+    'admin@geyang-cats.com',
+    'test@admin.com'
+  ];
+
   const createTestUser = async () => {
     setLoading(true);
     setMessage('');
@@ -110,10 +117,30 @@ You can now log in to the admin interface using these credentials.`);
           }}>
             Admin Email
           </label>
+          <select
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '1rem',
+              marginBottom: '0.5rem',
+              backgroundColor: 'white'
+            }}
+          >
+            {suggestedEmails.map(suggestedEmail => (
+              <option key={suggestedEmail} value={suggestedEmail}>
+                {suggestedEmail}
+              </option>
+            ))}
+          </select>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Or enter custom email"
             style={{
               width: '100%',
               padding: '0.5rem',
@@ -124,7 +151,7 @@ You can now log in to the admin interface using these credentials.`);
             }}
           />
           <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
-            Must be one of the allowed admin emails in the config
+            Must be one of the allowed admin emails in the config. Choose from dropdown or enter custom email.
           </p>
         </div>
 

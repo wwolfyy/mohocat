@@ -21,7 +21,7 @@ The following fields are **ALWAYS** sourced from YouTube and **CANNOT be edited*
 ### 3. `createdTime` (Date/Timestamp)
 - **Source**: YouTube `recordingDate` from video metadata
 - **Update Method**: Set in YouTube Studio via recording date
-- **Firebase Behavior**: Always mapped from YouTube's `recordingDate` field
+- **Firebase Behavior**: Always mapped from YouTube's `recordingDate` field to `createdTime`
 - **Note**: Can be `null` if no recording date is set in YouTube
 
 ### 4. `location` (Object with coordinates)
@@ -38,7 +38,7 @@ The following fields are **ALWAYS** sourced from YouTube and **CANNOT be edited*
 - **Logging**: Logs when read-only fields are being enforced from YouTube
 
 ### 2. Admin UI Restrictions
-- **File**: `src/app/admin/tag-videos/page.tsx`
+- **File**: `src/app/admin/tag-videos-new/page.tsx`
 - **Behavior**: Read-only fields are disabled in forms with explanatory messages
 - **Tags Field**: Shows "Tags are managed in YouTube Studio" message
 

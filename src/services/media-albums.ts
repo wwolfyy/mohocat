@@ -1,6 +1,6 @@
 // Service functions for media album system
 import { db, storage } from './firebase';
-import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, doc, getDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { CatImage, CatVideo, MediaQueryOptions } from '@/types/media';
 
@@ -65,7 +65,9 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
       return {
         id: doc.id,
         ...data,
-        uploadDate: parseDate(data.uploadDate)
+        uploadDate: parseDate(data.uploadDate),
+        createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
+        updated: data.updated ? parseDate(data.updated) : undefined
       };
     }) as CatImage[];
 
@@ -94,7 +96,9 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
       return {
         id: doc.id,
         ...data,
-        uploadDate: parseDate(data.uploadDate)
+        uploadDate: parseDate(data.uploadDate),
+        createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
+        updated: data.updated ? parseDate(data.updated) : undefined
       };
     }) as CatVideo[];
 
@@ -127,7 +131,9 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
       return {
         id: doc.id,
         ...data,
-        uploadDate: parseDate(data.uploadDate)
+        uploadDate: parseDate(data.uploadDate),
+        createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
+        updated: data.updated ? parseDate(data.updated) : undefined
       };
     }) as CatImage[];
 
@@ -179,7 +185,9 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
       return {
         id: doc.id,
         ...data,
-        uploadDate: parseDate(data.uploadDate)
+        uploadDate: parseDate(data.uploadDate),
+        createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
+        updated: data.updated ? parseDate(data.updated) : undefined
       };
     }) as CatVideo[];
 
@@ -215,7 +223,8 @@ export const updateImageTags = async (imageId: string, tags: string[]): Promise<
   try {
     const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
     await updateDoc(imageRef, {
-      tags: tags
+      tags: tags,
+      updated: new Date()
     });
     return true;
   } catch (error) {
@@ -275,5 +284,214 @@ export const getStorageFileUrl = async (storagePath: string): Promise<string | n
   } catch (error) {
     console.error('Error getting storage file URL:', error);
     return null;
+  }
+};
+
+// Additional CRUD operations for images
+
+export const getImageById = async (imageId: string): Promise<CatImage | null> => {
+  try {
+    const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
+    const imageDoc = await getDoc(imageRef);
+
+    if (!imageDoc.exists()) {
+      return null;
+    }
+
+    const data = imageDoc.data();
+    return {
+      id: imageDoc.id,
+      imageUrl: data.imageUrl || data.url || '',
+      fileName: data.fileName || '',
+      storagePath: data.storagePath || data.storageFilePath || '',
+      tags: data.tags || [],
+      uploadDate: parseDate(data.uploadDate || data.uploadedAt),
+      uploadedBy: data.uploadedBy || 'admin',
+      createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
+      description: data.description,
+      location: data.location,
+      thumbnailUrl: data.thumbnailUrl,
+      autoTagged: data.autoTagged || false,
+      fileSize: data.fileSize,
+      dimensions: data.dimensions
+    };
+  } catch (error) {
+    console.error('Error getting image by ID:', error);
+    return null;
+  }
+};
+
+export const updateImageRecord = async (imageId: string, updateData: Partial<CatImage>): Promise<boolean> => {
+  try {
+    const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
+    const { id, ...dataToUpdate } = updateData; // Remove id from update data
+    await updateDoc(imageRef, dataToUpdate);
+    return true;
+  } catch (error) {
+    console.error('Error updating image record:', error);
+    return false;
+  }
+};
+
+export const deleteImageRecord = async (imageId: string): Promise<boolean> => {
+  try {
+    const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
+    await deleteDoc(imageRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting image record:', error);
+    return false;
+  }
+};
+
+export const batchUpdateImages = async (updates: Array<{ id: string; data: Partial<CatImage> }>): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    updates.forEach(({ id, data }) => {
+      const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, id);
+      const { id: _, ...dataToUpdate } = data; // Remove id from update data
+      batch.update(imageRef, dataToUpdate);
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error('Error batch updating images:', error);
+    return false;
+  }
+};
+
+export const batchDeleteImages = async (imageIds: string[]): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    imageIds.forEach(id => {
+      const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, id);
+      batch.delete(imageRef);
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error('Error batch deleting images:', error);
+    return false;
+  }
+};
+
+export const syncImages = async (): Promise<boolean> => {
+  try {
+    // This is a placeholder for sync operations that might involve
+    // reconciling with external sources, cleaning up orphaned records, etc.
+    console.log('Syncing images...');
+    return true;
+  } catch (error) {
+    console.error('Error syncing images:', error);
+    return false;
+  }
+};
+
+// Additional CRUD operations for videos
+
+export const getVideoById = async (videoId: string): Promise<CatVideo | null> => {
+  try {
+    const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
+    const videoDoc = await getDoc(videoRef);
+
+    if (!videoDoc.exists()) {
+      return null;
+    }
+
+    const data = videoDoc.data();
+    return {
+      id: videoDoc.id,
+      videoUrl: data.videoUrl || data.url || '',
+      storagePath: data.storagePath || data.storageFilePath || '',
+      tags: data.tags || [],
+      uploadDate: parseDate(data.uploadDate || data.uploadedAt),
+      uploadedBy: data.uploadedBy || 'admin',
+      createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
+      description: data.description,
+      location: data.location,
+      thumbnailUrl: data.thumbnailUrl || '',
+      duration: data.duration || 0,
+      autoTagged: data.autoTagged || false,
+      fileSize: data.fileSize,
+      videoType: data.videoType || 'storage',
+      allPlaylists: data.allPlaylists || []
+    };
+  } catch (error) {
+    console.error('Error getting video by ID:', error);
+    return null;
+  }
+};
+
+export const updateVideoRecord = async (videoId: string, updateData: Partial<CatVideo>): Promise<boolean> => {
+  try {
+    const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
+    const { id, ...dataToUpdate } = updateData; // Remove id from update data
+    await updateDoc(videoRef, dataToUpdate);
+    return true;
+  } catch (error) {
+    console.error('Error updating video record:', error);
+    return false;
+  }
+};
+
+export const deleteVideoRecord = async (videoId: string): Promise<boolean> => {
+  try {
+    const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
+    await deleteDoc(videoRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting video record:', error);
+    return false;
+  }
+};
+
+export const batchUpdateVideos = async (updates: Array<{ id: string; data: Partial<CatVideo> }>): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    updates.forEach(({ id, data }) => {
+      const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, id);
+      const { id: _, ...dataToUpdate } = data; // Remove id from update data
+      batch.update(videoRef, dataToUpdate);
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error('Error batch updating videos:', error);
+    return false;
+  }
+};
+
+export const batchDeleteVideos = async (videoIds: string[]): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    videoIds.forEach(id => {
+      const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, id);
+      batch.delete(videoRef);
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error('Error batch deleting videos:', error);
+    return false;
+  }
+};
+
+export const syncVideos = async (): Promise<boolean> => {
+  try {
+    // This is a placeholder for sync operations that might involve
+    // reconciling with external sources, cleaning up orphaned records, etc.
+    console.log('Syncing videos...');
+    return true;
+  } catch (error) {
+    console.error('Error syncing videos:', error);
+    return false;
   }
 };

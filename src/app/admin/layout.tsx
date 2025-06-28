@@ -65,7 +65,7 @@ export default function AdminLayout({
                 }}>
                   Dashboard
                 </a>
-                <a href="/admin/tag-images" style={{
+                <a href="/admin/tag-images-new" style={{
                   padding: '0.5rem 1rem',
                   color: '#6b7280',
                   textDecoration: 'none',
@@ -74,7 +74,7 @@ export default function AdminLayout({
                 }}>
                   Tag Images
                 </a>
-                <a href="/admin/tag-videos" style={{
+                <a href="/admin/tag-videos-new" style={{
                   padding: '0.5rem 1rem',
                   color: '#6b7280',
                   textDecoration: 'none',

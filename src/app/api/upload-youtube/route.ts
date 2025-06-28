@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;    // Enhanced metadata options
     const tags = formData.get('tags') as string; // Comma-separated tags
-    const recordingDate = formData.get('recordingDate') as string; // ISO date string
+    const createdTime = formData.get('createdTime') as string; // ISO date string
     const playlistId = formData.get('playlistId') as string; // Playlist ID
 
     if (!file) {
@@ -59,16 +59,16 @@ export async function POST(request: NextRequest) {
 
     // Prepare recording details if provided
     let recordingDetails: any = undefined;
-    if (recordingDate) {
+    if (createdTime) {
       try {
-        const date = new Date(recordingDate);
+        const date = new Date(createdTime);
         if (!isNaN(date.getTime())) {
           recordingDetails = {
             recordingDate: date.toISOString()
           };
         }
       } catch (e) {
-        console.warn('Invalid recording date provided:', recordingDate);
+        console.warn('Invalid created time provided:', createdTime);
       }
     }
 
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
         tags: tagsArray,
         uploadDate: new Date(),
-        createdTime: recordingDate ? new Date(recordingDate) : new Date(), // Use recording date or current date
+        createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
         uploadedBy: 'user', // or get from authentication context
         description: response.data.snippet?.description || description || '',
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
@@ -141,7 +141,6 @@ export async function POST(request: NextRequest) {
         youtubeId: videoId, // Important: YouTube video ID
         title: response.data.snippet?.title || title || file.name,
         publishedAt: new Date().toISOString(),
-        recordingDate: recordingDate ? new Date(recordingDate).toISOString() : null, // Add this field explicitly
         channelTitle: 'Mountain Cats', // or get from YouTube API
         catName: '', // Empty initially, can be filled later through tagging
         playlist: playlistId || '', // Add playlist field

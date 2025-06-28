@@ -40,7 +40,6 @@ const YOUTUBE_SOURCED_FIELDS = [
   'description', // YouTube description but may be overridable
   'thumbnailUrl',
   'publishedAt',
-  'recordingDate',
   'duration',
   'channelTitle',
   'youtubeId',
@@ -134,7 +133,7 @@ async function examineVideoStructure() {
     console.log('   - NEVER editable in the admin UI');
     console.log('   - ALWAYS overwritten during metadata sync from YouTube');
     console.log('   - Source of Truth: YouTube only');
-    console.log('   - Fields: tags, videoUrl, createdTime (from recordingDate), location');
+    console.log('   - Fields: tags, videoUrl, createdTime (from YouTube recordingDate), location');
     console.log('');
     console.log('🔵 OTHER YOUTUBE-SOURCED fields should be:');
     console.log('   - Primarily sourced from YouTube');

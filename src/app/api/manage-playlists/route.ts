@@ -1,6 +1,5 @@
+import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,23 +10,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Channel ID is required' }, { status: 400 });
     }
 
-    if (!YOUTUBE_API_KEY) {
-      return NextResponse.json({ error: 'YouTube API key not configured' }, { status: 500 });
-    }
+    // Set up OAuth2 client for authenticated requests
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.YOUTUBE_CLIENT_ID,
+      process.env.YOUTUBE_CLIENT_SECRET,
+      process.env.YOUTUBE_REDIRECT_URI
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+    });
+
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
     console.log('Fetching playlists for channel:', channelId);
 
     // Fetch all playlists from the channel
-    const playlistsResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails,status&channelId=${channelId}&key=${YOUTUBE_API_KEY}&maxResults=50`
-    );
+    const playlistsResponse = await youtube.playlists.list({
+      part: ['snippet', 'contentDetails', 'status'],
+      channelId: channelId,
+      maxResults: 50
+    });
 
-    if (!playlistsResponse.ok) {
-      throw new Error(`Failed to fetch playlists: ${playlistsResponse.status} ${playlistsResponse.statusText}`);
-    }
-
-    const playlistsData = await playlistsResponse.json();
-    const playlists = playlistsData.items || [];
+    const playlists = playlistsResponse.data.items || [];
 
     console.log(`Found ${playlists.length} playlists`);
 
@@ -60,9 +65,18 @@ export async function POST(request: NextRequest) {
   try {
     const { action, videoId, playlistId, playlistIds } = await request.json();
 
-    if (!YOUTUBE_API_KEY) {
-      return NextResponse.json({ error: 'YouTube API key not configured' }, { status: 500 });
-    }
+    // Set up OAuth2 client for authenticated requests
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.YOUTUBE_CLIENT_ID,
+      process.env.YOUTUBE_CLIENT_SECRET,
+      process.env.YOUTUBE_REDIRECT_URI
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+    });
+
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
     console.log('Playlist management action:', action, { videoId, playlistId, playlistIds });
 
@@ -72,51 +86,38 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'videoId and playlistId are required for add_to_playlist' }, { status: 400 });
         }
 
-        const addResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&key=${YOUTUBE_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              snippet: {
-                playlistId: playlistId,
-                resourceId: {
-                  kind: 'youtube#video',
-                  videoId: videoId
-                }
+        const addResult = await youtube.playlistItems.insert({
+          part: ['snippet'],
+          requestBody: {
+            snippet: {
+              playlistId: playlistId,
+              resourceId: {
+                kind: 'youtube#video',
+                videoId: videoId
               }
-            })
+            }
           }
-        );
+        });
 
-        if (!addResponse.ok) {
-          const errorData = await addResponse.json();
-          throw new Error(`Failed to add video to playlist: ${errorData.error?.message || 'Unknown error'}`);
-        }
-
-        const addResult = await addResponse.json();
         return NextResponse.json({
           success: true,
           message: 'Video added to playlist successfully',
-          playlistItemId: addResult.id
+          playlistItemId: addResult.data.id
         });
 
       case 'remove_from_playlist':
-        if (!playlistId) {
-          return NextResponse.json({ error: 'playlistId is required for remove_from_playlist' }, { status: 400 });
+        if (!playlistId || !videoId) {
+          return NextResponse.json({ error: 'playlistId and videoId are required for remove_from_playlist' }, { status: 400 });
         }
 
         // First, find the playlist item ID
-        const playlistItemsResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${YOUTUBE_API_KEY}&maxResults=50`
-        );
+        const playlistItemsResponse = await youtube.playlistItems.list({
+          part: ['snippet'],
+          playlistId: playlistId,
+          maxResults: 50
+        });
 
-        if (!playlistItemsResponse.ok) {
-          throw new Error('Failed to fetch playlist items');
-        }
-
-        const playlistItemsData = await playlistItemsResponse.json();
-        const playlistItem = playlistItemsData.items?.find((item: any) =>
+        const playlistItem = playlistItemsResponse.data.items?.find((item: any) =>
           item.snippet?.resourceId?.videoId === videoId
         );
 
@@ -124,15 +125,9 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Video not found in playlist' }, { status: 404 });
         }
 
-        const removeResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlistItems?id=${playlistItem.id}&key=${YOUTUBE_API_KEY}`,
-          { method: 'DELETE' }
-        );
-
-        if (!removeResponse.ok) {
-          const errorData = await removeResponse.json();
-          throw new Error(`Failed to remove video from playlist: ${errorData.error?.message || 'Unknown error'}`);
-        }
+        await youtube.playlistItems.delete({
+          id: playlistItem.id!
+        });
 
         return NextResponse.json({
           success: true,
@@ -150,30 +145,26 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Channel ID not configured' }, { status: 500 });
         }
 
-        const currentPlaylistsResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${channelId}&key=${YOUTUBE_API_KEY}&maxResults=50`
-        );
+        const currentPlaylistsResponse = await youtube.playlists.list({
+          part: ['snippet'],
+          channelId: channelId,
+          maxResults: 50
+        });
 
-        if (!currentPlaylistsResponse.ok) {
-          throw new Error('Failed to fetch channel playlists');
-        }
-
-        const currentPlaylistsData = await currentPlaylistsResponse.json();
-        const allPlaylists = currentPlaylistsData.items || [];        // Find which playlists currently contain this video
+        const allPlaylists = currentPlaylistsResponse.data.items || [];        // Find which playlists currently contain this video
         const currentVideoPlaylists: string[] = [];
         for (const playlist of allPlaylists) {
-          const itemsResponse = await fetch(
-            `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist.id}&key=${YOUTUBE_API_KEY}&maxResults=50`
-          );
+          const itemsResponse = await youtube.playlistItems.list({
+            part: ['snippet'],
+            playlistId: playlist.id!,
+            maxResults: 50
+          });
 
-          if (itemsResponse.ok) {
-            const itemsData = await itemsResponse.json();
-            const containsVideo = itemsData.items?.some((item: any) =>
-              item.snippet?.resourceId?.videoId === videoId
-            );
-            if (containsVideo) {
-              currentVideoPlaylists.push(playlist.id);
-            }
+          const containsVideo = itemsResponse.data.items?.some((item: any) =>
+            item.snippet?.resourceId?.videoId === videoId
+          );
+          if (containsVideo) {
+            currentVideoPlaylists.push(playlist.id!);
           }
         }
 
@@ -189,29 +180,19 @@ export async function POST(request: NextRequest) {
         // Add to new playlists
         for (const playlistId of playlistsToAdd) {
           try {
-            const addResponse = await fetch(
-              `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&key=${YOUTUBE_API_KEY}`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  snippet: {
-                    playlistId: playlistId,
-                    resourceId: {
-                      kind: 'youtube#video',
-                      videoId: videoId
-                    }
+            await youtube.playlistItems.insert({
+              part: ['snippet'],
+              requestBody: {
+                snippet: {
+                  playlistId: playlistId,
+                  resourceId: {
+                    kind: 'youtube#video',
+                    videoId: videoId
                   }
-                })
+                }
               }
-            );
-
-            if (addResponse.ok) {
-              results.push({ action: 'added', playlistId, success: true });
-            } else {
-              const errorData = await addResponse.json();
-              results.push({ action: 'added', playlistId, success: false, error: errorData.error?.message });
-            }
+            });
+            results.push({ action: 'added', playlistId, success: true });
           } catch (error) {
             results.push({ action: 'added', playlistId, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
           }
@@ -221,29 +202,21 @@ export async function POST(request: NextRequest) {
         for (const playlistId of playlistsToRemove) {
           try {
             // Find the playlist item ID
-            const itemsResponse = await fetch(
-              `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${YOUTUBE_API_KEY}&maxResults=50`
+            const itemsResponse = await youtube.playlistItems.list({
+              part: ['snippet'],
+              playlistId: playlistId,
+              maxResults: 50
+            });
+
+            const playlistItem = itemsResponse.data.items?.find((item: any) =>
+              item.snippet?.resourceId?.videoId === videoId
             );
 
-            if (itemsResponse.ok) {
-              const itemsData = await itemsResponse.json();
-              const playlistItem = itemsData.items?.find((item: any) =>
-                item.snippet?.resourceId?.videoId === videoId
-              );
-
-              if (playlistItem) {
-                const removeResponse = await fetch(
-                  `https://www.googleapis.com/youtube/v3/playlistItems?id=${playlistItem.id}&key=${YOUTUBE_API_KEY}`,
-                  { method: 'DELETE' }
-                );
-
-                if (removeResponse.ok) {
-                  results.push({ action: 'removed', playlistId, success: true });
-                } else {
-                  const errorData = await removeResponse.json();
-                  results.push({ action: 'removed', playlistId, success: false, error: errorData.error?.message });
-                }
-              }
+            if (playlistItem) {
+              await youtube.playlistItems.delete({
+                id: playlistItem.id!
+              });
+              results.push({ action: 'removed', playlistId, success: true });
             }
           } catch (error) {
             results.push({ action: 'removed', playlistId, success: false, error: error instanceof Error ? error.message : 'Unknown error' });

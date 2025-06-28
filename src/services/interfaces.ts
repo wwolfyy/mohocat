@@ -41,18 +41,38 @@ export interface IContactService {
 
 // Image service interface
 export interface IImageService {
+  // Existing read-only methods
   getAllImages(options?: any): Promise<any[]>;
   getCatImages(catName: string): Promise<any[]>;
   updateImageTags(imageId: string, tags: string[]): Promise<boolean>;
   addImageRecord(imageData: any): Promise<string | null>;
+
+  // Extended admin methods
+  getImageById(id: string): Promise<any | null>;
+  createImage(imageData: any): Promise<string>;
+  updateImage(id: string, updates: Partial<any>): Promise<void>;
+  deleteImage(id: string): Promise<void>;
+  batchUpdateImages(updates: Array<{id: string, updates: Partial<any>}>): Promise<void>;
+  batchDeleteImages(ids: string[]): Promise<void>;
+  syncWithStorage(): Promise<any[]>; // Returns StorageImage[] with metadata sync
 }
 
 // Video service interface
 export interface IVideoService {
+  // Existing read-only methods
   getAllVideos(options?: any): Promise<any[]>;
   getCatVideos(catName: string): Promise<any[]>;
   updateVideoTags(videoId: string, tags: string[]): Promise<boolean>;
   addVideoRecord(videoData: any): Promise<string | null>;
+
+  // Extended admin methods
+  getVideoById(id: string): Promise<any | null>;
+  createVideo(videoData: any): Promise<string>;
+  updateVideo(id: string, updates: Partial<any>): Promise<void>;
+  deleteVideo(id: string): Promise<void>;
+  batchUpdateVideos(updates: Array<{id: string, updates: Partial<any>}>): Promise<void>;
+  batchDeleteVideos(ids: string[]): Promise<void>;
+  syncWithYouTube?(): Promise<any[]>; // Optional YouTube sync
 }
 
 // Storage service interface

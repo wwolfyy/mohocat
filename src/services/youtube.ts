@@ -15,7 +15,7 @@ export interface YouTubeVideo {
   description: string;
   thumbnailUrl: string;
   publishedAt: string;
-  recordingDate?: string; // Recording date from YouTube metadata
+  createdTime?: string; // Created/recorded time from YouTube metadata
   duration?: string;
   videoUrl: string;
   channelTitle: string;
@@ -140,7 +140,7 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
                       video.snippet?.thumbnails?.default?.url ||
                       `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`,
         publishedAt: video.snippet?.publishedAt || '',
-        recordingDate: video.recordingDetails?.recordingDate || undefined,
+        createdTime: video.recordingDetails?.recordingDate || undefined,
         duration: video.contentDetails?.duration || undefined,
         videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
         channelTitle: video.snippet?.channelTitle || '',

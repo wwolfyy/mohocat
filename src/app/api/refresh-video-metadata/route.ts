@@ -25,8 +25,10 @@ const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 export async function POST(request: NextRequest) {
   try {
     console.log('=== REFRESH METADATA API CALLED ===');
-    const { videoIds } = await request.json();
+    const { videoIds, expectedRecordingDate, retryCount = 0 } = await request.json();
     console.log('Received videoIds:', videoIds);
+    console.log('Expected recording date:', expectedRecordingDate);
+    console.log('Retry count:', retryCount);
 
     if (!Array.isArray(videoIds) || videoIds.length === 0) {
       console.log('ERROR: Invalid videoIds array');
@@ -50,6 +52,43 @@ export async function POST(request: NextRequest) {
 
     if (refreshedVideos.length === 0) {
       return NextResponse.json({ error: 'No videos found with provided IDs' }, { status: 404 });
+    }
+
+    // Check if recording date has been updated (if we're expecting a specific recording date)
+    if (expectedRecordingDate && refreshedVideos.length === 1) {
+      const video = refreshedVideos[0];
+      const currentRecordingDate = video.recordingDetails?.recordingDate;
+
+      console.log(`Expected recording date: ${expectedRecordingDate}`);
+      console.log(`Current recording date from YouTube: ${currentRecordingDate}`);
+
+      // Compare dates properly (handle different ISO string formats)
+      const expectedDate = expectedRecordingDate ? new Date(expectedRecordingDate).getTime() : null;
+      const currentDate = currentRecordingDate ? new Date(currentRecordingDate).getTime() : null;
+      const datesMatch = expectedDate === currentDate;
+
+      // If the recording date doesn't match and we haven't retried too many times
+      if (!datesMatch && retryCount < 5) {
+        console.log(`Recording date mismatch, retrying in 2 seconds (attempt ${retryCount + 1}/5)...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Retry the request
+        return POST(new NextRequest(request.url, {
+          method: 'POST',
+          headers: request.headers,
+          body: JSON.stringify({
+            videoIds,
+            expectedRecordingDate,
+            retryCount: retryCount + 1
+          })
+        }));
+      }
+
+      if (!datesMatch && retryCount >= 5) {
+        console.warn(`Recording date still doesn't match after 5 retries. Expected: ${expectedRecordingDate}, Got: ${currentRecordingDate}. Proceeding anyway.`);
+      } else if (datesMatch) {
+        console.log(`✅ Recording date matches expected value: ${expectedRecordingDate}`);
+      }
     }    // Fetch playlist information for each video
     console.log('Fetching playlist information for videos...');
 
@@ -144,9 +183,10 @@ export async function POST(request: NextRequest) {
       console.log(`YouTube-sourced data for ${videoId}:`, {
         tags: youtubeTags,
         videoUrl: youtubeVideoUrl,
-        recordingDate: youtubeRecordingDate,
+        createdTime: youtubeRecordingDate,
         location: youtubeLocation || 'No location data',
-        playlistCount: videoPlaylists.length
+        playlistCount: videoPlaylists.length,
+        recordingDateRaw: video.recordingDetails // Add raw recording details for debugging
       });
 
       // CRITICAL: These YouTube-sourced fields MUST always be overwritten from YouTube
@@ -160,7 +200,6 @@ export async function POST(request: NextRequest) {
                      video.snippet?.thumbnails?.default?.url ||
                      `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         publishedAt: video.snippet?.publishedAt || '',
-        recordingDate: youtubeRecordingDate || null,
         duration: video.contentDetails?.duration || '',
         channelTitle: video.snippet?.channelTitle || '',
 
@@ -191,13 +230,12 @@ export async function POST(request: NextRequest) {
 
         // Update timestamp to track when metadata was last refreshed
         lastMetadataRefresh: new Date(),
-      };console.log(`Updated data for ${videoId}:`, {
+      };      console.log(`Updated data for ${videoId}:`, {
         title: updatedData.title,
         description: updatedData.description?.substring(0, 50) + '...',
         tags: updatedData.tags?.length || 0,
-        recordingDate: updatedData.recordingDate,
         createdTime: updatedData.createdTime,
-        recordingDateMapped: youtubeRecordingDate ? `${youtubeRecordingDate} → ${updatedData.createdTime}` : 'No recording date',
+        createdTimeMapped: youtubeRecordingDate ? `${youtubeRecordingDate} → ${updatedData.createdTime}` : 'No created time',
         playlists: videoPlaylists.length > 0 ? videoPlaylists.map((p: any) => `${p.title} (${p.id})`).join(', ') : 'No playlists',
         allPlaylistsCount: videoPlaylists.length,
         lastRefresh: updatedData.lastMetadataRefresh

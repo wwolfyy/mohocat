@@ -45,8 +45,8 @@ npx ts-node scripts/migrate-created-time-new.ts
 
 Once the migration is complete:
 
-1. The image tagging interface (`/admin/tag-images`) will show "Not set" for empty `createdTime` fields
-2. The video tagging interface (`/admin/tag-videos`) will only display `createdTime` when it has a value
+1. The image tagging interface (`/admin/tag-images-new`) will show "Not set" for empty `createdTime` fields
+2. The video tagging interface (`/admin/tag-videos-new`) will only display `createdTime` when it has a value
 3. Both interfaces are ready for manual entry of creation timestamps
 
 ## Example Output

@@ -19,7 +19,7 @@ const NewPostForm = () => {
   const [uploading, setUploading] = useState(false);
   // YouTube metadata states
   const [tags, setTags] = useState('');
-  const [recordingDate, setRecordingDate] = useState('');
+  const [createdTime, setCreatedTime] = useState('');
   const [selectedPlaylist, setSelectedPlaylist] = useState('');
   const [playlists, setPlaylists] = useState<Playlist[]>([]);const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   // Fetch user's YouTube playlists on component mount
@@ -100,9 +100,9 @@ const NewPostForm = () => {
     if (tags.trim()) {
       formData.append('tags', tags);
     }
-    if (recordingDate) {
-      console.log('Sending recording date to YouTube:', recordingDate);
-      formData.append('recordingDate', recordingDate);
+    if (createdTime) {
+      console.log('Sending created time to YouTube:', createdTime);
+      formData.append('createdTime', createdTime);
     }
     if (selectedPlaylist) {
       formData.append('playlistId', selectedPlaylist);
@@ -141,9 +141,9 @@ const NewPostForm = () => {
         if (tags.trim()) {
           formData.append('tags', tags);
         }
-        if (recordingDate) {
-          console.log('Sending recording date to YouTube:', recordingDate);
-          formData.append('recordingDate', recordingDate);
+        if (createdTime) {
+          console.log('Sending created time to YouTube:', createdTime);
+          formData.append('createdTime', createdTime);
         }
         if (selectedPlaylist) {
           formData.append('playlistId', selectedPlaylist);
@@ -290,12 +290,12 @@ const NewPostForm = () => {
             <p className="text-sm text-gray-600 mt-1">태그는 쉼표로 구분하여 입력하세요</p>
           </div>
 
-          {/* Recording Date */}
+          {/* Created Time */}
           <div className="mb-4">
             <label className="block font-semibold mb-1">촬영 날짜:</label>            <input
               type="date"
-              value={recordingDate}
-              onChange={e => setRecordingDate(e.target.value)}
+              value={createdTime}
+              onChange={e => setCreatedTime(e.target.value)}
               className="border p-2 rounded"
             />
           </div>          {/* Playlist Selection */}

@@ -1,11 +1,13 @@
 {
   "name": "mtcat_next",
   "version": "0.1.0",
-  "private": true,  "scripts": {
+  "private": true,
+  "scripts": {
     "dev": "next dev",
     "build": "node scripts/fetch-static-assets.js && next build",
     "start": "next start",
-    "lint": "next lint",    "script:add-updated-field": "node scripts/add_updated_field.js",
+    "lint": "next lint",
+    "script:add-updated-field": "node scripts/add_updated_field.js",
     "script:add-updated-field-admin": "node scripts/add_updated_field_admin.js",
     "script:remove-thumbnailUrl": "node scripts/remove_thumbnailUrl_field.js"
   },
@@ -26,6 +28,7 @@
     "firebase-admin": "^13.4.0",
     "googleapis": "^149.0.0",
     "next": "^14.2.29",
+    "open": "^10.1.2",
     "ra-data-fakerest": "^5.8.3",
     "ra-data-firebase-client": "^3.0.0",
     "ra-ui-materialui": "^5.8.3",

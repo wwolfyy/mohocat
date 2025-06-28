@@ -6,7 +6,7 @@
 - ✅ **Admin Routing**: Working Next.js app router structure under `/admin`
 - ✅ **Admin Layout**: Clean, professional layout with navigation header
 - ✅ **Basic Dashboard**: Functional dashboard with stats cards and action links
-- ✅ **Tag Pages**: Working tag-images and tag-videos pages with React Admin integration
+- ✅ **Tag Pages**: Working tag-images-new and tag-videos-new pages with enhanced functionality
 - ✅ **Dependencies**: All required packages installed (React Admin, Material-UI, Firebase, etc.)
 - ✅ **Firebase Integration**: Real-time data loading from Firestore collections
 - ✅ **Authentication**: Full admin authentication with Firebase Auth
@@ -15,18 +15,18 @@
 ### File Structure
 ```
 src/app/admin/
-├── layout.tsx          # Admin-specific layout with navigation + auth
-├── page.tsx            # Main admin dashboard with real Firebase stats
-├── tag-images/
-│   └── page.tsx        # React Admin image tagging interface
-├── tag-videos/
-│   └── page.tsx        # React Admin video tagging interface
+├── layout.tsx              # Admin-specific layout with navigation + auth
+├── page.tsx                # Main admin dashboard with real Firebase stats
+├── tag-images-new/
+│   └── page.tsx            # Enhanced image tagging interface with batch editing
+├── tag-videos-new/
+│   └── page.tsx            # Enhanced video tagging interface with batch editing
 ├── seed-data/
-│   └── page.tsx        # Database seeding utility (dev only)
+│   └── page.tsx            # Database seeding utility (dev only)
 ├── simple-test/
-│   └── page.tsx        # Simple test page
+│   └── page.tsx            # Simple test page
 └── minimal/
-    └── page.tsx        # Minimal test page
+    └── page.tsx            # Minimal test page
 
 src/components/admin/
 ├── AdminAuth.tsx       # Firebase authentication wrapper

@@ -8,6 +8,7 @@ export interface CatImage {
   tags: string[];            // Array of cat names/tags
   uploadDate: Date;
   createdTime?: Date;         // When the image was originally taken/created
+  updated?: Date;             // When the image metadata was last updated
   uploadedBy: string;        // User ID or name
   description?: string;      // Optional description
   location?: string;         // Optional location where photo was taken
@@ -22,11 +23,13 @@ export interface CatImage {
 
 export interface CatVideo {
   id: string;
+  title?: string;            // Video title (from YouTube or user-defined)
   videoUrl: string;          // Firebase Storage URL or YouTube URL
   storagePath: string;       // Full path in Firebase Storage
   tags: string[];            // Array of cat names/tags
   uploadDate: Date;
   createdTime?: Date;        // When the video was originally created/recorded
+  updated?: Date;            // When the video metadata was last updated
   uploadedBy: string;        // User ID or name
   description?: string;      // Optional description
   location?: string;         // Optional location where video was taken
@@ -35,6 +38,7 @@ export interface CatVideo {
   autoTagged?: boolean;      // Flag indicating if tags were auto-generated
   fileSize?: number;         // File size in bytes
   videoType: 'storage' | 'youtube'; // Where the video is hosted
+  youtubeId?: string;        // YouTube video ID (for YouTube videos)
   allPlaylists?: Array<{id: string, title: string}>; // All playlists the video belongs to
 }
 

@@ -8,7 +8,7 @@
 const { google } = require('googleapis');
 const http = require('http');
 const url = require('url');
-const open = require('open');
+// Removed 'open' package - we'll use manual browser opening
 
 // Replace these with your OAuth2 credentials from Google Cloud Console
 const CLIENT_ID = '266233773870-f3ih7cj734e18aoc3gc4tmt3unfgko9k.apps.googleusercontent.com';
@@ -22,10 +22,13 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // YouTube API scopes needed for uploading videos and fetching playlists
+// Including all scopes that YouTube API expects based on the error message
 const SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
   'https://www.googleapis.com/auth/youtube',
-  'https://www.googleapis.com/auth/youtube.readonly'
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube.force-ssl',
+  'https://www.googleapis.com/auth/youtubepartner'
 ];
 
 async function generateRefreshToken() {
@@ -36,11 +39,11 @@ async function generateRefreshToken() {
     prompt: 'consent' // Force consent screen to ensure refresh token
   });
 
-  console.log('1. Opening authorization URL in your browser...');
-  console.log('   If it doesn\'t open automatically, go to:', authUrl);
+  console.log('1. Please open this URL in your browser:');
+  console.log('   ' + authUrl);
+  console.log('');
 
-  // Open the authorization URL in the default browser
-  await open(authUrl);
+  // Removed automatic browser opening - user needs to manually open URL
 
   // Create a simple HTTP server to handle the OAuth callback
   const server = http.createServer(async (req, res) => {
