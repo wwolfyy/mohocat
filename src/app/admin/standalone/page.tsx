@@ -85,13 +85,13 @@ export default function AdminStandalone() {
             <p className="subtitle">Manage your mountain cats media and tagging system</p>
 
             <div className="actions">
-              <a href="/admin/tag-images-new" className="action-card">
+              <a href="/admin/tag-images" className="action-card">
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🖼️</div>
                 <h3>Tag Images</h3>
                 <p>Tag untagged images with cat names</p>
               </a>
 
-              <a href="/admin/tag-videos-new" className="action-card">
+              <a href="/admin/tag-videos" className="action-card">
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎥</div>
                 <h3>Tag Videos</h3>
                 <p>Tag untagged videos with cat names</p>

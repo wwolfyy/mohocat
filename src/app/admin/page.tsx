@@ -547,7 +547,7 @@ export default function AdminDashboard() {  const [stats, setStats] = useState<A
         marginBottom: '2rem'
       }}>
         <a
-          href="/admin/tag-images-new"
+          href="/admin/tag-images"
           style={{
             display: 'block',
             backgroundColor: 'white',
@@ -575,7 +575,7 @@ export default function AdminDashboard() {  const [stats, setStats] = useState<A
         </a>
 
         <a
-          href="/admin/tag-videos-new"
+          href="/admin/tag-videos"
           style={{
             display: 'block',
             backgroundColor: 'white',

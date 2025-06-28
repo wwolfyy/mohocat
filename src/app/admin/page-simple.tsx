@@ -77,7 +77,7 @@ export default function AdminDashboard() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <a
-              href="/admin/tag-images-new"
+              href="/admin/tag-images"
               className="block p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all bg-white"
             >
               <div className="flex items-start space-x-3">
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
             </a>
 
             <a
-              href="/admin/tag-videos-new"
+              href="/admin/tag-videos"
               className="block p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all bg-white"
             >
               <div className="flex items-start space-x-3">
