@@ -49,6 +49,10 @@ export default function AdminDashboard() {
   const [configLoading, setConfigLoading] = useState(false);
   const [configSuccess, setConfigSuccess] = useState(false);
 
+  // Data updater state
+  const [dataUpdaterLoading, setDataUpdaterLoading] = useState(false);
+  const [dataUpdaterMessage, setDataUpdaterMessage] = useState<string>('');
+
   // Load posts collection configuration from localStorage
   const loadPostsCollectionConfig = () => {
     try {
@@ -207,35 +211,9 @@ export default function AdminDashboard() {
         </p>
 
         {/* Service Configuration Status */}
-        <div style={{
-          backgroundColor: '#f0fdf4',
-          border: '1px solid #bbf7d0',
-          borderRadius: '8px',
-          padding: '1rem',
-          marginTop: '1rem'
-        }}>
-          <h3 style={{
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#166534',
-            marginBottom: '0.5rem'
-          }}>
-            Service Layer Configuration
-          </h3>
-          <div style={{ fontSize: '0.875rem', color: '#15803d' }}>
-            <div style={{ marginBottom: '0.25rem' }}>
-              <span style={{ color: '#166534' }}>Data Access:</span>{' '}
-              <span style={{ color: '#059669' }}>✅ Using Service Layer Abstraction</span>
-            </div>
-            <div style={{ marginBottom: '0.25rem' }}>
-              <span style={{ color: '#166534' }}>Services:</span>{' '}
-              <span style={{ color: '#059669' }}>✅ Images, Videos, Cats, Points via service layer</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.5rem' }}>
-              All dashboard statistics are loaded through the service layer for better maintainability and multi-tenant support.
-            </div>
-          </div>
-        </div>        {error && (
+        {/* Removed service layer configuration box */}
+
+        {error && (
           <div style={{
             backgroundColor: '#fef2f2',
             border: '1px solid #fecaca',
