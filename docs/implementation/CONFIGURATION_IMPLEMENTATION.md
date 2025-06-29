@@ -18,6 +18,7 @@ This document describes the implementation of the configuration-driven system th
   - `getFirebaseConfig()` - Get Firebase settings for current mountain
   - `getYouTubeApiKey()` - Get YouTube API key for current mountain
   - `getMountainTheme()` - Get theme configuration
+  - `getMountainAbout()` - Get about page content for current mountain
   - `isFeatureEnabled()` - Check if specific features are enabled
 
 ### 2. Mountain Configuration File
@@ -30,6 +31,11 @@ This document describes the implementation of the configuration-driven system th
       "id": "geyang",
       "name": "계양산 냥이들",
       "description": "계양산에서 살고 있는 고양이들의 이야기",
+      "about": {
+        "title": "계양산 냥이들에 대하여",
+        "mainContent": "...",
+        "sections": [...]
+      },
       "theme": { "primaryColor": "#10b981", ... },
       "features": { "videoAlbum": true, ... },
       "social": { "youtubeChannelId": "", ... }

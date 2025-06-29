@@ -283,6 +283,151 @@ The project includes GitHub Actions workflows for automated deployment:
 3. Add environment variables as GitHub secrets
 4. Customize workflow files for your mountains
 
+## Firebase Storage Structure
+
+The application uses Firebase Storage for static assets, including about page photos. The storage structure is organized by mountain ID to support multi-tenant deployments.
+
+### Storage Organization
+
+```
+/about-photos/
+  ├── geyang/
+  │   ├── about-main-geyang.jpg
+  │   └── about-secondary-geyang.jpg
+  ├── jirisan/
+  │   ├── about-main-jirisan.jpg
+  │   └── about-secondary-jirisan.jpg
+  └── [mountain-id]/
+      └── [photo-files]
+
+/media/
+  ├── photos/
+  ├── videos/
+  └── thumbnails/
+```
+
+### About Page Photo Configuration
+
+1. **Upload Photos to Firebase Storage**:
+   - Navigate to Firebase Console > Storage
+   - Create the folder structure: `about-photos/[mountain-id]/`
+   - Upload your main photo (e.g., `about-main-geyang.jpg`)
+
+2. **Configure in mountains.json**:
+   ```json
+   {
+     "geyang": {
+       "about": {
+         "title": "계양산에서 만나는 고양이 이야기",
+         "mainContent": "Your main content...",
+         "mainPhoto": {
+           "filename": "about-main-geyang.jpg",
+           "caption": "계양산의 아름다운 자연 속에서 평화롭게 지내는 고양이들",
+           "altText": "계양산 고양이들의 모습"
+         }
+       }
+     }
+   }
+   ```
+
+3. **File Naming Conventions**:
+   - Main photo: `about-main-[mountain-id].jpg`
+   - Additional photos: `about-[purpose]-[mountain-id].jpg`
+   - Use web-optimized formats (JPG, WebP)
+   - Recommended size: 1200x800px or similar aspect ratio
+
+### Multi-Tenant About Photo Setup
+
+For multi-tenant deployments, each mountain needs its own about photos:
+
+#### **Step 1: Organize Photos by Mountain**
+Create separate folders for each mountain in Firebase Storage:
+```
+/about-photos/
+  ├── geyang/
+  │   └── about-main-geyang.jpg
+  ├── jirisan/
+  │   └── about-main-jirisan.jpg
+  └── [new-mountain-id]/
+      └── about-main-[new-mountain-id].jpg
+```
+
+#### **Step 2: Upload Process for Each Mountain**
+1. **Access Firebase Console**: Go to the specific mountain's Firebase project
+2. **Navigate to Storage**: Firebase Console > Storage > Files
+3. **Create Mountain Folder**:
+   - Create folder: `about-photos`
+   - Create subfolder: `[mountain-id]` (e.g., `geyang`, `jirisan`)
+4. **Upload Photo**: Place the about photo in `/about-photos/[mountain-id]/`
+
+#### **Step 3: Configure Each Mountain**
+Update `config/mountains/mountains.json` for each mountain:
+
+```json
+{
+  "geyang": {
+    "about": {
+      "mainPhoto": {
+        "filename": "about-main-geyang.jpg",
+        "caption": "Your Geyang-specific caption",
+        "altText": "Geyang cats photo"
+      }
+    }
+  },
+  "jirisan": {
+    "about": {
+      "mainPhoto": {
+        "filename": "about-main-jirisan.jpg",
+        "caption": "Your Jirisan-specific caption",
+        "altText": "Jirisan cats photo"
+      }
+    }
+  }
+}
+```
+
+#### **Step 4: Deploy to Each Mountain**
+Each mountain deployment will automatically load its own photo:
+```bash
+# Deploy to Geyang
+MOUNTAIN_ID=geyang npm run build
+firebase deploy --project geyang
+
+# Deploy to Jirisan
+MOUNTAIN_ID=jirisan npm run build
+firebase deploy --project jirisan
+```
+
+**Important**: The application automatically resolves the correct photo path using the `MOUNTAIN_ID` environment variable. Each deployment will load photos from its own `/about-photos/[mountain-id]/` folder.
+
+### Storage Security Rules
+
+Ensure your Firebase Storage rules allow public read access for about photos:
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read access to about photos
+    match /about-photos/{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Allow public read access to other media (adjust as needed)
+    match /media/{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Restrict write access to authenticated users
+    match /{allPaths=**} {
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+**Important**: Configure these rules in Firebase Console > Storage > Rules tab and click "Publish" to apply them.
+
 ## Troubleshooting
 
 ### Common Issues

@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getFirebaseConfig } from '@/utils/config';
 import type { Point, Cat } from '@/types';
 
@@ -13,6 +14,7 @@ if (!firebaseConfig || !firebaseConfig.apiKey) {
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Data access functions
 export async function getPoints(): Promise<Point[]> {
@@ -44,4 +46,15 @@ export async function getCatsByPointId(pointId: string): Promise<Cat[]> {
   }
 }
 
-export { app, db };
+export { app, db, storage };
+
+// Firebase Storage utility functions
+export async function getStorageUrl(path: string): Promise<string> {
+  try {
+    const storageRef = ref(storage, path);
+    return await getDownloadURL(storageRef);
+  } catch (error) {
+    console.error('Error getting storage URL:', error);
+    throw new Error(`Failed to get storage URL for path: ${path}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}

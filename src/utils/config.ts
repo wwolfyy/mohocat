@@ -45,15 +45,42 @@ export interface MountainSecrets {
   serviceAccount?: any;
 }
 
+export interface AboutSection {
+  title: string;
+  content: string;
+}
+
+export interface AboutMainPhoto {
+  filename: string;
+  caption: string;
+  altText: string;
+}
+
+export interface MountainAbout {
+  title: string;
+  subtitle: string;
+  mainContent: string;
+  mainPhoto?: AboutMainPhoto;
+  sections: AboutSection[];
+}
+
 export interface MountainConfig {
   id: string;
   name: string;
   description: string;
   adminEmail: string;
+  about: MountainAbout;
   theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
   secrets?: MountainSecrets;
+}
+
+/**
+ * Get the current mountain ID
+ */
+export function getCurrentMountainId(): string {
+  return process.env.MOUNTAIN_ID || process.env.NEXT_PUBLIC_MOUNTAIN_ID || 'geyang';
 }
 
 /**
@@ -183,4 +210,12 @@ export function getMountainDescription(): string {
 export function getYouTubeChannelId(): string {
   const config = getMountainConfig();
   return config.social.youtubeChannelId;
+}
+
+/**
+ * Get about page configuration for the current mountain
+ */
+export function getMountainAbout(): MountainAbout {
+  const config = getMountainConfig();
+  return config.about;
 }
