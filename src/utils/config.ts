@@ -95,7 +95,7 @@ export function getMountainConfig(): MountainConfig {
 
   // Load public configuration
   const publicConfig = mountainsConfig[mountainId as keyof typeof mountainsConfig];
-  if (!publicConfig) {
+  if (!publicConfig || typeof publicConfig !== 'object' || 'centralUserService' in publicConfig) {
     throw new Error(`Configuration not found for mountain: ${mountainId}`);
   }
 
@@ -143,7 +143,7 @@ export function getMountainConfig(): MountainConfig {
   }
 
   return {
-    ...publicConfig,
+    ...(publicConfig as any),
     secrets: secretConfig
   };
 }
@@ -218,4 +218,17 @@ export function getYouTubeChannelId(): string {
 export function getMountainAbout(): MountainAbout {
   const config = getMountainConfig();
   return config.about;
+}
+
+/**
+ * Get all available mountains (excluding meta entries)
+ */
+export function getAllMountains(): Array<{ id: string; name: string; description: string }> {
+  return Object.entries(mountainsConfig)
+    .filter(([key]) => !key.startsWith('_'))
+    .map(([id, config]) => ({
+      id,
+      name: (config as any).name,
+      description: (config as any).description,
+    }));
 }

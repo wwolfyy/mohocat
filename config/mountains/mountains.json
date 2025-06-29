@@ -57,50 +57,5 @@
       "defaultRole": "viewer",
       "requireApproval": true
     }
-  },
-  "jirisan": {
-    "id": "jirisan",
-    "name": "지리산 냥이들",
-    "description": "지리산의 고양이들을 보호하고 돌보는 커뮤니티",
-    "adminEmail": "admin@jirisan-cats.com",
-    "about": {
-      "title": "지리산 냥이들에 대하여",
-      "subtitle": "영남 알프스의 든든한 지킴이들",
-      "mainContent": "지리산은 우리나라 최대의 국립공원으로, 이곳에서 살아가는 고양이들은 자연과 조화를 이루며 살아가고 있습니다. 우리는 이들이 건강하고 안전하게 지낼 수 있도록 지원하고 있습니다.",
-      "sections": [
-        {
-          "title": "지리산만의 특별함",
-          "content": "지리산의 광활한 자연 속에서 고양이들은 야생의 본능을 유지하면서도 사람과의 조화로운 관계를 맺고 있습니다."
-        },
-        {
-          "title": "보호 활동",
-          "content": "계절별 급식 지원, 겨울철 보온 시설 제공, 정기적인 건강 검진 등을 통해 지리산 고양이들을 돌보고 있습니다."
-        }
-      ]
-    },
-    "theme": {
-      "primaryColor": "#059669",
-      "secondaryColor": "#047857",
-      "accentColor": "#fbbf24"
-    },
-    "features": {
-      "videoAlbum": true,
-      "photoAlbum": true,
-      "advancedFiltering": true,
-      "adminPanel": true
-    },
-    "social": {
-      "youtubeChannelId": "UC_jirisan_channel_id",
-      "instagramHandle": "@jirisan_cats",
-      "facebookPage": "jirisan.cats"
-    },
-    "authentication": {
-      "type": "centralized",
-      "userServiceProject": "mountain-cats-users",
-      "roles": ["admin", "butler-offline", "butler-online", "viewer"],
-      "smsRegions": ["KR"],
-      "defaultRole": "viewer",
-      "requireApproval": true
-    }
   }
 }
