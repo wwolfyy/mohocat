@@ -30,8 +30,16 @@ export interface IPointService {
 // Post/Blog service interface
 export interface IPostService {
   getAllPosts(): Promise<any[]>;
+  getAllPostsIncludingReplies(): Promise<any[]>;
+  getTopLevelPosts(): Promise<any[]>;
   getPostById(id: string): Promise<any | null>;
   createPost(post: any): Promise<any>;
+
+  // Reply functionality
+  getReplies(postId: string): Promise<any[]>;
+  createReply(reply: any): Promise<any>;
+  getPostWithReplies(postId: string): Promise<{ post: any; replies: any[] }>;
+  updateReplyCount(postId: string): Promise<void>;
 }
 
 // Contact service interface

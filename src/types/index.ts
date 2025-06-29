@@ -20,3 +20,25 @@ export interface Cat {
   character?: string;
   sickness?: string;
 }
+
+// Post and Reply interfaces
+export interface Post {
+  id: string;
+  title: string;
+  message: string;
+  thumbnailUrl?: string;
+  mediaType?: 'video' | 'image';
+  videoUrls?: string[];
+  videoUrl?: string; // Keep for backward compatibility
+  imageUrls?: string[];
+  username: string;
+  date: string;
+  time: string;
+
+  // Reply functionality
+  parentId?: string;          // null for root posts, postId for replies
+  replyCount?: number;        // cached count for performance
+  depth?: number;             // 0 for root, 1+ for replies
+  threadId?: string;          // root post ID for entire thread
+  isReply?: boolean;          // true for replies, false/undefined for root posts
+}

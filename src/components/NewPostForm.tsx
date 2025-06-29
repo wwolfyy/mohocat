@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getPostService } from '@/services';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/utils/cn';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Playlist {
   id: string;
@@ -13,6 +14,8 @@ const NewPostForm = () => {
   // Service references
   const postService = getPostService();
   const router = useRouter();
+  const { user, isAuthenticated, loading } = useAuth();
+
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [title, setTitle] = useState('');
@@ -22,7 +25,24 @@ const NewPostForm = () => {
   const [tags, setTags] = useState('');
   const [createdTime, setCreatedTime] = useState('');
   const [selectedPlaylist, setSelectedPlaylist] = useState('');
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+
+  // Don't render if not authenticated
+  if (loading) {
+    return <div className="p-4">로딩 중...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+        <h2 className="text-lg font-semibold text-yellow-800 mb-2">로그인이 필요합니다</h2>
+        <p className="text-yellow-700">
+          새 글을 작성하려면 로그인이 필요합니다. 관리자에게 문의하여 계정을 요청하세요.
+        </p>
+      </div>
+    );
+  }
   // Fetch user's YouTube playlists on component mount
   useEffect(() => {
     const fetchPlaylists = async () => {
@@ -214,7 +234,7 @@ const NewPostForm = () => {
 
       const post = {
         title,
-        username: 'anonymous',
+        username: user?.email || 'unknown',
         date: now.toLocaleDateString(),
         time: now.toLocaleTimeString(),
         thumbnailUrl,

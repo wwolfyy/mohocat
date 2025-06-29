@@ -33,19 +33,48 @@ const ButlerStream = () => {
 
   const fetchPosts = async (page = 1) => {
     if (isAuthenticated) {
-      // Use service layer instead of direct Firebase access
-      const allPosts = await postService.getAllPosts();
-      const sortedPosts = allPosts.sort((a: any, b: any) => {
-        const dateA = new Date(`${a.date} ${a.time}`);
-        const dateB = new Date(`${b.date} ${b.time}`);
-        return dateB.getTime() - dateA.getTime();
-      });
+      try {
+        console.log('Fetching posts...');
+        // Use service layer instead of direct Firebase access
+        const allPosts = await postService.getAllPosts();
+        console.log('Raw posts from service:', allPosts);
+        console.log('Number of posts fetched:', allPosts.length);
 
-      const startIndex = (page - 1) * postsPerPage;
-      const paginatedPosts = sortedPosts.slice(startIndex, startIndex + postsPerPage);
+        // Check if posts have date/time fields or use createdAt
+        const sortedPosts = allPosts.sort((a: any, b: any) => {
+          // Try to use date/time fields first, fallback to createdAt
+          let dateA, dateB;
 
-      setPosts(paginatedPosts);
-      setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
+          if (a.date && a.time) {
+            dateA = new Date(`${a.date} ${a.time}`);
+          } else if (a.createdAt) {
+            dateA = new Date(a.createdAt);
+          } else {
+            dateA = new Date();
+          }
+
+          if (b.date && b.time) {
+            dateB = new Date(`${b.date} ${b.time}`);
+          } else if (b.createdAt) {
+            dateB = new Date(b.createdAt);
+          } else {
+            dateB = new Date();
+          }
+
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        console.log('Sorted posts:', sortedPosts);
+
+        const startIndex = (page - 1) * postsPerPage;
+        const paginatedPosts = sortedPosts.slice(startIndex, startIndex + postsPerPage);
+
+        console.log('Paginated posts for display:', paginatedPosts);
+        setPosts(paginatedPosts);
+        setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
+      } catch (error) {
+        console.error('Error in fetchPosts:', error);
+      }
     }
   };
 

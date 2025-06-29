@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPostService } from '@/services';
+import { Post } from '@/types';
+import ReplyButton from '@/components/ReplyButton';
+import ReplyForm from '@/components/ReplyForm';
+import ReplyList from '@/components/ReplyList';
 
 const PostDetailsPage = () => {
   // Service references
   const postService = getPostService();
   const [post, setPost] = useState<any | null>(null);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyCount, setReplyCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,6 +26,7 @@ const PostDetailsPage = () => {
         const postData = await postService.getPostById(id);
         if (postData) {
           setPost(postData);
+          setReplyCount(postData.replyCount || 0);
         } else {
           setPost(null);
         }
@@ -31,6 +38,15 @@ const PostDetailsPage = () => {
 
     fetchPost();
   }, []);
+
+  const handleReplySuccess = (reply: Post) => {
+    setReplyCount(prev => prev + 1);
+    setShowReplyForm(false);
+  };
+
+  const handleReplyCountUpdate = (count: number) => {
+    setReplyCount(count);
+  };
 
   if (!post) {
     return <div className="p-4">Post not found.</div>;
@@ -117,6 +133,34 @@ const PostDetailsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Reply section */}
+      <div className="mt-8 border-t pt-6">
+        <h3 className="text-lg font-semibold mb-4">댓글</h3>
+
+        <ReplyButton
+          postId={post.id}
+          replyCount={replyCount}
+          onToggleReply={() => setShowReplyForm(!showReplyForm)}
+          showingReplies={false}
+          showingReplyForm={showReplyForm}
+        />
+
+        {showReplyForm && (
+          <ReplyForm
+            parentId={post.id}
+            parentUsername={post.username}
+            onReplySuccess={handleReplySuccess}
+            onCancel={() => setShowReplyForm(false)}
+          />
+        )}
+
+        <ReplyList
+          postId={post.id}
+          replyCount={replyCount}
+          onReplyCountUpdate={handleReplyCountUpdate}
+        />
+      </div>
     </div>
   );
 };

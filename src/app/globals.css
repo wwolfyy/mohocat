@@ -78,6 +78,11 @@ body {
     animation: bounce-gentle 2s ease-in-out infinite;
   }
 
+  /* Reply indentation classes */
+  .ml-4 { margin-left: 1rem; }
+  .ml-8 { margin-left: 2rem; }
+  .ml-12 { margin-left: 3rem; }
+
   /* Page load slide-in animations */
   .animate-slide-in-left {
     animation: slide-in-left 0.8s ease-out forwards;

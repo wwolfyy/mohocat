@@ -1,6 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils/cn';
+import { Post as PostType } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import ReplyButton from './ReplyButton';
+import ReplyForm from './ReplyForm';
+import ReplyList from './ReplyList';
 
 interface Post {
   id: string;
@@ -14,6 +19,7 @@ interface Post {
   username: string;
   date: string;
   time: string;
+  replyCount?: number;
 }
 
 interface PostListProps {
@@ -24,78 +30,134 @@ interface PostListProps {
 }
 
 const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onPageChange }) => {
+  const [postReplyCounts, setPostReplyCounts] = useState<Record<string, number>>({});
+  const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>({});
+  const { isAuthenticated } = useAuth();
+
+  const handleReplyCountUpdate = (postId: string, count: number) => {
+    setPostReplyCounts(prev => ({ ...prev, [postId]: count }));
+  };
+
+  const handleToggleReplyForm = (postId: string) => {
+    if (!isAuthenticated) {
+      alert('댓글을 작성하려면 로그인이 필요합니다.');
+      return;
+    }
+    setShowReplyForms(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const handleReplySuccess = (postId: string, reply: PostType) => {
+    const currentCount = postReplyCounts[postId] || posts.find(p => p.id === postId)?.replyCount || 0;
+    handleReplyCountUpdate(postId, currentCount + 1);
+    setShowReplyForms(prev => ({ ...prev, [postId]: false }));
+  };
+
   return (
     <div>
       <div className="space-y-4">
-        {posts.length === 0 && <div>No posts yet.</div>}        {posts.map((post) => (
-          <div key={post.id} className="border p-4 rounded flex items-start space-x-4">            <div className="flex-shrink-0">              {/* Show video thumbnail if video exists */}
-              {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (() => {
-                // Support both new videoUrls array and legacy videoUrl
-                const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
-                const match = firstVideoUrl?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-                const videoId = match ? match[1] : null;
-                if (videoId) {
-                  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                  const videoCount = post.videoUrls?.length || 1;
-                  return (
-                    <Link href={`/pages/posts/${post.id}`}>
-                      <div className="relative cursor-pointer">
-                        <img
-                          src={thumbnailUrl}
-                          alt="Video thumbnail"
-                          className="w-20 h-15 object-cover rounded"
-                          onError={(e) => {
-                            e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
-                          }}
-                        />
-                        {/* Play button overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-red-600 text-white rounded-full p-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M8 5v14l11-7z"/>
-                            </svg>
+        {posts.length === 0 && <div>No posts yet.</div>}        {posts.map((post) => {
+          const currentReplyCount = postReplyCounts[post.id] ?? post.replyCount ?? 0;
+          const showingReplyForm = showReplyForms[post.id] || false;
+
+          return (
+          <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                {/* Show video thumbnail if video exists */}
+                {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (() => {
+                  // Support both new videoUrls array and legacy videoUrl
+                  const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
+                  const match = firstVideoUrl?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+                  const videoId = match ? match[1] : null;
+                  if (videoId) {
+                    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                    const videoCount = post.videoUrls?.length || 1;
+                    return (
+                      <Link href={`/pages/posts/${post.id}`}>
+                        <div className="relative cursor-pointer">
+                          <img
+                            src={thumbnailUrl}
+                            alt="Video thumbnail"
+                            className="w-20 h-15 object-cover rounded"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
+                            }}
+                          />
+                          {/* Play button overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-red-600 text-white rounded-full p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </div>
                           </div>
+                          {/* Video count indicator for multiple videos */}
+                          {videoCount > 1 && (
+                            <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
+                              {videoCount}
+                            </div>
+                          )}
                         </div>
-                        {/* Video count indicator for multiple videos */}
-                        {videoCount > 1 && (
-                          <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
-                            {videoCount}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                }
-                return null;
-              })()}
-              {/* Show image thumbnail only if no video exists */}
-              {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && post.thumbnailUrl && (
-                <Link href={`/pages/posts/${post.id}`}>
-                  <img
-                    src={post.thumbnailUrl}
-                    alt="Image thumbnail"
-                    className="w-20 h-15 object-cover rounded cursor-pointer"
-                  />
+                      </Link>
+                    );
+                  }
+                  return null;
+                })()}
+                {/* Show image thumbnail only if no video exists */}
+                {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && post.thumbnailUrl && (
+                  <Link href={`/pages/posts/${post.id}`}>
+                    <img
+                      src={post.thumbnailUrl}
+                      alt="Image thumbnail"
+                      className="w-20 h-15 object-cover rounded cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+              <div className="flex-grow">
+                <Link
+                  href={`/pages/posts/${post.id}`}
+                  className="text-xl font-bold mb-2 block flex items-center space-x-2"
+                >
+                  {post.title}
                 </Link>
+                <p className="text-gray-700 mb-2">{post.message}</p>
+              </div>
+              <div className="text-right text-sm text-gray-500 flex flex-col items-end">
+                <p>{post.username}</p>
+                <p>
+                  {post.date} {post.time}
+                </p>
+              </div>
+            </div>
+
+            {/* Reply functionality */}
+            <div className="border-t pt-3">
+              <ReplyButton
+                postId={post.id}
+                replyCount={currentReplyCount}
+                onToggleReply={() => handleToggleReplyForm(post.id)}
+                showingReplies={false}
+                showingReplyForm={showingReplyForm}
+              />
+
+              {showingReplyForm && (
+                <ReplyForm
+                  parentId={post.id}
+                  parentUsername={post.username}
+                  onReplySuccess={(reply) => handleReplySuccess(post.id, reply)}
+                  onCancel={() => handleToggleReplyForm(post.id)}
+                />
               )}
-            </div>
-            <div className="flex-grow">
-              <Link
-                href={`/pages/posts/${post.id}`}
-                className="text-xl font-bold mb-2 block flex items-center space-x-2"
-              >
-                {post.title}
-              </Link>
-              <p className="text-gray-700 mb-2">{post.message}</p>
-            </div>
-            <div className="text-right text-sm text-gray-500 flex flex-col items-end">
-              <p>{post.username}</p>
-              <p>
-                {post.date} {post.time}
-              </p>
+
+              <ReplyList
+                postId={post.id}
+                replyCount={currentReplyCount}
+                onReplyCountUpdate={(count) => handleReplyCountUpdate(post.id, count)}
+              />
             </div>
           </div>
-        ))}
+        )})}
       </div>
       <div className="flex justify-center mt-4 space-x-2">
         {Array.from({ length: totalPages }, (_, index) => {
