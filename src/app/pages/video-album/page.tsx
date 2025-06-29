@@ -563,19 +563,19 @@ export default function VideoAlbumPage() {
                         <span>{formatDuration(video.duration)}</span>
                       )}
                     </div>
+                  </div>
 
-                    {/* Video type indicator */}
-                    <div className="absolute top-2 right-2">
-                      {video.videoType === 'youtube' ? (
-                        <div className="bg-red-600 text-white text-xs px-2 py-1 rounded">
-                          YouTube
-                        </div>
-                      ) : (
-                        <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                          Storage
-                        </div>
-                      )}
-                    </div>
+                  {/* Video type indicator - moved outside bottom overlay to top right */}
+                  <div className="absolute top-1 right-1">
+                    {video.videoType === 'youtube' ? (
+                      <div className="bg-red-600 text-white text-xs px-1 py-0.5 rounded text-center leading-tight">
+                        YouTube
+                      </div>
+                    ) : (
+                      <div className="bg-blue-600 text-white text-xs px-1 py-0.5 rounded text-center leading-tight">
+                        Storage
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
