@@ -1,4 +1,13 @@
 {
+  "_meta": {
+    "centralUserService": {
+      "projectId": "mountain-cats-users",
+      "description": "Centralized authentication and user management for all mountains",
+      "handles": ["authentication", "user-management", "cross-mountain-access"]
+    },
+    "version": "2.0",
+    "lastUpdated": "2025-06-29"
+  },
   "geyang": {
     "id": "geyang",
     "name": "계양산 냥이들",
@@ -39,6 +48,14 @@
       "youtubeChannelId": "UC1g-XZS4wwyUu7JHDEpB0jw",
       "instagramHandle": "",
       "facebookPage": ""
+    },
+    "authentication": {
+      "type": "centralized",
+      "userServiceProject": "mountain-cats-users",
+      "roles": ["admin", "butler-offline", "butler-online", "viewer"],
+      "smsRegions": ["KR"],
+      "defaultRole": "viewer",
+      "requireApproval": true
     }
   },
   "jirisan": {
@@ -76,6 +93,14 @@
       "youtubeChannelId": "UC_jirisan_channel_id",
       "instagramHandle": "@jirisan_cats",
       "facebookPage": "jirisan.cats"
+    },
+    "authentication": {
+      "type": "centralized",
+      "userServiceProject": "mountain-cats-users",
+      "roles": ["admin", "butler-offline", "butler-online", "viewer"],
+      "smsRegions": ["KR"],
+      "defaultRole": "viewer",
+      "requireApproval": true
     }
   }
 }
