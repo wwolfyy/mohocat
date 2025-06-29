@@ -5,7 +5,7 @@
  * while maintaining backward compatibility with the current single-mountain setup.
  */
 
-import mountainsConfig from '../../config/mountains.json';
+import mountainsConfig from '../../config/mountains/mountains.json';
 
 export interface MountainTheme {
   primaryColor: string;

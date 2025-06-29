@@ -21,7 +21,7 @@ This document describes the implementation of the configuration-driven system th
   - `isFeatureEnabled()` - Check if specific features are enabled
 
 ### 2. Mountain Configuration File
-- **File**: `config/mountains.json`
+- **File**: `config/mountains/mountains.json`
 - **Purpose**: Store public configuration for each mountain
 - **Current Structure**:
   ```json
@@ -89,14 +89,14 @@ This flow ensures that:
 ### Current Single-Mountain Mode (Default)
 1. `getMountainConfig()` is called
 2. `MOUNTAIN_ID` is not set → defaults to 'geyang'
-3. Loads `config/mountains.json['geyang']`
+3. Loads `config/mountains/mountains.json['geyang']`
 4. Uses existing environment variables for secrets
 5. Returns combined configuration
 6. Services use this configuration (same behavior as before)
 
 ### Future Multi-Mountain Mode
 1. Set `MOUNTAIN_ID=jirisan` environment variable
-2. `getMountainConfig()` loads `config/mountains.json['jirisan']`
+2. `getMountainConfig()` loads `config/mountains/mountains.json['jirisan']`
 3. Uses `FIREBASE_CONFIG` and other mountain-specific env vars
 4. Same code, different data sources
 5. No code changes needed in components or services

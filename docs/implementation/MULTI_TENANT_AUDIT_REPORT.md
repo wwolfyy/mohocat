@@ -30,7 +30,7 @@ This audit confirms that the **Configuration System Foundation** and **Service L
 
 #### **Core Configuration System**
 - **`src/utils/config.ts`** - Comprehensive centralized configuration system
-- **`config/mountains.json`** - Mountain-specific public configuration
+- **`config/mountains/mountains.json`** - Mountain-specific public configuration
 - **Environment variable abstraction** - All env vars accessed through config utilities
 - **Backward compatibility** - Current single-mountain deployment unchanged
 - **Multi-tenant ready** - Ready for `MOUNTAIN_ID=jirisan` deployment
@@ -139,7 +139,7 @@ const cats = await catService.getAllCats();
 
 ### **Configuration System Files**
 - ✅ `src/utils/config.ts` - Central config with multi-tenant support
-- ✅ `config/mountains.json` - Mountain-specific public settings
+- ✅ `config/mountains/mountains.json` - Mountain-specific public settings
 
 ### **Service Layer Files**
 - ✅ `src/services/index.ts` - Service factory with lazy initialization
@@ -197,7 +197,7 @@ To deploy a new mountain (e.g., Jirisan):
 
 ### **1. Add Mountain Configuration**
 ```json
-// config/mountains.json
+// config/mountains/mountains.json
 "jirisan": {
   "id": "jirisan",
   "name": "지리산 냥이들",

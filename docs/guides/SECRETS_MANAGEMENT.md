@@ -103,7 +103,7 @@ export function getMountainConfig() {
   }
 
   // Load public configuration
-  const publicConfig = require('../config/mountains.json')[mountainId];
+  const publicConfig = require('../config/mountains/mountains.json')[mountainId];
   if (!publicConfig) {
     throw new Error(`Configuration not found for mountain: ${mountainId}`);
   }
@@ -230,7 +230,7 @@ gh workflow run deploy-all.yml
 
 2. **Update public configuration**
    ```json
-   // config/mountains.json
+   // config/mountains/mountains.json
    {
      "newmountain": {
        "name": "새로운 산 냥이들",
