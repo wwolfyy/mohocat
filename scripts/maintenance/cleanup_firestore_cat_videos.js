@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load service account key
-const serviceAccountPath = path.join(__dirname, '..', 'mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(__dirname, '..', '..', 'config', 'firebase', 'mountaincats-61543-7329e795c352.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
   console.error('Service account key file not found:', serviceAccountPath);

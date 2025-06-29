@@ -2,7 +2,7 @@ const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
 if (admin.apps.length === 0) {
-  const serviceAccount = require('../mountaincats-61543-7329e795c352.json');
+  const serviceAccount = require('../../config/firebase/mountaincats-61543-7329e795c352.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: 'https://mountaincats-61543-default-rtdb.firebaseio.com'

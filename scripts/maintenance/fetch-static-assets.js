@@ -5,7 +5,7 @@ const path = require('path');
 const axios = require('axios'); // For downloading images
 
 // --- Configuration ---
-const SERVICE_ACCOUNT_KEY_PATH = './mountaincats-61543-769df223a745.json'; // Updated to use the actual service account file
+const SERVICE_ACCOUNT_KEY_PATH = 'config/firebase/mountaincats-61543-7329e795c352.json'; // Updated to use the actual service account file
 const FIREBASE_PROJECT_ID = 'mountaincats-61543'; // Your Firebase Project ID
 const STORAGE_BUCKET = 'mountaincats-61543.firebasestorage.app'; // Your storage bucket
 const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
@@ -14,7 +14,7 @@ const LOCAL_THUMBNAILS_DIR_RELATIVE = 'public/images/thumbnails'; // Relative to
 const STATIC_DATA_JSON_PATH_RELATIVE = 'src/lib/cats-static-data.json'; // Relative to project root
 
 // Absolute paths resolved from project root
-const PROJECT_ROOT = path.resolve(__dirname, '..'); // Assuming script is in 'scripts' directory
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..'); // Assuming script is in 'scripts/maintenance' directory
 const SERVICE_ACCOUNT_FULL_PATH = path.join(PROJECT_ROOT, SERVICE_ACCOUNT_KEY_PATH);
 const LOCAL_THUMBNAILS_DIR = path.join(PROJECT_ROOT, LOCAL_THUMBNAILS_DIR_RELATIVE);
 const STATIC_DATA_JSON_PATH = path.join(PROJECT_ROOT, STATIC_DATA_JSON_PATH_RELATIVE);

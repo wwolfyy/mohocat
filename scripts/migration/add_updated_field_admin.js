@@ -13,7 +13,7 @@ console.log(`📁 Current working directory: ${process.cwd()}`);
 console.log(`🗂️  Script directory: ${__dirname}`);
 
 // Check for service account key file
-const serviceAccountPath = path.resolve(__dirname, '../mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.resolve(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json');
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -29,7 +29,7 @@ if (!admin.apps.length) {
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin:', error.message);
     console.log('\n📋 To fix this issue:');
-    console.log('1. Make sure the service account key file exists: mountaincats-61543-769df223a745.json');
+    console.log('1. Make sure the service account key file exists: config/firebase/mountaincats-61543-7329e795c352.json');
     console.log('2. Place it in the root directory of your project');
     process.exit(1);
   }

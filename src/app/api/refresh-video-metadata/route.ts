@@ -7,7 +7,7 @@ import * as fs from 'fs';
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
-  const serviceAccountPath = path.join(process.cwd(), 'mountaincats-61543-7329e795c352.json');
+  const serviceAccountPath = path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json');
 
   if (fs.existsSync(serviceAccountPath)) {
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
