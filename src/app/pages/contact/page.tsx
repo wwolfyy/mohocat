@@ -52,29 +52,20 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h4 className="text-xl font-bold text-center mb-8">
-        고양이들 돌보기 또는 입양, 중성화 등을 통한 개체 수 조절에
-        동참을 원하시면 아래 서식을 작성해 주세요
-      </h4>
-
-      {/* Service Configuration Status */}
-      <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6">
-        <h3 className="text-sm font-semibold text-green-800 mb-2">Service Layer Configuration</h3>
-        <div className="text-sm space-y-1">
-          <div>
-            <span className="text-green-700">Contact Form:</span>{' '}
-            <span className="text-green-600">✅ Using Contact Service Abstraction</span>
-          </div>
-          <div>
-            <span className="text-green-700">Database:</span>{' '}
-            <span className="text-green-600">✅ No direct Firebase imports</span>
-          </div>
-          <div className="text-xs text-green-600 mt-2">
-            All contact form submissions go through the service layer for better maintainability and multi-tenant support.
-          </div>
+    <div className="max-w-2xl mx-auto p-6 relative">
+      {/* Overlay for disabled state */}
+      <div className="absolute inset-0 bg-gray-100 bg-opacity-80 z-10 flex items-center justify-center rounded-lg">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-gray-600 mb-2">준비 중입니다</div>
         </div>
       </div>
+
+      {/* Grayed out content */}
+      <div className="filter grayscale opacity-50 pointer-events-none">
+        <h4 className="text-xl font-bold text-center mb-8">
+          고양이들 돌보기 또는 입양, 중성화 등을 통한 개체 수 조절에
+          동참을 원하시면 아래 서식을 작성해 주세요
+        </h4>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name Input */}
@@ -157,6 +148,7 @@ export default function Contact() {
       {/* Reminder for router.push or links update */}
       <div className="mt-4 text-center text-sm text-gray-500">
         If you use router.push or links to this page elsewhere, update their paths to '/pages/contact'.
+      </div>
       </div>
     </div>
   );
