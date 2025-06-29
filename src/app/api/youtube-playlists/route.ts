@@ -1,22 +1,24 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { getYouTubeOAuthConfig } from '@/utils/config';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check environment variables
-    if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET || !process.env.YOUTUBE_REFRESH_TOKEN) {
+    // Get YouTube OAuth configuration from centralized config
+    const youtubeOAuth = getYouTubeOAuthConfig();
+    if (!youtubeOAuth) {
       return NextResponse.json({
-        error: 'YouTube API credentials not configured'
+        error: 'YouTube OAuth credentials not configured'
       }, { status: 500 });
     }
 
     const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
+      youtubeOAuth.clientId,
+      youtubeOAuth.clientSecret,
+      youtubeOAuth.redirectUri
     );
     oauth2Client.setCredentials({
-      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      refresh_token: youtubeOAuth.refreshToken,
     });
 
     try {

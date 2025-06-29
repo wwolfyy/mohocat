@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/services/firebase';
+import { getAuthService } from '@/services';
 
 export default function CreateAdminUserPage() {
   const [email, setEmail] = useState('admin@mtcat.com');
@@ -22,8 +21,9 @@ export default function CreateAdminUserPage() {
     setMessage('');
 
     try {
-      // Create the user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Create the user using auth service
+      const authService = getAuthService();
+      const user = await authService.createUser(email, password);
       setMessage(`✅ Test admin user created successfully!
 
 📧 Email: ${email}
@@ -49,7 +49,8 @@ You can now log in to the admin interface using these credentials.`);
     setMessage('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const authService = getAuthService();
+      await authService.signIn(email, password);
       setMessage(`✅ Login test successful! Redirecting to admin dashboard...`);
 
       // Redirect to admin dashboard after a short delay

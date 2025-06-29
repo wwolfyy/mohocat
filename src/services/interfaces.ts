@@ -87,5 +87,6 @@ export interface IAuthService {
   getCurrentUser(): any | null;
   signIn(email: string, password: string): Promise<any>;
   signOut(): Promise<void>;
+  createUser(email: string, password: string): Promise<any>;
   onAuthStateChanged(callback: (user: any) => void): () => void;
 }

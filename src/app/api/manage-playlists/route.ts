@@ -1,24 +1,33 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { getYouTubeOAuthConfig, getYouTubeChannelId } from '@/utils/config';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const channelId = searchParams.get('channelId') || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
+    const channelId = searchParams.get('channelId') || getYouTubeChannelId();
 
     if (!channelId) {
       return NextResponse.json({ error: 'Channel ID is required' }, { status: 400 });
     }
 
+    // Get YouTube OAuth configuration from centralized config
+    const youtubeOAuth = getYouTubeOAuthConfig();
+    if (!youtubeOAuth) {
+      return NextResponse.json({
+        error: 'YouTube OAuth credentials not configured'
+      }, { status: 500 });
+    }
+
     // Set up OAuth2 client for authenticated requests
     const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
+      youtubeOAuth.clientId,
+      youtubeOAuth.clientSecret,
+      youtubeOAuth.redirectUri
     );
 
     oauth2Client.setCredentials({
-      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      refresh_token: youtubeOAuth.refreshToken,
     });
 
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -65,15 +74,23 @@ export async function POST(request: NextRequest) {
   try {
     const { action, videoId, playlistId, playlistIds } = await request.json();
 
+    // Get YouTube OAuth configuration from centralized config
+    const youtubeOAuth = getYouTubeOAuthConfig();
+    if (!youtubeOAuth) {
+      return NextResponse.json({
+        error: 'YouTube OAuth credentials not configured'
+      }, { status: 500 });
+    }
+
     // Set up OAuth2 client for authenticated requests
     const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
+      youtubeOAuth.clientId,
+      youtubeOAuth.clientSecret,
+      youtubeOAuth.redirectUri
     );
 
     oauth2Client.setCredentials({
-      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      refresh_token: youtubeOAuth.refreshToken,
     });
 
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });

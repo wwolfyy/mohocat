@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
-import { db } from '@/services/firebase';
+import { getVideoService, getImageService, getCatService, getPostService } from '@/services';
 
 export default function TestDbPage() {
   const [results, setResults] = useState<any[]>([]);
@@ -11,27 +10,18 @@ export default function TestDbPage() {
   const testCollections = async () => {
     setLoading(true);
     try {
-      // Test cat_videos collection
-      const videosSnapshot = await getDocs(collection(db, 'cat_videos'));
-      const videos = videosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Test using service layer
+      const videoService = getVideoService();
+      const imageService = getImageService();
 
-      // Test cat_images collection
-      const imagesSnapshot = await getDocs(collection(db, 'cat_images'));
-      const images = imagesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      // Test old collections for comparison
-      const oldVideosSnapshot = await getDocs(collection(db, 'videos'));
-      const oldVideos = oldVideosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      const oldImagesSnapshot = await getDocs(collection(db, 'images'));
-      const oldImages = oldImagesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const videos = await videoService.getAllVideos();
+      const images = await imageService.getAllImages();
 
       setResults([
-        { collection: 'cat_videos', count: videos.length, data: videos },
-        { collection: 'cat_images', count: images.length, data: images },
-        { collection: 'videos (old)', count: oldVideos.length, data: oldVideos },
-        { collection: 'images (old)', count: oldImages.length, data: oldImages },
-      ]);    } catch (error: any) {
+        { collection: 'cat_videos (via service)', count: videos.length, data: videos },
+        { collection: 'cat_images (via service)', count: images.length, data: images },
+      ]);
+    } catch (error: any) {
       console.error('Error testing collections:', error);
       setResults([{ error: error.message }]);
     } finally {
@@ -41,6 +31,7 @@ export default function TestDbPage() {
 
   const addTestVideo = async () => {
     try {
+      const videoService = getVideoService();
       const testVideo = {
         videoUrl: 'https://youtube.com/test',
         fileName: 'test-video',
@@ -50,10 +41,12 @@ export default function TestDbPage() {
         uploadedBy: 'admin-test',
         description: 'Test video from admin interface',
         needsTagging: false,
-        videoType: 'youtube',
+        videoType: 'youtube' as const,
         youtubeId: 'test-123',
         title: 'Test Video',
-      };      await addDoc(collection(db, 'cat_videos'), testVideo);
+      };
+
+      await videoService.createVideo(testVideo);
       alert('Test video added successfully!');
       testCollections(); // Refresh data
     } catch (error: any) {

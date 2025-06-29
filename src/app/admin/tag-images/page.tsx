@@ -98,16 +98,9 @@ export default function TagImagesPage() {
 
   const loadCats = async () => {
     try {
-      // For now, use direct Firebase call until cat service is available
-      // TODO: Replace with catService.getAllCats() when available
-      const { collection, getDocs } = await import('firebase/firestore');
-      const { db } = await import('@/services/firebase');
-
-      const catsSnapshot = await getDocs(collection(db, 'cats'));
-      const catsData = catsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Cat[];
+      // Use service layer to get all cats
+      const catService = getCatService();
+      const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
       console.error('Error loading cats:', error);

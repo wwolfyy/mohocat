@@ -1,11 +1,14 @@
 import { getStorage } from 'firebase-admin/storage';
 import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app';
 import { NextRequest, NextResponse } from 'next/server';
+import { getFirebaseConfig } from '@/utils/config';
 
 if (!getApps().length) {
+  // Use centralized config for Firebase configuration
+  const firebaseConfig = getFirebaseConfig();
   initializeApp({
     credential: applicationDefault(),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    storageBucket: firebaseConfig?.storageBucket,
   });
 }
 
@@ -26,7 +29,9 @@ export async function POST(request: NextRequest) {
       contentType: fileType,
     });
 
-    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/uploads%2F${encodeURIComponent(fileName)}?alt=media`;
+    // Use centralized config for public URL generation
+    const firebaseConfig = getFirebaseConfig();
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig?.storageBucket}/o/uploads%2F${encodeURIComponent(fileName)}?alt=media`;
 
     return NextResponse.json({ signedUrl, publicUrl });
   } catch (error) {

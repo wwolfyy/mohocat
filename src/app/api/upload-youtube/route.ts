@@ -1,15 +1,16 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { Readable } from 'stream';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '@/services/firebase';
+import { getVideoService } from '@/services';
+import { getYouTubeOAuthConfig } from '@/utils/config';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check environment variables first
-    if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET || !process.env.YOUTUBE_REFRESH_TOKEN) {
+    // Get YouTube OAuth configuration from centralized config
+    const youtubeOAuth = getYouTubeOAuthConfig();
+    if (!youtubeOAuth) {
       return NextResponse.json({
-        error: 'YouTube API credentials not configured'
+        error: 'YouTube OAuth credentials not configured'
       }, { status: 500 });
     }    // Parse the multipart form data
     const formData = await request.formData();
@@ -25,12 +26,12 @@ export async function POST(request: NextRequest) {
     }
 
     const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
+      youtubeOAuth.clientId,
+      youtubeOAuth.clientSecret,
+      youtubeOAuth.redirectUri
     );
     oauth2Client.setCredentials({
-      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      refresh_token: youtubeOAuth.refreshToken,
     });
 
     try {
@@ -150,8 +151,9 @@ export async function POST(request: NextRequest) {
 
       console.log('Creating Firestore entry for uploaded video:', videoData);
 
-      const docRef = await addDoc(collection(db, 'cat_videos'), videoData);
-      console.log('Created cat_videos entry with ID:', docRef.id);
+      const videoService = getVideoService();
+      const firestoreVideoId = await videoService.createVideo(videoData);
+      console.log('Created cat_videos entry with ID:', firestoreVideoId);
 
     } catch (firestoreError) {
       console.error('Failed to create Firestore entry:', firestoreError);

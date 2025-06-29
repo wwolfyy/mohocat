@@ -1,16 +1,22 @@
 /**
  * Firebase Auth Service Implementation
- * 
+ *
  * Handles all authentication operations using Firebase Auth.
  * Uses the current mountain's configuration for auth access.
  */
 
 import type { IAuthService } from './interfaces';
-import { signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged as firebaseOnAuthStateChanged, User } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged as firebaseOnAuthStateChanged,
+  createUserWithEmailAndPassword,
+  User
+} from 'firebase/auth';
 import { auth } from './firebase';
 
 export class FirebaseAuthService implements IAuthService {
-  
+
   getCurrentUser(): any | null {
     return auth.currentUser;
   }
@@ -31,6 +37,16 @@ export class FirebaseAuthService implements IAuthService {
     } catch (error) {
       console.error('Error signing out:', error);
       throw new Error('Failed to sign out');
+    }
+  }
+
+  async createUser(email: string, password: string): Promise<any> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error('Failed to create user');
     }
   }
 

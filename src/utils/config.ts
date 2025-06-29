@@ -36,6 +36,12 @@ export interface MountainSecrets {
     appId: string;
   };
   youtubeApiKey: string;
+  youtubeOAuth?: {
+    clientId: string;
+    clientSecret: string;
+    refreshToken: string;
+    redirectUri?: string;
+  };
   serviceAccount?: any;
 }
 
@@ -79,6 +85,16 @@ export function getMountainConfig(): MountainConfig {
     },
     youtubeApiKey: process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
   };
+
+  // Add YouTube OAuth credentials if available
+  if (process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET && process.env.YOUTUBE_REFRESH_TOKEN) {
+    secretConfig.youtubeOAuth = {
+      clientId: process.env.YOUTUBE_CLIENT_ID,
+      clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
+      refreshToken: process.env.YOUTUBE_REFRESH_TOKEN,
+      redirectUri: process.env.YOUTUBE_REDIRECT_URI,
+    };
+  }
 
   // In the future, when we have multi-mountain setup, we can also parse:
   // FIREBASE_CONFIG and SERVICE_ACCOUNT_KEY environment variables
@@ -146,9 +162,25 @@ export function getMountainName(): string {
 }
 
 /**
+ * Get YouTube OAuth configuration for the current mountain
+ */
+export function getYouTubeOAuthConfig() {
+  const config = getMountainConfig();
+  return config.secrets?.youtubeOAuth;
+}
+
+/**
  * Get mountain description
  */
 export function getMountainDescription(): string {
   const config = getMountainConfig();
   return config.description;
+}
+
+/**
+ * Get YouTube channel ID for the current mountain
+ */
+export function getYouTubeChannelId(): string {
+  const config = getMountainConfig();
+  return config.social.youtubeChannelId;
 }

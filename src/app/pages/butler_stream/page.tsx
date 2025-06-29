@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/services/firebase';
+import { getAuthService, getPostService } from '@/services';
 import PostList from '@/components/PostList';
 import { User } from 'firebase/auth';
-import { collection, getDocs } from 'firebase/firestore';
 import { cn } from '@/utils/cn';
 
 const ButlerStream = () => {
+  // Service references
+  const authService = getAuthService();
+  const postService = getPostService();
+
   const [posts, setPosts] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +20,7 @@ const ButlerStream = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user: User | null) => {
+    const unsubscribe = authService.onAuthStateChanged((user: User | null) => {
       if (user) {
         setIsAuthenticated(true);
       } else {
@@ -26,13 +29,13 @@ const ButlerStream = () => {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, authService]);
 
   const fetchPosts = async (page = 1) => {
     if (isAuthenticated) {
-      const querySnapshot = await getDocs(collection(db, 'posts_feeding'));
-      const allPosts = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const sortedPosts = allPosts.sort((a, b) => {
+      // Use service layer instead of direct Firebase access
+      const allPosts = await postService.getAllPosts();
+      const sortedPosts = allPosts.sort((a: any, b: any) => {
         const dateA = new Date(`${a.date} ${a.time}`);
         const dateB = new Date(`${b.date} ${b.time}`);
         return dateB.getTime() - dateA.getTime();

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/services/firebase';
+import { getPostService } from '@/services';
 
 const PostDetailsPage = () => {
+  // Service references
+  const postService = getPostService();
   const [post, setPost] = useState<any | null>(null);
   const router = useRouter();
 
@@ -15,9 +16,10 @@ const PostDetailsPage = () => {
       if (!id) return;
 
       try {
-        const postDoc = await getDoc(doc(db, 'posts_feeding', id));
-        if (postDoc.exists()) {
-          setPost(postDoc.data());
+        // Use service layer instead of direct Firebase access
+        const postData = await postService.getPostById(id);
+        if (postData) {
+          setPost(postData);
         } else {
           setPost(null);
         }

@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
+import { getYouTubeOAuthConfig } from '@/utils/config';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -13,23 +14,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
 
-    // Set up OAuth2 client
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
-    );
-
-    // Check if refresh token is available
-    if (!process.env.YOUTUBE_REFRESH_TOKEN) {
-      console.error('YOUTUBE_REFRESH_TOKEN environment variable not set');
+    // Get YouTube OAuth configuration from centralized config
+    const youtubeOAuth = getYouTubeOAuthConfig();
+    if (!youtubeOAuth) {
       return NextResponse.json({
-        error: 'YouTube OAuth not configured. YOUTUBE_REFRESH_TOKEN missing.'
+        error: 'YouTube OAuth credentials not configured'
       }, { status: 500 });
     }
 
+    // Set up OAuth2 client
+    const oauth2Client = new google.auth.OAuth2(
+      youtubeOAuth.clientId,
+      youtubeOAuth.clientSecret,
+      youtubeOAuth.redirectUri
+    );
+
     oauth2Client.setCredentials({
-      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+      refresh_token: youtubeOAuth.refreshToken,
     });
 
     // Test the credentials by trying to refresh the access token

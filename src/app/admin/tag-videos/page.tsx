@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getVideoService } from '@/services';
+import { getVideoService, getCatService } from '@/services';
 import { Cat } from '@/types';
 import { CatVideo } from '@/types/media';
 
@@ -144,16 +144,8 @@ export default function TagVideosPage() {
 
   const loadCats = async () => {
     try {
-      // For now, use direct Firebase call until cat service is available
-      // TODO: Replace with catService.getAllCats() when available
-      const { collection, getDocs } = await import('firebase/firestore');
-      const { db } = await import('@/services/firebase');
-
-      const catsSnapshot = await getDocs(collection(db, 'cats'));
-      const catsData = catsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Cat[];
+      const catService = getCatService();
+      const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
       console.error('Error loading cats:', error);

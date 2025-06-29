@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirebaseConfig, getYouTubeApiKey, getMountainConfig } from '@/utils/config';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -10,9 +11,12 @@ if (!getApps().length) {
 
   if (fs.existsSync(serviceAccountPath)) {
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+
+    // Use centralized config for Firebase configuration
+    const firebaseConfig = getFirebaseConfig();
     initializeApp({
       credential: cert(serviceAccount),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      storageBucket: firebaseConfig?.storageBucket,
     });
   } else {
     throw new Error('Service account file not found: ' + serviceAccountPath);
@@ -20,7 +24,8 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+// Use centralized config for YouTube API key
+const YOUTUBE_API_KEY = getYouTubeApiKey();
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,7 +98,9 @@ export async function POST(request: NextRequest) {
     console.log('Fetching playlist information for videos...');
 
     // First, get all playlists from the channel
-    const channelId = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
+    // Get channel ID from centralized config
+    const config = getMountainConfig();
+    const channelId = config.social?.youtubeChannelId;
     if (!channelId) {
       console.warn('No channel ID configured, skipping playlist fetch');
       var playlistMap = new Map();

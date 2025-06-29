@@ -1,9 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { getMountainConfig, getFirebaseConfig, getYouTubeApiKey } from '@/utils/config';
 
 export default function AdminTestPage() {
   const [testMessage, setTestMessage] = useState('Admin test page loaded successfully!');
+
+  let configCheck = 'Loading...';
+  let firebaseConfig = null;
+  let youtubeApiKey = '';
+
+  try {
+    const config = getMountainConfig();
+    firebaseConfig = getFirebaseConfig();
+    youtubeApiKey = getYouTubeApiKey();
+    configCheck = `✅ Config loaded for: ${config.name}`;
+  } catch (error) {
+    configCheck = `❌ Config error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
 
   return (
     <div style={{
@@ -52,12 +66,13 @@ export default function AdminTestPage() {
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         maxWidth: '600px'
       }}>
-        <h3 style={{ marginBottom: '1rem', color: '#111827' }}>Environment Check:</h3>
+        <h3 style={{ marginBottom: '1rem', color: '#111827' }}>Configuration System Check:</h3>
+        <div style={{ textAlign: 'left', color: '#6b7280', marginBottom: '1rem' }}>{configCheck}</div>
         <ul style={{ textAlign: 'left', color: '#6b7280' }}>
-          <li>Firebase API Key: {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ Set' : '❌ Missing'}</li>
-          <li>Firebase Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing'}</li>
-          <li>YouTube API Key: {process.env.NEXT_PUBLIC_YOUTUBE_API_KEY ? '✅ Set' : '❌ Missing'}</li>
-          <li>YouTube Channel ID: {process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID ? '✅ Set' : '❌ Missing'}</li>
+          <li>Firebase API Key: {firebaseConfig?.apiKey ? '✅ Set' : '❌ Missing'}</li>
+          <li>Firebase Project ID: {firebaseConfig?.projectId ? '✅ Set' : '❌ Missing'}</li>
+          <li>YouTube API Key: {youtubeApiKey ? '✅ Set' : '❌ Missing'}</li>
+          <li>Config Source: {process.env.MOUNTAIN_ID || process.env.NEXT_PUBLIC_MOUNTAIN_ID || 'geyang (default)'}</li>
         </ul>
       </div>
     </div>

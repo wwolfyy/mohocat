@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '@/services/firebase';
+import { getPostService } from '@/services';
 import { useRouter } from 'next/navigation';
-import { collection, addDoc } from 'firebase/firestore';
 import { cn } from '@/utils/cn';
 
 interface Playlist {
@@ -11,6 +10,8 @@ interface Playlist {
 }
 
 const NewPostForm = () => {
+  // Service references
+  const postService = getPostService();
   const router = useRouter();
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -228,7 +229,8 @@ const NewPostForm = () => {
         throw new Error('Video files were selected but no video URLs were generated');
       }
 
-      await addDoc(collection(db, 'posts_feeding'), post);
+      // Use service layer instead of direct Firebase access
+      await postService.createPost(post);
 
       setVideoFiles([]);
       setImageFiles([]);

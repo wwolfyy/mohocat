@@ -1,8 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/services/firebase';
+import { getAuthService } from '@/services';
 import AdminAuth from '@/components/admin/AdminAuth';
 
 export default function AdminLayout({
@@ -14,7 +13,8 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      const authService = getAuthService();
+      await authService.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
     }
