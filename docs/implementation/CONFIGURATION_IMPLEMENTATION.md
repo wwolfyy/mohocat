@@ -37,7 +37,22 @@ This document describes the implementation of the configuration-driven system th
   }
   ```
 
-### 3. Updated Services
+### 3. Environment Variable Loading Flow
+
+The centralized configuration system follows a specific flow when loading configuration:
+
+1. **Code**: `getMountainConfig()` function is called
+2. **Reads**: `MOUNTAIN_ID` from environment variables (`process.env.MOUNTAIN_ID`)
+3. **Loads**: Public configuration from `mountains.json[MOUNTAIN_ID]`
+4. **Adds**: Secret configuration from environment variables (Firebase, YouTube OAuth, etc.)
+5. **Returns**: Complete mountain configuration object combining public and secret settings
+
+This flow ensures that:
+- Public settings (themes, features, names) come from the version-controlled `mountains.json`
+- Secret settings (API keys, credentials) come from secure environment variables
+- The same codebase can serve different mountains based solely on the `MOUNTAIN_ID` environment variable
+
+### 4. Updated Services
 - **Firebase Service** (`src/services/firebase.ts`):
   - Now uses `getFirebaseConfig()` instead of direct environment variables
   - Maintains same exports and functionality
@@ -48,7 +63,7 @@ This document describes the implementation of the configuration-driven system th
   - Supports both current environment variables and future config-based approach
   - All functions updated to use centralized configuration
 
-### 4. Environment Variable Structure
+### 5. Environment Variable Structure
 - **File**: `.env.example`
 - **Backward Compatibility**: All existing environment variables still work
 - **Future Ready**: Supports new `MOUNTAIN_ID`, `FIREBASE_CONFIG`, etc.

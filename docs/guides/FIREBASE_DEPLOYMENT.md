@@ -70,6 +70,40 @@ firebase deploy --only hosting
 
 Visit your Firebase Hosting URL to verify the deployment is successful.
 
+## Multi-Tenant Deployment Workflow
+
+The multi-tenant deployment follows a specific workflow that enables the same codebase to serve multiple mountains:
+
+### 1. Development and Commit
+
+```bash
+1. Developer commits code to GitHub
+2. CI/CD system detects changes and triggers deployment pipeline
+```
+
+### 2. Build and Deploy Strategy
+
+```bash
+CI/CD triggers multiple deployments:
+
+Build (once) → Deploy Geyang (with Geyang env vars)
+             → Deploy Jirisan (with Jirisan env vars)
+             → Deploy Seoraksan (with Seoraksan env vars)
+```
+
+### 3. Deployment Execution
+
+Each deployment follows this pattern:
+- **Uses same built files** - Identical application code and bundled `mountains.json`
+- **Loads different environment variables** - Mountain-specific secrets from deployment platform
+- **Serves mountain-specific content** - Runtime configuration based on `MOUNTAIN_ID`
+
+This approach ensures:
+- ✅ **Single Codebase Maintenance** - One set of code to update and test
+- ✅ **Consistent Features** - All mountains get identical functionality
+- ✅ **Secure Secret Management** - Each deployment has isolated credentials
+- ✅ **Easy Scaling** - Adding new mountains requires only configuration changes
+
 ## Multi-Tenant Deployment
 
 The centralized configuration system allows you to deploy the same codebase to multiple Firebase projects for different mountains.

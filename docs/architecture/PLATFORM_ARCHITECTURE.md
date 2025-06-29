@@ -68,10 +68,25 @@ Each mountain is configured via a JSON file:
 
 #### Automated Deployment:
 1. **Code updates** pushed to main branch
-2. **GitHub Actions** builds app for each mountain
-3. **Environment-specific builds** using `MOUNTAIN_ID` environment variable
+2. **CI/CD triggers multiple deployments**:
+   ```
+   Build (once) → Deploy Geyang (with Geyang env vars)
+                → Deploy Jirisan (with Jirisan env vars)
+                → Deploy Seoraksan (with Seoraksan env vars)
+   ```
+3. **Each deployment**:
+   - Uses same built files
+   - Loads different environment variables from platform
+   - Serves mountain-specific content via `MOUNTAIN_ID`
 4. **Parallel deployment** to all Firebase projects
 5. **All mountain sites updated** simultaneously
+
+#### Configuration Loading Flow:
+1. **Code**: `getMountainConfig()` function is called
+2. **Reads**: `MOUNTAIN_ID` from environment variables
+3. **Loads**: Public config from `mountains.json[MOUNTAIN_ID]`
+4. **Adds**: Secret config from environment variables
+5. **Returns**: Complete mountain configuration
 
 ### Update Process
 ```mermaid
