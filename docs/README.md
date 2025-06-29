@@ -14,6 +14,7 @@ This directory contains all project documentation, organized by type:
   - `ADMIN_IMPLEMENTATION_STATUS.md` - Admin functionality implementation status
 
 - **`guides/`** - User and developer guides
+  - `FIREBASE_DEPLOYMENT.md` - Complete guide for Firebase hosting deployment (single and multi-tenant)
   - `SECRETS_MANAGEMENT.md` - Guide for managing secrets and environment variables
   - `CLAUDE.md` - Guide for working with Claude AI
   - `VIDEO_TAGGING.md` - Guide for video tagging functionality
