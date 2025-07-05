@@ -25,6 +25,7 @@ import { FirebasePostService } from './post-service';
 import { FirebaseContactService } from './contact-service';
 import { FirebaseStorageService } from './storage-service';
 import { FirebaseAuthService } from './auth-service';
+import { FirebaseFeedingSpotsService, IFeedingSpotsService } from './feeding-spots-service';
 
 // Service instances - lazy initialized
 let catServiceInstance: ICatService | null = null;
@@ -35,6 +36,7 @@ let postServiceInstance: IPostService | null = null;
 let contactServiceInstance: IContactService | null = null;
 let storageServiceInstance: IStorageService | null = null;
 let authServiceInstance: IAuthService | null = null;
+let feedingSpotsServiceInstance: IFeedingSpotsService | null = null;
 
 /**
  * Get the cat service instance
@@ -116,6 +118,16 @@ export function getAuthService(): IAuthService {
   return authServiceInstance;
 }
 
+/**
+ * Get the feeding spots service instance
+ */
+export function getFeedingSpotsService(): IFeedingSpotsService {
+  if (!feedingSpotsServiceInstance) {
+    feedingSpotsServiceInstance = new FirebaseFeedingSpotsService();
+  }
+  return feedingSpotsServiceInstance;
+}
+
 // Export service interfaces for type checking
 export type {
   ICatService,
@@ -125,5 +137,9 @@ export type {
   IPostService,
   IContactService,
   IStorageService,
-  IAuthService
+  IAuthService,
+  IFeedingSpotsService
 } from './interfaces';
+
+// Also export the FeedingSpot type
+export type { FeedingSpot } from './feeding-spots-service';

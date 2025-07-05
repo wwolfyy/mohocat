@@ -98,3 +98,13 @@ export interface IAuthService {
   createUser(email: string, password: string): Promise<any>;
   onAuthStateChanged(callback: (user: any) => void): () => void;
 }
+
+// Feeding spots service interface
+export interface IFeedingSpotsService {
+  getAllFeedingSpots(): Promise<Array<{
+    id: number;
+    name: string;
+    last_attended: string;
+    last_attended_by: string;
+  }>>;
+}

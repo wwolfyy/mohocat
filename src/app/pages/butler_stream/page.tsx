@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthService, getPostService } from "@/services";
 import PostList from "@/components/PostList";
+import FeedingSpotsList from "@/components/FeedingSpotsList";
 import { User } from "firebase/auth";
 import { cn } from "@/utils/cn";
 
@@ -113,6 +114,9 @@ const ButlerStream = () => {
           새글 작성
         </button>
       </div>
+
+      <FeedingSpotsList />
+
       <PostList
         posts={posts}
         currentPage={currentPage}
