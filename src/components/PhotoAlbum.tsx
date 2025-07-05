@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { getImageService } from '@/services';
-import { CatImage } from '@/types/media';
-import { cn } from '@/utils/cn';
+import { useState, useEffect } from "react";
+import { getImageService } from "@/services";
+import { CatImage } from "@/types/media";
+import { cn } from "@/utils/cn";
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -16,24 +16,27 @@ const parseDate = (dateValue: any): Date | null => {
     }
 
     // If it's a Firebase Timestamp with seconds property
-    if (typeof dateValue === 'object' && dateValue.seconds) {
+    if (typeof dateValue === "object" && dateValue.seconds) {
       return new Date(dateValue.seconds * 1000);
     }
 
     // If it's a Firebase Timestamp with toDate method
-    if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
+    if (
+      typeof dateValue === "object" &&
+      typeof dateValue.toDate === "function"
+    ) {
       return dateValue.toDate();
     }
 
     // If it's a string or number
-    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+    if (typeof dateValue === "string" || typeof dateValue === "number") {
       const date = new Date(dateValue);
       return isNaN(date.getTime()) ? null : date;
     }
 
     return null;
   } catch (error) {
-    console.warn('Error parsing date:', dateValue, error);
+    console.warn("Error parsing date:", dateValue, error);
     return null;
   }
 };
@@ -53,7 +56,14 @@ interface LightboxProps {
   hasNext: boolean;
 }
 
-function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: LightboxProps) {
+function Lightbox({
+  image,
+  onClose,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext,
+}: LightboxProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
@@ -61,27 +71,28 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'Escape':
+        case "Escape":
           onClose();
           break;
-        case 'ArrowLeft':
+        case "ArrowLeft":
           if (hasPrevious) onPrevious();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           if (hasNext) onNext();
           break;
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose, onPrevious, onNext, hasPrevious, hasNext]);
 
   // Reset loading state when image changes
   useEffect(() => {
     setImageLoading(true);
     setImageError(false);
-  }, [image.imageUrl]);  return (
+  }, [image.imageUrl]);
+  return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-90 pt-4 pb-4 overflow-y-auto"
       onClick={onClose}
@@ -94,7 +105,6 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
       >
         ×
       </button>
-
       {/* Previous button */}
       {hasPrevious && (
         <button
@@ -105,7 +115,6 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
           ‹
         </button>
       )}
-
       {/* Next button */}
       {hasNext && (
         <button
@@ -115,7 +124,8 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
         >
           ›
         </button>
-      )}      {/* Main image container */}
+      )}{" "}
+      {/* Main image container */}
       <div className="w-full max-w-4xl max-h-[calc(100vh-2rem)] p-4 relative bg-white bg-opacity-5 rounded-2xl backdrop-blur-sm mx-4">
         {imageLoading && !imageError && (
           <div className="flex items-center justify-center w-full h-64">
@@ -129,43 +139,42 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
           </div>
         )}
 
-        <div
-          className="relative"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
           <img
             src={image.imageUrl}
             alt={image.fileName}
-            className={`max-w-full max-h-full object-contain rounded-xl ${imageLoading ? 'hidden' : ''}`}
+            className={`max-w-full max-h-full object-contain rounded-xl ${imageLoading ? "hidden" : ""}`}
             onLoad={() => setImageLoading(false)}
             onError={() => {
               setImageLoading(false);
               setImageError(true);
             }}
           />
-        </div>{/* Image info */}
+        </div>
+        {/* Image info */}
         {!imageLoading && !imageError && (
           <div className="mt-4 text-white text-center">
             {image.description && (
-              <p className="text-sm text-black mt-1 bg-white bg-opacity-90 px-3 py-1 rounded">{image.description}</p>
+              <p className="text-sm text-black mt-1 bg-white bg-opacity-90 px-3 py-1 rounded">
+                {image.description}
+              </p>
             )}
             <p className="text-xs text-gray-400 mt-1">
               {(() => {
                 const createdDate = parseDate(image.createdTime);
                 return createdDate
-                  ? createdDate.toLocaleDateString('ko-KR')
-                  : '날짜 없음';
+                  ? createdDate.toLocaleDateString("ko-KR")
+                  : "날짜 없음";
               })()}
             </p>
             {image.tags && image.tags.length > 0 && (
               <p className="text-xs text-gray-400 mt-1">
-                태그: {image.tags.join(', ')}
+                태그: {image.tags.join(", ")}
               </p>
             )}
           </div>
         )}
       </div>
-
       {/* Click overlay to close */}
       <div
         className="absolute inset-0 -z-10"
@@ -176,11 +185,17 @@ function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: 
   );
 }
 
-export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps) {
+export default function PhotoAlbum({
+  isOpen,
+  onClose,
+  catName,
+}: PhotoAlbumProps) {
   const [images, setImages] = useState<CatImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null,
+  );
   // Load images when the album opens
   useEffect(() => {
     if (isOpen && catName) {
@@ -194,7 +209,8 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
       setSelectedImageIndex(null);
       setError(null);
     }
-  }, [isOpen]);  const loadImages = async () => {
+  }, [isOpen]);
+  const loadImages = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -207,24 +223,31 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
 
       if (catImages.length === 0) {
         // If no cat-specific images found, let's try to get all images for debugging
-        console.log('No cat-specific images found, checking if there are any images in the database...');
+        console.log(
+          "No cat-specific images found, checking if there are any images in the database...",
+        );
         try {
           const allImages = await imageService.getAllImages({ limit: 10 });
           console.log(`Total images in database: ${allImages.length}`);
 
           if (allImages.length > 0) {
-            console.log('Sample image structure:', allImages[0]);
-            console.log('Available tags in first few images:', allImages.slice(0, 5).map(img => ({ fileName: img.fileName, tags: img.tags })));
+            console.log("Sample image structure:", allImages[0]);
+            console.log(
+              "Available tags in first few images:",
+              allImages
+                .slice(0, 5)
+                .map((img) => ({ fileName: img.fileName, tags: img.tags })),
+            );
           }
         } catch (debugError) {
-          console.error('Error during debugging query:', debugError);
+          console.error("Error during debugging query:", debugError);
         }
       }
 
       setImages(catImages);
     } catch (err) {
-      console.error('Error loading cat images:', err);
-      setError('사진을 불러오는데 실패했습니다.');
+      console.error("Error loading cat images:", err);
+      setError("사진을 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -270,7 +293,7 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
             className={cn(
               "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
               "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
-              "flex items-center justify-center z-10"
+              "flex items-center justify-center z-10",
             )}
             aria-label="Close album"
           >
@@ -287,8 +310,18 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
                 className="text-blue-600 hover:text-blue-800 disabled:text-gray-400 p-1"
                 title="새로고침"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
                 </svg>
               </button>
             </div>
@@ -301,18 +334,17 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
                 <div className="text-gray-600">사진을 불러오는 중...</div>
               </div>
             )}
-
             {error && (
               <div className="flex justify-center items-center py-12">
                 <div className="text-red-600">{error}</div>
               </div>
             )}
-
             {!loading && !error && images.length === 0 && (
               <div className="flex justify-center items-center py-12">
                 <div className="text-gray-600">등록된 사진이 없습니다.</div>
               </div>
-            )}            {!loading && !error && images.length > 0 && (
+            )}{" "}
+            {!loading && !error && images.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {images.map((image, index) => (
                   <div
@@ -332,24 +364,35 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
                         }
                       }}
                     />
-
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-200 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        <svg
+                          className="w-8 h-8 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
                         </svg>
                       </div>
-                    </div>                    {/* Image info overlay */}                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
+                    </div>{" "}
+                    {/* Image info overlay */}{" "}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
                       <p className="text-white text-xs truncate">
-                        {image.description || '설명 없음'}
+                        {image.description || "설명 없음"}
                       </p>
                       <p className="text-white text-xs opacity-75">
                         {(() => {
                           const createdDate = parseDate(image.createdTime);
                           return createdDate
-                            ? createdDate.toLocaleDateString('ko-KR')
-                            : '날짜 없음';
+                            ? createdDate.toLocaleDateString("ko-KR")
+                            : "날짜 없음";
                         })()}
                       </p>
                     </div>

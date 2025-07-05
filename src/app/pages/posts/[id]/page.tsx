@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getPostService } from '@/services';
-import { Post } from '@/types';
-import ReplyButton from '@/components/ReplyButton';
-import ReplyForm from '@/components/ReplyForm';
-import ReplyList from '@/components/ReplyList';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getPostService } from "@/services";
+import { Post } from "@/types";
+import ReplyButton from "@/components/ReplyButton";
+import ReplyForm from "@/components/ReplyForm";
+import ReplyList from "@/components/ReplyList";
 
 const PostDetailsPage = () => {
   // Service references
@@ -18,7 +18,7 @@ const PostDetailsPage = () => {
 
   useEffect(() => {
     const fetchPost = async () => {
-      const id = window.location.pathname.split('/').pop();
+      const id = window.location.pathname.split("/").pop();
       if (!id) return;
 
       try {
@@ -31,7 +31,7 @@ const PostDetailsPage = () => {
           setPost(null);
         }
       } catch (error) {
-        console.error('Error fetching post:', error);
+        console.error("Error fetching post:", error);
         setPost(null);
       }
     };
@@ -40,7 +40,7 @@ const PostDetailsPage = () => {
   }, []);
 
   const handleReplySuccess = (reply: Post) => {
-    setReplyCount(prev => prev + 1);
+    setReplyCount((prev) => prev + 1);
     setShowReplyForm(false);
   };
 
@@ -49,39 +49,55 @@ const PostDetailsPage = () => {
   };
 
   if (!post) {
-    return <div className="p-4">Post not found.</div>;
+    return (
+      <div className="p-4" data-oid="gb28vk9">
+        Post not found.
+      </div>
+    );
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-      <p>{post.message}</p>      {/* Show videos if present */}
+    <div className="p-4" data-oid="cqcgpeq">
+      <h1 className="text-2xl font-bold mb-4" data-oid="v2qhust">
+        {post.title}
+      </h1>
+      <p data-oid="l.1t25q">{post.message}</p> {/* Show videos if present */}
       {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-2">
-            {post.videoUrls?.length > 1 ? `Videos (${post.videoUrls.length}):` : 'Video:'}
+        <div className="mt-4" data-oid="-lefipm">
+          <h2 className="text-xl font-semibold mb-2" data-oid="pdg-0.z">
+            {post.videoUrls?.length > 1
+              ? `Videos (${post.videoUrls.length}):`
+              : "Video:"}
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-4" data-oid="kmf5wsd">
             {(() => {
               // Support both new videoUrls array and legacy videoUrl
               const videoUrls = post.videoUrls || [post.videoUrl];
               return videoUrls.map((videoUrl: string, index: number) => {
                 // Extract YouTube video ID from URL
-                const match = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+                const match = videoUrl.match(
+                  /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+                );
                 const videoId = match ? match[1] : null;
 
                 if (videoId) {
                   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
                   return (
-                    <div key={index}>
+                    <div key={index} data-oid="jf:vmdm">
                       {videoUrls.length > 1 && (
-                        <h3 className="text-lg font-medium mb-2">Video {index + 1}</h3>
+                        <h3
+                          className="text-lg font-medium mb-2"
+                          data-oid="sctacn8"
+                        >
+                          Video {index + 1}
+                        </h3>
                       )}
                       <a
                         href={videoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block relative group"
+                        data-oid="2jdmjk-"
                       >
                         <img
                           src={thumbnailUrl}
@@ -91,12 +107,26 @@ const PostDetailsPage = () => {
                             // Fallback to medium quality thumbnail if maxres fails
                             e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                           }}
+                          data-oid="8hlo15j"
                         />
+
                         {/* Play button overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg">
-                          <div className="bg-red-600 text-white rounded-full p-4 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M8 5v14l11-7z"/>
+                        <div
+                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg"
+                          data-oid="pge1wr5"
+                        >
+                          <div
+                            className="bg-red-600 text-white rounded-full p-4 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300"
+                            data-oid="f40yn1v"
+                          >
+                            <svg
+                              width="32"
+                              height="32"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              data-oid="rpd6ug3"
+                            >
+                              <path d="M8 5v14l11-7z" data-oid="8o90stx" />
                             </svg>
                           </div>
                         </div>
@@ -106,11 +136,22 @@ const PostDetailsPage = () => {
                 } else {
                   // Fallback for non-YouTube videos or invalid URLs
                   return (
-                    <div key={index}>
+                    <div key={index} data-oid="wt09hvd">
                       {videoUrls.length > 1 && (
-                        <h3 className="text-lg font-medium mb-2">Video {index + 1}</h3>
+                        <h3
+                          className="text-lg font-medium mb-2"
+                          data-oid="kg:sav:"
+                        >
+                          Video {index + 1}
+                        </h3>
                       )}
-                      <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                      <a
+                        href={videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 underline"
+                        data-oid="a1c-6ih"
+                      >
                         Watch Video {index + 1}
                       </a>
                     </div>
@@ -121,22 +162,30 @@ const PostDetailsPage = () => {
           </div>
         </div>
       )}
-
       {/* Show images if present */}
       {post.imageUrls && post.imageUrls.length > 0 && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-2">Images:</h2>
-          <div className="space-y-2">
+        <div className="mt-4" data-oid="j..7qvf">
+          <h2 className="text-xl font-semibold mb-2" data-oid="1.mkqfc">
+            Images:
+          </h2>
+          <div className="space-y-2" data-oid="-icr5up">
             {post.imageUrls.map((url: string, index: number) => (
-              <img key={index} src={url} alt={`Image ${index + 1}`} className="w-full rounded" />
+              <img
+                key={index}
+                src={url}
+                alt={`Image ${index + 1}`}
+                className="w-full rounded"
+                data-oid="mwcywrv"
+              />
             ))}
           </div>
         </div>
       )}
-
       {/* Reply section */}
-      <div className="mt-8 border-t pt-6">
-        <h3 className="text-lg font-semibold mb-4">댓글</h3>
+      <div className="mt-8 border-t pt-6" data-oid=":lorruy">
+        <h3 className="text-lg font-semibold mb-4" data-oid="8ds1dch">
+          댓글
+        </h3>
 
         <ReplyButton
           postId={post.id}
@@ -144,6 +193,7 @@ const PostDetailsPage = () => {
           onToggleReply={() => setShowReplyForm(!showReplyForm)}
           showingReplies={false}
           showingReplyForm={showReplyForm}
+          data-oid=".tzeqq4"
         />
 
         {showReplyForm && (
@@ -152,6 +202,7 @@ const PostDetailsPage = () => {
             parentUsername={post.username}
             onReplySuccess={handleReplySuccess}
             onCancel={() => setShowReplyForm(false)}
+            data-oid="wr4xkv7"
           />
         )}
 
@@ -159,6 +210,7 @@ const PostDetailsPage = () => {
           postId={post.id}
           replyCount={replyCount}
           onReplyCountUpdate={handleReplyCountUpdate}
+          data-oid="1hxe0gs"
         />
       </div>
     </div>

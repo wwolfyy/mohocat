@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Edit,
   SimpleForm,
@@ -19,7 +19,7 @@ import {
   ListButton,
   ShowButton,
   DeleteButton,
-} from 'react-admin';
+} from "react-admin";
 import {
   Box,
   Card,
@@ -41,16 +41,43 @@ import {
   DialogActions,
   Alert,
   Divider,
-} from '@mui/material';
-import { Add, Remove, Visibility, Edit as EditIcon } from '@mui/icons-material';
+} from "@mui/material";
+import { Add, Remove, Visibility, Edit as EditIcon } from "@mui/icons-material";
 
 // Available cat tags - in a real app, this would come from Firestore
 const AVAILABLE_TAGS = [
-  '개똥이', '깡패', '꽃분이', '누렁이', '대장이', '땅콩이', '뚜껑이',
-  '마니', '메리', '블타', '삼숙이', '삼순이', '송이', '순돌이',
-  '아들조로', '아롱이', '알콩이', '엄마조로', '예쁜이', '예쁜이엄마',
-  '점돌이', '점순이', '정상노랑이', '찰리', '초롱이', '코순이',
-  '판다', '팔랑이', '팔봉이', '팔봉이친구', '하느재노랑이', '하얀코'
+  "개똥이",
+  "깡패",
+  "꽃분이",
+  "누렁이",
+  "대장이",
+  "땅콩이",
+  "뚜껑이",
+  "마니",
+  "메리",
+  "블타",
+  "삼숙이",
+  "삼순이",
+  "송이",
+  "순돌이",
+  "아들조로",
+  "아롱이",
+  "알콩이",
+  "엄마조로",
+  "예쁜이",
+  "예쁜이엄마",
+  "점돌이",
+  "점순이",
+  "정상노랑이",
+  "찰리",
+  "초롱이",
+  "코순이",
+  "판다",
+  "팔랑이",
+  "팔봉이",
+  "팔봉이친구",
+  "하느재노랑이",
+  "하얀코",
 ];
 
 // Custom toolbar with enhanced save options
@@ -60,7 +87,9 @@ const ImageEditToolbar = () => {
 
   const handleSaveAndContinue = () => {
     // This would save and redirect to the next untagged image
-    notify('Image saved. Redirecting to next untagged image...', { type: 'info' });
+    notify("Image saved. Redirecting to next untagged image...", {
+      type: "info",
+    });
   };
 
   return (
@@ -99,19 +128,26 @@ const ImagePreview = () => {
         <Typography variant="h6" gutterBottom>
           Image Preview
         </Typography>
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
           <img
             src={record.imageUrl}
             alt={record.fileName}
             style={{
-              maxWidth: '100%',
-              maxHeight: '400px',
-              objectFit: 'contain',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
+              maxWidth: "100%",
+              maxHeight: "400px",
+              objectFit: "contain",
+              borderRadius: "8px",
+              border: "1px solid #ddd",
             }}
           />
-        </Box>        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+        </Box>{" "}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 2,
+          }}
+        >
           <Box>
             <Typography variant="body2" color="textSecondary">
               <strong>File Name:</strong> {record.fileName}
@@ -119,13 +155,15 @@ const ImagePreview = () => {
           </Box>
           <Box>
             <Typography variant="body2" color="textSecondary">
-              <strong>Upload Date:</strong> {new Date(record.uploadDate).toLocaleDateString()}
+              <strong>Upload Date:</strong>{" "}
+              {new Date(record.uploadDate).toLocaleDateString()}
             </Typography>
           </Box>
           {record.fileSize && (
             <Box>
               <Typography variant="body2" color="textSecondary">
-                <strong>File Size:</strong> {(record.fileSize / 1024 / 1024).toFixed(2)} MB
+                <strong>File Size:</strong>{" "}
+                {(record.fileSize / 1024 / 1024).toFixed(2)} MB
               </Typography>
             </Box>
           )}
@@ -145,17 +183,22 @@ const ImagePreview = () => {
 // Enhanced tag editing component
 const TagEditor = () => {
   const record = useRecordContext();
-  const [selectedTags, setSelectedTags] = useState<string[]>(record?.tags || []);
-  const [customTag, setCustomTag] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    record?.tags || [],
+  );
+  const [customTag, setCustomTag] = useState("");
   const [customTagDialogOpen, setCustomTagDialogOpen] = useState(false);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
   // Generate tag suggestions based on filename
   React.useEffect(() => {
     if (record?.fileName) {
-      const suggestions = AVAILABLE_TAGS.filter(tag =>
-        record.fileName.toLowerCase().includes(tag.toLowerCase()) ||
-        tag.toLowerCase().includes(record.fileName.toLowerCase().substring(0, 3))
+      const suggestions = AVAILABLE_TAGS.filter(
+        (tag) =>
+          record.fileName.toLowerCase().includes(tag.toLowerCase()) ||
+          tag
+            .toLowerCase()
+            .includes(record.fileName.toLowerCase().substring(0, 3)),
       );
       setTagSuggestions(suggestions.slice(0, 5)); // Limit to 5 suggestions
     }
@@ -169,7 +212,7 @@ const TagEditor = () => {
     if (customTag.trim() && !selectedTags.includes(customTag.trim())) {
       const newTags = [...selectedTags, customTag.trim()];
       setSelectedTags(newTags);
-      setCustomTag('');
+      setCustomTag("");
       setCustomTagDialogOpen(false);
     }
   };
@@ -181,7 +224,7 @@ const TagEditor = () => {
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+    setSelectedTags(selectedTags.filter((tag) => tag !== tagToRemove));
   };
 
   return (
@@ -197,7 +240,7 @@ const TagEditor = () => {
             <Typography variant="subtitle2" color="textSecondary" gutterBottom>
               Suggestions based on filename:
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {tagSuggestions.map((suggestion) => (
                 <Chip
                   key={suggestion}
@@ -220,7 +263,7 @@ const TagEditor = () => {
           <Typography variant="subtitle2" gutterBottom>
             Current Tags:
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
             {selectedTags.map((tag) => (
               <Chip
                 key={tag}
@@ -267,7 +310,7 @@ const TagEditor = () => {
         </Box>
 
         {/* Custom Tag Button */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
             startIcon={<Add />}
@@ -298,7 +341,7 @@ const TagEditor = () => {
               value={customTag}
               onChange={(e) => setCustomTag(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   handleAddCustomTag();
                 }
               }}
@@ -315,11 +358,7 @@ const TagEditor = () => {
         </Dialog>
 
         {/* Hidden input for form submission */}
-        <input
-          type="hidden"
-          name="tags"
-          value={JSON.stringify(selectedTags)}
-        />
+        <input type="hidden" name="tags" value={JSON.stringify(selectedTags)} />
       </CardContent>
     </Card>
   );
@@ -328,10 +367,7 @@ const TagEditor = () => {
 // Main ImageEdit component
 const ImageEdit = () => {
   return (
-    <Edit
-      actions={<ImageEditActions />}
-      title="Edit Image Tags"
-    >
+    <Edit actions={<ImageEditActions />} title="Edit Image Tags">
       <Box sx={{ p: 2 }}>
         {/* Image Preview */}
         <ImagePreview />

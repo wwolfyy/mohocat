@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { cn } from '@/utils/cn';
-import { Post as PostType } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
-import ReplyButton from './ReplyButton';
-import ReplyForm from './ReplyForm';
-import ReplyList from './ReplyList';
+import React, { useState } from "react";
+import Link from "next/link";
+import { cn } from "@/utils/cn";
+import { Post as PostType } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
+import ReplyButton from "./ReplyButton";
+import ReplyForm from "./ReplyForm";
+import ReplyList from "./ReplyList";
 
 interface Post {
   id: string;
   title: string;
   message: string;
   thumbnailUrl?: string;
-  mediaType?: 'video' | 'image';
+  mediaType?: "video" | "image";
   videoUrls?: string[];
   videoUrl?: string; // Keep for backward compatibility
   imageUrls?: string[];
@@ -29,137 +29,205 @@ interface PostListProps {
   onPageChange: (page: number) => void;
 }
 
-const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onPageChange }) => {
-  const [postReplyCounts, setPostReplyCounts] = useState<Record<string, number>>({});
-  const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>({});
+const PostList: React.FC<PostListProps> = ({
+  posts,
+  currentPage,
+  totalPages,
+  onPageChange,
+}) => {
+  const [postReplyCounts, setPostReplyCounts] = useState<
+    Record<string, number>
+  >({});
+  const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>(
+    {},
+  );
   const { isAuthenticated } = useAuth();
 
   const handleReplyCountUpdate = (postId: string, count: number) => {
-    setPostReplyCounts(prev => ({ ...prev, [postId]: count }));
+    setPostReplyCounts((prev) => ({ ...prev, [postId]: count }));
   };
 
   const handleToggleReplyForm = (postId: string) => {
     if (!isAuthenticated) {
-      alert('댓글을 작성하려면 로그인이 필요합니다.');
+      alert("댓글을 작성하려면 로그인이 필요합니다.");
       return;
     }
-    setShowReplyForms(prev => ({ ...prev, [postId]: !prev[postId] }));
+    setShowReplyForms((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
   const handleReplySuccess = (postId: string, reply: PostType) => {
-    const currentCount = postReplyCounts[postId] || posts.find(p => p.id === postId)?.replyCount || 0;
+    const currentCount =
+      postReplyCounts[postId] ||
+      posts.find((p) => p.id === postId)?.replyCount ||
+      0;
     handleReplyCountUpdate(postId, currentCount + 1);
-    setShowReplyForms(prev => ({ ...prev, [postId]: false }));
+    setShowReplyForms((prev) => ({ ...prev, [postId]: false }));
   };
 
   return (
-    <div>
-      <div className="space-y-4">
-        {posts.length === 0 && <div>No posts yet.</div>}        {posts.map((post) => {
-          const currentReplyCount = postReplyCounts[post.id] ?? post.replyCount ?? 0;
+    <div data-oid="3b9e81w">
+      <div className="space-y-4" data-oid="-9-82_z">
+        {posts.length === 0 && <div data-oid="-9.mua2">No posts yet.</div>}{" "}
+        {posts.map((post) => {
+          const currentReplyCount =
+            postReplyCounts[post.id] ?? post.replyCount ?? 0;
           const showingReplyForm = showReplyForms[post.id] || false;
 
           return (
-          <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
-            <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0">
-                {/* Show video thumbnail if video exists */}
-                {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (() => {
-                  // Support both new videoUrls array and legacy videoUrl
-                  const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
-                  const match = firstVideoUrl?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-                  const videoId = match ? match[1] : null;
-                  if (videoId) {
-                    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                    const videoCount = post.videoUrls?.length || 1;
-                    return (
-                      <Link href={`/pages/posts/${post.id}`}>
-                        <div className="relative cursor-pointer">
-                          <img
-                            src={thumbnailUrl}
-                            alt="Video thumbnail"
-                            className="w-20 h-15 object-cover rounded"
-                            onError={(e) => {
-                              e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
-                            }}
-                          />
-                          {/* Play button overlay */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-red-600 text-white rounded-full p-1">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M8 5v14l11-7z"/>
-                              </svg>
+            <div
+              key={post.id}
+              className="border p-4 rounded flex flex-col space-y-4"
+              data-oid="9:9znti"
+            >
+              <div className="flex items-start space-x-4" data-oid="znsva14">
+                <div className="flex-shrink-0" data-oid="uzxozoi">
+                  {/* Show video thumbnail if video exists */}
+                  {((post.videoUrls && post.videoUrls.length > 0) ||
+                    post.videoUrl) &&
+                    (() => {
+                      // Support both new videoUrls array and legacy videoUrl
+                      const firstVideoUrl =
+                        post.videoUrls?.[0] || post.videoUrl;
+                      const match = firstVideoUrl?.match(
+                        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+                      );
+                      const videoId = match ? match[1] : null;
+                      if (videoId) {
+                        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                        const videoCount = post.videoUrls?.length || 1;
+                        return (
+                          <Link
+                            href={`/pages/posts/${post.id}`}
+                            data-oid="-luwmz."
+                          >
+                            <div
+                              className="relative cursor-pointer"
+                              data-oid="2v1k_yo"
+                            >
+                              <img
+                                src={thumbnailUrl}
+                                alt="Video thumbnail"
+                                className="w-20 h-15 object-cover rounded"
+                                onError={(e) => {
+                                  e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
+                                }}
+                                data-oid="l.0mr4a"
+                              />
+
+                              {/* Play button overlay */}
+                              <div
+                                className="absolute inset-0 flex items-center justify-center"
+                                data-oid="w62r2df"
+                              >
+                                <div
+                                  className="bg-red-600 text-white rounded-full p-1"
+                                  data-oid="v1w.l5h"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    data-oid="on.llpv"
+                                  >
+                                    <path
+                                      d="M8 5v14l11-7z"
+                                      data-oid="mro1i4z"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                              {/* Video count indicator for multiple videos */}
+                              {videoCount > 1 && (
+                                <div
+                                  className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded"
+                                  data-oid="ecjovul"
+                                >
+                                  {videoCount}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                          {/* Video count indicator for multiple videos */}
-                          {videoCount > 1 && (
-                            <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
-                              {videoCount}
-                            </div>
-                          )}
-                        </div>
+                          </Link>
+                        );
+                      }
+                      return null;
+                    })()}
+                  {/* Show image thumbnail only if no video exists */}
+                  {!(
+                    (post.videoUrls && post.videoUrls.length > 0) ||
+                    post.videoUrl
+                  ) &&
+                    post.thumbnailUrl && (
+                      <Link href={`/pages/posts/${post.id}`} data-oid="epramt8">
+                        <img
+                          src={post.thumbnailUrl}
+                          alt="Image thumbnail"
+                          className="w-20 h-15 object-cover rounded cursor-pointer"
+                          data-oid="4zpq7xr"
+                        />
                       </Link>
-                    );
-                  }
-                  return null;
-                })()}
-                {/* Show image thumbnail only if no video exists */}
-                {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && post.thumbnailUrl && (
-                  <Link href={`/pages/posts/${post.id}`}>
-                    <img
-                      src={post.thumbnailUrl}
-                      alt="Image thumbnail"
-                      className="w-20 h-15 object-cover rounded cursor-pointer"
-                    />
+                    )}
+                </div>
+                <div className="flex-grow" data-oid="nrsxh9s">
+                  <Link
+                    href={`/pages/posts/${post.id}`}
+                    className="text-xl font-bold mb-2 block flex items-center space-x-2"
+                    data-oid="zhxdr_w"
+                  >
+                    {post.title}
                   </Link>
-                )}
-              </div>
-              <div className="flex-grow">
-                <Link
-                  href={`/pages/posts/${post.id}`}
-                  className="text-xl font-bold mb-2 block flex items-center space-x-2"
+                  <p className="text-gray-700 mb-2" data-oid="diph-a5">
+                    {post.message}
+                  </p>
+                </div>
+                <div
+                  className="text-right text-sm text-gray-500 flex flex-col items-end"
+                  data-oid="x9ibw25"
                 >
-                  {post.title}
-                </Link>
-                <p className="text-gray-700 mb-2">{post.message}</p>
+                  <p data-oid="vqu:5d-">{post.username}</p>
+                  <p data-oid="_t.8j:k">
+                    {post.date} {post.time}
+                  </p>
+                </div>
               </div>
-              <div className="text-right text-sm text-gray-500 flex flex-col items-end">
-                <p>{post.username}</p>
-                <p>
-                  {post.date} {post.time}
-                </p>
-              </div>
-            </div>
 
-            {/* Reply functionality */}
-            <div className="border-t pt-3">
-              <ReplyButton
-                postId={post.id}
-                replyCount={currentReplyCount}
-                onToggleReply={() => handleToggleReplyForm(post.id)}
-                showingReplies={false}
-                showingReplyForm={showingReplyForm}
-              />
-
-              {showingReplyForm && (
-                <ReplyForm
-                  parentId={post.id}
-                  parentUsername={post.username}
-                  onReplySuccess={(reply) => handleReplySuccess(post.id, reply)}
-                  onCancel={() => handleToggleReplyForm(post.id)}
+              {/* Reply functionality */}
+              <div className="border-t pt-3" data-oid="82-kfph">
+                <ReplyButton
+                  postId={post.id}
+                  replyCount={currentReplyCount}
+                  onToggleReply={() => handleToggleReplyForm(post.id)}
+                  showingReplies={false}
+                  showingReplyForm={showingReplyForm}
+                  data-oid="fk96t67"
                 />
-              )}
 
-              <ReplyList
-                postId={post.id}
-                replyCount={currentReplyCount}
-                onReplyCountUpdate={(count) => handleReplyCountUpdate(post.id, count)}
-              />
+                {showingReplyForm && (
+                  <ReplyForm
+                    parentId={post.id}
+                    parentUsername={post.username}
+                    onReplySuccess={(reply) =>
+                      handleReplySuccess(post.id, reply)
+                    }
+                    onCancel={() => handleToggleReplyForm(post.id)}
+                    data-oid="gaff14q"
+                  />
+                )}
+
+                <ReplyList
+                  postId={post.id}
+                  replyCount={currentReplyCount}
+                  onReplyCountUpdate={(count) =>
+                    handleReplyCountUpdate(post.id, count)
+                  }
+                  data-oid="84ehpq2"
+                />
+              </div>
             </div>
-          </div>
-        )})}
+          );
+        })}
       </div>
-      <div className="flex justify-center mt-4 space-x-2">
+      <div className="flex justify-center mt-4 space-x-2" data-oid="nb7_bdt">
         {Array.from({ length: totalPages }, (_, index) => {
           const page = index + 1;
           const isSelected = page === currentPage;
@@ -167,11 +235,12 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
             <button
               key={page}
               className={cn(
-                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
-                'border border-yellow-500',
-                'transition-all duration-200'
+                "px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow",
+                "border border-yellow-500",
+                "transition-all duration-200",
               )}
               disabled
+              data-oid="51.e9_i"
             >
               {page}
             </button>
@@ -180,36 +249,41 @@ const PostList: React.FC<PostListProps> = ({ posts, currentPage, totalPages, onP
               key={page}
               onClick={() => onPageChange(page)}
               className={cn(
-                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
-                'transition-all duration-200'
+                "px-4 py-2 rounded text-gray-700 hover:bg-gray-100",
+                "transition-all duration-200",
               )}
+              data-oid="fl5gnwa"
             >
               {page}
             </button>
           );
         })}
       </div>
-      <div className="flex justify-between mt-4">        <div>
+      <div className="flex justify-between mt-4" data-oid="xj_b5pb">
+        {" "}
+        <div data-oid="cbu9l42">
           {currentPage > 1 && (
             <button
               onClick={() => onPageChange(currentPage - 1)}
               className={cn(
                 "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
               )}
+              data-oid="qk1:r56"
             >
               previous
             </button>
           )}
         </div>
-        <div>
+        <div data-oid="fkdwlbi">
           {currentPage < totalPages && (
             <button
               onClick={() => onPageChange(currentPage + 1)}
               className={cn(
                 "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
               )}
+              data-oid="g9d7zmy"
             >
               next
             </button>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { cn } from '@/utils/cn';
+import React, { useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { cn } from "@/utils/cn";
 
 interface FAQItem {
   question: string;
@@ -31,7 +31,7 @@ const FAQAccordion: React.FC<FAQProps> = ({ items }) => {
           <button
             className={cn(
               "w-full px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-              "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
+              "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
             )}
             onClick={() => toggleItem(index)}
             aria-expanded={openItems.has(index)}
@@ -49,9 +49,7 @@ const FAQAccordion: React.FC<FAQProps> = ({ items }) => {
           </button>
           {openItems.has(index) && (
             <div className="px-6 pb-4">
-              <div className="text-gray-700 leading-relaxed">
-                {item.answer}
-              </div>
+              <div className="text-gray-700 leading-relaxed">{item.answer}</div>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Edit,
   SimpleForm,
@@ -20,7 +20,7 @@ import {
   ShowButton,
   DeleteButton,
   NumberInput,
-} from 'react-admin';
+} from "react-admin";
 import {
   Box,
   Card,
@@ -43,7 +43,7 @@ import {
   Alert,
   Divider,
   IconButton,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Add,
   Remove,
@@ -53,20 +53,47 @@ import {
   YouTube,
   CloudQueue,
   OpenInNew,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 // Available cat tags
 const AVAILABLE_TAGS = [
-  '개똥이', '깡패', '꽃분이', '누렁이', '대장이', '땅콩이', '뚜껑이',
-  '마니', '메리', '블타', '삼숙이', '삼순이', '송이', '순돌이',
-  '아들조로', '아롱이', '알콩이', '엄마조로', '예쁜이', '예쁜이엄마',
-  '점돌이', '점순이', '정상노랑이', '찰리', '초롱이', '코순이',
-  '판다', '팔랑이', '팔봉이', '팔봉이친구', '하느재노랑이', '하얀코'
+  "개똥이",
+  "깡패",
+  "꽃분이",
+  "누렁이",
+  "대장이",
+  "땅콩이",
+  "뚜껑이",
+  "마니",
+  "메리",
+  "블타",
+  "삼숙이",
+  "삼순이",
+  "송이",
+  "순돌이",
+  "아들조로",
+  "아롱이",
+  "알콩이",
+  "엄마조로",
+  "예쁜이",
+  "예쁜이엄마",
+  "점돌이",
+  "점순이",
+  "정상노랑이",
+  "찰리",
+  "초롱이",
+  "코순이",
+  "판다",
+  "팔랑이",
+  "팔봉이",
+  "팔봉이친구",
+  "하느재노랑이",
+  "하얀코",
 ];
 
 // Helper function to format duration
 const formatDuration = (seconds: number): string => {
-  if (!seconds) return 'Unknown';
+  if (!seconds) return "Unknown";
 
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -74,10 +101,10 @@ const formatDuration = (seconds: number): string => {
   if (minutes > 60) {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return `${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${hours}:${remainingMinutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
   }
 
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
 
 // Custom toolbar with enhanced save options
@@ -87,7 +114,9 @@ const VideoEditToolbar = () => {
 
   const handleSaveAndContinue = () => {
     // This would save and redirect to the next untagged video
-    notify('Video saved. Redirecting to next untagged video...', { type: 'info' });
+    notify("Video saved. Redirecting to next untagged video...", {
+      type: "info",
+    });
   };
 
   return (
@@ -122,26 +151,28 @@ const VideoPreview = () => {
   if (!record) return null;
 
   const getVideoTypeIcon = () => {
-    if (record.videoType === 'youtube') {
+    if (record.videoType === "youtube") {
       return <YouTube color="error" sx={{ mr: 1 }} />;
     }
     return <CloudQueue color="primary" sx={{ mr: 1 }} />;
   };
 
   const getThumbnailUrl = () => {
-    if (record.videoType === 'youtube' && record.videoUrl) {
+    if (record.videoType === "youtube" && record.videoUrl) {
       // Extract YouTube video ID and create thumbnail URL
-      const videoId = record.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+      const videoId = record.videoUrl.match(
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+      );
       if (videoId && videoId[1]) {
         return `https://img.youtube.com/vi/${videoId[1]}/maxresdefault.jpg`;
       }
     }
-    return record.thumbnailUrl || '/images/tux_cat_favicon_1.png';
+    return record.thumbnailUrl || "/images/tux_cat_favicon_1.png";
   };
 
   const handlePlayVideo = () => {
-    if (record.videoType === 'youtube') {
-      window.open(record.videoUrl, '_blank');
+    if (record.videoType === "youtube") {
+      window.open(record.videoUrl, "_blank");
     } else {
       setIsPlaying(true);
     }
@@ -150,18 +181,16 @@ const VideoPreview = () => {
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">
-            Video Preview
-          </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Typography variant="h6">Video Preview</Typography>
           {getVideoTypeIcon()}
           <Typography variant="body2" color="textSecondary">
-            {record.videoType === 'youtube' ? 'YouTube Video' : 'Storage Video'}
+            {record.videoType === "youtube" ? "YouTube Video" : "Storage Video"}
           </Typography>
-          {record.videoType === 'youtube' && (
+          {record.videoType === "youtube" && (
             <IconButton
               size="small"
-              onClick={() => window.open(record.videoUrl, '_blank')}
+              onClick={() => window.open(record.videoUrl, "_blank")}
               sx={{ ml: 1 }}
               title="Open in YouTube"
             >
@@ -169,26 +198,25 @@ const VideoPreview = () => {
             </IconButton>
           )}
         </Box>
-
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
-          {isPlaying && record.videoType !== 'youtube' ? (
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          {isPlaying && record.videoType !== "youtube" ? (
             <video
               src={record.videoUrl}
               controls
               autoPlay
               style={{
-                maxWidth: '100%',
-                maxHeight: '400px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
+                maxWidth: "100%",
+                maxHeight: "400px",
+                borderRadius: "8px",
+                border: "1px solid #ddd",
               }}
             />
           ) : (
             <Box
               sx={{
-                position: 'relative',
-                display: 'inline-block',
-                cursor: 'pointer',
+                position: "relative",
+                display: "inline-block",
+                cursor: "pointer",
               }}
               onClick={handlePlayVideo}
             >
@@ -196,44 +224,46 @@ const VideoPreview = () => {
                 src={getThumbnailUrl()}
                 alt={record.fileName}
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '400px',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd',
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
                 }}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/tux_cat_favicon_1.png';
+                  (e.target as HTMLImageElement).src =
+                    "/images/tux_cat_favicon_1.png";
                 }}
               />
+
               <Box
                 sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                  borderRadius: '50%',
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  borderRadius: "50%",
                   p: 2,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.8)",
                   },
                 }}
               >
-                <PlayArrow sx={{ color: 'white', fontSize: '3rem' }} />
+                <PlayArrow sx={{ color: "white", fontSize: "3rem" }} />
               </Box>
               {/* Duration overlay */}
               {record.duration && (
                 <Box
                   sx={{
-                    position: 'absolute',
+                    position: "absolute",
                     bottom: 8,
                     right: 8,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    color: 'white',
+                    backgroundColor: "rgba(0, 0, 0, 0.8)",
+                    color: "white",
                     px: 1,
                     py: 0.5,
-                    borderRadius: '4px',
-                    fontSize: '14px',
+                    borderRadius: "4px",
+                    fontSize: "14px",
                   }}
                 >
                   {formatDuration(record.duration)}
@@ -241,7 +271,14 @@ const VideoPreview = () => {
               )}
             </Box>
           )}
-        </Box>        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+        </Box>{" "}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 2,
+          }}
+        >
           <Box>
             <Typography variant="body2" color="textSecondary">
               <strong>File Name:</strong> {record.fileName}
@@ -249,7 +286,8 @@ const VideoPreview = () => {
           </Box>
           <Box>
             <Typography variant="body2" color="textSecondary">
-              <strong>Upload Date:</strong> {new Date(record.uploadDate).toLocaleDateString()}
+              <strong>Upload Date:</strong>{" "}
+              {new Date(record.uploadDate).toLocaleDateString()}
             </Typography>
           </Box>
           {record.duration && (
@@ -262,14 +300,19 @@ const VideoPreview = () => {
           {record.fileSize && (
             <Box>
               <Typography variant="body2" color="textSecondary">
-                <strong>File Size:</strong> {(record.fileSize / 1024 / 1024).toFixed(2)} MB
+                <strong>File Size:</strong>{" "}
+                {(record.fileSize / 1024 / 1024).toFixed(2)} MB
               </Typography>
             </Box>
           )}
-          <Box sx={{ gridColumn: '1 / -1' }}>
+          <Box sx={{ gridColumn: "1 / -1" }}>
             <Typography variant="body2" color="textSecondary">
-              <strong>Video URL:</strong>{' '}
-              <a href={record.videoUrl} target="_blank" rel="noopener noreferrer">
+              <strong>Video URL:</strong>{" "}
+              <a
+                href={record.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {record.videoUrl}
               </a>
             </Typography>
@@ -283,17 +326,22 @@ const VideoPreview = () => {
 // Enhanced tag editing component for videos
 const VideoTagEditor = () => {
   const record = useRecordContext();
-  const [selectedTags, setSelectedTags] = useState<string[]>(record?.tags || []);
-  const [customTag, setCustomTag] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    record?.tags || [],
+  );
+  const [customTag, setCustomTag] = useState("");
   const [customTagDialogOpen, setCustomTagDialogOpen] = useState(false);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
   // Generate tag suggestions based on filename
   React.useEffect(() => {
     if (record?.fileName) {
-      const suggestions = AVAILABLE_TAGS.filter(tag =>
-        record.fileName.toLowerCase().includes(tag.toLowerCase()) ||
-        tag.toLowerCase().includes(record.fileName.toLowerCase().substring(0, 3))
+      const suggestions = AVAILABLE_TAGS.filter(
+        (tag) =>
+          record.fileName.toLowerCase().includes(tag.toLowerCase()) ||
+          tag
+            .toLowerCase()
+            .includes(record.fileName.toLowerCase().substring(0, 3)),
       );
       setTagSuggestions(suggestions.slice(0, 5)); // Limit to 5 suggestions
     }
@@ -307,7 +355,7 @@ const VideoTagEditor = () => {
     if (customTag.trim() && !selectedTags.includes(customTag.trim())) {
       const newTags = [...selectedTags, customTag.trim()];
       setSelectedTags(newTags);
-      setCustomTag('');
+      setCustomTag("");
       setCustomTagDialogOpen(false);
     }
   };
@@ -319,7 +367,7 @@ const VideoTagEditor = () => {
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+    setSelectedTags(selectedTags.filter((tag) => tag !== tagToRemove));
   };
 
   return (
@@ -335,7 +383,7 @@ const VideoTagEditor = () => {
             <Typography variant="subtitle2" color="textSecondary" gutterBottom>
               Suggestions based on filename:
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {tagSuggestions.map((suggestion) => (
                 <Chip
                   key={suggestion}
@@ -358,7 +406,7 @@ const VideoTagEditor = () => {
           <Typography variant="subtitle2" gutterBottom>
             Current Tags:
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
             {selectedTags.map((tag) => (
               <Chip
                 key={tag}
@@ -405,7 +453,7 @@ const VideoTagEditor = () => {
         </Box>
 
         {/* Custom Tag Button */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
             startIcon={<Add />}
@@ -436,7 +484,7 @@ const VideoTagEditor = () => {
               value={customTag}
               onChange={(e) => setCustomTag(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   handleAddCustomTag();
                 }
               }}
@@ -453,11 +501,7 @@ const VideoTagEditor = () => {
         </Dialog>
 
         {/* Hidden input for form submission */}
-        <input
-          type="hidden"
-          name="tags"
-          value={JSON.stringify(selectedTags)}
-        />
+        <input type="hidden" name="tags" value={JSON.stringify(selectedTags)} />
       </CardContent>
     </Card>
   );
@@ -466,10 +510,7 @@ const VideoTagEditor = () => {
 // Main VideoEdit component
 const VideoEdit = () => {
   return (
-    <Edit
-      actions={<VideoEditActions />}
-      title="Edit Video Tags"
-    >
+    <Edit actions={<VideoEditActions />} title="Edit Video Tags">
       <Box sx={{ p: 2 }}>
         {/* Video Preview */}
         <VideoPreview />
@@ -491,9 +532,10 @@ const VideoEdit = () => {
             label="Description"
             multiline
             rows={3}
-            fullWidth          />
+            fullWidth
+          />
 
-            {/* Video Type Selection */}
+          {/* Video Type Selection */}
           <TextInput
             source="videoType"
             label="Video Type"
@@ -531,12 +573,7 @@ const VideoEdit = () => {
             fullWidth
           />
 
-          <TextInput
-            source="videoUrl"
-            label="Video URL"
-            disabled
-            fullWidth
-          />
+          <TextInput source="videoUrl" label="Video URL" disabled fullWidth />
         </SimpleForm>
       </Box>
     </Edit>

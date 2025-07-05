@@ -1,14 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { cn } from '@/utils/cn';
+import Link from "next/link";
+import { useState } from "react";
+import { cn } from "@/utils/cn";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <>      {/* Desktop navigation */}
+    <>
+      {" "}
+      {/* Desktop navigation */}
       <nav className="hidden md:flex items-center space-x-6">
         <Link
           href="/pages/about"
@@ -21,7 +23,8 @@ export default function Navigation() {
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           동참
-        </Link>        <Link
+        </Link>{" "}
+        <Link
           href="/pages/photo-album"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
@@ -46,14 +49,13 @@ export default function Navigation() {
           FAQ
         </Link>
       </nav>
-
       {/* Mobile hamburger button */}
       <div className="md:hidden">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
-            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+            "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
+            "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
           )}
           aria-expanded="false"
         >
@@ -95,7 +97,9 @@ export default function Navigation() {
 
         {/* Mobile navigation menu */}
         {isMobileMenuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">            <div className="py-1">
+          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+            {" "}
+            <div className="py-1">
               <Link
                 href="/pages/about"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -109,7 +113,8 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
-              </Link>              <Link
+              </Link>{" "}
+              <Link
                 href="/pages/photo-album"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -121,14 +126,14 @@ export default function Navigation() {
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                동영상첩
+                동영상
               </Link>
               <Link
                 href="/pages/butler_stream"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                집사 스트림
+                집사게시판
               </Link>
               <Link
                 href="/pages/faq"

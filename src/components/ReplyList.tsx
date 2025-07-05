@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Post } from '@/types';
-import { getPostService } from '@/services';
-import ReplyItem from './ReplyItem';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from "react";
+import { Post } from "@/types";
+import { getPostService } from "@/services";
+import ReplyItem from "./ReplyItem";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 interface ReplyListProps {
   postId: string;
@@ -12,7 +12,11 @@ interface ReplyListProps {
   onReplyCountUpdate: (count: number) => void;
 }
 
-export default function ReplyList({ postId, replyCount = 0, onReplyCountUpdate }: ReplyListProps) {
+export default function ReplyList({
+  postId,
+  replyCount = 0,
+  onReplyCountUpdate,
+}: ReplyListProps) {
   const [replies, setReplies] = useState<Post[]>([]);
   const [showReplies, setShowReplies] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,14 +26,14 @@ export default function ReplyList({ postId, replyCount = 0, onReplyCountUpdate }
   const loadReplies = async () => {
     if (replies.length > 0) return; // Already loaded
 
-    console.log('ReplyList: Loading replies for postId:', postId);
+    console.log("ReplyList: Loading replies for postId:", postId);
     setLoading(true);
     try {
       const fetchedReplies = await postService.getReplies(postId);
-      console.log('ReplyList: Fetched replies:', fetchedReplies);
+      console.log("ReplyList: Fetched replies:", fetchedReplies);
       setReplies(fetchedReplies);
     } catch (error) {
-      console.error('Error loading replies:', error);
+      console.error("Error loading replies:", error);
     } finally {
       setLoading(false);
     }
@@ -43,7 +47,7 @@ export default function ReplyList({ postId, replyCount = 0, onReplyCountUpdate }
   };
 
   const handleReplySuccess = (newReply: Post) => {
-    setReplies(prev => [...prev, newReply]);
+    setReplies((prev) => [...prev, newReply]);
     onReplyCountUpdate(replyCount + 1);
   };
 
@@ -65,11 +69,10 @@ export default function ReplyList({ postId, replyCount = 0, onReplyCountUpdate }
         )}
         <span>
           {loading
-            ? '로딩 중...'
+            ? "로딩 중..."
             : showReplies
-              ? '댓글 숨기기'
-              : `댓글 ${replyCount}개 보기`
-          }
+              ? "댓글 숨기기"
+              : `댓글 ${replyCount}개 보기`}
         </span>
       </button>
 
@@ -84,9 +87,7 @@ export default function ReplyList({ postId, replyCount = 0, onReplyCountUpdate }
           ))}
 
           {replies.length === 0 && !loading && (
-            <div className="text-gray-500 text-sm py-4">
-              댓글이 없습니다.
-            </div>
+            <div className="text-gray-500 text-sm py-4">댓글이 없습니다.</div>
           )}
         </div>
       )}

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Post } from '@/types';
-import ReplyButton from './ReplyButton';
-import ReplyForm from './ReplyForm';
+import { useState } from "react";
+import { Post } from "@/types";
+import ReplyButton from "./ReplyButton";
+import ReplyForm from "./ReplyForm";
 
 interface ReplyItemProps {
   reply: Post;
@@ -11,7 +11,11 @@ interface ReplyItemProps {
   maxDepth?: number;
 }
 
-export default function ReplyItem({ reply, onReplySuccess, maxDepth = 3 }: ReplyItemProps) {
+export default function ReplyItem({
+  reply,
+  onReplySuccess,
+  maxDepth = 3,
+}: ReplyItemProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replies, setReplies] = useState<Post[]>([]);
 
@@ -19,13 +23,15 @@ export default function ReplyItem({ reply, onReplySuccess, maxDepth = 3 }: Reply
   const indentLevel = Math.min(reply.depth || 0, 3); // Max visual indent
 
   const handleReplySuccess = (newReply: Post) => {
-    setReplies(prev => [...prev, newReply]);
+    setReplies((prev) => [...prev, newReply]);
     setShowReplyForm(false);
     onReplySuccess(newReply);
   };
 
   return (
-    <div className={`mt-3 ${indentLevel > 0 ? `ml-${indentLevel * 4} border-l-2 border-gray-200 pl-4` : ''}`}>
+    <div
+      className={`mt-3 ${indentLevel > 0 ? `ml-${indentLevel * 4} border-l-2 border-gray-200 pl-4` : ""}`}
+    >
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         {/* Reply content */}
         <div className="flex justify-between items-start">
@@ -35,7 +41,9 @@ export default function ReplyItem({ reply, onReplySuccess, maxDepth = 3 }: Reply
               <div className="flex items-center space-x-2">
                 <span className="font-medium">{reply.username}</span>
                 <span>•</span>
-                <span>{reply.date} {reply.time}</span>
+                <span>
+                  {reply.date} {reply.time}
+                </span>
                 {reply.depth && reply.depth > 0 && (
                   <>
                     <span>•</span>
