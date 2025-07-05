@@ -28,26 +28,11 @@ const NewPostForm = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
 
-  // Don't render if not authenticated
-  if (loading) {
-    return <div className="p-4">로딩 중...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-        <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-          로그인이 필요합니다
-        </h2>
-        <p className="text-yellow-700">
-          새 글을 작성하려면 로그인이 필요합니다. 관리자에게 문의하여 계정을
-          요청하세요.
-        </p>
-      </div>
-    );
-  }
   // Fetch user's YouTube playlists on component mount
   useEffect(() => {
+    // Only fetch playlists if user is authenticated
+    if (!isAuthenticated || loading) return;
+
     const fetchPlaylists = async () => {
       console.log("Starting to fetch playlists...");
       setLoadingPlaylists(true);
@@ -76,7 +61,26 @@ const NewPostForm = () => {
     };
 
     fetchPlaylists();
-  }, []);
+  }, [isAuthenticated, loading]);
+
+  // Don't render if not authenticated
+  if (loading) {
+    return <div className="p-4">로딩 중...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+        <h2 className="text-lg font-semibold text-yellow-800 mb-2">
+          로그인이 필요합니다
+        </h2>
+        <p className="text-yellow-700">
+          새 글을 작성하려면 로그인이 필요합니다. 관리자에게 문의하여 계정을
+          요청하세요.
+        </p>
+      </div>
+    );
+  }
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
