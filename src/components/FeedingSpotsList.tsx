@@ -10,6 +10,36 @@ const FeedingSpotsList = () => {
 
   const feedingSpotsService = getFeedingSpotsService();
 
+  // Calculate color based on hours ago (0 hours = green, 60+ hours = red)
+  const getColorForHours = (hoursAgo: number | null): { className: string; style?: React.CSSProperties } => {
+    if (hoursAgo === null) return { className: 'text-gray-500' };
+
+    if (hoursAgo >= 60) return { className: 'text-red-600' };
+    if (hoursAgo === 0) return { className: 'text-green-600' };
+
+    // Calculate gradient from green to red (0-60 hours)
+    const ratio = hoursAgo / 60;
+    const red = Math.round(255 * ratio);
+    const green = Math.round(255 * (1 - ratio));
+
+    return {
+      className: '',
+      style: { color: `rgb(${red}, ${green}, 0)` }
+    };
+  };
+
+  // Format hours ago text
+  const formatHoursAgo = (hoursAgo: number | null): string => {
+    if (hoursAgo === null) return '';
+    if (hoursAgo === 0) return '(방금 전)';
+    if (hoursAgo === 1) return '(1시간 전)';
+    
+    const baseText = `(${hoursAgo}시간 전)`;
+    const urgentMarker = hoursAgo >= 48 ? ' !' : '';
+    
+    return baseText + urgentMarker;
+  };
+
   useEffect(() => {
     const fetchFeedingSpots = async () => {
       try {
@@ -70,19 +100,35 @@ const FeedingSpotsList = () => {
               </tr>
             </thead>
             <tbody>
-              {feedingSpots.map((spot) => (
-                <tr key={spot.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-sm text-gray-900 border-b">
-                    {spot.name}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-700 border-b">
-                    {spot.last_attended || '정보 없음'}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-700 border-b">
-                    {spot.last_attended_by || '정보 없음'}
-                  </td>
-                </tr>
-              ))}
+              {feedingSpots.map((spot) => {
+                const colorConfig = getColorForHours(spot.hoursAgo);
+                return (
+                  <tr key={spot.id} className="hover:bg-gray-50">
+                    <td
+                      className={`px-4 py-2 text-sm border-b font-medium ${colorConfig.className}`}
+                      style={colorConfig.style}
+                    >
+                      {spot.name}
+                    </td>
+                    <td
+                      className={`px-4 py-2 text-sm border-b ${colorConfig.className}`}
+                      style={colorConfig.style}
+                    >
+                      <span>
+                        {spot.last_attended || '정보 없음'}
+                        {spot.hoursAgo !== null && (
+                          <span className="ml-2 text-xs opacity-75">
+                            {formatHoursAgo(spot.hoursAgo)}
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-700 border-b">
+                      {spot.last_attended_by || '정보 없음'}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
