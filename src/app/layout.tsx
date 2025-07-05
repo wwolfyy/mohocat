@@ -45,11 +45,11 @@ export default function RootLayout({
               <div className="flex items-center space-x-4" data-oid="bvc1q.c">
                 <Link
                   href="/"
-                  className="group hover:text-blue-600 transition-colors duration-300 animate-slide-in-left"
+                  className="group hover:text-blue-600 transition-colors duration-300"
                   data-oid="mry3xtu"
                 >
                   <div className="flex items-center" data-oid="htl-mls">
-                    <div className="relative" data-oid="pix5iyn">
+                    <div className="relative animate-slide-in-left" data-oid="pix5iyn">
                       <Image
                         // src="/images/tux_cat_favicon_1.png"
                         // src="/images/tux_cat_favicon_2.png"

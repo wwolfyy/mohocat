@@ -93,7 +93,7 @@ body {
   .animate-slide-in-right {
     animation: slide-in-right 0.8s ease-out 0.2s forwards;
     opacity: 0;
-    transform: translateX(100px) rotate(720deg);
+    transform: translateX(100px);
   }
 
   /* Initial hidden states for slide-in animations */
@@ -165,11 +165,11 @@ body {
 
 @keyframes slide-in-right {
   from {
-    transform: translateX(100px) rotate(720deg);
+    transform: translateX(100px);
     opacity: 0;
   }
   to {
-    transform: translateX(0) rotate(0deg);
+    transform: translateX(0);
     opacity: 1;
   }
 }
