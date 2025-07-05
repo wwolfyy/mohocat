@@ -33,10 +33,10 @@ const FeedingSpotsList = () => {
     if (hoursAgo === null) return '';
     if (hoursAgo === 0) return '(방금 전)';
     if (hoursAgo === 1) return '(1시간 전)';
-    
+
     const baseText = `(${hoursAgo}시간 전)`;
     const urgentMarker = hoursAgo >= 48 ? ' !' : '';
-    
+
     return baseText + urgentMarker;
   };
 

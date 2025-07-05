@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getPostService } from "@/services";
+import { getPostService, getFeedingSpotsService, FeedingSpot } from "@/services";
 import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,8 +11,12 @@ interface Playlist {
 }
 
 const NewPostForm = () => {
+  // Define the default title constant
+  const DEFAULT_TITLE = "급식소 챙기고 갑니다";
+
   // Service references
   const postService = getPostService();
+  const feedingSpotsService = getFeedingSpotsService();
   const router = useRouter();
   const { user, isAuthenticated, loading } = useAuth();
 
@@ -27,13 +31,18 @@ const NewPostForm = () => {
   const [selectedPlaylist, setSelectedPlaylist] = useState("");
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  // Feeding spots states
+  const [feedingSpots, setFeedingSpots] = useState<FeedingSpot[]>([]);
+  const [checkedSpots, setCheckedSpots] = useState<Set<number>>(new Set());
+  const [loadingFeedingSpots, setLoadingFeedingSpots] = useState(false);
 
-  // Fetch user's YouTube playlists on component mount
+  // Fetch user's YouTube playlists and feeding spots on component mount
   useEffect(() => {
-    // Only fetch playlists if user is authenticated
+    // Only fetch if user is authenticated
     if (!isAuthenticated || loading) return;
 
-    const fetchPlaylists = async () => {
+    const fetchData = async () => {
+      // Fetch playlists
       console.log("Starting to fetch playlists...");
       setLoadingPlaylists(true);
       try {
@@ -58,10 +67,23 @@ const NewPostForm = () => {
       } finally {
         setLoadingPlaylists(false);
       }
+
+      // Fetch feeding spots
+      console.log("Starting to fetch feeding spots...");
+      setLoadingFeedingSpots(true);
+      try {
+        const spots = await feedingSpotsService.getAllFeedingSpots();
+        setFeedingSpots(spots);
+        console.log("Feeding spots loaded:", spots);
+      } catch (error) {
+        console.error("Error fetching feeding spots:", error);
+      } finally {
+        setLoadingFeedingSpots(false);
+      }
     };
 
-    fetchPlaylists();
-  }, [isAuthenticated, loading]);
+    fetchData();
+  }, [isAuthenticated, loading, feedingSpotsService]);
 
   // Don't render if not authenticated
   if (loading) {
@@ -94,6 +116,18 @@ const NewPostForm = () => {
     if (event.target.files) {
       setImageFiles(Array.from(event.target.files));
     }
+  };
+
+  const handleFeedingSpotToggle = (spotId: number) => {
+    setCheckedSpots((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(spotId)) {
+        newSet.delete(spotId);
+      } else {
+        newSet.add(spotId);
+      }
+      return newSet;
+    });
   };
 
   const uploadImagesWithSignedUrls = async (
@@ -130,7 +164,9 @@ const NewPostForm = () => {
   const uploadVideoToYouTube = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("video", file);
-    formData.append("title", title);
+    // Use the default title if no title is provided
+    const finalTitle = title.trim() || DEFAULT_TITLE;
+    formData.append("title", finalTitle);
     formData.append("description", message || "Uploaded via Mountain Cats app");
 
     // Add enhanced metadata
@@ -174,9 +210,11 @@ const NewPostForm = () => {
       files.map(async (file, index) => {
         const formData = new FormData();
         formData.append("video", file);
+        // Use the default title if no title is provided
+        const finalTitle = title.trim() || DEFAULT_TITLE;
         formData.append(
           "title",
-          `${title} ${files.length > 1 ? `(Part ${index + 1})` : ""}`,
+          `${finalTitle} ${files.length > 1 ? `(Part ${index + 1})` : ""}`,
         );
         formData.append(
           "description",
@@ -271,8 +309,11 @@ const NewPostForm = () => {
       const thumbnailUrl =
         videoThumb || (imageUrls.length > 0 ? imageUrls[0] : "");
 
+      // Use the default title if no title is provided
+      const finalTitle = title.trim() || DEFAULT_TITLE;
+
       const post = {
-        title,
+        title: finalTitle,
         username: user?.email || "unknown",
         date: now.toLocaleDateString(),
         time: now.toLocaleTimeString(),
@@ -293,10 +334,24 @@ const NewPostForm = () => {
       // Use service layer instead of direct Firebase access
       await postService.createPost(post);
 
+      // Update feeding spots if any were checked
+      if (checkedSpots.size > 0) {
+        try {
+          const checkedSpotIds = Array.from(checkedSpots);
+          const userDisplayName = user?.displayName || user?.email || "unknown";
+          await feedingSpotsService.updateFeedingSpots(checkedSpotIds, userDisplayName);
+          console.log(`Updated ${checkedSpotIds.length} feeding spots for user: ${userDisplayName}`);
+        } catch (error) {
+          console.error('Error updating feeding spots:', error);
+          // Don't fail the post creation if feeding spots update fails
+        }
+      }
+
       setVideoFiles([]);
       setImageFiles([]);
       setTitle("");
       setMessage("");
+      setCheckedSpots(new Set()); // Clear checked spots
       alert("Post created successfully!");
 
       // Redirect to the butler_stream page
@@ -318,10 +373,57 @@ const NewPostForm = () => {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
+          placeholder={DEFAULT_TITLE}
           className="border p-2 rounded w-full"
         />
-      </div>{" "}
+      </div>
+
+      {/* Feeding Spots Section */}
+      <div className="border-t pt-4 mt-4">
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+          아래 급식소를 챙겼어요!
+        </h3>
+        {loadingFeedingSpots ? (
+          <div className="text-center py-4">
+            <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-sm text-gray-600">급식소 정보를 불러오는 중...</p>
+          </div>
+        ) : feedingSpots.length === 0 ? (
+          <p className="text-sm text-gray-600 py-4">급식소 정보가 없습니다.</p>
+        ) : (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {feedingSpots.map((spot) => (
+                <label
+                  key={spot.id}
+                  className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 rounded p-2 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checkedSpots.has(spot.id)}
+                    onChange={() => handleFeedingSpotToggle(spot.id)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-900 flex-1">
+                    {spot.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {checkedSpots.size > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm text-green-600 font-medium">
+                  선택된 급식소: {checkedSpots.size}개
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Visual divider between feeding spots and media upload */}
+      <div className="border-t border-gray-200 my-6"></div>
+
       <div>
         <label className="block font-semibold">동영상 업로드:</label>
         <input

@@ -1,4 +1,4 @@
-import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, Timestamp, doc, updateDoc, where } from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface FeedingSpot {
@@ -12,6 +12,7 @@ export interface FeedingSpot {
 
 export interface IFeedingSpotsService {
   getAllFeedingSpots(): Promise<FeedingSpot[]>;
+  updateFeedingSpots(spotIds: number[], attendedBy: string): Promise<void>;
 }
 
 export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
@@ -113,6 +114,36 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
       });
     } catch (error) {
       console.error('Error fetching feeding spots:', error);
+      throw error;
+    }
+  }
+
+  async updateFeedingSpots(spotIds: number[], attendedBy: string): Promise<void> {
+    if (spotIds.length === 0) return;
+
+    try {
+      const now = Timestamp.now();
+      const updatePromises = spotIds.map(async (spotId) => {
+        // Find the document by id field
+        const feedingSpotsRef = collection(db, this.COLLECTION_NAME);
+        const q = query(feedingSpotsRef, where('id', '==', spotId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const docRef = querySnapshot.docs[0].ref;
+          await updateDoc(docRef, {
+            last_attended: now,
+            last_attended_by: attendedBy
+          });
+        } else {
+          console.warn(`Feeding spot with id ${spotId} not found`);
+        }
+      });
+
+      await Promise.all(updatePromises);
+      console.log(`Successfully updated ${spotIds.length} feeding spots`);
+    } catch (error) {
+      console.error('Error updating feeding spots:', error);
       throw error;
     }
   }
