@@ -8,6 +8,7 @@ A Next.js application for tracking and managing mountain cats with multi-tenant 
 The platform has been successfully future-proofed for multi-tenant deployment:
 - **Configuration System Foundation**: ✅ Complete
 - **Service Layer Abstraction**: ✅ Complete
+- **Static Data Cloud Storage Migration**: ✅ Complete
 
 **📊 See [MULTI_TENANT_AUDIT_REPORT.md](./MULTI_TENANT_AUDIT_REPORT.md) for comprehensive implementation verification.**
 
@@ -15,6 +16,20 @@ The platform has been successfully future-proofed for multi-tenant deployment:
 - [Platform Architecture](./PLATFORM_ARCHITECTURE.md) - Multi-tenant platform overview
 - [Configuration Implementation](./CONFIGURATION_IMPLEMENTATION.md) - Config system details
 - [Service Layer Summary](./SERVICE_LAYER_SUMMARY.md) - Service abstraction details
+- [Static Data Migration](./scripts/migration/README_cloud_storage_migration.md) - Cloud Storage migration details
+
+## 🚀 **Major Features**
+
+### **Static Data Performance**
+- **Cloud Storage Integration**: All static data (cats, points, feeding spots) served from Google Cloud Storage
+- **Build-Time Optimization**: Data exported to Cloud Storage during build process
+- **Admin Management**: One-click data refresh through admin interface
+- **CDN Caching**: Improved performance with Firebase Storage CDN
+
+### **Multi-Tenant Ready**
+- **Configuration-Driven**: Environment-specific Firebase projects
+- **Service Layer**: Abstracted data access for easy deployment variations
+- **Scalable Architecture**: Ready for multiple instances and tenants
 
 ## Getting Started
 
@@ -59,8 +74,28 @@ The project is set to deploy the app the Firebase hosting.
 
 To deploy the app:
 ```bash
-npm run build
+npm run build  # This will export static data to Cloud Storage before building
 firebase login
 firebase use mountaincats-staging # .firebaserc is configured appropriately for different branches
 firebase deploy --only hosting
 ```
+
+## 📊 **Data Management**
+
+### **Static Data**
+All static data is now served from Google Cloud Storage for optimal performance:
+- **Cats**: `/static-data/cats-static-data.json`
+- **Points**: `/static-data/points-static-data.json`
+- **Feeding Spots**: `/static-data/feeding-spots-static-data.json`
+
+### **Admin Operations**
+Use the admin interface at `/admin` to:
+- View comprehensive statistics
+- Refresh static data from Firestore to Cloud Storage
+- Manage posts collections
+- Monitor system health
+
+### **Data Update Workflow**
+1. Update data in Firestore through admin interface
+2. Use admin panel buttons to refresh static data in Cloud Storage
+3. Data is automatically served to all users with CDN caching

@@ -4,12 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/maintenance/fetch-static-assets.js && next build",
+    "build": "node scripts/migration/export_all_to_cloud_storage.js && node scripts/maintenance/fetch-static-assets.js && next build",
     "start": "next start",
     "lint": "next lint",
     "script:add-updated-field": "node scripts/migration/add_updated_field.js",
     "script:add-updated-field-admin": "node scripts/migration/add_updated_field_admin.js",
-    "script:remove-thumbnailUrl": "node scripts/remove_thumbnailUrl_field.js"
+    "script:remove-thumbnailUrl": "node scripts/remove_thumbnailUrl_field.js",
+    "update:static-data": "node scripts/migration/update_all_static_data.js",
+    "update:cats": "node scripts/migration/export_cats_to_static.js",
+    "update:points": "node scripts/migration/export_points_to_static.js",
+    "update:feeding-spots": "node scripts/migration/export_feeding_spots_to_static.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

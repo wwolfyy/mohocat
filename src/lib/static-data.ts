@@ -1,49 +1,68 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { getFirebaseConfig } from '@/utils/config';
 import type { Point, Cat } from '@/types';
-import catsData from './cats-static-data.json'; // Import the local JSON data
 
-// Get Firebase configuration from the centralized config system
+// Get Firebase configuration to determine the storage bucket
 const firebaseConfig = getFirebaseConfig();
 
-if (!firebaseConfig || !firebaseConfig.apiKey) {
+if (!firebaseConfig || !firebaseConfig.projectId) {
   throw new Error('Firebase configuration is missing or invalid. Please check your environment variables.');
 }
 
-// Build-time Firebase initialization (server-side only) for points
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
+// Cloud Storage base URL for static data (public access)
+const CLOUD_STORAGE_BASE = 'https://firebasestorage.googleapis.com/v0/b/mountaincats-61543.firebasestorage.app/o/static-data%2F';
 
-export async function getAllPoints(): Promise<Point[]> {
+// Cache for static data to avoid repeated fetches
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+async function fetchFromCloudStorage<T>(filename: string): Promise<T> {
+  const cacheKey = filename;
+  const now = Date.now();
+
+  // Check cache first
+  const cached = cache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return cached.data;
+  }
+
   try {
-    const pointsCollection = collection(db, 'points');
-    const pointsSnapshot = await getDocs(pointsCollection);
-    return pointsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Point[];
+    const encodedFilename = encodeURIComponent(filename);
+    const response = await fetch(`${CLOUD_STORAGE_BASE}${encodedFilename}?alt=media`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${filename}: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Cache the result
+    cache.set(cacheKey, { data, timestamp: now });
+
+    return data;
   } catch (error) {
-    console.error('Error fetching points:', error);
-    return [];
+    console.error(`Error fetching ${filename} from Cloud Storage:`, error);
+    throw error;
   }
 }
 
-// Updated getAllCats to use the imported JSON data
-export function getAllCats(): Cat[] {
-  // The imported catsData is already an array of Cat objects
-  // Ensure the structure of cats-static-data.json matches the Cat type,
-  // especially the thumbnailUrl.
-  return catsData as Cat[];
+export async function getAllPoints(): Promise<Point[]> {
+  return fetchFromCloudStorage<Point[]>('points-static-data.json');
+}
+
+export async function getAllCats(): Promise<Cat[]> {
+  return fetchFromCloudStorage<Cat[]>('cats-static-data.json');
+}
+
+export async function getFeedingSpotNames(): Promise<string[]> {
+  return fetchFromCloudStorage<string[]>('feeding-spots-static-data.json');
 }
 
 export async function getCatsByPointId(pointId: string, allCatsInput?: Cat[]): Promise<{
   current: Cat[];
   former: Cat[];
 }> {
-  const catsToFilter = allCatsInput || getAllCats(); // Use imported data if no specific list provided
-  const current = catsToFilter.filter(cat => cat.dwelling === pointId);
-  const former = catsToFilter.filter(cat => cat.prev_dwelling === pointId);
-  
+  const catsToFilter = allCatsInput || await getAllCats();
+  const current = catsToFilter.filter((cat: Cat) => cat.dwelling === pointId);
+  const former = catsToFilter.filter((cat: Cat) => cat.prev_dwelling === pointId);
+
   return { current, former };
 }

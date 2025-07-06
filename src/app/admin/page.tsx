@@ -6,7 +6,6 @@ import {
   getVideoService,
   getCatService,
   getContactService,
-  getPointService,
   getPostService,
 } from "@/services";
 
@@ -34,7 +33,6 @@ export default function AdminDashboard() {
   const videoService = getVideoService();
   const catService = getCatService();
   const contactService = getContactService();
-  const pointService = getPointService();
   const postService = getPostService();
 
   const [stats, setStats] = useState<AdminStats>({
@@ -160,11 +158,14 @@ export default function AdminDashboard() {
           totalContacts = 0;
         }
 
-        // Get points count (fallback to 0 if service doesn't support getAll)
+        // Get points count from static API
         let totalPoints = 0;
         try {
-          const allPoints = await pointService.getAllPoints();
-          totalPoints = allPoints.length;
+          const pointsResponse = await fetch('/api/points');
+          if (pointsResponse.ok) {
+            const { points } = await pointsResponse.json();
+            totalPoints = points.length;
+          }
         } catch (error) {
           console.warn("Points count not available:", error);
           totalPoints = 0;
@@ -219,6 +220,46 @@ export default function AdminDashboard() {
 
     fetchStats();
   }, []);
+
+  // Static data update functions
+  const updateStaticData = async (dataType: 'cats' | 'points' | 'feeding-spots' | 'all') => {
+    try {
+      setDataUpdaterLoading(true);
+      setDataUpdaterMessage(`Updating ${dataType} data...`);
+
+      const response = await fetch('/api/admin/update-static-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dataType }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Update failed');
+      }
+
+      setDataUpdaterMessage(`${result.message} ✅`);
+
+      // Refresh stats after successful update
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Static data update failed:', error);
+      setDataUpdaterMessage(`Update failed: ${error.message} ❌`);
+    } finally {
+      setDataUpdaterLoading(false);
+    }
+  };
+
+  const updateCatsData = () => updateStaticData('cats');
+  const updatePointsData = () => updateStaticData('points');
+  const updateFeedingSpotsData = () => updateStaticData('feeding-spots');
+  const updateAllStaticData = () => updateStaticData('all');
 
   return (
     <div
@@ -846,6 +887,167 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Static Data Management */}
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "1.5rem",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          marginBottom: "2rem",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "1.1rem",
+            fontWeight: "bold",
+            color: "#111827",
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          🔄 Static Data Management
+        </h3>
+        <p
+          style={{
+            color: "#6b7280",
+            fontSize: "0.9rem",
+            marginBottom: "1.5rem",
+            lineHeight: "1.4",
+          }}
+        >
+          Update static data files from Firebase collections. This improves performance by serving data from JSON files instead of making database queries.
+        </p>
+
+        {/* Status Message */}
+        {dataUpdaterMessage && (
+          <div
+            style={{
+              backgroundColor: dataUpdaterMessage.includes('❌') ? "#fef2f2" : "#f0fdf4",
+              border: dataUpdaterMessage.includes('❌') ? "1px solid #fecaca" : "1px solid #bbf7d0",
+              borderRadius: "6px",
+              padding: "0.75rem",
+              marginBottom: "1rem",
+              color: dataUpdaterMessage.includes('❌') ? "#dc2626" : "#16a34a",
+              fontSize: "0.9rem",
+            }}
+          >
+            {dataUpdaterMessage}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <button
+            onClick={updateCatsData}
+            disabled={dataUpdaterLoading}
+            style={{
+              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#3b82f6",
+              color: dataUpdaterLoading ? "#6b7280" : "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "0.75rem 1rem",
+              fontSize: "0.9rem",
+              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
+              transition: "background-color 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+            }}
+          >
+            🐱 Update Cats Data
+          </button>
+
+          <button
+            onClick={updatePointsData}
+            disabled={dataUpdaterLoading}
+            style={{
+              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#10b981",
+              color: dataUpdaterLoading ? "#6b7280" : "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "0.75rem 1rem",
+              fontSize: "0.9rem",
+              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
+              transition: "background-color 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+            }}
+          >
+            📍 Update Points Data
+          </button>
+
+          <button
+            onClick={updateFeedingSpotsData}
+            disabled={dataUpdaterLoading}
+            style={{
+              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#f59e0b",
+              color: dataUpdaterLoading ? "#6b7280" : "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "0.75rem 1rem",
+              fontSize: "0.9rem",
+              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
+              transition: "background-color 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+            }}
+          >
+            🍽️ Update Feeding Spots
+          </button>
+
+          <button
+            onClick={updateAllStaticData}
+            disabled={dataUpdaterLoading}
+            style={{
+              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#8b5cf6",
+              color: dataUpdaterLoading ? "#6b7280" : "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "0.75rem 1rem",
+              fontSize: "0.9rem",
+              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
+              transition: "background-color 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              gridColumn: "span 2",
+            }}
+          >
+            {dataUpdaterLoading ? "🔄 Updating..." : "🚀 Update All Data"}
+          </button>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#f9fafb",
+            border: "1px solid #e5e7eb",
+            borderRadius: "6px",
+            padding: "0.75rem",
+            fontSize: "0.8rem",
+            color: "#374151",
+          }}
+        >
+          <strong>Note:</strong> Static data updates may take a few moments to complete. The page will refresh automatically after successful updates.
+        </div>
+      </div>
 
       {/* Main Actions */}
       <div
