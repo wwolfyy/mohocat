@@ -21,6 +21,11 @@ if (!getApps().length) {
   }
 }
 
+export interface BasicFeedingSpot {
+  id: number;
+  name: string;
+}
+
 export interface FeedingSpot {
   id: number;
   name: string;
@@ -120,12 +125,12 @@ export class AdminFeedingSpotsService {
 
       snapshot.forEach((doc) => {
         const data = doc.data();
-        const lastAttendedDate = this.parseTimestamp(data.last_attended_at);
+        const lastAttendedDate = this.parseTimestamp(data.last_attended);
 
         feedingSpots.push({
           id: data.id,
           name: data.name,
-          last_attended: this.formatTimestamp(data.last_attended_at),
+          last_attended: this.formatTimestamp(data.last_attended),
           last_attended_by: data.last_attended_by || '',
           hoursAgo: this.calculateHoursAgo(lastAttendedDate),
           lastAttendedDate: lastAttendedDate,
@@ -135,6 +140,28 @@ export class AdminFeedingSpotsService {
       return feedingSpots;
     } catch (error) {
       console.error('Error fetching feeding spots:', error);
+      throw error;
+    }
+  }
+
+  async getBasicFeedingSpots(): Promise<BasicFeedingSpot[]> {
+    try {
+      const collectionRef = this.db.collection(this.COLLECTION_NAME);
+      const snapshot = await collectionRef.orderBy('id').get();
+
+      const basicFeedingSpots: BasicFeedingSpot[] = [];
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        basicFeedingSpots.push({
+          id: data.id,
+          name: data.name,
+        });
+      });
+
+      return basicFeedingSpots;
+    } catch (error) {
+      console.error('Error fetching basic feeding spots:', error);
       throw error;
     }
   }

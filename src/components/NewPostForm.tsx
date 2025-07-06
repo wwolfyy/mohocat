@@ -25,6 +25,22 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
   // Define the default title constant
   const DEFAULT_TITLE = "급식소 챙기고 갑니다";
 
+  // Helper function to format date for datetime-local input in Korea timezone
+  const formatKoreaTimeForInput = (date: Date): string => {
+    // Convert to Korea time (UTC+9)
+    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const koreaTime = new Date(utcTime + (9 * 3600000));
+
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input
+    const year = koreaTime.getFullYear();
+    const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
+    const day = String(koreaTime.getDate()).padStart(2, '0');
+    const hours = String(koreaTime.getHours()).padStart(2, '0');
+    const minutes = String(koreaTime.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   // Generate dynamic title based on visit time
   const generateDynamicTitle = (visitTime: string) => {
     if (!visitTime) return DEFAULT_TITLE;
@@ -62,10 +78,10 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
 
   // Fetch user's YouTube playlists and feeding spots on component mount
   useEffect(() => {
-    // Prepopulate feeding visit time with current time (rounded to current hour)
+    // Prepopulate feeding visit time with current time in UTC+9 (Korea time, rounded to current hour)
     const now = new Date();
-    now.setMinutes(0, 0, 0); // Round to the hour
-    const timeString = now.toISOString().slice(0, 16); // Format for datetime-local input
+    now.setMinutes(0, 0, 0); // Round to the hour first
+    const timeString = formatKoreaTimeForInput(now);
     setFeedingVisitTime(timeString);
 
     // Set initial title with current date
@@ -377,8 +393,9 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
         try {
           const checkedSpotIds = Array.from(checkedSpots);
           const userDisplayName = user?.displayName || user?.email || "unknown";
-          await feedingSpotsService.updateFeedingSpots(checkedSpotIds, userDisplayName);
-          console.log(`Updated ${checkedSpotIds.length} feeding spots for user: ${userDisplayName}`);
+          // Pass the feeding visit time from the form
+          await feedingSpotsService.updateFeedingSpots(checkedSpotIds, userDisplayName, feedingVisitTime);
+          console.log(`Updated ${checkedSpotIds.length} feeding spots for user: ${userDisplayName} at time: ${feedingVisitTime}`);
         } catch (error) {
           console.error('Error updating feeding spots:', error);
           // Don't fail the post creation if feeding spots update fails
@@ -390,10 +407,10 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
       setTitle("");
       setMessage("");
       setCheckedSpots(new Set()); // Clear checked spots
-      // Reset feeding visit time to current time
+      // Reset feeding visit time to current time in UTC+9 (Korea time)
       const resetTime = new Date();
       resetTime.setMinutes(0, 0, 0);
-      const resetTimeString = resetTime.toISOString().slice(0, 16);
+      const resetTimeString = formatKoreaTimeForInput(resetTime);
       setFeedingVisitTime(resetTimeString);
       // Reset title with new current date
       setTitle(generateDynamicTitle(resetTimeString));

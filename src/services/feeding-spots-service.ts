@@ -12,7 +12,7 @@ export interface FeedingSpot {
 
 export interface IFeedingSpotsService {
   getAllFeedingSpots(): Promise<FeedingSpot[]>;
-  updateFeedingSpots(spotIds: number[], attendedBy: string): Promise<void>;
+  updateFeedingSpots(spotIds: number[], attendedBy: string, attendedAt?: string): Promise<void>;
 }
 
 export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
@@ -118,11 +118,13 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
     }
   }
 
-  async updateFeedingSpots(spotIds: number[], attendedBy: string): Promise<void> {
+  async updateFeedingSpots(spotIds: number[], attendedBy: string, attendedAt?: string): Promise<void> {
     if (spotIds.length === 0) return;
 
     try {
-      const now = Timestamp.now();
+      // Use provided timestamp or current time
+      const timestamp = attendedAt ? Timestamp.fromDate(new Date(attendedAt)) : Timestamp.now();
+
       const updatePromises = spotIds.map(async (spotId) => {
         // Find the document by id field
         const feedingSpotsRef = collection(db, this.COLLECTION_NAME);
@@ -132,7 +134,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
         if (!querySnapshot.empty) {
           const docRef = querySnapshot.docs[0].ref;
           await updateDoc(docRef, {
-            last_attended: now,
+            last_attended: timestamp,
             last_attended_by: attendedBy
           });
         } else {
@@ -141,7 +143,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
       });
 
       await Promise.all(updatePromises);
-      console.log(`Successfully updated ${spotIds.length} feeding spots`);
+      console.log(`Successfully updated ${spotIds.length} feeding spots with timestamp: ${attendedAt || 'current time'}`);
     } catch (error) {
       console.error('Error updating feeding spots:', error);
       throw error;
