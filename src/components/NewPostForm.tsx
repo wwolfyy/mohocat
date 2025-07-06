@@ -14,6 +14,20 @@ const NewPostForm = () => {
   // Define the default title constant
   const DEFAULT_TITLE = "급식소 챙기고 갑니다";
 
+  // Generate dynamic title based on visit time
+  const generateDynamicTitle = (visitTime: string) => {
+    if (!visitTime) return DEFAULT_TITLE;
+
+    const date = new Date(visitTime);
+    const formattedDate = date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\s/g, '').replace(/\.$/, ''); // Remove spaces and trailing period
+
+    return `${DEFAULT_TITLE} (${formattedDate})`;
+  };
+
   // Service references
   const postService = getPostService();
   const feedingSpotsService = getFeedingSpotsService();
@@ -35,8 +49,27 @@ const NewPostForm = () => {
   const [feedingSpots, setFeedingSpots] = useState<FeedingSpot[]>([]);
   const [checkedSpots, setCheckedSpots] = useState<Set<number>>(new Set());
   const [loadingFeedingSpots, setLoadingFeedingSpots] = useState(false);
+  const [feedingVisitTime, setFeedingVisitTime] = useState("");
 
   // Fetch user's YouTube playlists and feeding spots on component mount
+  useEffect(() => {
+    // Prepopulate feeding visit time with current time (rounded to current hour)
+    const now = new Date();
+    now.setMinutes(0, 0, 0); // Round to the hour
+    const timeString = now.toISOString().slice(0, 16); // Format for datetime-local input
+    setFeedingVisitTime(timeString);
+
+    // Set initial title with current date
+    setTitle(generateDynamicTitle(timeString));
+  }, []);
+
+  // Update title when visit time changes
+  useEffect(() => {
+    if (feedingVisitTime) {
+      setTitle(generateDynamicTitle(feedingVisitTime));
+    }
+  }, [feedingVisitTime]);
+
   useEffect(() => {
     // Only fetch if user is authenticated
     if (!isAuthenticated || loading) return;
@@ -130,6 +163,15 @@ const NewPostForm = () => {
     });
   };
 
+  const handleSelectAllFeedingSpots = () => {
+    const allSpotIds = new Set(feedingSpots.map(spot => spot.id));
+    setCheckedSpots(allSpotIds);
+  };
+
+  const handleDeselectAllFeedingSpots = () => {
+    setCheckedSpots(new Set());
+  };
+
   const uploadImagesWithSignedUrls = async (
     files: File[],
   ): Promise<string[]> => {
@@ -165,7 +207,7 @@ const NewPostForm = () => {
     const formData = new FormData();
     formData.append("video", file);
     // Use the default title if no title is provided
-    const finalTitle = title.trim() || DEFAULT_TITLE;
+    const finalTitle = title.trim() || generateDynamicTitle(feedingVisitTime);
     formData.append("title", finalTitle);
     formData.append("description", message || "Uploaded via Mountain Cats app");
 
@@ -211,7 +253,7 @@ const NewPostForm = () => {
         const formData = new FormData();
         formData.append("video", file);
         // Use the default title if no title is provided
-        const finalTitle = title.trim() || DEFAULT_TITLE;
+        const finalTitle = title.trim() || generateDynamicTitle(feedingVisitTime);
         formData.append(
           "title",
           `${finalTitle} ${files.length > 1 ? `(Part ${index + 1})` : ""}`,
@@ -310,7 +352,7 @@ const NewPostForm = () => {
         videoThumb || (imageUrls.length > 0 ? imageUrls[0] : "");
 
       // Use the default title if no title is provided
-      const finalTitle = title.trim() || DEFAULT_TITLE;
+      const finalTitle = title.trim() || generateDynamicTitle(feedingVisitTime);
 
       const post = {
         title: finalTitle,
@@ -352,6 +394,13 @@ const NewPostForm = () => {
       setTitle("");
       setMessage("");
       setCheckedSpots(new Set()); // Clear checked spots
+      // Reset feeding visit time to current time
+      const resetTime = new Date();
+      resetTime.setMinutes(0, 0, 0);
+      const resetTimeString = resetTime.toISOString().slice(0, 16);
+      setFeedingVisitTime(resetTimeString);
+      // Reset title with new current date
+      setTitle(generateDynamicTitle(resetTimeString));
       alert("Post created successfully!");
 
       // Redirect to the butler_stream page
@@ -373,16 +422,36 @@ const NewPostForm = () => {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={DEFAULT_TITLE}
+          placeholder={generateDynamicTitle(feedingVisitTime)}
           className="border p-2 rounded w-full"
         />
       </div>
 
       {/* Feeding Spots Section */}
       <div className="border-t pt-4 mt-4">
-        <h3 className="text-lg font-semibold mb-3 text-gray-800">
-          아래 급식소를 챙겼어요!
-        </h3>
+        <div className="flex items-center gap-4 mb-3">
+          <h3 className="text-lg font-semibold text-gray-800">
+            아래 급식소를 챙겼어요!
+          </h3>
+          {!loadingFeedingSpots && feedingSpots.length > 0 && (
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={handleSelectAllFeedingSpots}
+                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+              >
+                모두 선택
+              </button>
+              <button
+                type="button"
+                onClick={handleDeselectAllFeedingSpots}
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              >
+                선택 해제
+              </button>
+            </div>
+          )}
+        </div>
         {loadingFeedingSpots ? (
           <div className="text-center py-4">
             <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
@@ -414,6 +483,23 @@ const NewPostForm = () => {
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <p className="text-sm text-green-600 font-medium">
                   선택된 급식소: {checkedSpots.size}개
+                </p>
+              </div>
+            )}
+            {checkedSpots.size > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  급식소 방문 시간:
+                </label>
+                <input
+                  type="datetime-local"
+                  value={feedingVisitTime}
+                  onChange={(e) => setFeedingVisitTime(e.target.value)}
+                  className="border p-2 rounded w-full max-w-xs"
+                  step="3600"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  급식소를 방문한 날짜와 시간을 선택하세요 (시간 단위)
                 </p>
               </div>
             )}
