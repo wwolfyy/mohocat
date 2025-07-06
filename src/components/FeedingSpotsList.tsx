@@ -44,6 +44,7 @@ const FeedingSpotsList = () => {
     const fetchFeedingSpots = async () => {
       try {
         setLoading(true);
+        setError(null);
         const spots = await feedingSpotsService.getAllFeedingSpots();
         setFeedingSpots(spots);
       } catch (err) {

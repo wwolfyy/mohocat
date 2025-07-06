@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
-import { getPostService, getFeedingSpotsService, FeedingSpot } from "@/services";
+import { getPostService, getFeedingSpotsService } from "@/services";
 import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +12,16 @@ interface Playlist {
   description?: string;
 }
 
-const NewPostForm = () => {
+interface BasicFeedingSpot {
+  id: number;
+  name: string;
+}
+
+interface NewPostFormProps {
+  feedingSpots: BasicFeedingSpot[];
+}
+
+const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
   // Define the default title constant
   const DEFAULT_TITLE = "급식소 챙기고 갑니다";
 
@@ -46,9 +57,7 @@ const NewPostForm = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   // Feeding spots states
-  const [feedingSpots, setFeedingSpots] = useState<FeedingSpot[]>([]);
   const [checkedSpots, setCheckedSpots] = useState<Set<number>>(new Set());
-  const [loadingFeedingSpots, setLoadingFeedingSpots] = useState(false);
   const [feedingVisitTime, setFeedingVisitTime] = useState("");
 
   // Fetch user's YouTube playlists and feeding spots on component mount
@@ -100,23 +109,10 @@ const NewPostForm = () => {
       } finally {
         setLoadingPlaylists(false);
       }
-
-      // Fetch feeding spots
-      console.log("Starting to fetch feeding spots...");
-      setLoadingFeedingSpots(true);
-      try {
-        const spots = await feedingSpotsService.getAllFeedingSpots();
-        setFeedingSpots(spots);
-        console.log("Feeding spots loaded:", spots);
-      } catch (error) {
-        console.error("Error fetching feeding spots:", error);
-      } finally {
-        setLoadingFeedingSpots(false);
-      }
     };
 
     fetchData();
-  }, [isAuthenticated, loading, feedingSpotsService]);
+  }, [isAuthenticated, loading]);
 
   // Don't render if not authenticated
   if (loading) {
@@ -433,7 +429,7 @@ const NewPostForm = () => {
           <h3 className="text-lg font-semibold text-gray-800">
             아래 급식소를 챙겼어요!
           </h3>
-          {!loadingFeedingSpots && feedingSpots.length > 0 && (
+          {feedingSpots.length > 0 && (
             <div className="flex space-x-2">
               <button
                 type="button"
@@ -452,12 +448,7 @@ const NewPostForm = () => {
             </div>
           )}
         </div>
-        {loadingFeedingSpots ? (
-          <div className="text-center py-4">
-            <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-sm text-gray-600">급식소 정보를 불러오는 중...</p>
-          </div>
-        ) : feedingSpots.length === 0 ? (
+        {feedingSpots.length === 0 ? (
           <p className="text-sm text-gray-600 py-4">급식소 정보가 없습니다.</p>
         ) : (
           <div className="bg-gray-50 rounded-lg p-4">
