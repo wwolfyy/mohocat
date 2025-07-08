@@ -299,20 +299,6 @@ export default function AdminDashboard() {
             data-oid="93q-7rm"
           >
             ⚠️ {error}
-            {error.includes("Failed to load statistics") && (
-              <div style={{ marginTop: "0.5rem" }} data-oid="46d9a1j">
-                <a
-                  href="/admin/seed-data"
-                  style={{
-                    color: "#dc2626",
-                    textDecoration: "underline",
-                  }}
-                  data-oid="l:vx14b"
-                >
-                  Try seeding the database with sample data
-                </a>
-              </div>
-            )}
           </div>
         )}
 
@@ -334,18 +320,7 @@ export default function AdminDashboard() {
               }}
               data-oid="b-d56vv"
             >
-              📊 No data found.
-              <a
-                href="/admin/seed-data"
-                style={{
-                  color: "#92400e",
-                  textDecoration: "underline",
-                  marginLeft: "0.5rem",
-                }}
-                data-oid="5s3vxou"
-              >
-                Seed database with sample data
-              </a>
+              📊 No data found. Please ensure your database is properly configured.
             </div>
           )}
       </div>
