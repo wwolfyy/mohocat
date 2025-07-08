@@ -277,11 +277,9 @@ export default function AdminDashboard() {
           }}
           data-oid="7z5gd_x"
         >
-          🐱 Mountain Cats Admin Dashboard
+          🐱 산냥이집냥이 관리자 페이지
         </h1>
-        <p style={{ color: "#6b7280", fontSize: "1.1rem" }} data-oid="hq4hxls">
-          Manage cat images, videos, and tagging
-        </p>
+
 
         {/* Service Configuration Status */}
         {/* Removed service layer configuration box */}
@@ -356,7 +354,7 @@ export default function AdminDashboard() {
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
             data-oid="w_aicfh"
           >
-            Images
+            사진
           </h3>
           <p
             style={{
@@ -404,7 +402,7 @@ export default function AdminDashboard() {
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
             data-oid="k83rzh3"
           >
-            Videos
+            동영상
           </h3>
           <p
             style={{
@@ -452,7 +450,7 @@ export default function AdminDashboard() {
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
             data-oid="a:g.734"
           >
-            Cat Profiles
+            고양이들
           </h3>
           <p
             style={{
@@ -488,7 +486,7 @@ export default function AdminDashboard() {
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
             data-oid="3ct38kf"
           >
-            Contacts
+            회원
           </h3>
           <p
             style={{
@@ -524,7 +522,7 @@ export default function AdminDashboard() {
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
             data-oid="7ee3-5p"
           >
-            Points
+            지도상 거주지
           </h3>
           <p
             style={{
@@ -583,7 +581,7 @@ export default function AdminDashboard() {
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
             data-oid="x1.9aam"
           >
-            Posts
+            게시물
           </h3>
           <div
             style={{
@@ -1064,11 +1062,8 @@ export default function AdminDashboard() {
             }}
             data-oid="3durko6"
           >
-            Tag Images
+            사진 관리
           </h3>
-          <p style={{ color: "#6b7280", margin: 0 }} data-oid=".d8:ni:">
-            Add tags and metadata to cat images
-          </p>
         </a>
 
         <a
@@ -1101,11 +1096,8 @@ export default function AdminDashboard() {
             }}
             data-oid="yndubm1"
           >
-            Tag Videos
+            동영상 관리
           </h3>
-          <p style={{ color: "#6b7280", margin: 0 }} data-oid="g:srz6h">
-            Add tags and metadata to cat videos
-          </p>
         </a>
 
         <a
@@ -1138,11 +1130,8 @@ export default function AdminDashboard() {
             }}
             data-oid="catscms_title"
           >
-            Manage Cats
+            고양이 관리
           </h3>
-          <p style={{ color: "#6b7280", margin: 0 }} data-oid="catscms_desc">
-            Add, edit, and manage cat information directly
-          </p>
         </a>
       </div>
     </div>

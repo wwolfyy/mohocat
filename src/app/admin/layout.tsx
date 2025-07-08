@@ -86,7 +86,7 @@ export default function AdminLayout({
                   }}
                   data-oid="l1y0wkd"
                 >
-                  Dashboard
+                  관리자 대쉬보드
                 </a>
                 <a
                   href="/admin/tag-images"
@@ -99,7 +99,7 @@ export default function AdminLayout({
                   }}
                   data-oid="251u7o9"
                 >
-                  Tag Images
+                  사진 관리
                 </a>
                 <a
                   href="/admin/tag-videos"
@@ -112,7 +112,7 @@ export default function AdminLayout({
                   }}
                   data-oid="zh478e2"
                 >
-                  Tag Videos
+                  동영상 관리
                 </a>
               </nav>{" "}
             </div>
