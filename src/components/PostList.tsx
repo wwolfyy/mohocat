@@ -7,6 +7,80 @@ import ReplyButton from "./ReplyButton";
 import ReplyForm from "./ReplyForm";
 import ReplyList from "./ReplyList";
 
+// Utility function to convert any timestamp format to Korea timezone display
+const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
+  try {
+    let targetDate: Date | null = null;
+
+    // Try multiple parsing strategies to handle different timestamp formats
+
+    // Strategy 1: If we have separate date and time fields (preferred format)
+    if (date && time) {
+      // Try parsing as UTC first
+      const utcDateTime = new Date(`${date}T${time}Z`);
+      if (!isNaN(utcDateTime.getTime())) {
+        targetDate = utcDateTime;
+      } else {
+        // Try parsing without Z (local time)
+        const localDateTime = new Date(`${date}T${time}`);
+        if (!isNaN(localDateTime.getTime())) {
+          targetDate = localDateTime;
+        }
+      }
+    }
+
+    // Strategy 2: If we have a createdAt field, use that
+    if (!targetDate && createdAt) {
+      if (createdAt instanceof Date) {
+        targetDate = createdAt;
+      } else if (typeof createdAt === 'string' || typeof createdAt === 'number') {
+        const parsedDate = new Date(createdAt);
+        if (!isNaN(parsedDate.getTime())) {
+          targetDate = parsedDate;
+        }
+      } else if (createdAt.toDate && typeof createdAt.toDate === 'function') {
+        // Firestore timestamp
+        targetDate = createdAt.toDate();
+      }
+    }
+
+    // Strategy 3: Try parsing the combined date + time string as-is
+    if (!targetDate && date && time) {
+      const combinedDateTime = new Date(`${date} ${time}`);
+      if (!isNaN(combinedDateTime.getTime())) {
+        targetDate = combinedDateTime;
+      }
+    }
+
+    // If we still don't have a valid date, return original format
+    if (!targetDate) {
+      return `${date} ${time}`;
+    }
+
+    // Convert to Korea timezone if it's in UTC, or assume it's already in Korea time
+    let koreaTime: Date;
+    if (targetDate.getTimezoneOffset) {
+      // For dates that might be in UTC, convert to Korea time
+      koreaTime = new Date(targetDate.getTime() + (9 * 60 * 60 * 1000));
+    } else {
+      koreaTime = targetDate;
+    }
+
+    // Format for display in exact format: "YYYY-MM-DD HH:MM:SS"
+    const year = koreaTime.getFullYear();
+    const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
+    const day = String(koreaTime.getDate()).padStart(2, '0');
+    const hours = String(koreaTime.getHours()).padStart(2, '0');
+    const minutes = String(koreaTime.getMinutes()).padStart(2, '0');
+    const seconds = String(koreaTime.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  } catch (error) {
+    // Fallback: ensure consistent format even on error
+    return `${date || 'Unknown'} ${time || 'Time'}`;
+  }
+};
+
 interface Post {
   id: string;
   title: string;
@@ -19,6 +93,7 @@ interface Post {
   username: string;
   date: string;
   time: string;
+  createdAt?: any; // Can be Date, string, number, or Firestore timestamp
   replyCount?: number;
 }
 
@@ -186,7 +261,7 @@ const PostList: React.FC<PostListProps> = ({
                 >
                   <p data-oid="vqu:5d-">{post.username}</p>
                   <p data-oid="_t.8j:k">
-                    {post.date} {post.time}
+                    {formatKoreaDateTime(post.date, post.time, post.createdAt)}
                   </p>
                 </div>
               </div>

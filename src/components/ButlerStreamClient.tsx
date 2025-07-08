@@ -46,21 +46,27 @@ const ButlerStreamClient = () => {
           let dateA, dateB;
 
           if (a.date && a.time) {
-            dateA = new Date(`${a.date} ${a.time}`);
+            // Parse as UTC time for consistent sorting
+            const dateTimeA = `${a.date}T${a.time}Z`;
+            dateA = new Date(dateTimeA);
           } else if (a.createdAt) {
-            dateA = new Date(a.createdAt);
+            dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
           } else {
-            dateA = new Date();
+            dateA = new Date(0); // Very old date for fallback
           }
 
           if (b.date && b.time) {
-            dateB = new Date(`${b.date} ${b.time}`);
+            // Parse as UTC time for consistent sorting
+            const dateTimeB = `${b.date}T${b.time}Z`;
+            dateB = new Date(dateTimeB);
           } else if (b.createdAt) {
-            dateB = new Date(b.createdAt);
+            dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
           } else {
-            dateB = new Date();
+            dateB = new Date(0); // Very old date for fallback
           }
 
+          // Sort newest first (reverse chronological order)
+          // Larger timestamp (newer date) should come first
           return dateB.getTime() - dateA.getTime();
         });
 

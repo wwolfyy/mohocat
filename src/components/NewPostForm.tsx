@@ -369,8 +369,8 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
       const post = {
         title: finalTitle,
         username: user?.email || "unknown",
-        date: now.toLocaleDateString(),
-        time: now.toLocaleTimeString(),
+        date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
+        time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
         thumbnailUrl,
         mediaType,
         videoUrls,

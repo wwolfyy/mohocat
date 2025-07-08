@@ -38,10 +38,11 @@ export class FirebasePostService implements IPostService {
       const filteredPosts = allPosts.filter((post: any) => post.isReply !== true);
       console.log('FirebasePostService: Posts after filtering out replies:', filteredPosts);
 
-      // Sort in the application layer
+      // Sort in the application layer - newest posts first (reverse chronological)
       const sortedPosts = filteredPosts.sort((a: any, b: any) => {
-        const aTime = a.createdAt || new Date();
-        const bTime = b.createdAt || new Date();
+        const aTime = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt || 0);
+        const bTime = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt || 0);
+        // Newer posts first: larger timestamp (bTime) minus smaller timestamp (aTime)
         return bTime.getTime() - aTime.getTime();
       });
 
