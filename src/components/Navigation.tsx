@@ -40,7 +40,13 @@ export default function Navigation() {
           href="/pages/butler_stream"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
-          집사게시판
+          급식현황
+        </Link>
+        <Link
+          href="/pages/butler_talk"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          집사톡
         </Link>
         <Link
           href="/pages/faq"
@@ -133,7 +139,14 @@ export default function Navigation() {
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                집사게시판
+                급식현황
+              </Link>
+              <Link
+                href="/pages/butler_talk"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                집사톡
               </Link>
               <Link
                 href="/pages/faq"

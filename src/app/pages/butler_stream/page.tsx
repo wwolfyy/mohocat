@@ -10,7 +10,7 @@ const ButlerStream = async () => {
         className="text-center text-2xl font-bold mb-4 mx-auto"
         data-oid=".pbn:qr"
       >
-        집사게시판
+        급식현황
       </h1>
 
       <FeedingSpotsList />
