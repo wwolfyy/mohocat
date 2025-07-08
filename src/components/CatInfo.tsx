@@ -2,25 +2,9 @@
 
 import { useState } from "react";
 import { cn } from "@/utils/cn";
+import { Cat } from "@/types";
 import PhotoAlbum from "./PhotoAlbum";
 import VideoAlbum from "./VideoAlbum";
-
-interface Cat {
-  id: string;
-  name: string;
-  thumbnailUrl: string;
-  description?: string;
-  date_of_birth?: string;
-  sex?: string;
-  dwelling?: string;
-  status?: string;
-  character?: string;
-  parents?: string;
-  offspring?: string;
-  sickness?: string;
-  isNeutered?: boolean;
-  note?: string;
-}
 
 interface CatInfoProps {
   cat: Cat;
@@ -66,7 +50,15 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.date_of_birth && (
           <div className="flex items-center">
             <span className="w-24 font-semibold text-gray-700">출생연도:</span>
-            <span className="text-gray-600">{cat.date_of_birth}</span>
+            <span className="text-gray-600">
+              {cat.date_of_birth}
+              {cat.dob_certainty && (
+                <span className="ml-2 text-sm text-gray-500">(
+                  {cat.dob_certainty === "certain" ? "확실함" : "불확실"}
+                  )
+                </span>
+              )}
+            </span>
           </div>
         )}
         {cat.sex && (
@@ -122,7 +114,9 @@ export default function CatInfo({ cat }: CatInfoProps) {
         </div>
         <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">중성화 여부:</span>
-          <span className="text-gray-600">{cat.isNeutered ? "O" : "X"}</span>
+          <span className="text-gray-600">
+            {cat.isNeutered === true ? "O" : cat.isNeutered === false ? "X" : "?"}
+          </span>
         </div>
         {cat.note && (
           <div className="mt-4">

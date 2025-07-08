@@ -20,6 +20,13 @@ The platform has been successfully future-proofed for multi-tenant deployment:
 
 ## 🚀 **Major Features**
 
+### **Cat Management System (CMS)** 🐱
+- **Direct Management**: Manage cat information directly in the application
+- **No Google Sheets Required**: Eliminates the need for external spreadsheet management
+- **Real-time Updates**: Changes are immediately reflected in the application
+- **Comprehensive Interface**: Add, edit, delete, and search cats with ease
+- **Data Validation**: Built-in validation ensures data integrity
+
 ### **Static Data Performance**
 - **Cloud Storage Integration**: All static data (cats, points, feeding spots) served from Google Cloud Storage
 - **Build-Time Optimization**: Data exported to Cloud Storage during build process
@@ -82,6 +89,13 @@ firebase deploy --only hosting
 
 ## 📊 **Data Management**
 
+### **Cat Management System (CMS)**
+The platform now includes a comprehensive CMS for managing cats:
+- **Access**: Navigate to `/admin/cats` from the admin dashboard
+- **Features**: Add, edit, delete, and search cats
+- **Real-time**: Changes are immediately saved to Firestore
+- **Documentation**: See [CAT_CMS_GUIDE.md](./docs/guides/CAT_CMS_GUIDE.md) for detailed usage instructions
+
 ### **Static Data**
 All static data is now served from Google Cloud Storage for optimal performance:
 - **Cats**: `/static-data/cats-static-data.json`
@@ -90,6 +104,8 @@ All static data is now served from Google Cloud Storage for optimal performance:
 
 ### **Admin Operations**
 Use the admin interface at `/admin` to:
+- **Manage Cats**: Direct cat information management through the CMS
+- **View Statistics**: Comprehensive statistics dashboard
 - View comprehensive statistics
 - Refresh static data from Firestore to Cloud Storage
 - Manage posts collections

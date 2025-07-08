@@ -14,11 +14,16 @@ export interface Cat {
   thumbnailUrl: string;
   dwelling?: string;
   prev_dwelling?: string;
-  date_of_birth?: string;
+  date_of_birth?: number;
+  dob_certainty?: string;
   sex?: string;
   status?: string;
   character?: string;
   sickness?: string;
+  parents?: string;
+  offspring?: string;
+  isNeutered?: boolean;
+  note?: string;
 }
 
 // Post and Reply interfaces

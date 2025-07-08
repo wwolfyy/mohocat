@@ -1132,6 +1132,43 @@ export default function AdminDashboard() {
             Add tags and metadata to cat videos
           </p>
         </a>
+
+        <a
+          href="/admin/cats"
+          style={{
+            display: "block",
+            backgroundColor: "white",
+            padding: "2rem",
+            borderRadius: "8px",
+            border: "1px solid #e7eb",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            textDecoration: "none",
+            color: "inherit",
+            transition: "transform 0.2s, box-shadow 0.2s",
+          }}
+          data-oid="catscms"
+        >
+          <div
+            style={{ fontSize: "3rem", marginBottom: "1rem" }}
+            data-oid="catscms_icon"
+          >
+            🐱
+          </div>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "bold",
+              color: "#111827",
+              marginBottom: "0.5rem",
+            }}
+            data-oid="catscms_title"
+          >
+            Manage Cats
+          </h3>
+          <p style={{ color: "#6b7280", margin: 0 }} data-oid="catscms_desc">
+            Add, edit, and manage cat information directly
+          </p>
+        </a>
       </div>
     </div>
   );
