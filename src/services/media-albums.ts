@@ -250,10 +250,15 @@ export const updateVideoTags = async (videoId: string, tags: string[]): Promise<
 // Add new image record to Firestore
 export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<string | null> => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTIONS.CAT_IMAGES), {
-      ...imageData,
-      uploadDate: new Date()
-    });
+    // Filter out undefined values to avoid Firestore errors
+    const cleanedData = Object.fromEntries(
+      Object.entries({
+        ...imageData,
+        uploadDate: new Date()
+      }).filter(([_, value]) => value !== undefined)
+    );
+
+    const docRef = await addDoc(collection(db, COLLECTIONS.CAT_IMAGES), cleanedData);
     return docRef.id;
   } catch (error) {
     console.error('Error adding image record:', error);
@@ -264,10 +269,15 @@ export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<s
 // Add new video record to Firestore
 export const addVideoRecord = async (videoData: Omit<CatVideo, 'id'>): Promise<string | null> => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTIONS.CAT_VIDEOS), {
-      ...videoData,
-      uploadDate: new Date()
-    });
+    // Filter out undefined values to avoid Firestore errors
+    const cleanedData = Object.fromEntries(
+      Object.entries({
+        ...videoData,
+        uploadDate: new Date()
+      }).filter(([_, value]) => value !== undefined)
+    );
+
+    const docRef = await addDoc(collection(db, COLLECTIONS.CAT_VIDEOS), cleanedData);
     return docRef.id;
   } catch (error) {
     console.error('Error adding video record:', error);
@@ -381,9 +391,97 @@ export const batchDeleteImages = async (imageIds: string[]): Promise<boolean> =>
 
 export const syncImages = async (): Promise<boolean> => {
   try {
-    // This is a placeholder for sync operations that might involve
-    // reconciling with external sources, cleaning up orphaned records, etc.
-    console.log('Syncing images...');
+    console.log('Starting image sync with Firebase Storage...');
+
+    // Import Firebase Storage
+    const { getStorage, ref, listAll, getDownloadURL } = await import('firebase/storage');
+    const { storage } = await import('./firebase');
+
+    // Folders to scan for images in Firebase Storage - only uploads/ and images/
+    const SCAN_FOLDERS = ['uploads/', 'images/'];
+    const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'];
+
+    let totalFound = 0;
+    let totalImported = 0;
+
+    for (const folder of SCAN_FOLDERS) {
+      try {
+        console.log(`Scanning storage folder: ${folder}`);
+        const folderRef = ref(storage, folder);
+
+        let listResult;
+        try {
+          listResult = await listAll(folderRef);
+          console.log(`Successfully listed contents of ${folder} - found ${listResult.items.length} items`);
+        } catch (listError) {
+          console.log(`Folder ${folder} does not exist or is empty:`, listError);
+          continue;
+        }
+
+        // Filter for image files
+        const imageFiles = listResult.items.filter(item => {
+          const fileName = item.name.toLowerCase();
+          const isImage = IMAGE_EXTENSIONS.some(ext => fileName.endsWith(ext));
+          if (isImage) {
+            console.log(`Found image file: ${item.name} at path: ${item.fullPath}`);
+          }
+          return isImage;
+        });
+
+        console.log(`Found ${imageFiles.length} image files in ${folder}`);
+        totalFound += imageFiles.length;
+
+        for (const fileRef of imageFiles) {
+          try {
+            const storagePath = fileRef.fullPath;
+            console.log(`Processing file: ${fileRef.name} at ${storagePath}`);
+
+            // Check if already exists in Firestore
+            const q = query(
+              collection(db, COLLECTIONS.CAT_IMAGES),
+              where('storagePath', '==', storagePath)
+            );
+            const existingDocs = await getDocs(q);
+
+            if (!existingDocs.empty) {
+              console.log(`Skipping ${fileRef.name} - already exists in database`);
+              continue;
+            }
+
+            // Get download URL
+            console.log(`Getting download URL for ${fileRef.name}...`);
+            const imageUrl = await getDownloadURL(fileRef);
+            console.log(`Got download URL: ${imageUrl}`);
+
+            // Create Firestore entry
+            const imageData = {
+              imageUrl,
+              fileName: fileRef.name,
+              storagePath,
+              tags: [], // Empty initially - needs manual tagging
+              uploadDate: new Date(), // Use current date since we can't get original upload date easily
+              uploadedBy: 'system_sync',
+              description: '',
+              location: '',
+              autoTagged: false
+              // fileSize and dimensions omitted when undefined to avoid Firestore errors
+            };
+
+            console.log(`Creating Firestore entry for ${fileRef.name}:`, imageData);
+            const docRef = await addDoc(collection(db, COLLECTIONS.CAT_IMAGES), imageData);
+            console.log(`✅ Imported: ${fileRef.name} with ID: ${docRef.id}`);
+            totalImported++;
+
+          } catch (error) {
+            console.error(`❌ Failed to import ${fileRef.name}:`, error);
+          }
+        }
+      } catch (error) {
+        console.error(`Error scanning folder ${folder}:`, error);
+      }
+    }
+
+    console.log(`Image sync complete: ${totalImported}/${totalFound} new images imported`);
     return true;
   } catch (error) {
     console.error('Error syncing images:', error);
@@ -486,12 +584,72 @@ export const batchDeleteVideos = async (videoIds: string[]): Promise<boolean> =>
 
 export const syncVideos = async (): Promise<boolean> => {
   try {
-    // This is a placeholder for sync operations that might involve
-    // reconciling with external sources, cleaning up orphaned records, etc.
-    console.log('Syncing videos...');
+    console.log('Starting YouTube video discovery and sync...');
+
+    // Import the fetchChannelVideos function
+    const { fetchChannelVideos } = await import('./youtube');
+
+    // Fetch all videos from YouTube channel
+    console.log('Fetching videos from YouTube channel...');
+    const youtubeVideos = await fetchChannelVideos();
+    console.log(`Found ${youtubeVideos.length} videos on YouTube channel`);
+
+    // Get existing videos from Firestore
+    const existingVideosQuery = query(collection(db, COLLECTIONS.CAT_VIDEOS));
+    const existingVideosSnapshot = await getDocs(existingVideosQuery);
+    const existingYouTubeIds = new Set();
+
+    existingVideosSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.youtubeId) {
+        existingYouTubeIds.add(data.youtubeId);
+      }
+    });
+
+    console.log(`Found ${existingYouTubeIds.size} existing videos in Firestore`);
+
+    // Find new videos that aren't in Firestore yet
+    const newVideos = youtubeVideos.filter(video => !existingYouTubeIds.has(video.id));
+    console.log(`Found ${newVideos.length} new videos to import`);
+
+    // Import new videos to Firestore
+    let importedCount = 0;
+    for (const video of newVideos) {
+      try {
+        const videoData = {
+          youtubeId: video.id,
+          videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
+          title: video.title,
+          description: video.description || '',
+          thumbnailUrl: video.thumbnailUrl || '',
+          duration: video.duration || 0,
+          publishedAt: video.publishedAt,
+          channelTitle: video.channelTitle || 'Mountain Cats',
+          tags: [],
+          location: '',
+          videoType: 'youtube' as const,
+          uploadedBy: 'youtube_sync',
+          autoTagged: false,
+          needsTagging: true,
+          catName: ''
+        };
+
+        console.log(`Importing new video: ${video.title} (${video.id})`);
+        const docRef = await addDoc(collection(db, COLLECTIONS.CAT_VIDEOS), videoData);
+        console.log(`✅ Imported video with Firestore ID: ${docRef.id}`);
+        importedCount++;
+      } catch (error) {
+        console.error(`❌ Failed to import video ${video.title}:`, error);
+      }
+    }
+
+    console.log(`Video sync complete: ${importedCount}/${newVideos.length} new videos imported`);
+    console.log(`Total videos on YouTube: ${youtubeVideos.length}`);
+    console.log(`Total videos in Firestore: ${existingYouTubeIds.size + importedCount}`);
+
     return true;
   } catch (error) {
-    console.error('Error syncing videos:', error);
+    console.error('Error in video sync:', error);
     return false;
   }
 };

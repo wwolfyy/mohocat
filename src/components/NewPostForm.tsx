@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getPostService, getFeedingSpotsService } from "@/services";
+import { getPostService, getFeedingSpotsService, getImageService } from "@/services";
 import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/hooks/useAuth";
+import CatSelectorModal from "@/components/CatSelectorModal";
+import { parseRecordingDateFromTitle, formatDateForInput } from "@/utils/dateParser";
 
 interface Playlist {
   id: string;
@@ -69,12 +71,18 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
   // YouTube metadata states
   const [tags, setTags] = useState("");
   const [createdTime, setCreatedTime] = useState("");
-  const [selectedPlaylist, setSelectedPlaylist] = useState("");
+  const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Will be set to 집사게시판 playlist ID
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   // Feeding spots states
   const [checkedSpots, setCheckedSpots] = useState<Set<number>>(new Set());
   const [feedingVisitTime, setFeedingVisitTime] = useState("");
+
+  // Cat tagging states
+  const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
+  const [selectedImageTags, setSelectedImageTags] = useState<string[]>([]);
+  const [showVideoTagSelector, setShowVideoTagSelector] = useState(false);
+  const [showImageTagSelector, setShowImageTagSelector] = useState(false);
 
   // Fetch user's YouTube playlists and feeding spots on component mount
   useEffect(() => {
@@ -109,8 +117,18 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
         if (response.ok) {
           const data = await response.json();
           console.log("Playlist data received:", data);
-          setPlaylists(data.playlists || []);
-          console.log("Playlists set to state:", data.playlists || []);
+          const playlistsData = data.playlists || [];
+          setPlaylists(playlistsData);
+          console.log("Playlists set to state:", playlistsData);
+
+          // Automatically select "집사게시판" playlist
+          const butlerPlaylist = playlistsData.find((playlist: Playlist) =>
+            playlist.title === "집사게시판"
+          );
+          if (butlerPlaylist) {
+            setSelectedPlaylist(butlerPlaylist.id);
+            console.log("Auto-selected 집사게시판 playlist:", butlerPlaylist.id);
+          }
         } else {
           const errorText = await response.text();
           console.warn(
@@ -151,7 +169,19 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setVideoFiles(Array.from(event.target.files));
+      const files = Array.from(event.target.files);
+      setVideoFiles(files);
+
+      // Auto-parse recording date from the first video file name
+      if (files.length > 0 && !createdTime) {
+        const firstFileName = files[0].name;
+        const parsedDate = parseRecordingDateFromTitle(firstFileName);
+        if (parsedDate) {
+          const dateString = formatDateForInput(parsedDate);
+          setCreatedTime(dateString);
+          console.log(`Auto-populated recording date from filename "${firstFileName}": ${dateString}`);
+        }
+      }
     } else {
       setVideoFiles([]);
     }
@@ -159,7 +189,19 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setImageFiles(Array.from(event.target.files));
+      const files = Array.from(event.target.files);
+      setImageFiles(files);
+
+      // Auto-parse recording date from the first image file name if no video files and no existing date
+      if (files.length > 0 && videoFiles.length === 0 && !createdTime) {
+        const firstFileName = files[0].name;
+        const parsedDate = parseRecordingDateFromTitle(firstFileName);
+        if (parsedDate) {
+          const dateString = formatDateForInput(parsedDate);
+          setCreatedTime(dateString);
+          console.log(`Auto-populated recording date from image filename "${firstFileName}": ${dateString}`);
+        }
+      }
     }
   };
 
@@ -187,8 +229,11 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
   const uploadImagesWithSignedUrls = async (
     files: File[],
   ): Promise<string[]> => {
+    const imageService = getImageService();
+
     const urls = await Promise.all(
-      files.map(async (file) => {
+      files.map(async (file, index) => {
+        // Get signed URL
         const response = await fetch("/api/generate-signed-url", {
           method: "POST",
           headers: {
@@ -203,6 +248,7 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
 
         const { signedUrl, publicUrl } = await response.json();
 
+        // Upload to Firebase Storage
         await fetch(signedUrl, {
           method: "PUT",
           headers: {
@@ -210,6 +256,36 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
           },
           body: file,
         });
+
+        // Create Firestore entry in cat_images collection
+        try {
+          const imageTagsToUse = selectedImageTags.length > 0 ? selectedImageTags : [];
+
+          const imageData = {
+            imageUrl: publicUrl,
+            fileName: file.name,
+            storagePath: publicUrl, // For direct uploads, this is the same as imageUrl
+            tags: imageTagsToUse,
+            uploadDate: new Date(),
+            createdTime: createdTime ? new Date(createdTime) : new Date(),
+            uploadedBy: user?.email || 'unknown',
+            description: message || '',
+            location: '', // Could be enhanced to include location info
+            autoTagged: false, // User manually provided tags
+            fileSize: file.size,
+            dimensions: undefined, // Could be enhanced to read image dimensions
+          };
+
+          console.log('Creating Firestore entry for uploaded image:', imageData);
+
+          const firestoreImageId = await imageService.createImage(imageData);
+          console.log('Created cat_images entry with ID:', firestoreImageId);
+
+        } catch (firestoreError) {
+          console.error('Failed to create Firestore entry for image:', firestoreError);
+          // Don't fail the entire upload if Firestore creation fails
+        }
+
         return publicUrl;
       }),
     );
@@ -276,9 +352,8 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
         );
 
         // Add enhanced metadata
-        if (tags.trim()) {
-          formData.append("tags", tags);
-        }
+        const videoTagsToUse = selectedVideoTags.length > 0 ? selectedVideoTags.join(", ") : (tags.trim() || "산고양이");
+        formData.append("tags", videoTagsToUse);
         if (createdTime) {
           console.log("Sending created time to YouTube:", createdTime);
           formData.append("createdTime", createdTime);
@@ -376,6 +451,7 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
         videoUrls,
         imageUrls,
         message,
+        tags: mediaType === "video" ? selectedVideoTags : selectedImageTags,
       };
 
       // Validate that we have the expected content
@@ -527,6 +603,63 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
           onChange={handleVideoChange}
         />
       </div>
+
+      {/* YouTube Metadata Section */}
+      {videoFiles.length > 0 && (
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">
+            YouTube 동영상 설정
+          </h3>
+          {/* Cat Tags */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">
+              등장하는 고양이:
+            </label>
+            <input
+              type="text"
+              value={selectedVideoTags.join(", ")}
+              onClick={() => setShowVideoTagSelector(true)}
+              readOnly
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-gray-50"
+              placeholder="고양이를 선택하려면 클릭하세요"
+            />
+          </div>
+          {/* Created Time */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">촬영 날짜:</label>
+            <input
+              type="date"
+              value={createdTime}
+              onChange={(e) => setCreatedTime(e.target.value)}
+              className="border p-2 rounded w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              동영상이나 이미지 파일명에서 자동으로 날짜를 추출합니다. 필요시 수정 가능합니다.
+            </p>
+          </div>
+          {/* Playlist Selection */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">재생목록에 추가:</label>
+            {loadingPlaylists ? (
+              <p className="text-sm text-gray-600">재생목록을 불러오는 중...</p>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value="집사게시판"
+                  readOnly
+                  disabled
+                  className="border p-2 rounded w-full bg-gray-100 text-gray-600 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  모든 동영상은 자동으로 "집사게시판" 재생목록에 추가됩니다
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div>
         <label className="block font-semibold">사진 업로드:</label>
         <input
@@ -536,6 +669,21 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
           onChange={handleImageChange}
         />
       </div>
+
+      {/* Image Cat Tags - only show if images are selected */}
+      {imageFiles.length > 0 && (
+        <div>
+          <label className="block font-semibold">등장하는 고양이:</label>
+          <input
+            type="text"
+            value={selectedImageTags.join(", ")}
+            onClick={() => setShowImageTagSelector(true)}
+            readOnly
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-gray-50"
+            placeholder="고양이를 선택하려면 클릭하세요"
+          />
+        </div>
+      )}
       <div>
         <label className="block font-semibold">내용:</label>{" "}
         <textarea
@@ -545,68 +693,6 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
           rows={4}
         />
       </div>
-      {/* YouTube Metadata Section */}
-      {videoFiles.length > 0 && (
-        <div className="border-t pt-4 mt-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800">
-            YouTube 동영상 설정
-          </h3>
-          {/* Tags */}
-          <div className="mb-4">
-            <label className="block font-semibold mb-1">
-              태그 (쉼표로 구분):
-            </label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="예: 고양이, 산, 자연"
-              className="border p-2 rounded w-full"
-            />
-
-            <p className="text-sm text-gray-600 mt-1">
-              태그는 쉼표로 구분하여 입력하세요
-            </p>
-          </div>
-          {/* Created Time */}
-          <div className="mb-4">
-            <label className="block font-semibold mb-1">촬영 날짜:</label>{" "}
-            <input
-              type="date"
-              value={createdTime}
-              onChange={(e) => setCreatedTime(e.target.value)}
-              className="border p-2 rounded"
-            />
-          </div>{" "}
-          {/* Playlist Selection */}
-          <div className="mb-4">
-            <label className="block font-semibold mb-1">재생목록에 추가:</label>
-            {loadingPlaylists ? (
-              <p className="text-sm text-gray-600">재생목록을 불러오는 중...</p>
-            ) : (
-              <>
-                <select
-                  value={selectedPlaylist}
-                  onChange={(e) => setSelectedPlaylist(e.target.value)}
-                  className="border p-2 rounded w-full"
-                >
-                  <option value="">재생목록 선택 안함</option>
-                  {playlists.map((playlist) => (
-                    <option key={playlist.id} value={playlist.id}>
-                      {playlist.title}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  {playlists.length > 0
-                    ? `${playlists.length}개의 재생목록을 찾았습니다`
-                    : "재생목록을 찾을 수 없습니다"}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      )}
       <button
         type="submit"
         disabled={uploading}
@@ -625,6 +711,23 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
             : "Uploading images..."}
         </p>
       )}
+
+      {/* Cat Selector Modals */}
+      <CatSelectorModal
+        isOpen={showVideoTagSelector}
+        onClose={() => setShowVideoTagSelector(false)}
+        selectedTags={selectedVideoTags}
+        onTagsChange={setSelectedVideoTags}
+        title="비디오에 등장하는 고양이 선택"
+      />
+
+      <CatSelectorModal
+        isOpen={showImageTagSelector}
+        onClose={() => setShowImageTagSelector(false)}
+        selectedTags={selectedImageTags}
+        onTagsChange={setSelectedImageTags}
+        title="이미지에 등장하는 고양이 선택"
+      />
     </form>
   );
 };

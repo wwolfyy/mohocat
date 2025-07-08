@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getButlerTalkService } from "@/services";
+import { getButlerTalkService, getImageService } from "@/services";
 import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/hooks/useAuth";
+import CatSelectorModal from "@/components/CatSelectorModal";
+import { parseRecordingDateFromTitle, formatDateTimeForInput } from "@/utils/dateParser";
 
 interface Playlist {
   id: string;
@@ -57,9 +59,15 @@ const NewButlerTalkForm = () => {
   // YouTube metadata states
   const [tags, setTags] = useState("");
   const [createdTime, setCreatedTime] = useState("");
-  const [selectedPlaylist, setSelectedPlaylist] = useState("");
+  const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Will be set to 집사게시판 playlist ID
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+
+  // Cat tagging states
+  const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
+  const [selectedImageTags, setSelectedImageTags] = useState<string[]>([]);
+  const [showVideoTagSelector, setShowVideoTagSelector] = useState(false);
+  const [showImageTagSelector, setShowImageTagSelector] = useState(false);
 
   // Fetch user's YouTube playlists on component mount
   useEffect(() => {
@@ -80,8 +88,18 @@ const NewButlerTalkForm = () => {
         if (response.ok) {
           const data = await response.json();
           console.log("Playlist data received:", data);
-          setPlaylists(data.playlists || []);
-          console.log("Playlists set to state:", data.playlists || []);
+          const playlistsData = data.playlists || [];
+          setPlaylists(playlistsData);
+          console.log("Playlists set to state:", playlistsData);
+
+          // Automatically select "집사게시판" playlist
+          const butlerPlaylist = playlistsData.find((playlist: Playlist) =>
+            playlist.title === "집사게시판"
+          );
+          if (butlerPlaylist) {
+            setSelectedPlaylist(butlerPlaylist.id);
+            console.log("Auto-selected 집사게시판 playlist:", butlerPlaylist.id);
+          }
         } else {
           const errorText = await response.text();
           console.warn(
@@ -122,7 +140,19 @@ const NewButlerTalkForm = () => {
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setVideoFiles(Array.from(event.target.files));
+      const files = Array.from(event.target.files);
+      setVideoFiles(files);
+
+      // Auto-parse recording date from the first video file name
+      if (files.length > 0 && !createdTime) {
+        const firstFileName = files[0].name;
+        const parsedDate = parseRecordingDateFromTitle(firstFileName);
+        if (parsedDate) {
+          const dateString = formatDateTimeForInput(parsedDate);
+          setCreatedTime(dateString);
+          console.log(`Auto-populated recording date from filename "${firstFileName}": ${dateString}`);
+        }
+      }
     } else {
       setVideoFiles([]);
     }
@@ -130,15 +160,30 @@ const NewButlerTalkForm = () => {
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setImageFiles(Array.from(event.target.files));
+      const files = Array.from(event.target.files);
+      setImageFiles(files);
+
+      // Auto-parse recording date from the first image file name if no video files and no existing date
+      if (files.length > 0 && videoFiles.length === 0 && !createdTime) {
+        const firstFileName = files[0].name;
+        const parsedDate = parseRecordingDateFromTitle(firstFileName);
+        if (parsedDate) {
+          const dateString = formatDateTimeForInput(parsedDate);
+          setCreatedTime(dateString);
+          console.log(`Auto-populated recording date from image filename "${firstFileName}": ${dateString}`);
+        }
+      }
     }
   };
 
   const uploadImagesWithSignedUrls = async (
     files: File[],
   ): Promise<string[]> => {
+    const imageService = getImageService();
+
     const urls = await Promise.all(
       files.map(async (file) => {
+        // Get signed URL
         const response = await fetch("/api/generate-signed-url", {
           method: "POST",
           headers: {
@@ -166,6 +211,35 @@ const NewButlerTalkForm = () => {
           throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);
         }
 
+        // Create Firestore entry in cat_images collection
+        try {
+          const imageTagsToUse = selectedImageTags.length > 0 ? selectedImageTags : [];
+
+          const imageData = {
+            imageUrl: downloadUrl,
+            fileName: file.name,
+            storagePath: downloadUrl, // For direct uploads, this is the same as imageUrl
+            tags: imageTagsToUse,
+            uploadDate: new Date(),
+            createdTime: createdTime ? new Date(createdTime) : new Date(),
+            uploadedBy: user?.email || 'unknown',
+            description: message || '',
+            location: '', // Could be enhanced to include location info
+            autoTagged: false, // User manually provided tags
+            fileSize: file.size,
+            dimensions: undefined, // Could be enhanced to read image dimensions
+          };
+
+          console.log('Creating Firestore entry for uploaded image:', imageData);
+
+          const firestoreImageId = await imageService.createImage(imageData);
+          console.log('Created cat_images entry with ID:', firestoreImageId);
+
+        } catch (firestoreError) {
+          console.error('Failed to create Firestore entry for image:', firestoreError);
+          // Don't fail the entire upload if Firestore creation fails
+        }
+
         return downloadUrl;
       }),
     );
@@ -180,7 +254,7 @@ const NewButlerTalkForm = () => {
         formData.append("video", file);
         formData.append("title", title || generateDynamicTitle());
         formData.append("description", message || "산고양이 영상");
-        formData.append("tags", tags || "산고양이");
+        formData.append("tags", selectedVideoTags.join(", ") || "산고양이");
         formData.append("playlistId", selectedPlaylist);
         formData.append("createdTime", createdTime);
 
@@ -266,6 +340,7 @@ const NewButlerTalkForm = () => {
         videoUrls,
         imageUrls,
         message,
+        tags: mediaType === "video" ? selectedVideoTags : selectedImageTags,
       };
 
       // Validate that we have the expected content
@@ -357,21 +432,22 @@ const NewButlerTalkForm = () => {
             YouTube 업로드 설정
           </h3>
 
-          {/* Tags */}
+          {/* Cat Tags */}
           <div className="mb-4">
             <label
-              htmlFor="tags"
+              htmlFor="videoTags"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              태그 (쉼표로 구분)
+              등장하는 고양이
             </label>
             <input
               type="text"
-              id="tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="예: 산고양이, 급식소, 고양이"
+              id="videoTags"
+              value={selectedVideoTags.join(", ")}
+              onClick={() => setShowVideoTagSelector(true)}
+              readOnly
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-gray-50"
+              placeholder="고양이를 선택하려면 클릭하세요"
             />
           </div>
 
@@ -390,6 +466,9 @@ const NewButlerTalkForm = () => {
               onChange={(e) => setCreatedTime(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              동영상이나 이미지 파일명에서 자동으로 날짜를 추출합니다. 필요시 수정 가능합니다.
+            </p>
           </div>
 
           {/* Playlist Selection */}
@@ -403,19 +482,18 @@ const NewButlerTalkForm = () => {
             {loadingPlaylists ? (
               <p className="text-sm text-gray-600">재생목록을 불러오는 중...</p>
             ) : (
-              <select
-                id="playlist"
-                value={selectedPlaylist}
-                onChange={(e) => setSelectedPlaylist(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">재생목록 선택 (선택사항)</option>
-                {playlists.map((playlist) => (
-                  <option key={playlist.id} value={playlist.id}>
-                    {playlist.title}
-                  </option>
-                ))}
-              </select>
+              <>
+                <input
+                  type="text"
+                  value="집사게시판"
+                  readOnly
+                  disabled
+                  className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  모든 동영상은 자동으로 "집사게시판" 재생목록에 추가됩니다
+                </p>
+              </>
             )}
           </div>
         </div>
@@ -444,6 +522,27 @@ const NewButlerTalkForm = () => {
         )}
       </div>
 
+      {/* Image Cat Tags - only show if images are selected */}
+      {imageFiles.length > 0 && (
+        <div>
+          <label
+            htmlFor="imageTags"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            등장하는 고양이
+          </label>
+          <input
+            type="text"
+            id="imageTags"
+            value={selectedImageTags.join(", ")}
+            onClick={() => setShowImageTagSelector(true)}
+            readOnly
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-gray-50"
+            placeholder="고양이를 선택하려면 클릭하세요"
+          />
+        </div>
+      )}
+
       {/* Submit Button */}
       <div className="pt-4">
         <button
@@ -459,6 +558,23 @@ const NewButlerTalkForm = () => {
           {uploading ? "업로드 중..." : "글 작성"}
         </button>
       </div>
+
+      {/* Cat Selector Modals */}
+      <CatSelectorModal
+        isOpen={showVideoTagSelector}
+        onClose={() => setShowVideoTagSelector(false)}
+        selectedTags={selectedVideoTags}
+        onTagsChange={setSelectedVideoTags}
+        title="비디오에 등장하는 고양이 선택"
+      />
+
+      <CatSelectorModal
+        isOpen={showImageTagSelector}
+        onClose={() => setShowImageTagSelector(false)}
+        selectedTags={selectedImageTags}
+        onTagsChange={setSelectedImageTags}
+        title="이미지에 등장하는 고양이 선택"
+      />
     </form>
   );
 };

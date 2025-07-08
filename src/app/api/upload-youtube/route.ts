@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
         channelTitle: 'Mountain Cats', // or get from YouTube API
         catName: '', // Empty initially, can be filled later through tagging
         playlist: playlistId || '', // Add playlist field
-        fileSize: undefined, // Not available for YouTube uploads
         autoTagged: false, // User manually provided tags
+        // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
       };
 
       console.log('Creating Firestore entry for uploaded video:', videoData);

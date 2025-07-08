@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getVideoService, getCatService } from "@/services";
 import { Cat } from "@/types";
 import { CatVideo } from "@/types/media";
+import { parseRecordingDateFromTitle } from "@/utils/dateParser";
 
 // Utility function to format duration from ISO 8601 or seconds to human-friendly format
 function formatDuration(duration: number | string | undefined): string {
@@ -999,7 +1000,7 @@ export default function TagVideosPage() {
   const syncWithYouTube = async () => {
     if (
       !confirm(
-        "This will sync video metadata with YouTube, including playlist information.\n\nNote: This fetches the current data from YouTube and may overwrite any recent changes that haven't propagated yet.\n\nContinue?",
+        "This will discover new videos from YouTube and sync metadata for all videos.\n\nThis includes:\n1. Finding new videos not yet in Firestore\n2. Updating metadata for existing videos\n3. Playlist information sync\n\nNote: This may overwrite recent changes that haven't propagated yet.\n\nContinue?",
       )
     )
       return;
@@ -1007,7 +1008,16 @@ export default function TagVideosPage() {
     try {
       setBatchSaving(true);
 
-      // First, get all videos to collect YouTube video IDs
+      // Step 1: Discover and import new videos from YouTube
+      console.log('Step 1: Discovering new videos from YouTube...');
+      if (videoService && videoService.syncWithYouTube) {
+        const syncResult = await videoService.syncWithYouTube();
+        console.log('New video discovery complete');
+      } else {
+        console.log('Video service not available, skipping new video discovery');
+      }
+
+      // Step 2: Get all videos (including newly discovered ones) to collect YouTube video IDs
       const allVideos = await videoService.getAllVideos();
       const youtubeVideos = allVideos.filter(
         (video) => video.videoType === "youtube",
@@ -1046,7 +1056,7 @@ export default function TagVideosPage() {
       await loadVideos();
 
       alert(
-        `YouTube sync completed successfully! Updated ${result.updated || youtubeVideoIds.length} videos with latest metadata and playlist information.`,
+        `YouTube sync completed successfully!\n\n✅ Discovered and imported any new videos from YouTube\n✅ Updated ${result.updated || youtubeVideoIds.length} videos with latest metadata and playlist information`,
       );
     } catch (err: any) {
       console.error("Error syncing:", err);
@@ -1138,7 +1148,7 @@ export default function TagVideosPage() {
             return newSet;
           });
 
-          const titleSource = video.description || video.id || "";
+          const titleSource = video.description || video.id;
           const parsedDate = parseRecordingDateFromTitle(titleSource);
           if (parsedDate) {
             console.log(
@@ -1178,7 +1188,7 @@ export default function TagVideosPage() {
             return newSet;
           });
         } catch (error) {
-          const titleSource = video.description || video.id || "";
+          const titleSource = video.description || video.id;
           console.error(`❌ Error processing ${titleSource}:`, error);
           failCount++;
           results.push({
@@ -2139,6 +2149,7 @@ export default function TagVideosPage() {
                 ) : (
                   <div className="text-gray-500 italic" data-oid="t68vltp">
                     None selected
+
                   </div>
                 )}
               </div>
@@ -3190,77 +3201,3 @@ export default function TagVideosPage() {
     </div>
   );
 }
-
-// Helper function to parse recording date from video title
-const parseRecordingDateFromTitle = (title: string): Date | null => {
-  try {
-    // Pattern 1: yyyy-mm-dd hh.MM.ss (with spaces or special chars around)
-    const pattern1 = /(\d{4}-\d{2}-\d{2}\s+\d{2}\.\d{2}\.\d{2})/;
-    const match1 = title.match(pattern1);
-
-    if (match1) {
-      const dateTimeStr = match1[1];
-      // Convert format: "2024-03-15 14.30.45" -> "2024-03-15T14:30:45"
-      const isoFormat = dateTimeStr.replace(/\s+/, "T").replace(/\./g, ":");
-      const date = new Date(isoFormat);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-    }
-
-    // Pattern 2: yyyymmdd_hhMMss (with spaces or special chars around)
-    const pattern2 = /(\d{8}_\d{6})/;
-    const match2 = title.match(pattern2);
-
-    if (match2) {
-      const dateTimeStr = match2[1];
-      // Convert format: "20240315_143045" -> "2024-03-15T14:30:45"
-      const year = dateTimeStr.substring(0, 4);
-      const month = dateTimeStr.substring(4, 6);
-      const day = dateTimeStr.substring(6, 8);
-      const hour = dateTimeStr.substring(9, 11);
-      const minute = dateTimeStr.substring(11, 13);
-      const second = dateTimeStr.substring(13, 15);
-
-      const isoFormat = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-      const date = new Date(isoFormat);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-    }
-
-    // Additional pattern: yyyy-mm-dd (date only, no time)
-    const pattern3 = /(\d{4}-\d{2}-\d{2})/;
-    const match3 = title.match(pattern3);
-
-    if (match3) {
-      const dateStr = match3[1];
-      const date = new Date(dateStr + "T00:00:00");
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-    }
-
-    // Additional pattern: yyyymmdd (date only, no time)
-    const pattern4 = /(\d{8})/;
-    const match4 = title.match(pattern4);
-
-    if (match4) {
-      const dateStr = match4[1];
-      const year = dateStr.substring(0, 4);
-      const month = dateStr.substring(4, 6);
-      const day = dateStr.substring(6, 8);
-
-      const isoFormat = `${year}-${month}-${day}T00:00:00`;
-      const date = new Date(isoFormat);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.warn(`Error parsing date from video title "${title}":`, error);
-    return null;
-  }
-};
