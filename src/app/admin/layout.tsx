@@ -89,6 +89,32 @@ export default function AdminLayout({
                   관리자 대쉬보드
                 </a>
                 <a
+                  href="/admin/posts"
+                  style={{
+                    padding: "0.5rem 1rem",
+                    color: "#6b7280",
+                    textDecoration: "none",
+                    borderRadius: "4px",
+                    transition: "background-color 0.2s",
+                  }}
+                  data-oid="post_mgmt"
+                >
+                  게시물 관리
+                </a>
+                <a
+                  href="/admin/cats"
+                  style={{
+                    padding: "0.5rem 1rem",
+                    color: "#6b7280",
+                    textDecoration: "none",
+                    borderRadius: "4px",
+                    transition: "background-color 0.2s",
+                  }}
+                  data-oid="cat_mgmt"
+                >
+                  고양이 관리
+                </a>
+                <a
                   href="/admin/tag-images"
                   style={{
                     padding: "0.5rem 1rem",

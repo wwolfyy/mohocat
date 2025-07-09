@@ -6,7 +6,7 @@
  */
 
 import type { IPostService } from './interfaces';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, query, where, orderBy, updateDoc, increment } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, Timestamp, query, where, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebasePostService implements IPostService {
@@ -229,6 +229,59 @@ export class FirebasePostService implements IPostService {
     } catch (error) {
       console.error('Error updating reply count:', error);
       throw new Error(`Failed to update reply count for post: ${postId}`);
+    }
+  }
+
+  async deletePost(postId: string): Promise<void> {
+    try {
+      console.log('FirebasePostService: Deleting post:', postId);
+
+      // First, delete all replies to this post
+      const replies = await this.getReplies(postId);
+      for (const reply of replies) {
+        await this.deleteReply(reply.id);
+      }
+
+      // Then delete the post itself
+      const postRef = doc(db, this.COLLECTION_NAME, postId);
+      await deleteDoc(postRef);
+
+      console.log('FirebasePostService: Successfully deleted post and all replies');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      throw new Error(`Failed to delete post: ${postId}`);
+    }
+  }
+
+  async deleteReply(replyId: string): Promise<void> {
+    try {
+      console.log('FirebasePostService: Deleting reply:', replyId);
+
+      // Get the reply to find its parent and any nested replies
+      const reply = await this.getPostById(replyId);
+      if (!reply) {
+        throw new Error('Reply not found');
+      }
+
+      // Delete any nested replies first
+      const nestedReplies = await this.getReplies(replyId);
+      for (const nestedReply of nestedReplies) {
+        await this.deleteReply(nestedReply.id);
+      }
+
+      // Delete the reply itself
+      const replyRef = doc(db, this.COLLECTION_NAME, replyId);
+      await deleteDoc(replyRef);
+
+      // Update parent post's reply count
+      if (reply.parentId) {
+        await this.updateReplyCount(reply.parentId);
+      }
+
+      console.log('FirebasePostService: Successfully deleted reply and nested replies');
+    } catch (error) {
+      console.error('Error deleting reply:', error);
+      throw new Error(`Failed to delete reply: ${replyId}`);
     }
   }
 }

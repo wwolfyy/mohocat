@@ -40,6 +40,10 @@ export interface IPostService {
   createReply(reply: any): Promise<any>;
   getPostWithReplies(postId: string): Promise<{ post: any; replies: any[] }>;
   updateReplyCount(postId: string): Promise<void>;
+
+  // Delete functionality
+  deletePost(postId: string): Promise<void>;
+  deleteReply(replyId: string): Promise<void>;
 }
 
 // Contact service interface
