@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAuthService, getPostService, getButlerTalkService, getAnnouncementService } from "@/services";
+import { getAuthService, getAnnouncementService } from "@/services";
 import { User } from "firebase/auth";
 import { cn } from "@/utils/cn";
 import Link from "next/link";
-import AdminReplyList from "./AdminReplyList";
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -82,38 +81,15 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
   }
 };
 
-interface Post {
-  id: string;
-  title: string;
-  message: string;
-  thumbnailUrl?: string;
-  mediaType?: "video" | "image";
-  videoUrls?: string[];
-  videoUrl?: string; // Keep for backward compatibility
-  imageUrls?: string[];
-  username: string;
-  date: string;
-  time: string;
-  createdAt?: any; // Can be Date, string, number, or Firestore timestamp
-  replyCount?: number;
-}
-
-interface AdminPostListProps {
-  postType: "butler_stream" | "butler_talk" | "announcements";
-}
-
-const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
+const AnnouncementClient = () => {
   // Service references
   const authService = getAuthService();
-  const postService = getPostService();
-  const butlerTalkService = getButlerTalkService();
   const announcementService = getAnnouncementService();
 
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const postsPerPage = 20;
   const router = useRouter();
 
@@ -122,7 +98,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
       if (user) {
         setIsAuthenticated(true);
       } else {
-        router.push(`/pages/login?redirect=/admin/posts`);
+        router.push(`/pages/login?redirect=/pages/announcements`);
       }
     });
 
@@ -130,141 +106,77 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   }, [router, authService]);
 
   const fetchPosts = async (page = 1) => {
-    if (!isAuthenticated) return;
+    if (isAuthenticated) {
+      try {
+        console.log("Fetching announcements...");
+        // Use service layer for announcements
+        const allPosts = await announcementService.getAllPosts();
+        console.log("Raw announcements from service:", allPosts);
+        console.log("Number of announcements fetched:", allPosts.length);
 
-    setIsLoading(true);
-    try {
-      console.log(`Fetching ${postType} posts...`);
+        // Check if posts have date/time fields or use createdAt
+        const sortedPosts = allPosts.sort((a: any, b: any) => {
+          // Try to use date/time fields first, fallback to createdAt
+          let dateA, dateB;
 
-      // Use the appropriate service based on post type
-      const service = postType === "butler_stream"
-        ? postService
-        : postType === "butler_talk"
-          ? butlerTalkService
-          : announcementService;
-      const allPosts = await service.getAllPosts();
+          if (a.date && a.time) {
+            // Parse as UTC time for consistent sorting
+            const dateTimeA = `${a.date}T${a.time}Z`;
+            dateA = new Date(dateTimeA);
+          } else if (a.createdAt) {
+            dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+          } else {
+            dateA = new Date(0); // Very old date for fallback
+          }
 
-      console.log(`Raw ${postType} posts from service:`, allPosts);
-      console.log(`Number of ${postType} posts fetched:`, allPosts.length);
+          if (b.date && b.time) {
+            // Parse as UTC time for consistent sorting
+            const dateTimeB = `${b.date}T${b.time}Z`;
+            dateB = new Date(dateTimeB);
+          } else if (b.createdAt) {
+            dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+          } else {
+            dateB = new Date(0); // Very old date for fallback
+          }
 
-      // Sort posts by date/time
-      const sortedPosts = allPosts.sort((a: any, b: any) => {
-        let dateA, dateB;
+          // Sort newest first (reverse chronological order)
+          // Larger timestamp (newer date) should come first
+          return dateB.getTime() - dateA.getTime();
+        });
 
-        if (a.date && a.time) {
-          const dateTimeA = `${a.date}T${a.time}Z`;
-          dateA = new Date(dateTimeA);
-        } else if (a.createdAt) {
-          dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-        } else {
-          dateA = new Date(0);
-        }
+        console.log("Sorted announcements:", sortedPosts);
 
-        if (b.date && b.time) {
-          const dateTimeB = `${b.date}T${b.time}Z`;
-          dateB = new Date(dateTimeB);
-        } else if (b.createdAt) {
-          dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-        } else {
-          dateB = new Date(0);
-        }
+        const startIndex = (page - 1) * postsPerPage;
+        const paginatedPosts = sortedPosts.slice(
+          startIndex,
+          startIndex + postsPerPage,
+        );
 
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      console.log(`Sorted ${postType} posts:`, sortedPosts);
-
-      const startIndex = (page - 1) * postsPerPage;
-      const paginatedPosts = sortedPosts.slice(
-        startIndex,
-        startIndex + postsPerPage,
-      );
-
-      console.log(`Paginated ${postType} posts for display:`, paginatedPosts);
-      setPosts(paginatedPosts);
-      setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
-    } catch (error) {
-      console.error(`Error in fetching ${postType} posts:`, error);
-    } finally {
-      setIsLoading(false);
+        console.log("Paginated announcements for display:", paginatedPosts);
+        setPosts(paginatedPosts);
+        setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
+      } catch (error) {
+        console.error("Error in fetchPosts:", error);
+      }
     }
   };
-
-  useEffect(() => {
-    // Reset to page 1 when switching tabs
-    setCurrentPage(1);
-  }, [postType]);
 
   useEffect(() => {
     fetchPosts(currentPage);
-  }, [isAuthenticated, currentPage, postType]);
+  }, [isAuthenticated, currentPage]);
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const handleEdit = (postId: string) => {
-    // TODO: Implement edit functionality
-    console.log(`Edit post: ${postId}`);
-    alert("Edit functionality coming soon!");
-  };
-
-  const handleDelete = async (postId: string) => {
-    if (!confirm("Are you sure you want to delete this post? This will also delete all replies.")) {
-      return;
-    }
-
-    try {
-      // Use the appropriate service based on post type
-      const service = postType === "butler_stream"
-        ? postService
-        : postType === "butler_talk"
-          ? butlerTalkService
-          : announcementService;
-      await service.deletePost(postId);
-
-      // Remove the post from local state
-      setPosts(prev => prev.filter(post => post.id !== postId));
-
-      // Show success message
-      alert("Post deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting post:", error);
-      alert("Failed to delete post. Please try again.");
-    }
   };
 
   if (!isAuthenticated) {
     return null; // Prevent rendering until authentication is confirmed
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-gray-500">Loading posts...</div>
-      </div>
-    );
-  }
-
   return (
     <div>
-      {/* Create Announcement Button */}
-      {postType === "announcements" && (
-        <div className="mb-6 flex justify-end">
-          <button
-            onClick={() => router.push("/admin/announcements/new")}
-            className={cn(
-              "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-              "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200"
-            )}
-          >
-            새 공지사항 작성
-          </button>
-        </div>
-      )}
-
       <div className="space-y-4">
-        {posts.length === 0 && <div>No posts yet.</div>}
+        {posts.length === 0 && <div>No announcements yet.</div>}
         {posts.map((post) => (
           <div
             key={post.id}
@@ -286,7 +198,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                       const videoCount = post.videoUrls?.length || 1;
                       return (
-                        <Link href={`/pages/posts/${post.id}`}>
+                        <Link href={`/pages/announcements/${post.id}`}>
                           <div className="relative cursor-pointer">
                             <img
                               src={thumbnailUrl}
@@ -328,7 +240,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                   post.videoUrl
                 ) &&
                   post.thumbnailUrl && (
-                    <Link href={`/pages/posts/${post.id}`}>
+                    <Link href={`/pages/announcements/${post.id}`}>
                       <img
                         src={post.thumbnailUrl}
                         alt="Image thumbnail"
@@ -339,7 +251,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
               </div>
               <div className="flex-grow">
                 <Link
-                  href={`/pages/posts/${post.id}`}
+                  href={`/pages/announcements/${post.id}`}
                   className="text-xl font-bold mb-2 block flex items-center space-x-2"
                 >
                   {post.title}
@@ -353,55 +265,6 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                 </p>
               </div>
             </div>
-
-            {/* Admin Controls */}
-            <div className="border-t pt-3 flex justify-between items-center">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEdit(post.id)}
-                  className={cn(
-                    "px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600",
-                    "transition-colors duration-200"
-                  )}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(post.id)}
-                  className={cn(
-                    "px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600",
-                    "transition-colors duration-200"
-                  )}
-                >
-                  Delete
-                </button>
-              </div>
-
-              {/* Reply count display */}
-              {post.replyCount && post.replyCount > 0 && (
-                <div className="text-sm text-gray-500">
-                  {post.replyCount} replies
-                </div>
-              )}
-            </div>
-
-            {/* Admin Reply Management */}
-            {postType !== "announcements" && (
-              <AdminReplyList
-                postId={post.id}
-                replyCount={post.replyCount || 0}
-                onReplyCountUpdate={(count) => {
-                  setPosts(prev => prev.map(p =>
-                    p.id === post.id ? { ...p, replyCount: count } : p
-                  ));
-                }}
-                postService={postType === "butler_stream"
-                  ? postService
-                  : postType === "butler_talk"
-                    ? butlerTalkService
-                    : announcementService}
-              />
-            )}
           </div>
         ))}
       </div>
@@ -470,4 +333,4 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   );
 };
 
-export default AdminPostList;
+export default AnnouncementClient;

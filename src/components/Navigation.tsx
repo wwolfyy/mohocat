@@ -49,6 +49,12 @@ export default function Navigation() {
           집사톡
         </Link>
         <Link
+          href="/pages/announcements"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          공지
+        </Link>
+        <Link
           href="/pages/faq"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
@@ -147,6 +153,13 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 집사톡
+              </Link>
+              <Link
+                href="/pages/announcements"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                공지
               </Link>
               <Link
                 href="/pages/faq"

@@ -23,6 +23,7 @@ import { FirebaseImageService } from './image-service';
 import { FirebaseVideoService } from './video-service';
 import { FirebasePostService } from './post-service';
 import { FirebaseButlerTalkService } from './butler-talk-service';
+import { FirebaseAnnouncementService } from './announcement-service';
 import { FirebaseContactService } from './contact-service';
 import { FirebaseStorageService } from './storage-service';
 import { FirebaseAuthService } from './auth-service';
@@ -35,6 +36,7 @@ let imageServiceInstance: IImageService | null = null;
 let videoServiceInstance: IVideoService | null = null;
 let postServiceInstance: IPostService | null = null;
 let butlerTalkServiceInstance: IPostService | null = null;
+let announcementServiceInstance: IPostService | null = null;
 let contactServiceInstance: IContactService | null = null;
 let storageServiceInstance: IStorageService | null = null;
 let authServiceInstance: IAuthService | null = null;
@@ -98,6 +100,16 @@ export function getButlerTalkService(): IPostService {
     butlerTalkServiceInstance = new FirebaseButlerTalkService();
   }
   return butlerTalkServiceInstance;
+}
+
+/**
+ * Get the announcement service instance
+ */
+export function getAnnouncementService(): IPostService {
+  if (!announcementServiceInstance) {
+    announcementServiceInstance = new FirebaseAnnouncementService();
+  }
+  return announcementServiceInstance;
 }
 
 /**
