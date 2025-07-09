@@ -5,7 +5,8 @@ import { Post as PostType } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import ReplyButton from "./ReplyButton";
 import ReplyForm from "./ReplyForm";
-import ReplyList from "./ReplyList";
+import ReplyList, { ReplyListRef } from "./ReplyList";
+import { IPostService } from "@/services";
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -59,7 +60,7 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
 
     // Convert to Korea timezone if it's in UTC, or assume it's already in Korea time
     let koreaTime: Date;
-    if (targetDate.getTimezoneOffset) {
+    if (typeof targetDate.getTimezoneOffset === 'function') {
       // For dates that might be in UTC, convert to Korea time
       koreaTime = new Date(targetDate.getTime() + (9 * 60 * 60 * 1000));
     } else {
@@ -102,6 +103,7 @@ interface PostListProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  postService: IPostService;
 }
 
 const PostList: React.FC<PostListProps> = ({
@@ -109,6 +111,7 @@ const PostList: React.FC<PostListProps> = ({
   currentPage,
   totalPages,
   onPageChange,
+  postService,
 }) => {
   const [postReplyCounts, setPostReplyCounts] = useState<
     Record<string, number>
@@ -116,6 +119,7 @@ const PostList: React.FC<PostListProps> = ({
   const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>(
     {},
   );
+  const [replyListRefs, setReplyListRefs] = useState<Record<string, React.RefObject<ReplyListRef>>>({});
   const { isAuthenticated } = useAuth();
 
   const handleReplyCountUpdate = (postId: string, count: number) => {
@@ -137,6 +141,12 @@ const PostList: React.FC<PostListProps> = ({
       0;
     handleReplyCountUpdate(postId, currentCount + 1);
     setShowReplyForms((prev) => ({ ...prev, [postId]: false }));
+
+    // Notify the ReplyList component about the new reply
+    const replyListRef = replyListRefs[postId];
+    if (replyListRef?.current) {
+      replyListRef.current.addReply(reply);
+    }
   };
 
   return (
@@ -147,6 +157,11 @@ const PostList: React.FC<PostListProps> = ({
           const currentReplyCount =
             postReplyCounts[post.id] ?? post.replyCount ?? 0;
           const showingReplyForm = showReplyForms[post.id] || false;
+
+          // Create a ref for this post's ReplyList if it doesn't exist
+          if (!replyListRefs[post.id]) {
+            replyListRefs[post.id] = React.createRef<ReplyListRef>();
+          }
 
           return (
             <div
@@ -285,16 +300,19 @@ const PostList: React.FC<PostListProps> = ({
                       handleReplySuccess(post.id, reply)
                     }
                     onCancel={() => handleToggleReplyForm(post.id)}
+                    postService={postService}
                     data-oid="gaff14q"
                   />
                 )}
 
                 <ReplyList
+                  ref={replyListRefs[post.id]}
                   postId={post.id}
                   replyCount={currentReplyCount}
                   onReplyCountUpdate={(count) =>
                     handleReplyCountUpdate(post.id, count)
                   }
+                  postService={postService}
                   data-oid="84ehpq2"
                 />
               </div>

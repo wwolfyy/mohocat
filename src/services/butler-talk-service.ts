@@ -109,25 +109,37 @@ export class FirebaseButlerTalkService implements IPostService {
     }
   }
 
-  async createReply(reply: any): Promise<string> {
+  async createReply(reply: any): Promise<any> {
     try {
+      // Get parent post to determine thread info
+      const parentPost = await this.getPostById(reply.parentId);
+      if (!parentPost) {
+        throw new Error('Parent post not found');
+      }
+
       const replyData = {
         ...reply,
         createdAt: Timestamp.now(),
         isReply: true,
+        depth: (parentPost.depth || 0) + 1,
+        threadId: parentPost.threadId || parentPost.id,
+        replyCount: 0
       };
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), replyData);
 
-      // Update parent post reply count
-      if (reply.parentId) {
-        const parentDocRef = doc(db, this.COLLECTION_NAME, reply.parentId);
-        await updateDoc(parentDocRef, {
-          replyCount: increment(1)
-        });
-      }
+      // Update parent post's reply count
+      await this.updateReplyCount(reply.parentId);
 
-      return docRef.id;
+      return {
+        id: docRef.id,
+        ...reply, // Original reply data from the form
+        createdAt: new Date(),
+        isReply: true,
+        depth: (parentPost.depth || 0) + 1,
+        threadId: parentPost.threadId || parentPost.id,
+        replyCount: 0
+      };
     } catch (error) {
       console.error('Error creating butler talk reply:', error);
       throw new Error('Failed to create butler talk reply');

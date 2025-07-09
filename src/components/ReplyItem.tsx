@@ -1,30 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Post } from "@/types";
 import ReplyButton from "./ReplyButton";
 import ReplyForm from "./ReplyForm";
+import { IPostService } from "@/services";
 
 interface ReplyItemProps {
   reply: Post;
   onReplySuccess: (newReply: Post) => void;
   maxDepth?: number;
+  postService: IPostService;
 }
 
 export default function ReplyItem({
   reply,
   onReplySuccess,
   maxDepth = 3,
+  postService,
 }: ReplyItemProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [replies, setReplies] = useState<Post[]>([]);
+  const [nestedReplies, setNestedReplies] = useState<Post[]>([]);
+  const [showNestedReplies, setShowNestedReplies] = useState(false);
+  const [loadingNested, setLoadingNested] = useState(false);
+  const [nestedReplyCount, setNestedReplyCount] = useState(reply.replyCount || 0);
 
   const canReply = (reply.depth || 0) < maxDepth;
   const indentLevel = Math.min(reply.depth || 0, 3); // Max visual indent
 
+  // Update nested reply count when reply.replyCount changes
+  useEffect(() => {
+    setNestedReplyCount(reply.replyCount || 0);
+  }, [reply.replyCount]);
+
+  const loadNestedReplies = async () => {
+    if (nestedReplies.length > 0) return; // Already loaded
+
+    setLoadingNested(true);
+    try {
+      console.log("Loading nested replies for reply:", reply.id);
+      const fetchedNestedReplies = await postService.getReplies(reply.id);
+      console.log("Fetched nested replies:", fetchedNestedReplies);
+      setNestedReplies(fetchedNestedReplies);
+    } catch (error) {
+      console.error("Error loading nested replies:", error);
+    } finally {
+      setLoadingNested(false);
+    }
+  };
+
+  const handleToggleNestedReplies = () => {
+    if (!showNestedReplies && nestedReplies.length === 0 && nestedReplyCount > 0) {
+      loadNestedReplies();
+    }
+    setShowNestedReplies(!showNestedReplies);
+  };
+
   const handleReplySuccess = (newReply: Post) => {
-    setReplies((prev) => [...prev, newReply]);
+    // Add the new reply to nested replies
+    setNestedReplies((prev) => [...prev, newReply]);
+    setNestedReplyCount(prev => prev + 1);
     setShowReplyForm(false);
+    setShowNestedReplies(true); // Automatically show nested replies when a new one is added
+    // Notify parent about the new reply
+    onReplySuccess(newReply);
+  };
+
+  const handleNestedReplySuccess = (newReply: Post) => {
+    // When a deeply nested reply is created, just pass it up and update count
+    setNestedReplyCount(prev => prev + 1);
     onReplySuccess(newReply);
   };
 
@@ -56,15 +100,32 @@ export default function ReplyItem({
         </div>
 
         {/* Reply actions */}
-        {canReply && (
-          <ReplyButton
-            postId={reply.id}
-            replyCount={reply.replyCount}
-            onToggleReply={() => setShowReplyForm(!showReplyForm)}
-            showingReplies={false}
-            showingReplyForm={showReplyForm}
-          />
-        )}
+        <div className="mt-3 flex items-center space-x-4">
+          {canReply && (
+            <ReplyButton
+              postId={reply.id}
+              replyCount={nestedReplyCount}
+              onToggleReply={() => setShowReplyForm(!showReplyForm)}
+              showingReplies={false}
+              showingReplyForm={showReplyForm}
+            />
+          )}
+
+          {/* Show nested replies button */}
+          {nestedReplyCount > 0 && (
+            <button
+              onClick={handleToggleNestedReplies}
+              className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
+              disabled={loadingNested}
+            >
+              {loadingNested
+                ? "로딩 중..."
+                : showNestedReplies
+                  ? "답글 숨기기"
+                  : `답글 ${nestedReplyCount}개 보기`}
+            </button>
+          )}
+        </div>
 
         {/* Reply form */}
         {showReplyForm && (
@@ -74,21 +135,27 @@ export default function ReplyItem({
             onReplySuccess={handleReplySuccess}
             onCancel={() => setShowReplyForm(false)}
             depth={reply.depth || 0}
+            postService={postService}
           />
         )}
 
         {/* Nested replies */}
-        {replies.length > 0 && (
+        {showNestedReplies && nestedReplies.length > 0 && (
           <div className="mt-3">
-            {replies.map((nestedReply) => (
+            {nestedReplies.map((nestedReply) => (
               <ReplyItem
                 key={nestedReply.id}
                 reply={nestedReply}
-                onReplySuccess={onReplySuccess}
+                onReplySuccess={handleNestedReplySuccess}
                 maxDepth={maxDepth}
+                postService={postService}
               />
             ))}
           </div>
+        )}
+
+        {showNestedReplies && nestedReplies.length === 0 && !loadingNested && nestedReplyCount > 0 && (
+          <div className="text-gray-500 text-sm py-4 ml-4">답글을 불러올 수 없습니다.</div>
         )}
       </div>
     </div>

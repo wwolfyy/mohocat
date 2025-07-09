@@ -119,6 +119,7 @@ const ButlerTalkClient = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageClick}
+        postService={butlerTalkService}
         data-oid="dy3hc7:"
       />
     </>

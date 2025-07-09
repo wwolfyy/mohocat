@@ -119,6 +119,7 @@ const ButlerStreamClient = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageClick}
+        postService={postService}
         data-oid="dy3hc7:"
       />
     </>

@@ -189,8 +189,12 @@ export class FirebasePostService implements IPostService {
 
       return {
         id: docRef.id,
-        ...replyData,
-        createdAt: new Date()
+        ...reply, // Original reply data from the form
+        createdAt: new Date(),
+        isReply: true,
+        depth: (parentPost.depth || 0) + 1,
+        threadId: parentPost.threadId || parentPost.id,
+        replyCount: 0
       };
     } catch (error) {
       console.error('Error creating reply:', error);

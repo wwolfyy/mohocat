@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Post } from "@/types";
-import { getPostService } from "@/services";
+import { IPostService } from "@/services";
 import ReplyItem from "./ReplyItem";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
@@ -10,18 +10,22 @@ interface ReplyListProps {
   postId: string;
   replyCount?: number;
   onReplyCountUpdate: (count: number) => void;
+  postService: IPostService;
 }
 
-export default function ReplyList({
+export interface ReplyListRef {
+  addReply: (reply: Post) => void;
+}
+
+const ReplyList = forwardRef<ReplyListRef, ReplyListProps>(({
   postId,
   replyCount = 0,
   onReplyCountUpdate,
-}: ReplyListProps) {
+  postService,
+}, ref) => {
   const [replies, setReplies] = useState<Post[]>([]);
   const [showReplies, setShowReplies] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const postService = getPostService();
 
   const loadReplies = async () => {
     if (replies.length > 0) return; // Already loaded
@@ -47,9 +51,24 @@ export default function ReplyList({
   };
 
   const handleReplySuccess = (newReply: Post) => {
-    setReplies((prev) => [...prev, newReply]);
+    // Check if this reply is a direct child of the current post
+    if (newReply.parentId === postId) {
+      // Only add direct children to this ReplyList
+      setReplies((prev) => [...prev, newReply]);
+      // Automatically show replies when a new one is added
+      setShowReplies(true);
+    }
+    // Always update the reply count for the parent
     onReplyCountUpdate(replyCount + 1);
   };
+
+  const addReply = (reply: Post) => {
+    handleReplySuccess(reply);
+  };
+
+  useImperativeHandle(ref, () => ({
+    addReply,
+  }));
 
   if (replyCount === 0) {
     return null;
@@ -83,6 +102,7 @@ export default function ReplyList({
               key={reply.id}
               reply={reply}
               onReplySuccess={handleReplySuccess}
+              postService={postService}
             />
           ))}
 
@@ -93,4 +113,8 @@ export default function ReplyList({
       )}
     </div>
   );
-}
+});
+
+ReplyList.displayName = 'ReplyList';
+
+export default ReplyList;

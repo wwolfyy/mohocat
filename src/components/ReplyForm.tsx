@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getPostService } from "@/services";
+import { IPostService } from "@/services";
 import { useAuth } from "@/hooks/useAuth";
 
 interface ReplyFormProps {
@@ -10,6 +10,7 @@ interface ReplyFormProps {
   onReplySuccess: (reply: any) => void;
   onCancel: () => void;
   depth?: number;
+  postService: IPostService;
 }
 
 export default function ReplyForm({
@@ -18,12 +19,11 @@ export default function ReplyForm({
   onReplySuccess,
   onCancel,
   depth = 0,
+  postService,
 }: ReplyFormProps) {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, isAuthenticated, loading } = useAuth();
-
-  const postService = getPostService();
 
   // Don't render if not authenticated
   if (loading) {
@@ -78,9 +78,12 @@ export default function ReplyForm({
           hour12: false,
         }),
         title: `Re: ${parentUsername}님의 글`, // Auto-generated title for replies
+        depth: depth + 1, // Increment depth for nested replies
       };
 
+      console.log("Creating reply with data:", replyData);
       const newReply = await postService.createReply(replyData);
+      console.log("Created reply:", newReply);
       onReplySuccess(newReply);
       setMessage("");
     } catch (error) {
