@@ -69,6 +69,9 @@ export default function CatsCMSPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [locationFilter, setLocationFilter] = useState<string>('');
+  const [genderFilter, setGenderFilter] = useState<string>('');
+  const [birthYearFilter, setBirthYearFilter] = useState<string>('');
+  const [neuteredFilter, setNeuteredFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
   // Get unique locations and statuses for filters
@@ -80,6 +83,21 @@ export default function CatsCMSPage() {
   const uniqueStatuses = Array.from(new Set(
     cats.map(cat => cat.status).filter(Boolean)
   )).sort();
+
+  // Get unique values for new filters
+  const uniqueGenders = Array.from(new Set(
+    cats.map(cat => cat.sex).filter(Boolean)
+  )).sort();
+
+  const uniqueBirthYears = Array.from(new Set(
+    cats.map(cat => cat.date_of_birth).filter((year): year is number => year !== undefined)
+  )).sort((a, b) => b - a); // Sort years in descending order
+
+  const neuteredOptions = [
+    { value: 'true', label: 'O (중성화됨)' },
+    { value: 'false', label: 'X (중성화 안됨)' },
+    { value: 'unknown', label: '? (알 수 없음)' }
+  ];
 
   // Get unique dwelling values for dropdown options
   const allDwellingValues = Array.from(new Set([
@@ -108,7 +126,21 @@ export default function CatsCMSPage() {
         cat.dwelling === locationFilter ||
         cat.prev_dwelling === locationFilter;
 
-      return matchesSearch && matchesStatus && matchesLocation;
+      // Gender filter
+      const matchesGender = !genderFilter || cat.sex === genderFilter;
+
+      // Birth year filter
+      const matchesBirthYear = !birthYearFilter ||
+        cat.date_of_birth?.toString() === birthYearFilter;
+
+      // Neutered filter
+      const matchesNeutered = !neuteredFilter ||
+        (neuteredFilter === 'true' && cat.isNeutered === true) ||
+        (neuteredFilter === 'false' && cat.isNeutered === false) ||
+        (neuteredFilter === 'unknown' && cat.isNeutered === undefined);
+
+      return matchesSearch && matchesStatus && matchesLocation &&
+             matchesGender && matchesBirthYear && matchesNeutered;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -150,6 +182,9 @@ export default function CatsCMSPage() {
     setSearchTerm('');
     setStatusFilter('');
     setLocationFilter('');
+    setGenderFilter('');
+    setBirthYearFilter('');
+    setNeuteredFilter('');
     setSortBy('name');
     setSortOrder('asc');
   };
@@ -419,8 +454,8 @@ export default function CatsCMSPage() {
       {/* Filters Panel */}
       {showFilters && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Filter by Status
               </label>
@@ -437,7 +472,7 @@ export default function CatsCMSPage() {
                 ))}
               </select>
             </div>
-            <div className="flex-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Filter by Location
               </label>
@@ -454,14 +489,65 @@ export default function CatsCMSPage() {
                 ))}
               </select>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Filter by Gender
+              </label>
+              <select
+                value={genderFilter}
+                onChange={(e) => setGenderFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Clear Filters
-              </button>
+                <option value="">All Genders</option>
+                {uniqueGenders.map(gender => (
+                  <option key={gender} value={gender}>
+                    {gender === 'M' ? '남 (Male)' : gender === 'F' ? '여 (Female)' : gender}
+                  </option>
+                ))}
+              </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Filter by Birth Year
+              </label>
+              <select
+                value={birthYearFilter}
+                onChange={(e) => setBirthYearFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Years</option>
+                {uniqueBirthYears.map(year => (
+                  <option key={year} value={year.toString()}>
+                    {year}년
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Filter by Neutering
+              </label>
+              <select
+                value={neuteredFilter}
+                onChange={(e) => setNeuteredFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All</option>
+                {neuteredOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
       )}
@@ -928,21 +1014,32 @@ export default function CatsCMSPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
-                      {cat.sex && <span className="capitalize">{cat.sex}</span>}
-                      {cat.date_of_birth && (
-                        <div className="text-gray-500">
-                          Born: {cat.date_of_birth}
+                      {/* Combined gender, birth year, and neutering status in Korean format */}
+                      {(cat.sex || cat.date_of_birth || cat.isNeutered !== undefined) && (
+                        <div className="mb-1">
+                          {cat.sex && (
+                            <span>
+                              {cat.sex === 'M' ? '남' : cat.sex === 'F' ? '여' : cat.sex}
+                            </span>
+                          )}
+                          {(cat.date_of_birth || cat.isNeutered !== undefined) && (
+                            <span>
+                              {' '}(
+                              {cat.date_of_birth && `${cat.date_of_birth}년 생`}
+                              {cat.date_of_birth && cat.isNeutered !== undefined && ', '}
+                              {cat.isNeutered !== undefined && `중성화 ${cat.isNeutered === true ? "O" : cat.isNeutered === false ? "X" : "?"}`}
+                              )
+                            </span>
+                          )}
                         </div>
                       )}
-                      <div className="text-gray-500">
-                        Neutered: {cat.isNeutered === true ? "O" : cat.isNeutered === false ? "X" : "?"}
-                      </div>
+                      {/* Description on the second line */}
+                      {cat.description && (
+                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                          {cat.description}
+                        </div>
+                      )}
                     </div>
-                    {cat.description && (
-                      <div className="text-sm text-gray-500 truncate max-w-xs">
-                        {cat.description}
-                      </div>
-                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
@@ -988,7 +1085,7 @@ export default function CatsCMSPage() {
         {filteredCats.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">
-              {searchTerm || statusFilter || locationFilter
+              {searchTerm || statusFilter || locationFilter || genderFilter || birthYearFilter || neuteredFilter
                 ? "No cats found matching your filters."
                 : "No cats found."}
             </p>
