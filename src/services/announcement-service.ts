@@ -10,7 +10,7 @@ import { collection, getDocs, doc, getDoc, addDoc, Timestamp, query, where, orde
 import { db } from './firebase';
 
 export class FirebaseAnnouncementService implements IPostService {
-  private readonly COLLECTION_NAME = 'announcements';
+  private readonly COLLECTION_NAME = 'posts_announcements';
 
   async getAllPosts(): Promise<any[]> {
     try {
