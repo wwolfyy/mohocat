@@ -163,4 +163,62 @@ export class FirebaseAnnouncementService implements IPostService {
   async updateReplyCount(postId: string): Promise<void> {
     // No-op for announcements since they don't have replies
   }
+
+  /**
+   * Get the most recently updated announcement that is marked to show in modal
+   */
+  async getModalAnnouncement(): Promise<any | null> {
+    try {
+      // Get all announcements with showInModal = true
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('showInModal', '==', true)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        return null;
+      }
+
+      // Get all documents and sort them manually by updatedAt if it exists, otherwise by createdAt
+      const allDocs = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || data.createdAt?.toDate() || new Date()
+        };
+      });
+
+      // Sort by updatedAt (most recent first), then by createdAt
+      allDocs.sort((a, b) => {
+        const aTime = a.updatedAt || a.createdAt;
+        const bTime = b.updatedAt || b.createdAt;
+        return bTime.getTime() - aTime.getTime();
+      });
+
+      return allDocs[0];
+    } catch (error) {
+      console.error('Error fetching modal announcement:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Toggle the modal display status of an announcement
+   */
+  async toggleModalDisplay(postId: string, showInModal: boolean): Promise<void> {
+    try {
+      const postRef = doc(db, this.COLLECTION_NAME, postId);
+      await updateDoc(postRef, {
+        showInModal,
+        updatedAt: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('Error toggling modal display:', error);
+      throw new Error(`Failed to toggle modal display for announcement: ${postId}`);
+    }
+  }
 }

@@ -96,6 +96,7 @@ interface Post {
   time: string;
   createdAt?: any; // Can be Date, string, number, or Firestore timestamp
   replyCount?: number;
+  showInModal?: boolean; // For announcements modal popup
 }
 
 interface AdminPostListProps {
@@ -215,22 +216,39 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
     }
 
     try {
-      // Use the appropriate service based on post type
+      setIsLoading(true);
       const service = postType === "butler_stream"
         ? postService
         : postType === "butler_talk"
           ? butlerTalkService
           : announcementService;
+
       await service.deletePost(postId);
 
-      // Remove the post from local state
-      setPosts(prev => prev.filter(post => post.id !== postId));
-
-      // Show success message
+      // Refresh the posts list
+      await fetchPosts(currentPage);
       alert("Post deleted successfully!");
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error("Failed to delete post:", error);
       alert("Failed to delete post. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggleModal = async (postId: string, currentStatus: boolean) => {
+    try {
+      setIsLoading(true);
+      await (announcementService as any).toggleModalDisplay(postId, !currentStatus);
+
+      // Refresh the posts list
+      await fetchPosts(currentPage);
+      alert(`공지사항 팝업이 ${!currentStatus ? '활성화' : '비활성화'}되었습니다.`);
+    } catch (error) {
+      console.error("Failed to toggle modal display:", error);
+      alert("모달 설정 변경에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -268,7 +286,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
         {posts.map((post) => (
           <div
             key={post.id}
-            className="border p-4 rounded flex flex-col space-y-4"
+            className="border p-4 rounded"
           >
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
@@ -346,61 +364,105 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                 </Link>
                 <p className="text-gray-700 mb-2">{post.message}</p>
               </div>
-              <div className="text-right text-sm text-gray-500 flex flex-col items-end">
-                <p>{post.username}</p>
-                <p>
-                  {formatKoreaDateTime(post.date, post.time, post.createdAt)}
-                </p>
-              </div>
-            </div>
+              <div className="text-right text-sm text-gray-500 flex flex-col items-end space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="text-right">
+                    <p>{post.username}</p>
+                    <p>
+                      {formatKoreaDateTime(post.date, post.time, post.createdAt)}
+                    </p>
+                  </div>
+                  {/* Admin Controls - Inline with user info */}
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => handleEdit(post.id)}
+                      className={cn(
+                        "px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600",
+                        "transition-colors duration-200"
+                      )}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      className={cn(
+                        "px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600",
+                        "transition-colors duration-200"
+                      )}
+                    >
+                      Delete
+                    </button>
 
-            {/* Admin Controls */}
-            <div className="border-t pt-3 flex justify-between items-center">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEdit(post.id)}
-                  className={cn(
-                    "px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600",
-                    "transition-colors duration-200"
-                  )}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(post.id)}
-                  className={cn(
-                    "px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600",
-                    "transition-colors duration-200"
-                  )}
-                >
-                  Delete
-                </button>
-              </div>
-
-              {/* Reply count display */}
-              {post.replyCount && post.replyCount > 0 && (
-                <div className="text-sm text-gray-500">
-                  {post.replyCount} replies
+                    {/* Modal Toggle Switch - Only for announcements */}
+                    {postType === "announcements" && (
+                      <div
+                        onClick={() => handleToggleModal(post.id, post.showInModal || false)}
+                        className={cn(
+                          "relative inline-flex items-center h-6 w-11 rounded-full cursor-pointer transition-colors duration-200",
+                          post.showInModal ? "bg-green-500" : "bg-gray-300"
+                        )}
+                        role="switch"
+                        aria-checked={post.showInModal || false}
+                      >
+                        {/* Toggle circle */}
+                        <span
+                          className={cn(
+                            "inline-block w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200",
+                            post.showInModal ? "translate-x-6" : "translate-x-1"
+                          )}
+                        />
+                        {/* ON label */}
+                        <span
+                          className={cn(
+                            "absolute left-1 text-xs font-medium transition-opacity duration-200",
+                            post.showInModal ? "text-white opacity-100" : "text-gray-500 opacity-0"
+                          )}
+                          style={{ fontSize: "8px" }}
+                        >
+                          ON
+                        </span>
+                        {/* OFF label */}
+                        <span
+                          className={cn(
+                            "absolute right-1 text-xs font-medium transition-opacity duration-200",
+                            !post.showInModal ? "text-gray-600 opacity-100" : "text-white opacity-0"
+                          )}
+                          style={{ fontSize: "8px" }}
+                        >
+                          OFF
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* Reply count display - moved to bottom right */}
+                {post.replyCount && post.replyCount > 0 && (
+                  <div className="text-xs text-gray-400">
+                    {post.replyCount} replies
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Admin Reply Management */}
             {postType !== "announcements" && (
-              <AdminReplyList
-                postId={post.id}
-                replyCount={post.replyCount || 0}
-                onReplyCountUpdate={(count) => {
-                  setPosts(prev => prev.map(p =>
-                    p.id === post.id ? { ...p, replyCount: count } : p
-                  ));
-                }}
-                postService={postType === "butler_stream"
-                  ? postService
-                  : postType === "butler_talk"
-                    ? butlerTalkService
-                    : announcementService}
-              />
+              <div className="mt-4 pt-3 border-t">
+                <AdminReplyList
+                  postId={post.id}
+                  replyCount={post.replyCount || 0}
+                  onReplyCountUpdate={(count) => {
+                    setPosts(prev => prev.map(p =>
+                      p.id === post.id ? { ...p, replyCount: count } : p
+                    ));
+                  }}
+                  postService={postType === "butler_stream"
+                    ? postService
+                    : postType === "butler_talk"
+                      ? butlerTalkService
+                      : announcementService}
+                />
+              </div>
             )}
           </div>
         ))}
