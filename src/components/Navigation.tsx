@@ -11,49 +11,56 @@ export default function Navigation() {
     <>
       {" "}
       {/* Desktop navigation */}
-      <nav className="hidden md:flex items-center space-x-6">
+      <nav className="hidden md:flex items-center">
         <Link
           href="/pages/about"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           소개
         </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/contact"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           동참
-        </Link>{" "}
+        </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/photo-album"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           사진첩
         </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/video-album"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           동영상
         </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/butler_stream"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           급식현황
         </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/butler_talk"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           집사톡
         </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/announcements"
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           공지
         </Link>
+        <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/faq"
           className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -110,53 +117,52 @@ export default function Navigation() {
         {/* Mobile navigation menu */}
         {isMobileMenuOpen && (
           <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-            {" "}
             <div className="py-1">
               <Link
                 href="/pages/about"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 소개
               </Link>
               <Link
                 href="/pages/contact"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동참
-              </Link>{" "}
+              </Link>
               <Link
                 href="/pages/photo-album"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 사진첩
               </Link>
               <Link
                 href="/pages/video-album"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 동영상
               </Link>
               <Link
                 href="/pages/butler_stream"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 급식현황
               </Link>
               <Link
                 href="/pages/butler_talk"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 집사톡
               </Link>
               <Link
                 href="/pages/announcements"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 공지
