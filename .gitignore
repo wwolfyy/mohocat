@@ -40,11 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
-
+# cache
 **/*.cache
 .vscode/*
 .history/
 
+# secrets & configs
 config/firebase/mountaincats-61543-7329e795c352.json
 google_svs_account.json
+
+# media
+public/images/about-photos/*

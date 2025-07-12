@@ -54,6 +54,7 @@ export interface AboutMainPhoto {
   filename: string;
   caption: string;
   altText: string;
+  localPath?: string; // Path to static local image (set during build time)
 }
 
 export interface MountainAbout {

@@ -3,7 +3,11 @@
     "centralUserService": {
       "projectId": "mountain-cats-users",
       "description": "Centralized authentication and user management for all mountains",
-      "handles": ["authentication", "user-management", "cross-mountain-access"]
+      "handles": [
+        "authentication",
+        "user-management",
+        "cross-mountain-access"
+      ]
     },
     "version": "2.0",
     "lastUpdated": "2025-06-29"
@@ -20,7 +24,8 @@
       "mainPhoto": {
         "filename": "about-main-geyang.jpg",
         "caption": "2020년 1월 19일 해질 무렵. 추위가 좀 풀린 틈을 타 같이 햇볕을 쬐고 있는 계양산 최고의 절친 아롱이(오른쪽)와 개똥이.",
-        "altText": "개똥이와 아롱이"
+        "altText": "개똥이와 아롱이",
+        "localPath": "/images/about-photos/geyang/about-main-geyang.jpg"
       },
       "sections": [
         {
@@ -52,8 +57,15 @@
     "authentication": {
       "type": "centralized",
       "userServiceProject": "mountain-cats-users",
-      "roles": ["admin", "butler-offline", "butler-online", "viewer"],
-      "smsRegions": ["KR"],
+      "roles": [
+        "admin",
+        "butler-offline",
+        "butler-online",
+        "viewer"
+      ],
+      "smsRegions": [
+        "KR"
+      ],
       "defaultRole": "viewer",
       "requireApproval": true
     }

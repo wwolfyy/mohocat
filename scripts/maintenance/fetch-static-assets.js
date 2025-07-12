@@ -9,15 +9,20 @@ const SERVICE_ACCOUNT_KEY_PATH = 'config/firebase/mountaincats-61543-7329e795c35
 const FIREBASE_PROJECT_ID = 'mountaincats-61543'; // Your Firebase Project ID
 const STORAGE_BUCKET = 'mountaincats-61543.firebasestorage.app'; // Your storage bucket
 const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
+const ABOUT_PHOTOS_FOLDER = 'about-photos/'; // Folder in Firebase Storage where about photos are stored
 const CATS_COLLECTION = 'cats';
 const LOCAL_THUMBNAILS_DIR_RELATIVE = 'public/images/thumbnails'; // Relative to project root
+const LOCAL_ABOUT_PHOTOS_DIR_RELATIVE = 'public/images/about-photos'; // Relative to project root
 const STATIC_DATA_JSON_PATH_RELATIVE = 'src/lib/cats-static-data.json'; // Relative to project root
+const MOUNTAINS_CONFIG_PATH_RELATIVE = 'config/mountains/mountains.json'; // Relative to project root
 
 // Absolute paths resolved from project root
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..'); // Assuming script is in 'scripts/maintenance' directory
 const SERVICE_ACCOUNT_FULL_PATH = path.join(PROJECT_ROOT, SERVICE_ACCOUNT_KEY_PATH);
 const LOCAL_THUMBNAILS_DIR = path.join(PROJECT_ROOT, LOCAL_THUMBNAILS_DIR_RELATIVE);
+const LOCAL_ABOUT_PHOTOS_DIR = path.join(PROJECT_ROOT, LOCAL_ABOUT_PHOTOS_DIR_RELATIVE);
 const STATIC_DATA_JSON_PATH = path.join(PROJECT_ROOT, STATIC_DATA_JSON_PATH_RELATIVE);
+const MOUNTAINS_CONFIG_PATH = path.join(PROJECT_ROOT, MOUNTAINS_CONFIG_PATH_RELATIVE);
 // ---
 
 async function initializeFirebase() {
@@ -125,6 +130,56 @@ async function fetchThumbnailsFromStorage(bucket) {
     }
 }
 
+async function fetchAboutPhotosFromStorage(bucket) {
+    console.log(`Fetching about photos from Firebase Storage folder: '${ABOUT_PHOTOS_FOLDER}'...`);
+    try {
+        const [files] = await bucket.getFiles({ prefix: ABOUT_PHOTOS_FOLDER });
+
+        // Filter out directories and get actual image files
+        const imageFiles = files.filter(file => {
+            const fileName = file.name;
+            // Skip directories and non-image files
+            return !fileName.endsWith('/') &&
+                   fileName !== ABOUT_PHOTOS_FOLDER.slice(0, -1) &&
+                   /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+        });
+
+        console.log(`Found ${imageFiles.length} about photo images in storage.`);
+
+        // Debug: Show some example filenames
+        if (imageFiles.length > 0) {
+            const exampleFiles = imageFiles.slice(0, 3).map(f => path.basename(f.name));
+            console.log(`Example about photo filenames: ${exampleFiles.join(', ')}${imageFiles.length > 3 ? '...' : ''}`);
+        }
+
+        // Create a map of full path to download URL for about photos
+        const aboutPhotosMap = {};
+        for (const file of imageFiles) {
+            try {
+                const [url] = await file.getSignedUrl({
+                    action: 'read',
+                    expires: Date.now() + 1000 * 60 * 60 * 24 * 7 // 7 days
+                });
+
+                // Keep the full path structure for about photos (e.g., about-photos/geyang/about-main-geyang.jpg)
+                aboutPhotosMap[file.name] = url;
+
+                // Debug: Show the paths for the first few files
+                if (Object.keys(aboutPhotosMap).length <= 3) {
+                    console.log(`About photo: '${file.name}' -> URL ready`);
+                }
+            } catch (error) {
+                console.error(`Failed to get download URL for ${file.name}:`, error.message);
+            }
+        }
+
+        return aboutPhotosMap;
+    } catch (error) {
+        console.error("Error fetching about photos from storage:", error);
+        return {};
+    }
+}
+
 async function downloadImage(url, localPath) {
     try {
         const response = await axios({
@@ -227,6 +282,74 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
     return updatedCatsList;
 }
 
+async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
+    console.log(`Ensuring local about photos directory exists: '${LOCAL_ABOUT_PHOTOS_DIR}'`);
+    await fsPromises.mkdir(LOCAL_ABOUT_PHOTOS_DIR, { recursive: true });
+
+    const updatedMountainsConfig = { ...mountainsConfig };
+
+    for (const [mountainId, mountainConfig] of Object.entries(mountainsConfig)) {
+        if (!mountainConfig.about || !mountainConfig.about.mainPhoto) {
+            console.log(`No main photo configured for mountain: ${mountainId}`);
+            continue;
+        }
+
+        const mainPhoto = mountainConfig.about.mainPhoto;
+        const expectedStoragePath = `${ABOUT_PHOTOS_FOLDER}${mountainId}/${mainPhoto.filename}`;
+
+        console.log(`Processing mountain: '${mountainId}', looking for photo: '${expectedStoragePath}'`);
+
+        // Find the photo in storage
+        const downloadUrl = aboutPhotosMap[expectedStoragePath];
+
+        if (!downloadUrl) {
+            console.warn(`WARNING: About photo not found in storage for mountain '${mountainId}': ${expectedStoragePath}`);
+
+            // Debug: show available about photos
+            const availablePhotos = Object.keys(aboutPhotosMap).filter(path =>
+                path.startsWith(`${ABOUT_PHOTOS_FOLDER}${mountainId}/`)
+            );
+            console.log(`Available photos for ${mountainId}:`, availablePhotos);
+            continue;
+        }
+
+        try {
+            // Create mountain-specific directory
+            const mountainAboutDir = path.join(LOCAL_ABOUT_PHOTOS_DIR, mountainId);
+            await fsPromises.mkdir(mountainAboutDir, { recursive: true });
+
+            const localImagePath = path.join(mountainAboutDir, mainPhoto.filename);
+            await downloadImage(downloadUrl, localImagePath);
+
+            // Generate web-accessible path
+            const relativePath = path.relative(path.join(PROJECT_ROOT, 'public'), localImagePath);
+            const standardizedPath = relativePath.replace(/\\/g, '/'); // Ensure forward slashes for web
+            const webAccessiblePath = `/${standardizedPath}`;
+
+            console.log(`Successfully downloaded about photo for '${mountainId}' to: '${localImagePath}'. Web path: '${webAccessiblePath}'`);
+
+            // Update the mountain config with the local path
+            if (!updatedMountainsConfig[mountainId].about.mainPhoto.localPath) {
+                updatedMountainsConfig[mountainId] = {
+                    ...updatedMountainsConfig[mountainId],
+                    about: {
+                        ...updatedMountainsConfig[mountainId].about,
+                        mainPhoto: {
+                            ...updatedMountainsConfig[mountainId].about.mainPhoto,
+                            localPath: webAccessiblePath
+                        }
+                    }
+                };
+            }
+
+        } catch (error) {
+            console.error(`Failed to download about photo for mountain '${mountainId}':`, error.message);
+        }
+    }
+
+    return updatedMountainsConfig;
+}
+
 async function saveStaticDataJson(catsData) {
     console.log(`Saving updated cat data to JSON: '${STATIC_DATA_JSON_PATH}'...`);
     try {
@@ -235,6 +358,48 @@ async function saveStaticDataJson(catsData) {
         console.log(`Successfully created static data JSON: '${STATIC_DATA_JSON_PATH}'`);
     } catch (error) {
         console.error(`ERROR: Could not write static data JSON to '${STATIC_DATA_JSON_PATH}':`, error);
+    }
+}
+
+async function loadMountainsConfig() {
+    try {
+        console.log(`Loading mountains configuration from: '${MOUNTAINS_CONFIG_PATH}'`);
+        const configData = await fsPromises.readFile(MOUNTAINS_CONFIG_PATH, 'utf-8');
+        const config = JSON.parse(configData);
+
+        // Extract mountains (excluding _meta)
+        const mountains = {};
+        for (const [key, value] of Object.entries(config)) {
+            if (key !== '_meta' && value && typeof value === 'object') {
+                mountains[key] = value;
+            }
+        }
+
+        console.log(`Loaded ${Object.keys(mountains).length} mountain configurations`);
+        return mountains;
+    } catch (error) {
+        console.error("Error loading mountains configuration:", error);
+        return {};
+    }
+}
+
+async function saveUpdatedMountainsConfig(updatedConfig) {
+    try {
+        // Read the original config to preserve _meta and structure
+        const originalConfigData = await fsPromises.readFile(MOUNTAINS_CONFIG_PATH, 'utf-8');
+        const originalConfig = JSON.parse(originalConfigData);
+
+        // Merge with updated mountain configs
+        const finalConfig = {
+            ...originalConfig,
+            ...updatedConfig
+        };
+
+        const jsonData = JSON.stringify(finalConfig, null, 2);
+        await fsPromises.writeFile(MOUNTAINS_CONFIG_PATH, jsonData, 'utf-8');
+        console.log(`Successfully updated mountains configuration: '${MOUNTAINS_CONFIG_PATH}'`);
+    } catch (error) {
+        console.error(`ERROR: Could not write updated mountains configuration to '${MOUNTAINS_CONFIG_PATH}':`, error);
     }
 }
 
@@ -265,6 +430,16 @@ async function main() {
 
     const updatedCatsData = await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
     await saveStaticDataJson(updatedCatsData);
+
+    const aboutPhotosMap = await fetchAboutPhotosFromStorage(storage);
+    if (Object.keys(aboutPhotosMap).length === 0) {
+        console.log("No about photos found in Firebase Storage. About images may not be available.");
+    }
+
+    const mountainsConfig = await loadMountainsConfig();
+    const updatedMountainsConfig = await downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig);
+    await saveUpdatedMountainsConfig(updatedMountainsConfig);
+
     console.log("--- Static Asset Fetching Process (Node.js) Completed ---");
 }
 
