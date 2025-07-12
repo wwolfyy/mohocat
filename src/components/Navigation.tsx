@@ -7,6 +7,12 @@ import { cn } from "@/utils/cn";
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Handle click on disabled items
+  const handleDisabledClick = (e: React.MouseEvent, feature: string) => {
+    e.preventDefault();
+    alert(`${feature} 기능은 아직 구현되지 않았습니다.`);
+  };
+
   return (
     <>
       {" "}
@@ -40,19 +46,12 @@ export default function Navigation() {
           동영상
         </Link>
         <span className="mx-3 text-gray-400">•</span>
-        <Link
-          href="/pages/butler_stream"
-          className="text-gray-600 hover:text-gray-900 transition-colors"
+        <span
+          onClick={(e) => handleDisabledClick(e, "입양홍보")}
+          className="text-gray-400 cursor-not-allowed opacity-60"
         >
-          급식현황
-        </Link>
-        <span className="mx-3 text-gray-400">•</span>
-        <Link
-          href="/pages/butler_talk"
-          className="text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          집사톡
-        </Link>
+          입양홍보
+        </span>
         <span className="mx-3 text-gray-400">•</span>
         <Link
           href="/pages/announcements"
@@ -66,6 +65,20 @@ export default function Navigation() {
           className="text-gray-600 hover:text-gray-900 transition-colors"
         >
           FAQ
+        </Link>
+        <span className="mx-3 text-gray-400">|</span>
+        <Link
+          href="/pages/butler_stream"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          급식현황
+        </Link>
+        <span className="mx-3 text-gray-400">•</span>
+        <Link
+          href="/pages/butler_talk"
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          집사톡
         </Link>
       </nav>
       {/* Mobile hamburger button */}
@@ -146,20 +159,15 @@ export default function Navigation() {
               >
                 동영상
               </Link>
-              <Link
-                href="/pages/butler_stream"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
-                onClick={() => setIsMobileMenuOpen(false)}
+              <span
+                onClick={(e) => {
+                  handleDisabledClick(e, "입양홍보");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="block px-4 py-2 text-sm text-gray-400 cursor-not-allowed opacity-60 border-b border-gray-100"
               >
-                급식현황
-              </Link>
-              <Link
-                href="/pages/butler_talk"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                집사톡
-              </Link>
+                입양홍보
+              </span>
               <Link
                 href="/pages/announcements"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
@@ -169,10 +177,26 @@ export default function Navigation() {
               </Link>
               <Link
                 href="/pages/faq"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 FAQ
+              </Link>
+              <div className="border-t border-gray-300 my-1"></div>
+              <div className="px-4 py-1 text-xs text-gray-500 font-medium">인증 회원 전용</div>
+              <Link
+                href="/pages/butler_stream"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                급식현황
+              </Link>
+              <Link
+                href="/pages/butler_talk"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                집사톡
               </Link>
             </div>
           </div>
