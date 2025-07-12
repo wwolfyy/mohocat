@@ -57,12 +57,26 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
 
     if (catsWithThumbnails.length === 0) return null;
 
-    // Select a random cat (but stable across renders)
-    // Use pointId as seed for consistent randomization
-    const seed = pointId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const randomIndex = seed % catsWithThumbnails.length;
-    return catsWithThumbnails[randomIndex];
+    // Select a truly random cat (changes on each page load)
+    const randomIndex = Math.floor(Math.random() * catsWithThumbnails.length);
+    const selectedCat = catsWithThumbnails[randomIndex];
+
+    // Preload the image to reduce latency
+    if (selectedCat.thumbnailUrl) {
+      const img = new Image();
+      img.src = selectedCat.thumbnailUrl;
+    }
+
+    return selectedCat;
   }, [cats, pointId]);
+
+  // Preload the selected cat's thumbnail to reduce latency
+  useEffect(() => {
+    if (selectedCat?.thumbnailUrl) {
+      const img = new Image();
+      img.src = selectedCat.thumbnailUrl;
+    }
+  }, [selectedCat]);
 
   // If loading, no cats, or no thumbnails available, show the default dot
   if (loading || !selectedCat || imageError) {
