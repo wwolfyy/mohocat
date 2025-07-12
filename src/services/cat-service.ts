@@ -43,7 +43,32 @@ export class FirebaseCatService implements ICatService {
       console.error('Error fetching cat:', error);
       throw new Error(`Failed to fetch cat with id: ${id}`);
     }
-  }  async getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }> {
+  }
+
+  async getCatByName(name: string): Promise<Cat | null> {
+    try {
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('name', '==', name)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0]; // Get the first match
+        return {
+          id: doc.id,
+          ...doc.data()
+        } as Cat;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching cat by name:', error);
+      throw new Error(`Failed to fetch cat with name: ${name}`);
+    }
+  }
+
+  async getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }> {
     try {
       // Get current cats - those with dwelling matching pointId
       const currentQuery = query(

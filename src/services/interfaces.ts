@@ -12,6 +12,7 @@ import type { Cat, Point } from '../types';
 export interface ICatService {
   getAllCats(): Promise<Cat[]>;
   getCatById(id: string): Promise<Cat | null>;
+  getCatByName(name: string): Promise<Cat | null>;
   getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }>;
   createCat(cat: Omit<Cat, 'id'>): Promise<Cat>;
   updateCat(id: string, updates: Partial<Cat>): Promise<Cat>;

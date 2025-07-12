@@ -1,19 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getMountainAbout, getMountainTheme } from "@/utils/config";
 import { useAboutPhoto } from "@/hooks/useAboutPhoto";
-import { getAboutContentService } from "@/services";
+import { getAboutContentService, getCatService } from "@/services";
 import { AboutContent } from "@/services/about-content-service";
 import { processTextWithLinks } from "@/utils/text-processing";
+import { Cat } from "@/types";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import CatInfo from "@/components/CatInfo";
+import { cn } from "@/utils/cn";
 import Image from "next/image";
 
 export default function About() {
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
+  const [catModalLoading, setCatModalLoading] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const aboutContentService = getAboutContentService();
+  const catService = getCatService();
   const theme = getMountainTheme();
 
   // Load about content from Firestore or fallback to JSON
@@ -78,6 +86,43 @@ export default function About() {
 
     loadAboutContent();
   }, []);
+
+  // Handle cat modal link clicks
+  useEffect(() => {
+    const handleCatModalClick = async (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('cat-modal-link')) {
+        const catName = target.getAttribute('data-cat-name');
+        if (catName) {
+          setCatModalLoading(true);
+          try {
+            const cat = await catService.getCatByName(catName);
+            if (cat) {
+              setSelectedCat(cat);
+            } else {
+              console.warn(`Cat not found: ${catName}`);
+              // Could show a toast or alert here
+            }
+          } catch (error) {
+            console.error('Error loading cat:', error);
+          } finally {
+            setCatModalLoading(false);
+          }
+        }
+      }
+    };
+
+    const contentElement = contentRef.current;
+    if (contentElement) {
+      contentElement.addEventListener('click', handleCatModalClick);
+    }
+
+    return () => {
+      if (contentElement) {
+        contentElement.removeEventListener('click', handleCatModalClick);
+      }
+    };
+  }, [aboutData, catService]);
 
   const {
     photoUrl,
@@ -189,7 +234,7 @@ export default function About() {
         )}
 
         {/* Main Content */}
-        <div className="text-lg mb-8 leading-relaxed" data-oid="9dy6r-_">
+        <div className="text-lg mb-8 leading-relaxed" data-oid="9dy6r-_" ref={contentRef}>
           <div
             className="whitespace-pre-line"
             dangerouslySetInnerHTML={{ __html: processTextWithLinks(aboutData.mainContent) }}
@@ -216,6 +261,39 @@ export default function About() {
           </div>
         )} */}
       </div>
+
+      {/* Cat Modal */}
+      {selectedCat && (
+        <div
+          className="fixed inset-0 bg-black/75 flex items-start justify-center z-50 overflow-y-auto py-4"
+          onClick={() => setSelectedCat(null)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedCat(null)}
+              className={cn(
+                "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
+                "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
+                "flex items-center justify-center z-10"
+              )}
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+            <CatInfo cat={selectedCat} />
+          </div>
+        </div>
+      )}
+
+      {/* Cat Modal Loading */}
+      {catModalLoading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+        </div>
+      )}
     </div>
   );
 }

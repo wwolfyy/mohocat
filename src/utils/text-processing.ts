@@ -12,6 +12,15 @@ export function convertMarkdownLinks(text: string): string {
 }
 
 /**
+ * Convert cat modal links [catmodal:name] to clickable spans
+ */
+export function convertCatModalLinks(text: string): string {
+  // Match [catmodal:name] pattern
+  const catModalLinkRegex = /\[catmodal:([^\]]+)\]/g;
+  return text.replace(catModalLinkRegex, '<span class="cat-modal-link text-blue-600 hover:text-blue-800 underline cursor-pointer" data-cat-name="$1">$1</span>');
+}
+
+/**
  * Auto-detect URLs and convert them to clickable links
  */
 export function autoLinkUrls(text: string): string {
@@ -25,7 +34,7 @@ export function autoLinkUrls(text: string): string {
 }
 
 /**
- * Process text with both markdown links and auto URL detection
+ * Process text with markdown links, cat modal links, and auto URL detection
  */
 export function processTextWithLinks(text: string): string {
   if (!text) return text;
@@ -33,12 +42,15 @@ export function processTextWithLinks(text: string): string {
   // First convert markdown-style links
   let processed = convertMarkdownLinks(text);
 
+  // Then convert cat modal links
+  processed = convertCatModalLinks(processed);
+
   // Then auto-detect remaining URLs (but avoid double-converting)
   // Split by existing HTML tags to avoid converting URLs inside href attributes
-  const parts = processed.split(/(<a[^>]*>.*?<\/a>)/gi);
+  const parts = processed.split(/(<a[^>]*>.*?<\/a>|<span[^>]*>.*?<\/span>)/gi);
 
   processed = parts.map((part, index) => {
-    // Only process parts that are not already links (odd indices are the link tags)
+    // Only process parts that are not already links or spans (odd indices are the tags)
     if (index % 2 === 0) {
       return autoLinkUrls(part);
     }

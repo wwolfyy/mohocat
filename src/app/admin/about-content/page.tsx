@@ -202,6 +202,7 @@ export default function AboutContentAdmin() {
             <ul className="list-disc list-inside space-y-1">
               <li><strong>Markdown links:</strong> [링크텍스트](https://example.com)</li>
               <li><strong>Auto-detection:</strong> URLs like https://example.com are automatically converted to links</li>
+              <li><strong>Cat modal links:</strong> [catmodal:아롱이] opens a modal for the cat named "아롱이"</li>
               <li><strong>Line breaks:</strong> Press Enter for new lines</li>
             </ul>
           </div>
