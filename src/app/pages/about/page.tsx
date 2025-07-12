@@ -163,7 +163,7 @@ export default function About() {
             {photoUrl && !photoLoading && (
               <figure className="mb-6" data-oid="r08gnc2">
                 <div
-                  className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden"
+                  className="relative w-full h-96 md:h-[48rem] rounded-lg overflow-hidden"
                   data-oid="fq-5m32"
                 >
                   <Image
