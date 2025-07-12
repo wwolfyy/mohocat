@@ -333,7 +333,43 @@ export default function AdminDashboard() {
         }}
         data-oid="p5es.xv"
       >
-        {/* Images Tile */}
+        {/* 1. 고양이 관리 - Cats Tile */}
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "1.5rem",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          }}
+          data-oid="34qlh1x"
+        >
+          <div
+            style={{ fontSize: "2rem", marginBottom: "0.5rem" }}
+            data-oid="_952g1o"
+          >
+            �
+          </div>
+          <h3
+            style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
+            data-oid="a:g.734"
+          >
+            고양이
+          </h3>
+          <p
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              color: "#111827",
+              margin: 0,
+            }}
+            data-oid="-zikimc"
+          >
+            {loading ? "Loading..." : stats.totalCats}
+          </p>
+        </div>
+
+        {/* 2. 사진 - Images Tile */}
         <div
           style={{
             backgroundColor: "white",
@@ -381,7 +417,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Videos Tile */}
+        {/* 3. 동영상 - Videos Tile */}
         <div
           style={{
             backgroundColor: "white",
@@ -429,115 +465,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Cats Tile */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          }}
-          data-oid="34qlh1x"
-        >
-          <div
-            style={{ fontSize: "2rem", marginBottom: "0.5rem" }}
-            data-oid="_952g1o"
-          >
-            🐱
-          </div>
-          <h3
-            style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
-            data-oid="a:g.734"
-          >
-            고양이들
-          </h3>
-          <p
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              color: "#111827",
-              margin: 0,
-            }}
-            data-oid="-zikimc"
-          >
-            {loading ? "Loading..." : stats.totalCats}
-          </p>
-        </div>
-
-        {/* Contacts Tile */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          }}
-          data-oid="2zm0gko"
-        >
-          <div
-            style={{ fontSize: "2rem", marginBottom: "0.5rem" }}
-            data-oid="q6nqrq2"
-          >
-            📧
-          </div>
-          <h3
-            style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
-            data-oid="3ct38kf"
-          >
-            회원
-          </h3>
-          <p
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              color: "#111827",
-              margin: 0,
-            }}
-            data-oid="1hvy0ga"
-          >
-            {loading ? "Loading..." : stats.totalContacts}
-          </p>
-        </div>
-
-        {/* Points Tile */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          }}
-          data-oid="dxjicch"
-        >
-          <div
-            style={{ fontSize: "2rem", marginBottom: "0.5rem" }}
-            data-oid="2_y7h0i"
-          >
-            �
-          </div>
-          <h3
-            style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
-            data-oid="7ee3-5p"
-          >
-            지도상 거주지
-          </h3>
-          <p
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              color: "#111827",
-              margin: 0,
-            }}
-            data-oid="116q03m"
-          >
-            {loading ? "Loading..." : stats.totalPoints}
-          </p>
-        </div>
-
-        {/* Posts Tile */}
+        {/* 4. 게시물 - Posts Tile */}
         <div
           style={{
             backgroundColor: "white",
@@ -635,6 +563,78 @@ export default function AdminDashboard() {
               No collections configured
             </p>
           )}
+        </div>
+
+        {/* 5. 거주지 - Points Tile */}
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "1.5rem",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          }}
+          data-oid="dxjicch"
+        >
+          <div
+            style={{ fontSize: "2rem", marginBottom: "0.5rem" }}
+            data-oid="2_y7h0i"
+          >
+            📍
+          </div>
+          <h3
+            style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
+            data-oid="7ee3-5p"
+          >
+            거주지
+          </h3>
+          <p
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              color: "#111827",
+              margin: 0,
+            }}
+            data-oid="116q03m"
+          >
+            {loading ? "Loading..." : stats.totalPoints}
+          </p>
+        </div>
+
+        {/* 6. 회원 - Contacts Tile */}
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "1.5rem",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          }}
+          data-oid="2zm0gko"
+        >
+          <div
+            style={{ fontSize: "2rem", marginBottom: "0.5rem" }}
+            data-oid="q6nqrq2"
+          >
+            📧
+          </div>
+          <h3
+            style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
+            data-oid="3ct38kf"
+          >
+            회원
+          </h3>
+          <p
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              color: "#111827",
+              margin: 0,
+            }}
+            data-oid="1hvy0ga"
+          >
+            {loading ? "Loading..." : stats.totalContacts}
+          </p>
         </div>
       </div>
 
