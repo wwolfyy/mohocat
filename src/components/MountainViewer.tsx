@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { Point, Cat } from "@/types";
 import { cn } from "@/utils/cn";
 import CatGallery from "./CatGallery";
+import RandomCatThumbnail from "./RandomCatThumbnail";
 
 interface MountainViewerProps {
   points: Point[];
@@ -154,14 +155,8 @@ export default function MountainViewer({ points }: MountainViewerProps) {
                     onMouseLeave={handleMouseLeave}
                     onClick={() => handlePointClick(point)}
                   >
-                    {/* White circle indicator - always centered in the PointWrapper */}
-                    <div
-                      className={cn(
-                        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                        "w-4 h-4 bg-white rounded-full border-2 border-gray-600",
-                        "transition-transform duration-200 group-hover:scale-110",
-                      )}
-                    />
+                    {/* Cat thumbnail or white circle indicator - always centered in the PointWrapper */}
+                    <RandomCatThumbnail pointId={point.id} />
 
                     {/* Label - positioned relative to the centered circle */}
                     <div
