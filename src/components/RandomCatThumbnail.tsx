@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { getCatService } from "@/services";
+import { thumbnailPreloader } from "@/services/thumbnailPreloader";
 import type { Cat } from "@/types";
 import { cn } from "@/utils/cn";
 
@@ -17,6 +18,7 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [thumbnailReady, setThumbnailReady] = useState(false);
 
   // Fetch cats for this point
   useEffect(() => {
@@ -61,25 +63,42 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
     const randomIndex = Math.floor(Math.random() * catsWithThumbnails.length);
     const selectedCat = catsWithThumbnails[randomIndex];
 
-    // Preload the image to reduce latency
-    if (selectedCat.thumbnailUrl) {
-      const img = new Image();
-      img.src = selectedCat.thumbnailUrl;
-    }
-
     return selectedCat;
   }, [cats, pointId]);
 
-  // Preload the selected cat's thumbnail to reduce latency
+  // Wait for the selected cat's thumbnail to be ready before showing animation
   useEffect(() => {
-    if (selectedCat?.thumbnailUrl) {
-      const img = new Image();
-      img.src = selectedCat.thumbnailUrl;
-    }
+    const waitForThumbnail = async () => {
+      if (!selectedCat?.thumbnailUrl) {
+        setThumbnailReady(false);
+        return;
+      }
+
+      try {
+        // Always wait for the thumbnail to be loaded, even if preloader thinks it's ready
+        // This ensures the actual image is loaded in the browser, not just cached by preloader
+        await thumbnailPreloader.waitForThumbnail(selectedCat.thumbnailUrl);
+
+        // Additional check: ensure the image is actually loadable right now
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Image failed to load'));
+          img.src = selectedCat.thumbnailUrl;
+        });
+
+        setThumbnailReady(true);
+      } catch (error) {
+        console.error('Error loading thumbnail:', error);
+        setThumbnailReady(false);
+      }
+    };
+
+    waitForThumbnail();
   }, [selectedCat]);
 
-  // If loading, no cats, or no thumbnails available, show the default dot
-  if (loading || !selectedCat || imageError) {
+  // If loading, no cats, no thumbnails available, or thumbnail not ready, show the default dot
+  if (loading || !selectedCat || imageError || !thumbnailReady) {
     return (
       <div
         className={cn(

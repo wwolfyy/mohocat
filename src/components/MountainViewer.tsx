@@ -5,6 +5,7 @@ import type { Point, Cat } from "@/types";
 import { cn } from "@/utils/cn";
 import CatGallery from "./CatGallery";
 import RandomCatThumbnail from "./RandomCatThumbnail";
+import { thumbnailPreloader } from "@/services/thumbnailPreloader";
 
 interface MountainViewerProps {
   points: Point[];
@@ -43,6 +44,22 @@ export default function MountainViewer({ points }: MountainViewerProps) {
     };
     img.src = "/images/screenshot_mt_geyang_50.png"; // Ensure this path is correct
   }, []);
+
+  // Preload all thumbnails for current cats when component mounts
+  useEffect(() => {
+    const preloadThumbnails = async () => {
+      try {
+        const pointIds = points.map(point => point.id);
+        await thumbnailPreloader.preloadThumbnailsForPoints(pointIds);
+      } catch (error) {
+        console.error('Error preloading thumbnails:', error);
+      }
+    };
+
+    if (points.length > 0) {
+      preloadThumbnails();
+    }
+  }, [points]);
 
   useEffect(() => {
     if (imageNaturalDimensions) {
