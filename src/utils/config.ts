@@ -52,7 +52,7 @@ export interface AboutSection {
 
 export interface AboutMainPhoto {
   filename: string;
-  caption: string;
+  caption: string | string[]; // Support both string and array formats
   altText: string;
   localPath?: string; // Path to static local image (set during build time)
 }
@@ -60,7 +60,7 @@ export interface AboutMainPhoto {
 export interface MountainAbout {
   title: string;
   subtitle: string;
-  mainContent: string;
+  mainContent: string | string[]; // Support both string and array formats
   mainPhoto?: AboutMainPhoto;
   sections: AboutSection[];
 }

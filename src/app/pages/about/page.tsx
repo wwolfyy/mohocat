@@ -1,17 +1,116 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { getMountainAbout, getMountainTheme } from "@/utils/config";
 import { useAboutPhoto } from "@/hooks/useAboutPhoto";
+import { getAboutContentService } from "@/services";
+import { AboutContent } from "@/services/about-content-service";
+import { processTextWithLinks } from "@/utils/text-processing";
 import Image from "next/image";
 
 export default function About() {
-  const aboutConfig = getMountainAbout();
+  const [aboutData, setAboutData] = useState<AboutContent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const aboutContentService = getAboutContentService();
   const theme = getMountainTheme();
+
+  // Load about content from Firestore or fallback to JSON
+  useEffect(() => {
+    const loadAboutContent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const firestoreContent = await aboutContentService.getAboutContent();
+
+        if (firestoreContent) {
+          setAboutData(firestoreContent);
+        } else {
+          // Fallback to JSON config
+          const jsonConfig = getMountainAbout();
+          const fallbackContent: AboutContent = {
+            title: jsonConfig.title,
+            subtitle: jsonConfig.subtitle,
+            mainContent: Array.isArray(jsonConfig.mainContent)
+              ? jsonConfig.mainContent.join('')
+              : jsonConfig.mainContent,
+            mainPhoto: {
+              filename: jsonConfig.mainPhoto?.filename || '',
+              caption: Array.isArray(jsonConfig.mainPhoto?.caption)
+                ? jsonConfig.mainPhoto.caption.join('')
+                : jsonConfig.mainPhoto?.caption || '',
+              altText: jsonConfig.mainPhoto?.altText || '',
+              localPath: jsonConfig.mainPhoto?.localPath
+            },
+            sections: jsonConfig.sections || []
+          };
+          setAboutData(fallbackContent);
+        }
+      } catch (err) {
+        console.error('Error loading about content:', err);
+        setError('Failed to load about content');
+
+        // Fallback to JSON config on error
+        const jsonConfig = getMountainAbout();
+        const fallbackContent: AboutContent = {
+          title: jsonConfig.title,
+          subtitle: jsonConfig.subtitle,
+          mainContent: Array.isArray(jsonConfig.mainContent)
+            ? jsonConfig.mainContent.join('')
+            : jsonConfig.mainContent,
+          mainPhoto: {
+            filename: jsonConfig.mainPhoto?.filename || '',
+            caption: Array.isArray(jsonConfig.mainPhoto?.caption)
+              ? jsonConfig.mainPhoto.caption.join('')
+              : jsonConfig.mainPhoto?.caption || '',
+            altText: jsonConfig.mainPhoto?.altText || '',
+            localPath: jsonConfig.mainPhoto?.localPath
+          },
+          sections: jsonConfig.sections || []
+        };
+        setAboutData(fallbackContent);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAboutContent();
+  }, []);
+
   const {
     photoUrl,
     loading: photoLoading,
     error: photoError,
-  } = useAboutPhoto(aboutConfig.mainPhoto?.filename || "");
+  } = useAboutPhoto(aboutData?.mainPhoto?.filename || "");
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded mb-6"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!aboutData) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">About</h1>
+          <p className="text-gray-600">Content not available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -25,21 +124,21 @@ export default function About() {
           style={{ color: theme.primaryColor }}
           data-oid="5f.mun5"
         >
-          {aboutConfig.title}
+          {aboutData.title}
         </h1>
 
         {/* Subtitle */}
-        {/* {aboutConfig.subtitle && (
-              <p
-                className="text-xl mb-6"
-                style={{ color: theme.secondaryColor }}
-              >
-                {aboutConfig.subtitle}
-              </p>
-             )} */}
+        {/* {aboutData.subtitle && (
+          <p
+            className="text-xl mb-6"
+            style={{ color: theme.secondaryColor }}
+          >
+            {aboutData.subtitle}
+          </p>
+        )} */}
 
         {/* Main Photo */}
-        {aboutConfig.mainPhoto && (
+        {aboutData.mainPhoto && (
           <div className="mb-8" data-oid="fb83bh3">
             {photoLoading && (
               <div
@@ -69,19 +168,19 @@ export default function About() {
                 >
                   <Image
                     src={photoUrl}
-                    alt={aboutConfig.mainPhoto.altText}
+                    alt={aboutData.mainPhoto.altText}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     data-oid="vwu05tu"
                   />
                 </div>
-                {aboutConfig.mainPhoto.caption && (
+                {aboutData.mainPhoto.caption && (
                   <figcaption
                     className="text-center text-sm text-gray-600 mt-2 italic"
                     data-oid="9bbwzqo"
                   >
-                    {aboutConfig.mainPhoto.caption}
+                    {aboutData.mainPhoto.caption}
                   </figcaption>
                 )}
               </figure>
@@ -91,11 +190,16 @@ export default function About() {
 
         {/* Main Content */}
         <div className="text-lg mb-8 leading-relaxed" data-oid="9dy6r-_">
-          <p data-oid="0tdy2ya">{aboutConfig.mainContent}</p>
+          <div
+            className="whitespace-pre-line"
+            dangerouslySetInnerHTML={{ __html: processTextWithLinks(aboutData.mainContent) }}
+          />
         </div>
 
         {/* Dynamic Sections */}
-        {/* {aboutConfig.sections.map((section, index) => (
+        {/* {aboutData.sections && aboutData.sections.length > 0 && (
+          <div className="space-y-8">
+            {aboutData.sections.map((section, index) => (
               <div key={index} className="mb-8">
                 <h2
                   className="text-2xl font-semibold mb-4"
@@ -103,14 +207,17 @@ export default function About() {
                 >
                   {section.title}
                 </h2>
-                <p className="text-lg leading-relaxed">
-                  {section.content}
-                </p>
+                <div
+                  className="text-lg leading-relaxed whitespace-pre-line"
+                  dangerouslySetInnerHTML={{ __html: processTextWithLinks(section.content) }}
+                />
               </div>
-             ))} */}
+            ))}
+          </div>
+        )} */}
       </div>
     </div>
   );
 }
 
-// This page now dynamically loads content based on the current mountain's configuration
+// This page now dynamically loads content from Firestore with JSON fallback

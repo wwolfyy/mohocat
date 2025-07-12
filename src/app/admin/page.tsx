@@ -1133,6 +1133,40 @@ export default function AdminDashboard() {
             고양이 관리
           </h3>
         </a>
+
+        <a
+          href="/admin/about-content"
+          style={{
+            display: "block",
+            backgroundColor: "white",
+            padding: "2rem",
+            borderRadius: "8px",
+            border: "1px solid #e7eb",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            textDecoration: "none",
+            color: "inherit",
+            transition: "transform 0.2s, box-shadow 0.2s",
+          }}
+          data-oid="aboutcms"
+        >
+          <div
+            style={{ fontSize: "3rem", marginBottom: "1rem" }}
+            data-oid="aboutcms_icon"
+          >
+            📝
+          </div>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "bold",
+              color: "#111827",
+              marginBottom: "0.5rem",
+            }}
+            data-oid="aboutcms_title"
+          >
+            소개 페이지 관리
+          </h3>
+        </a>
       </div>
     </div>
   );

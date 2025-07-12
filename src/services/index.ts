@@ -28,6 +28,7 @@ import { FirebaseContactService } from './contact-service';
 import { FirebaseStorageService } from './storage-service';
 import { FirebaseAuthService } from './auth-service';
 import { FirebaseFeedingSpotsService, IFeedingSpotsService } from './feeding-spots-service';
+import { aboutContentService } from './about-content-service';
 
 // Service instances - lazy initialized
 let catServiceInstance: ICatService | null = null;
@@ -150,6 +151,13 @@ export function getFeedingSpotsService(): IFeedingSpotsService {
     feedingSpotsServiceInstance = new FirebaseFeedingSpotsService();
   }
   return feedingSpotsServiceInstance;
+}
+
+/**
+ * Get the about content service instance
+ */
+export function getAboutContentService() {
+  return aboutContentService;
 }
 
 // Export service interfaces for type checking
