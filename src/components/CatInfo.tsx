@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/utils/cn";
 import { Cat } from "@/types";
+import { processTextWithLinks } from "@/utils/text-processing";
+import { getCatService } from "@/services";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import PhotoAlbum from "./PhotoAlbum";
 import VideoAlbum from "./VideoAlbum";
 
@@ -23,9 +26,50 @@ const getStatusEmoji = (status?: string) => {
 export default function CatInfo({ cat }: CatInfoProps) {
   const [showPhotoAlbum, setShowPhotoAlbum] = useState(false);
   const [showVideoAlbum, setShowVideoAlbum] = useState(false);
+  const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
+  const [catModalLoading, setCatModalLoading] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const catService = getCatService();
+
+  // Handle cat modal link clicks
+  useEffect(() => {
+    const handleCatModalClick = async (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('cat-modal-link')) {
+        const catName = target.getAttribute('data-cat-name');
+        if (catName) {
+          setCatModalLoading(true);
+          try {
+            const catData = await catService.getCatByName(catName);
+            if (catData) {
+              setSelectedCat(catData);
+            } else {
+              console.warn(`Cat not found: ${catName}`);
+            }
+          } catch (error) {
+            console.error('Error loading cat:', error);
+          } finally {
+            setCatModalLoading(false);
+          }
+        }
+      }
+    };
+
+    const contentElement = contentRef.current;
+    if (contentElement) {
+      contentElement.addEventListener('click', handleCatModalClick);
+    }
+
+    return () => {
+      if (contentElement) {
+        contentElement.removeEventListener('click', handleCatModalClick);
+      }
+    };
+  }, [cat, catService]);
 
   return (
-    <div className="p-4">
+    <div className="p-4" ref={contentRef}>
       <div className="flex justify-center mb-4">
         <img
           src={cat.thumbnailUrl}
@@ -38,13 +82,10 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.description && (
           <div className="mt-4">
             <h4 className="font-semibold text-gray-700"></h4>
-            {/* <p className="mt-2 text-gray-600">{cat.description}</p> */}
-            <p
-              className="mt-2 text-gray-600"
-              style={{ whiteSpace: "pre-line" }}
-            >
-              {cat.description}
-            </p>
+            <div
+              className="mt-2 text-gray-600 whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.description) }}
+            />
           </div>
         )}
         {cat.date_of_birth && (
@@ -84,13 +125,10 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.character && (
           <div className="mt-4">
             <h4 className="font-semibold text-gray-700">성격:</h4>
-            {/* <p className="text-gray-600">{cat.character}</p> */}
-            <p
-              className="mt-2 text-gray-600"
-              style={{ whiteSpace: "pre-line" }}
-            >
-              {cat.character}
-            </p>
+            <div
+              className="mt-2 text-gray-600 whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.character) }}
+            />
           </div>
         )}
         {cat.parents && (
@@ -107,10 +145,10 @@ export default function CatInfo({ cat }: CatInfoProps) {
         )}
         <div className="mt-4">
           <h4 className="font-semibold text-gray-700">건강상태:</h4>
-          {/* <p className="text-gray-600">{cat.sickness || 'Unknown'}</p> */}
-          <p className="mt-2 text-gray-600" style={{ whiteSpace: "pre-line" }}>
-            {cat.sickness || "Unknown"}
-          </p>
+          <div
+            className="mt-2 text-gray-600 whitespace-pre-line"
+            dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.sickness || 'Unknown') }}
+          />
         </div>
         <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">중성화 여부:</span>
@@ -121,13 +159,10 @@ export default function CatInfo({ cat }: CatInfoProps) {
         {cat.note && (
           <div className="mt-4">
             <h4 className="font-semibold text-gray-700">특이사항:</h4>
-            {/* <p className="mt-2 text-gray-600">{cat.note}</p> */}
-            <p
-              className="mt-2 text-gray-600"
-              style={{ whiteSpace: "pre-line" }}
-            >
-              {cat.note}
-            </p>
+            <div
+              className="mt-2 text-gray-600 whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.note) }}
+            />
           </div>
         )}{" "}
         <div className="flex items-center">
@@ -161,6 +196,39 @@ export default function CatInfo({ cat }: CatInfoProps) {
         onClose={() => setShowVideoAlbum(false)}
         catName={cat.name}
       />
+
+      {/* Nested Cat Modal */}
+      {selectedCat && (
+        <div
+          className="fixed inset-0 bg-black/85 flex items-start justify-center z-[70] overflow-y-auto py-4"
+          onClick={() => setSelectedCat(null)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedCat(null)}
+              className={cn(
+                "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
+                "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
+                "flex items-center justify-center z-10"
+              )}
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+            <CatInfo cat={selectedCat} />
+          </div>
+        </div>
+      )}
+
+      {/* Cat Modal Loading */}
+      {catModalLoading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+        </div>
+      )}
     </div>
   );
 }
