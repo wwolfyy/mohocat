@@ -98,6 +98,13 @@ export default function AdminLayout({
                   관리자 대쉬보드
                 </a>
                 <a
+                  href="/admin/about-content"
+                  style={getNavItemStyles("/admin/about-content")}
+                  data-oid="about_mgmt"
+                >
+                  소개페이지 관리
+                </a>
+                <a
                   href="/admin/cats"
                   style={getNavItemStyles("/admin/cats")}
                   data-oid="cat_mgmt"
@@ -124,13 +131,6 @@ export default function AdminLayout({
                   data-oid="post_mgmt"
                 >
                   게시물 관리
-                </a>
-                <a
-                  href="/admin/about-content"
-                  style={getNavItemStyles("/admin/about-content")}
-                  data-oid="about_mgmt"
-                >
-                  소개페이지 관리
                 </a>
                 <span
                   style={getNavItemStyles("/admin/points", true)}
