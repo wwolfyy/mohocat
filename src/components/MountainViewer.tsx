@@ -168,18 +168,18 @@ export default function MountainViewer({ points }: MountainViewerProps) {
                         // Conditional positioning:
                         {
                           // Default: Label above point
-                          "left-1/2 -translate-x-1/2 bottom-[calc(50%_+_0.75rem)]":
+                          "left-1/2 -translate-x-1/2 bottom-[calc(50%_+_1.25rem)]":
                             point.title !== "하느재 등산로 입구 부근" &&
                             point.title !== "공원 관리소 부근",
 
                           // "하느재 등산로 입구 부근": Right on mobile, Above on desktop
-                          "top-1/2 -translate-y-1/2 left-[calc(50%_+_0.75rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_0.75rem)] md:top-auto md:translate-y-0":
+                          "top-1/2 -translate-y-1/2 left-[calc(50%_+_1.25rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_1.25rem)] md:top-auto md:translate-y-0":
                             point.title === "하느재 등산로 입구 부근",
 
                           // "공원 관리소 부근": Lower-Right on mobile, Above on desktop
                           // No -translate-y-1/2 for top on mobile as we want its top edge to align.
                           // No -translate-x-1/2 for left on mobile as we want its left edge to align.
-                          "top-[calc(50%_+_0.75rem)] left-[calc(50%_+_0.75rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_0.75rem)] md:top-auto":
+                          "top-[calc(50%_+_1.25rem)] left-[calc(50%_+_1.25rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_1.25rem)] md:top-auto":
                             point.title === "공원 관리소 부근",
                         },
                       )}

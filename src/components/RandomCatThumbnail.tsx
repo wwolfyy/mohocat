@@ -70,7 +70,7 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
       <div
         className={cn(
           "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-          "w-4 h-4 bg-white rounded-full border-2 border-gray-600",
+          "w-10 h-10 bg-white rounded-full border-2 border-gray-600",
           "transition-transform duration-200 group-hover:scale-110",
           className
         )}
@@ -82,7 +82,7 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
     <div
       className={cn(
         "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-        "w-4 h-4 rounded-full border-2 border-white shadow-sm overflow-hidden",
+        "w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden",
         "transition-transform duration-200 group-hover:scale-110",
         "bg-gray-200", // Fallback background while image loads
         className
