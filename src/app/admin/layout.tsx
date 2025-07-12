@@ -11,6 +11,33 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
 
+  // Helper function to determine if a path is active
+  const isActivePath = (path: string) => {
+    if (path === "/admin") {
+      return pathname === "/admin";
+    }
+    return pathname.startsWith(path);
+  };
+
+  // Helper function to get nav item styles
+  const getNavItemStyles = (path: string, isDisabled = false) => ({
+    padding: "0.5rem 1rem",
+    color: isDisabled ? "#9ca3af" : (isActivePath(path) ? "#111827" : "#6b7280"),
+    backgroundColor: isActivePath(path) ? "#f3f4f6" : "transparent",
+    textDecoration: "none",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
+    fontWeight: isActivePath(path) ? "500" : "normal",
+    cursor: isDisabled ? "not-allowed" : "pointer",
+    opacity: isDisabled ? 0.6 : 1,
+  });
+
+  // Handle click on disabled items
+  const handleDisabledClick = (e: React.MouseEvent, feature: string) => {
+    e.preventDefault();
+    alert(`${feature} 기능은 아직 구현되지 않았습니다.`);
+  };
+
   const handleLogout = async () => {
     try {
       const authService = getAuthService();
@@ -62,104 +89,69 @@ export default function AdminLayout({
               style={{ display: "flex", alignItems: "center", gap: "2rem" }}
               data-oid="uiiiy_1"
             >
-              <a
-                href="/admin"
-                style={{
-                  fontSize: "1.25rem",
-                  fontWeight: "bold",
-                  color: "#111827",
-                  textDecoration: "none",
-                }}
-                data-oid="t3b2bv0"
-              >
-                🐱 Admin
-              </a>
               <nav style={{ display: "flex", gap: "1rem" }} data-oid="viu778z">
                 <a
                   href="/admin"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "#6b7280",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    transition: "background-color 0.2s",
-                  }}
+                  style={getNavItemStyles("/admin")}
                   data-oid="l1y0wkd"
                 >
                   관리자 대쉬보드
                 </a>
                 <a
-                  href="/admin/posts"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "#6b7280",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    transition: "background-color 0.2s",
-                  }}
-                  data-oid="post_mgmt"
-                >
-                  게시물 관리
-                </a>
-                <a
                   href="/admin/cats"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "#6b7280",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    transition: "background-color 0.2s",
-                  }}
+                  style={getNavItemStyles("/admin/cats")}
                   data-oid="cat_mgmt"
                 >
                   고양이 관리
                 </a>
                 <a
                   href="/admin/tag-images"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "#6b7280",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    transition: "background-color 0.2s",
-                  }}
+                  style={getNavItemStyles("/admin/tag-images")}
                   data-oid="251u7o9"
                 >
                   사진 관리
                 </a>
                 <a
                   href="/admin/tag-videos"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "#6b7280",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    transition: "background-color 0.2s",
-                  }}
+                  style={getNavItemStyles("/admin/tag-videos")}
                   data-oid="zh478e2"
                 >
                   동영상 관리
                 </a>
+                <a
+                  href="/admin/posts"
+                  style={getNavItemStyles("/admin/posts")}
+                  data-oid="post_mgmt"
+                >
+                  게시물 관리
+                </a>
+                <a
+                  href="/admin/about-content"
+                  style={getNavItemStyles("/admin/about-content")}
+                  data-oid="about_mgmt"
+                >
+                  소개페이지 관리
+                </a>
+                <span
+                  style={getNavItemStyles("/admin/points", true)}
+                  onClick={(e) => handleDisabledClick(e, "거주지 관리")}
+                  data-oid="points_mgmt"
+                >
+                  거주지 관리
+                </span>
+                <span
+                  style={getNavItemStyles("/admin/members", true)}
+                  onClick={(e) => handleDisabledClick(e, "회원 관리")}
+                  data-oid="members_mgmt"
+                >
+                  회원 관리
+                </span>
               </nav>{" "}
             </div>
             <div
               style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
               data-oid="q8p7-kk"
             >
-              <a
-                href="/"
-                style={{
-                  padding: "0.5rem 1rem",
-                  backgroundColor: "#f3f4f6",
-                  color: "#374151",
-                  textDecoration: "none",
-                  borderRadius: "4px",
-                  fontSize: "0.9rem",
-                }}
-                data-oid="a61z31e"
-              >
-                ← Back to Site
-              </a>
               <button
                 onClick={handleLogout}
                 style={{
