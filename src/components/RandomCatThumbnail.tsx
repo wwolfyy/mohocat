@@ -95,10 +95,11 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
   return (
     <div
       className={cn(
-        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+        "absolute top-1/2 left-1/2",
         "w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden",
         "transition-transform duration-200 group-hover:scale-110",
         "bg-gray-200", // Fallback background while image loads
+        "animate-bubble-pop", // Bubble pop animation with built-in centering
         className
       )}
       title={`${selectedCat.name} ${selectedCat.alt_name ? `(${selectedCat.alt_name})` : ''}`}
