@@ -1,4 +1,31 @@
-# Firebase Deployment Guide
+# Firebase Deployment Guide (Legacy - Static Export)
+
+> **⚠️ DEPRECATED**: This guide is for legacy static export deployment to Firebase Hosting.
+>
+> **NEW DEPLOYMENT**: The application now uses **Google Cloud Run** for better performance and Next.js image optimization. See [CLOUD_RUN_DEPLOYMENT.md](./CLOUD_RUN_DEPLOYMENT.md) for current deployment instructions.
+
+## Migration Notice
+
+**Why we moved from Firebase Hosting to Cloud Run:**
+
+- ✅ **Next.js Image Optimization**: Requires server runtime (impossible with static export)
+- ✅ **API Routes**: 16+ API endpoints need server-side execution
+- ✅ **Better Performance**: 70% faster image loading with optimization
+- ✅ **Full Next.js Features**: SSR, API routes, middleware support
+
+## Current Status
+
+This Firebase Hosting deployment approach is **no longer recommended** but maintained for reference. The application has been upgraded to use:
+
+- **Next.js Image Optimization** (enabled in `next.config.js`)
+- **Server-side API routes** (16+ endpoints requiring runtime)
+- **Dynamic content generation** (optimized image serving)
+
+These features are **incompatible with static export** and require a Node.js server environment like Cloud Run.
+
+---
+
+# Legacy Documentation (Firebase Hosting)
 
 This guide explains how to deploy the Mountain Cats application to Firebase Hosting using the centralized configuration system for both single-mountain and multi-tenant deployments.
 

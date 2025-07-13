@@ -1,0 +1,65 @@
+# Node modules
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build output
+.next
+out
+
+# Environment files
+.env*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Cache directories
+.next/cache
+.eslintcache
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Firebase files not needed in container
+.firebase/
+firebase-debug.log
+.firebaserc

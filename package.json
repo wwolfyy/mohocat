@@ -13,7 +13,11 @@
     "update:static-data": "node scripts/migration/update_all_static_data.js",
     "update:cats": "node scripts/migration/export_cats_to_static.js",
     "update:points": "node scripts/migration/export_points_to_static.js",
-    "update:feeding-spots": "node scripts/migration/export_feeding_spots_to_static.js"
+    "update:feeding-spots": "node scripts/migration/export_feeding_spots_to_static.js",
+    "docker:build": "docker build -t mtcat-next .",
+    "docker:run": "docker run -p 8080:8080 --env-file .env.local mtcat-next",
+    "docker:build-and-run": "npm run docker:build && npm run docker:run",
+    "cloud-run:deploy": "gcloud run deploy mtcat-next --source . --platform managed --region asia-northeast3 --allow-unauthenticated"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

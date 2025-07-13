@@ -1,12 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // For static export (current setup - SLOWER performance)
-  // output: 'export',
-  // images: {
-  //   unoptimized: true,
-  // },
-
-  // For optimized images (RECOMMENDED - 70% faster performance)
+  // For optimized images (ENABLED - 70% faster performance)
+  // Note: Static export is disabled to enable Next.js image optimization
+  // and server-side features required for Cloud Run deployment
   images: {
     unoptimized: false, // Enable Next.js image optimization
 
