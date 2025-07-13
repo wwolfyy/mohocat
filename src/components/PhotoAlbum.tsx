@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { getImageService } from "@/services";
 import { CatImage } from "@/types/media";
 import { cn } from "@/utils/cn";
@@ -140,15 +141,18 @@ function Lightbox({
         )}
 
         <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <img
+          <Image
             src={image.imageUrl}
             alt={image.fileName}
+            width={800}
+            height={600}
             className={`max-w-full max-h-full object-contain rounded-xl ${imageLoading ? "hidden" : ""}`}
             onLoad={() => setImageLoading(false)}
             onError={() => {
               setImageLoading(false);
               setImageError(true);
             }}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
           />
         </div>
         {/* Image info */}
@@ -352,9 +356,11 @@ export default function PhotoAlbum({
                     className="aspect-square cursor-pointer group relative overflow-hidden rounded-lg bg-gray-200"
                     onClick={() => openLightbox(index)}
                   >
-                    <img
+                    <Image
                       src={image.thumbnailUrl || image.imageUrl}
                       alt={image.fileName}
+                      width={200}
+                      height={200}
                       className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                       onError={(e) => {
                         // Fallback to main image URL if thumbnail fails
@@ -363,6 +369,7 @@ export default function PhotoAlbum({
                           target.src = image.imageUrl;
                         }
                       }}
+                      sizes="200px"
                     />
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-200 flex items-center justify-center">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { Cat } from "@/types";
 import { cn } from "@/utils/cn";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -100,11 +101,15 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                   data-oid="xy3qc36"
                 >
                   {" "}
-                  <img
+                  <Image
                     src={cat.thumbnailUrl}
                     alt={cat.name}
+                    width={112}
+                    height={112}
                     className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
                     data-oid="25hbi.n"
+                    sizes="112px"
+                    quality={85}
                   />
                 </div>
                 {/* Static name display below the thumbnail */}
@@ -151,13 +156,16 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                 <div
                   className="aspect-square rounded-full overflow-hidden border-4 border-white shadow-lg"
                   data-oid="tmuobxm"
-                >
-                  <img
-                    src={cat.thumbnailUrl}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
-                    data-oid="o8z9b:f"
-                  />
+                >                <Image
+                  src={cat.thumbnailUrl}
+                  alt={cat.name}
+                  width={112}
+                  height={112}
+                  className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                  data-oid="o8z9b:f"
+                  sizes="112px"
+                  quality={85}
+                />
                 </div>
                 {/* Static name display below the thumbnail */}
                 <div

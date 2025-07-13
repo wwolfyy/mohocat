@@ -61,7 +61,7 @@ class ThumbnailPreloader {
     }
 
     const loadPromise = new Promise<void>((resolve, reject) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         this.loadedThumbnails.add(url);
         this.loadingPromises.delete(url);

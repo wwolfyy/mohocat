@@ -13,6 +13,7 @@ This directory contains all project documentation, organized by type:
   - `SERVICE_LAYER_SUMMARY.md` - Service layer architecture and usage
   - `ADMIN_IMPLEMENTATION_STATUS.md` - Admin functionality implementation status
   - `CAT_CMS_FIRESTORE_ALIGNMENT.md` - Cat Management System schema alignment and enhancements
+  - `IMAGE_OPTIMIZATION.md` - Next.js Image optimization implementation for performance
 
 - **`guides/`** - User and developer guides
   - `FIREBASE_DEPLOYMENT.md` - Complete guide for Firebase hosting deployment (single and multi-tenant)

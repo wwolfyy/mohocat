@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { getCatService } from "@/services";
-import { thumbnailPreloader } from "@/services/thumbnailPreloader";
 import type { Cat } from "@/types";
 import { cn } from "@/utils/cn";
 
@@ -18,7 +18,7 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [thumbnailReady, setThumbnailReady] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Fetch cats for this point
   useEffect(() => {
@@ -66,69 +66,49 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
     return selectedCat;
   }, [cats, pointId]);
 
-  // Wait for the selected cat's thumbnail to be ready before showing animation
+  // Reset image loaded state when cat changes
   useEffect(() => {
-    const waitForThumbnail = async () => {
-      if (!selectedCat?.thumbnailUrl) {
-        setThumbnailReady(false);
-        return;
-      }
-
-      try {
-        // Always wait for the thumbnail to be loaded, even if preloader thinks it's ready
-        // This ensures the actual image is loaded in the browser, not just cached by preloader
-        await thumbnailPreloader.waitForThumbnail(selectedCat.thumbnailUrl);
-
-        // Additional check: ensure the image is actually loadable right now
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Image failed to load'));
-          img.src = selectedCat.thumbnailUrl;
-        });
-
-        setThumbnailReady(true);
-      } catch (error) {
-        console.error('Error loading thumbnail:', error);
-        setThumbnailReady(false);
-      }
-    };
-
-    waitForThumbnail();
+    setImageLoaded(false);
+    setImageError(false);
   }, [selectedCat]);
 
-  // If loading, no cats, no thumbnails available, or thumbnail not ready, show the default dot
-  if (loading || !selectedCat || imageError || !thumbnailReady) {
-    return (
-      <div
-        className={cn(
-          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-          "w-10 h-10 bg-white rounded-full border-2 border-gray-600",
-          "transition-transform duration-200 group-hover:scale-110",
-          className
-        )}
-      />
-    );
+  // If loading or no cats, show nothing
+  if (loading || !selectedCat) {
+    return null;
+  }
+
+  // If image failed to load, show nothing (fallback to default map behavior)
+  if (imageError) {
+    return null;
   }
 
   return (
     <div
       className={cn(
-        "absolute top-1/2 left-1/2",
+        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
         "w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden",
         "transition-transform duration-200 group-hover:scale-110",
         "bg-gray-200", // Fallback background while image loads
-        "animate-bubble-pop", // Bubble pop animation with built-in centering
+        // Only show and animate when image is loaded
+        imageLoaded ? "animate-bubble-pop" : "opacity-0 scale-0",
         className
       )}
       title={`${selectedCat.name} ${selectedCat.alt_name ? `(${selectedCat.alt_name})` : ''}`}
     >
-      <img
+      <Image
         src={selectedCat.thumbnailUrl}
         alt={selectedCat.name}
+        width={40}
+        height={40}
         className="w-full h-full object-cover"
         onError={() => setImageError(true)}
-        onLoad={() => setImageError(false)}
+        onLoad={() => {
+          setImageLoaded(true);
+          setImageError(false);
+        }}
+        priority={true} // Prioritize loading for better UX
+        sizes="40px" // Specify exact size for optimization
+        quality={85} // Optimize for good quality vs file size balance
       />
     </div>
   );
