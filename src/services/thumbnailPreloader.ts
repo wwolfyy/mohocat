@@ -33,16 +33,24 @@ class ThumbnailPreloader {
     const uniqueThumbnailUrls = Array.from(new Set(thumbnailUrls));
 
     // Preload all thumbnails
-    await this.preloadThumbnails(uniqueThumbnailUrls);
+    await this.preloadThumbnailsPrivate(uniqueThumbnailUrls);
 
     // Mark these points as preloaded
     pointIds.forEach(pointId => this.preloadedPoints.add(pointId));
   }
 
   /**
-   * Preload individual thumbnails
+   * Preload individual thumbnails (public method)
    */
-  private async preloadThumbnails(urls: string[]): Promise<void> {
+  async preloadThumbnails(urls: string[]): Promise<void> {
+    const loadPromises = urls.map(url => this.preloadSingleThumbnail(url));
+    await Promise.all(loadPromises);
+  }
+
+  /**
+   * Preload individual thumbnails (private method)
+   */
+  private async preloadThumbnailsPrivate(urls: string[]): Promise<void> {
     const loadPromises = urls.map(url => this.preloadSingleThumbnail(url));
     await Promise.all(loadPromises);
   }

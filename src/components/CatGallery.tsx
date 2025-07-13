@@ -7,6 +7,7 @@ import { cn } from "@/utils/cn";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import CatInfo from "./CatInfo";
 import { getCatService } from "@/services";
+import { thumbnailPreloader } from "@/services/thumbnailPreloader";
 
 interface CatGalleryProps {
   pointId: string;
@@ -18,6 +19,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
   const [formerResidents, setFormerResidents] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
+  const [thumbnailsPreloaded, setThumbnailsPreloaded] = useState(false);
   useEffect(() => {
     const loadCats = async () => {
       try {
@@ -25,6 +27,26 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
         const { current, former } = await catService.getCatsByPointId(pointId);
         setCurrentResidents(current);
         setFormerResidents(former);
+
+        // Preload all thumbnails for faster display
+        const allCats = [...current, ...former];
+        const thumbnailUrls = allCats
+          .map(cat => cat.thumbnailUrl)
+          .filter(url => url && url.trim() !== '');
+
+        if (thumbnailUrls.length > 0) {
+          // Start preloading thumbnails in the background
+          thumbnailPreloader.preloadThumbnails(thumbnailUrls)
+            .then(() => {
+              setThumbnailsPreloaded(true);
+            })
+            .catch(error => {
+              console.warn('Error preloading gallery thumbnails:', error);
+              setThumbnailsPreloaded(true); // Still allow display even if preloading fails
+            });
+        } else {
+          setThumbnailsPreloaded(true);
+        }
       } catch (error) {
         console.error("Error loading cats:", error);
       } finally {
@@ -86,7 +108,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
             className="flex flex-wrap justify-center gap-4"
             data-oid="a4.0aol"
           >
-            {currentResidents.map((cat) => (
+            {currentResidents.map((cat, index) => (
               <div
                 key={cat.id}
                 onClick={() => setSelectedCat(cat)}
@@ -110,6 +132,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                     data-oid="25hbi.n"
                     sizes="112px"
                     quality={85}
+                    priority={index < 6} // Prioritize first 6 thumbnails
                   />
                 </div>
                 {/* Static name display below the thumbnail */}
@@ -143,7 +166,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
             className="flex flex-wrap justify-center gap-4"
             data-oid="aw2-423"
           >
-            {formerResidents.map((cat) => (
+            {formerResidents.map((cat, index) => (
               <div
                 key={cat.id}
                 onClick={() => setSelectedCat(cat)}
@@ -165,6 +188,7 @@ export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
                   data-oid="o8z9b:f"
                   sizes="112px"
                   quality={85}
+                  priority={index < 3} // Prioritize first 3 former residents
                 />
                 </div>
                 {/* Static name display below the thumbnail */}

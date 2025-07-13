@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { cn } from "@/utils/cn";
 import { Cat } from "@/types";
 import { processTextWithLinks } from "@/utils/text-processing";
@@ -71,11 +72,18 @@ export default function CatInfo({ cat }: CatInfoProps) {
   return (
     <div className="p-4" ref={contentRef}>
       <div className="flex justify-center mb-4">
-        <img
-          src={cat.thumbnailUrl}
-          alt={cat.name}
-          className="w-32 h-32 rounded-full object-cover"
-        />
+        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+          <Image
+            src={cat.thumbnailUrl}
+            alt={cat.name}
+            width={128}
+            height={128}
+            className="w-full h-full object-cover"
+            priority={true}
+            sizes="128px"
+            quality={85}
+          />
+        </div>
       </div>
       <div className="space-y-4">
         <h3 className="text-xl font-bold bg-white/80 py-2">{cat.name}</h3>
