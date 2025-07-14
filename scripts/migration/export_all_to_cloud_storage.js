@@ -3,13 +3,13 @@
  * This script fetches data from Firestore and uploads JSON files to Cloud Storage
  */
 
-const { initializeApp, cert } = require('firebase-admin/app');
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const { getStorage } = require('firebase-admin/storage');
 const path = require('path');
 const fs = require('fs');
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin only if not already initialized
 // Try multiple paths to find the service account file
 const possiblePaths = [
   path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
@@ -34,10 +34,13 @@ console.log('Using service account file at:', serviceAccountPath);
 
 const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 
-initializeApp({
-  credential: cert(serviceAccount),
-  storageBucket: 'mountaincats-61543.firebasestorage.app' // Use the correct bucket name
-});
+// Only initialize if no apps exist
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: 'mountaincats-61543.firebasestorage.app' // Use the correct bucket name
+  });
+}
 
 const db = getFirestore();
 const storage = getStorage();

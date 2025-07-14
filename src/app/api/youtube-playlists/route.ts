@@ -8,8 +8,9 @@ export async function GET(request: NextRequest) {
     const youtubeOAuth = getYouTubeOAuthConfig();
     if (!youtubeOAuth) {
       return NextResponse.json({
-        error: 'YouTube OAuth credentials not configured'
-      }, { status: 500 });
+        error: 'YouTube OAuth credentials not configured',
+        playlists: []
+      }, { status: 200 }); // Return empty array instead of error
     }
 
     const oauth2Client = new google.auth.OAuth2(
@@ -26,8 +27,9 @@ export async function GET(request: NextRequest) {
     } catch (authError) {
       console.error('OAuth2 authentication failed:', authError);
       return NextResponse.json({
-        error: 'YouTube authentication failed'
-      }, { status: 401 });
+        error: 'YouTube authentication failed',
+        playlists: []
+      }, { status: 200 }); // Return empty array instead of error
     }    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
     console.log('Fetching YouTube playlists...');
@@ -59,7 +61,8 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching YouTube playlists:', error);
     return NextResponse.json({
       error: 'Failed to fetch YouTube playlists',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+      details: error instanceof Error ? error.message : 'Unknown error',
+      playlists: []
+    }, { status: 200 }); // Return empty array instead of error
   }
 }
