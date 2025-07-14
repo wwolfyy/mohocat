@@ -6,6 +6,7 @@ import { CatVideo } from "@/types/media";
 import { Cat } from "@/types";
 import { cn } from "@/utils/cn";
 import { formatDuration } from "@/utils/duration";
+import FirebaseDebugger from "@/components/FirebaseDebugger";
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -904,6 +905,9 @@ export default function VideoAlbumPage() {
           </div>
         </div>
       )}
+
+      {/* Firebase Debugger - only shows in development */}
+      <FirebaseDebugger />
     </div>
   );
 }

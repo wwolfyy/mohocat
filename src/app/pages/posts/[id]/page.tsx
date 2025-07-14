@@ -202,6 +202,7 @@ const PostDetailsPage = () => {
             parentUsername={post.username}
             onReplySuccess={handleReplySuccess}
             onCancel={() => setShowReplyForm(false)}
+            postService={postService}
             data-oid="wr4xkv7"
           />
         )}
@@ -210,6 +211,7 @@ const PostDetailsPage = () => {
           postId={post.id}
           replyCount={replyCount}
           onReplyCountUpdate={handleReplyCountUpdate}
+          postService={postService}
           data-oid="1hxe0gs"
         />
       </div>

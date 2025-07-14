@@ -33,7 +33,6 @@ import {
 import {
   Card,
   CardContent,
-  Grid,
   Box,
   Chip,
   Dialog,
@@ -197,8 +196,8 @@ const ImageRow = () => {
   return (
     <Card sx={{ margin: 1 }}>
       <CardContent>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 33.33%', minWidth: '200px' }}>
             <img
               src={record.imageUrl}
               alt={record.fileName}
@@ -209,8 +208,8 @@ const ImageRow = () => {
                 borderRadius: "8px",
               }}
             />
-          </Grid>
-          <Grid item xs={12} md={8}>
+          </div>
+          <div style={{ flex: '1', minWidth: '300px' }}>
             <Box>
               <h3 style={{ margin: "0 0 8px 0" }}>{record.fileName}</h3>{" "}
               <p style={{ margin: "4px 0", fontSize: "14px", color: "#666" }}>
@@ -243,8 +242,8 @@ const ImageRow = () => {
                 <ShowButton />
               </Box>
             </Box>
-          </Grid>
-        </Grid>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -260,10 +259,10 @@ const ImageList = () => (
   >
     <Box sx={{ padding: 2 }}>
       {/* Grid view for better image visualization */}
-      <Grid container spacing={2}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
         {/* We'll use a custom iterator here */}
         <ImageGrid />
-      </Grid>
+      </div>
     </Box>
   </List>
 );
@@ -277,17 +276,16 @@ const ImageGrid = () => {
   }
 
   return (
-    <>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
       {data?.map((record: any) => (
-        <Grid item xs={12} md={6} lg={4} key={record.id}>
-          <Card>
-            <CardContent>
-              <img
-                src={record.imageUrl}
-                alt={record.fileName}
-                style={{
-                  width: "100%",
-                  height: "200px",
+        <Card key={record.id}>
+          <CardContent>
+            <img
+              src={record.imageUrl}
+              alt={record.fileName}
+              style={{
+                width: "100%",
+                height: "200px",
                   objectFit: "cover",
                   borderRadius: "8px",
                   marginBottom: "8px",
@@ -326,9 +324,8 @@ const ImageGrid = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
       ))}
-    </>
+    </div>
   );
 };
 

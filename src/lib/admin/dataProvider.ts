@@ -1,5 +1,4 @@
 // Custom Firebase data provider for React-Admin
-import { DataProvider } from 'react-admin';
 import {
   collection,
   doc,
@@ -17,12 +16,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/services/firebase';
 
-export const firebaseDataProvider: DataProvider = {
-  getList: async (resource, params) => {
+export const firebaseDataProvider = {
+  getList: async (resource: string, params: any) => {
     try {
-      const { page, perPage } = params.pagination;
-      const { field, order } = params.sort;
-      const filter = params.filter;
+      const { page = 1, perPage = 10 } = params.pagination || {};
+      const { field, order } = params.sort || { field: 'id', order: 'ASC' };
+      const filter = params.filter || {};
 
       let q = query(collection(db, resource));
 
@@ -80,9 +79,9 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  getOne: async (resource, params) => {
+  getOne: async (resource: string, params: any) => {
     try {
-      const docRef = doc(db, resource, params.id);
+      const docRef = doc(db, resource, String(params.id));
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
@@ -103,10 +102,10 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  getMany: async (resource, params) => {
+  getMany: async (resource: string, params: any) => {
     try {
       const docs = await Promise.all(
-        params.ids.map(async (id) => {
+        params.ids.map(async (id: any) => {
           const docRef = doc(db, resource, id);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
@@ -130,7 +129,7 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  getManyReference: async (resource, params) => {
+  getManyReference: async (resource: string, params: any) => {
     try {
       const { target, id } = params;
       let q = query(collection(db, resource), where(target, '==', id));
@@ -159,7 +158,7 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  create: async (resource, params) => {
+  create: async (resource: string, params: any) => {
     try {
       const docData = {
         ...params.data,
@@ -181,7 +180,7 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  update: async (resource, params) => {
+  update: async (resource: string, params: any) => {
     try {
       const docRef = doc(db, resource, params.id);
       const updateData = { ...params.data };
@@ -206,10 +205,10 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  updateMany: async (resource, params) => {
+  updateMany: async (resource: string, params: any) => {
     try {
       const updates = await Promise.all(
-        params.ids.map(async (id) => {
+        params.ids.map(async (id: any) => {
           const docRef = doc(db, resource, id);
           const updateData = { ...params.data };
           delete updateData.id;
@@ -228,7 +227,7 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  delete: async (resource, params) => {
+  delete: async (resource: string, params: any) => {
     try {
       const docRef = doc(db, resource, params.id);
       await deleteDoc(docRef);
@@ -242,10 +241,10 @@ export const firebaseDataProvider: DataProvider = {
     }
   },
 
-  deleteMany: async (resource, params) => {
+  deleteMany: async (resource: string, params: any) => {
     try {
       await Promise.all(
-        params.ids.map(async (id) => {
+        params.ids.map(async (id: any) => {
           const docRef = doc(db, resource, id);
           await deleteDoc(docRef);
         })
