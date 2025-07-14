@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getAuthService, getAnnouncementService } from "@/services";
-import { User } from "firebase/auth";
+import { getAnnouncementService } from "@/services";
 import { cn } from "@/utils/cn";
 import Link from "next/link";
 
@@ -83,41 +81,25 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
 
 const AnnouncementClient = () => {
   // Service references
-  const authService = getAuthService();
   const announcementService = getAnnouncementService();
 
   const [posts, setPosts] = useState<any[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const postsPerPage = 20;
-  const router = useRouter();
-
-  useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged((user: User | null) => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        router.push(`/pages/login?redirect=/pages/announcements`);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router, authService]);
 
   const fetchPosts = async (page = 1) => {
-    if (isAuthenticated) {
-      try {
-        console.log("Fetching announcements...");
-        // Use service layer for announcements
-        const allPosts = await announcementService.getAllPosts();
-        console.log("Raw announcements from service:", allPosts);
-        console.log("Number of announcements fetched:", allPosts.length);
+    try {
+      console.log("Fetching announcements...");
+      // Use service layer for announcements
+      const allPosts = await announcementService.getAllPosts();
+      console.log("Raw announcements from service:", allPosts);
+      console.log("Number of announcements fetched:", allPosts.length);
 
-        // Check if posts have date/time fields or use createdAt
-        const sortedPosts = allPosts.sort((a: any, b: any) => {
-          // Try to use date/time fields first, fallback to createdAt
-          let dateA, dateB;
+      // Check if posts have date/time fields or use createdAt
+      const sortedPosts = allPosts.sort((a: any, b: any) => {
+        // Try to use date/time fields first, fallback to createdAt
+        let dateA, dateB;
 
           if (a.date && a.time) {
             // Parse as UTC time for consistent sorting
@@ -158,20 +140,15 @@ const AnnouncementClient = () => {
       } catch (error) {
         console.error("Error in fetchPosts:", error);
       }
-    }
   };
 
   useEffect(() => {
     fetchPosts(currentPage);
-  }, [isAuthenticated, currentPage]);
+  }, [currentPage]);
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
   };
-
-  if (!isAuthenticated) {
-    return null; // Prevent rendering until authentication is confirmed
-  }
 
   return (
     <div>
