@@ -9,6 +9,9 @@ const getYouTubeConfig = () => {
   };
 };
 
+// Note: YouTube upload functionality is implemented in the new post workflow
+// via /api/upload-youtube and NewPostForm.tsx component
+
 export interface YouTubeVideo {
   id: string;
   title: string;
@@ -22,7 +25,10 @@ export interface YouTubeVideo {
 }
 
 // Fetch videos from your YouTube channel with pagination support
-export const fetchChannelVideos = async (channelId?: string, maxResults: number = 500): Promise<YouTubeVideo[]> => {
+export const fetchChannelVideos = async (
+  channelId?: string,
+  maxResults: number = 500
+): Promise<YouTubeVideo[]> => {
   const { apiKey, channelId: defaultChannelId } = getYouTubeConfig();
 
   if (!apiKey) {
@@ -164,7 +170,10 @@ export const fetchChannelVideos = async (channelId?: string, maxResults: number 
   }
 };
 
-export const searchYouTubeVideos = async (query: string, maxResults: number = 25): Promise<YouTubeVideo[]> => {
+export const searchYouTubeVideos = async (
+  query: string,
+  maxResults: number = 25
+): Promise<YouTubeVideo[]> => {
   const { apiKey, channelId: defaultChannelId } = getYouTubeConfig();
 
   if (!apiKey) {
@@ -227,7 +236,5 @@ export const searchYouTubeVideos = async (query: string, maxResults: number = 25
   }
 };
 
-// Simplified upload function
-export const uploadVideoToYouTube = async (videoFile: string, title: string, description: string) => {
-  throw new Error('YouTube upload functionality requires OAuth configuration and is not currently supported');
-};
+// Note: YouTube upload functionality is implemented in the new post workflow
+// via /api/upload-youtube and NewPostForm.tsx component
