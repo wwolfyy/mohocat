@@ -198,6 +198,27 @@ export function getYouTubeOAuthConfig() {
 }
 
 /**
+ * Get Firebase Admin Service Account configuration for admin operations
+ * Uses Firebase Admin SDK service account with elevated privileges
+ */
+export function getFirebaseAdminServiceAccount() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const adminServiceAccountPath = path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json');
+
+    if (fs.existsSync(adminServiceAccountPath)) {
+      const serviceAccount = JSON.parse(fs.readFileSync(adminServiceAccountPath, 'utf8'));
+      return serviceAccount;
+    }
+  } catch (error) {
+    console.warn('Failed to load Firebase Admin service account from file:', error);
+  }
+
+  return null;
+}
+
+/**
  * Get mountain description
  */
 export function getMountainDescription(): string {
