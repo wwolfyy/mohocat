@@ -8,6 +8,7 @@ import {
   getContactService,
   getPostService,
 } from "@/services";
+import YouTubeAuthPanel from "@/components/admin/YouTubeAuthPanelNew";
 
 interface AdminStats {
   // Images stats
@@ -322,6 +323,9 @@ export default function AdminDashboard() {
             </div>
           )}
       </div>
+
+      {/* YouTube Auth Panel */}
+      <YouTubeAuthPanel />
 
       {/* Quick Stats - 6 Tiles */}
       <div

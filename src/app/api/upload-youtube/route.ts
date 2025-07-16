@@ -3,12 +3,73 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Readable } from 'stream';
 import { getVideoService } from '@/services';
 import { getYouTubeOAuthConfig } from '@/utils/config';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+// Initialize Firebase Admin directly
+function initFirebaseAdmin() {
+  if (!getApps().length) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const adminServiceAccountPath = path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json');
+
+      if (fs.existsSync(adminServiceAccountPath)) {
+        const serviceAccount = JSON.parse(fs.readFileSync(adminServiceAccountPath, 'utf8'));
+        return initializeApp({
+          credential: cert(serviceAccount),
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to load Firebase Admin service account from file:', error);
+    }
+  }
+  return null;
+}
+
+async function getYouTubeRefreshToken() {
+  // Initialize Firebase Admin
+  initFirebaseAdmin();
+
+  // First try to get token from environment variable
+  const youtubeOAuth = getYouTubeOAuthConfig();
+  if (youtubeOAuth?.refreshToken) {
+    return {
+      refreshToken: youtubeOAuth.refreshToken,
+      clientId: youtubeOAuth.clientId,
+      clientSecret: youtubeOAuth.clientSecret,
+      redirectUri: youtubeOAuth.redirectUri,
+    };
+  }
+
+  // If env var token is not available, try to get from Firestore
+  try {
+    const db = getFirestore();
+    const doc = await db.collection('admin_config').doc('youtube_auth').get();
+
+    if (doc.exists) {
+      const data = doc.data();
+      if (data?.refreshToken && youtubeOAuth?.clientId && youtubeOAuth?.clientSecret) {
+        return {
+          refreshToken: data.refreshToken,
+          clientId: youtubeOAuth.clientId,
+          clientSecret: youtubeOAuth.clientSecret,
+          redirectUri: youtubeOAuth.redirectUri,
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to get YouTube token from Firestore:', error);
+  }
+
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Get YouTube OAuth configuration from centralized config
-    const youtubeOAuth = getYouTubeOAuthConfig();
-    if (!youtubeOAuth) {
+    // Get YouTube OAuth configuration from centralized config or Firestore
+    const tokenConfig = await getYouTubeRefreshToken();
+    if (!tokenConfig) {
       return NextResponse.json({
         error: 'YouTube OAuth credentials not configured'
       }, { status: 500 });
@@ -26,12 +87,12 @@ export async function POST(request: NextRequest) {
     }
 
     const oauth2Client = new google.auth.OAuth2(
-      youtubeOAuth.clientId,
-      youtubeOAuth.clientSecret,
-      youtubeOAuth.redirectUri
+      tokenConfig.clientId,
+      tokenConfig.clientSecret,
+      tokenConfig.redirectUri
     );
     oauth2Client.setCredentials({
-      refresh_token: youtubeOAuth.refreshToken,
+      refresh_token: tokenConfig.refreshToken,
     });
 
     try {
