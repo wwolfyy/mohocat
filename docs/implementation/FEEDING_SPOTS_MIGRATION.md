@@ -30,9 +30,9 @@ Uncaught Error: There was an error during hydration. The server HTML was replace
 ┌─────────────────────┐    ┌─────────────────────┐
 │   Server Components │    │   Client Components │
 │                     │    │                     │
-│ ❌ Mixed data fetch  │    │ ❌ Expected props   │
-│ ❌ Admin SDK issues  │    │ ❌ Hydration errors │
-│ ❌ Static data       │    │ ❌ Chunk failures   │
+│ ❌ Mixed data fetch │    │ ❌ Expected props   │
+│ ❌ Admin SDK issues │    │ ❌ Hydration errors │
+│ ❌ Static data      │    │ ❌ Chunk failures   │
 └─────────────────────┘    └─────────────────────┘
 ```
 

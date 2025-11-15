@@ -28,5 +28,6 @@ This directory contains all project documentation, organized by type:
 ## Root-Level Documentation
 
 - `README.md` - Main project README (located at project root)
+- `CODEBASE_SUMMARY.md`
 
 This organization helps separate architectural decisions, implementation details, and user-facing guides for better navigation and maintenance.
