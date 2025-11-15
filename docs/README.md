@@ -31,3 +31,41 @@ This directory contains all project documentation, organized by type:
 - `CODEBASE_SUMMARY.md`
 
 This organization helps separate architectural decisions, implementation details, and user-facing guides for better navigation and maintenance.
+
+## Complete list of documentation
+```
+├── docs/
+│   ├── README.md
+│   ├── CODEBASE_SUMMARY.md
+│   ├── admin-onboarding.md
+│   ├── architecture/
+│   │   └── PLATFORM_ARCHITECTURE.md
+│   ├── guides/
+│   │   ├── CAT_CMS_GUIDE.md
+│   │   ├── CLAUDE.md
+│   │   ├── CLOUD_RUN_DEPLOYMENT.md
+│   │   ├── FIREBASE_DEPLOYMENT.md
+│   │   ├── PERFORMANCE_OPTIMIZATION.md
+│   │   ├── SECRETS_MANAGEMENT.md
+│   │   ├── VIDEO_TAGGING.md
+│   │   └── YOUTUBE_READONLY_ENFORCEMENT.md
+│   └── implementation/
+│       ├── ADMIN_IMPLEMENTATION_STATUS.md
+│       ├── CAT_CMS_FIRESTORE_ALIGNMENT.md
+│       ├── CONFIGURATION_IMPLEMENTATION.md
+│       ├── IMAGE_OPTIMIZATION.md
+│       ├── MULTI_TENANT_AUDIT_REPORT.md
+│       └── SERVICE_LAYER_SUMMARY.md
+├── config/
+│   └── README.md
+├── scripts/
+│   ├── README.md
+│   ├── deployment/
+│   │   └── README.md
+│   └── migration/
+│       └── README_cloud_storage_migration.md
+├── src/
+│   └── services/
+│       └── README.md
+└── README.md
+```
