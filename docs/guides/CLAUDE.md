@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# General Priciples
+
+- When working as an agent or ochestrator, do not make code edits unless specifically asked. 
+- Do not do more than what you're asked to do. 
+
+# Project-Specific Information
+
 ## Development Commands
 
 - `npm run dev` - Start development server on http://localhost:3000

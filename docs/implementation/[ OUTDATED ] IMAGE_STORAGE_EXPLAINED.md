@@ -2,8 +2,6 @@
 
 ## Current Configuration Analysis
 
-## Current Configuration Analysis
-
 ### What's Happening Now
 With `images.unoptimized: true` in `next.config.js`:
 - **No Next.js image optimization** is performed
