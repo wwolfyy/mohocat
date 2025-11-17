@@ -89,9 +89,9 @@ This table provides timestamp information for all documentation files in the pro
 | migration/README_points_static_migration.md | 2025-07-06 18:48:16 | 2025-07-06 22:02:38 | | current folder | N |
 | 📁**Main Documentation (./docs)** | | | | | |
 | README.md | 2025-06-29 13:15:26 | 2025-11-15 18:47:19 | project status tracking | all | Y |
-| CODEBASE_SUMMARY.md | 2025-08-22 23:50:52 | 2025-08-22 23:51:23 | (implied by file name) | all | Y |
+| 💥CODEBASE_SUMMARY.md | 2025-08-22 23:50:52 | 2025-08-22 23:51:23 | (implied by file name) | all | Y |
 | 📁**Architecture (./docs/architecture)** | | | | | |
-| PLATFORM_ARCHITECTURE.md | 2025-06-24 23:09:56 | 2025-06-29 15:06:34 | main architecture doc | all | Y |
+| 💥PLATFORM_ARCHITECTURE.md | 2025-06-24 23:09:56 | 2025-06-29 15:06:34 | main architecture doc | all | Y |
 | 📁**Guides (./docs/guides)** | | | | | |
 | [ OUTDATED ] FIREBASE_DEPLOYMENT.md | 2025-06-29 14:03:22 | 2025-07-13 12:40:25 | | | |
 | [ OUTDATED ] PERFORMANCE_OPTIMIZATION.md | 2025-07-13 11:14:06 | 2025-07-13 12:10:13 | | | |
@@ -105,7 +105,7 @@ This table provides timestamp information for all documentation files in the pro
 | YOUTUBE_READONLY_ENFORCEMENT.md | | | guide for editing video metadata (YouTube-first) | TBD | (N) |
 | 📁**Implementation (./docs/implementation)** | | | | | |
 | [ OUTDATED ] IMAGE_STORAGE_EXPLAINED.md | 2025-07-13 1:35:31 | 2025-07-13 10:38:15 | | | |
-| ADMIN_IMPLEMENTATION_STATUS.md | 2025-06-21 10:03:36 | 2025-06-29 2:12:07 | status of CMS dev | TBD | Y |
+| 💥ADMIN_IMPLEMENTATION_STATUS.md | 2025-06-21 10:03:36 | 2025-06-29 2:12:07 | status of CMS dev | TBD | Y |
 | CAT_CMS_COMPLETE_FIELDS.md | 2025-07-07 21:40:56 | 2025-07-08 3:51:45 | cat CMS field mapping (Firebase - CMS) | TBD | (N) |
 | CAT_CMS_FIRESTORE_ALIGNMENT.md | 2025-07-08 2:58:51 | 2025-07-08 3:45:52 | explainer on Firebase - CMS data sync for cat CMS | TBD | (N) |
 | CAT_CMS_KOREAN_STATUS_UPDATE.md | 2025-07-07 21:48:44 | 2025-07-08 2:34:36 | explainer on Koean attribute implementation | TBD | (N) |
@@ -114,7 +114,7 @@ This table provides timestamp information for all documentation files in the pro
 | FEEDING_SPOTS_MIGRATION.md | 2025-07-06 13:39:36 | 2025-11-15 13:53:08 | explainer on feeding spot (for butlers) static-dynamic hybrid implementation | TBD | (N) |
 | IMAGE_OPTIMIZATION.md | 2025-07-13 0:34:12 | 2025-07-13 12:26:33 | explainer on image loading optimization | TBD | (N) |
 | MULTI_TENANT_AUDIT_REPORT.md | | | audit report on multi-tenant system based on config and service layer | TBD | (N) |
-| SERVICE_LAYER_SUMMARY.md | 2025-06-26 0:02:27 | 2025-06-29 11:49:31 | service layer abstraction summary | TBD | Y |
+| 💥SERVICE_LAYER_SUMMARY.md | 2025-06-26 0:02:27 | 2025-06-29 11:49:31 | service layer abstraction summary | TBD | Y |
 | STATIC_SITE_ANALYSIS.md | 2025-07-13 2:09:14 | 2025-07-13 2:21:20 | report on static site feaibility (not possible) | x | N |
 
 *Last updated: 2025-11-15*
