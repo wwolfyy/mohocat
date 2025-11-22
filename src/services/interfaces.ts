@@ -7,6 +7,7 @@
  */
 
 import type { Cat, Point } from '../types';
+import type { UserCredential, User } from 'firebase/auth';
 
 // Cat-related service interface
 export interface ICatService {
@@ -95,13 +96,30 @@ export interface IStorageService {
   getDownloadUrl(path: string): Promise<string>;
 }
 
+// Provider data interface for OAuth providers
+export interface ProviderData {
+  providerId: string;
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  photoURL: string | null;
+}
+
 // Authentication service interface
 export interface IAuthService {
-  getCurrentUser(): any | null;
-  signIn(email: string, password: string): Promise<any>;
+  getCurrentUser(): User | null;
+  signIn(email: string, password: string): Promise<User>;
   signOut(): Promise<void>;
-  createUser(email: string, password: string): Promise<any>;
-  onAuthStateChanged(callback: (user: any) => void): () => void;
+  createUser(email: string, password: string): Promise<User>;
+  onAuthStateChanged(callback: (user: User | null) => void): () => void;
+  
+  // Social login methods
+  signInWithGoogle(): Promise<UserCredential>;
+  signInWithKakao(): Promise<UserCredential>;
+  linkProvider(providerId: string): Promise<UserCredential>;
+  unlinkProvider(providerId: string): Promise<void>;
+  getProviderData(): Promise<ProviderData[]>;
 }
 
 // Feeding spots service interface

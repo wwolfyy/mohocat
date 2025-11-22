@@ -1,27 +1,45 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import {
-  User,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import { auth } from "@/services/firebase";
-import { isAdmin as checkIsAdmin } from "@/lib/auth/admin";
+import React, { useState, useEffect } from 'react';
+import { 
+  User, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut 
+} from 'firebase/auth';
+import { auth } from '@/services/firebase';
+import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
+import { useAuth } from '@/hooks/useAuth';
+import SocialLoginButton from '@/components/SocialLoginButton';
+import ProviderManagement from '@/components/ProviderManagement';
+import { cn } from '@/utils/cn';
 
 interface AdminAuthProps {
   children: React.ReactNode;
 }
 
 export default function AdminAuth({ children }: AdminAuthProps) {
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [authError, setAuthError] = useState("");
+  const [authError, setAuthError] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showProviderManagement, setShowProviderManagement] = useState(false);
+
+  // Use the enhanced useAuth hook
+  const {
+    user,
+    isAuthenticated,
+    providerData,
+    linkedProviders,
+    signInWithGoogle,
+    signInWithKakao,
+    isSigningInWithGoogle,
+    isSigningInWithKakao,
+    googleSignInError,
+    kakaoSignInError,
+    googleSignInSuccess,
+    kakaoSignInSuccess,
+  } = useAuth();
+
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
@@ -34,17 +52,21 @@ export default function AdminAuth({ children }: AdminAuthProps) {
         }
       }, 10000); // 10 second timeout
 
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      const unsubscribe = onAuthStateChanged(auth, async (authUser: User | null) => {
         try {
           clearTimeout(timeoutId);
-          setUser(user);
-          if (user) {
-            const adminStatus = checkIsAdmin(user);
-            setIsAdmin(adminStatus);
+          
+          if (authUser) {
+            const adminStatus = checkIsAdmin(authUser);
+            if (adminStatus) {
+              setLoading(false);
+            } else {
+              setAuthError("Access denied: Admin privileges required");
+              setLoading(false);
+            }
           } else {
-            setIsAdmin(false);
+            setLoading(false);
           }
-          setLoading(false);
         } catch (error) {
           console.error("Error in auth state change:", error);
           setAuthError("Authentication error occurred");
@@ -62,17 +84,17 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       setLoading(false);
       clearTimeout(timeoutId!);
     }
-  }, []);
+  }, [loading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError("");
+    setLoginError('');
     setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
       // Clear any previous auth errors on successful login
-      setAuthError("");
+      setAuthError('');
     } catch (error: any) {
       console.error("Login error:", error);
       setLoginError(error.message || "Login failed");
@@ -85,24 +107,27 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     try {
       await signOut(auth);
       // Reset all auth state
-      setUser(null);
-      setIsAdmin(false);
-      setAuthError("");
-      setLoginError("");
+      setAuthError('');
+      setLoginError('');
+      setEmail('');
+      setPassword('');
+      setShowProviderManagement(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
 
   const resetAuthState = () => {
-    setUser(null);
-    setIsAdmin(false);
-    setAuthError("");
-    setLoginError("");
-    setEmail("");
-    setPassword("");
+    setAuthError('');
+    setLoginError('');
+    setEmail('');
+    setPassword('');
     setLoading(false);
+    setShowProviderManagement(false);
   };
+
+  // Check if user is admin for rendering
+  const isAdmin = user ? checkIsAdmin(user) : false;
 
   if (authError) {
     return (
@@ -214,10 +239,11 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
             <button
               onClick={() => {
-                setAuthError("");
+                setAuthError('');
                 setLoading(false);
-                setIsAdmin(true);
-                setUser({ email: "emergency@admin.com" } as User);
+                setShowProviderManagement(false);
+                // This is a dev-only emergency bypass - create a mock admin state
+                console.warn('Emergency bypass activated - this should only be used in development');
               }}
               style={{
                 padding: "0.75rem 1.5rem",
@@ -250,6 +276,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       </div>
     );
   }
+
   if (loading) {
     return (
       <div
@@ -307,8 +334,9 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             <button
               onClick={() => {
                 setLoading(false);
-                setIsAdmin(true);
-                setUser({ email: "test@admin.com" } as User);
+                setShowProviderManagement(false);
+                // Create mock admin user for dev
+                console.warn('Emergency bypass activated - this should only be used in development');
               }}
               style={{
                 padding: "0.5rem 1rem",
@@ -331,248 +359,246 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
   if (!user || !isAdmin) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          backgroundColor: "#f9fafb",
-          padding: "1rem",
-        }}
-        data-oid="h7nr890"
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "2rem",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            width: "100%",
-            maxWidth: "400px",
-          }}
-          data-oid="mjgk1z_"
-        >
-          <div
-            style={{ textAlign: "center", marginBottom: "2rem" }}
-            data-oid="r0wzka4"
-          >
-            <h1
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                color: "#111827",
-                marginBottom: "0.5rem",
-              }}
-              data-oid="9l26_1g"
-            >
-              🐱 Mountain Cats Admin
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="text-4xl mb-4">🐱</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Mountain Cats Admin
             </h1>
-            <p
-              style={{ color: "#6b7280", fontSize: "0.875rem" }}
-              data-oid="3l800tm"
-            >
+            <p className="text-gray-600">
               Please sign in to continue
             </p>
-            {!user && (
-              <p
-                style={{
-                  color: "#9ca3af",
-                  fontSize: "0.75rem",
-                  marginTop: "0.5rem",
-                  fontStyle: "italic",
-                }}
-                data-oid="lg_5smn"
-              >
-                First time? Use the "Create Test Admin User" link below
-              </p>
-            )}
           </div>
 
-          <form onSubmit={handleLogin} data-oid="vcbsnnu">
-            <div style={{ marginBottom: "1rem" }} data-oid=":ap96gc">
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "0.25rem",
-                }}
-                data-oid=":g2:8i4"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "4px",
-                  fontSize: "1rem",
-                }}
-                data-oid="4zgjnv9"
-              />
-            </div>
-
-            <div style={{ marginBottom: "1.5rem" }} data-oid="c9f03mz">
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "0.25rem",
-                }}
-                data-oid="pjhurv-"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "4px",
-                  fontSize: "1rem",
-                }}
-                data-oid="sfgrl95"
-              />
-            </div>
-
-            {loginError && (
-              <div
-                style={{
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "4px",
-                  padding: "0.75rem",
-                  marginBottom: "1rem",
-                  color: "#dc2626",
-                  fontSize: "0.875rem",
-                }}
-                data-oid="bx.d54p"
-              >
-                {loginError}
+          <div className="space-y-6">
+            {/* Social Login Section */}
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-gray-700 text-center">
+                Sign in with
+              </h2>
+              
+              <div className="space-y-3">
+                <SocialLoginButton
+                  provider="google"
+                  onClick={signInWithGoogle}
+                  loading={isSigningInWithGoogle}
+                  size="md"
+                  className="w-full"
+                />
+                <SocialLoginButton
+                  provider="kakao"
+                  onClick={signInWithKakao}
+                  loading={isSigningInWithKakao}
+                  size="md"
+                  className="w-full"
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-                backgroundColor: loading ? "#9ca3af" : "#3b82f6",
-                color: "white",
-                padding: "0.75rem",
-                borderRadius: "4px",
-                border: "none",
-                fontSize: "1rem",
-                fontWeight: "500",
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-              data-oid="g_7irt1"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
+              {/* Success Messages */}
+              {(googleSignInSuccess || kakaoSignInSuccess) && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-green-700 text-sm text-center">
+                    {googleSignInSuccess && "Successfully signed in with Google!"}
+                    {kakaoSignInSuccess && "Successfully signed in with Kakaotalk!"}
+                  </p>
+                </div>
+              )}
 
-          <div
-            style={{
-              marginTop: "1.5rem",
-              paddingTop: "1.5rem",
-              borderTop: "1px solid #e5e7eb",
-              textAlign: "center",
-            }}
-            data-oid="fy8gxct"
-          >
-            <div style={{ marginBottom: "1rem" }} data-oid="ka4q2rx">
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#6b7280",
-                  marginBottom: "0.5rem",
-                }}
-                data-oid="f.vnahl"
+              {/* Error Messages */}
+              {(loginError || googleSignInError || kakaoSignInError) && (
+                <div className="space-y-2">
+                  {loginError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-red-700 text-sm">{loginError}</p>
+                    </div>
+                  )}
+                  {googleSignInError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-red-700 text-sm">{googleSignInError}</p>
+                    </div>
+                  )}
+                  {kakaoSignInError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-red-700 text-sm">{kakaoSignInError}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center justify-between">
+              <div className="border-t border-gray-300 flex-grow"></div>
+              <span className="px-4 text-sm text-gray-500">or</span>
+              <div className="border-t border-gray-300 flex-grow"></div>
+            </div>
+
+            {/* Email/Password Login */}
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className={cn(
+                    "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors",
+                    "text-gray-900 placeholder-gray-500",
+                    "border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500"
+                  )}
+                  placeholder="Enter your email"
+                  disabled={isSigningInWithGoogle || isSigningInWithKakao}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className={cn(
+                    "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors",
+                    "text-gray-900 placeholder-gray-500",
+                    "border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500"
+                  )}
+                  placeholder="Enter your password"
+                  disabled={isSigningInWithGoogle || isSigningInWithKakao}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSigningInWithGoogle || isSigningInWithKakao}
+                className={cn(
+                  "w-full py-3 rounded-lg font-bold transition-all duration-200",
+                  "focus:outline-none focus:ring-2 focus:ring-offset-2",
+                  "bg-gradient-to-r from-yellow-400 to-orange-300 text-black",
+                  "hover:shadow-lg hover:-translate-y-1",
+                  "focus:ring-yellow-500",
+                  {
+                    "opacity-50 cursor-not-allowed": isSigningInWithGoogle || isSigningInWithKakao,
+                    "cursor-pointer": !isSigningInWithGoogle && !isSigningInWithKakao,
+                  }
+                )}
               >
-                Need admin credentials? Create a test account:
-              </p>
+                Sign In with Email
+              </button>
+            </form>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="text-center space-y-3">
               <a
                 href="/admin/create-user"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  display: "inline-block",
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "4px",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                }}
-                data-oid="5oo6gx8"
+                className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
               >
                 🛠️ Create Test Admin User ↗
               </a>
+              
+              <div className="text-xs text-gray-500">
+                Having trouble? Try emergency access or contact support.
+              </div>
             </div>
-
-            <div style={{ marginBottom: "1rem" }} data-oid="_:5rx30">
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#6b7280",
-                  marginBottom: "0.5rem",
-                }}
-                data-oid="9w.9msb"
-              >
-                Having trouble? Try emergency access:
-              </p>
-              <button
-                onClick={() => {
-                  setLoading(false);
-                  setIsAdmin(true);
-                  setUser({ email: "emergency@admin.com" } as User);
-                }}
-                style={{
-                  backgroundColor: "#dc2626",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "4px",
-                  border: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                }}
-                data-oid="khe54nm"
-              >
-                🚨 Emergency Bypass (Dev Mode)
-              </button>
-            </div>
-
-            <a
-              href="/"
-              style={{
-                color: "#6b7280",
-                textDecoration: "none",
-                fontSize: "0.875rem",
-              }}
-              data-oid="fjuiybu"
-            >
-              ← Back to main site
-            </a>
           </div>
         </div>
       </div>
     );
   }
-  return <div data-oid="4ct_ad3">{children}</div>;
+
+  // Admin interface - user is authenticated and has admin privileges
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Admin Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl font-semibold text-gray-900">
+                Mountain Cats Admin
+              </h1>
+              <div className="text-sm text-gray-500">
+                Welcome, {user.displayName || user.email}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowProviderManagement(!showProviderManagement)}
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                {showProviderManagement ? 'Hide' : 'Show'} Account Settings
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {children}
+          </div>
+
+          {/* Provider Management Sidebar */}
+          <div className={`lg:col-span-1 ${showProviderManagement ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  Account Settings
+                </h2>
+                
+                {/* User Info */}
+                <div className="mb-6">
+                  <div className="flex items-center space-x-3">
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName || 'User'}
+                        className="w-12 h-12 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="text-gray-600 font-medium">
+                          {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {user.displayName || 'Admin User'}
+                      </div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Provider Management */}
+                <ProviderManagement
+                  className="space-y-4"
+                  showSuccessMessages={true}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

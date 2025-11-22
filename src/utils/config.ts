@@ -26,6 +26,19 @@ export interface MountainSocial {
   facebookPage: string;
 }
 
+export interface OAuthProviderConfig {
+  google?: {
+    clientId: string;
+    clientSecret?: string;
+    enabled: boolean;
+  };
+  kakao?: {
+    clientId: string;
+    clientSecret?: string;
+    enabled: boolean;
+  };
+}
+
 export interface MountainSecrets {
   firebase: {
     apiKey: string;
@@ -42,6 +55,7 @@ export interface MountainSecrets {
     refreshToken: string;
     redirectUri?: string;
   };
+  oauthProviders?: OAuthProviderConfig;
   serviceAccount?: any;
 }
 
@@ -122,6 +136,31 @@ export function getMountainConfig(): MountainConfig {
       refreshToken: process.env.YOUTUBE_REFRESH_TOKEN,
       redirectUri: process.env.YOUTUBE_REDIRECT_URI,
     };
+  }
+
+  // Add OAuth provider credentials if available
+  const oauthProviders: OAuthProviderConfig = {};
+  
+  // Google OAuth
+  if (process.env.GOOGLE_CLIENT_ID) {
+    oauthProviders.google = {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || undefined,
+      enabled: process.env.GOOGLE_OAUTH_ENABLED !== 'false', // Default to true if not explicitly disabled
+    };
+  }
+  
+  // Kakaotalk OAuth
+  if (process.env.KAKAO_CLIENT_ID) {
+    oauthProviders.kakao = {
+      clientId: process.env.KAKAO_CLIENT_ID,
+      clientSecret: process.env.KAKAO_CLIENT_SECRET || undefined,
+      enabled: process.env.KAKAO_OAUTH_ENABLED !== 'false', // Default to true if not explicitly disabled
+    };
+  }
+  
+  if (Object.keys(oauthProviders).length > 0) {
+    secretConfig.oauthProviders = oauthProviders;
   }
 
   // In the future, when we have multi-mountain setup, we can also parse:
@@ -210,9 +249,24 @@ export function getFirebaseAdminServiceAccount() {
     return null;
   }
 
-  // For now, return null to avoid fs module issues
-  // This functionality should be moved to individual API routes
-  return null;
+  try {
+    const config = getMountainConfig();
+    const serviceAccount = config.secrets?.serviceAccount;
+    
+    if (serviceAccount) {
+      return serviceAccount;
+    }
+    
+    // Fallback to environment variable
+    if (process.env.SERVICE_ACCOUNT_KEY) {
+      return JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Failed to parse Firebase Admin service account:', error);
+    return null;
+  }
 }
 
 /**
@@ -237,6 +291,46 @@ export function getYouTubeChannelId(): string {
 export function getMountainAbout(): MountainAbout {
   const config = getMountainConfig();
   return config.about;
+}
+
+/**
+ * Get OAuth provider configuration for the current mountain
+ */
+export function getOAuthProvidersConfig() {
+  const config = getMountainConfig();
+  return config.secrets?.oauthProviders;
+}
+
+/**
+ * Get Google OAuth configuration
+ */
+export function getGoogleOAuthConfig() {
+  const oauthConfig = getOAuthProvidersConfig();
+  return oauthConfig?.google;
+}
+
+/**
+ * Get Kakaotalk OAuth configuration
+ */
+export function getKakaoOAuthConfig() {
+  const oauthConfig = getOAuthProvidersConfig();
+  return oauthConfig?.kakao;
+}
+
+/**
+ * Check if Google OAuth is enabled
+ */
+export function isGoogleOAuthEnabled(): boolean {
+  const config = getGoogleOAuthConfig();
+  return config?.enabled === true;
+}
+
+/**
+ * Check if Kakaotalk OAuth is enabled
+ */
+export function isKakaoOAuthEnabled(): boolean {
+  const config = getKakaoOAuthConfig();
+  return config?.enabled === true;
 }
 
 /**
