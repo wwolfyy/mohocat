@@ -1,38 +1,67 @@
-rules_version = '2';
+ rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Cat videos collection with YouTube read-only field enforcement
-    match /cat_videos/{videoId} {
-      // Allow read access (adjust based on your auth requirements)
-      allow read: if true;
-
-      // Allow creation of new videos (adjust based on your auth requirements)
-      allow create: if true;
-
-      // Allow updates but PREVENT modification of YouTube read-only fields
-      allow update: if
-        // Ensure YouTube read-only fields are not being modified
-        !('tags' in request.resource.data.diff(resource.data).affectedKeys()) &&
-        !('videoUrl' in request.resource.data.diff(resource.data).affectedKeys()) &&
-        !('createdTime' in request.resource.data.diff(resource.data).affectedKeys()) &&
-        !('location' in request.resource.data.diff(resource.data).affectedKeys()) &&
-        // Additional safety check: ensure storagePath (which mirrors videoUrl) is not modified
-        !('storagePath' in request.resource.data.diff(resource.data).affectedKeys());
-
-      // Prevent deletion (adjust based on your requirements)
-      allow delete: if false;
+    // Allow read access to the points collection
+    match /points/{x} {
+      allow read: if true;  // Allows anyone to read
+      allow write: if false;  // No one can write
     }
 
-    // Cat images collection (no YouTube restrictions)
-    match /cat_images/{imageId} {
-      allow read, write: if true; // Adjust based on your auth requirements
+    // Allow read access to the cats collection
+    match /cats/{x} {
+      allow read: if true; 
+      allow write: if false;  
     }
 
-    // Cats collection (no YouTube restrictions)
-    match /cats/{catId} {
-      allow read, write: if true; // Adjust based on your auth requirements
+    // Allow read access to the cats collection
+    match /about_content/{x} {
+      allow read: if true; 
+      allow write: if false;  
     }
 
-    // Other collections can be added here as needed
+    // Allow read access to the cats collection
+    match /cat_images/{x} {
+      allow read: if true; 
+      allow write: if false;  
+    }
+    
+    // Allow read access to the cats collection
+    match /cat_videos/{x} {
+      allow read: if true; 
+      allow write: if false;  
+    }    
+
+    // Allow read access to the cats collection
+    match /posts_announcements/{x} {
+      allow read: if true; 
+      allow write: if false;  
+    }
+
+    // Allow read access to the feeding_spots collection
+    // match /feeding_spots/{x} {
+    //   allow read: if true;  
+    //   allow write: if false;  
+    // }
+
+    // Allow read and write access to the posts_feeding collection for authenticated users
+    match /posts_feeding/{document} {
+      allow read, write: if request.auth != null;  
+    }
+
+    // Allow read and write access to the posts_feeding collection for authenticated users
+    match /posts_butler/{document} {
+      allow read, write: if request.auth != null; 
+    }
+
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+      }
+    
+    // rules for dev/test (allow everything)
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
