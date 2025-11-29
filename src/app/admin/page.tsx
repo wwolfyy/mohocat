@@ -9,6 +9,8 @@ import {
   getPostService,
 } from "@/services";
 import YouTubeAuthPanel from "@/components/admin/YouTubeAuthPanelNew";
+import RoleManagement from "@/components/admin/RoleManagement";
+import PermissionDebug from "@/components/admin/PermissionDebug";
 
 interface AdminStats {
   // Images stats
@@ -1026,6 +1028,60 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+
+      {/* Role Management Section */}
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "1.5rem",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          marginBottom: "2rem",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "1.1rem",
+            fontWeight: "bold",
+            color: "#111827",
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          🔐 Role Management
+        </h3>
+        <RoleManagement />
+      </div>
+
+      {/* Permission Debug Section */}
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "1.5rem",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          marginBottom: "2rem",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "1.1rem",
+            fontWeight: "bold",
+            color: "#111827",
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          🔧 Permission Debug Tool
+        </h3>
+        <PermissionDebug />
+      </div>
 
     </div>
   );

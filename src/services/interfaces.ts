@@ -116,7 +116,7 @@ export interface IAuthService {
   
   // Social login methods
   signInWithGoogle(): Promise<UserCredential>;
-  signInWithKakao(): Promise<UserCredential>;
+  signInWithKakao(forceFallback?: boolean): Promise<UserCredential>;
   linkProvider(providerId: string): Promise<UserCredential>;
   unlinkProvider(providerId: string): Promise<void>;
   getProviderData(): Promise<ProviderData[]>;

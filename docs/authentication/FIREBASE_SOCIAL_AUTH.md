@@ -110,7 +110,9 @@ graph TD
    - Set **Project support email** and **OAuth consent screen**
    - Save configuration
 
-#### Kakaotalk OAuth Setup
+#### Kakaotalk OAuth Setup (Updated - Follow This Guide)
+
+**IMPORTANT**: This implementation uses Firebase OpenID Connect with provider ID `oidc.kakao`. Follow these exact steps:
 
 1. **Create Kakaotalk OAuth Credentials**:
    - Go to [Kakao Developers](https://developers.kakao.com/)
@@ -118,21 +120,37 @@ graph TD
    - Navigate to **Product Settings > Kakao Login**
    - Set **Authorized redirect URI**: `http://localhost:3000/__/auth/handler`
    - Copy the **REST API Key** as your client ID
-   - Note: Client secret is optional for web applications
+   - **Enable Client Secret**: Go to **Product Settings > Kakao Login > Security** and activate Client Secret
+   - Copy the **Client Secret** for Firebase configuration
 
-2. **Enable Kakaotalk OAuth in Firebase**:
+2. **Enable Kakaotalk OAuth in Firebase (Critical Step)**:
    - Go to [Firebase Console](https://console.firebase.google.com/)
    - Select your project
    - Navigate to **Authentication > Sign-in method**
    - Click **Add new provider > OpenID Connect**
-   - Configure with Kakaotalk OAuth endpoints:
-     - **Provider ID**: `https://kakao.com`
-     - **Display name**: `Kakaotalk`
-     - **Client ID**: Your Kakaotalk REST API Key
-     - **Issuer**: `https://kauth.kakao.com`
-     - **Authorization endpoint**: `https://kauth.kakao.com/oauth/authorize`
-     - **Token endpoint**: `https://kauth.kakao.com/oauth/token`
-     - **Client secret**: Optional
+   - **Provider ID**: `oidc.kakao` (This must be exactly this value!)
+   - **Display name**: `Kakaotalk`
+   - **Client ID**: Your Kakaotalk REST API Key
+   - **Client secret**: Your Kakaotalk Client Secret
+   - **Issuer**: `https://kauth.kakao.com`
+   - **Authorization endpoint**: `https://kauth.kakao.com/oauth/authorize`
+   - **Token endpoint**: `https://kauth.kakao.com/oauth/token`
+   - **Additional scopes**: `profile_account`
+   - Click **Save**
+
+3. **Environment Variables**:
+   Ensure these are set in your `.env.local`:
+   ```bash
+   NEXT_PUBLIC_KAKAO_CLIENT_ID=your-rest-api-key
+   NEXT_PUBLIC_KAKAO_CLIENT_SECRET=your-client-secret
+   NEXT_PUBLIC_KAKAO_OAUTH_ENABLED=true
+   ```
+
+**Common Setup Issues**:
+- ❌ Using `kakao.com` instead of `oidc.kakao` as provider ID
+- ❌ Not enabling Client Secret in Kakao Developers
+- ❌ Missing or incorrect redirect URI
+- ❌ Provider not enabled in Firebase Authentication settings
 
 ### Firebase Security Rules
 

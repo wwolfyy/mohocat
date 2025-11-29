@@ -1,0 +1,46 @@
+{
+  "roles": {
+    "admin": {
+      "permissions": [
+        "manage-cats",
+        "manage-posts",
+        "manage-users",
+        "view-analytics",
+        "manage-settings",
+        "export-data"
+      ],
+      "description": "Full administrative access"
+    },
+    "butler-offline": {
+      "permissions": [
+        "manage-cats",
+        "manage-posts",
+        "view-analytics"
+      ],
+      "description": "Physical cat care management"
+    },
+    "butler-online": {
+      "permissions": [
+        "manage-posts",
+        "view-analytics"
+      ],
+      "description": "Digital content management"
+    },
+    "viewer": {
+      "permissions": [],
+      "description": "Read-only access to public content"
+    }
+  },
+  "mountains": {
+    "geyang": {
+      "name": "Geyangsan",
+      "adminUsers": ["jaesangpark@gmail.com"],
+      "defaultRole": "viewer"
+    },
+    "manisan": {
+      "name": "Manisan",
+      "adminUsers": [],
+      "defaultRole": "viewer"
+    }
+  }
+}

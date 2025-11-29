@@ -57,7 +57,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
           clearTimeout(timeoutId);
           
           if (authUser) {
-            const adminStatus = checkIsAdmin(authUser);
+            const adminStatus = await checkIsAdmin(authUser);
             if (adminStatus) {
               setLoading(false);
             } else {
@@ -127,7 +127,27 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   };
 
   // Check if user is admin for rendering
-  const isAdmin = user ? checkIsAdmin(user) : false;
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminLoading, setIsAdminLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        try {
+          const adminStatus = await checkIsAdmin(user);
+          setIsAdmin(adminStatus);
+        } catch (error) {
+          console.error("Error checking admin status:", error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+      setIsAdminLoading(false);
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   if (authError) {
     return (
@@ -357,7 +377,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !isAdmin || isAdminLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">

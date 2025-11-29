@@ -5,7 +5,6 @@ import { User } from 'firebase/auth';
 import { getAuthService } from '@/services';
 import type { ProviderData } from '@/services/interfaces';
 import { UserCredential } from 'firebase/auth';
-
 export interface AuthState {
   user: User | null;
   loading: boolean;
@@ -33,10 +32,14 @@ export interface AuthState {
 }
 
 interface UseAuthActions {
+  signIn: (email: string, password: string) => Promise<void>;
+  createUser: (email: string, password: string) => Promise<User>;
+  signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInWithKakao: () => Promise<void>;
+  signInWithKakao: (forceFallback?: boolean) => Promise<void>;
   linkGoogleProvider: () => Promise<void>;
   linkKakaoProvider: () => Promise<void>;
+  linkProvider: (providerId: string) => Promise<void>;
   unlinkProvider: (providerId: string) => Promise<void>;
   clearErrors: () => void;
   clearSuccess: () => void;
@@ -132,8 +135,31 @@ export function useAuth(): AuthState & UseAuthActions {
     }
   }, [authService, isSigningInWithGoogle, clearErrors]);
 
+  // Email/password sign-in
+  const signIn = useCallback(async (email: string, password: string) => {
+    clearErrors();
+    try {
+      await authService.signIn(email, password);
+    } catch (error: any) {
+      setGoogleSignInError(error.message || 'Failed to sign in with email');
+      throw error;
+    }
+  }, [authService, clearErrors]);
+
+  // Create user account
+  const createUser = useCallback(async (email: string, password: string): Promise<User> => {
+    clearErrors();
+    try {
+      const user = await authService.createUser(email, password);
+      return user;
+    } catch (error: any) {
+      setGoogleSignInError(error.message || 'Failed to create account');
+      throw error;
+    }
+  }, [authService, clearErrors]);
+
   // Kakaotalk sign-in
-  const signInWithKakao = useCallback(async () => {
+  const signInWithKakao = useCallback(async (forceFallback: boolean = false) => {
     if (isSigningInWithKakao) return;
     
     clearErrors();
@@ -141,7 +167,7 @@ export function useAuth(): AuthState & UseAuthActions {
     setKakaoSignInError(null);
     
     try {
-      await authService.signInWithKakao();
+      await authService.signInWithKakao(forceFallback);
       setKakaoSignInSuccess(true);
       setTimeout(() => setKakaoSignInSuccess(false), 3000);
     } catch (error: any) {
@@ -197,6 +223,21 @@ export function useAuth(): AuthState & UseAuthActions {
     }
   }, [authService, isLinkingKakao, clearErrors]);
 
+  // Link provider (generic method for KakaoTalkAuthOptions)
+  const linkProvider = useCallback(async (providerId: string) => {
+    try {
+      await authService.linkProvider(providerId);
+      setLinkProviderSuccess(true);
+      // Refresh provider data
+      const providers = await authService.getProviderData();
+      setProviderData(providers);
+      setLinkedProviders(providers.map(p => p.providerId));
+      setTimeout(() => setLinkProviderSuccess(false), 3000);
+    } catch (error: any) {
+      setLinkProviderError(error.message || 'Failed to link provider');
+    }
+  }, [authService]);
+
   // Unlink provider
   const unlinkProvider = useCallback(async (providerId: string) => {
     if (isUnlinkingProvider) return;
@@ -219,6 +260,17 @@ export function useAuth(): AuthState & UseAuthActions {
       setIsUnlinkingProvider(false);
     }
   }, [authService, isUnlinkingProvider, clearErrors]);
+
+  // Sign out
+  const signOut = useCallback(async () => {
+    clearErrors();
+    try {
+      await authService.signOut();
+    } catch (error: any) {
+      console.error('Sign out failed:', error);
+      throw error;
+    }
+  }, [authService, clearErrors]);
 
   return {
     user,
@@ -245,10 +297,14 @@ export function useAuth(): AuthState & UseAuthActions {
     linkProviderSuccess,
     unlinkProviderSuccess,
     // Actions
+    signIn,
+    createUser,
+    signOut,
     signInWithGoogle,
     signInWithKakao,
     linkGoogleProvider,
     linkKakaoProvider,
+    linkProvider,
     unlinkProvider,
     clearErrors,
     clearSuccess,

@@ -4,6 +4,7 @@ import { auth } from "@/services/firebase";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/hooks/useAuth";
 import SocialLoginButton from "@/components/SocialLoginButton";
+import KakaoTalkAuthOptions from "@/components/KakaoTalkAuthOptions";
 
 interface LoginFormProps {
   onLoginSuccess?: () => void;
@@ -80,12 +81,22 @@ const LoginForm: React.FC<LoginFormProps> = ({
             loading={isSigningInWithGoogle}
             disabled={isEmailLoginLoading}
           />
-          <SocialLoginButton
-            provider="kakao"
-            onClick={signInWithKakao}
-            loading={isSigningInWithKakao}
-            disabled={isEmailLoginLoading}
-          />
+          
+          {/* KakaoTalk Authentication Options */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <KakaoTalkAuthOptions
+              onAuthSuccess={() => {
+                // Emit custom event for login success
+                const loginSuccessEvent = new Event("loginSuccess");
+                window.dispatchEvent(loginSuccessEvent);
+                onLoginSuccess?.();
+              }}
+              onAuthError={(error) => {
+                console.error("KakaoTalk authentication error:", error);
+                onLoginError?.(error);
+              }}
+            />
+          </div>
         </div>
 
         {/* Social Login Success Messages */}

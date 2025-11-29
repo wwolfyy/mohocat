@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/utils/cn";
+import { NavigationBarLogout } from "@/components/auth/NavigationBarLogout";
+import { NavigationBarLogin } from "@/components/auth/NavigationBarLogin";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { canManageCats, canManagePosts } = usePermissions();
 
   // Handle click on disabled items
   const handleDisabledClick = (e: React.MouseEvent, feature: string) => {
@@ -67,19 +71,33 @@ export default function Navigation() {
           FAQ
         </Link>
         <span className="mx-3 text-gray-400">|</span>
-        <Link
-          href="/pages/butler_stream"
-          className="text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          급식현황
-        </Link>
-        <span className="mx-3 text-gray-400">•</span>
-        <Link
-          href="/pages/butler_talk"
-          className="text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          집사톡
-        </Link>
+        {canManageCats && (
+          <>
+            <Link
+              href="/pages/butler_stream"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              급식현황
+            </Link>
+            <span className="mx-3 text-gray-400">•</span>
+          </>
+        )}
+        {canManagePosts && (
+          <Link
+            href="/pages/butler_talk"
+            className="text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            집사톡
+          </Link>
+        )}
+        
+        {/* Login Button - Always visible when not logged in */}
+        <NavigationBarLogin />
+        
+        {/* Logout Button - Always visible when logged in */}
+        <div className="ml-6">
+          <NavigationBarLogout />
+        </div>
       </nav>
       {/* Mobile hamburger button */}
       <div className="md:hidden">
@@ -184,20 +202,41 @@ export default function Navigation() {
               </Link>
               <div className="border-t border-gray-300 my-1"></div>
               <div className="px-4 py-1 text-xs text-gray-500 font-medium">인증 회원 전용</div>
+              {canManageCats && (
+                <Link
+                  href="/pages/butler_stream"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  급식현황
+                </Link>
+              )}
+              {canManagePosts && (
+                <Link
+                  href="/pages/butler_talk"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  집사톡
+                </Link>
+              )}
               <Link
-                href="/pages/butler_stream"
+                href="/auth-test"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                급식현황
+                🔐 Auth Test
               </Link>
-              <Link
-                href="/pages/butler_talk"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                집사톡
-              </Link>
+              <div className="border-t border-gray-300 my-1"></div>
+              <div className="px-4 py-1 text-xs text-gray-500 font-medium">인증</div>
+              <div className="px-4 py-2">
+                <NavigationBarLogin />
+              </div>
+              <div className="border-t border-gray-300 my-1"></div>
+              <div className="px-4 py-1 text-xs text-gray-500 font-medium">계정</div>
+              <div className="px-4 py-2">
+                <NavigationBarLogout />
+              </div>
             </div>
           </div>
         )}

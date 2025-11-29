@@ -2,101 +2,135 @@
 
 import { User } from 'firebase/auth';
 import { auth } from '@/services/firebase';
-import { AdminUser } from '@/types/admin';
-
-// Admin user emails - in production, store this in Firestore or environment variables
-const ADMIN_EMAILS = [
-  'admin@mtcat.com', // Default admin email
-  'jp@mtcat.com', // Add your email here
-  'admin@geyang-cats.com', // From mountains config
-  'test@admin.com', // For testing
-  'emergency@admin.com', // For emergency bypass
-  // Add more admin emails as needed
-];
-
-// Admin permissions configuration
-const ADMIN_PERMISSIONS = {
-  admin: {
-    images: ['create', 'read', 'update', 'delete'],
-    videos: ['create', 'read', 'update', 'delete'],
-    cats: ['create', 'read', 'update', 'delete'],
-    users: ['create', 'read', 'update', 'delete'],
-  },
-  moderator: {
-    images: ['read', 'update'],
-    videos: ['read', 'update'],
-    cats: ['read', 'update'],
-    users: ['read'],
-  },
-};
+import { AdminUser, AdminPermission } from '@/types/admin';
+import { PermissionService } from '@/services/permission-service';
 
 /**
- * Check if a user is an admin based on their email
+ * Check if a user is an admin based on their Firestore permissions
  */
-export function isAdmin(user: User | null): boolean {
-  if (!user?.email) return false;
-  return ADMIN_EMAILS.includes(user.email);
+export async function isAdmin(user: User | null): Promise<boolean> {
+  if (!user?.uid) return false;
+  
+  try {
+    const permissionService = new PermissionService();
+    const permissions = await permissionService.getUserPermissions(user.uid);
+    
+    // Check if user has any admin-level permissions
+    const adminPermissions = [
+      'manage-cats',
+      'manage-posts',
+      'manage-users',
+      'manage-settings'
+    ];
+    
+    return permissions.some(permission => adminPermissions.includes(permission));
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
 }
 
 /**
- * Get admin user role
+ * Get user's role from Firestore permissions
  */
-export function getAdminRole(email: string): 'admin' | 'moderator' | null {
-  if (!ADMIN_EMAILS.includes(email)) return null;
-
-  // For now, all admin emails are 'admin' role
-  // In production, you might want to store roles in Firestore
-  return 'admin';
+export async function getUserRole(user: User | null): Promise<string | null> {
+  if (!user?.uid) return null;
+  
+  try {
+    const permissionService = new PermissionService();
+    const permissions = await permissionService.getUserPermissions(user.uid);
+    
+    // Determine role based on permissions
+    if (permissions.includes('manage-users')) {
+      return 'admin';
+    } else if (permissions.includes('manage-posts')) {
+      return 'butler-online';
+    } else if (permissions.includes('manage-cats')) {
+      return 'butler-offline';
+    } else if (permissions.length > 0) {
+      return 'viewer';
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting user role:', error);
+    return null;
+  }
 }
 
 /**
  * Check if user has permission for a specific action on a resource
  */
-export function hasPermission(
+export async function hasPermission(
   user: User | null,
-  resource: string,
-  action: string
-): boolean {
-  if (!user?.email) return false;
-
-  const role = getAdminRole(user.email);
-  if (!role) return false;
-
-  const permissions = ADMIN_PERMISSIONS[role];
-  const resourcePermissions = permissions[resource as keyof typeof permissions];
-
-  return resourcePermissions?.includes(action as any) || false;
+  permission: string
+): Promise<boolean> {
+  if (!user?.uid) return false;
+  
+  try {
+    const permissionService = new PermissionService();
+    return await permissionService.checkPermission(user.uid, permission);
+  } catch (error) {
+    console.error('Error checking permission:', error);
+    return false;
+  }
 }
 
 /**
  * Create admin user object from Firebase user
  */
-export function createAdminUser(user: User): AdminUser | null {
-  if (!user.email || !isAdmin(user)) return null;
+export async function createAdminUser(user: User): Promise<AdminUser | null> {
+  if (!user.uid) return null;
 
-  const role = getAdminRole(user.email);
+  const isAdminUser = await isAdmin(user);
+  if (!isAdminUser) return null;
+
+  const role = await getUserRole(user);
   if (!role) return null;
+
+  const permissionService = new PermissionService();
+  const permissions = await permissionService.getUserPermissions(user.uid);
+
+  // Map permission system permissions to admin interface permissions
+  const adminPermissions: AdminPermission[] = [];
+  
+  permissions.forEach(permission => {
+    switch (permission) {
+      case 'manage-cats':
+        adminPermissions.push({ resource: 'cats', actions: ['create', 'read', 'update', 'delete'] });
+        break;
+      case 'manage-posts':
+        adminPermissions.push({ resource: 'users', actions: ['create', 'read', 'update'] });
+        break;
+      case 'manage-users':
+        adminPermissions.push({ resource: 'users', actions: ['create', 'read', 'update', 'delete'] });
+        break;
+      case 'view-analytics':
+        adminPermissions.push({ resource: 'images', actions: ['read'] });
+        adminPermissions.push({ resource: 'videos', actions: ['read'] });
+        break;
+      default:
+        break;
+    }
+  });
 
   return {
     id: user.uid,
-    email: user.email,
+    email: user.email || 'unknown@example.com',
     displayName: user.displayName || undefined,
-    role,
+    role: role as 'admin' | 'moderator',
     lastLogin: new Date(),
-    permissions: Object.entries(ADMIN_PERMISSIONS[role]).map(([resource, actions]) => ({
-      resource: resource as any,
-      actions: actions as any,
-    })),
+    permissions: adminPermissions,
   };
 }
 
 /**
  * Admin authentication hook
  */
-export async function useAdminAuth() {
-  return new Promise<AdminUser | null>((resolve) => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      const adminUser = user ? createAdminUser(user) : null;
+export async function useAdminAuth(): Promise<AdminUser | null> {
+  return new Promise((resolve) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      const adminUser = user ? await createAdminUser(user) : null;
       resolve(adminUser);
       unsubscribe();
     });
@@ -111,7 +145,7 @@ export async function requireAdminAuth(user: User | null): Promise<AdminUser> {
     throw new Error('Authentication required');
   }
 
-  const adminUser = createAdminUser(user);
+  const adminUser = await createAdminUser(user);
   if (!adminUser) {
     throw new Error('Admin access required');
   }
@@ -124,10 +158,19 @@ export async function requireAdminAuth(user: User | null): Promise<AdminUser> {
  */
 export function logAdminAction(
   adminUser: AdminUser,
-  action: string,  resource: string,
+  action: string,
+  resource: string,
   resourceId?: string,
   details?: any
 ) {
   // In production, you might want to store this in Firestore
   // or send to a logging service
+  console.log('Admin action:', {
+    user: adminUser.email,
+    action,
+    resource,
+    resourceId,
+    details,
+    timestamp: new Date().toISOString()
+  });
 }

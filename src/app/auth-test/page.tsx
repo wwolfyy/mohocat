@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { useAuth } from '@/hooks/useAuth';
 import LoginForm from '@/components/LoginForm';
+import SignupForm from '@/components/SignupForm';
 import ProviderManagement from '@/components/ProviderManagement';
 import AdminAuth from '@/components/admin/AdminAuth';
 import SocialLoginButton from '@/components/SocialLoginButton';
@@ -68,6 +69,11 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
   useEffect(() => {
     const googleEnabled = isGoogleOAuthEnabled();
     const kakaoEnabled = isKakaoOAuthEnabled();
+    
+    // Debug logging
+    console.log('OAuth Configuration Debug:');
+    console.log('Google OAuth Enabled:', googleEnabled);
+    console.log('Kakao OAuth Enabled:', kakaoEnabled);
     
     addTestResult(
       'oauth-config',
@@ -449,7 +455,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
 
                 {activeTab === 'login' && (
                   <div className="space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Login Test Interface</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Login & Signup Test Interface</h2>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Social Login Test */}
@@ -479,10 +485,22 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                         )}
                       </div>
 
-                      {/* Email/Password Login Test */}
+                      {/* Email/Password Authentication Test */}
                       <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 className="text-md font-medium text-gray-900 mb-4">Email/Password Login</h3>
-                        <LoginForm />
+                        <h3 className="text-md font-medium text-gray-900 mb-4">Email/Password Authentication</h3>
+                        <div className="space-y-6">
+                          {/* Login Form */}
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Login</h4>
+                            <LoginForm />
+                          </div>
+                          
+                          {/* Signup Form */}
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Sign Up</h4>
+                            <SignupForm />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

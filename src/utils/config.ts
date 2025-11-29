@@ -142,20 +142,20 @@ export function getMountainConfig(): MountainConfig {
   const oauthProviders: OAuthProviderConfig = {};
   
   // Google OAuth
-  if (process.env.GOOGLE_CLIENT_ID) {
+  if (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
     oauthProviders.google = {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || undefined,
-      enabled: process.env.GOOGLE_OAUTH_ENABLED !== 'false', // Default to true if not explicitly disabled
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || undefined,
+      enabled: process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === 'true',
     };
   }
   
   // Kakaotalk OAuth
-  if (process.env.KAKAO_CLIENT_ID) {
+  if (process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID) {
     oauthProviders.kakao = {
-      clientId: process.env.KAKAO_CLIENT_ID,
-      clientSecret: process.env.KAKAO_CLIENT_SECRET || undefined,
-      enabled: process.env.KAKAO_OAUTH_ENABLED !== 'false', // Default to true if not explicitly disabled
+      clientId: process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID,
+      clientSecret: process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET || undefined,
+      enabled: process.env.NEXT_PUBLIC_KAKAO_OAUTH_ENABLED === 'true',
     };
   }
   

@@ -17,11 +17,12 @@ import {
   getAdditionalUserInfo,
   GoogleAuthProvider,
   OAuthProvider,
+  signInAnonymously,
   User,
   UserCredential
 } from 'firebase/auth';
 import { auth } from './firebase';
-import { getGoogleOAuthConfig, isGoogleOAuthEnabled, isKakaoOAuthEnabled } from '@/utils/config';
+import { getGoogleOAuthConfig, getKakaoOAuthConfig, isGoogleOAuthEnabled, isKakaoOAuthEnabled } from '@/utils/config';
 
 export class FirebaseAuthService implements IAuthService {
 
@@ -110,56 +111,366 @@ export class FirebaseAuthService implements IAuthService {
     }
   }
 
-  async signInWithKakao(): Promise<UserCredential> {
+  async signInWithKakao(forceFallback: boolean = false): Promise<UserCredential> {
     if (!isKakaoOAuthEnabled()) {
       throw new Error('Kakao OAuth is not enabled');
     }
 
     try {
-      // Create a custom OAuth provider for Kakaotalk
-      const kakaoProvider = new OAuthProvider('https://kakao.com');
+      // Kakaotalk OAuth implementation using OpenID Connect
+      // Based on reference guide: https://developers.kakao.com/docs/latest/kakaologin/rest-api
+      
+      const config = getKakaoOAuthConfig();
+      if (!config) {
+        throw new Error('Kakao OAuth configuration not found');
+      }
+      
+      console.log('=== KAKAOTALK OAUTH DEBUG ===');
+      console.log('Kakao OAuth Config:', {
+        clientId: config.clientId ? '***HIDDEN***' : 'NOT_SET',
+        clientSecret: config.clientSecret ? '***HIDDEN***' : 'NOT_SET',
+        enabled: config.enabled
+      });
+      console.log('Environment Variables:', {
+        NEXT_PUBLIC_KAKAO_CLIENT_ID: process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID ? '***SET***' : 'NOT_SET',
+        NEXT_PUBLIC_KAKAO_CLIENT_SECRET: process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET ? '***SET***' : 'NOT_SET',
+        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
+      });
+      
+      // According to reference guide, use 'oidc.kakao' for OpenID Connect
+      const kakaoProvider = new OAuthProvider('oidc.kakao');
+      
+      console.log('Created OAuthProvider with provider ID: oidc.kakao');
+      
+      // Configure OpenID Connect parameters as per reference guide
+      // Note: If consent items are not available, use minimal configuration
+      // Use Firebase's redirect URI for OpenID Connect
+      const firebaseAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+      const firebaseRedirectUri = firebaseAuthDomain
+        ? `https://${firebaseAuthDomain}/__/auth/handler`
+        : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/__/auth/handler`;
+
       kakaoProvider.setCustomParameters({
-        // Kakaotalk OAuth parameters
-        'client_id': process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID || '',
-        'redirect_uri': `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/kakao/callback`,
+        'client_id': config.clientId || '',
+        'redirect_uri': firebaseRedirectUri,
         'response_type': 'code',
+        // Remove scope parameter if consent items are not configured
+        // 'scope': 'profile_account',
       });
 
+      console.log('OAuth Provider Configuration:', {
+        providerId: kakaoProvider.providerId,
+        redirectUri: firebaseRedirectUri,
+        clientId: config.clientId ? '***SET***' : '***NOT_SET***',
+        clientSecret: config.clientSecret ? '***SET***' : '***NOT_SET***'
+      });
+
+      // Note: Only add scopes if they are available in your Kakao Developers application
+      // Comment out scopes if getting consent items error
+      // kakaoProvider.addScope('profile');
+      // kakaoProvider.addScope('account');
+      // kakaoProvider.addScope('openid');
+
+      console.log('OAuth Provider Configuration:', {
+        providerId: kakaoProvider.providerId
+      });
+
+      console.log('Attempting to sign in with KakaoTalk using popup...');
+      console.log('OAuth Provider Debug Info:', {
+        providerId: kakaoProvider.providerId
+      });
+      
+      // Add delay to prevent popup blocking issues
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('Opening KakaoTalk popup...');
+      
       const result = await signInWithPopup(auth, kakaoProvider);
       const additionalUserInfo = getAdditionalUserInfo(result);
       
+      console.log('Popup completed successfully, processing result...');
+      
+      console.log('=== KAKAOTALK SIGN IN SUCCESS ===');
       console.log('Kakao sign in successful:', {
         isNewUser: additionalUserInfo?.isNewUser,
         providerId: additionalUserInfo?.providerId,
         displayName: result.user.displayName,
-        email: result.user.email
+        email: result.user.email,
+        photoURL: result.user.photoURL,
+        uid: result.user.uid
       });
 
       return result;
     } catch (error: any) {
-      console.error('Error signing in with Kakaotalk:', error);
+      console.error('=== KAKAOTALK OAUTH ERROR ===');
+      console.error('Initial sign-in attempt failed:', error);
+      console.error('Kakaotalk OAuth error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+        customData: error.customData
+      });
+
+      // DEBUG: Log the exact error code that should trigger fallback
+      console.log('=== DEBUG: ERROR CODE ANALYSIS ===');
+      console.log('Error code:', error.code);
+      console.log('Error message:', error.message);
+      console.log('Should trigger fallback based on current logic:', this.isKakaoUserCreationError(error));
+      console.log('All recognized error codes:', [
+        'auth/internal-error',
+        'auth/operation-not-allowed'
+      ]);
+      console.log('=== DEBUG: END ===');
+
+      // Check if this is a user creation error that can be resolved with anonymous user + linking approach
+      // OR if fallback is being forced for testing
+      const isUserCreationError = forceFallback || this.isKakaoUserCreationError(error);
       
-      // Handle specific Kakaotalk OAuth errors
+      if (forceFallback) {
+        console.log('=== FORCING FALLBACK APPROACH FOR TESTING ===');
+      }
+      
+      if (isUserCreationError) {
+        console.log('=== FALLING BACK TO ANONYMOUS USER + LINKING APPROACH ===');
+        console.log('Detected user creation error, attempting anonymous user creation and linking...');
+        
+        try {
+          // Step 1: Create anonymous user
+          console.log('Creating anonymous user...');
+          const anonymousResult = await signInAnonymously(auth);
+          console.log('Anonymous user created:', {
+            uid: anonymousResult.user.uid,
+            isAnonymous: anonymousResult.user.isAnonymous
+          });
+
+          // Step 2: Link KakaoTalk account to anonymous user
+          console.log('Linking KakaoTalk account to anonymous user...');
+          
+          const kakaoProvider = new OAuthProvider('oidc.kakao');
+          const firebaseAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+          const firebaseRedirectUri = firebaseAuthDomain
+            ? `https://${firebaseAuthDomain}/__/auth/handler`
+            : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/__/auth/handler`;
+
+          // Re-get config for the linking process
+          const linkingConfig = getKakaoOAuthConfig();
+          if (!linkingConfig) {
+            throw new Error('Kakao OAuth configuration not found for linking');
+          }
+
+          kakaoProvider.setCustomParameters({
+            'client_id': linkingConfig.clientId || '',
+            'redirect_uri': firebaseRedirectUri,
+            'response_type': 'code',
+          });
+
+          const linkingResult = await linkWithPopup(anonymousResult.user, kakaoProvider);
+          const additionalUserInfo = getAdditionalUserInfo(linkingResult);
+          
+          console.log('=== KAKAOTALK LINKING SUCCESS ===');
+          console.log('KakaoTalk account linked successfully:', {
+            isNewUser: additionalUserInfo?.isNewUser,
+            providerId: additionalUserInfo?.providerId,
+            displayName: linkingResult.user.displayName,
+            email: linkingResult.user.email,
+            photoURL: linkingResult.user.photoURL,
+            uid: linkingResult.user.uid,
+            providerData: linkingResult.user.providerData
+          });
+
+          return linkingResult;
+        } catch (linkingError: any) {
+          console.error('=== LINKING APPROACH ALSO FAILED ===');
+          console.error('Linking error details:', {
+            code: linkingError.code,
+            message: linkingError.message,
+            stack: linkingError.stack
+          });
+
+          // Clean up anonymous user if linking failed
+          try {
+            if (auth.currentUser?.isAnonymous) {
+              console.log('Cleaning up anonymous user after failed linking...');
+              await auth.currentUser.delete();
+            }
+          } catch (cleanupError) {
+            console.error('Error cleaning up anonymous user:', cleanupError);
+          }
+
+          // Throw original error since fallback also failed
+          throw new Error(`KakaoTalk authentication failed and fallback approach also failed. Original error: ${error.message}`);
+        }
+      }
+      
+      // Enhanced error handling with specific KakaoTalk issues
       let errorMessage = 'Failed to sign in with Kakaotalk';
       switch (error.code) {
         case 'auth/popup-closed-by-user':
-          errorMessage = 'Kakaotalk sign-in was cancelled. Please try again.';
+          errorMessage = 'Kakaotalk sign-in was cancelled. This could mean: 1) User closed popup 2) Popup was blocked 3) Authentication completed but result not processed. Please try again.';
+          console.error('=== POPUP CLOSED DEBUG ===');
+          console.error('Possible causes:');
+          console.error('1. User manually closed the popup');
+          console.error('2. Popup was blocked by browser security');
+          console.error('3. Authentication completed but result processing failed');
+          console.error('4. Session already exists - try signing out first');
+          console.error('SOLUTION: Try again, disable popup blocker, or sign out and retry');
           break;
         case 'auth/cancelled-popup-request':
           errorMessage = 'Kakaotalk sign-in request was cancelled. Please wait a moment and try again.';
+          console.error('=== POPUP REQUEST CANCELLED ===');
+          console.error('The popup request was cancelled before completion');
+          console.error('This often happens when multiple requests are made simultaneously');
+          console.error('SOLUTION: Wait a few seconds and try again');
           break;
         case 'auth/popup-blocked':
           errorMessage = 'Kakaotalk sign-in was blocked by popup blocker. Please disable popup blocker and try again.';
+          console.error('=== POPUP BLOCKED ===');
+          console.error('Browser popup blocker prevented the authentication popup');
+          console.error('SOLUTION: 1) Disable popup blocker 2) Allow popups for this site 3) Try different browser');
+          break;
+        case 'auth/timeout':
+          errorMessage = 'Kakaotalk sign-in timed out. Please check your internet connection and try again.';
+          console.error('=== TIMEOUT ERROR ===');
+          console.error('Authentication request timed out');
+          console.error('SOLUTION: Check internet connection, try again, or use different browser');
           break;
         case 'auth/account-exists-with-different-credential':
           errorMessage = 'An account already exists with this email address. Please sign in using the original method.';
           break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Kakaotalk sign-in is not enabled in Firebase Console. Please check the authentication providers settings.';
+          console.error('FIREBASE SETUP REQUIRED: Enable OpenID Connect provider "oidc.kakao" in Firebase Console > Authentication > Sign-in method');
+          break;
+        case 'auth/internal-error':
+          errorMessage = 'Kakaotalk login failed. Since linking works but login doesn\'t, this suggests a session or flow issue rather than credentials.';
+          console.error('=== KAKAOTALK LOGIN VS LINKING DEBUG ===');
+          console.error('OBSERVATION: Provider linking works but login fails');
+          console.error('This indicates the credentials are correct but there\'s a flow difference');
+          console.error('');
+          console.error('POSSIBLE CAUSES:');
+          console.error('1. Firebase session state conflict - user already authenticated');
+          console.error('2. Different OAuth flow behavior between signIn vs link operations');
+          console.error('3. OpenID Connect provider configuration issue specific to login flow');
+          console.error('4. User already has a Firebase account with different provider');
+          console.error('');
+          console.error('SOLUTIONS TO TRY:');
+          console.error('1. Sign out completely and try fresh login');
+          console.error('2. Check if user already exists in Firebase with different email');
+          console.error('3. Try creating a new browser profile or incognito mode');
+          console.error('4. Verify that the OpenID Connect provider allows new user creation');
+          console.error('5. Check Firebase Authentication logs for detailed error information');
+          console.error('');
+          console.error('DEBUG INFO: The fact that linking works proves credentials are correct.');
+          console.error('This is likely a Firebase configuration or session state issue.');
+          break;
+        case 'auth/invalid-custom-parameter':
+          errorMessage = 'Invalid Kakaotalk OAuth configuration. Please check the client ID and redirect URI settings.';
+          console.error('CONFIGURATION ERROR: Check environment variables and Firebase provider setup');
+          break;
+        case 'auth/unsupported-popup-redirect':
+          errorMessage = 'Kakaotalk OAuth provider is not properly configured in Firebase Console. Please add OpenID Connect provider with ID "oidc.kakao".';
+          console.error('FIREBASE SETUP: Add OpenID Connect provider with ID "oidc.kakao"');
+          break;
         default:
-          errorMessage = error.message || 'Failed to sign in with Kakaotalk';
+          errorMessage = `Kakaotalk authentication failed: ${error.message || 'Unknown error'}`;
+          // Check for client credentials error
+          if (error.message && (
+            error.message.includes('invalid-client') ||
+            error.message.includes('Bad client credentials') ||
+            error.message.includes('KOE010') ||
+            error.message.includes('invalid_credential')
+          )) {
+            console.error('=== CLIENT CREDENTIALS ERROR DETECTED ===');
+            console.error('ERROR: Firebase is sending wrong credentials to KakaoTalk');
+            console.error('SOLUTION: Update Firebase OpenID Connect provider configuration');
+            console.error('1. CLIENT ID must match your Kakao REST API Key');
+            console.error('2. CLIENT SECRET must match your Kakao Client Secret');
+            console.error('3. Both must be entered EXACTLY in Firebase Console');
+            console.error('4. Check for extra spaces or typos');
+          }
+          // Check if the error message contains consent-related keywords
+          else if (error.message && (
+            error.message.includes('동의 항목') ||
+            error.message.includes('consent') ||
+            error.message.includes('scope') ||
+            error.message.includes('openid') ||
+            error.message.includes('profile') ||
+            error.message.includes('account')
+          )) {
+            console.error('=== CONSENT ITEMS ERROR DETECTED ===');
+            console.error('SOLUTION 1: Enable consent items in Kakao Developers Console');
+            console.error('Navigate to: 내 애플리케이션 > 카카오 로그인 > 동의항목');
+            console.error('Enable available consent items and save changes');
+            console.error('');
+            console.error('SOLUTION 2: Use basic login without scopes');
+            console.error('The implementation has been updated to work without scopes');
+            console.error('This will provide basic authentication with limited user data');
+            console.error('Try the login again - it should work with basic authentication');
+          }
       }
       
       throw new Error(errorMessage);
     }
+  }
+
+  /**
+   * Determines if a KakaoTalk authentication error is related to user creation
+   * and can be resolved with the anonymous user + linking approach.
+   */
+  private isKakaoUserCreationError(error: any): boolean {
+    if (!error || !error.code) {
+      return false;
+    }
+
+    // User creation errors that can be resolved with anonymous + linking approach
+    const userCreationErrorCodes = [
+      'auth/internal-error',           // Often indicates user creation issues
+      'auth/operation-not-allowed',    // Could be provider not allowing new user creation
+      'auth/account-exists-with-different-credential',  // Account exists with different provider
+      'auth/email-already-in-use',     // Email already registered with different provider
+      'auth/user-not-found',           // User not found in Firebase but exists in Kakao
+      'auth/invalid-credential',       // Credential validation issues that might be resolved with linking
+      'auth/user-disabled',            // User account disabled in Firebase
+      'auth/wrong-password',           // Password mismatch scenarios
+    ];
+
+    // Check for specific error messages that indicate user creation problems
+    const userCreationErrorMessages = [
+      'user creation',                 // Generic user creation error
+      'create user',                   // User creation attempt failed
+      'new user',                      // New user creation not allowed
+      'sign up',                       // Sign up/registration failed
+      'registration',                  // User registration failed
+      'account creation',              // Account creation failed
+      'user already exists',           // User exists but can't be found/created
+      'duplicate user',                // Duplicate user creation attempt
+      'credential already linked',     // Credential already linked to another account
+      'different credential',          // Account exists with different credential
+      'email already in use',          // Email already registered
+      'firebase user',                 // Firebase user-related issues
+      'provider mismatch',             // Provider configuration mismatch
+      'linking failed',                // Previous linking attempts failed
+      'authentication failed',         // General authentication failures that might be user-related
+    ];
+
+    // Check if error code matches known user creation errors
+    if (userCreationErrorCodes.includes(error.code)) {
+      console.log('Detected user creation error code:', error.code);
+      return true;
+    }
+
+    // Check if error message contains user creation indicators
+    if (error.message) {
+      const lowerMessage = error.message.toLowerCase();
+      for (const errorMessage of userCreationErrorMessages) {
+        if (lowerMessage.includes(errorMessage)) {
+          console.log('Detected user creation error message:', errorMessage);
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   async linkProvider(providerId: string): Promise<UserCredential> {
@@ -172,8 +483,13 @@ export class FirebaseAuthService implements IAuthService {
       let provider;
       if (providerId === 'google.com') {
         provider = new GoogleAuthProvider();
-      } else if (providerId === 'https://kakao.com') {
-        provider = new OAuthProvider('https://kakao.com');
+      } else if (providerId === 'https://kakao.com' || providerId === 'oidc.kakao') {
+        provider = new OAuthProvider('oidc.kakao');
+        // Note: Comment out scopes if getting consent items error
+        // Only enable these if consent items are available in your Kakao Developers app
+        // provider.addScope('profile');
+        // provider.addScope('account');
+        // provider.addScope('openid');
       } else {
         throw new Error(`Unsupported provider: ${providerId}`);
       }
@@ -197,6 +513,17 @@ export class FirebaseAuthService implements IAuthService {
           break;
         default:
           errorMessage = error.message || `Failed to link ${providerId} provider`;
+          // Check for consent items error in linking
+          if (providerId.includes('kakao') && error.message && (
+            error.message.includes('동의 항목') ||
+            error.message.includes('consent') ||
+            error.message.includes('scope')
+          )) {
+            console.error('=== KAKAOTALK LINKING CONSENT ERROR ===');
+            console.error('Linking failed due to missing consent items');
+            console.error('SOLUTION: The implementation has been updated to work without scopes');
+            console.error('Try linking again - it should work now with basic authentication');
+          }
       }
       
       throw new Error(errorMessage);
@@ -243,4 +570,5 @@ export class FirebaseAuthService implements IAuthService {
       photoURL: providerData.photoURL,
     }));
   }
+
 }

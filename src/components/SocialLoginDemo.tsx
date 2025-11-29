@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import LoginForm from '@/components/LoginForm';
 import ProviderManagement from '@/components/ProviderManagement';
 import SocialLoginButton from '@/components/SocialLoginButton';
+import KakaoTalkDebug from '@/components/KakaoTalkDebug';
 import { cn } from '@/utils/cn';
 
 interface SocialLoginDemoProps {
@@ -12,7 +13,7 @@ interface SocialLoginDemoProps {
 }
 
 const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
-  const [activeTab, setActiveTab] = useState<'login' | 'providers' | 'demo'>('demo');
+   const [activeTab, setActiveTab] = useState<'login' | 'providers' | 'demo' | 'debug'>('demo');
   const {
     user,
     isAuthenticated,
@@ -82,7 +83,8 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
           {[
             { id: 'demo', label: 'Live Demo', icon: '🎮' },
             { id: 'login', label: 'Login Form', icon: '🔑' },
-            { id: 'providers', label: 'Provider Management', icon: '⚙️' }
+            { id: 'providers', label: 'Provider Management', icon: '⚙️' },
+            { id: 'debug', label: 'Kakao Debug', icon: '🐛' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -233,6 +235,24 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
                 onLoginSuccess={handleLoginSuccess}
                 onLoginError={handleLoginError}
               />
+            </div>
+          </div>
+        )}
+
+        {/* KakaoTalk Debug Tab */}
+        {activeTab === 'debug' && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                KakaoTalk Debug Console
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Advanced debugging tools for KakaoTalk OAuth implementation. Use this to diagnose and fix authentication issues.
+              </p>
+            </div>
+            
+            <div className="max-w-md mx-auto">
+              <KakaoTalkDebug />
             </div>
           </div>
         )}
