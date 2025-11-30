@@ -36,13 +36,13 @@ export class RoleAssignmentService {
       if (mountainConfig.adminUsers && mountainConfig.adminUsers.includes(email)) {
         assignedRole = 'admin';
       }
-      // Check if user is butler-offline
-      else if (mountainConfig.butlerOfflineUsers && mountainConfig.butlerOfflineUsers.includes(email)) {
-        assignedRole = 'butler-offline';
+      // Check if user is butler-ground
+      else if (mountainConfig.butlerGroundUsers && mountainConfig.butlerGroundUsers.includes(email)) {
+        assignedRole = 'butler-ground';
       }
-      // Check if user is butler-online
-      else if (mountainConfig.butlerOnlineUsers && mountainConfig.butlerOnlineUsers.includes(email)) {
-        assignedRole = 'butler-online';
+      // Check if user is butler-internet
+      else if (mountainConfig.butlerInternetUsers && mountainConfig.butlerInternetUsers.includes(email)) {
+        assignedRole = 'butler-internet';
       }
 
       // Get role permissions

@@ -59,8 +59,8 @@
       "userServiceProject": "mountain-cats-users",
       "roles": [
         "admin",
-        "butler-offline",
-        "butler-online",
+        "butler-ground",
+        "butler-internet",
         "viewer"
       ],
       "smsRegions": [

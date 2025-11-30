@@ -286,8 +286,8 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
                         <span className={cn(
                           "px-2 py-1 rounded-full text-xs font-medium",
                           roleInfo.role === 'admin' && "bg-red-100 text-red-800",
-                          roleInfo.role === 'butler-offline' && "bg-orange-100 text-orange-800",
-                          roleInfo.role === 'butler-online' && "bg-blue-100 text-blue-800",
+                          roleInfo.role === 'butler-ground' && "bg-orange-100 text-orange-800",
+                          roleInfo.role === 'butler-internet' && "bg-blue-100 text-blue-800",
                           roleInfo.role === 'viewer' && "bg-gray-100 text-gray-800"
                         )}>
                           {roleInfo.role.toUpperCase()}

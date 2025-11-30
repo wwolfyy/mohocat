@@ -44,9 +44,9 @@ export async function getUserRole(user: User | null): Promise<string | null> {
     if (permissions.includes('manage-users')) {
       return 'admin';
     } else if (permissions.includes('manage-posts')) {
-      return 'butler-online';
+      return 'butler-internet';
     } else if (permissions.includes('manage-cats')) {
-      return 'butler-offline';
+      return 'butler-ground';
     } else if (permissions.length > 0) {
       return 'viewer';
     }

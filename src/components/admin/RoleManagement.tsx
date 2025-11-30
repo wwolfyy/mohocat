@@ -108,7 +108,7 @@ export default function RoleManagement() {
                  </div>
                  <div className="space-y-2">
                    <div className="flex space-x-2">
-                     {['admin', 'butler-offline', 'butler-online', 'viewer'].map((role) => (
+                     {['admin', 'butler-ground', 'butler-internet', 'viewer'].map((role) => (
                        <button
                          key={role}
                          onClick={() => assignRole(userItem.uid, role)}
@@ -157,7 +157,7 @@ export default function RoleManagement() {
             </div>
             
             <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900">butler-offline</h4>
+              <h4 className="font-medium text-gray-900">butler-ground</h4>
               <p className="text-sm text-gray-600">Physical cat care management</p>
               <ul className="text-xs text-gray-500 mt-2 space-y-1">
                 <li>• Manage cats</li>
@@ -167,7 +167,7 @@ export default function RoleManagement() {
             </div>
             
             <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900">butler-online</h4>
+              <h4 className="font-medium text-gray-900">butler-internet</h4>
               <p className="text-sm text-gray-600">Digital content management</p>
               <ul className="text-xs text-gray-500 mt-2 space-y-1">
                 <li>• Manage posts</li>

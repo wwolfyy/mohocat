@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     // Sort users by role (admin first, then others)
     users.sort((a, b) => {
-      const roleOrder: Record<string, number> = { 'admin': 0, 'butler-offline': 1, 'butler-online': 2, 'viewer': 3 };
+      const roleOrder: Record<string, number> = { 'admin': 0, 'butler-ground': 1, 'butler-internet': 2, 'viewer': 3 };
       const aOrder = roleOrder[a.role] ?? 999;
       const bOrder = roleOrder[b.role] ?? 999;
       return aOrder - bOrder;

@@ -114,7 +114,7 @@ export default function RoleManagementDirect() {
                     <div className="text-sm text-blue-600 font-medium">{userItem.role}</div>
                   </div>
                   <div className="space-x-2">
-                    {['admin', 'butler-offline', 'butler-online', 'viewer'].map((role) => (
+                    {['admin', 'butler-ground', 'butler-internet', 'viewer'].map((role) => (
                       <button
                         key={role}
                         onClick={() => assignRole(userItem.uid, role)}

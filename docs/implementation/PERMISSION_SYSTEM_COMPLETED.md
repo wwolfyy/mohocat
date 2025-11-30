@@ -44,12 +44,12 @@ The system implements a four-tier role hierarchy:
    - Can assign roles to other users
    - Full access to all admin features
 
-2. **butler-online** - Digital content management
+2. **butler-internet** - Digital content management
    - Can manage posts and videos
    - Can view analytics
    - Cannot manage users or physical cat care
 
-3. **butler-offline** - Physical cat care management
+3. **butler-ground** - Physical cat care management
    - Can manage cats and posts
    - Can view analytics
    - Cannot manage users
@@ -293,7 +293,7 @@ function RoleManagement() {
             <span>{user.email}</span>
             <span>{user.role}</span>
             <button onClick={() => assignRole(user.uid, 'admin')}>Admin</button>
-            <button onClick={() => assignRole(user.uid, 'butler-online')}>Online</button>
+            <button onClick={() => assignRole(user.uid, 'butler-internet')}>Online</button>
           </div>
         ))}
       </div>

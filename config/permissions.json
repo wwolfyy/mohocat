@@ -11,7 +11,7 @@
       ],
       "description": "Full administrative access"
     },
-    "butler-offline": {
+    "butler-ground": {
       "permissions": [
         "manage-cats",
         "manage-posts",
@@ -19,7 +19,7 @@
       ],
       "description": "Physical cat care management"
     },
-    "butler-online": {
+    "butler-internet": {
       "permissions": [
         "manage-posts",
         "view-analytics"

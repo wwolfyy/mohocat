@@ -34,10 +34,10 @@ This document outlines the comprehensive authentication and member management sy
 1. **admin**: Full mountain management access
    - Permissions: `["manage-cats", "manage-posts", "manage-users", "view-analytics", "manage-settings", "export-data"]`
 
-2. **butler-offline**: Physical cat care management
+2. **butler-ground**: Physical cat care management
    - Permissions: `["manage-cats", "manage-posts", "view-analytics"]`
 
-3. **butler-online**: Digital content management
+3. **butler-internet**: Digital content management
    - Permissions: `["manage-posts", "view-analytics"]`
 
 4. **viewer**: Read-only access
@@ -90,7 +90,7 @@ This document outlines the comprehensive authentication and member management sy
       approvedAt: timestamp
     },
     "jirisan": {
-      role: "butler-online",
+      role: "butler-internet",
       status: "pending",
       assignedBy: null,
       assignedAt: null,

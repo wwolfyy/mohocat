@@ -37,9 +37,9 @@ export async function getUserRole(userId: string): Promise<string | null> {
   if (permissions.includes('manage-users') && permissions.includes('manage-settings')) {
     return 'admin';
   } else if (permissions.includes('manage-cats')) {
-    return 'butler-offline';
+    return 'butler-ground';
   } else if (permissions.includes('manage-posts')) {
-    return 'butler-online';
+    return 'butler-internet';
   } else if (permissions.length === 0) {
     return 'viewer';
   }
@@ -53,8 +53,8 @@ export async function getUserRole(userId: string): Promise<string | null> {
 export function getRoleDisplayName(role: string): string {
   const roleNames: Record<string, string> = {
     'admin': 'Administrator',
-    'butler-offline': 'Butler (Offline)',
-    'butler-online': 'Butler (Online)',
+    'butler-ground': 'Butler (Ground)',
+    'butler-internet': 'Butler (Internet)',
     'viewer': 'Viewer'
   };
   
@@ -67,8 +67,8 @@ export function getRoleDisplayName(role: string): string {
 export function getRoleColor(role: string): string {
   const roleColors: Record<string, string> = {
     'admin': 'red',
-    'butler-offline': 'orange',
-    'butler-online': 'blue',
+    'butler-ground': 'orange',
+    'butler-internet': 'blue',
     'viewer': 'gray'
   };
   

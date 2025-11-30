@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
     // Sort users by role hierarchy
     const roleOrder: Record<string, number> = {
       admin: 4,
-      'butler-offline': 3,
-      'butler-online': 2,
+      'butler-ground': 3,
+      'butler-internet': 2,
       viewer: 1
     };
     

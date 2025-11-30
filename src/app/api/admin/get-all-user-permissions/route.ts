@@ -93,8 +93,8 @@ export async function GET(request: NextRequest) {
     users.sort((a, b) => {
       const roleOrder: Record<string, number> = {
         admin: 4,
-        'butler-offline': 3,
-        'butler-online': 2,
+        'butler-ground': 3,
+        'butler-internet': 2,
         viewer: 1
       };
       const aRole = roleOrder[a.role] || 0;

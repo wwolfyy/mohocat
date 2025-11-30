@@ -27,8 +27,8 @@ The permission system has been **successfully implemented and is fully functiona
 The permission system replaces hardcoded admin emails with a flexible, configuration-based approach that supports 4 privilege levels across multiple mountains:
 
 - **admin**: Full administrative access
-- **butler-offline**: Physical cat care management
-- **butler-online**: Digital content management  
+- **butler-ground**: Physical cat care management
+- **butler-internet**: Digital content management
 - **viewer**: Read-only access to public content
 
 ## File Structure
@@ -76,7 +76,7 @@ The system uses a JSON configuration file to define roles and permissions:
       ],
       "description": "Full administrative access"
     },
-    "butler-offline": {
+    "butler-ground": {
       "permissions": [
         "manage-cats",
         "manage-posts",
@@ -84,7 +84,7 @@ The system uses a JSON configuration file to define roles and permissions:
       ],
       "description": "Physical cat care management"
     },
-    "butler-online": {
+    "butler-internet": {
       "permissions": [
         "manage-posts",
         "view-analytics"

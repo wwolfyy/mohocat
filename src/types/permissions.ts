@@ -15,7 +15,7 @@ export interface UserPermissions {
 }
 
 export interface UserRole {
-  role: string; // 'admin' | 'butler-offline' | 'butler-online' | 'viewer'
+  role: string; // 'admin' | 'butler-ground' | 'butler-internet' | 'viewer'
   permissions: string[];
   mountainId: string;
   assignedBy: string;
@@ -55,8 +55,8 @@ export interface MountainConfig {
 }
 
 // Type guards for better type safety
-export function isValidRole(role: string): role is 'admin' | 'butler-offline' | 'butler-online' | 'viewer' {
-  return ['admin', 'butler-offline', 'butler-online', 'viewer'].includes(role);
+export function isValidRole(role: string): role is 'admin' | 'butler-ground' | 'butler-internet' | 'viewer' {
+  return ['admin', 'butler-ground', 'butler-internet', 'viewer'].includes(role);
 }
 
 export function isValidPermission(permission: string): boolean {
@@ -72,5 +72,5 @@ export function isValidPermission(permission: string): boolean {
 }
 
 // Utility types for convenience
-export type Role = 'admin' | 'butler-offline' | 'butler-online' | 'viewer';
+export type Role = 'admin' | 'butler-ground' | 'butler-internet' | 'viewer';
 export type Permission = 'manage-cats' | 'manage-posts' | 'manage-users' | 'view-analytics' | 'manage-settings' | 'export-data';

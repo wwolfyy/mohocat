@@ -1,7 +1,7 @@
 # Permission System Implementation Plan
 
 ## Overview
-Implement a configuration-driven permission system to replace hardcoded admin emails with 4 privilege levels: admin, butler-offline, butler-online, and viewer.
+Implement a configuration-driven permission system to replace hardcoded admin emails with 4 privilege levels: admin, butler-ground, butler-internet, and viewer.
 
 ## Configuration Files
 
@@ -20,7 +20,7 @@ Implement a configuration-driven permission system to replace hardcoded admin em
       ],
       "description": "Full administrative access"
     },
-    "butler-offline": {
+    "butler-ground": {
       "permissions": [
         "manage-cats",
         "manage-posts",
@@ -28,7 +28,7 @@ Implement a configuration-driven permission system to replace hardcoded admin em
       ],
       "description": "Physical cat care management"
     },
-    "butler-online": {
+    "butler-internet": {
       "permissions": [
         "manage-posts",
         "view-analytics"
@@ -106,7 +106,7 @@ export interface UserPermissions {
 }
 
 export interface UserRole {
-  role: string; // 'admin' | 'butler-offline' | 'butler-online' | 'viewer'
+  role: string; // 'admin' | 'butler-ground' | 'butler-internet' | 'viewer'
   permissions: string[];
   mountainId: string;
   assignedBy: string;

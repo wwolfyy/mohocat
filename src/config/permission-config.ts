@@ -13,7 +13,7 @@ export interface PermissionConfig {
   }>;
 }
 
-export type Role = 'admin' | 'butler-offline' | 'butler-online' | 'viewer';
+export type Role = 'admin' | 'butler-ground' | 'butler-internet' | 'viewer';
 export type Permission = 'manage-cats' | 'manage-posts' | 'manage-users' | 'view-analytics' | 'manage-settings' | 'export-data';
 
 /**
