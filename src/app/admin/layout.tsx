@@ -95,7 +95,7 @@ export default function AdminLayout({
                   style={getNavItemStyles("/admin")}
                   data-oid="l1y0wkd"
                 >
-                  관리자 대쉬보드
+                  대쉬보드
                 </a>
                 <a
                   href="/admin/about-content"
@@ -111,6 +111,20 @@ export default function AdminLayout({
                 >
                   고양이 관리
                 </a>
+                <span
+                  style={getNavItemStyles("/admin/points", true)}
+                  onClick={(e) => handleDisabledClick(e, "급식소 관리")}
+                  data-oid="points_mgmt"
+                >
+                  급식소 관리
+                </span>
+                <span
+                  style={getNavItemStyles("/admin/winter-houses", true)}
+                  onClick={(e) => handleDisabledClick(e, "겨울집 관리")}
+                  data-oid="winter_houses_mgmt"
+                >
+                  겨울집 관리
+                </span>
                 <a
                   href="/admin/tag-images"
                   style={getNavItemStyles("/admin/tag-images")}
@@ -132,13 +146,6 @@ export default function AdminLayout({
                 >
                   게시물 관리
                 </a>
-                <span
-                  style={getNavItemStyles("/admin/points", true)}
-                  onClick={(e) => handleDisabledClick(e, "거주지 관리")}
-                  data-oid="points_mgmt"
-                >
-                  거주지 관리
-                </span>
                 <span
                   style={getNavItemStyles("/admin/members", true)}
                   onClick={(e) => handleDisabledClick(e, "회원 관리")}
