@@ -98,11 +98,11 @@ export default function AdminLayout({
                   대쉬보드
                 </a>
                 <a
-                  href="/admin/about-content"
-                  style={getNavItemStyles("/admin/about-content")}
-                  data-oid="about_mgmt"
+                  href="/admin/app-management"
+                  style={getNavItemStyles("/admin/app-management")}
+                  data-oid="app_mgmt"
                 >
-                  소개페이지 관리
+                  앱관리
                 </a>
                 <a
                   href="/admin/cats"
