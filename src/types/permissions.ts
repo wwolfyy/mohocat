@@ -3,13 +3,13 @@ export interface UserPermissions {
   email: string;
   displayName?: string;
   photoURL?: string;
-  
+
   // Current mountain role
   currentRole: UserRole;
-  
+
   // Historical roles for audit purposes
   roleHistory: UserRole[];
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,16 +61,34 @@ export function isValidRole(role: string): role is 'admin' | 'butler-ground' | '
 
 export function isValidPermission(permission: string): boolean {
   const validPermissions = [
-    'manage-cats',
-    'manage-posts', 
+    'manage-app',
+    'manage-cat',
+    'manage-canteen',
+    'manage-shelter',
+    'manage-photo',
+    'manage-video',
+    'manage-posts',
     'manage-users',
-    'view-analytics',
-    'manage-settings',
-    'export-data'
+    'view-post-feeding',
+    'view-post-butler',
+    'view-photo',
+    'view-video'
   ];
   return validPermissions.includes(permission);
 }
 
 // Utility types for convenience
 export type Role = 'admin' | 'butler-ground' | 'butler-internet' | 'viewer';
-export type Permission = 'manage-cats' | 'manage-posts' | 'manage-users' | 'view-analytics' | 'manage-settings' | 'export-data';
+export type Permission =
+  | 'manage-app'
+  | 'manage-cat'
+  | 'manage-canteen'
+  | 'manage-shelter'
+  | 'manage-photo'
+  | 'manage-video'
+  | 'manage-posts'
+  | 'manage-users'
+  | 'view-post-feeding'
+  | 'view-post-butler'
+  | 'view-photo'
+  | 'view-video';

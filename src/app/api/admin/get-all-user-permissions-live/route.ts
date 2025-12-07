@@ -1,56 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Use Firebase Admin SDK approach which is more reliable for server-side operations
-// This requires the firebase-admin package to be installed
+import { db } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('=== FETCHING LIVE USERS FROM FIRESTORE ===');
-    
-    // Import Firebase Admin dynamically to avoid initialization issues
-    const admin = require('firebase-admin');
-    
-    // Initialize Firebase Admin if not already initialized
-    if (!admin.apps.length) {
-      console.log('Initializing Firebase Admin...');
-      
-      // Use service account credentials or application default credentials
-      try {
-        // Try application default credentials first (works in Firebase/Google Cloud)
-        admin.initializeApp({
-          credential: admin.credential.applicationDefault(),
-        });
-        console.log('Firebase Admin initialized with application default credentials');
-      } catch (defaultError) {
-        console.log('Application default credentials failed, trying service account...');
-        
-        // Fallback to service account if available
-        const serviceAccount = {
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        };
-        
-        if (serviceAccount.privateKey && serviceAccount.clientEmail) {
-          admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-          });
-          console.log('Firebase Admin initialized with service account credentials');
-        } else {
-          throw new Error('No valid Firebase credentials found');
-        }
-      }
-    }
-    
-    // Get Firestore instance
-    const db = admin.firestore();
+
+    // Get Firestore instance from centralized utility
     console.log('Firestore instance obtained');
-    
+
     // Query the user_permissions collection
     console.log('Querying user_permissions collection...');
     const snapshot = await db.collection('user_permissions').get();
     console.log(`Found ${snapshot.size} user documents`);
-    
+
     // Type definition for user data
     interface UserPermissionData {
       uid: string;
@@ -65,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Process each document
     const users: UserPermissionData[] = [];
     let processedCount = 0;
-    
+
     snapshot.forEach((doc: any) => {
       try {
         const data = doc.data();
@@ -74,7 +36,7 @@ export async function GET(request: NextRequest) {
           role: data.currentRole?.role,
           displayName: data.displayName
         });
-        
+
         users.push({
           uid: doc.id,
           email: data.email || 'No email',
@@ -89,9 +51,9 @@ export async function GET(request: NextRequest) {
         console.error('Error processing document:', doc.id, docError);
       }
     });
-    
+
     console.log(`✅ Successfully processed ${processedCount} users from Firestore`);
-    
+
     // Sort users by role hierarchy
     const roleOrder: Record<string, number> = {
       admin: 4,
@@ -102,7 +64,7 @@ export async function GET(request: NextRequest) {
     users.sort((a, b) => {
       const aRole = roleOrder[a.role] || 0;
       const bRole = roleOrder[b.role] || 0;
-      
+
       if (aRole !== bRole) return bRole - aRole; // Sort by role (desc)
       return a.email.localeCompare(b.email); // Sort by email (asc)
     });

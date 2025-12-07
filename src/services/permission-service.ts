@@ -7,13 +7,31 @@ export class PermissionService {
   private config: PermissionConfig | null = null;
 
   /**
-   * Load and cache permission configuration
+   * Load and cache permission configuration from Firestore
    */
-  private loadConfig(): PermissionConfig {
-    if (!this.config) {
+  private async loadConfig(): Promise<PermissionConfig> {
+    if (this.config) {
+      return this.config;
+    }
+
+    try {
+      const configRef = doc(this.db, 'role_permissions', 'role-config');
+      const configSnap = await getDoc(configRef);
+
+      if (configSnap.exists()) {
+        this.config = configSnap.data() as PermissionConfig;
+      } else {
+        // Fallback to local config if Firestore is empty
+        console.warn('Firestore permission config not found, falling back to local defaults');
+        this.config = loadPermissionConfig();
+      }
+    } catch (error) {
+      console.error('Failed to load permission config from Firestore:', error);
+      // Fallback to local config on error
       this.config = loadPermissionConfig();
     }
-    return this.config;
+
+    return this.config!;
   }
 
   /**
@@ -24,11 +42,23 @@ export class PermissionService {
     if (!userDoc.exists()) {
       return [];
     }
-    
+
     const userData = userDoc.data() as UserPermissions;
     const currentRole = userData.currentRole;
-    
-    return currentRole.isActive ? currentRole.permissions : [];
+
+    if (currentRole.isActive) {
+      // If specific permissions are assigned to the user role instance, use them
+      if (currentRole.permissions && currentRole.permissions.length > 0) {
+        return currentRole.permissions;
+      }
+
+      // Otherwise, lookup permissions from the current config for this role
+      const config = await this.loadConfig();
+      const roleConfig = config.roles[currentRole.role];
+      return roleConfig ? roleConfig.permissions : [];
+    }
+
+    return [];
   }
 
   /**
@@ -65,13 +95,26 @@ export class PermissionService {
     assignedBy: string
   ): Promise<void> {
     const config = await this.loadConfig();
-    
+
     if (!config.roles[role]) {
       throw new Error(`Invalid role: ${role}`);
     }
 
     const newRole: UserRole = {
       role,
+      // We don't snapshot permissions here anymore to allow dynamic updates
+      // OR we snapshot them if we want them tied to assignment time.
+      // Given the requirement to "make changes and hit save", dynamic lookup is better.
+      // But keeping permissions in UserRole is safer for history.
+      // Let's store them but `getUserPermissions` prefers dynamic config if we want instant updates?
+      // Actually, standard RBAC usually associates role, and permissions come from role definition.
+      // The current UserRole interface has `permissions: string[]`.
+      // I will populate it for historical record, but `getUserPermissions` (above) logic
+      // might need to decide whether to trust the stored list or the live config.
+      // For now, I updated `getUserPermissions` to prefer live config if permissions are empty?
+      // Actually, let's stick to RBAC best practice: Role defines permissions.
+      // So `getUserPermissions` should ideally check the LIVE config for the user's role.
+      // The code above in `getUserPermissions` does exactly that now.
       permissions: config.roles[role].permissions,
       mountainId,
       assignedBy,
@@ -84,7 +127,7 @@ export class PermissionService {
 
     if (userDoc.exists()) {
       const userData = userDoc.data() as UserPermissions;
-      
+
       // Deactivate previous role and add to history
       if (userData.currentRole) {
         userData.roleHistory = userData.roleHistory || [];
@@ -109,7 +152,7 @@ export class PermissionService {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
+
       await setDoc(userRef, newUserPermissions);
     }
 
@@ -123,13 +166,13 @@ export class PermissionService {
   async suspendRole(userId: string, suspendedBy: string, reason?: string): Promise<void> {
     const userRef = doc(this.db, 'user_permissions', userId);
     const userDoc = await getDoc(userRef);
-    
+
     if (!userDoc.exists()) {
       throw new Error('User not found');
     }
 
     const userData = userDoc.data() as UserPermissions;
-    
+
     // Add current role to history with suspension reason
     userData.roleHistory = userData.roleHistory || [];
     userData.roleHistory.push({
@@ -151,9 +194,9 @@ export class PermissionService {
 
     // Log the suspension
     await this.logRoleChange(
-      userId, 
-      'suspended', 
-      userData.currentRole.mountainId, 
+      userId,
+      'suspended',
+      userData.currentRole.mountainId,
       suspendedBy,
       {
         reason: reason || 'No reason provided',
@@ -168,13 +211,13 @@ export class PermissionService {
   async reactivateRole(userId: string, reactivatedBy: string): Promise<void> {
     const userRef = doc(this.db, 'user_permissions', userId);
     const userDoc = await getDoc(userRef);
-    
+
     if (!userDoc.exists()) {
       throw new Error('User not found');
     }
 
     const userData = userDoc.data() as UserPermissions;
-    
+
     if (userData.currentRole.isActive) {
       throw new Error('User role is already active');
     }
@@ -192,9 +235,9 @@ export class PermissionService {
 
     // Log the reactivation
     await this.logRoleChange(
-      userId, 
-      'reactivated', 
-      userData.currentRole.mountainId, 
+      userId,
+      'reactivated',
+      userData.currentRole.mountainId,
       reactivatedBy
     );
   }

@@ -364,7 +364,7 @@ export default function PhotoAlbumPage() {
             사진첩
           </h1>
           <p className="text-gray-600 text-center mt-2" data-oid="rzcnaj3">
-            산양이 고양이들의 소중한 순간들
+            {/* 산양이 고양이들의 소중한 순간들 */}
           </p>
         </div>
       </div>{" "}

@@ -424,7 +424,7 @@ export default function VideoAlbumPage() {
             동영상
           </h1>
           <p className="text-gray-600 text-center mt-2" data-oid="s-3bu97">
-            산냥이 집냥이의 소중한 순간들
+            {/* 산냥이 집냥이의 소중한 순간들 */}
           </p>
         </div>
       </div>

@@ -2,39 +2,52 @@
   "roles": {
     "admin": {
       "permissions": [
-        "manage-cats",
+        "manage-app",
+        "manage-cat",
+        "manage-canteen",
+        "manage-shelter",
+        "manage-photo",
+        "manage-video",
         "manage-posts",
         "manage-users",
-        "view-analytics",
-        "manage-settings",
-        "export-data"
+        "view-post-feeding",
+        "view-post-butler",
+        "view-photo",
+        "view-video"
       ],
       "description": "Full administrative access"
     },
     "butler-ground": {
       "permissions": [
-        "manage-cats",
-        "manage-posts",
-        "view-analytics"
+        "view-video",
+        "view-photo",
+        "view-post-butler",
+        "view-post-feeding"
       ],
       "description": "Physical cat care management"
     },
     "butler-internet": {
       "permissions": [
-        "manage-posts",
-        "view-analytics"
+        "view-video",
+        "view-photo",
+        "view-post-butler"
       ],
       "description": "Digital content management"
     },
     "viewer": {
-      "permissions": [],
+      "permissions": [
+        "view-video",
+        "view-photo"
+      ],
       "description": "Read-only access to public content"
     }
   },
   "mountains": {
     "geyang": {
       "name": "Geyangsan",
-      "adminUsers": ["jaesangpark@gmail.com"],
+      "adminUsers": [
+        "jaesangpark@gmail.com"
+      ],
       "defaultRole": "viewer"
     },
     "manisan": {

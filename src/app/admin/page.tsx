@@ -9,10 +9,9 @@ import {
   getPostService,
 } from "@/services";
 import YouTubeAuthPanel from "@/components/admin/YouTubeAuthPanelNew";
-import RoleManagement from "@/components/admin/RoleManagement";
-import PermissionDebug from "@/components/admin/PermissionDebug";
 
 interface AdminStats {
+
   // Images stats
   totalImages: number;
   taggedImages: number;
@@ -51,57 +50,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Posts collections configuration
-  const [postsCollectionNames, setPostsCollectionNames] = useState<string>("");
-  const [showPostsConfig, setShowPostsConfig] = useState(false);
-  const [configLoading, setConfigLoading] = useState(false);
-  const [configSuccess, setConfigSuccess] = useState(false);
-
-  // Data updater state
-  const [dataUpdaterLoading, setDataUpdaterLoading] = useState(false);
-  const [dataUpdaterMessage, setDataUpdaterMessage] = useState<string>("");
-
-  // Load posts collection configuration from localStorage
-  const loadPostsCollectionConfig = () => {
-    try {
-      const saved = localStorage.getItem("admin-posts-collections");
-      if (saved) {
-        setPostsCollectionNames(saved);
-        return saved.split("\n").filter((name) => name.trim().length > 0);
-      }
-    } catch (error) {
-      console.warn(
-        "Failed to load posts collection config from localStorage:",
-        error,
-      );
-    }
-
-    // Default collections if nothing saved
-    const defaultCollections = [
-      "posts_main",
-      "posts_feeding",
-      "posts_announcements",
-    ];
-
-    setPostsCollectionNames(defaultCollections.join("\n"));
-    return defaultCollections;
-  };
-
-  // Save posts collection configuration to localStorage
-  const savePostsCollectionConfig = (configText: string) => {
-    try {
-      localStorage.setItem("admin-posts-collections", configText);
-      setPostsCollectionNames(configText);
-      return true;
-    } catch (error) {
-      console.error(
-        "Failed to save posts collection config to localStorage:",
-        error,
-      );
-      return false;
-    }
-  };
-
   // Get posts collections from user configuration
   const getConfiguredPostsCollections = async (collectionNames: string[]) => {
     const postsCollections: { name: string; count: number }[] = [];
@@ -134,8 +82,16 @@ export default function AdminDashboard() {
         setLoading(true);
         setError(null);
 
-        // Load posts collection configuration
-        const configuredCollections = loadPostsCollectionConfig();
+        // Load posts collection configuration from localStorage
+        let configuredCollections = ["posts_main", "posts_feeding", "posts_announcements"];
+        try {
+          const saved = localStorage.getItem("admin-posts-collections");
+          if (saved) {
+            configuredCollections = saved.split("\n").filter((name) => name.trim().length > 0);
+          }
+        } catch (error) {
+          console.warn("Failed to load posts collection config from localStorage:", error);
+        }
 
         // Fetch data using service layer
         const [
@@ -223,46 +179,6 @@ export default function AdminDashboard() {
 
     fetchStats();
   }, []);
-
-  // Static data update functions
-  const updateStaticData = async (dataType: 'cats' | 'points' | 'feeding-spots' | 'all') => {
-    try {
-      setDataUpdaterLoading(true);
-      setDataUpdaterMessage(`Updating ${dataType} data...`);
-
-      const response = await fetch('/api/admin/update-static-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ dataType }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Update failed');
-      }
-
-      setDataUpdaterMessage(`${result.message} ✅`);
-
-      // Refresh stats after successful update
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-
-    } catch (error: any) {
-      console.error('Static data update failed:', error);
-      setDataUpdaterMessage(`Update failed: ${error.message} ❌`);
-    } finally {
-      setDataUpdaterLoading(false);
-    }
-  };
-
-  const updateCatsData = () => updateStaticData('cats');
-  const updatePointsData = () => updateStaticData('points');
-  const updateFeedingSpotsData = () => updateStaticData('feeding-spots');
-  const updateAllStaticData = () => updateStaticData('all');
 
   return (
     <div
@@ -494,8 +410,8 @@ export default function AdminDashboard() {
             <div style={{ fontSize: "2rem" }} data-oid=".bq-c12">
               📝
             </div>
-            <button
-              onClick={() => setShowPostsConfig(!showPostsConfig)}
+            <a
+              href="/admin/app-management?tab=posts-config"
               style={{
                 fontSize: "0.75rem",
                 padding: "0.25rem 0.5rem",
@@ -504,12 +420,13 @@ export default function AdminDashboard() {
                 borderRadius: "4px",
                 color: "#374151",
                 cursor: "pointer",
+                textDecoration: "none",
               }}
               title="Configure post collections"
               data-oid="mjr.6p6"
             >
               ⚙️ Config
-            </button>
+            </a>
           </div>
           <h3
             style={{ fontSize: "1rem", color: "#6b7280", margin: 0 }}
@@ -644,444 +561,10 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Posts Collections Configuration Panel */}
-      {showPostsConfig && (
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            marginBottom: "2rem",
-          }}
-          data-oid="k298t.3"
-        >
-          <h3
-            style={{
-              fontSize: "1.1rem",
-              fontWeight: "bold",
-              color: "#111827",
-              marginBottom: "1rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-            data-oid="iprgon-"
-          >
-            📝 Configure Posts Collections
-          </h3>
-          <p
-            style={{
-              color: "#6b7280",
-              fontSize: "0.9rem",
-              marginBottom: "1rem",
-              lineHeight: "1.4",
-            }}
-            data-oid="kuff-oy"
-          >
-            Specify which Firestore collections should be considered "posts"
-            collections. Enter one collection name per line. The dashboard will
-            show document counts for each collection.
-          </p>
-
-          <div
-            style={{
-              backgroundColor: "#f9fafb",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-              padding: "0.75rem",
-              marginBottom: "1rem",
-              fontSize: "0.8rem",
-              color: "#374151",
-            }}
-            data-oid="xmzu2il"
-          >
-            <strong data-oid="l15b881">Example:</strong>
-            <br data-oid="ve:1iv_" />
-            <code
-              style={{
-                fontFamily: "monospace",
-                backgroundColor: "#f3f4f6",
-                padding: "0.125rem 0.25rem",
-                borderRadius: "3px",
-              }}
-              data-oid="0mn:i:4"
-            >
-              posts_main
-              <br data-oid="nocx.4s" />
-              posts_feeding
-              <br data-oid="-lijsx4" />
-              posts_announcements
-              <br data-oid="tdqtyew" />
-              posts_events
-            </code>
-          </div>
-
-          <div style={{ marginBottom: "1rem" }} data-oid="-koql1t">
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.9rem",
-                fontWeight: "500",
-                color: "#374151",
-                marginBottom: "0.5rem",
-              }}
-              data-oid="0irran6"
-            >
-              Collection Names (one per line):
-            </label>
-            <textarea
-              value={postsCollectionNames}
-              onChange={(e) => setPostsCollectionNames(e.target.value)}
-              placeholder="posts_main&#10;posts_feeding&#10;posts_announcements"
-              style={{
-                width: "100%",
-                minHeight: "100px",
-                padding: "0.75rem",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "0.9rem",
-                fontFamily: "monospace",
-                resize: "vertical",
-                outline: "none",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#3b82f6";
-                e.target.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.1)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#d1d5db";
-                e.target.style.boxShadow = "none";
-              }}
-              data-oid="lfo3yn_"
-            />
-          </div>
-
-          <div
-            style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
-            data-oid="nmh_6rn"
-          >
-            <button
-              onClick={async () => {
-                setConfigLoading(true);
-                setConfigSuccess(false);
-                try {
-                  const saved = savePostsCollectionConfig(postsCollectionNames);
-                  if (!saved) {
-                    throw new Error("Failed to save configuration");
-                  }
-
-                  // Re-fetch stats with new configuration
-                  const collectionNames = postsCollectionNames
-                    .split("\n")
-                    .map((name) => name.trim())
-                    .filter((name) => name.length > 0);
-
-                  if (collectionNames.length === 0) {
-                    throw new Error(
-                      "Please specify at least one collection name",
-                    );
-                  }
-
-                  const newPostsCollections =
-                    await getConfiguredPostsCollections(collectionNames);
-
-                  setStats((prev) => ({
-                    ...prev,
-                    postsCollections: newPostsCollections,
-                  }));
-
-                  setConfigSuccess(true);
-                  setTimeout(() => {
-                    setShowPostsConfig(false);
-                    setConfigSuccess(false);
-                  }, 1000);
-                } catch (error) {
-                  console.error(
-                    "Failed to update posts collections config:",
-                    error,
-                  );
-                  alert(
-                    `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
-                  );
-                } finally {
-                  setConfigLoading(false);
-                }
-              }}
-              disabled={configLoading}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: configLoading
-                  ? "#9ca3af"
-                  : configSuccess
-                    ? "#10b981"
-                    : "#3b82f6",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                fontSize: "0.9rem",
-                fontWeight: "500",
-                cursor: configLoading ? "not-allowed" : "pointer",
-              }}
-              data-oid="gwcntf0"
-            >
-              {configLoading
-                ? "Saving..."
-                : configSuccess
-                  ? "✓ Saved!"
-                  : "Save & Refresh"}
-            </button>
-
-            <button
-              onClick={() => {
-                setShowPostsConfig(false);
-                // Reset to saved config
-                loadPostsCollectionConfig();
-              }}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#f3f4f6",
-                color: "#374151",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "0.9rem",
-                cursor: "pointer",
-              }}
-              data-oid="daixp6:"
-            >
-              Cancel
-            </button>
-
-            <div
-              style={{
-                fontSize: "0.8rem",
-                color: "#6b7280",
-                marginLeft: "auto",
-              }}
-              data-oid="ig7xvly"
-            >
-              Configuration saved to browser storage
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Static Data Management */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "1.5rem",
-          borderRadius: "8px",
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          marginBottom: "2rem",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            color: "#111827",
-            marginBottom: "1rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          🔄 Static Data Management
-        </h3>
-        <p
-          style={{
-            color: "#6b7280",
-            fontSize: "0.9rem",
-            marginBottom: "1.5rem",
-            lineHeight: "1.4",
-          }}
-        >
-          Update static data files from Firebase collections. This improves performance by serving data from JSON files instead of making database queries.
-        </p>
-
-        {/* Status Message */}
-        {dataUpdaterMessage && (
-          <div
-            style={{
-              backgroundColor: dataUpdaterMessage.includes('❌') ? "#fef2f2" : "#f0fdf4",
-              border: dataUpdaterMessage.includes('❌') ? "1px solid #fecaca" : "1px solid #bbf7d0",
-              borderRadius: "6px",
-              padding: "0.75rem",
-              marginBottom: "1rem",
-              color: dataUpdaterMessage.includes('❌') ? "#dc2626" : "#16a34a",
-              fontSize: "0.9rem",
-            }}
-          >
-            {dataUpdaterMessage}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "1rem",
-            marginBottom: "1rem",
-          }}
-        >
-          <button
-            onClick={updateCatsData}
-            disabled={dataUpdaterLoading}
-            style={{
-              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#3b82f6",
-              color: dataUpdaterLoading ? "#6b7280" : "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "0.75rem 1rem",
-              fontSize: "0.9rem",
-              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
-              transition: "background-color 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-            }}
-          >
-            🐱 Update Cats Data
-          </button>
-
-          <button
-            onClick={updatePointsData}
-            disabled={dataUpdaterLoading}
-            style={{
-              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#10b981",
-              color: dataUpdaterLoading ? "#6b7280" : "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "0.75rem 1rem",
-              fontSize: "0.9rem",
-              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
-              transition: "background-color 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-            }}
-          >
-            📍 Update Points Data
-          </button>
-
-          <button
-            onClick={updateFeedingSpotsData}
-            disabled={dataUpdaterLoading}
-            style={{
-              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#f59e0b",
-              color: dataUpdaterLoading ? "#6b7280" : "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "0.75rem 1rem",
-              fontSize: "0.9rem",
-              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
-              transition: "background-color 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-            }}
-          >
-            🍽️ Update Feeding Spots
-          </button>
-
-          <button
-            onClick={updateAllStaticData}
-            disabled={dataUpdaterLoading}
-            style={{
-              backgroundColor: dataUpdaterLoading ? "#f3f4f6" : "#8b5cf6",
-              color: dataUpdaterLoading ? "#6b7280" : "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "0.75rem 1rem",
-              fontSize: "0.9rem",
-              cursor: dataUpdaterLoading ? "not-allowed" : "pointer",
-              transition: "background-color 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-              gridColumn: "span 2",
-            }}
-          >
-            {dataUpdaterLoading ? "🔄 Updating..." : "🚀 Update All Data"}
-          </button>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "#f9fafb",
-            border: "1px solid #e5e7eb",
-            borderRadius: "6px",
-            padding: "0.75rem",
-            fontSize: "0.8rem",
-            color: "#374151",
-          }}
-        >
-          <strong>Note:</strong> Static data updates may take a few moments to complete. The page will refresh automatically after successful updates.
-        </div>
-      </div>
 
 
-      {/* Role Management Section */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "1.5rem",
-          borderRadius: "8px",
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          marginBottom: "2rem",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            color: "#111827",
-            marginBottom: "1rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          🔐 Role Management
-        </h3>
-        <RoleManagement />
-      </div>
 
-      {/* Permission Debug Section */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "1.5rem",
-          borderRadius: "8px",
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          marginBottom: "2rem",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            color: "#111827",
-            marginBottom: "1rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          🔧 Permission Debug Tool
-        </h3>
-        <PermissionDebug />
-      </div>
+
 
     </div>
   );

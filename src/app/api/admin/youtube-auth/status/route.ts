@@ -1,29 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-
-// Initialize Firebase Admin directly
-function initFirebaseAdmin() {
-  if (!getApps().length) {
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const adminServiceAccountPath = path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json');
-
-      if (fs.existsSync(adminServiceAccountPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(adminServiceAccountPath, 'utf8'));
-        return initializeApp({
-          credential: cert(serviceAccount),
-        });
-      }
-    } catch (error) {
-      console.warn('Failed to load Firebase Admin service account from file:', error);
-    }
-  }
-  return null;
-}
+import { db } from '@/lib/firebase-admin';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
@@ -36,9 +14,6 @@ interface TokenInfo {
 
 export async function GET() {
   try {
-    // Initialize Firebase Admin
-    initFirebaseAdmin();
-
     const oauthConfig = getYouTubeOAuthConfig();
 
     if (!oauthConfig) {
@@ -54,7 +29,6 @@ export async function GET() {
 
     // First, try to get Firestore token data to use its timestamp
     try {
-      const db = getFirestore();
       const authDoc = await db.collection('admin_config').doc('youtube_auth').get();
 
       if (authDoc.exists) {

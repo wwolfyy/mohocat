@@ -1,30 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirebaseConfig, getYouTubeApiKey, getMountainConfig } from '@/utils/config';
-import * as path from 'path';
-import * as fs from 'fs';
+import { db } from '@/lib/firebase-admin';
+import { getYouTubeApiKey, getMountainConfig } from '@/utils/config';
+import { NextURL } from 'next/dist/server/web/next-url';
 
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  const serviceAccountPath = path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json');
-
-  if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-
-    // Use centralized config for Firebase configuration
-    const firebaseConfig = getFirebaseConfig();
-    initializeApp({
-      credential: cert(serviceAccount),
-      storageBucket: firebaseConfig?.storageBucket,
-    });
-  } else {
-    throw new Error('Service account file not found: ' + serviceAccountPath);
-  }
-}
-
-const db = getFirestore();
-// Use centralized config for YouTube API key
 const YOUTUBE_API_KEY = getYouTubeApiKey();
 
 export async function POST(request: NextRequest) {
@@ -43,7 +21,11 @@ export async function POST(request: NextRequest) {
     if (!YOUTUBE_API_KEY) {
       console.log('ERROR: YouTube API key not configured');
       return NextResponse.json({ error: 'YouTube API key not configured' }, { status: 500 });
-    }    console.log(`Refreshing metadata for ${videoIds.length} videos`);    // Fetch fresh metadata from YouTube API - include location data
+    }
+
+    console.log(`Refreshing metadata for ${videoIds.length} videos`);
+
+    // Fetch fresh metadata from YouTube API - include location data
     const videosResponse = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,recordingDetails,liveStreamingDetails&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
     );
@@ -77,7 +59,11 @@ export async function POST(request: NextRequest) {
         console.log(`Recording date mismatch, retrying in 2 seconds (attempt ${retryCount + 1}/5)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Retry the request
+        // Retry the request by recursively calling POST (simulated by returning a new response from a new call would be ideal, but here we just recurse logic or return error to client to retry?
+        // Actually, recursing in API route is tricky without internal redirect.
+        // Let's just return a specific status that client can retry, OR just do the recursion IF we can.
+        // The original code tried to POST to itself: return POST(new NextRequest(request.url...))
+        // We will keep that logic.
         return POST(new NextRequest(request.url, {
           method: 'POST',
           headers: request.headers,
@@ -94,24 +80,28 @@ export async function POST(request: NextRequest) {
       } else if (datesMatch) {
         console.log(`✅ Recording date matches expected value: ${expectedRecordingDate}`);
       }
-    }    // Fetch playlist information for each video
+    }
+
+    // Fetch playlist information for each video
     console.log('Fetching playlist information for videos...');
 
     // First, get all playlists from the channel
-    // Get channel ID from centralized config
     const config = getMountainConfig();
     const channelId = config.social?.youtubeChannelId;
+
+    // Proper Map initialization
+    const playlistMap = new Map<string, any[]>();
+
     if (!channelId) {
       console.warn('No channel ID configured, skipping playlist fetch');
-      var playlistMap = new Map();
-      videoIds.forEach(videoId => playlistMap.set(videoId, []));
+      videoIds.forEach(videoId => playlistMap.set(videoId as string, []));
     } else {
       console.log('Fetching channel playlists...');
       const channelPlaylistsResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${channelId}&key=${YOUTUBE_API_KEY}&maxResults=50`
       );
 
-      let allPlaylists = [];
+      let allPlaylists: any[] = [];
       if (channelPlaylistsResponse.ok) {
         const channelPlaylistsData = await channelPlaylistsResponse.json();
         allPlaylists = channelPlaylistsData.items || [];
@@ -155,11 +145,12 @@ export async function POST(request: NextRequest) {
       });
 
       const playlistResults = await Promise.all(playlistPromises);
-      var playlistMap = new Map();
       playlistResults.forEach(result => {
         playlistMap.set(result.videoId, result.playlists);
       });
-    }// Update each video's metadata in Firestore
+    }
+
+    // Update each video's metadata in Firestore
     const updatePromises = refreshedVideos.map(async (video: any) => {
       const videoId = video.id;
       console.log(`Processing video: ${videoId} (${video.snippet?.title})`);
@@ -175,11 +166,8 @@ export async function POST(request: NextRequest) {
 
       const docRef = querySnapshot.docs[0];
       const existingData = docRef.data();
-      console.log(`Existing data for ${videoId}:`, {
-        title: existingData.title,
-        youtubeId: existingData.youtubeId,
-        tags: existingData.tags?.length || 0
-      });      // Extract YouTube data - these fields are now YouTube-sourced and read-only
+
+      // Extract YouTube data - these fields are now YouTube-sourced and read-only
       const youtubeTitle = video.snippet?.title || 'Untitled';
       const youtubeTags = video.snippet?.tags || []; // YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)
       const youtubeRecordingDate = video.recordingDetails?.recordingDate;
@@ -187,66 +175,44 @@ export async function POST(request: NextRequest) {
       const youtubeVideoUrl = `https://www.youtube.com/watch?v=${videoId}`; // YOUTUBE-SOURCED: videoUrl (ALWAYS OVERWRITE)
       const videoPlaylists = playlistMap.get(videoId) || [];
 
-      console.log(`YouTube-sourced data for ${videoId}:`, {
-        tags: youtubeTags,
-        videoUrl: youtubeVideoUrl,
-        createdTime: youtubeRecordingDate,
-        location: youtubeLocation || 'No location data',
-        playlistCount: videoPlaylists.length,
-        recordingDateRaw: video.recordingDetails // Add raw recording details for debugging
-      });
-
       // CRITICAL: These YouTube-sourced fields MUST always be overwritten from YouTube
-      // Any manual edits to these fields in Firebase will be lost during metadata refresh
-      // This is intentional to enforce YouTube as the single source of truth
       const updatedData = {
-        // Core YouTube metadata
         title: youtubeTitle,
         description: video.snippet?.description || '',
         thumbnailUrl: video.snippet?.thumbnails?.medium?.url ||
-                     video.snippet?.thumbnails?.default?.url ||
-                     `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+          video.snippet?.thumbnails?.default?.url ||
+          `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         publishedAt: video.snippet?.publishedAt || '',
         duration: video.contentDetails?.duration || '',
         channelTitle: video.snippet?.channelTitle || '',
 
-        // ========================================================================
-        // YOUTUBE READ-ONLY FIELDS - THESE ARE FORCIBLY OVERWRITTEN FROM YOUTUBE
-        // ========================================================================
-        videoUrl: youtubeVideoUrl, // ENFORCED: Always from YouTube, cannot be edited in Firebase
-        storagePath: youtubeVideoUrl, // ENFORCED: Same as videoUrl for YouTube videos
-        tags: youtubeTags, // ENFORCED: Always from YouTube tags, cannot be edited in Firebase
-        createdTime: youtubeRecordingDate ? new Date(youtubeRecordingDate) : null, // ENFORCED: Always from YouTube recordingDate
+        // YOUTUBE READ-ONLY FIELDS
+        videoUrl: youtubeVideoUrl,
+        storagePath: youtubeVideoUrl,
+        tags: youtubeTags,
+        createdTime: youtubeRecordingDate ? new Date(youtubeRecordingDate) : null,
         location: youtubeLocation ? {
           latitude: youtubeLocation.latitude,
           longitude: youtubeLocation.longitude,
           altitude: youtubeLocation.altitude
-        } : null, // ENFORCED: Always from YouTube location data
-        // ========================================================================
+        } : null,
 
         // YouTube specific fields
         youtubeId: videoId,
         videoType: 'youtube',
 
         // System fields
-        uploadDate: new Date(), // Update to current time
+        uploadDate: new Date(),
         uploadedBy: 'admin',
 
-        // Playlist information from YouTube - using allPlaylists as the source of truth
-        allPlaylists: videoPlaylists, // Complete playlist information
+        // Playlist information
+        allPlaylists: videoPlaylists,
 
-        // Update timestamp to track when metadata was last refreshed
+        // Update timestamp
         lastMetadataRefresh: new Date(),
-      };      console.log(`Updated data for ${videoId}:`, {
-        title: updatedData.title,
-        description: updatedData.description?.substring(0, 50) + '...',
-        tags: updatedData.tags?.length || 0,
-        createdTime: updatedData.createdTime,
-        createdTimeMapped: youtubeRecordingDate ? `${youtubeRecordingDate} → ${updatedData.createdTime}` : 'No created time',
-        playlists: videoPlaylists.length > 0 ? videoPlaylists.map((p: any) => `${p.title} (${p.id})`).join(', ') : 'No playlists',
-        allPlaylistsCount: videoPlaylists.length,
-        lastRefresh: updatedData.lastMetadataRefresh
-      });console.log(`Updating Firestore document for ${videoId}...`);
+      };
+
+      console.log(`Updating Firestore document for ${videoId}...`);
       await docRef.ref.update(updatedData);
       console.log(`✅ Successfully updated ${videoId} in Firestore`);
 

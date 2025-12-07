@@ -3,34 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Readable } from 'stream';
 import { getVideoService } from '@/services';
 import { getYouTubeOAuthConfig } from '@/utils/config';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-
-// Initialize Firebase Admin directly
-function initFirebaseAdmin() {
-  if (!getApps().length) {
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const adminServiceAccountPath = path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json');
-
-      if (fs.existsSync(adminServiceAccountPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(adminServiceAccountPath, 'utf8'));
-        return initializeApp({
-          credential: cert(serviceAccount),
-        });
-      }
-    } catch (error) {
-      console.warn('Failed to load Firebase Admin service account from file:', error);
-    }
-  }
-  return null;
-}
+import { db } from '@/lib/firebase-admin';
 
 async function getYouTubeRefreshToken() {
-  // Initialize Firebase Admin
-  initFirebaseAdmin();
-
   // First try to get token from environment variable
   const youtubeOAuth = getYouTubeOAuthConfig();
   if (youtubeOAuth?.refreshToken) {
@@ -44,7 +19,6 @@ async function getYouTubeRefreshToken() {
 
   // If env var token is not available, try to get from Firestore
   try {
-    const db = getFirestore();
     const doc = await db.collection('admin_config').doc('youtube_auth').get();
 
     if (doc.exists) {
@@ -177,38 +151,39 @@ export async function POST(request: NextRequest) {
               }
             }
           }
-        });      } catch (playlistError) {
+        });
+      } catch (playlistError) {
         console.warn('Failed to add video to playlist:', playlistError);
         // Don't fail the entire upload if playlist addition fails
       }
-    }    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    } const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     // Create Firestore entry in cat_videos collection
     try {
       const tagsArray = tags && tags.trim()
         ? tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-        : [];      const videoData = {
-        videoUrl,
-        fileName: response.data.snippet?.title || title || file.name,
-        storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
-        tags: tagsArray,
-        uploadDate: new Date(),
-        createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
-        uploadedBy: 'user', // or get from authentication context
-        description: response.data.snippet?.description || description || '',
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        duration: undefined, // YouTube doesn't return duration in upload response
-        needsTagging: tagsArray.length === 0, // Needs tagging if no tags provided
-        videoType: 'youtube' as const,
-        youtubeId: videoId, // Important: YouTube video ID
-        title: response.data.snippet?.title || title || file.name,
-        publishedAt: new Date().toISOString(),
-        channelTitle: 'Mountain Cats', // or get from YouTube API
-        catName: '', // Empty initially, can be filled later through tagging
-        playlist: playlistId || '', // Add playlist field
-        autoTagged: false, // User manually provided tags
-        // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
-      };
+        : []; const videoData = {
+          videoUrl,
+          fileName: response.data.snippet?.title || title || file.name,
+          storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
+          tags: tagsArray,
+          uploadDate: new Date(),
+          createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
+          uploadedBy: 'user', // or get from authentication context
+          description: response.data.snippet?.description || description || '',
+          thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+          duration: undefined, // YouTube doesn't return duration in upload response
+          needsTagging: tagsArray.length === 0, // Needs tagging if no tags provided
+          videoType: 'youtube' as const,
+          youtubeId: videoId, // Important: YouTube video ID
+          title: response.data.snippet?.title || title || file.name,
+          publishedAt: new Date().toISOString(),
+          channelTitle: 'Mountain Cats', // or get from YouTube API
+          catName: '', // Empty initially, can be filled later through tagging
+          playlist: playlistId || '', // Add playlist field
+          autoTagged: false, // User manually provided tags
+          // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
+        };
 
       console.log('Creating Firestore entry for uploaded video:', videoData);
 

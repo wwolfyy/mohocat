@@ -20,7 +20,7 @@ export function usePermissions() {
     const loadPermissions = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const userPermissions = await permissionService.getUserPermissions(user.uid);
         setPermissions(userPermissions);
@@ -37,17 +37,17 @@ export function usePermissions() {
   }, [user?.uid]);
 
   // Permission checking functions
-  const hasPermission = useCallback((permission: string) => 
+  const hasPermission = useCallback((permission: string) =>
     permissions.includes(permission), [permissions]);
 
-  const hasAnyPermission = useCallback((permissionList: string[]) => 
+  const hasAnyPermission = useCallback((permissionList: string[]) =>
     permissionList.some(permission => permissions.includes(permission)), [permissions]);
 
-  const hasAllPermissions = useCallback((permissionList: string[]) => 
+  const hasAllPermissions = useCallback((permissionList: string[]) =>
     permissionList.every(permission => permissions.includes(permission)), [permissions]);
 
   // Convenience getters for specific permissions
-  const canManageCats = hasPermission('manage-cats');
+  const canManageCats = hasPermission('manage-cat');
   const canManagePosts = hasPermission('manage-posts');
   const canManageUsers = hasPermission('manage-users');
   const canViewAnalytics = hasPermission('view-analytics');
@@ -78,12 +78,12 @@ export function usePermissions() {
     permissions,
     isLoading,
     error,
-    
+
     // Permission checking functions
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
-    
+
     // Specific permission getters
     canManageCats,
     canManagePosts,
@@ -91,13 +91,13 @@ export function usePermissions() {
     canViewAnalytics,
     canManageSettings,
     canExportData,
-    
+
     // Role-based getters
     isAdmin,
     isButlerOffline,
     isButlerOnline,
     isViewer,
-    
+
     // Action-based getters
     canCreateContent,
     canEditContent,
@@ -108,11 +108,11 @@ export function usePermissions() {
     canExportSystemData,
     canManageAllUsers,
     canAccessAllFeatures,
-    
+
     // Utility functions
-    hasRequiredPermissions: (requiredPermissions: string[]) => 
+    hasRequiredPermissions: (requiredPermissions: string[]) =>
       requiredPermissions.every(permission => permissions.includes(permission)),
-    
+
     // Refresh permissions (useful after role changes)
     refreshPermissions: async () => {
       if (user) {
@@ -139,7 +139,7 @@ export function usePermissionCheck() {
 
   const checkPermission = useCallback(async (permission: string): Promise<boolean> => {
     if (!user) return false;
-    
+
     try {
       return await permissionService.checkPermission(user.uid, permission);
     } catch (error) {
@@ -150,7 +150,7 @@ export function usePermissionCheck() {
 
   const checkAnyPermission = useCallback(async (permissions: string[]): Promise<boolean> => {
     if (!user) return false;
-    
+
     try {
       return await permissionService.hasAnyPermission(user.uid, permissions);
     } catch (error) {
@@ -161,7 +161,7 @@ export function usePermissionCheck() {
 
   const checkAllPermissions = useCallback(async (permissions: string[]): Promise<boolean> => {
     if (!user) return false;
-    
+
     try {
       return await permissionService.hasAllPermissions(user.uid, permissions);
     } catch (error) {

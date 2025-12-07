@@ -146,13 +146,13 @@ export default function AdminLayout({
                 >
                   게시물 관리
                 </a>
-                <span
-                  style={getNavItemStyles("/admin/members", true)}
-                  onClick={(e) => handleDisabledClick(e, "회원 관리")}
+                <a
+                  href="/admin/members"
+                  style={getNavItemStyles("/admin/members")}
                   data-oid="members_mgmt"
                 >
-                  회원 관리
-                </span>
+                  사용자 관리
+                </a>
               </nav>{" "}
             </div>
             <div

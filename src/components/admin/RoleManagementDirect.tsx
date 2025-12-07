@@ -8,7 +8,7 @@ import { cn } from '@/utils/cn';
 export default function RoleManagementDirect() {
   const { user } = useAuth();
   const [permissionService] = useState(() => new PermissionService());
-  
+
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -16,41 +16,41 @@ export default function RoleManagementDirect() {
   // Load all users and their roles directly from the permission service
   const loadUsers = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     setMessage('Loading users...');
-    
+
     try {
       console.log('=== FETCHING USERS DIRECTLY FROM PERMISSION SERVICE ===');
-      
+
       // Use the existing permission service to get all user permissions
       // This bypasses the API route issue entirely
-      
+
       // For now, let's try to get users from the current user's perspective
       // In a real implementation, you'd need a method to fetch all users
-      
+
       const currentUserRole = await permissionService.getUserRole(user.uid);
       console.log('Current user role:', currentUserRole);
-      
+
       // Since we can't easily fetch all users from the client-side permission service,
       // let's create a mock structure based on what we know exists
-      
+
       const mockUsers = [
         {
           uid: user.uid,
           email: user.email || 'No email',
           role: currentUserRole || 'No role assigned',
           displayName: user.displayName || user.email?.split('@')[0] || 'Unknown',
-          permissions: currentUserRole ? ['view-analytics'] : [],
+          permissions: currentUserRole ? ['view-photo'] : [],
           assignedAt: new Date().toISOString(),
           isActive: true
         }
       ];
-      
+
       console.log('Mock users created:', mockUsers);
       setUsers(mockUsers);
       setMessage(`Loaded ${mockUsers.length} user(s)`);
-      
+
     } catch (error) {
       console.error('Failed to load users:', error);
       setMessage('Failed to load users - check console for details');
@@ -67,7 +67,7 @@ export default function RoleManagementDirect() {
 
   const assignRole = async (userId: string, role: string) => {
     if (!user) return;
-    
+
     try {
       setMessage(`Assigning ${role} role...`);
       // This would call the role assignment service
@@ -91,7 +91,7 @@ export default function RoleManagementDirect() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Role Management</h2>
-        
+
         {message && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-sm">{message}</p>

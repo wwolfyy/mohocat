@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { db } from '@/lib/firebase-admin';
 
 // Use the same Firebase Admin SDK approach as other working API routes
 export async function GET(request: NextRequest) {
   try {
     console.log('=== FETCHING ALL USERS FROM FIRESTORE USING ADMIN SDK ===');
-    
-    // Initialize Firebase Admin (same approach as youtube-auth routes)
-    if (!getApps().length) {
-      console.log('Initializing Firebase Admin...');
-      initializeApp();
-      console.log('Firebase Admin initialized successfully');
-    }
 
-    // Get Firestore instance
-    const db = getFirestore();
+    // Get Firestore instance from centralized utility
+    // db is already initialized
     console.log('Firestore instance obtained');
 
     // Query the user_permissions collection
@@ -70,11 +62,11 @@ export async function GET(request: NextRequest) {
       'butler-internet': 2,
       viewer: 1
     };
-    
+
     users.sort((a, b) => {
       const aRole = roleOrder[a.role] || 0;
       const bRole = roleOrder[b.role] || 0;
-      
+
       if (aRole !== bRole) return bRole - aRole; // Sort by role (desc)
       return a.email.localeCompare(b.email); // Sort by email (asc)
     });
