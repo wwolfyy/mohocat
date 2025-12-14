@@ -8,6 +8,7 @@
 import type { IAuthService, ProviderData } from './interfaces';
 import {
   signInWithEmailAndPassword,
+  signInWithPhoneNumber,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
   createUserWithEmailAndPassword,
@@ -15,20 +16,41 @@ import {
   linkWithPopup,
   unlink,
   getAdditionalUserInfo,
-  GoogleAuthProvider,
   OAuthProvider,
   signInAnonymously,
   User,
-  UserCredential
+  UserCredential,
+  EmailAuthProvider,
+  linkWithCredential,
+  updateProfile,
+  sendEmailVerification,
+  reauthenticateWithCredential,
+  verifyBeforeUpdateEmail,
+  updatePhoneNumber,
+  PhoneAuthProvider
 } from 'firebase/auth';
 import { auth } from './firebase';
-import { getGoogleOAuthConfig, getKakaoOAuthConfig, isGoogleOAuthEnabled, isKakaoOAuthEnabled } from '@/utils/config';
+import { getKakaoOAuthConfig, isKakaoOAuthEnabled } from '@/utils/config';
+
+import {
+  setPersistence,
+  browserLocalPersistence
+} from 'firebase/auth';
+
+// ... (existing imports)
 
 export class FirebaseAuthService implements IAuthService {
+  constructor() {
+    // Explicitly set persistence to local to avoid session loss/delays
+    setPersistence(auth, browserLocalPersistence).catch((error) => {
+      console.error('Failed to set persistence:', error);
+    });
+  }
 
   getCurrentUser(): User | null {
     return auth.currentUser;
   }
+  // ...
 
   async signIn(email: string, password: string): Promise<User> {
     try {
@@ -37,6 +59,26 @@ export class FirebaseAuthService implements IAuthService {
     } catch (error) {
       console.error('Error signing in:', error);
       throw new Error('Failed to sign in');
+    }
+  }
+
+  async signInWithPhoneNumber(phoneNumber: string, appVerifier: any): Promise<any> {
+    try {
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      return confirmationResult;
+    } catch (error) {
+      console.error('Error sending SMS:', error);
+      throw error;
+    }
+  }
+
+  async confirmPhoneLogin(confirmationResult: any, verificationCode: string): Promise<User> {
+    try {
+      const result = await confirmationResult.confirm(verificationCode);
+      return result.user;
+    } catch (error) {
+      console.error('Error verifying code:', error);
+      throw error;
     }
   }
 
@@ -63,53 +105,7 @@ export class FirebaseAuthService implements IAuthService {
     return firebaseOnAuthStateChanged(auth, callback);
   }
 
-  async signInWithGoogle(): Promise<UserCredential> {
-    if (!isGoogleOAuthEnabled()) {
-      throw new Error('Google OAuth is not enabled');
-    }
 
-    try {
-      const googleProvider = new GoogleAuthProvider();
-      googleProvider.setCustomParameters({
-        prompt: 'select_account'
-      });
-
-      const result = await signInWithPopup(auth, googleProvider);
-      const additionalUserInfo = getAdditionalUserInfo(result);
-      
-      console.log('Google sign in successful:', {
-        isNewUser: additionalUserInfo?.isNewUser,
-        providerId: additionalUserInfo?.providerId,
-        displayName: result.user.displayName,
-        email: result.user.email
-      });
-
-      return result;
-    } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      
-      // Handle specific Google OAuth errors
-      let errorMessage = 'Failed to sign in with Google';
-      switch (error.code) {
-        case 'auth/popup-closed-by-user':
-          errorMessage = 'Google sign-in was cancelled. Please try again.';
-          break;
-        case 'auth/cancelled-popup-request':
-          errorMessage = 'Google sign-in request was cancelled. Please wait a moment and try again.';
-          break;
-        case 'auth/popup-blocked':
-          errorMessage = 'Google sign-in was blocked by popup blocker. Please disable popup blocker and try again.';
-          break;
-        case 'auth/account-exists-with-different-credential':
-          errorMessage = 'An account already exists with this email address. Please sign in using the original method.';
-          break;
-        default:
-          errorMessage = error.message || 'Failed to sign in with Google';
-      }
-      
-      throw new Error(errorMessage);
-    }
-  }
 
   async signInWithKakao(forceFallback: boolean = false): Promise<UserCredential> {
     if (!isKakaoOAuthEnabled()) {
@@ -119,12 +115,12 @@ export class FirebaseAuthService implements IAuthService {
     try {
       // Kakaotalk OAuth implementation using OpenID Connect
       // Based on reference guide: https://developers.kakao.com/docs/latest/kakaologin/rest-api
-      
+
       const config = getKakaoOAuthConfig();
       if (!config) {
         throw new Error('Kakao OAuth configuration not found');
       }
-      
+
       console.log('=== KAKAOTALK OAUTH DEBUG ===');
       console.log('Kakao OAuth Config:', {
         clientId: config.clientId ? '***HIDDEN***' : 'NOT_SET',
@@ -136,12 +132,12 @@ export class FirebaseAuthService implements IAuthService {
         NEXT_PUBLIC_KAKAO_CLIENT_SECRET: process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET ? '***SET***' : 'NOT_SET',
         NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
       });
-      
+
       // According to reference guide, use 'oidc.kakao' for OpenID Connect
       const kakaoProvider = new OAuthProvider('oidc.kakao');
-      
+
       console.log('Created OAuthProvider with provider ID: oidc.kakao');
-      
+
       // Configure OpenID Connect parameters as per reference guide
       // Note: If consent items are not available, use minimal configuration
       // Use Firebase's redirect URI for OpenID Connect
@@ -150,13 +146,15 @@ export class FirebaseAuthService implements IAuthService {
         ? `https://${firebaseAuthDomain}/__/auth/handler`
         : `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/__/auth/handler`;
 
+      /*
+      // Removing manual custom parameters to match linkProvider behavior
+      // Firebase Console configuration should be sufficient if linking works
       kakaoProvider.setCustomParameters({
         'client_id': config.clientId || '',
         'redirect_uri': firebaseRedirectUri,
         'response_type': 'code',
-        // Remove scope parameter if consent items are not configured
-        // 'scope': 'profile_account',
       });
+      */
 
       console.log('OAuth Provider Configuration:', {
         providerId: kakaoProvider.providerId,
@@ -179,17 +177,17 @@ export class FirebaseAuthService implements IAuthService {
       console.log('OAuth Provider Debug Info:', {
         providerId: kakaoProvider.providerId
       });
-      
+
       // Add delay to prevent popup blocking issues
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       console.log('Opening KakaoTalk popup...');
-      
+
       const result = await signInWithPopup(auth, kakaoProvider);
       const additionalUserInfo = getAdditionalUserInfo(result);
-      
+
       console.log('Popup completed successfully, processing result...');
-      
+
       console.log('=== KAKAOTALK SIGN IN SUCCESS ===');
       console.log('Kakao sign in successful:', {
         isNewUser: additionalUserInfo?.isNewUser,
@@ -225,15 +223,15 @@ export class FirebaseAuthService implements IAuthService {
       // Check if this is a user creation error that can be resolved with anonymous user + linking approach
       // OR if fallback is being forced for testing
       const isUserCreationError = forceFallback || this.isKakaoUserCreationError(error);
-      
+
       if (forceFallback) {
         console.log('=== FORCING FALLBACK APPROACH FOR TESTING ===');
       }
-      
+
       if (isUserCreationError) {
         console.log('=== FALLING BACK TO ANONYMOUS USER + LINKING APPROACH ===');
         console.log('Detected user creation error, attempting anonymous user creation and linking...');
-        
+
         try {
           // Step 1: Create anonymous user
           console.log('Creating anonymous user...');
@@ -245,7 +243,7 @@ export class FirebaseAuthService implements IAuthService {
 
           // Step 2: Link KakaoTalk account to anonymous user
           console.log('Linking KakaoTalk account to anonymous user...');
-          
+
           const kakaoProvider = new OAuthProvider('oidc.kakao');
           const firebaseAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
           const firebaseRedirectUri = firebaseAuthDomain
@@ -266,7 +264,7 @@ export class FirebaseAuthService implements IAuthService {
 
           const linkingResult = await linkWithPopup(anonymousResult.user, kakaoProvider);
           const additionalUserInfo = getAdditionalUserInfo(linkingResult);
-          
+
           console.log('=== KAKAOTALK LINKING SUCCESS ===');
           console.log('KakaoTalk account linked successfully:', {
             isNewUser: additionalUserInfo?.isNewUser,
@@ -301,7 +299,7 @@ export class FirebaseAuthService implements IAuthService {
           throw new Error(`KakaoTalk authentication failed and fallback approach also failed. Original error: ${error.message}`);
         }
       }
-      
+
       // Enhanced error handling with specific KakaoTalk issues
       let errorMessage = 'Failed to sign in with Kakaotalk';
       switch (error.code) {
@@ -408,7 +406,7 @@ export class FirebaseAuthService implements IAuthService {
             console.error('Try the login again - it should work with basic authentication');
           }
       }
-      
+
       throw new Error(errorMessage);
     }
   }
@@ -473,6 +471,45 @@ export class FirebaseAuthService implements IAuthService {
     return false;
   }
 
+  async linkEmailPassword(email: string, password: string): Promise<UserCredential> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in');
+    }
+
+    // Force reload to get latest provider data
+    await user.reload();
+
+    // Check if Password provider is already linked
+    const isPasswordLinked = user.providerData.some(
+      (profile) => profile.providerId === EmailAuthProvider.PROVIDER_ID
+    );
+
+    if (isPasswordLinked) {
+      console.log('User already has email/password provider linked. Skipping link step.');
+      // We can't return a UserCredential easily here without re-signing in,
+      // but the caller might just need the promise to resolve.
+      // We'll return a dummy or cast the current user.
+      // Actually, standardizing on returning existing credential is hard without credentials.
+      // But for this flow, we just want to avoid the error.
+      return { user } as UserCredential;
+    }
+
+    try {
+      const credential = EmailAuthProvider.credential(email, password);
+      const result = await linkWithCredential(user, credential);
+      return result;
+    } catch (error: any) {
+      // Handle race condition where it was linked just now
+      if (error.code === 'auth/provider-already-linked') {
+        console.log('Caught auth/provider-already-linked race condition. Treating as success.');
+        return { user } as UserCredential;
+      }
+      console.error('Error linking email/password:', error);
+      throw error;
+    }
+  }
+
   async linkProvider(providerId: string): Promise<UserCredential> {
     const user = auth.currentUser;
     if (!user) {
@@ -481,9 +518,7 @@ export class FirebaseAuthService implements IAuthService {
 
     try {
       let provider;
-      if (providerId === 'google.com') {
-        provider = new GoogleAuthProvider();
-      } else if (providerId === 'https://kakao.com' || providerId === 'oidc.kakao') {
+      if (providerId === 'https://kakao.com' || providerId === 'oidc.kakao') {
         provider = new OAuthProvider('oidc.kakao');
         // Note: Comment out scopes if getting consent items error
         // Only enable these if consent items are available in your Kakao Developers app
@@ -499,7 +534,7 @@ export class FirebaseAuthService implements IAuthService {
       return result;
     } catch (error: any) {
       console.error(`Error linking provider ${providerId}:`, error);
-      
+
       let errorMessage = `Failed to link ${providerId} provider`;
       switch (error.code) {
         case 'auth/provider-already-linked':
@@ -525,7 +560,7 @@ export class FirebaseAuthService implements IAuthService {
             console.error('Try linking again - it should work now with basic authentication');
           }
       }
-      
+
       throw new Error(errorMessage);
     }
   }
@@ -541,7 +576,7 @@ export class FirebaseAuthService implements IAuthService {
       console.log(`Provider ${providerId} unlinked successfully`);
     } catch (error: any) {
       console.error(`Error unlinking provider ${providerId}:`, error);
-      
+
       let errorMessage = `Failed to unlink ${providerId} provider`;
       switch (error.code) {
         case 'auth/no-such-provider':
@@ -550,8 +585,25 @@ export class FirebaseAuthService implements IAuthService {
         default:
           errorMessage = error.message || `Failed to unlink ${providerId} provider`;
       }
-      
+
       throw new Error(errorMessage);
+    }
+  }
+
+  async updateProfile(displayName?: string, photoURL?: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in');
+    }
+
+    try {
+      await updateProfile(user, {
+        displayName: displayName || undefined,
+        photoURL: photoURL || undefined
+      });
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      throw error;
     }
   }
 
@@ -569,6 +621,72 @@ export class FirebaseAuthService implements IAuthService {
       phoneNumber: providerData.phoneNumber,
       photoURL: providerData.photoURL,
     }));
+  }
+
+  async sendEmailVerification(): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in');
+    }
+
+    try {
+      await sendEmailVerification(user);
+    } catch (error: any) {
+      console.error('Error sending email verification:', error);
+      throw error;
+    }
+  }
+
+  async reauthenticateWithType(type: 'password' | 'phone', credentialData: any): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in');
+    }
+
+    try {
+      let credential;
+      if (type === 'password') {
+        credential = EmailAuthProvider.credential(user.email!, credentialData.password);
+        await reauthenticateWithCredential(user, credential);
+      } else if (type === 'phone') {
+        const verificationId = credentialData.verificationId;
+        const verificationCode = credentialData.verificationCode;
+        credential = PhoneAuthProvider.credential(verificationId, verificationCode);
+        await reauthenticateWithCredential(user, credential);
+      }
+    } catch (error: any) {
+      console.error('Error re-authenticating:', error);
+      throw error;
+    }
+  }
+
+  async verifyBeforeUpdateEmail(newEmail: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in');
+    }
+
+    try {
+      await verifyBeforeUpdateEmail(user, newEmail);
+    } catch (error: any) {
+      console.error('Error sending verification for new email:', error);
+      throw error;
+    }
+  }
+
+  async updatePhoneNumber(verificationId: string, verificationCode: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in');
+    }
+
+    try {
+      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
+      await updatePhoneNumber(user, credential);
+    } catch (error: any) {
+      console.error('Error updating phone number:', error);
+      throw error;
+    }
   }
 
 }

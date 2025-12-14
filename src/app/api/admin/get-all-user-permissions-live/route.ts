@@ -8,9 +8,9 @@ export async function GET(request: NextRequest) {
     // Get Firestore instance from centralized utility
     console.log('Firestore instance obtained');
 
-    // Query the user_permissions collection
-    console.log('Querying user_permissions collection...');
-    const snapshot = await db.collection('user_permissions').get();
+    // Query the users collection
+    console.log('Querying users collection...');
+    const snapshot = await db.collection('users').get();
     console.log(`Found ${snapshot.size} user documents`);
 
     // Type definition for user data

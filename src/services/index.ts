@@ -17,7 +17,7 @@ import {
   IAuthService
 } from './interfaces';
 
-import { FirebaseCatService } from './cat-service';
+import { StaticCatService } from './static-cat-service';
 import { FirebasePointService } from './point-service';
 import { FirebaseImageService } from './image-service';
 import { FirebaseVideoService } from './video-service';
@@ -29,6 +29,7 @@ import { FirebaseStorageService } from './storage-service';
 import { FirebaseAuthService } from './auth-service';
 import { FirebaseFeedingSpotsService, IFeedingSpotsService } from './feeding-spots-service';
 import { aboutContentService } from './about-content-service';
+import { PermissionService } from './permission-service';
 
 // Service instances - lazy initialized
 let catServiceInstance: ICatService | null = null;
@@ -48,7 +49,7 @@ let feedingSpotsServiceInstance: IFeedingSpotsService | null = null;
  */
 export function getCatService(): ICatService {
   if (!catServiceInstance) {
-    catServiceInstance = new FirebaseCatService();
+    catServiceInstance = new StaticCatService();
   }
   return catServiceInstance;
 }
@@ -158,6 +159,11 @@ export function getFeedingSpotsService(): IFeedingSpotsService {
  */
 export function getAboutContentService() {
   return aboutContentService;
+}
+
+// Export permission service getter
+export function getPermissionService() {
+  return new PermissionService();
 }
 
 // Export service interfaces for type checking

@@ -12,7 +12,10 @@ if (!getApps().length) {
   });
 }
 
-const storage = getStorage().bucket();
+const firebaseConfig = getFirebaseConfig();
+// Explicitly pass the bucket name, with a fallback to the known bucket if env var is missing during build
+const storageBucket = firebaseConfig?.storageBucket || 'mountaincats-61543.firebasestorage.app';
+const storage = getStorage().bucket(storageBucket);
 
 export async function POST(request: NextRequest) {
   try {

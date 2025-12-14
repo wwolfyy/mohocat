@@ -18,7 +18,7 @@ import {
 } from '@/utils/auth-integration-test';
 import { cn } from '@/utils/cn';
 
-interface AuthTestPageProps {}
+interface AuthTestPageProps { }
 
 const AuthTestPage: React.FC<AuthTestPageProps> = () => {
   const {
@@ -27,11 +27,8 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
     isAuthenticated,
     providerData,
     linkedProviders,
-    isSigningInWithGoogle,
     isSigningInWithKakao,
-    googleSignInError,
     kakaoSignInError,
-    googleSignInSuccess,
     kakaoSignInSuccess,
     linkProviderError,
     unlinkProviderError,
@@ -46,7 +43,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
     message?: string;
     timestamp?: string;
   }>>([]);
-  
+
   const [integrationTestResults, setIntegrationTestResults] = useState<IntegrationTestResult[]>([]);
   const [isRunningIntegrationTests, setIsRunningIntegrationTests] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'login' | 'providers' | 'admin' | 'tests'>('overview');
@@ -69,12 +66,12 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
   useEffect(() => {
     const googleEnabled = isGoogleOAuthEnabled();
     const kakaoEnabled = isKakaoOAuthEnabled();
-    
+
     // Debug logging
     console.log('OAuth Configuration Debug:');
     console.log('Google OAuth Enabled:', googleEnabled);
     console.log('Kakao OAuth Enabled:', kakaoEnabled);
-    
+
     addTestResult(
       'oauth-config',
       'OAuth Configuration Check',
@@ -116,14 +113,6 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
 
   // Test error states
   useEffect(() => {
-    if (googleSignInError) {
-      addTestResult(
-        'google-error',
-        'Google OAuth Error',
-        'error',
-        `Google sign-in error: ${googleSignInError}`
-      );
-    }
     if (kakaoSignInError) {
       addTestResult(
         'kakao-error',
@@ -148,18 +137,10 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
         `Provider unlink error: ${unlinkProviderError}`
       );
     }
-  }, [googleSignInError, kakaoSignInError, linkProviderError, unlinkProviderError]);
+  }, [kakaoSignInError, linkProviderError, unlinkProviderError]);
 
   // Test success states
   useEffect(() => {
-    if (googleSignInSuccess) {
-      addTestResult(
-        'google-success',
-        'Google OAuth Success',
-        'success',
-        'Successfully signed in with Google'
-      );
-    }
     if (kakaoSignInSuccess) {
       addTestResult(
         'kakao-success',
@@ -184,7 +165,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
         'Successfully unlinked provider'
       );
     }
-  }, [googleSignInSuccess, kakaoSignInSuccess, linkProviderSuccess, unlinkProviderSuccess]);
+  }, [kakaoSignInSuccess, linkProviderSuccess, unlinkProviderSuccess]);
 
   const handleTestOAuthFlow = async (provider: 'google' | 'kakao') => {
     addTestResult(
@@ -198,7 +179,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
       // This would normally trigger the OAuth flow
       // For testing purposes, we'll simulate the flow
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       addTestResult(
         `oauth-flow-${provider}`,
         `${provider.toUpperCase()} OAuth Flow Test`,
@@ -225,7 +206,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       addTestResult(
         `provider-link-${providerId}`,
         `Provider Linking Test (${providerId})`,
@@ -246,12 +227,12 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
   const handleRunIntegrationTests = async () => {
     setIsRunningIntegrationTests(true);
     setIntegrationTestResults([]);
-    
+
     try {
       const results = await runAuthIntegrationTests();
       setIntegrationTestResults(results);
       printTestResults(results);
-      
+
       if (allTestsPassed(results)) {
         addTestResult(
           'integration-tests',
@@ -394,7 +375,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                 {activeTab === 'overview' && (
                   <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-900">Authentication Overview</h2>
-                    
+
                     {/* Current User Info */}
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
                       <h3 className="text-md font-medium text-gray-900 mb-4">Current User</h3>
@@ -456,7 +437,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                 {activeTab === 'login' && (
                   <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-900">Login & Signup Test Interface</h2>
-                    
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Social Login Test */}
                       <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -466,7 +447,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                             <SocialLoginButton
                               provider="google"
                               onClick={() => handleTestOAuthFlow('google')}
-                              loading={isSigningInWithGoogle}
+                              loading={false}
                             />
                           )}
                           {isKakaoOAuthEnabled() && (
@@ -477,7 +458,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                             />
                           )}
                         </div>
-                        
+
                         {!isGoogleOAuthEnabled() && !isKakaoOAuthEnabled() && (
                           <div className="text-center py-4 bg-gray-50 rounded-lg">
                             <p className="text-sm text-gray-500">OAuth providers are disabled. Enable them in environment configuration.</p>
@@ -494,7 +475,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                             <h4 className="text-sm font-medium text-gray-700 mb-2">Login</h4>
                             <LoginForm />
                           </div>
-                          
+
                           {/* Signup Form */}
                           <div>
                             <h4 className="text-sm font-medium text-gray-700 mb-2">Sign Up</h4>
@@ -509,7 +490,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                 {activeTab === 'providers' && (
                   <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-900">Provider Management Test</h2>
-                    
+
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
                       <ProviderManagement />
                     </div>
@@ -547,13 +528,13 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                 {activeTab === 'admin' && (
                   <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-900">Admin Authentication Test</h2>
-                    
+
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
                       <p className="text-sm text-gray-600 mb-4">
                         This section tests the AdminAuth component integration with social login.
                         The component below will show different states based on authentication status.
                       </p>
-                      
+
                       {/* Mock Admin Content */}
                       <AdminAuth>
                         <div className="bg-gray-50 rounded-lg p-6 text-center">
@@ -587,7 +568,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                         Clear Results
                       </button>
                     </div>
-                    
+
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
                       {testResults.length === 0 ? (
                         <div className="text-center py-8">
@@ -652,7 +633,7 @@ const AuthTestPage: React.FC<AuthTestPageProps> = () => {
                             'Run Integration Tests'
                           )}
                         </button>
-                        
+
                         {integrationTestResults.length > 0 && (
                           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                             <h4 className="font-medium text-gray-900 mb-2">Test Summary</h4>

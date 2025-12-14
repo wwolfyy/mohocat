@@ -13,10 +13,11 @@ interface NavItemProps {
   label: string;
   mobile?: boolean;
   onClick?: () => void;
+  canAccessResource: (resourceId: string) => boolean;
+  isLoading: boolean;
 }
 
-const NavItem = ({ href, resourceId, label, mobile, onClick }: NavItemProps) => {
-  const { canAccessResource, isLoading } = useResourceAccess();
+const NavItem = ({ href, resourceId, label, mobile, onClick, canAccessResource, isLoading }: NavItemProps) => {
   const hasAccess = canAccessResource(resourceId);
 
   // While loading, we might want to default to disabled or loading state to prevent flickering?
@@ -62,6 +63,7 @@ const NavItem = ({ href, resourceId, label, mobile, onClick }: NavItemProps) => 
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { canAccessResource, isLoading } = useResourceAccess();
 
   // Separator component
   const Separator = () => <span className="mx-3 text-gray-400">•</span>;
@@ -71,25 +73,25 @@ export default function Navigation() {
       {" "}
       {/* Desktop navigation */}
       <nav className="hidden md:flex items-center">
-        <NavItem href="/pages/about" resourceId="about" label="소개" />
+        <NavItem href="/pages/about" resourceId="about" label="소개" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/contact" resourceId="contact" label="동참" />
+        <NavItem href="/pages/contact" resourceId="contact" label="동참" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/photo-album" resourceId="photo_album" label="사진첩" />
+        <NavItem href="/pages/photo-album" resourceId="photo_album" label="사진첩" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/video-album" resourceId="video_album" label="동영상" />
+        <NavItem href="/pages/video-album" resourceId="video_album" label="동영상" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" />
+        <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/announcements" resourceId="announcements" label="공지" />
+        <NavItem href="/pages/announcements" resourceId="announcements" label="공지" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/faq" resourceId="faq" label="FAQ" />
+        <NavItem href="/pages/faq" resourceId="faq" label="FAQ" canAccessResource={canAccessResource} isLoading={isLoading} />
         <span className="mx-3 text-gray-400">|</span>
 
         {/* Protected items that were previously hidden */}
-        <NavItem href="/pages/butler_stream" resourceId="butler_stream" label="급식현황" />
+        <NavItem href="/pages/butler_stream" resourceId="butler_stream" label="급식현황" canAccessResource={canAccessResource} isLoading={isLoading} />
         <Separator />
-        <NavItem href="/pages/butler_talk" resourceId="butler_talk" label="집사톡" />
+        <NavItem href="/pages/butler_talk" resourceId="butler_talk" label="집사톡" canAccessResource={canAccessResource} isLoading={isLoading} />
 
         {/* Login/Logout Buttons */}
         <NavigationBarLogin />
@@ -124,27 +126,21 @@ export default function Navigation() {
         {isMobileMenuOpen && (
           <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
             <div className="py-1">
-              <NavItem href="/pages/about" resourceId="about" label="소개" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/contact" resourceId="contact" label="동참" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/photo-album" resourceId="photo_album" label="사진첩" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/video-album" resourceId="video_album" label="동영상" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/announcements" resourceId="announcements" label="공지" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/faq" resourceId="faq" label="FAQ" mobile onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/pages/about" resourceId="about" label="소개" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/contact" resourceId="contact" label="동참" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/photo-album" resourceId="photo_album" label="사진첩" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/video-album" resourceId="video_album" label="동영상" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/announcements" resourceId="announcements" label="공지" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/faq" resourceId="faq" label="FAQ" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
 
               <div className="border-t border-gray-300 my-1"></div>
               <div className="px-4 py-1 text-xs text-gray-500 font-medium">인증 회원 전용</div>
 
-              <NavItem href="/pages/butler_stream" resourceId="butler_stream" label="급식현황" mobile onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/pages/butler_talk" resourceId="butler_talk" label="집사톡" mobile onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/pages/butler_stream" resourceId="butler_stream" label="급식현황" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
+              <NavItem href="/pages/butler_talk" resourceId="butler_talk" label="집사톡" mobile onClick={() => setIsMobileMenuOpen(false)} canAccessResource={canAccessResource} isLoading={isLoading} />
 
-              <Link
-                href="/auth-test"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-100"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                🔐 Auth Test
-              </Link>
+
               <div className="border-t border-gray-300 my-1"></div>
               <div className="px-4 py-1 text-xs text-gray-500 font-medium">인증</div>
               <div className="px-4 py-2">

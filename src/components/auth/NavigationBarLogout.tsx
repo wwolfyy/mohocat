@@ -6,7 +6,7 @@ import { LogoutModal } from './LogoutModal';
 import { cn } from '@/utils/cn';
 
 export function NavigationBarLogout() {
-  const { user } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => {
@@ -18,7 +18,7 @@ export function NavigationBarLogout() {
   };
 
   // Only show the logout button when user is logged in
-  if (!user) {
+  if (!isAuthenticated) {
     return null;
   }
 

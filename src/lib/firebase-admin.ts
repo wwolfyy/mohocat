@@ -2,7 +2,7 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getStorage } from 'firebase-admin/storage';
-import { getFirebaseAdminServiceAccount } from '@/utils/config';
+import { getFirebaseAdminServiceAccount, getFirebaseConfig } from '@/utils/config';
 
 // Initialize Firebase Admin SDK
 function initAdmin(): App {
@@ -11,10 +11,12 @@ function initAdmin(): App {
     }
 
     const serviceAccount = getFirebaseAdminServiceAccount();
+    const firebaseConfig = getFirebaseConfig();
 
     if (serviceAccount) {
         return initializeApp({
-            credential: cert(serviceAccount)
+            credential: cert(serviceAccount),
+            storageBucket: firebaseConfig?.storageBucket
         });
     }
 

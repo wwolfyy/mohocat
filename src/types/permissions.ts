@@ -3,6 +3,8 @@ export interface UserPermissions {
   email: string;
   displayName?: string;
   photoURL?: string;
+  phoneNumber?: string;
+  emailVerified?: boolean; // Synced from Firebase Auth
 
   // Current mountain role
   currentRole: UserRole;

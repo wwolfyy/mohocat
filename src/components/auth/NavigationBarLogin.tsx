@@ -3,19 +3,21 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
 
 export function NavigationBarLogin() {
-  const { user } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  const pathname = usePathname();
 
-  // Only show login button when user is not logged in
-  if (user) {
+  // Only show login button when user is not logged in (or is anonymous)
+  if (isAuthenticated) {
     return null;
   }
 
   return (
     <Link
-      href="/auth-test"
+      href={`/login?redirect=${encodeURIComponent(pathname)}`}
       className={cn(
         "text-gray-600 hover:text-gray-900 transition-colors",
         "px-3 py-2 text-sm font-medium",

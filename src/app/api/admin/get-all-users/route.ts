@@ -7,19 +7,19 @@ export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication
     const authHeader = request.headers.get('authorization');
-    
+
     // For now, we'll implement a simple user listing without complex auth checks
     // In production, you'd want proper admin verification here
 
     // Query Firestore for all user_permissions documents
-    const userPermissionsSnapshot = await getDocs(collection(db, 'user_permissions'));
-    
+    const userPermissionsSnapshot = await getDocs(collection(db, 'users'));
+
     const users = [];
-    
+
     for (const userDoc of userPermissionsSnapshot.docs) {
       const userData = userDoc.data();
       const userPermissions = userData;
-      
+
       // Get basic user info from the permissions document
       const user = {
         uid: userDoc.id,
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         createdAt: userPermissions.createdAt?.toDate()?.toISOString() || 'Unknown',
         isActive: userPermissions.currentRole?.isActive || false
       };
-      
+
       users.push(user);
     }
 

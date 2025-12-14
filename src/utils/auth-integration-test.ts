@@ -1,13 +1,13 @@
 /**
  * Firebase Authentication Integration Test Suite
- * 
+ *
  * This module provides comprehensive integration tests for the social login
  * implementation. It verifies that all components work together correctly
  * and handles various authentication scenarios.
  */
 
 import { getAuthService } from '@/services';
-import { isGoogleOAuthEnabled, isKakaoOAuthEnabled } from '@/utils/config';
+import { isKakaoOAuthEnabled } from '@/utils/config';
 
 export interface IntegrationTestResult {
   testId: string;
@@ -26,7 +26,7 @@ export class AuthIntegrationTester {
    */
   async runAllTests(): Promise<IntegrationTestResult[]> {
     console.log('🚀 Starting Firebase Authentication Integration Tests...');
-    
+
     const tests = [
       this.testConfiguration.bind(this),
       this.testServiceInstantiation.bind(this),
@@ -76,20 +76,19 @@ export class AuthIntegrationTester {
       }
 
       // Test OAuth provider configuration
-      const googleEnabled = isGoogleOAuthEnabled();
       const kakaoEnabled = isKakaoOAuthEnabled();
 
-      if (!googleEnabled && !kakaoEnabled) {
+      if (!kakaoEnabled) {
         console.warn('⚠️  No OAuth providers are enabled - social login will not work');
       }
 
       const duration = Date.now() - startTime;
-      
+
       this.addTestResult(
         'config-test',
         'Environment Configuration',
         'success',
-        `Google OAuth: ${googleEnabled ? 'Enabled' : 'Disabled'}, Kakaotalk OAuth: ${kakaoEnabled ? 'Enabled' : 'Disabled'}`,
+        `Kakaotalk OAuth: ${kakaoEnabled ? 'Enabled' : 'Disabled'}`,
         duration
       );
 
@@ -117,25 +116,22 @@ export class AuthIntegrationTester {
 
     try {
       const authService = getAuthService();
-      
+
       // Test that service implements required interface
       if (typeof authService.getCurrentUser !== 'function') {
         throw new Error('getCurrentUser method not implemented');
       }
-      
+
       if (typeof authService.signIn !== 'function') {
         throw new Error('signIn method not implemented');
       }
-      
+
       if (typeof authService.signOut !== 'function') {
         throw new Error('signOut method not implemented');
       }
 
       // Test OAuth methods
-      if (typeof authService.signInWithGoogle !== 'function') {
-        throw new Error('signInWithGoogle method not implemented');
-      }
-      
+
       if (typeof authService.signInWithKakao !== 'function') {
         throw new Error('signInWithKakao method not implemented');
       }
@@ -174,23 +170,7 @@ export class AuthIntegrationTester {
 
     try {
       const authService = getAuthService();
-      const googleEnabled = isGoogleOAuthEnabled();
       const kakaoEnabled = isKakaoOAuthEnabled();
-
-      // Test Google OAuth
-      if (googleEnabled) {
-        try {
-          // This will fail without proper setup, but we're testing the method exists
-          await authService.signInWithGoogle();
-        } catch (error: any) {
-          // Expected to fail in test environment, but should be a Firebase error
-          if (error.code && error.code.startsWith('auth/')) {
-            console.log('✅ Google OAuth method works (expected Firebase error in test)');
-          } else {
-            throw new Error(`Unexpected Google OAuth error: ${error.message}`);
-          }
-        }
-      }
 
       // Test Kakaotalk OAuth
       if (kakaoEnabled) {
@@ -212,7 +192,7 @@ export class AuthIntegrationTester {
         'oauth-availability',
         'OAuth Provider Availability',
         'success',
-        `Google: ${googleEnabled ? 'Available' : 'Disabled'}, Kakaotalk: ${kakaoEnabled ? 'Available' : 'Disabled'}`,
+        `Kakaotalk: ${kakaoEnabled ? 'Available' : 'Disabled'}`,
         duration
       );
 
@@ -301,12 +281,6 @@ export class AuthIntegrationTester {
 
     try {
       // Test error message mapping for Google OAuth
-      const googleErrorTests = [
-        { code: 'auth/popup-closed-by-user', expected: 'Google sign-in was cancelled' },
-        { code: 'auth/popup-blocked', expected: 'Google sign-in was blocked by popup blocker' },
-        { code: 'auth/account-exists-with-different-credential', expected: 'An account already exists with this email address' },
-      ];
-
       const kakaoErrorTests = [
         { code: 'auth/popup-closed-by-user', expected: 'Kakaotalk sign-in was cancelled' },
         { code: 'auth/popup-blocked', expected: 'Kakaotalk sign-in was blocked by popup blocker' },
@@ -315,7 +289,6 @@ export class AuthIntegrationTester {
 
       // These would normally be tested with actual Firebase errors
       // For now, we verify the error structure exists in the service
-      console.log('✅ Error handling structures verified for Google OAuth');
       console.log('✅ Error handling structures verified for Kakaotalk OAuth');
 
       const duration = Date.now() - startTime;
@@ -353,7 +326,7 @@ export class AuthIntegrationTester {
     try {
       // Test that admin components can access auth service
       const authService = getAuthService();
-      
+
       // Verify admin-specific functionality
       if (typeof authService.getCurrentUser === 'function') {
         const currentUser = authService.getCurrentUser();
@@ -406,10 +379,10 @@ export class AuthIntegrationTester {
     try {
       // Test that OAuth methods are available on mobile
       const authService = getAuthService();
-      
+
       // Mobile-specific considerations
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      
+
       if (isMobile) {
         console.log('📱 Running on mobile device - OAuth should work with popup fallbacks');
       }
@@ -419,7 +392,6 @@ export class AuthIntegrationTester {
         'getCurrentUser',
         'signIn',
         'signOut',
-        'signInWithGoogle',
         'signInWithKakao',
         'linkProvider',
         'unlinkProvider',
@@ -516,7 +488,7 @@ export class AuthIntegrationTester {
     duration?: number
   ): void {
     const existingIndex = this.testResults.findIndex(result => result.testId === testId);
-    
+
     const result: IntegrationTestResult = {
       testId,
       testName,

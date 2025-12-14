@@ -38,6 +38,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@/components', '@/services', '@/utils'],
   },
+  reactStrictMode: false,
 };
 
 module.exports = nextConfig;

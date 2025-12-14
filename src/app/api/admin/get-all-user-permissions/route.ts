@@ -10,7 +10,7 @@ function getFirebaseApp() {
     if (getApps().length > 0) {
       return getApps()[0];
     }
-    
+
     // Initialize new app if none exists
     const firebaseConfig = {
       apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -41,21 +41,21 @@ function getFirebaseApp() {
 export async function GET(request: NextRequest) {
   try {
     console.log('Starting user permissions fetch...');
-    
+
     // Note: Admin authentication is handled by the frontend component
     // This API provides user data to authenticated admin users only
-    
+
     const app = getFirebaseApp();
     console.log('Firebase app initialized:', app.name);
-    
+
     const db = getFirestore(app);
     console.log('Firestore instance created');
-    
+
     // Get all user permissions from Firestore
-    console.log('Fetching user_permissions collection...');
-    const permissionsSnapshot = await getDocs(collection(db, 'user_permissions'));
+    console.log('Fetching users collection...');
+    const permissionsSnapshot = await getDocs(collection(db, 'users'));
     console.log('Permissions snapshot received, size:', permissionsSnapshot.size);
-    
+
     interface UserPermissionData {
       uid: string;
       email: string;
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     const users: UserPermissionData[] = [];
     let processedCount = 0;
-    
+
     permissionsSnapshot.forEach((doc) => {
       try {
         const data = doc.data();
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         console.error('Error processing document:', doc.id, docError);
       }
     });
-    
+
     console.log(`Processed ${processedCount} users`);
 
     // Sort users by role and then by email
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       };
       const aRole = roleOrder[a.role] || 0;
       const bRole = roleOrder[b.role] || 0;
-      
+
       if (aRole !== bRole) return bRole - aRole; // Sort by role (desc)
       return a.email.localeCompare(b.email); // Sort by email (asc)
     });

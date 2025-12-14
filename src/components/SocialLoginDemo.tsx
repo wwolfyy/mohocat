@@ -13,19 +13,15 @@ interface SocialLoginDemoProps {
 }
 
 const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
-   const [activeTab, setActiveTab] = useState<'login' | 'providers' | 'demo' | 'debug'>('demo');
+  const [activeTab, setActiveTab] = useState<'login' | 'providers' | 'demo' | 'debug'>('demo');
   const {
     user,
     isAuthenticated,
     providerData,
     linkedProviders,
-    signInWithGoogle,
     signInWithKakao,
-    isSigningInWithGoogle,
     isSigningInWithKakao,
-    googleSignInError,
     kakaoSignInError,
-    googleSignInSuccess,
     kakaoSignInSuccess,
   } = useAuth();
 
@@ -115,19 +111,13 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
               <p className="text-gray-600 mb-4">
                 Try the social login buttons below to see them in action.
               </p>
-              
+
               <div className="space-y-4">
                 <div>
                   <h4 className="text-md font-medium text-gray-800 mb-3">
                     Standalone Social Login Buttons
                   </h4>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <SocialLoginButton
-                      provider="google"
-                      onClick={signInWithGoogle}
-                      loading={isSigningInWithGoogle}
-                      size="md"
-                    />
                     <SocialLoginButton
                       provider="kakao"
                       onClick={signInWithKakao}
@@ -152,23 +142,17 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
                 )}
 
                 {/* Success Messages */}
-                {(googleSignInSuccess || kakaoSignInSuccess) && (
+                {kakaoSignInSuccess && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-green-700 text-sm text-center">
-                      {googleSignInSuccess && "✅ Successfully signed in with Google!"}
-                      {kakaoSignInSuccess && "✅ Successfully signed in with Kakaotalk!"}
+                      ✅ Successfully signed in with Kakaotalk!
                     </p>
                   </div>
                 )}
 
                 {/* Error Messages */}
-                {(googleSignInError || kakaoSignInError) && (
+                {kakaoSignInError && (
                   <div className="space-y-2">
-                    {googleSignInError && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-red-700 text-sm">❌ Google Sign-in Error: {googleSignInError}</p>
-                      </div>
-                    )}
                     {kakaoSignInError && (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-red-700 text-sm">❌ Kakaotalk Sign-in Error: {kakaoSignInError}</p>
@@ -184,7 +168,7 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
               <h3 className="text-lg font-semibold text-gray-900">
                 Features Demonstrated
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <h4 className="font-semibold text-blue-900 mb-2">🎨 Beautiful Design</h4>
@@ -192,21 +176,21 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
                     Custom SVG icons with provider-specific colors and hover effects
                   </p>
                 </div>
-                
+
                 <div className="bg-green-50 rounded-lg p-4">
                   <h4 className="font-semibold text-green-900 mb-2">🔄 Loading States</h4>
                   <p className="text-sm text-green-800">
                     Smooth loading animations and disabled states during OAuth operations
                   </p>
                 </div>
-                
+
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <h4 className="font-semibold text-yellow-900 mb-2">🛡️ Error Handling</h4>
                   <p className="text-sm text-yellow-800">
                     Comprehensive error messages for common OAuth failure scenarios
                   </p>
                 </div>
-                
+
                 <div className="bg-purple-50 rounded-lg p-4">
                   <h4 className="font-semibold text-purple-900 mb-2">📱 Responsive</h4>
                   <p className="text-sm text-purple-800">
@@ -229,9 +213,9 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
                 Complete login form with social authentication options and traditional email/password login.
               </p>
             </div>
-            
+
             <div className="max-w-md mx-auto">
-              <LoginForm 
+              <LoginForm
                 onLoginSuccess={handleLoginSuccess}
                 onLoginError={handleLoginError}
               />
@@ -250,7 +234,7 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
                 Advanced debugging tools for KakaoTalk OAuth implementation. Use this to diagnose and fix authentication issues.
               </p>
             </div>
-            
+
             <div className="max-w-md mx-auto">
               <KakaoTalkDebug />
             </div>
@@ -268,7 +252,7 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
                 Manage your connected OAuth providers and link/unlink accounts.
               </p>
             </div>
-            
+
             <div className="max-w-md mx-auto">
               <ProviderManagement
                 showSuccessMessages={true}
@@ -285,7 +269,7 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
         <h3 className="text-lg font-semibold text-gray-900">
           Implementation Details
         </h3>
-        
+
         <div className="bg-gray-50 rounded-lg p-6">
           <h4 className="font-semibold text-gray-900 mb-3">
             Technologies Used:
@@ -299,7 +283,7 @@ const SocialLoginDemo: React.FC<SocialLoginDemoProps> = ({ className }) => {
             <li>TypeScript for type safety</li>
             <li>Custom hooks for state management</li>
           </ul>
-          
+
           <h4 className="font-semibold text-gray-900 mt-4 mb-3">
             Components Created:
           </h4>

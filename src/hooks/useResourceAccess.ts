@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { usePermissions } from './usePermissions';
 import { Permission } from '@/types/permissions';
 
@@ -6,28 +6,27 @@ interface ResourceConfig {
     resources: Record<string, Permission[]>;
 }
 
+const fetcher = async (url: string) => {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error('Failed to fetch resource permissions');
+    }
+    return response.json();
+};
+
 export function useResourceAccess() {
     const { permissions, isLoading: permissionsLoading } = usePermissions();
-    const [config, setConfig] = useState<ResourceConfig | null>(null);
-    const [configLoading, setConfigLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchConfig = async () => {
-            try {
-                const response = await fetch('/api/admin/resource-permissions');
-                if (response.ok) {
-                    const data = await response.json();
-                    setConfig(data);
-                }
-            } catch (error) {
-                console.error('Failed to load resource permissions:', error);
-            } finally {
-                setConfigLoading(false);
-            }
-        };
-
-        fetchConfig();
-    }, []);
+    // Use SWR for caching and automatic deduplication
+    // revalidateOnFocus: false to avoid unnecessary refetches when switching windows
+    const { data: config, error, isLoading: configLoading } = useSWR<ResourceConfig>(
+        '/api/admin/resource-permissions',
+        fetcher,
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 60000, // cache for 1 minute
+        }
+    );
 
     const canAccessResource = (resourceId: string): boolean => {
         if (permissionsLoading || configLoading || !config) return false;
@@ -45,6 +44,7 @@ export function useResourceAccess() {
 
     return {
         canAccessResource,
-        isLoading: permissionsLoading || configLoading
+        isLoading: permissionsLoading || configLoading,
+        error
     };
 }

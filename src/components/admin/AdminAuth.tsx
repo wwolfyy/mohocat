@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  User, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  signOut 
+import {
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
 } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
@@ -30,13 +30,9 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     isAuthenticated,
     providerData,
     linkedProviders,
-    signInWithGoogle,
     signInWithKakao,
-    isSigningInWithGoogle,
     isSigningInWithKakao,
-    googleSignInError,
     kakaoSignInError,
-    googleSignInSuccess,
     kakaoSignInSuccess,
   } = useAuth();
 
@@ -55,7 +51,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       const unsubscribe = onAuthStateChanged(auth, async (authUser: User | null) => {
         try {
           clearTimeout(timeoutId);
-          
+
           if (authUser) {
             const adminStatus = await checkIsAdmin(authUser);
             if (adminStatus) {
@@ -397,15 +393,8 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               <h2 className="text-sm font-semibold text-gray-700 text-center">
                 Sign in with
               </h2>
-              
+
               <div className="space-y-3">
-                <SocialLoginButton
-                  provider="google"
-                  onClick={signInWithGoogle}
-                  loading={isSigningInWithGoogle}
-                  size="md"
-                  className="w-full"
-                />
                 <SocialLoginButton
                   provider="kakao"
                   onClick={signInWithKakao}
@@ -416,26 +405,21 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               </div>
 
               {/* Success Messages */}
-              {(googleSignInSuccess || kakaoSignInSuccess) && (
+              {/* Success Messages */}
+              {kakaoSignInSuccess && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <p className="text-green-700 text-sm text-center">
-                    {googleSignInSuccess && "Successfully signed in with Google!"}
-                    {kakaoSignInSuccess && "Successfully signed in with Kakaotalk!"}
+                    Successfully signed in with Kakaotalk!
                   </p>
                 </div>
               )}
 
               {/* Error Messages */}
-              {(loginError || googleSignInError || kakaoSignInError) && (
+              {(loginError || kakaoSignInError) && (
                 <div className="space-y-2">
                   {loginError && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                       <p className="text-red-700 text-sm">{loginError}</p>
-                    </div>
-                  )}
-                  {googleSignInError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-red-700 text-sm">{googleSignInError}</p>
                     </div>
                   )}
                   {kakaoSignInError && (
@@ -471,10 +455,10 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                     "border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500"
                   )}
                   placeholder="Enter your email"
-                  disabled={isSigningInWithGoogle || isSigningInWithKakao}
+                  disabled={isSigningInWithKakao}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -490,13 +474,13 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                     "border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500"
                   )}
                   placeholder="Enter your password"
-                  disabled={isSigningInWithGoogle || isSigningInWithKakao}
+                  disabled={isSigningInWithKakao}
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={isSigningInWithGoogle || isSigningInWithKakao}
+                disabled={isSigningInWithKakao}
                 className={cn(
                   "w-full py-3 rounded-lg font-bold transition-all duration-200",
                   "focus:outline-none focus:ring-2 focus:ring-offset-2",
@@ -504,8 +488,8 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                   "hover:shadow-lg hover:-translate-y-1",
                   "focus:ring-yellow-500",
                   {
-                    "opacity-50 cursor-not-allowed": isSigningInWithGoogle || isSigningInWithKakao,
-                    "cursor-pointer": !isSigningInWithGoogle && !isSigningInWithKakao,
+                    "opacity-50 cursor-not-allowed": isSigningInWithKakao,
+                    "cursor-pointer": !isSigningInWithKakao,
                   }
                 )}
               >
@@ -524,7 +508,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               >
                 🛠️ Create Test Admin User ↗
               </a>
-              
+
               <div className="text-xs text-gray-500">
                 Having trouble? Try emergency access or contact support.
               </div>
@@ -550,7 +534,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                 Welcome, {user.displayName || user.email}
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowProviderManagement(!showProviderManagement)}
@@ -583,7 +567,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Account Settings
                 </h2>
-                
+
                 {/* User Info */}
                 <div className="mb-6">
                   <div className="flex items-center space-x-3">

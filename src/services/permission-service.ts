@@ -4,6 +4,8 @@ import type { UserPermissions, UserRole, PermissionLog, PermissionConfig } from 
 
 export class PermissionService {
   private db = getFirestore();
+  private collectionName = 'role_permissions';
+  private usersCollection = 'users'; // Migrated from 'user_permissions'
   private config: PermissionConfig | null = null;
 
   /**
@@ -35,10 +37,32 @@ export class PermissionService {
   }
 
   /**
+   * Get user's current role
+   */
+  async getUserRole(userId: string): Promise<string | null> {
+    try {
+      const userDoc = await getDoc(doc(this.db, this.usersCollection, userId));
+      if (!userDoc.exists()) {
+        return null;
+      }
+
+      const userData = userDoc.data() as UserPermissions;
+      if (userData.currentRole && userData.currentRole.isActive) {
+        return userData.currentRole.role;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      return null;
+    }
+  }
+
+  /**
    * Get user's effective permissions
    */
   async getUserPermissions(userId: string): Promise<string[]> {
-    const userDoc = await getDoc(doc(this.db, 'user_permissions', userId));
+    const userDoc = await getDoc(doc(this.db, this.usersCollection, userId));
     if (!userDoc.exists()) {
       return [];
     }
@@ -122,7 +146,7 @@ export class PermissionService {
       isActive: true
     };
 
-    const userRef = doc(this.db, 'user_permissions', userId);
+    const userRef = doc(this.db, this.usersCollection, userId);
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
@@ -164,7 +188,7 @@ export class PermissionService {
    * Suspend user role
    */
   async suspendRole(userId: string, suspendedBy: string, reason?: string): Promise<void> {
-    const userRef = doc(this.db, 'user_permissions', userId);
+    const userRef = doc(this.db, this.usersCollection, userId);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
@@ -209,7 +233,7 @@ export class PermissionService {
    * Reactivate user role
    */
   async reactivateRole(userId: string, reactivatedBy: string): Promise<void> {
-    const userRef = doc(this.db, 'user_permissions', userId);
+    const userRef = doc(this.db, this.usersCollection, userId);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
@@ -246,7 +270,7 @@ export class PermissionService {
    * Get user's role history
    */
   async getRoleHistory(userId: string): Promise<UserRole[]> {
-    const userDoc = await getDoc(doc(this.db, 'user_permissions', userId));
+    const userDoc = await getDoc(doc(this.db, this.usersCollection, userId));
     if (!userDoc.exists()) {
       return [];
     }
@@ -260,7 +284,7 @@ export class PermissionService {
    */
   async getUsersByRole(mountainId: string, role: string): Promise<UserPermissions[]> {
     const q = query(
-      collection(this.db, 'user_permissions'),
+      collection(this.db, this.usersCollection),
       where(`currentRole.mountainId`, '==', mountainId),
       where(`currentRole.role`, '==', role),
       where(`currentRole.isActive`, '==', true)
@@ -278,7 +302,7 @@ export class PermissionService {
    */
   async getUsersInMountain(mountainId: string): Promise<UserPermissions[]> {
     const q = query(
-      collection(this.db, 'user_permissions'),
+      collection(this.db, this.usersCollection),
       where(`currentRole.mountainId`, '==', mountainId),
       where(`currentRole.isActive`, '==', true)
     );
@@ -346,5 +370,105 @@ export class PermissionService {
       id: doc.id,
       ...doc.data()
     } as any as PermissionLog));
+  }
+
+  /**
+   * Ensure user exists in the Firestore users collection
+   * Creates the user document if it doesn't exist, or updates it if it does.
+   */
+  async ensureUserExists(user: any): Promise<void> {
+    if (!user || !user.uid) return;
+
+    try {
+      const userRef = doc(this.db, this.usersCollection, user.uid);
+      const userDoc = await getDoc(userRef);
+
+      const timestamp = new Date();
+
+      const userData: Partial<UserPermissions> = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        phoneNumber: user.phoneNumber || '',
+        emailVerified: user.emailVerified || false,
+        updatedAt: timestamp
+      };
+
+      if (!userDoc.exists()) {
+        // Create new user with default role
+        const defaultRole: UserRole = {
+          role: 'viewer', // Default role
+          permissions: [],
+          mountainId: 'default', // Default mountain
+          assignedBy: 'system',
+          assignedAt: timestamp,
+          isActive: true
+        };
+
+        const newUser: UserPermissions = {
+          ...userData as UserPermissions,
+          currentRole: defaultRole,
+          roleHistory: [],
+          createdAt: timestamp
+        };
+
+        await setDoc(userRef, newUser);
+        console.log(`User document created for ${user.uid}`);
+      } else {
+        // Update existing user with latest auth data
+        // Only update fields that are present in auth user to avoid overwriting exist data with empty
+        const updateData: any = { updatedAt: timestamp };
+        if (userData.email) updateData.email = userData.email;
+        if (userData.displayName) updateData.displayName = userData.displayName;
+        if (userData.photoURL) updateData.photoURL = userData.photoURL;
+        if (userData.phoneNumber) updateData.phoneNumber = userData.phoneNumber;
+        if (userData.emailVerified !== undefined) updateData.emailVerified = userData.emailVerified;
+
+        await updateDoc(userRef, updateData);
+        console.log(`User document updated for ${user.uid}`);
+      }
+    } catch (error) {
+      console.error('Error ensuring user exists in Firestore:', error);
+      throw error;
+    }
+  }
+  async checkUserExists(uid: string): Promise<boolean> {
+    if (!uid) return false;
+    try {
+      const userRef = doc(this.db, this.usersCollection, uid);
+      const userDoc = await getDoc(userRef);
+      return userDoc.exists();
+    } catch (error) {
+      console.error('Error checking user existence:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update user's linked providers in Firestore
+   */
+  async updateUserProviders(uid: string, providerData: any[]): Promise<void> {
+    if (!uid) return;
+    try {
+      const userRef = doc(this.db, this.usersCollection, uid);
+      // We store a simplified version of provider data
+      const providers = providerData.map(p => ({
+        providerId: p.providerId,
+        uid: p.uid, // The persistent ID from the provider (e.g. Google sub)
+        displayName: p.displayName || null,
+        email: p.email || null,
+        linkedAt: new Date()
+      }));
+
+      await updateDoc(userRef, {
+        providers: providers,
+        updatedAt: new Date()
+      });
+      console.log(`Updated providers for user ${uid}`);
+    } catch (error) {
+      console.error('Error updating user providers:', error);
+      // Don't throw, just log. Non-critical for auth flow, critical for record keeping.
+    }
   }
 }

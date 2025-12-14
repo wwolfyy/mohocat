@@ -1,6 +1,12 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, setLogLevel } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
+import {
+  initializeAuth,
+  browserLocalPersistence,
+  browserPopupRedirectResolver,
+  indexedDBLocalPersistence,
+  inMemoryPersistence
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFirebaseConfig } from '@/utils/config';
 
@@ -11,9 +17,39 @@ if (!firebaseConfig || !firebaseConfig.apiKey) {
   throw new Error('Firebase configuration is missing or invalid. Please check your environment variables.');
 }
 
-const app = initializeApp(firebaseConfig);
+// Enable verbose logging for debugging auth delays
+// setLogLevel('debug'); // Disabled after fixing 48s delay
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const storage = getStorage(app);
-const auth = getAuth(app);
+
+// Use initializeAuth to explicitly set persistence.
+// We use browserLocalPersistence (localStorage) because indexedDB was causing massive 48s delays in some environments.
+let auth;
+try {
+  if (typeof window === 'undefined') {
+    // Server-side (SSR)
+    auth = initializeAuth(app, {
+      persistence: inMemoryPersistence
+      // No popupRedirectResolver needed on server
+    });
+  } else {
+    // Client-side
+    auth = initializeAuth(app, {
+      persistence: browserLocalPersistence,
+      popupRedirectResolver: browserPopupRedirectResolver
+    });
+  }
+} catch (e: any) {
+  // If auth is already initialized (hot reload), get existing instance
+  if (e.code === 'auth/already-initialized') {
+    const { getAuth } = require('firebase/auth');
+    auth = getAuth(app);
+  } else {
+    throw e;
+  }
+}
+
 const db = getFirestore(app);
 
 export { storage, auth, db };

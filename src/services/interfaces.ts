@@ -66,7 +66,7 @@ export interface IImageService {
   createImage(imageData: any): Promise<string>;
   updateImage(id: string, updates: Partial<any>): Promise<void>;
   deleteImage(id: string): Promise<void>;
-  batchUpdateImages(updates: Array<{id: string, updates: Partial<any>}>): Promise<void>;
+  batchUpdateImages(updates: Array<{ id: string, updates: Partial<any> }>): Promise<void>;
   batchDeleteImages(ids: string[]): Promise<void>;
   syncWithStorage(): Promise<any[]>; // Returns StorageImage[] with metadata sync
 }
@@ -84,7 +84,7 @@ export interface IVideoService {
   createVideo(videoData: any): Promise<string>;
   updateVideo(id: string, updates: Partial<any>): Promise<void>;
   deleteVideo(id: string): Promise<void>;
-  batchUpdateVideos(updates: Array<{id: string, updates: Partial<any>}>): Promise<void>;
+  batchUpdateVideos(updates: Array<{ id: string, updates: Partial<any> }>): Promise<void>;
   batchDeleteVideos(ids: string[]): Promise<void>;
   syncWithYouTube?(): Promise<any[]>; // Optional YouTube sync
 }
@@ -110,16 +110,25 @@ export interface ProviderData {
 export interface IAuthService {
   getCurrentUser(): User | null;
   signIn(email: string, password: string): Promise<User>;
+  signInWithPhoneNumber(phoneNumber: string, appVerifier: any): Promise<any>; // Returns ConfirmationResult
+  confirmPhoneLogin(confirmationResult: any, verificationCode: string): Promise<User>;
   signOut(): Promise<void>;
   createUser(email: string, password: string): Promise<User>;
   onAuthStateChanged(callback: (user: User | null) => void): () => void;
-  
+
   // Social login methods
-  signInWithGoogle(): Promise<UserCredential>;
+
   signInWithKakao(forceFallback?: boolean): Promise<UserCredential>;
   linkProvider(providerId: string): Promise<UserCredential>;
+  linkEmailPassword(email: string, password: string): Promise<UserCredential>;
   unlinkProvider(providerId: string): Promise<void>;
   getProviderData(): Promise<ProviderData[]>;
+  getProviderData(): Promise<ProviderData[]>;
+  updateProfile(displayName?: string, photoURL?: string): Promise<void>;
+  sendEmailVerification(): Promise<void>;
+  reauthenticateWithType(type: 'password' | 'phone', credentialData: any): Promise<void>;
+  verifyBeforeUpdateEmail(newEmail: string): Promise<void>;
+  updatePhoneNumber(verificationId: string, verificationCode: string): Promise<void>;
 }
 
 // Feeding spots service interface
