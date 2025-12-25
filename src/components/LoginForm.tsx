@@ -9,6 +9,7 @@ import PhoneLoginForm from "@/components/auth/PhoneLoginForm";
 import { useRouter, useSearchParams } from 'next/navigation';
 import UserNotFoundModal from "@/components/auth/UserNotFoundModal";
 import EmailVerificationModal from "@/components/auth/EmailVerificationModal";
+import PasswordResetModal from "@/components/auth/PasswordResetModal";
 import { getPermissionService } from "@/services";
 
 interface LoginFormProps {
@@ -33,6 +34,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [isUserNotFoundModalOpen, setIsUserNotFoundModalOpen] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [isKakaoGuidanceOpen, setIsKakaoGuidanceOpen] = useState(false);
+  const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
 
   const permissionService = getPermissionService();
 
@@ -205,6 +207,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
         }}
       />
 
+      <PasswordResetModal
+        isOpen={isPasswordResetModalOpen}
+        onClose={() => setIsPasswordResetModalOpen(false)}
+        email={email}
+      />
+
       {/* Social Login Section */}
       <div className="space-y-3">
         <div className="text-center">
@@ -292,6 +300,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
             placeholder="Enter your password"
             disabled={isSigningInWithKakao || isEmailLoginLoading}
           />
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setIsPasswordResetModalOpen(true)}
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+          >
+            Forgot Password?
+          </button>
         </div>
 
         {/* Error Messages */}

@@ -27,7 +27,8 @@ import {
   reauthenticateWithCredential,
   verifyBeforeUpdateEmail,
   updatePhoneNumber,
-  PhoneAuthProvider
+  PhoneAuthProvider,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from './firebase';
 import { getKakaoOAuthConfig, isKakaoOAuthEnabled } from '@/utils/config';
@@ -685,6 +686,15 @@ export class FirebaseAuthService implements IAuthService {
       await updatePhoneNumber(user, credential);
     } catch (error: any) {
       console.error('Error updating phone number:', error);
+      throw error;
+    }
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      console.error('Error sending password reset email:', error);
       throw error;
     }
   }

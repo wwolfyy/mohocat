@@ -47,6 +47,7 @@ interface AuthActions {
     reauthenticateWithType: (type: 'password' | 'phone', credentialData: any) => Promise<void>;
     verifyBeforeUpdateEmail: (newEmail: string) => Promise<void>;
     updatePhoneNumber: (verificationId: string, verificationCode: string) => Promise<void>;
+    sendPasswordResetEmail: (email: string) => Promise<void>;
 }
 
 type AuthContextType = AuthState & AuthActions;
@@ -348,6 +349,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [authService, clearErrors]);
 
+    const sendPasswordResetEmail = useCallback(async (email: string) => {
+        clearErrors();
+        try {
+            await authService.sendPasswordResetEmail(email);
+        } catch (error: any) {
+            console.error(error);
+            throw error;
+        }
+    }, [authService, clearErrors]);
+
     const verifyBeforeUpdateEmail = useCallback(async (newEmail: string) => {
         clearErrors();
         try {
@@ -391,6 +402,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         reauthenticateWithType,
         verifyBeforeUpdateEmail,
         updatePhoneNumber,
+        sendPasswordResetEmail,
     };
 
     return (

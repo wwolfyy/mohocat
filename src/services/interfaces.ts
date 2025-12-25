@@ -129,6 +129,7 @@ export interface IAuthService {
   reauthenticateWithType(type: 'password' | 'phone', credentialData: any): Promise<void>;
   verifyBeforeUpdateEmail(newEmail: string): Promise<void>;
   updatePhoneNumber(verificationId: string, verificationCode: string): Promise<void>;
+  sendPasswordResetEmail(email: string): Promise<void>;
 }
 
 // Feeding spots service interface
