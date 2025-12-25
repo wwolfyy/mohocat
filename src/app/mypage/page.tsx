@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
+import PasswordResetModal from '@/components/auth/PasswordResetModal';
 
 export default function MyPage() {
     const {
@@ -35,6 +36,8 @@ export default function MyPage() {
     // --- State for Edit Modes ---
     const [editingNickname, setEditingNickname] = useState(false);
     const [newNickname, setNewNickname] = useState('');
+
+    const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
     const [editingEmail, setEditingEmail] = useState(false);
     const [newEmail, setNewEmail] = useState('');
@@ -274,6 +277,20 @@ export default function MyPage() {
                     )}
                 </div>
 
+                {/* Password Change Link */}
+                <div className="mb-4">
+                    <label className="block text-sm text-gray-500 mb-1">Password</label>
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-900">********</span>
+                        <button
+                            onClick={() => setIsResetModalOpen(true)}
+                            className="text-blue-500 text-sm hover:underline"
+                        >
+                            Reset Password
+                        </button>
+                    </div>
+                </div>
+
                 {/* Phone */}
                 <div className="mb-4">
                     <label className="block text-sm text-gray-500 mb-1">Phone Number</label>
@@ -354,6 +371,11 @@ export default function MyPage() {
                 Sign Out
             </button>
 
+            <PasswordResetModal
+                isOpen={isResetModalOpen}
+                onClose={() => setIsResetModalOpen(false)}
+                email={user?.email || ''}
+            />
         </div>
     );
 }
