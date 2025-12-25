@@ -17,9 +17,11 @@ body {
   h1 {
     @apply text-4xl font-bold tracking-tight;
   }
+
   h2 {
     @apply text-3xl font-semibold tracking-tight;
   }
+
   h3 {
     @apply text-2xl font-semibold tracking-tight;
   }
@@ -29,15 +31,18 @@ body {
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-colors;
   }
+
   .btn-primary {
     @apply bg-blue-600 text-white hover:bg-blue-700;
   }
+
   .btn-secondary {
     @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
   }
 }
 
 @layer utilities {
+
   /* Line clamp utilities for text truncation */
   .line-clamp-1 {
     display: -webkit-box;
@@ -46,6 +51,7 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -53,6 +59,7 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -112,9 +119,17 @@ body {
   }
 
   /* Reply indentation classes */
-  .ml-4 { margin-left: 1rem; }
-  .ml-8 { margin-left: 2rem; }
-  .ml-12 { margin-left: 3rem; }
+  .ml-4 {
+    margin-left: 1rem;
+  }
+
+  .ml-8 {
+    margin-left: 2rem;
+  }
+
+  .ml-12 {
+    margin-left: 3rem;
+  }
 
   /* Page load slide-in animations */
   .animate-slide-in-left {
@@ -143,9 +158,12 @@ body {
 
 /* Keyframe animations */
 @keyframes pulse-subtle {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.8;
   }
@@ -156,6 +174,7 @@ body {
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -167,6 +186,7 @@ body {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translateY(-5px) scale(0.98);
@@ -174,12 +194,19 @@ body {
 }
 
 @keyframes bounce-gentle {
-  0%, 20%, 50%, 80%, 100% {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
+
   40% {
     transform: translateY(-4px);
   }
+
   60% {
     transform: translateY(-2px);
   }
@@ -190,6 +217,7 @@ body {
     transform: translateX(-100px) rotate(-720deg);
     opacity: 0;
   }
+
   to {
     transform: translateX(0) rotate(0deg);
     opacity: 1;
@@ -201,6 +229,7 @@ body {
     transform: translateX(100px);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -212,10 +241,12 @@ body {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0);
   }
+
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.2);
   }
+
   100% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
@@ -227,18 +258,22 @@ body {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0) rotate(0deg);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.4) rotate(5deg);
   }
+
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(0.9) rotate(-3deg);
   }
+
   70% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.1) rotate(2deg);
   }
+
   100% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
@@ -250,10 +285,12 @@ body {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-80%, -80%) scale(0.3);
@@ -265,12 +302,28 @@ body {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-20%, -80%) scale(0.2);
   }
+}
+
+/* Fix for Chrome/Safari Autofill styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  /* gray-900 */
+  caret-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s;
+  font-size: 1rem !important;
+  /* Force font size to prevent shrinking */
 }

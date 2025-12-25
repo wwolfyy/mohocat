@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
+import { MdLogin } from 'react-icons/md';
 
 export function NavigationBarLogin() {
   const { isAuthenticated, loading } = useAuth();
@@ -19,14 +20,14 @@ export function NavigationBarLogin() {
     <Link
       href={`/login?redirect=${encodeURIComponent(pathname)}`}
       className={cn(
-        "text-gray-600 hover:text-gray-900 transition-colors",
-        "px-3 py-2 text-sm font-medium",
-        "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-        "rounded-md hover:bg-gray-100",
-        "bg-blue-500 hover:bg-blue-600 text-white"
+        "flex items-center gap-2 px-3 py-1.5",
+        "bg-white border border-gray-200 rounded-full shadow-sm",
+        "text-sm font-semibold text-gray-700",
+        "transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-blue-600"
       )}
     >
-      Log In
+      <span>Log In</span>
+      <MdLogin size={18} />
     </Link>
   );
 }

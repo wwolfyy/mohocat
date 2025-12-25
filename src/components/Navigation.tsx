@@ -94,8 +94,8 @@ export default function Navigation() {
         <NavItem href="/pages/butler_talk" resourceId="butler_talk" label="집사톡" canAccessResource={canAccessResource} isLoading={isLoading} />
 
         {/* Login/Logout Buttons */}
-        <NavigationBarLogin />
         <div className="ml-6">
+          <NavigationBarLogin />
           <NavigationBarLogout />
         </div>
       </nav>
