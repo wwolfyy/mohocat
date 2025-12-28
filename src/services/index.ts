@@ -1,11 +1,3 @@
-/**
- * Service Factory - Central service provider for the application
- *
- * This file exports service getter functions that return the appropriate
- * service implementation based on the current mountain configuration.
- * This makes it easy to switch implementations or add new service types.
- */
-
 import {
   ICatService,
   IPointService,
@@ -17,7 +9,7 @@ import {
   IAuthService
 } from './interfaces';
 
-import { StaticCatService } from './static-cat-service';
+import { FirebaseCatService } from './cat-service';
 import { FirebasePointService } from './point-service';
 import { FirebaseImageService } from './image-service';
 import { FirebaseVideoService } from './video-service';
@@ -49,7 +41,7 @@ let feedingSpotsServiceInstance: IFeedingSpotsService | null = null;
  */
 export function getCatService(): ICatService {
   if (!catServiceInstance) {
-    catServiceInstance = new StaticCatService();
+    catServiceInstance = new FirebaseCatService();
   }
   return catServiceInstance;
 }

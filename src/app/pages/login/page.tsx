@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import LoginForm from "@/components/LoginForm";
 
-const LoginPage = () => {
+const LoginContent = () => {
   const router = useRouter();
 
   useEffect(() => {
@@ -38,6 +38,14 @@ const LoginPage = () => {
         <LoginForm data-oid="1_qv9ef" />
       </div>
     </div>
+  );
+};
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 };
 

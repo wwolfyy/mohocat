@@ -1,4 +1,4 @@
-import React from "react";
+import { getAdminFeedingSpotsService } from "@/services/feeding-spots-admin-service";
 import NewPostForm from "@/components/NewPostForm";
 
 interface BasicFeedingSpot {
@@ -7,20 +7,13 @@ interface BasicFeedingSpot {
 }
 
 const NewPostPage = async () => {
-  // Fetch basic feeding spots at build time
+  // Fetch basic feeding spots at build time using the service directly
+  // This avoids HTTP calls to self during build which fails in Docker
   let feedingSpots: BasicFeedingSpot[] = [];
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/feeding-spots-basic`, {
-      cache: 'force-cache', // Cache at build time
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      feedingSpots = data.feedingSpots || [];
-    } else {
-      console.warn('Failed to fetch feeding spots at build time');
-    }
+    const feedingSpotsService = getAdminFeedingSpotsService();
+    feedingSpots = await feedingSpotsService.getBasicFeedingSpots();
   } catch (error) {
     console.error('Error fetching feeding spots at build time:', error);
   }

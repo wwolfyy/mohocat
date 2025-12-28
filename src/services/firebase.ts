@@ -5,7 +5,8 @@ import {
   browserLocalPersistence,
   browserPopupRedirectResolver,
   indexedDBLocalPersistence,
-  inMemoryPersistence
+  inMemoryPersistence,
+  Auth
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFirebaseConfig } from '@/utils/config';
@@ -25,30 +26,33 @@ const storage = getStorage(app);
 
 // Use initializeAuth to explicitly set persistence.
 // We use browserLocalPersistence (localStorage) because indexedDB was causing massive 48s delays in some environments.
-let auth;
-try {
-  if (typeof window === 'undefined') {
-    // Server-side (SSR)
-    auth = initializeAuth(app, {
-      persistence: inMemoryPersistence
-      // No popupRedirectResolver needed on server
-    });
-  } else {
-    // Client-side
-    auth = initializeAuth(app, {
-      persistence: browserLocalPersistence,
-      popupRedirectResolver: browserPopupRedirectResolver
-    });
+// Use initializeAuth to explicitly set persistence.
+// We use browserLocalPersistence (localStorage) because indexedDB was causing massive 48s delays in some environments.
+const auth: Auth = (() => {
+  try {
+    if (typeof window === 'undefined') {
+      // Server-side (SSR)
+      return initializeAuth(app, {
+        persistence: inMemoryPersistence
+        // No popupRedirectResolver needed on server
+      });
+    } else {
+      // Client-side
+      return initializeAuth(app, {
+        persistence: browserLocalPersistence,
+        popupRedirectResolver: browserPopupRedirectResolver
+      });
+    }
+  } catch (e: any) {
+    // If auth is already initialized (hot reload), get existing instance
+    if (e.code === 'auth/already-initialized') {
+      const { getAuth } = require('firebase/auth');
+      return getAuth(app);
+    } else {
+      throw e;
+    }
   }
-} catch (e: any) {
-  // If auth is already initialized (hot reload), get existing instance
-  if (e.code === 'auth/already-initialized') {
-    const { getAuth } = require('firebase/auth');
-    auth = getAuth(app);
-  } else {
-    throw e;
-  }
-}
+})();
 
 const db = getFirestore(app);
 

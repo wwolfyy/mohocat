@@ -1,8 +1,9 @@
 import MountainViewer from "@/components/MountainViewer";
-import { getAllPoints } from "@/lib/static-data";
+import { getPointService } from "@/services";
 
 export default async function Home() {
-  const points = await getAllPoints();
+  const pointService = getPointService();
+  const points = await pointService.getAllPoints();
 
   return (
     <main
