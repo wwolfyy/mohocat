@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AnnouncementModalProvider } from "@/contexts/AnnouncementModalContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body className={inter.className} data-oid="jwk6i0o">
         <AnnouncementModalProvider>
           <AuthProvider>
+            <AnalyticsTracker />
             <div
               className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 overflow-x-hidden"
               data-oid="7-_qmcr"

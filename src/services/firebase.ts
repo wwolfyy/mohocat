@@ -9,6 +9,7 @@ import {
   Auth
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 import { getFirebaseConfig } from '@/utils/config';
 
 // Get Firebase configuration from the centralized config system
@@ -56,7 +57,10 @@ const auth: Auth = (() => {
 
 const db = getFirestore(app);
 
-export { storage, auth, db };
+// Initialize Analytics only on the client-side
+const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+
+export { storage, auth, db, analytics };
 
 export async function uploadImageToFirebase(file: File): Promise<string> {
   const user = auth.currentUser;
