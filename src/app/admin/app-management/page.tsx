@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/utils/cn";
 import AboutContentEditor from "@/components/admin/AboutContentEditor";
 import { useSearchParams } from 'next/navigation';
 
-const AppManagementPage = () => {
+function AppManagementContent() {
     const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<"about" | "faq" | "static-data" | "posts-config">("about");
     const [isInitialized, setIsInitialized] = useState(false);
@@ -511,4 +511,10 @@ const AppManagementPage = () => {
     );
 };
 
-export default AppManagementPage;
+export default function AppManagementPage() {
+    return (
+        <Suspense fallback={<div className="p-4">Loading App Management...</div>}>
+            <AppManagementContent />
+        </Suspense>
+    );
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
 import { auth } from '@/services/firebase';
@@ -8,7 +8,7 @@ import { RecaptchaVerifier } from 'firebase/auth';
 import { getPermissionService } from '@/services';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SignupForm() {
+function SignupFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/';
@@ -345,5 +345,13 @@ export default function SignupForm() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function SignupForm() {
+  return (
+    <Suspense fallback={<div>Loading signup form...</div>}>
+      <SignupFormContent />
+    </Suspense>
   );
 }

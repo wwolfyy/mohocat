@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/services/firebase";
 import { cn } from "@/utils/cn";
@@ -18,7 +18,7 @@ interface LoginFormProps {
   onSwitchToSignup?: () => void; // Added prop to switch tab
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({
+const LoginFormContent: React.FC<LoginFormProps> = ({
   onLoginSuccess,
   onLoginError,
   onSwitchToSignup
@@ -379,6 +379,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </p>
       </div>
     </div>
+  );
+};
+
+const LoginForm: React.FC<LoginFormProps> = (props) => {
+  return (
+    <Suspense fallback={<div>Loading login form...</div>}>
+      <LoginFormContent {...props} />
+    </Suspense>
   );
 };
 

@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { db } from '@/lib/firebase-admin';
 
+export const dynamic = 'force-dynamic';
+
 // Path to the permissions config file (fallback)
 const CONFIG_PATH = path.join(process.cwd(), 'config', 'permissions.json');
 
