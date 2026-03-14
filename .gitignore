@@ -44,6 +44,7 @@ next-env.d.ts
 **/*.cache
 .vscode/*
 .history/
+.firebase/
 
 # secrets & configs
 config/firebase/mountaincats-61543-7329e795c352.json

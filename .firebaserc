@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "mountaincats-61543"
-  }
+    "default": "mountaincats-61543",
+    "staging": "mountaincats-staging"
+  },
+  "targets": {},
+  "etags": {}
 }
