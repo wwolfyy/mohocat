@@ -38,8 +38,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@/components', '@/services', '@/utils'],
   },
-  // Enable standalone output for Docker optimization
-  output: 'standalone',
 
   reactStrictMode: false,
 };
