@@ -131,7 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [authService]);
 
   // Check if providers can be linked
-  const canLinkKakao = user !== null && !linkedProviders.includes('https://kakao.com');
+  const canLinkKakao =
+    user !== null &&
+    !linkedProviders.includes('oidc.kakao') &&
+    !linkedProviders.includes('https://kakao.com');
 
   // Clear error states
   const clearErrors = useCallback(() => {
@@ -296,7 +299,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLinkProviderError(null);
 
     try {
-      await authService.linkProvider('https://kakao.com');
+      console.log('[AuthProvider] Calling authService.linkProvider(oidc.kakao)');
+      await authService.linkProvider('oidc.kakao');
       setLinkProviderSuccess(true);
       // Providers should update automatically via useEffect on user change, but user object might not change deep
       // We manually fetch to update state fast
@@ -349,7 +353,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUnlinkProviderError(null);
 
       try {
+        console.log('[AuthProvider] Calling authService.unlinkProvider for:', providerId);
         await authService.unlinkProvider(providerId);
+        console.log('[AuthProvider] Successfully unlinked in authService');
         setUnlinkProviderSuccess(true);
 
         const providers = await authService.getProviderData();
