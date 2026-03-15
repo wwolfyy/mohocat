@@ -26,9 +26,6 @@ resource "vercel_project" "mountaincats" {
     type = "github"
     repo = var.github_repo # e.g. "your-github-username/mtcat_next"
   }
-
-  # The branch whose merges trigger a Production deployment
-  production_branch = "main"
 }
 
 # ---------------------------------------------------------------------------
