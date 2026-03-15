@@ -53,7 +53,7 @@ export default function UserNotFoundModal({
           <h3 className="text-lg font-medium text-gray-900">Account Not Found</h3>
 
           <p className="text-sm text-gray-500">
-            We couldn&apos;t find an account associated with this information.
+            We couldn't find an account associated with this information.
           </p>
 
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-left">

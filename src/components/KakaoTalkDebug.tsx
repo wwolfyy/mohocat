@@ -210,14 +210,12 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
         <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 className="font-semibold text-yellow-900 mb-2">Debug Instructions:</h3>
           <ul className="text-sm text-yellow-800 space-y-1">
-            <li>1. Click &quot;Test Environment&quot; to check configuration</li>
-            <li>2. If environment is OK, click &quot;Test KakaoTalk Sign-in&quot;</li>
+            <li>1. Click "Test Environment" to check configuration</li>
+            <li>2. If environment is OK, click "Test KakaoTalk Sign-in"</li>
             <li>3. Review logs for any error messages</li>
             <li>4. Follow debugging tips in the logs</li>
             <li>5. Copy logs and share for troubleshooting help</li>
-            <li>
-              6. Use the &quot;KakaoTalk Fallback Debug&quot; section below for advanced testing
-            </li>
+            <li>6. Use the "KakaoTalk Fallback Debug" section below for advanced testing</li>
           </ul>
         </div>
       </div>

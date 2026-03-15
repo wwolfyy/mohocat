@@ -127,7 +127,7 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
   if (!canManageUsers) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p className="text-yellow-800">You don&apos;t have permission to manage users.</p>
+        <p className="text-yellow-800">You don't have permission to manage users.</p>
       </div>
     );
   }

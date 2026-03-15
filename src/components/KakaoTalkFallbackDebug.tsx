@@ -159,10 +159,8 @@ export default function KakaoTalkFallbackDebug() {
             <strong>Forced Fallback:</strong> Forces the two-step approach (anonymous + linking)
           </li>
           <li>Check browser console for detailed error logs</li>
-          <li>Look for &quot;=== DEBUG: ERROR CODE ANALYSIS ===&quot; in console logs</li>
-          <li>
-            Check if &quot;=== FALLING BACK TO ANONYMOUS USER + LINKING APPROACH ===&quot; appears
-          </li>
+          <li>Look for "=== DEBUG: ERROR CODE ANALYSIS ===" in console logs</li>
+          <li>Check if "=== FALLING BACK TO ANONYMOUS USER + LINKING APPROACH ===" appears</li>
         </ol>
 
         <h4>🔍 What to Look For:</h4>

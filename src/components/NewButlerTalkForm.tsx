@@ -463,7 +463,7 @@ const NewButlerTalkForm = () => {
                   className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  모든 동영상은 자동으로 &quot;집사게시판&quot; 재생목록에 추가됩니다
+                  모든 동영상은 자동으로 "집사게시판" 재생목록에 추가됩니다
                 </p>
               </>
             )}

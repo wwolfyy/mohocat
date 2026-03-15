@@ -148,7 +148,7 @@ export default function AboutContentEditor() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">About Content Management</h1>
-        <p className="text-gray-600">Manage the content for your mountain&apos;s about page</p>
+        <p className="text-gray-600">Manage the content for your mountain's about page</p>
       </div>
 
       {error && (
@@ -217,7 +217,7 @@ export default function AboutContentEditor() {
               </li>
               <li>
                 <strong>Cat modal links:</strong> [catmodal:아롱이] opens a modal for the cat named
-                &quot;아롱이&quot;
+                "아롱이"
               </li>
               <li>
                 <strong>Line breaks:</strong> Press Enter for new lines

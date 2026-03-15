@@ -290,7 +290,7 @@ export default function YouTubeAuthPanel() {
           >
             <strong>📝 사용법:</strong>
             <ul style={{ margin: '0.5rem 0', paddingLeft: '1rem' }}>
-              <li>토큰이 만료되면 &quot;토큰 갱신&quot; 버튼을 클릭하세요</li>
+              <li>토큰이 만료되면 "토큰 갱신" 버튼을 클릭하세요</li>
               <li>새 창이 열리면 Google 계정으로 로그인하세요</li>
               <li>승인 후 창이 자동으로 닫히면 완료됩니다</li>
               <li>토큰은 약 7-14일간 유효합니다</li>
