@@ -24,7 +24,7 @@ resource "vercel_project" "mountaincats" {
 
   git_repository = {
     type = "github"
-    repo = var.github_repo # e.g. "your-github-username/mtcat_next"
+    repo = var.github_repo # e.g. "your-github-username/mcathcat"
   }
 }
 

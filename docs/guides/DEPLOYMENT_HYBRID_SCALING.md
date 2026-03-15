@@ -78,8 +78,8 @@ Internet → Google Cloud Load Balancer → Physical Server (80% traffic)
 
 ```bash
 # Deploy your application to Cloud Run
-cd /path/to/mtcat_next
-gcloud run deploy mtcat-next \
+cd /path/to/mcathcat
+gcloud run deploy mcathcat \
   --source . \
   --region asia-northeast3 \
   --allow-unauthenticated \
@@ -111,27 +111,27 @@ sudo apt install -y htop iotop nethogs
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/mtcat_next.git /opt/mtcat-next
-cd /opt/mtcat-next
+git clone https://github.com/your-username/mcathcat.git /opt/mcathcat
+cd /opt/mcathcat
 
 # Create production environment file
 cp .env.example .env.production
 # Edit .env.production with your actual values
 
 # Build and run container
-docker build -t mtcat-next .
-docker run -d --name mtcat-next \
+docker build -t mcathcat .
+docker run -d --name mcathcat \
   -p 8080:8080 \
   --env-file .env.production \
   --restart unless-stopped \
-  mtcat-next
+  mcathcat
 
 # Set up reverse proxy with SSL
 sudo apt install -y nginx certbot python3-certbot-nginx
 
 # Configure nginx (see nginx.conf example below)
-sudo nano /etc/nginx/sites-available/mtcat-next
-sudo ln -s /etc/nginx/sites-available/mtcat-next /etc/nginx/sites-enabled/
+sudo nano /etc/nginx/sites-available/mcathcat
+sudo ln -s /etc/nginx/sites-available/mcathcat /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 
 # Get SSL certificate
@@ -247,7 +247,7 @@ curl -s https://your-domain.com/api/health | jq
 curl -s https://your-domain.com/api/health | jq '.scaling'
 
 # Test Cloud Run health
-curl -s https://mtcat-next-[hash]-uc.a.run.app/api/health | jq
+curl -s https://mcathcat-[hash]-uc.a.run.app/api/health | jq
 ```
 
 ### Load Testing
@@ -271,7 +271,7 @@ gcloud compute backend-services describe physical-server-backend --global
 gcloud compute backend-services describe cloud-run-backend --global
 
 # Check Cloud Run metrics
-gcloud run services describe mtcat-next --region=asia-northeast3
+gcloud run services describe mcathcat --region=asia-northeast3
 ```
 
 ## Step 7: Monitoring and Alerting
@@ -286,7 +286,7 @@ sudo journalctl -u mtcat-monitor -f
 sudo journalctl -u mtcat-traffic-manager -f
 
 # Application logs
-docker logs -f mtcat-next
+docker logs -f mcathcat
 ```
 
 ### Set Up Alerting (Optional)
@@ -356,10 +356,10 @@ SCALING_CONNECTIONS_THRESHOLD=1000
 
    ```bash
    # Check Cloud Run logs
-   gcloud run services logs read mtcat-next --region=asia-northeast3
+   gcloud run services logs read mcathcat --region=asia-northeast3
 
    # Check scaling configuration
-   gcloud run services describe mtcat-next --region=asia-northeast3
+   gcloud run services describe mcathcat --region=asia-northeast3
    ```
 
 3. **Health checks failing**
@@ -369,7 +369,7 @@ SCALING_CONNECTIONS_THRESHOLD=1000
    curl -v https://your-domain.com/api/health
 
    # Check application logs
-   docker logs mtcat-next
+   docker logs mcathcat
    ```
 
 ### Rollback Plan

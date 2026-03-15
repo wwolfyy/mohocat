@@ -7,7 +7,7 @@
 # -- Vercel ------------------------------------------------------------------
 vercel_api_token    = "PLACEHOLDER_VERCEL_API_TOKEN"  # https://vercel.com/account/tokens
 vercel_project_name = "mountaincats-web"
-github_repo         = "PLACEHOLDER_GITHUB_USERNAME/mtcat_next"
+github_repo         = "PLACEHOLDER_GITHUB_USERNAME/mcathcat"
 
 # Domains
 production_domain = "PLACEHOLDER_PRODUCTION_DOMAIN"  # e.g. www.mountaincats.com

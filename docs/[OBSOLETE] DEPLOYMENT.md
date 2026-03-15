@@ -39,7 +39,7 @@ NEXT_PUBLIC_FIREBASE_API_KEY=...
 ### Step 2: Deploy
 
 ```bash
-cd /path/to/mtcat_next
+cd /path/to/mcathcat
 docker compose up --build -d
 ```
 
@@ -83,7 +83,7 @@ A separate `deploy-cloud-run.yml` workflow will be created when needed.
 
 ```bash
 # View container logs
-docker logs -f mtcat_next-web-1
+docker logs -f mcathcat-web-1
 
 # Check resource usage
 docker stats
