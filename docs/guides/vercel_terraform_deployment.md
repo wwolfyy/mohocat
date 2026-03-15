@@ -35,7 +35,7 @@ Before running Terraform, you must create a `terraform.tfvars` file to supply th
    **Important:** `terraform.tfvars` is ignored by Git, ensuring your secrets are not committed.
 3. Open `terraform.tfvars` and replace all `PLACEHOLDER_*` values.
    - `vercel_api_token`: Your Vercel API token.
-   - `github_repo`: Your GitHub repository in `username/repo` format (e.g., `github_username/mtcat_next`).
+   - `github_repo`: Your GitHub repository in `username/repo` format (e.g., `github_username/mcathcat`).
    - `production_domain`: Your custom production domain (e.g., `www.mcathcat.org`).
    - `staging_domain`: Your custom staging domain (e.g., `staging.mcathcat.org` or a Vercel subdomain).
    - `service_account_key`: The entire single-line JSON string representing your Firebase Admin service account.

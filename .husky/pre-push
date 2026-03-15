@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  echo "🚫 [Error] Direct push to the 'main' branch is not allowed."
+  echo "   Please push your changes to 'dev' or a feature branch and create a Pull Request."
+  exit 1
+fi

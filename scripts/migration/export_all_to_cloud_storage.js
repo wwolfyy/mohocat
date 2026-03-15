@@ -10,29 +10,48 @@ const path = require('path');
 const fs = require('fs');
 
 // Initialize Firebase Admin only if not already initialized
-// Try multiple paths to find the service account file
-const possiblePaths = [
-  path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
-];
+let serviceAccount;
 
-let serviceAccountPath = null;
-for (const tryPath of possiblePaths) {
-  if (fs.existsSync(tryPath)) {
-    serviceAccountPath = tryPath;
-    break;
+if (process.env.SERVICE_ACCOUNT_KEY) {
+  console.log('Using SERVICE_ACCOUNT_KEY from environment variables.');
+  try {
+    let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+    // 1. Replace single quotes with double quotes
+    rawStr = rawStr.replace(/'/g, '"');
+    // 2. Escape any actual unescaped line breaks that might have been interpreted by the env
+    rawStr = rawStr.replace(/\n/g, '\\n');
+    // 3. Escape carriage returns too just in case
+    rawStr = rawStr.replace(/\r/g, '\\r');
+
+    serviceAccount = JSON.parse(rawStr);
+  } catch (error) {
+    console.error('Failed to parse SERVICE_ACCOUNT_KEY from environment:', error);
+    process.exit(1);
   }
+} else {
+  // Try multiple paths to find the service account file locally
+  const possiblePaths = [
+    path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
+    path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
+    path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
+  ];
+
+  let serviceAccountPath = null;
+  for (const tryPath of possiblePaths) {
+    if (fs.existsSync(tryPath)) {
+      serviceAccountPath = tryPath;
+      break;
+    }
+  }
+
+  if (!serviceAccountPath) {
+    console.error('Firebase service account file not found. Tried paths:', possiblePaths);
+    process.exit(1);
+  }
+
+  console.log('Using service account file at:', serviceAccountPath);
+  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 }
-
-if (!serviceAccountPath) {
-  console.error('Firebase service account file not found. Tried paths:', possiblePaths);
-  process.exit(1);
-}
-
-console.log('Using service account file at:', serviceAccountPath);
-
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 
 // Only initialize if no apps exist
 if (getApps().length === 0) {

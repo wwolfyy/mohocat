@@ -1,5 +1,5 @@
 {
-  "name": "mtcat_next",
+  "name": "mcathcat",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,10 +14,10 @@
     "update:cats": "node scripts/migration/export_cats_to_static.js",
     "update:points": "node scripts/migration/export_points_to_static.js",
     "update:feeding-spots": "node scripts/migration/export_feeding_spots_to_static.js",
-    "docker:build": "docker build -t mtcat-next .",
-    "docker:run": "docker run -p 8080:8080 --env-file .env.local mtcat-next",
+    "docker:build": "docker build -t mcathcat .",
+    "docker:run": "docker run -p 8080:8080 --env-file .env.local mcathcat",
     "docker:build-and-run": "npm run docker:build && npm run docker:run",
-    "cloud-run:deploy": "gcloud run deploy mtcat-next --source . --platform managed --region asia-northeast3 --allow-unauthenticated",
+    "cloud-run:deploy": "gcloud run deploy mcathcat --source . --platform managed --region asia-northeast3 --allow-unauthenticated",
     "prepare": "husky"
   },
   "dependencies": {

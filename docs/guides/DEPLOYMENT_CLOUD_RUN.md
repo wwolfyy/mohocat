@@ -43,7 +43,7 @@ gcloud config set project mountaincats-61543
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com
 
 # 3. Deploy
-gcloud run deploy mtcat-next \
+gcloud run deploy mcathcat \
   --source . \
   --platform managed \
   --region asia-northeast3 \
@@ -102,12 +102,12 @@ NEXTAUTH_URL=https://your-cloud-run-url.com
 
 ```bash
 # Set environment variables in Cloud Run
-gcloud run services update mtcat-next \
+gcloud run services update mcathcat \
   --region asia-northeast3 \
   --set-env-vars "MOUNTAIN_ID=geyang,NODE_ENV=production,PORT=8080"
 
 # Or set from file
-gcloud run services update mtcat-next \
+gcloud run services update mcathcat \
   --region asia-northeast3 \
   --env-vars-file .env.production
 ```
@@ -223,7 +223,7 @@ curl https://your-service-url.com/api/health
 
 ### Monitoring Dashboard
 
-Access Google Cloud Console → Cloud Run → mtcat-next:
+Access Google Cloud Console → Cloud Run → mcathcat:
 
 - **Request metrics**: Response times, error rates
 - **Resource usage**: CPU, memory utilization
@@ -245,7 +245,7 @@ Access Google Cloud Console → Cloud Run → mtcat-next:
 
 ```bash
 # Check logs
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=mtcat-next" --limit 50
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=mcathcat" --limit 50
 
 # Common fixes
 - Verify PORT=8080 environment variable
@@ -266,7 +266,7 @@ curl https://your-service-url.com/_next/image?url=FIREBASE_URL&w=40&q=85
 
 ```bash
 # Increase memory allocation
-gcloud run services update mtcat-next --memory 4Gi
+gcloud run services update mcathcat --memory 4Gi
 
 # Or optimize build
 - Remove unnecessary dependencies
@@ -277,7 +277,7 @@ gcloud run services update mtcat-next --memory 4Gi
 
 ```bash
 # Set minimum instances to avoid cold starts
-gcloud run services update mtcat-next --min-instances 1
+gcloud run services update mcathcat --min-instances 1
 
 # Cost: ~$10-15/month for always-on instance
 ```

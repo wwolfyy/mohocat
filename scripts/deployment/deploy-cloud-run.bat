@@ -6,7 +6,7 @@ echo Starting Cloud Run deployment...
 
 REM Configuration
 set PROJECT_ID=mountaincats-61543
-set SERVICE_NAME=mtcat-next
+set SERVICE_NAME=mcathcat
 set REGION=asia-northeast3
 set MEMORY=2Gi
 set CPU=2

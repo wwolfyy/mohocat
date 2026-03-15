@@ -1,6 +1,6 @@
 output "vercel_project_id" {
   description = "The unique ID of the Vercel project"
-  value       = vercel_project.mountaincats.id
+  value       = vercel_project.mohocat.id
 }
 
 output "production_url" {

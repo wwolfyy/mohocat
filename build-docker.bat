@@ -35,7 +35,7 @@ docker build ^
   --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="%NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID%" ^
   --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="%NEXT_PUBLIC_FIREBASE_APP_ID%" ^
   --build-arg MOUNTAIN_ID="%MOUNTAIN_ID%" ^
-  -t mtcat-next:latest .
+  -t mcathcat:latest .
 
 if %errorlevel% neq 0 (
     echo Build failed!
@@ -43,4 +43,4 @@ if %errorlevel% neq 0 (
 )
 
 echo Docker image built successfully!
-echo You can run it with: docker run -p 8080:8080 mtcat-next:latest
+echo You can run it with: docker run -p 8080:8080 --env-file .env.local mcathcat:latest

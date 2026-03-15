@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 PROJECT_ID="mountaincats-61543"
-SERVICE_NAME="mtcat-next"
+SERVICE_NAME="mcathcat"
 REGION="asia-northeast3"
 MEMORY="2Gi"
 CPU="2"

@@ -28,9 +28,25 @@ const MOUNTAINS_CONFIG_PATH = path.join(PROJECT_ROOT, MOUNTAINS_CONFIG_PATH_RELA
 async function initializeFirebase() {
   console.log('Initializing Firebase Admin SDK...');
   try {
-    // Check if service account key exists before requiring it
-    await fsPromises.access(SERVICE_ACCOUNT_FULL_PATH, fs.constants.F_OK);
-    const serviceAccountKey = require(SERVICE_ACCOUNT_FULL_PATH);
+    let serviceAccountKey;
+
+    // 1. Try environment variable first (Vercel deployment)
+    if (process.env.SERVICE_ACCOUNT_KEY) {
+      console.log('Using SERVICE_ACCOUNT_KEY from environment variables.');
+      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+      // Replace single quotes with double quotes
+      rawStr = rawStr.replace(/'/g, '"');
+      // Escape any actual unescaped line breaks that might have been interpreted by the env
+      rawStr = rawStr.replace(/\n/g, '\\n');
+      rawStr = rawStr.replace(/\r/g, '\\r');
+
+      serviceAccountKey = JSON.parse(rawStr);
+    }
+    // 2. Fallback to local file
+    else {
+      await fsPromises.access(SERVICE_ACCOUNT_FULL_PATH, fs.constants.F_OK);
+      serviceAccountKey = require(SERVICE_ACCOUNT_FULL_PATH);
+    }
 
     if (admin.apps.length === 0) {
       admin.initializeApp({

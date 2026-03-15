@@ -170,7 +170,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/mtcat_next
+            cd /path/to/mcathcat
             git pull origin main
             docker compose up --build -d
 ```

@@ -13,7 +13,7 @@ variable "vercel_project_name" {
 }
 
 variable "github_repo" {
-  description = "GitHub repo in 'owner/repo' format, e.g. 'your-org/mtcat_next'"
+  description = "GitHub repo in 'owner/repo' format, e.g. 'your-org/mcathcat'"
   type        = string
 }
 
