@@ -184,7 +184,9 @@ export function getMountainConfig(): MountainConfig {
 
   if (process.env.SERVICE_ACCOUNT_KEY) {
     try {
-      secretConfig.serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
+      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+      rawStr = rawStr.replace(/'/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+      secretConfig.serviceAccount = JSON.parse(rawStr);
     } catch (error) {
       console.warn('Failed to parse SERVICE_ACCOUNT_KEY environment variable:', error);
     }
@@ -251,12 +253,6 @@ export function getYouTubeOAuthConfig() {
  * This function is intentionally not available in client-side code
  */
 export function getFirebaseAdminServiceAccount() {
-  // Only run in server-side environment
-  if (typeof window !== 'undefined') {
-    console.warn('getFirebaseAdminServiceAccount called in browser context');
-    return null;
-  }
-
   try {
     const config = getMountainConfig();
     const serviceAccount = config.secrets?.serviceAccount;
@@ -267,7 +263,9 @@ export function getFirebaseAdminServiceAccount() {
 
     // Fallback to environment variable
     if (process.env.SERVICE_ACCOUNT_KEY) {
-      return JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
+      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+      rawStr = rawStr.replace(/'/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+      return JSON.parse(rawStr);
     }
 
     return null;
