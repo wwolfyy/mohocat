@@ -47,6 +47,7 @@ export interface MountainSecrets {
     storageBucket: string;
     messagingSenderId: string;
     appId: string;
+    measurementId?: string;
   };
   youtubeApiKey: string;
   youtubeOAuth?: {
@@ -124,6 +125,9 @@ export function getMountainConfig(): MountainConfig {
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+      ...(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID && {
+        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+      }),
     },
     youtubeApiKey: process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
   };
