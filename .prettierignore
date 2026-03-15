@@ -1,0 +1,14 @@
+# Ignore generated and cache files
+.next/
+out/
+build/
+node_modules/
+
+# Ignore media and data
+public/images/
+*.json
+package-lock.json
+
+# Ignore config files that might conflict
+infra/terraform/
+.husky/

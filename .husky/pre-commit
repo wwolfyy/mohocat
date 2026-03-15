@@ -1,0 +1,27 @@
+echo "🔎 Running TruffleHog to check for hardcoded secrets..."
+
+# Check if trufflehog is installed natively
+if command -v trufflehog >/dev/null 2>&1; then
+  # Run natively (fastest) 
+  # Scans uncommitted changes & staged files since the last HEAD commit
+  trufflehog git file://. --since-commit HEAD --only-verified --fail
+  
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  # Fallback: run via Docker if native binary is missing but Docker is active
+  echo "TruffleHog native binary not found. Falling back to Docker container..."
+  docker run --rm -v "$PWD:/proj" trufflesecurity/trufflehog:latest git file:///proj --since-commit HEAD --only-verified --fail
+  
+else
+  # Hard stop if no tools are available to run the scan
+  echo ""
+  echo "❌ Error: TruffleHog is not installed natively, and Docker is not running."
+  echo "To prevent accidentally committing secrets, this project requires TruffleHog."
+  echo "Please install it: https://github.com/trufflesecurity/trufflehog#installation"
+  echo "  - Mac: brew install trufflehog"
+  echo "  - Linux: curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin"
+  echo ""
+  exit 1
+fi
+
+echo "✨ Running Prettier & ESLint on staged files..."
+npx lint-staged
