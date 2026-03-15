@@ -39,6 +39,7 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
       case 'google.com':
         return 'Google';
       case 'https://kakao.com':
+      case 'oidc.kakao':
         return 'Kakaotalk';
       default:
         return providerId;
@@ -74,6 +75,7 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
           </svg>
         );
       case 'https://kakao.com':
+      case 'oidc.kakao':
         return (
           <svg
             className="w-5 h-5"
@@ -106,9 +108,10 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
 
   const handleLinkProvider = async (providerId: string) => {
     clearErrors();
+    console.log('[ProviderManagement] handleLinkProvider clicked for:', providerId);
 
     try {
-      if (providerId === 'https://kakao.com') {
+      if (providerId === 'oidc.kakao' || providerId === 'https://kakao.com') {
         await linkKakaoProvider();
         onSuccess?.('Successfully linked Kakaotalk account');
       }
@@ -119,12 +122,15 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
   };
 
   const handleUnlinkProvider = async (providerId: string) => {
+    console.log('[ProviderManagement] handleUnlinkProvider clicked for:', providerId);
     clearErrors();
 
     try {
       await unlinkProvider(providerId);
+      console.log('[ProviderManagement] unlinkProvider completed.');
       onSuccess?.('Successfully unlinked provider');
     } catch (error) {
+      console.error('[ProviderManagement] Error during unlinkProvider:', error);
       // Error is handled by the hook
       onError?.(unlinkProviderError || 'Failed to unlink provider');
     }
@@ -282,7 +288,7 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
           {/* Kakaotalk Provider */}
           {canLinkKakao && (
             <button
-              onClick={() => handleLinkProvider('https://kakao.com')}
+              onClick={() => handleLinkProvider('oidc.kakao')}
               disabled={isLinkingKakao}
               className={cn(
                 'w-full flex items-center justify-between p-4 border-2 rounded-lg transition-colors',
