@@ -1,0 +1,41 @@
+# terraform.tfvars.example
+# ---------------------------------------------------------------------------
+# Copy this file to terraform.tfvars and fill in ALL placeholder values.
+# NEVER commit terraform.tfvars to git — it is listed in .gitignore.
+# ---------------------------------------------------------------------------
+
+# -- Vercel ------------------------------------------------------------------
+vercel_api_token    = "PLACEHOLDER_VERCEL_API_TOKEN"  # https://vercel.com/account/tokens
+vercel_project_name = "mountaincats-web"
+github_repo         = "PLACEHOLDER_GITHUB_USERNAME/mtcat_next"
+
+# Domains
+production_domain = "PLACEHOLDER_PRODUCTION_DOMAIN"  # e.g. www.mountaincats.com
+staging_domain    = "PLACEHOLDER_STAGING_DOMAIN"     # e.g. staging.mountaincats.com
+
+# -- Firebase (client-side config) -------------------------------------------
+firebase_api_key             = "AIzaSyCqUszxMuaZv073Z9E2QG5FK1eDU-ARlMk"
+firebase_auth_domain         = "mountaincats-61543.firebaseapp.com"
+firebase_project_id          = "mountaincats-61543"
+firebase_storage_bucket      = "mountaincats-61543.firebasestorage.app"
+firebase_messaging_sender_id = "266233773870"
+firebase_app_id              = "1:266233773870:web:60c999184dd3a526e944bf"
+firebase_measurement_id      = "G-7ZXP63SYMG"
+
+# -- Firebase Admin SDK -------------------------------------------------------
+# Paste the entire one-line JSON string from the bottom of your .env file.
+# It starts with: {"type": "service_account", "project_id": ...}
+service_account_key = "PLACEHOLDER_SERVICE_ACCOUNT_KEY_JSON"
+
+# -- YouTube -----------------------------------------------------------------
+youtube_api_key       = "AIzaSyDLAeogqbxMPPgvkvsXGiY3GuN5641Kd_g"
+youtube_client_id     = "266233773870-f3ih7cj734e18aoc3gc4tmt3unfgko9k.apps.googleusercontent.com"
+youtube_client_secret = "PLACEHOLDER_YOUTUBE_CLIENT_SECRET"
+youtube_refresh_token = "PLACEHOLDER_YOUTUBE_REFRESH_TOKEN"
+
+# -- Kakao OAuth -------------------------------------------------------------
+kakao_client_id     = "a47343b7a894eeb5567fa6c90a8b1336"
+kakao_client_secret = "PLACEHOLDER_KAKAO_CLIENT_SECRET"
+
+# -- Misc --------------------------------------------------------------------
+mountain_id = "geyang"
