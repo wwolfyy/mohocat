@@ -10,29 +10,42 @@ const path = require('path');
 const fs = require('fs');
 
 // Initialize Firebase Admin only if not already initialized
-// Try multiple paths to find the service account file
-const possiblePaths = [
-  path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
-];
+let serviceAccount;
 
-let serviceAccountPath = null;
-for (const tryPath of possiblePaths) {
-  if (fs.existsSync(tryPath)) {
-    serviceAccountPath = tryPath;
-    break;
+if (process.env.SERVICE_ACCOUNT_KEY) {
+  console.log('Using SERVICE_ACCOUNT_KEY from environment variables.');
+  try {
+    // The Terraform variable might be using single quotes instead of double quotes for JSON parsing
+    const jsonString = process.env.SERVICE_ACCOUNT_KEY.replace(/'/g, '"');
+    serviceAccount = JSON.parse(jsonString);
+  } catch (error) {
+    console.error('Failed to parse SERVICE_ACCOUNT_KEY from environment:', error);
+    process.exit(1);
   }
+} else {
+  // Try multiple paths to find the service account file locally
+  const possiblePaths = [
+    path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
+    path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
+    path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
+  ];
+
+  let serviceAccountPath = null;
+  for (const tryPath of possiblePaths) {
+    if (fs.existsSync(tryPath)) {
+      serviceAccountPath = tryPath;
+      break;
+    }
+  }
+
+  if (!serviceAccountPath) {
+    console.error('Firebase service account file not found. Tried paths:', possiblePaths);
+    process.exit(1);
+  }
+
+  console.log('Using service account file at:', serviceAccountPath);
+  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 }
-
-if (!serviceAccountPath) {
-  console.error('Firebase service account file not found. Tried paths:', possiblePaths);
-  process.exit(1);
-}
-
-console.log('Using service account file at:', serviceAccountPath);
-
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 
 // Only initialize if no apps exist
 if (getApps().length === 0) {
