@@ -33,8 +33,14 @@ async function initializeFirebase() {
     // 1. Try environment variable first (Vercel deployment)
     if (process.env.SERVICE_ACCOUNT_KEY) {
       console.log('Using SERVICE_ACCOUNT_KEY from environment variables.');
-      const jsonString = process.env.SERVICE_ACCOUNT_KEY.replace(/'/g, '"');
-      serviceAccountKey = JSON.parse(jsonString);
+      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+      // Replace single quotes with double quotes
+      rawStr = rawStr.replace(/'/g, '"');
+      // Escape any actual unescaped line breaks that might have been interpreted by the env
+      rawStr = rawStr.replace(/\n/g, '\\n');
+      rawStr = rawStr.replace(/\r/g, '\\r');
+
+      serviceAccountKey = JSON.parse(rawStr);
     }
     // 2. Fallback to local file
     else {

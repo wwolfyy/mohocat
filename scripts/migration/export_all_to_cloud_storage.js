@@ -15,9 +15,15 @@ let serviceAccount;
 if (process.env.SERVICE_ACCOUNT_KEY) {
   console.log('Using SERVICE_ACCOUNT_KEY from environment variables.');
   try {
-    // The Terraform variable might be using single quotes instead of double quotes for JSON parsing
-    const jsonString = process.env.SERVICE_ACCOUNT_KEY.replace(/'/g, '"');
-    serviceAccount = JSON.parse(jsonString);
+    let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+    // 1. Replace single quotes with double quotes
+    rawStr = rawStr.replace(/'/g, '"');
+    // 2. Escape any actual unescaped line breaks that might have been interpreted by the env
+    rawStr = rawStr.replace(/\n/g, '\\n');
+    // 3. Escape carriage returns too just in case
+    rawStr = rawStr.replace(/\r/g, '\\r');
+
+    serviceAccount = JSON.parse(rawStr);
   } catch (error) {
     console.error('Failed to parse SERVICE_ACCOUNT_KEY from environment:', error);
     process.exit(1);
