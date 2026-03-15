@@ -12,7 +12,10 @@ export async function checkUserPermission(userId: string, permission: string): P
 /**
  * Utility function to check if a user has any of the specified permissions
  */
-export async function checkUserAnyPermission(userId: string, permissions: string[]): Promise<boolean> {
+export async function checkUserAnyPermission(
+  userId: string,
+  permissions: string[]
+): Promise<boolean> {
   const permissionService = new PermissionService();
   return await permissionService.hasAnyPermission(userId, permissions);
 }
@@ -20,7 +23,10 @@ export async function checkUserAnyPermission(userId: string, permissions: string
 /**
  * Utility function to check if a user has all specified permissions
  */
-export async function checkUserAllPermissions(userId: string, permissions: string[]): Promise<boolean> {
+export async function checkUserAllPermissions(
+  userId: string,
+  permissions: string[]
+): Promise<boolean> {
   const permissionService = new PermissionService();
   return await permissionService.hasAllPermissions(userId, permissions);
 }
@@ -31,7 +37,7 @@ export async function checkUserAllPermissions(userId: string, permissions: strin
 export async function getUserRole(userId: string): Promise<string | null> {
   const permissionService = new PermissionService();
   const permissions = await permissionService.getUserPermissions(userId);
-  
+
   // This is a simplified approach - in a real implementation you might want to
   // store the role separately or have a more sophisticated mapping
   if (permissions.includes('manage-users') && permissions.includes('manage-settings')) {
@@ -43,7 +49,7 @@ export async function getUserRole(userId: string): Promise<string | null> {
   } else if (permissions.length === 0) {
     return 'viewer';
   }
-  
+
   return null;
 }
 
@@ -52,12 +58,12 @@ export async function getUserRole(userId: string): Promise<string | null> {
  */
 export function getRoleDisplayName(role: string): string {
   const roleNames: Record<string, string> = {
-    'admin': 'Administrator',
+    admin: 'Administrator',
     'butler-ground': 'Butler (Ground)',
     'butler-internet': 'Butler (Internet)',
-    'viewer': 'Viewer'
+    viewer: 'Viewer',
   };
-  
+
   return roleNames[role] || role.charAt(0).toUpperCase() + role.slice(1);
 }
 
@@ -66,12 +72,12 @@ export function getRoleDisplayName(role: string): string {
  */
 export function getRoleColor(role: string): string {
   const roleColors: Record<string, string> = {
-    'admin': 'red',
+    admin: 'red',
     'butler-ground': 'orange',
     'butler-internet': 'blue',
-    'viewer': 'gray'
+    viewer: 'gray',
   };
-  
+
   return roleColors[role] || 'gray';
 }
 
@@ -101,19 +107,19 @@ export const ALL_PERMISSIONS = [
   'manage-users',
   'view-analytics',
   'manage-settings',
-  'export-data'
+  'export-data',
 ] as const;
 
 /**
  * Get permissions by category for UI grouping
  */
 export const PERMISSION_CATEGORIES = {
-  'cats': ['manage-cats'],
-  'content': ['manage-posts'],
-  'users': ['manage-users'],
-  'analytics': ['view-analytics'],
-  'settings': ['manage-settings'],
-  'data': ['export-data']
+  cats: ['manage-cats'],
+  content: ['manage-posts'],
+  users: ['manage-users'],
+  analytics: ['view-analytics'],
+  settings: ['manage-settings'],
+  data: ['export-data'],
 } as const;
 
 /**
@@ -147,24 +153,24 @@ export async function canViewAnalytics(userId: string): Promise<boolean> {
 /**
  * Get user's effective permissions with caching
  */
-const permissionCache = new Map<string, { permissions: string[], timestamp: number }>();
+const permissionCache = new Map<string, { permissions: string[]; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function getUserPermissionsWithCache(userId: string): Promise<string[]> {
   const cached = permissionCache.get(userId);
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.permissions;
   }
-  
+
   const permissionService = new PermissionService();
   const permissions = await permissionService.getUserPermissions(userId);
-  
+
   permissionCache.set(userId, {
     permissions,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
-  
+
   return permissions;
 }
 

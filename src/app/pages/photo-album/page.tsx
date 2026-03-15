@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { getImageService, getCatService } from "@/services";
-import { CatImage } from "@/types/media";
-import { Cat } from "@/types";
-import { cn } from "@/utils/cn";
+import { useState, useEffect } from 'react';
+import { getImageService, getCatService } from '@/services';
+import { CatImage } from '@/types/media';
+import { Cat } from '@/types';
+import { cn } from '@/utils/cn';
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -17,27 +17,24 @@ const parseDate = (dateValue: any): Date | null => {
     }
 
     // If it's a Firebase Timestamp with seconds property
-    if (typeof dateValue === "object" && dateValue.seconds) {
+    if (typeof dateValue === 'object' && dateValue.seconds) {
       return new Date(dateValue.seconds * 1000);
     }
 
     // If it's a Firebase Timestamp with toDate method
-    if (
-      typeof dateValue === "object" &&
-      typeof dateValue.toDate === "function"
-    ) {
+    if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
       return dateValue.toDate();
     }
 
     // If it's a string or number
-    if (typeof dateValue === "string" || typeof dateValue === "number") {
+    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
       const date = new Date(dateValue);
       return isNaN(date.getTime()) ? null : date;
     }
 
     return null;
   } catch (error) {
-    console.warn("Error parsing date:", dateValue, error);
+    console.warn('Error parsing date:', dateValue, error);
     return null;
   }
 };
@@ -52,14 +49,7 @@ interface LightboxProps {
 }
 
 // Lightbox component for viewing individual images
-function Lightbox({
-  image,
-  onClose,
-  onPrevious,
-  onNext,
-  hasPrevious,
-  hasNext,
-}: LightboxProps) {
+function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: LightboxProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
@@ -67,20 +57,20 @@ function Lightbox({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case "Escape":
+        case 'Escape':
           onClose();
           break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
           if (hasPrevious) onPrevious();
           break;
-        case "ArrowRight":
+        case 'ArrowRight':
           if (hasNext) onNext();
           break;
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose, onPrevious, onNext, hasPrevious, hasNext]);
 
   // Reset loading state when image changes
@@ -134,10 +124,7 @@ function Lightbox({
         data-oid="zjdqc9a"
       >
         {imageLoading && !imageError && (
-          <div
-            className="flex items-center justify-center w-full h-64"
-            data-oid="jv9zcuc"
-          >
+          <div className="flex items-center justify-center w-full h-64" data-oid="jv9zcuc">
             <div className="text-white" data-oid="qm:-y9u">
               이미지를 불러오는 중...
             </div>
@@ -145,10 +132,7 @@ function Lightbox({
         )}
 
         {imageError && (
-          <div
-            className="flex items-center justify-center w-full h-64"
-            data-oid="bzlt66z"
-          >
+          <div className="flex items-center justify-center w-full h-64" data-oid="bzlt66z">
             <div className="text-white" data-oid="6jr.vwv">
               이미지를 불러올 수 없습니다.
             </div>
@@ -159,7 +143,7 @@ function Lightbox({
           <img
             src={image.imageUrl}
             alt={image.fileName}
-            className={`max-w-full max-h-full object-contain rounded-xl ${imageLoading ? "hidden" : ""}`}
+            className={`max-w-full max-h-full object-contain rounded-xl ${imageLoading ? 'hidden' : ''}`}
             onLoad={() => setImageLoading(false)}
             onError={() => {
               setImageLoading(false);
@@ -183,14 +167,12 @@ function Lightbox({
             <p className="text-xs text-gray-400 mt-1" data-oid="3vx:4d7">
               {(() => {
                 const createdDate = parseDate(image.createdTime);
-                return createdDate
-                  ? createdDate.toLocaleDateString("ko-KR")
-                  : "날짜 없음";
+                return createdDate ? createdDate.toLocaleDateString('ko-KR') : '날짜 없음';
               })()}
             </p>
             {image.tags && image.tags.length > 0 && (
               <p className="text-xs text-gray-400 mt-1" data-oid=":8r0l.6">
-                태그: {image.tags.join(", ")}
+                태그: {image.tags.join(', ')}
               </p>
             )}
           </div>
@@ -212,18 +194,14 @@ export default function PhotoAlbumPage() {
   const [images, setImages] = useState<CatImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
-    null,
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filteredImages, setFilteredImages] = useState<CatImage[]>([]);
   // Filter states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
-  const [catSearchQuery, setCatSearchQuery] = useState("");
-  const [selectedCatNames, setSelectedCatNames] = useState<Set<string>>(
-    new Set(),
-  );
+  const [catSearchQuery, setCatSearchQuery] = useState('');
+  const [selectedCatNames, setSelectedCatNames] = useState<Set<string>>(new Set());
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   // Load all images when component mounts
   useEffect(() => {
@@ -238,20 +216,14 @@ export default function PhotoAlbumPage() {
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (image) =>
-          image.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          image.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase()),
-          ),
+          image.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          image.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
     // Apply cat name filter
     if (selectedCatNames.size > 0) {
-      filtered = filtered.filter((image) =>
-        image.tags.some((tag) => selectedCatNames.has(tag)),
-      );
+      filtered = filtered.filter((image) => image.tags.some((tag) => selectedCatNames.has(tag)));
     }
 
     setFilteredImages(filtered);
@@ -260,7 +232,7 @@ export default function PhotoAlbumPage() {
     try {
       setLoading(true);
       setError(null);
-      console.log("Loading all images...");
+      console.log('Loading all images...');
 
       const imageService = getImageService();
       const allImages = await imageService.getAllImages({ limit: 100 }); // Get first 100 images
@@ -268,8 +240,8 @@ export default function PhotoAlbumPage() {
 
       setImages(allImages);
     } catch (err) {
-      console.error("Error loading images:", err);
-      setError("이미지를 불러오는 중 오류가 발생했습니다.");
+      console.error('Error loading images:', err);
+      setError('이미지를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -281,7 +253,7 @@ export default function PhotoAlbumPage() {
       const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
-      console.error("Error loading cats:", error);
+      console.error('Error loading cats:', error);
     }
   };
 
@@ -299,10 +271,7 @@ export default function PhotoAlbumPage() {
     }
   };
   const goToNext = () => {
-    if (
-      selectedImageIndex !== null &&
-      selectedImageIndex < filteredImages.length - 1
-    ) {
+    if (selectedImageIndex !== null && selectedImageIndex < filteredImages.length - 1) {
       setSelectedImageIndex(selectedImageIndex + 1);
     }
   };
@@ -346,40 +315,28 @@ export default function PhotoAlbumPage() {
   const filteredCats = cats.filter(
     (cat) =>
       cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
-      cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase()),
+      cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-50" data-oid="f:ug0m1">
       {/* Header */}
       <div className="bg-white shadow-sm" data-oid="c-s4cg_">
-        <div
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-          data-oid="4c72572"
-        >
-          <h1
-            className="text-3xl font-bold text-gray-900 text-center"
-            data-oid="2ip13qw"
-          >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-oid="4c72572">
+          <h1 className="text-3xl font-bold text-gray-900 text-center" data-oid="2ip13qw">
             사진첩
           </h1>
           <p className="text-gray-600 text-center mt-2" data-oid="rzcnaj3">
             {/* 산양이 고양이들의 소중한 순간들 */}
           </p>
         </div>
-      </div>{" "}
+      </div>{' '}
       {/* Content */}
-      <div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-        data-oid="zv_xr.h"
-      >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-oid="zv_xr.h">
         {/* Search and Filter bar */}
         <div className="mb-8" data-oid="0ixjx:3">
           <div className="max-w-4xl mx-auto" data-oid="nr0l8b.">
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              data-oid="1rq4gxf"
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-oid="1rq4gxf">
               {/* Search input */}
               <div className="relative" data-oid="tpj1u3j">
                 <input
@@ -406,7 +363,7 @@ export default function PhotoAlbumPage() {
                     data-oid="eevgnvu"
                   />
                 </svg>
-              </div>{" "}
+              </div>{' '}
               {/* Filter input */}
               <div className="relative" data-oid="q1t958a">
                 {/* Selected cat tags display */}
@@ -444,13 +401,10 @@ export default function PhotoAlbumPage() {
                 >
                   <span className="text-gray-600 text-sm" data-oid="tvkb9:.">
                     {selectedCatNames.size > 0
-                      ? "클릭하여 더 많은 고양이 추가"
-                      : "클릭하여 고양이 선택"}
+                      ? '클릭하여 더 많은 고양이 추가'
+                      : '클릭하여 고양이 선택'}
                   </span>
-                  <span
-                    className="text-blue-500 hover:text-blue-700 text-sm"
-                    data-oid="kqbwtb6"
-                  >
+                  <span className="text-blue-500 hover:text-blue-700 text-sm" data-oid="kqbwtb6">
                     🐱 고양이 선택
                   </span>
                 </div>
@@ -499,7 +453,7 @@ export default function PhotoAlbumPage() {
                       className="inline-flex items-center bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
                       data-oid="sjt2kuh"
                     >
-                      {catName}{" "}
+                      {catName}{' '}
                       <button
                         onClick={() => {
                           const cat = cats.find((c) => c.name === catName);
@@ -521,10 +475,7 @@ export default function PhotoAlbumPage() {
         </div>
         {/* Loading state */}
         {loading && (
-          <div
-            className="flex justify-center items-center py-12"
-            data-oid="3z7uiss"
-          >
+          <div className="flex justify-center items-center py-12" data-oid="3z7uiss">
             <div className="text-gray-600" data-oid="cq1845w">
               사진을 불러오는 중...
             </div>
@@ -532,52 +483,39 @@ export default function PhotoAlbumPage() {
         )}
         {/* Error state */}
         {error && (
-          <div
-            className="flex justify-center items-center py-12"
-            data-oid="_krhhi9"
-          >
+          <div className="flex justify-center items-center py-12" data-oid="_krhhi9">
             <div className="text-red-600" data-oid="f4g1-lx">
               {error}
             </div>
           </div>
         )}
         {/* Empty state */}
-        {!loading &&
-          !error &&
-          filteredImages.length === 0 &&
-          images.length > 0 && (
-            <div
-              className="flex justify-center items-center py-12"
-              data-oid="q9cz44j"
-            >
-              <div className="text-gray-600" data-oid="w73ek5m">
-                검색 결과가 없습니다.
-              </div>
+        {!loading && !error && filteredImages.length === 0 && images.length > 0 && (
+          <div className="flex justify-center items-center py-12" data-oid="q9cz44j">
+            <div className="text-gray-600" data-oid="w73ek5m">
+              검색 결과가 없습니다.
             </div>
-          )}
+          </div>
+        )}
         {!loading && !error && images.length === 0 && (
-          <div
-            className="flex justify-center items-center py-12"
-            data-oid="klvl4sb"
-          >
+          <div className="flex justify-center items-center py-12" data-oid="klvl4sb">
             <div className="text-gray-600" data-oid="avk3ark">
               등록된 사진이 없습니다.
             </div>
           </div>
-        )}{" "}
+        )}{' '}
         {/* Image grid */}
         {!loading && !error && filteredImages.length > 0 && (
           <>
             <div className="mb-4 text-center text-gray-600" data-oid="eck5kj9">
               {(() => {
-                const hasFilters =
-                  searchQuery.trim() || selectedCatNames.size > 0;
+                const hasFilters = searchQuery.trim() || selectedCatNames.size > 0;
                 if (hasFilters) {
                   const filterDesc = [];
                   if (searchQuery.trim()) filterDesc.push(`"${searchQuery}"`);
                   if (selectedCatNames.size > 0)
                     filterDesc.push(`${selectedCatNames.size}마리 고양이`);
-                  return `${filterDesc.join(" + ")} 검색 결과: ${filteredImages.length}장`;
+                  return `${filterDesc.join(' + ')} 검색 결과: ${filteredImages.length}장`;
                 } else {
                   return `전체 ${filteredImages.length}장`;
                 }
@@ -641,21 +579,13 @@ export default function PhotoAlbumPage() {
                     className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2"
                     data-oid="alpiui8"
                   >
-                    <p
-                      className="text-white text-xs truncate"
-                      data-oid="d83rmqg"
-                    >
-                      {image.description || "설명 없음"}
+                    <p className="text-white text-xs truncate" data-oid="d83rmqg">
+                      {image.description || '설명 없음'}
                     </p>
-                    <p
-                      className="text-white text-xs opacity-75"
-                      data-oid="zom4:lg"
-                    >
+                    <p className="text-white text-xs opacity-75" data-oid="zom4:lg">
                       {(() => {
                         const createdDate = parseDate(image.createdTime);
-                        return createdDate
-                          ? createdDate.toLocaleDateString("ko-KR")
-                          : "날짜 없음";
+                        return createdDate ? createdDate.toLocaleDateString('ko-KR') : '날짜 없음';
                       })()}
                     </p>
                   </div>
@@ -664,7 +594,7 @@ export default function PhotoAlbumPage() {
             </div>
           </>
         )}
-      </div>{" "}
+      </div>{' '}
       {/* Lightbox */}
       {selectedImageIndex !== null && filteredImages[selectedImageIndex] && (
         <Lightbox
@@ -687,10 +617,7 @@ export default function PhotoAlbumPage() {
             className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
             data-oid="i9ktdk."
           >
-            <div
-              className="flex justify-between items-center mb-4"
-              data-oid="077m_9e"
-            >
+            <div className="flex justify-between items-center mb-4" data-oid="077m_9e">
               <h3 className="text-lg font-semibold" data-oid="bsmgajs">
                 고양이 선택
               </h3>
@@ -721,13 +648,8 @@ export default function PhotoAlbumPage() {
               data-oid="myg6hst"
             >
               {filteredCats.length === 0 ? (
-                <div
-                  className="p-4 text-center text-gray-500"
-                  data-oid="tg2pea3"
-                >
-                  {cats.length === 0
-                    ? "데이터베이스에 고양이가 없습니다"
-                    : "검색 결과가 없습니다"}
+                <div className="p-4 text-center text-gray-500" data-oid="tg2pea3">
+                  {cats.length === 0 ? '데이터베이스에 고양이가 없습니다' : '검색 결과가 없습니다'}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 p-4" data-oid=":cugd5:">
@@ -736,8 +658,8 @@ export default function PhotoAlbumPage() {
                       key={cat.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedCats.has(cat.id)
-                          ? "bg-blue-50 border border-blue-200"
-                          : "border border-gray-200"
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'border border-gray-200'
                       }`}
                       data-oid="c8o7m2."
                     >
@@ -754,10 +676,7 @@ export default function PhotoAlbumPage() {
                           {cat.name}
                         </div>
                         {cat.alt_name && (
-                          <div
-                            className="text-xs text-gray-500"
-                            data-oid="g:ooag5"
-                          >
+                          <div className="text-xs text-gray-500" data-oid="g:ooag5">
                             ({cat.alt_name})
                           </div>
                         )}
@@ -770,7 +689,7 @@ export default function PhotoAlbumPage() {
 
             {/* Action buttons */}
             <div className="flex justify-end gap-2 mt-4" data-oid="8r9k9r-">
-              {" "}
+              {' '}
               <button
                 onClick={() => {
                   setSelectedCats(new Set());
@@ -792,7 +711,6 @@ export default function PhotoAlbumPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

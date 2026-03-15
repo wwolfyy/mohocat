@@ -147,6 +147,7 @@ graph TD
    ```
 
 **Common Setup Issues**:
+
 - ❌ Using `kakao.com` instead of `oidc.kakao` as provider ID
 - ❌ Not enabling Client Secret in Kakao Developers
 - ❌ Missing or incorrect redirect URI
@@ -162,7 +163,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Admin users have full access
     match /{document=**} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
                           isAdmin(request.auth.uid);
     }
   }
@@ -206,14 +207,14 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 ### Configuration Options
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GOOGLE_CLIENT_ID` | No | - | Google OAuth Client ID |
-| `GOOGLE_CLIENT_SECRET` | No | - | Google OAuth Client Secret |
-| `GOOGLE_OAUTH_ENABLED` | No | `true` | Enable/disable Google OAuth |
-| `KAKAO_CLIENT_ID` | No | - | Kakaotalk OAuth Client ID |
-| `KAKAO_CLIENT_SECRET` | No | - | Kakaotalk OAuth Client Secret |
-| `KAKAO_OAUTH_ENABLED` | No | `true` | Enable/disable Kakaotalk OAuth |
+| Variable               | Required | Default | Description                    |
+| ---------------------- | -------- | ------- | ------------------------------ |
+| `GOOGLE_CLIENT_ID`     | No       | -       | Google OAuth Client ID         |
+| `GOOGLE_CLIENT_SECRET` | No       | -       | Google OAuth Client Secret     |
+| `GOOGLE_OAUTH_ENABLED` | No       | `true`  | Enable/disable Google OAuth    |
+| `KAKAO_CLIENT_ID`      | No       | -       | Kakaotalk OAuth Client ID      |
+| `KAKAO_CLIENT_SECRET`  | No       | -       | Kakaotalk OAuth Client Secret  |
+| `KAKAO_OAUTH_ENABLED`  | No       | `true`  | Enable/disable Kakaotalk OAuth |
 
 ### Development vs Production
 
@@ -251,7 +252,7 @@ function MyComponent() {
         size="md"
         className="w-full"
       />
-      
+
       <SocialLoginButton
         provider="kakao"
         onClick={handleKakaoLogin}
@@ -265,6 +266,7 @@ function MyComponent() {
 ```
 
 **Props:**
+
 - `provider`: `'google' | 'kakao'` - OAuth provider type
 - `onClick`: `() => void` - Click handler for OAuth flow
 - `loading`: `boolean` - Show loading state
@@ -292,16 +294,14 @@ function LoginPage() {
 
   return (
     <div className="login-container">
-      <LoginForm
-        onLoginSuccess={handleLoginSuccess}
-        onLoginError={handleLoginError}
-      />
+      <LoginForm onLoginSuccess={handleLoginSuccess} onLoginError={handleLoginError} />
     </div>
   );
 }
 ```
 
 **Props:**
+
 - `onLoginSuccess`: `() => void` - Called on successful login
 - `onLoginError`: `(error: string) => void` - Called on login error
 
@@ -337,6 +337,7 @@ function AccountSettings() {
 ```
 
 **Props:**
+
 - `className`: `string` - Additional CSS classes
 - `showSuccessMessages`: `boolean` - Show success notifications
 - `onSuccess`: `(message: string) => void` - Success callback
@@ -364,6 +365,7 @@ export default function AdminPage() {
 ```
 
 **Props:**
+
 - `children`: `React.ReactNode` - Protected content
 
 ### useAuth Hook
@@ -405,13 +407,13 @@ function UserProfile() {
           <p>Email: {user?.email}</p>
           <div>
             <h4>Linked Providers:</h4>
-            {providerData.map(provider => (
+            {providerData.map((provider) => (
               <div key={provider.providerId}>
                 {provider.providerId}: {provider.email}
               </div>
             ))}
           </div>
-          
+
           {!linkedProviders.includes('google.com') && (
             <button onClick={handleLinkGoogle} disabled={isSigningInWithGoogle}>
               Link Google Account
@@ -440,6 +442,7 @@ Main service class implementing the `IAuthService` interface.
 #### Methods
 
 **Authentication Methods:**
+
 - `getCurrentUser(): User | null` - Get current authenticated user
 - `signIn(email: string, password: string): Promise<User>` - Email/password sign in
 - `signOut(): Promise<void>` - Sign out current user
@@ -447,6 +450,7 @@ Main service class implementing the `IAuthService` interface.
 - `onAuthStateChanged(callback: (user: User | null) => void): () => void` - Listen for auth changes
 
 **OAuth Methods:**
+
 - `signInWithGoogle(): Promise<UserCredential>` - Sign in with Google
 - `signInWithKakao(): Promise<UserCredential>` - Sign in with Kakaotalk
 - `linkProvider(providerId: string): Promise<UserCredential>` - Link OAuth provider
@@ -475,12 +479,14 @@ try {
 ### Common OAuth Errors
 
 **Google OAuth Errors:**
+
 - `auth/popup-closed-by-user`: User closed the popup
 - `auth/cancelled-popup-request`: Popup request was cancelled
 - `auth/popup-blocked`: Popup blocked by browser
 - `auth/account-exists-with-different-credential`: Account exists with different provider
 
 **Kakaotalk OAuth Errors:**
+
 - Same error codes as Google with appropriate Korean provider messages
 
 ## Integration Guide
@@ -554,7 +560,7 @@ export default function UserProfile() {
         <p>Name: {user.displayName}</p>
         <p>Email: {user.email}</p>
       </div>
-      
+
       <div className="provider-management">
         <ProviderManagement />
       </div>
@@ -578,11 +584,11 @@ function CustomAuthComponent() {
   const handleCustomGoogleLogin = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const result = await authService.signInWithGoogle();
       console.log('Custom Google login successful:', result.user);
-      
+
       // Redirect or update UI as needed
     } catch (err: any) {
       setError(err.message);
@@ -596,7 +602,7 @@ function CustomAuthComponent() {
       <button onClick={handleCustomGoogleLogin} disabled={loading}>
         {loading ? 'Signing in...' : 'Custom Google Login'}
       </button>
-      
+
       {error && <div className="error">{error}</div>}
     </div>
   );
@@ -610,7 +616,8 @@ function CustomAuthComponent() {
 #### 1. OAuth Popup Blocked
 
 **Problem**: Popup is blocked by browser
-**Solution**: 
+**Solution**:
+
 - Ensure popup blocker is disabled
 - Trigger OAuth from user interaction (click event)
 - Add fallback for popup blocked error
@@ -659,6 +666,7 @@ try {
 
 **Problem**: OAuth providers not working
 **Checklist**:
+
 - [ ] Environment variables are set correctly
 - [ ] Firebase Authentication providers are enabled
 - [ ] OAuth redirect URIs are configured
@@ -669,6 +677,7 @@ try {
 
 **Problem**: OAuth works in development but not production
 **Solution**:
+
 - Update redirect URIs for production domain
 - Ensure production environment variables are set
 - Verify authorized domains in Firebase Console
@@ -694,7 +703,7 @@ Implement error monitoring for OAuth operations:
 // Add error tracking
 const trackAuthError = (error: any, provider: string) => {
   console.error(`Auth error (${provider}):`, error);
-  
+
   // Send to your error tracking service
   // errorTrackingService.captureException(error, { tags: { provider } });
 };
@@ -729,7 +738,7 @@ service cloud.firestore {
     // Only authenticated users can read
     match /{document=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
+      allow write: if request.auth != null &&
                           isAdmin(request.auth.uid);
     }
   }
@@ -771,6 +780,7 @@ Access the test page by navigating to `http://localhost:3000/auth-test` in your 
 ### Manual Testing Checklist
 
 #### OAuth Flow Testing
+
 - [ ] Google OAuth login works
 - [ ] Kakaotalk OAuth login works
 - [ ] OAuth login creates new user account
@@ -779,6 +789,7 @@ Access the test page by navigating to `http://localhost:3000/auth-test` in your 
 - [ ] Popup blocked errors are handled
 
 #### Provider Management Testing
+
 - [ ] Users can link additional providers
 - [ ] Users can unlink providers
 - [ ] Provider linking shows appropriate UI states
@@ -786,12 +797,14 @@ Access the test page by navigating to `http://localhost:3000/auth-test` in your 
 - [ ] Success messages clear automatically
 
 #### Admin Integration Testing
+
 - [ ] AdminAuth component works with social login
 - [ ] Admin privileges are maintained across OAuth flows
 - [ ] Non-admin users are properly blocked
 - [ ] Admin interface shows correct user information
 
 #### Error Handling Testing
+
 - [ ] Network errors are handled gracefully
 - [ ] Invalid credentials show appropriate messages
 - [ ] OAuth errors display user-friendly messages
@@ -809,11 +822,11 @@ describe('Authentication Service', () => {
     // Mock Firebase Auth
     // Test Google OAuth flow
   });
-  
+
   test('should handle OAuth errors', async () => {
     // Test error scenarios
   });
-  
+
   test('should link providers correctly', async () => {
     // Test provider linking
   });
@@ -834,6 +847,7 @@ describe('Authentication Service', () => {
 This Firebase Social Authentication implementation provides a robust, secure, and user-friendly authentication system with support for multiple OAuth providers. The modular architecture allows for easy integration into existing and new components while maintaining backward compatibility.
 
 For additional support or questions, refer to:
+
 - [Firebase Authentication Documentation](https://firebase.google.com/docs/auth)
 - [Google OAuth 2.0 Documentation](https://developers.google.com/identity/protocols/oauth2)
 - [Kakaotalk OAuth Documentation](https://developers.kakao.com/docs/latest/kakaologin/rest-api)

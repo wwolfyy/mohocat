@@ -16,7 +16,7 @@ export class FirebaseContactService implements IContactService {
     try {
       const contactData = {
         ...contact,
-        createdAt: Timestamp.now()
+        createdAt: Timestamp.now(),
       };
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), contactData);
@@ -24,7 +24,7 @@ export class FirebaseContactService implements IContactService {
       return {
         id: docRef.id,
         ...contact,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
     } catch (error) {
       console.error('Error creating contact:', error);

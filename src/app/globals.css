@@ -42,7 +42,6 @@ body {
 }
 
 @layer utilities {
-
   /* Line clamp utilities for text truncation */
   .line-clamp-1 {
     display: -webkit-box;
@@ -158,7 +157,6 @@ body {
 
 /* Keyframe animations */
 @keyframes pulse-subtle {
-
   0%,
   100% {
     opacity: 1;
@@ -194,7 +192,6 @@ body {
 }
 
 @keyframes bounce-gentle {
-
   0%,
   20%,
   50%,

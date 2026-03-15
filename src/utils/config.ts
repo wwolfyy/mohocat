@@ -133,7 +133,11 @@ export function getMountainConfig(): MountainConfig {
   };
 
   // Add YouTube OAuth credentials if available
-  if (process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET && process.env.YOUTUBE_REFRESH_TOKEN) {
+  if (
+    process.env.YOUTUBE_CLIENT_ID &&
+    process.env.YOUTUBE_CLIENT_SECRET &&
+    process.env.YOUTUBE_REFRESH_TOKEN
+  ) {
     secretConfig.youtubeOAuth = {
       clientId: process.env.YOUTUBE_CLIENT_ID,
       clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
@@ -144,7 +148,7 @@ export function getMountainConfig(): MountainConfig {
 
   // Add OAuth provider credentials if available
   const oauthProviders: OAuthProviderConfig = {};
-  
+
   // Google OAuth
   if (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
     oauthProviders.google = {
@@ -153,7 +157,7 @@ export function getMountainConfig(): MountainConfig {
       enabled: process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === 'true',
     };
   }
-  
+
   // Kakaotalk OAuth
   if (process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID) {
     oauthProviders.kakao = {
@@ -162,7 +166,7 @@ export function getMountainConfig(): MountainConfig {
       enabled: process.env.NEXT_PUBLIC_KAKAO_OAUTH_ENABLED === 'true',
     };
   }
-  
+
   if (Object.keys(oauthProviders).length > 0) {
     secretConfig.oauthProviders = oauthProviders;
   }
@@ -188,7 +192,7 @@ export function getMountainConfig(): MountainConfig {
 
   return {
     ...(publicConfig as any),
-    secrets: secretConfig
+    secrets: secretConfig,
   };
 }
 
@@ -256,16 +260,16 @@ export function getFirebaseAdminServiceAccount() {
   try {
     const config = getMountainConfig();
     const serviceAccount = config.secrets?.serviceAccount;
-    
+
     if (serviceAccount) {
       return serviceAccount;
     }
-    
+
     // Fallback to environment variable
     if (process.env.SERVICE_ACCOUNT_KEY) {
       return JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
     }
-    
+
     return null;
   } catch (error) {
     console.error('Failed to parse Firebase Admin service account:', error);

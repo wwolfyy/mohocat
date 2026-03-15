@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { getVideoService, getCatService } from "@/services";
-import { Cat } from "@/types";
-import { CatVideo } from "@/types/media";
-import { parseRecordingDateFromTitle } from "@/utils/dateParser";
+import { useState, useEffect } from 'react';
+import { getVideoService, getCatService } from '@/services';
+import { Cat } from '@/types';
+import { CatVideo } from '@/types/media';
+import { parseRecordingDateFromTitle } from '@/utils/dateParser';
 
 // Utility function to format duration from ISO 8601 or seconds to human-friendly format
 function formatDuration(duration: number | string | undefined): string {
-  if (!duration) return "Unknown";
+  if (!duration) return 'Unknown';
 
   let totalSeconds: number;
 
-  if (typeof duration === "number") {
+  if (typeof duration === 'number') {
     totalSeconds = duration;
-  } else if (typeof duration === "string") {
+  } else if (typeof duration === 'string') {
     // Parse ISO 8601 duration format (e.g., "PT1M30S" = 1 minute 30 seconds)
     const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!match) {
       return duration; // Return original if we can't parse
     }
 
-    const hours = parseInt(match[1] || "0", 10);
-    const minutes = parseInt(match[2] || "0", 10);
-    const seconds = parseInt(match[3] || "0", 10);
+    const hours = parseInt(match[1] || '0', 10);
+    const minutes = parseInt(match[2] || '0', 10);
+    const seconds = parseInt(match[3] || '0', 10);
 
     totalSeconds = hours * 3600 + minutes * 60 + seconds;
   } else {
-    return "Unknown";
+    return 'Unknown';
   }
 
   // Format as HH:MM:SS, MM:SS, or SS depending on length
@@ -36,9 +36,9 @@ function formatDuration(duration: number | string | undefined): string {
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   } else if (minutes > 0) {
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   } else {
     return `${seconds}s`;
   }
@@ -46,7 +46,7 @@ function formatDuration(duration: number | string | undefined): string {
 
 interface AdminVideo extends CatVideo {
   // Additional admin-specific properties can be added here
-  processingStatus?: "updating" | "deleting" | null;
+  processingStatus?: 'updating' | 'deleting' | null;
 }
 
 export default function TagVideosPage() {
@@ -64,16 +64,15 @@ export default function TagVideosPage() {
   const [saving, setSaving] = useState(false);
 
   // YouTube-specific form states
-  const [youtubeTitle, setYoutubeTitle] = useState<string>("");
-  const [youtubeTags, setYoutubeTags] = useState<string>("");
-  const [youtubeDescription, setYoutubeDescription] = useState<string>("");
-  const [youtubeCreatedTime, setYoutubeCreatedTime] = useState<string>("");
+  const [youtubeTitle, setYoutubeTitle] = useState<string>('');
+  const [youtubeTags, setYoutubeTags] = useState<string>('');
+  const [youtubeDescription, setYoutubeDescription] = useState<string>('');
+  const [youtubeCreatedTime, setYoutubeCreatedTime] = useState<string>('');
   const [updatingYoutube, setUpdatingYoutube] = useState(false);
 
   // Batch operation states
-  const [batchTags, setBatchTags] = useState<string>("");
-  const [batchYoutubeCreatedTime, setBatchYoutubeCreatedTime] =
-    useState<string>("");
+  const [batchTags, setBatchTags] = useState<string>('');
+  const [batchYoutubeCreatedTime, setBatchYoutubeCreatedTime] = useState<string>('');
   const [showBatchActions, setShowBatchActions] = useState(false);
   const [batchSaving, setBatchSaving] = useState(false);
   const [savingTags, setSavingTags] = useState(false);
@@ -82,50 +81,43 @@ export default function TagVideosPage() {
   // Cat selector states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
-  const [catSearchQuery, setCatSearchQuery] = useState("");
+  const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   const [catSelectorContext, setCatSelectorContext] = useState<
-    "batch" | "youtube-individual" | "youtube-batch"
-  >("batch");
+    'batch' | 'youtube-individual' | 'youtube-batch'
+  >('batch');
 
   // Playlist selector states
   const [allPlaylists, setAllPlaylists] = useState<
     Array<{ id: string; title: string; description: string; itemCount: number }>
   >([]);
   const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
-  const [selectedPlaylists, setSelectedPlaylists] = useState<Set<string>>(
-    new Set(),
+  const [selectedPlaylists, setSelectedPlaylists] = useState<Set<string>>(new Set());
+  const [playlistSelectorContext, setPlaylistSelectorContext] = useState<'individual' | 'batch'>(
+    'individual'
   );
-  const [playlistSelectorContext, setPlaylistSelectorContext] = useState<
-    "individual" | "batch"
-  >("individual");
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [savingPlaylists, setSavingPlaylists] = useState(false);
 
   // Filter states
   const [showTaggedVideos, setShowTaggedVideos] = useState(true);
   const [showUntaggedVideos, setShowUntaggedVideos] = useState(true);
-  const [showVideosWithoutTimestamp, setShowVideosWithoutTimestamp] =
-    useState(true);
+  const [showVideosWithoutTimestamp, setShowVideosWithoutTimestamp] = useState(true);
   const [enableDateFilter, setEnableDateFilter] = useState(false);
-  const [dateFilterFrom, setDateFilterFrom] = useState("");
-  const [dateFilterTo, setDateFilterTo] = useState("");
+  const [dateFilterFrom, setDateFilterFrom] = useState('');
+  const [dateFilterTo, setDateFilterTo] = useState('');
 
   // Date parsing states
   const [parsingDates, setParsingDates] = useState(false);
-  const [processingVideos, setProcessingVideos] = useState<Set<string>>(
-    new Set(),
-  );
+  const [processingVideos, setProcessingVideos] = useState<Set<string>>(new Set());
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [videosPerPage, setVideosPerPage] = useState(25);
 
   // Sorting states
-  const [sortBy, setSortBy] = useState<"created" | "uploaded" | "updated">(
-    "uploaded",
-  );
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<'created' | 'uploaded' | 'updated'>('uploaded');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Load data
   useEffect(() => {
@@ -150,8 +142,8 @@ export default function TagVideosPage() {
 
       setVideos(adminVideos);
     } catch (err: any) {
-      console.error("Error loading videos:", err);
-      setError("Failed to load videos: " + err.message);
+      console.error('Error loading videos:', err);
+      setError('Failed to load videos: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -163,18 +155,18 @@ export default function TagVideosPage() {
       const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
-      console.error("Error loading cats:", error);
+      console.error('Error loading cats:', error);
     }
   };
 
   const loadPlaylists = async () => {
     try {
       setLoadingPlaylists(true);
-      console.log("Loading playlists...");
+      console.log('Loading playlists...');
 
-      const response = await fetch("/api/manage-playlists");
+      const response = await fetch('/api/manage-playlists');
       if (!response.ok) {
-        throw new Error("Failed to fetch playlists");
+        throw new Error('Failed to fetch playlists');
       }
 
       const data = await response.json();
@@ -182,10 +174,10 @@ export default function TagVideosPage() {
         setAllPlaylists(data.playlists);
         console.log(`Loaded ${data.playlists.length} playlists`);
       } else {
-        throw new Error(data.error || "Failed to load playlists");
+        throw new Error(data.error || 'Failed to load playlists');
       }
     } catch (error) {
-      console.error("Error loading playlists:", error);
+      console.error('Error loading playlists:', error);
       // Don't set the main error since playlists are optional
     } finally {
       setLoadingPlaylists(false);
@@ -196,12 +188,12 @@ export default function TagVideosPage() {
     setSelectedVideo(video);
 
     // Populate YouTube-specific fields
-    setYoutubeTitle(video.title || "");
-    setYoutubeTags(video.tags?.join(", ") || "");
-    setYoutubeDescription(video.description || "");
+    setYoutubeTitle(video.title || '');
+    setYoutubeTags(video.tags?.join(', ') || '');
+    setYoutubeDescription(video.description || '');
 
     // Format recording date for YouTube field from Firestore createdTime
-    let createdTimeStr = "";
+    let createdTimeStr = '';
     if (video.createdTime) {
       try {
         let date: Date;
@@ -210,9 +202,9 @@ export default function TagVideosPage() {
         if (video.createdTime instanceof Date) {
           date = video.createdTime;
         } else if (
-          typeof video.createdTime === "object" &&
+          typeof video.createdTime === 'object' &&
           video.createdTime !== null &&
-          "seconds" in video.createdTime
+          'seconds' in video.createdTime
         ) {
           // Firebase Timestamp object
           date = new Date((video.createdTime as any).seconds * 1000);
@@ -223,18 +215,11 @@ export default function TagVideosPage() {
 
         if (!isNaN(date.getTime())) {
           // Convert to local date string for the date input (YYYY-MM-DD format)
-          createdTimeStr = date.toISOString().split("T")[0];
-          console.log(
-            "Pre-populating recording date from Firestore createdTime:",
-            createdTimeStr,
-          );
+          createdTimeStr = date.toISOString().split('T')[0];
+          console.log('Pre-populating recording date from Firestore createdTime:', createdTimeStr);
         }
       } catch (e) {
-        console.warn(
-          "Error parsing createdTime from Firestore:",
-          video.createdTime,
-          e,
-        );
+        console.warn('Error parsing createdTime from Firestore:', video.createdTime, e);
       }
     }
     setYoutubeCreatedTime(createdTimeStr);
@@ -244,8 +229,8 @@ export default function TagVideosPage() {
     if (!selectedVideo) return;
 
     // Only handle YouTube videos for now
-    if (selectedVideo.videoType !== "youtube") {
-      alert("Only YouTube videos can be edited from this interface.");
+    if (selectedVideo.videoType !== 'youtube') {
+      alert('Only YouTube videos can be edited from this interface.');
       return;
     }
 
@@ -264,30 +249,30 @@ export default function TagVideosPage() {
       }
 
       // Check if description has changed
-      if (youtubeDescription !== (selectedVideo.description || "")) {
+      if (youtubeDescription !== (selectedVideo.description || '')) {
         updates.description = youtubeDescription;
       }
 
       // Check if tags have changed
-      const currentTags = (selectedVideo.tags || []).join(",");
+      const currentTags = (selectedVideo.tags || []).join(',');
       if (youtubeTags !== currentTags) {
         updates.tags = youtubeTags
-          .split(",")
+          .split(',')
           .map((tag) => tag.trim())
           .filter(Boolean);
       }
 
       // Check if recording date has changed
-      let currentRecordingDate = "";
+      let currentRecordingDate = '';
       if (selectedVideo.createdTime) {
         try {
           let date: Date;
           if (selectedVideo.createdTime instanceof Date) {
             date = selectedVideo.createdTime;
           } else if (
-            typeof selectedVideo.createdTime === "object" &&
+            typeof selectedVideo.createdTime === 'object' &&
             selectedVideo.createdTime !== null &&
-            "seconds" in selectedVideo.createdTime
+            'seconds' in selectedVideo.createdTime
           ) {
             // Firebase Timestamp object
             date = new Date((selectedVideo.createdTime as any).seconds * 1000);
@@ -297,36 +282,32 @@ export default function TagVideosPage() {
           }
 
           if (!isNaN(date.getTime())) {
-            currentRecordingDate = date.toISOString().split("T")[0];
+            currentRecordingDate = date.toISOString().split('T')[0];
           }
         } catch (e) {
-          console.warn(
-            "Error parsing createdTime for comparison:",
-            selectedVideo.createdTime,
-            e,
-          );
+          console.warn('Error parsing createdTime for comparison:', selectedVideo.createdTime, e);
         }
       }
 
       if (youtubeCreatedTime && youtubeCreatedTime !== currentRecordingDate) {
         // Convert to ISO string for YouTube API
-        const createdTime = new Date(youtubeCreatedTime + "T00:00:00.000Z");
+        const createdTime = new Date(youtubeCreatedTime + 'T00:00:00.000Z');
         updates.createdTime = createdTime.toISOString();
       }
 
       // If no changes were made, skip the update
       if (Object.keys(updates).length === 0) {
-        alert("No changes detected to save.");
+        alert('No changes detected to save.');
         return;
       }
 
-      console.log("Updating YouTube video with:", updates);
+      console.log('Updating YouTube video with:', updates);
 
       // Step 1: Update YouTube video metadata
-      const updateResponse = await fetch("/api/update-youtube-video", {
-        method: "PUT",
+      const updateResponse = await fetch('/api/update-youtube-video', {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           videoId: videoId,
@@ -336,24 +317,22 @@ export default function TagVideosPage() {
 
       if (!updateResponse.ok) {
         const errorData = await updateResponse.json();
-        throw new Error(errorData.error || "Failed to update YouTube video");
+        throw new Error(errorData.error || 'Failed to update YouTube video');
       }
 
       const updateResult = await updateResponse.json();
-      console.log("YouTube update result:", updateResult);
+      console.log('YouTube update result:', updateResult);
 
       setUpdatingYoutube(false);
 
       // Step 2: Wait for YouTube API to propagate changes
       // Recording date changes can take longer to propagate than other metadata
       const waitTime = updates.createdTime ? 3000 : 3000; // 3 seconds for all metadata updates
-      console.log(
-        `Waiting ${waitTime}ms for YouTube API to propagate changes...`,
-      );
+      console.log(`Waiting ${waitTime}ms for YouTube API to propagate changes...`);
       await new Promise((resolve) => setTimeout(resolve, waitTime));
 
       // Step 3: Refresh metadata from YouTube to Firestore
-      console.log("Syncing changes to Firestore...");
+      console.log('Syncing changes to Firestore...');
       const refreshPayload: any = {
         videoIds: [videoId],
       };
@@ -361,26 +340,24 @@ export default function TagVideosPage() {
       // If we updated the recording date, pass the expected value for retry logic
       if (updates.createdTime) {
         refreshPayload.expectedRecordingDate = updates.createdTime;
-        console.log("Expecting recording date to be:", updates.createdTime);
+        console.log('Expecting recording date to be:', updates.createdTime);
       }
 
-      const refreshResponse = await fetch("/api/refresh-video-metadata", {
-        method: "POST",
+      const refreshResponse = await fetch('/api/refresh-video-metadata', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(refreshPayload),
       });
 
       if (!refreshResponse.ok) {
         const errorData = await refreshResponse.json();
-        throw new Error(
-          errorData.error || "Failed to sync changes to Firestore",
-        );
+        throw new Error(errorData.error || 'Failed to sync changes to Firestore');
       }
 
       const refreshResult = await refreshResponse.json();
-      console.log("Firestore sync result:", refreshResult);
+      console.log('Firestore sync result:', refreshResult);
 
       // Step 4: Update local state with the refreshed data
       await loadVideos();
@@ -388,50 +365,39 @@ export default function TagVideosPage() {
       // Wait a moment for state to update, then get the fresh video data
       setTimeout(() => {
         setVideos((currentVideos) => {
-          const updatedVideo = currentVideos.find(
-            (v) => v.id === selectedVideo.id,
-          );
+          const updatedVideo = currentVideos.find((v) => v.id === selectedVideo.id);
           if (updatedVideo) {
-            console.log(
-              "Updating selected video with fresh data:",
-              updatedVideo,
-            );
+            console.log('Updating selected video with fresh data:', updatedVideo);
             setSelectedVideo(updatedVideo);
             // Update form fields with the new data
-            setYoutubeTitle(updatedVideo.title || "");
-            setYoutubeDescription(updatedVideo.description || "");
-            setYoutubeTags((updatedVideo.tags || []).join(","));
+            setYoutubeTitle(updatedVideo.title || '');
+            setYoutubeDescription(updatedVideo.description || '');
+            setYoutubeTags((updatedVideo.tags || []).join(','));
 
             // Update recording date from createdTime
-            let updatedRecordingDate = "";
+            let updatedRecordingDate = '';
             if (updatedVideo.createdTime) {
               try {
                 let date: Date;
                 if (updatedVideo.createdTime instanceof Date) {
                   date = updatedVideo.createdTime;
                 } else if (
-                  typeof updatedVideo.createdTime === "object" &&
+                  typeof updatedVideo.createdTime === 'object' &&
                   updatedVideo.createdTime !== null &&
-                  "seconds" in updatedVideo.createdTime
+                  'seconds' in updatedVideo.createdTime
                 ) {
                   // Firebase Timestamp object
-                  date = new Date(
-                    (updatedVideo.createdTime as any).seconds * 1000,
-                  );
+                  date = new Date((updatedVideo.createdTime as any).seconds * 1000);
                 } else {
                   // String or other format
                   date = new Date(updatedVideo.createdTime as any);
                 }
 
                 if (!isNaN(date.getTime())) {
-                  updatedRecordingDate = date.toISOString().split("T")[0];
+                  updatedRecordingDate = date.toISOString().split('T')[0];
                 }
               } catch (e) {
-                console.warn(
-                  "Error parsing updated createdTime:",
-                  updatedVideo.createdTime,
-                  e,
-                );
+                console.warn('Error parsing updated createdTime:', updatedVideo.createdTime, e);
               }
             }
             setYoutubeCreatedTime(updatedRecordingDate);
@@ -440,10 +406,10 @@ export default function TagVideosPage() {
         });
       }, 500); // Small delay to ensure state has updated
 
-      alert("✅ Video metadata updated successfully!");
+      alert('✅ Video metadata updated successfully!');
     } catch (err: any) {
-      console.error("Error updating video metadata:", err);
-      alert("❌ Failed to update video metadata: " + err.message);
+      console.error('Error updating video metadata:', err);
+      alert('❌ Failed to update video metadata: ' + err.message);
     } finally {
       setSaving(false);
       setUpdatingYoutube(false);
@@ -463,7 +429,7 @@ export default function TagVideosPage() {
       let youtubeUpdateResults = [];
 
       // Step 1: Update YouTube fields
-      console.log("Performing batch YouTube updates...");
+      console.log('Performing batch YouTube updates...');
       console.log(`Processing ${videoIds.length} selected videos:`, videoIds);
 
       for (const videoId of videoIds) {
@@ -481,21 +447,21 @@ export default function TagVideosPage() {
         // Check for tag changes
         if (batchTags.trim()) {
           const newTags = batchTags
-            .split(",")
+            .split(',')
             .map((tag) => tag.trim())
             .filter(Boolean);
           const currentTags = video.tags || [];
 
           console.log(`Tag comparison for ${video.title}:`);
-          console.log("  New tags:", newTags);
-          console.log("  Current tags:", currentTags);
+          console.log('  New tags:', newTags);
+          console.log('  Current tags:', currentTags);
 
           // Compare arrays properly instead of comparing strings
           const tagsChanged =
             newTags.length !== currentTags.length ||
             !newTags.every((tag, index) => tag === currentTags[index]);
 
-          console.log("  Tags changed:", tagsChanged);
+          console.log('  Tags changed:', tagsChanged);
 
           if (tagsChanged) {
             youtubeUpdates.tags = newTags;
@@ -506,36 +472,29 @@ export default function TagVideosPage() {
         // Check for created time changes
         if (batchYoutubeCreatedTime.trim()) {
           // Handle datetime-local format (YYYY-MM-DDTHH:mm)
-          const newCreatedTime = new Date(
-            batchYoutubeCreatedTime,
-          ).toISOString();
-          const currentCreatedTime = video.createdTime || "";
+          const newCreatedTime = new Date(batchYoutubeCreatedTime).toISOString();
+          const currentCreatedTime = video.createdTime || '';
 
           // Compare timestamps properly (handle different ISO string formats)
           const newTimestamp = new Date(newCreatedTime).getTime();
-          const currentTimestamp = currentCreatedTime
-            ? new Date(currentCreatedTime).getTime()
-            : 0;
+          const currentTimestamp = currentCreatedTime ? new Date(currentCreatedTime).getTime() : 0;
 
           if (newTimestamp !== currentTimestamp) {
             youtubeUpdates.createdTime = newCreatedTime;
             hasYoutubeChanges = true;
             console.log(
-              `Recording date change detected for ${video.title}: ${currentCreatedTime} → ${newCreatedTime}`,
+              `Recording date change detected for ${video.title}: ${currentCreatedTime} → ${newCreatedTime}`
             );
           }
         }
 
         // Update YouTube if there are changes
         if (hasYoutubeChanges) {
-          console.log(
-            `Updating YouTube for ${video.title} with:`,
-            youtubeUpdates,
-          );
+          console.log(`Updating YouTube for ${video.title} with:`, youtubeUpdates);
           try {
-            const youtubeResponse = await fetch("/api/update-youtube-video", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
+            const youtubeResponse = await fetch('/api/update-youtube-video', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 videoId: video.youtubeId || video.id,
                 updates: youtubeUpdates,
@@ -550,18 +509,15 @@ export default function TagVideosPage() {
               youtubeUpdateResults.push({
                 videoId,
                 success: false,
-                error: errorData.error || "Unknown error",
+                error: errorData.error || 'Unknown error',
               });
-              console.error(
-                `❌ Failed to update ${video.title}:`,
-                errorData.error,
-              );
+              console.error(`❌ Failed to update ${video.title}:`, errorData.error);
             }
           } catch (err) {
             youtubeUpdateResults.push({
               videoId,
               success: false,
-              error: err instanceof Error ? err.message : "Unknown error",
+              error: err instanceof Error ? err.message : 'Unknown error',
             });
             console.error(`❌ Exception updating ${video.title}:`, err);
           }
@@ -577,47 +533,43 @@ export default function TagVideosPage() {
 
       if (successfulVideoIds.length > 0) {
         console.log(
-          `Syncing Firestore for ${successfulVideoIds.length} successfully updated videos...`,
+          `Syncing Firestore for ${successfulVideoIds.length} successfully updated videos...`
         );
 
         // Wait for YouTube API to propagate changes
         const waitTime = 3000; // 3 seconds for all metadata updates
-        console.log(
-          `Waiting ${waitTime}ms for YouTube API to propagate changes...`,
-        );
+        console.log(`Waiting ${waitTime}ms for YouTube API to propagate changes...`);
         await new Promise((resolve) => setTimeout(resolve, waitTime));
 
-        const refreshResponse = await fetch("/api/refresh-video-metadata", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             videoIds: successfulVideoIds,
           }),
         });
 
         if (refreshResponse.ok) {
-          console.log("✅ Firestore synced with fresh YouTube metadata");
+          console.log('✅ Firestore synced with fresh YouTube metadata');
         } else {
-          console.warn(
-            "⚠️ Failed to sync Firestore, but YouTube updates were successful",
-          );
+          console.warn('⚠️ Failed to sync Firestore, but YouTube updates were successful');
         }
       }
 
       // Step 3: Update playlists for all selected videos (if playlist selections were made)
       let playlistUpdateResults = [];
       if (selectedPlaylists.size > 0 || videoIds.length > 0) {
-        console.log("Updating playlists for selected videos...");
+        console.log('Updating playlists for selected videos...');
         for (const videoId of videoIds) {
           const video = videos.find((v) => v.id === videoId);
           if (!video) continue;
 
           try {
-            const playlistResponse = await fetch("/api/manage-playlists", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+            const playlistResponse = await fetch('/api/manage-playlists', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                action: "batch_update_playlists",
+                action: 'batch_update_playlists',
                 videoId: video.youtubeId || video.id,
                 playlistIds: Array.from(selectedPlaylists),
               }),
@@ -625,72 +577,54 @@ export default function TagVideosPage() {
 
             if (playlistResponse.ok) {
               playlistUpdateResults.push({ videoId, success: true });
-              console.log(
-                `✅ Successfully updated playlists for ${video.title}`,
-              );
+              console.log(`✅ Successfully updated playlists for ${video.title}`);
             } else {
               const errorData = await playlistResponse.json();
               playlistUpdateResults.push({
                 videoId,
                 success: false,
-                error: errorData.error || "Unknown error",
+                error: errorData.error || 'Unknown error',
               });
-              console.error(
-                `❌ Failed to update playlists for ${video.title}:`,
-                errorData.error,
-              );
+              console.error(`❌ Failed to update playlists for ${video.title}:`, errorData.error);
             }
           } catch (err) {
             playlistUpdateResults.push({
               videoId,
               success: false,
-              error: err instanceof Error ? err.message : "Unknown error",
+              error: err instanceof Error ? err.message : 'Unknown error',
             });
-            console.error(
-              `❌ Exception updating playlists for ${video.title}:`,
-              err,
-            );
+            console.error(`❌ Exception updating playlists for ${video.title}:`, err);
           }
         }
       }
 
       // Step 4: Update local state by reloading from Firestore (single source of truth)
-      console.log("Reloading videos from Firestore to update local state...");
+      console.log('Reloading videos from Firestore to update local state...');
       await loadVideos();
-      console.log("✅ Local state updated from Firestore data");
+      console.log('✅ Local state updated from Firestore data');
 
       // Clear selection and reset form
       clearSelection();
 
       // Show results
-      const youtubeSuccessful = youtubeUpdateResults.filter(
-        (r) => r.success,
-      ).length;
-      const youtubeFailed = youtubeUpdateResults.filter(
-        (r) => !r.success,
-      ).length;
-      const playlistSuccessful = playlistUpdateResults.filter(
-        (r) => r.success,
-      ).length;
-      const playlistFailed = playlistUpdateResults.filter(
-        (r) => !r.success,
-      ).length;
+      const youtubeSuccessful = youtubeUpdateResults.filter((r) => r.success).length;
+      const youtubeFailed = youtubeUpdateResults.filter((r) => !r.success).length;
+      const playlistSuccessful = playlistUpdateResults.filter((r) => r.success).length;
+      const playlistFailed = playlistUpdateResults.filter((r) => !r.success).length;
 
       let message = `Batch save completed!\n\n✅ Data flow: UI → YouTube → Firestore → Local State`;
       if (youtubeSuccessful > 0)
         message += `\n\nYouTube updates (tags/dates): ${youtubeSuccessful} successful`;
       if (youtubeFailed > 0) message += `\nYouTube failures: ${youtubeFailed}`;
-      if (playlistSuccessful > 0)
-        message += `\nPlaylist updates: ${playlistSuccessful} successful`;
-      if (playlistFailed > 0)
-        message += `\nPlaylist failures: ${playlistFailed}`;
-      message += `\nFirestore sync: ${youtubeSuccessful > 0 ? "Completed" : "Skipped (no successful updates)"}`;
+      if (playlistSuccessful > 0) message += `\nPlaylist updates: ${playlistSuccessful} successful`;
+      if (playlistFailed > 0) message += `\nPlaylist failures: ${playlistFailed}`;
+      message += `\nFirestore sync: ${youtubeSuccessful > 0 ? 'Completed' : 'Skipped (no successful updates)'}`;
       message += `\nLocal state: Updated from Firestore`;
 
       alert(message);
     } catch (err: any) {
-      console.error("Error batch updating videos:", err);
-      setError("Failed to save batch video metadata");
+      console.error('Error batch updating videos:', err);
+      setError('Failed to save batch video metadata');
     } finally {
       setBatchSaving(false);
     }
@@ -707,18 +641,15 @@ export default function TagVideosPage() {
       const videoIds = Array.from(selectedVideos);
       let youtubeUpdateResults = [];
 
-      console.log("Performing batch tags update...");
-      console.log(
-        `Processing ${videoIds.length} selected videos for tags:`,
-        batchTags,
-      );
+      console.log('Performing batch tags update...');
+      console.log(`Processing ${videoIds.length} selected videos for tags:`, batchTags);
 
       for (const videoId of videoIds) {
         const video = videos.find((v) => v.id === videoId);
         if (!video) continue;
 
         const newTags = batchTags
-          .split(",")
+          .split(',')
           .map((tag) => tag.trim())
           .filter(Boolean);
         const currentTags = video.tags || [];
@@ -729,9 +660,9 @@ export default function TagVideosPage() {
 
         if (tagsChanged) {
           try {
-            const youtubeResponse = await fetch("/api/update-youtube-video", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
+            const youtubeResponse = await fetch('/api/update-youtube-video', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 videoId: video.youtubeId || video.id,
                 updates: { tags: newTags },
@@ -748,21 +679,15 @@ export default function TagVideosPage() {
                 success: false,
                 error: errorData.error,
               });
-              console.error(
-                `❌ Failed to update tags for ${video.title}:`,
-                errorData.error,
-              );
+              console.error(`❌ Failed to update tags for ${video.title}:`, errorData.error);
             }
           } catch (err) {
             youtubeUpdateResults.push({
               videoId,
               success: false,
-              error: err instanceof Error ? err.message : "Unknown error",
+              error: err instanceof Error ? err.message : 'Unknown error',
             });
-            console.error(
-              `❌ Exception updating tags for ${video.title}:`,
-              err,
-            );
+            console.error(`❌ Exception updating tags for ${video.title}:`, err);
           }
         }
       }
@@ -774,14 +699,14 @@ export default function TagVideosPage() {
       if (successfulVideoIds.length > 0) {
         await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for YouTube propagation
 
-        const refreshResponse = await fetch("/api/refresh-video-metadata", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ videoIds: successfulVideoIds }),
         });
 
         if (refreshResponse.ok) {
-          console.log("✅ Firestore synced with fresh YouTube metadata");
+          console.log('✅ Firestore synced with fresh YouTube metadata');
         }
       }
 
@@ -791,15 +716,14 @@ export default function TagVideosPage() {
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
       let message = `Tags update completed!`;
-      if (successful > 0)
-        message += `\n✅ Successfully updated: ${successful} videos`;
+      if (successful > 0) message += `\n✅ Successfully updated: ${successful} videos`;
       if (failed > 0) message += `\n❌ Failed: ${failed} videos`;
 
       alert(message);
-      setBatchTags(""); // Clear tags after successful update
+      setBatchTags(''); // Clear tags after successful update
     } catch (err: any) {
-      console.error("Error updating tags:", err);
-      setError("Failed to update tags");
+      console.error('Error updating tags:', err);
+      setError('Failed to update tags');
     } finally {
       setSavingTags(false);
     }
@@ -815,10 +739,10 @@ export default function TagVideosPage() {
       const videoIds = Array.from(selectedVideos);
       let youtubeUpdateResults = [];
 
-      console.log("Performing batch date update...");
+      console.log('Performing batch date update...');
       console.log(
         `Processing ${videoIds.length} selected videos for date:`,
-        batchYoutubeCreatedTime,
+        batchYoutubeCreatedTime
       );
 
       for (const videoId of videoIds) {
@@ -826,18 +750,16 @@ export default function TagVideosPage() {
         if (!video) continue;
 
         const newCreatedTime = new Date(batchYoutubeCreatedTime).toISOString();
-        const currentCreatedTime = video.createdTime || "";
+        const currentCreatedTime = video.createdTime || '';
 
         const newTimestamp = new Date(newCreatedTime).getTime();
-        const currentTimestamp = currentCreatedTime
-          ? new Date(currentCreatedTime).getTime()
-          : 0;
+        const currentTimestamp = currentCreatedTime ? new Date(currentCreatedTime).getTime() : 0;
 
         if (newTimestamp !== currentTimestamp) {
           try {
-            const youtubeResponse = await fetch("/api/update-youtube-video", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
+            const youtubeResponse = await fetch('/api/update-youtube-video', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 videoId: video.youtubeId || video.id,
                 updates: { createdTime: newCreatedTime },
@@ -854,21 +776,15 @@ export default function TagVideosPage() {
                 success: false,
                 error: errorData.error,
               });
-              console.error(
-                `❌ Failed to update date for ${video.title}:`,
-                errorData.error,
-              );
+              console.error(`❌ Failed to update date for ${video.title}:`, errorData.error);
             }
           } catch (err) {
             youtubeUpdateResults.push({
               videoId,
               success: false,
-              error: err instanceof Error ? err.message : "Unknown error",
+              error: err instanceof Error ? err.message : 'Unknown error',
             });
-            console.error(
-              `❌ Exception updating date for ${video.title}:`,
-              err,
-            );
+            console.error(`❌ Exception updating date for ${video.title}:`, err);
           }
         }
       }
@@ -880,19 +796,17 @@ export default function TagVideosPage() {
       if (successfulVideoIds.length > 0) {
         await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for YouTube propagation
 
-        const refreshResponse = await fetch("/api/refresh-video-metadata", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             videoIds: successfulVideoIds,
-            expectedRecordingDate: new Date(
-              batchYoutubeCreatedTime,
-            ).toISOString(),
+            expectedRecordingDate: new Date(batchYoutubeCreatedTime).toISOString(),
           }),
         });
 
         if (refreshResponse.ok) {
-          console.log("✅ Firestore synced with fresh YouTube metadata");
+          console.log('✅ Firestore synced with fresh YouTube metadata');
         }
       }
 
@@ -902,15 +816,14 @@ export default function TagVideosPage() {
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
       let message = `Recording date update completed!`;
-      if (successful > 0)
-        message += `\n✅ Successfully updated: ${successful} videos`;
+      if (successful > 0) message += `\n✅ Successfully updated: ${successful} videos`;
       if (failed > 0) message += `\n❌ Failed: ${failed} videos`;
 
       alert(message);
-      setBatchYoutubeCreatedTime(""); // Clear date after successful update
+      setBatchYoutubeCreatedTime(''); // Clear date after successful update
     } catch (err: any) {
-      console.error("Error updating date:", err);
-      setError("Failed to update recording date");
+      console.error('Error updating date:', err);
+      setError('Failed to update recording date');
     } finally {
       setSavingDate(false);
     }
@@ -926,10 +839,10 @@ export default function TagVideosPage() {
       const videoIds = Array.from(selectedVideos);
       let playlistUpdateResults = [];
 
-      console.log("Performing batch playlist update...");
+      console.log('Performing batch playlist update...');
       console.log(
         `Processing ${videoIds.length} selected videos for playlists:`,
-        Array.from(selectedPlaylists),
+        Array.from(selectedPlaylists)
       );
 
       for (const videoId of videoIds) {
@@ -937,11 +850,11 @@ export default function TagVideosPage() {
         if (!video) continue;
 
         try {
-          const playlistResponse = await fetch("/api/manage-playlists", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          const playlistResponse = await fetch('/api/manage-playlists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              action: "batch_update_playlists",
+              action: 'batch_update_playlists',
               videoId: video.youtubeId || video.id,
               playlistIds: Array.from(selectedPlaylists),
             }),
@@ -957,21 +870,15 @@ export default function TagVideosPage() {
               success: false,
               error: errorData.error,
             });
-            console.error(
-              `❌ Failed to update playlists for ${video.title}:`,
-              errorData.error,
-            );
+            console.error(`❌ Failed to update playlists for ${video.title}:`, errorData.error);
           }
         } catch (err) {
           playlistUpdateResults.push({
             videoId,
             success: false,
-            error: err instanceof Error ? err.message : "Unknown error",
+            error: err instanceof Error ? err.message : 'Unknown error',
           });
-          console.error(
-            `❌ Exception updating playlists for ${video.title}:`,
-            err,
-          );
+          console.error(`❌ Exception updating playlists for ${video.title}:`, err);
         }
       }
 
@@ -981,15 +888,14 @@ export default function TagVideosPage() {
       const failed = playlistUpdateResults.filter((r) => !r.success).length;
 
       let message = `Playlist update completed!`;
-      if (successful > 0)
-        message += `\n✅ Successfully updated: ${successful} videos`;
+      if (successful > 0) message += `\n✅ Successfully updated: ${successful} videos`;
       if (failed > 0) message += `\n❌ Failed: ${failed} videos`;
 
       alert(message);
       setSelectedPlaylists(new Set()); // Clear playlist selection after successful update
     } catch (err: any) {
-      console.error("Error updating playlists:", err);
-      setError("Failed to update playlists");
+      console.error('Error updating playlists:', err);
+      setError('Failed to update playlists');
     } finally {
       setSavingPlaylists(false);
     }
@@ -1000,7 +906,7 @@ export default function TagVideosPage() {
   const syncWithYouTube = async () => {
     if (
       !confirm(
-        "This will discover new videos from YouTube and sync metadata for all videos.\n\nThis includes:\n1. Finding new videos not yet in Firestore\n2. Updating metadata for existing videos\n3. Playlist information sync\n\nNote: This may overwrite recent changes that haven't propagated yet.\n\nContinue?",
+        "This will discover new videos from YouTube and sync metadata for all videos.\n\nThis includes:\n1. Finding new videos not yet in Firestore\n2. Updating metadata for existing videos\n3. Playlist information sync\n\nNote: This may overwrite recent changes that haven't propagated yet.\n\nContinue?"
       )
     )
       return;
@@ -1019,25 +925,23 @@ export default function TagVideosPage() {
 
       // Step 2: Get all videos (including newly discovered ones) to collect YouTube video IDs
       const allVideos = await videoService.getAllVideos();
-      const youtubeVideos = allVideos.filter(
-        (video) => video.videoType === "youtube",
-      );
+      const youtubeVideos = allVideos.filter((video) => video.videoType === 'youtube');
       const youtubeVideoIds = youtubeVideos
         .map((video) => video.youtubeId || video.id)
         .filter(Boolean);
 
       if (youtubeVideoIds.length === 0) {
-        alert("No YouTube videos found to sync.");
+        alert('No YouTube videos found to sync.');
         return;
       }
 
       console.log(`Syncing ${youtubeVideoIds.length} YouTube videos...`);
 
       // Call the refresh metadata API to update all YouTube videos
-      const response = await fetch("/api/refresh-video-metadata", {
-        method: "POST",
+      const response = await fetch('/api/refresh-video-metadata', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           videoIds: youtubeVideoIds,
@@ -1046,21 +950,21 @@ export default function TagVideosPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to refresh video metadata");
+        throw new Error(errorData.error || 'Failed to refresh video metadata');
       }
 
       const result = await response.json();
-      console.log("Metadata refresh result:", result);
+      console.log('Metadata refresh result:', result);
 
       // Reload videos to get the updated data
       await loadVideos();
 
       alert(
-        `YouTube sync completed successfully!\n\n✅ Discovered and imported any new videos from YouTube\n✅ Updated ${result.updated || youtubeVideoIds.length} videos with latest metadata and playlist information`,
+        `YouTube sync completed successfully!\n\n✅ Discovered and imported any new videos from YouTube\n✅ Updated ${result.updated || youtubeVideoIds.length} videos with latest metadata and playlist information`
       );
     } catch (err: any) {
-      console.error("Error syncing:", err);
-      alert("Failed to sync: " + err.message);
+      console.error('Error syncing:', err);
+      alert('Failed to sync: ' + err.message);
     } finally {
       setBatchSaving(false);
     }
@@ -1091,8 +995,8 @@ export default function TagVideosPage() {
   const clearSelection = () => {
     setSelectedVideos(new Set());
     setShowBatchActions(false);
-    setBatchTags("");
-    setBatchYoutubeCreatedTime("");
+    setBatchTags('');
+    setBatchYoutubeCreatedTime('');
     setSelectedPlaylists(new Set());
   };
 
@@ -1102,14 +1006,14 @@ export default function TagVideosPage() {
     const videosNeedingDates = videos.filter((video) => {
       const hasNoCreatedTime = !video.createdTime;
       // Try multiple sources for date parsing
-      const titleSource = video.description || video.id || "";
+      const titleSource = video.description || video.id || '';
       const couldParseDate = parseRecordingDateFromTitle(titleSource) !== null;
       return hasNoCreatedTime && couldParseDate;
     });
 
     if (videosNeedingDates.length === 0) {
       alert(
-        "❌ No videos found that need date parsing.\n\nEither all videos already have creation dates, or no video descriptions/IDs contain parseable date patterns.",
+        '❌ No videos found that need date parsing.\n\nEither all videos already have creation dates, or no video descriptions/IDs contain parseable date patterns.'
       );
       return;
     }
@@ -1120,7 +1024,7 @@ export default function TagVideosPage() {
         `• Video createdTime field\n\n` +
         `Found ${videosNeedingDates.length} video(s) that could benefit from date parsing.\n\n` +
         `⚠️ This will make changes to the database and may take time to process.\n\n` +
-        `Continue?`,
+        `Continue?`
     );
 
     if (!confirmed) return;
@@ -1135,9 +1039,7 @@ export default function TagVideosPage() {
       const results = [];
       const updatedVideos = [...videos]; // Create a copy to batch updates
 
-      console.log(
-        `Starting automatic date parsing for ${videosNeedingDates.length} videos...`,
-      );
+      console.log(`Starting automatic date parsing for ${videosNeedingDates.length} videos...`);
 
       for (const video of videosNeedingDates) {
         try {
@@ -1151,9 +1053,7 @@ export default function TagVideosPage() {
           const titleSource = video.description || video.id;
           const parsedDate = parseRecordingDateFromTitle(titleSource);
           if (parsedDate) {
-            console.log(
-              `📅 Parsing date for "${titleSource}": ${parsedDate.toISOString()}`,
-            );
+            console.log(`📅 Parsing date for "${titleSource}": ${parsedDate.toISOString()}`);
 
             // Use service layer to update the video
             await videoService.updateVideo(video.id, {
@@ -1163,9 +1063,7 @@ export default function TagVideosPage() {
             console.log(`✅ Database updated for ${titleSource}`);
 
             // Update the local copy
-            const videoIndex = updatedVideos.findIndex(
-              (vid) => vid.id === video.id,
-            );
+            const videoIndex = updatedVideos.findIndex((vid) => vid.id === video.id);
             if (videoIndex !== -1) {
               updatedVideos[videoIndex] = {
                 ...updatedVideos[videoIndex],
@@ -1176,7 +1074,7 @@ export default function TagVideosPage() {
             successCount++;
             results.push({
               video: titleSource,
-              date: parsedDate.toISOString().split("T")[0],
+              date: parsedDate.toISOString().split('T')[0],
               success: true,
             });
           }
@@ -1194,8 +1092,7 @@ export default function TagVideosPage() {
           results.push({
             video: titleSource,
             success: false,
-            error:
-              error instanceof Error ? error.message : "Date parsing failed",
+            error: error instanceof Error ? error.message : 'Date parsing failed',
           });
 
           // Remove video from processing set even on error
@@ -1227,16 +1124,15 @@ export default function TagVideosPage() {
       });
 
       alert(resultMessage);
-      console.log("📊 Date parsing completed:", {
+      console.log('📊 Date parsing completed:', {
         successCount,
         failCount,
         results,
       });
     } catch (error) {
-      console.error("❌ Error during automatic date parsing:", error);
+      console.error('❌ Error during automatic date parsing:', error);
       setError(
-        "Failed to parse dates: " +
-          (error instanceof Error ? error.message : "Unknown error"),
+        'Failed to parse dates: ' + (error instanceof Error ? error.message : 'Unknown error')
       );
     } finally {
       setParsingDates(false);
@@ -1259,15 +1155,15 @@ export default function TagVideosPage() {
       .map((id) => cats.find((cat) => cat.id === id))
       .filter((cat) => cat)
       .map((cat) => cat!.name);
-    setBatchTags(selectedCatNames.join(", "));
+    setBatchTags(selectedCatNames.join(', '));
   };
 
   const handleBatchTagsInputClick = () => {
-    setCatSelectorContext("batch");
+    setCatSelectorContext('batch');
     setShowCatSelector(true);
     // Parse existing batch tags to pre-select cats
     const existingTags = batchTags
-      .split(",")
+      .split(',')
       .map((tag) => tag.trim())
       .filter(Boolean);
     const preSelectedCats = new Set<string>();
@@ -1282,20 +1178,20 @@ export default function TagVideosPage() {
   // YouTube tag management functions
   const removeYoutubeTag = (tagToRemove: string) => {
     const currentTags = youtubeTags
-      .split(",")
+      .split(',')
       .map((tag) => tag.trim())
       .filter(Boolean);
     const updatedTags = currentTags.filter((tag) => tag !== tagToRemove);
-    const newTagsString = updatedTags.join(", ");
+    const newTagsString = updatedTags.join(', ');
     setYoutubeTags(newTagsString);
   };
 
   const handleYoutubeTagsInputClick = () => {
-    setCatSelectorContext("youtube-individual");
+    setCatSelectorContext('youtube-individual');
     setShowCatSelector(true);
     // Parse existing YouTube tags to pre-select cats
     const existingTags = youtubeTags
-      .split(",")
+      .split(',')
       .map((tag) => tag.trim())
       .filter(Boolean);
     const preSelectedCats = new Set<string>();
@@ -1321,12 +1217,12 @@ export default function TagVideosPage() {
       .map((id) => cats.find((cat) => cat.id === id))
       .filter((cat) => cat)
       .map((cat) => cat!.name);
-    setYoutubeTags(selectedCatNames.join(", "));
+    setYoutubeTags(selectedCatNames.join(', '));
   };
 
   // Playlist selector handler
   const handlePlaylistSelectorClick = () => {
-    setPlaylistSelectorContext("individual");
+    setPlaylistSelectorContext('individual');
     setShowPlaylistSelector(true);
     // Pre-select playlists that the video is already in
     const videoPlaylists = selectedVideo?.allPlaylists || [];
@@ -1347,7 +1243,7 @@ export default function TagVideosPage() {
 
   // Save playlist changes for the selected video
   const savePlaylistChanges = async () => {
-    if (!selectedVideo || selectedVideo.videoType !== "youtube") {
+    if (!selectedVideo || selectedVideo.videoType !== 'youtube') {
       return;
     }
 
@@ -1355,23 +1251,21 @@ export default function TagVideosPage() {
       setSavingPlaylists(true);
 
       const videoId = selectedVideo.youtubeId || selectedVideo.id;
-      const currentPlaylistIds = new Set(
-        selectedVideo.allPlaylists?.map((p) => p.id) || [],
-      );
+      const currentPlaylistIds = new Set(selectedVideo.allPlaylists?.map((p) => p.id) || []);
       const newPlaylistIds = selectedPlaylists;
 
-      console.log("Saving playlist changes for video:", videoId);
-      console.log("Current playlists:", Array.from(currentPlaylistIds));
-      console.log("New playlists:", Array.from(newPlaylistIds));
+      console.log('Saving playlist changes for video:', videoId);
+      console.log('Current playlists:', Array.from(currentPlaylistIds));
+      console.log('New playlists:', Array.from(newPlaylistIds));
 
       // Use the manage-playlists API to update playlist membership
-      const response = await fetch("/api/manage-playlists", {
-        method: "POST",
+      const response = await fetch('/api/manage-playlists', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: "batch_update_playlists",
+          action: 'batch_update_playlists',
           videoId: videoId,
           playlistIds: Array.from(newPlaylistIds),
         }),
@@ -1379,38 +1273,36 @@ export default function TagVideosPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Playlist update failed:", errorData);
-        throw new Error(errorData.error || "Failed to update playlists");
+        console.error('Playlist update failed:', errorData);
+        throw new Error(errorData.error || 'Failed to update playlists');
       }
 
       const result = await response.json();
-      console.log("Playlist update result:", result);
+      console.log('Playlist update result:', result);
 
       // Check if there were any failures in the batch operation
       if (result.summary && result.summary.failed > 0) {
-        console.warn("Some playlist operations failed:", result.results);
+        console.warn('Some playlist operations failed:', result.results);
         const failedOperations = result.results.filter((r: any) => !r.success);
         const errorMessages = failedOperations.map(
-          (r: any) => `${r.action} ${r.playlistId}: ${r.error}`,
+          (r: any) => `${r.action} ${r.playlistId}: ${r.error}`
         );
-        console.warn("Failed operations:", errorMessages);
+        console.warn('Failed operations:', errorMessages);
 
         // Still continue with the sync if some operations succeeded
         if (result.summary.added > 0 || result.summary.removed > 0) {
           console.log(
-            `Partial success: ${result.summary.added} added, ${result.summary.removed} removed, ${result.summary.failed} failed`,
+            `Partial success: ${result.summary.added} added, ${result.summary.removed} removed, ${result.summary.failed} failed`
           );
         }
       }
 
       // After updating YouTube, refresh the video's metadata from YouTube to sync to Firestore
-      console.log(
-        "Refreshing video metadata to sync playlist changes to Firestore...",
-      );
-      const refreshResponse = await fetch("/api/refresh-video-metadata", {
-        method: "POST",
+      console.log('Refreshing video metadata to sync playlist changes to Firestore...');
+      const refreshResponse = await fetch('/api/refresh-video-metadata', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           videoIds: [videoId],
@@ -1419,10 +1311,7 @@ export default function TagVideosPage() {
 
       if (!refreshResponse.ok) {
         const refreshErrorData = await refreshResponse.json();
-        console.warn(
-          "Failed to refresh metadata after playlist update:",
-          refreshErrorData.error,
-        );
+        console.warn('Failed to refresh metadata after playlist update:', refreshErrorData.error);
         // Don't throw here, the playlist update was successful
       }
 
@@ -1447,10 +1336,10 @@ export default function TagVideosPage() {
 
       alert(message);
     } catch (error) {
-      console.error("Error saving playlist changes:", error);
+      console.error('Error saving playlist changes:', error);
       alert(
-        "Failed to save playlist changes: " +
-          (error instanceof Error ? error.message : "Unknown error"),
+        'Failed to save playlist changes: ' +
+          (error instanceof Error ? error.message : 'Unknown error')
       );
     } finally {
       setSavingPlaylists(false);
@@ -1470,16 +1359,16 @@ export default function TagVideosPage() {
 
       // Date range filtering
       if (enableDateFilter) {
-        let recordingDateStr = "";
+        let recordingDateStr = '';
         if (video.createdTime) {
           try {
             let date: Date;
             if (video.createdTime instanceof Date) {
               date = video.createdTime;
             } else if (
-              typeof video.createdTime === "object" &&
+              typeof video.createdTime === 'object' &&
               video.createdTime !== null &&
-              "seconds" in video.createdTime
+              'seconds' in video.createdTime
             ) {
               // Firebase Timestamp
               date = new Date((video.createdTime as any).seconds * 1000);
@@ -1489,7 +1378,7 @@ export default function TagVideosPage() {
             }
 
             if (!isNaN(date.getTime())) {
-              recordingDateStr = date.toISOString().split("T")[0];
+              recordingDateStr = date.toISOString().split('T')[0];
             }
           } catch (e) {
             // Skip if date parsing fails
@@ -1511,16 +1400,16 @@ export default function TagVideosPage() {
       let aValue: Date | null = null;
       let bValue: Date | null = null;
 
-      if (sortBy === "created") {
+      if (sortBy === 'created') {
         // Handle createdTime which could be Date, Firebase Timestamp, or string
         aValue = a.createdTime
           ? (() => {
               if (a.createdTime instanceof Date) {
                 return a.createdTime;
               } else if (
-                typeof a.createdTime === "object" &&
+                typeof a.createdTime === 'object' &&
                 a.createdTime !== null &&
-                "seconds" in a.createdTime
+                'seconds' in a.createdTime
               ) {
                 return new Date((a.createdTime as any).seconds * 1000);
               } else {
@@ -1533,9 +1422,9 @@ export default function TagVideosPage() {
               if (b.createdTime instanceof Date) {
                 return b.createdTime;
               } else if (
-                typeof b.createdTime === "object" &&
+                typeof b.createdTime === 'object' &&
                 b.createdTime !== null &&
-                "seconds" in b.createdTime
+                'seconds' in b.createdTime
               ) {
                 return new Date((b.createdTime as any).seconds * 1000);
               } else {
@@ -1543,34 +1432,33 @@ export default function TagVideosPage() {
               }
             })()
           : null;
-      } else if (sortBy === "uploaded") {
+      } else if (sortBy === 'uploaded') {
         aValue = a.uploadDate ? new Date(a.uploadDate) : null;
         bValue = b.uploadDate ? new Date(b.uploadDate) : null;
-      } else if (sortBy === "updated") {
+      } else if (sortBy === 'updated') {
         aValue = a.updated ? new Date(a.updated) : null;
         bValue = b.updated ? new Date(b.updated) : null;
       }
 
       // Handle null values
       if (aValue === null && bValue === null) return 0;
-      if (aValue === null) return sortOrder === "asc" ? 1 : -1;
-      if (bValue === null) return sortOrder === "asc" ? -1 : 1;
+      if (aValue === null) return sortOrder === 'asc' ? 1 : -1;
+      if (bValue === null) return sortOrder === 'asc' ? -1 : 1;
 
       // Check for invalid dates
       if (isNaN(aValue.getTime()) && isNaN(bValue.getTime())) return 0;
-      if (isNaN(aValue.getTime())) return sortOrder === "asc" ? 1 : -1;
-      if (isNaN(bValue.getTime())) return sortOrder === "asc" ? -1 : 1;
+      if (isNaN(aValue.getTime())) return sortOrder === 'asc' ? 1 : -1;
+      if (isNaN(bValue.getTime())) return sortOrder === 'asc' ? -1 : 1;
 
       const comparison = aValue.getTime() - bValue.getTime();
-      return sortOrder === "asc" ? comparison : -comparison;
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
 
   // Filtered cats for search
   const filteredCats = cats.filter(
     (cat) =>
       cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
-      (cat.alt_name &&
-        cat.alt_name.toLowerCase().includes(catSearchQuery.toLowerCase())),
+      (cat.alt_name && cat.alt_name.toLowerCase().includes(catSearchQuery.toLowerCase()))
   );
 
   // Pagination
@@ -1594,12 +1482,8 @@ export default function TagVideosPage() {
   ]);
 
   // Statistics
-  const untaggedVideos = videos.filter(
-    (video) => !video.tags || video.tags.length === 0,
-  );
-  const taggedVideos = videos.filter(
-    (video) => video.tags && video.tags.length > 0,
-  );
+  const untaggedVideos = videos.filter((video) => !video.tags || video.tags.length === 0);
+  const taggedVideos = videos.filter((video) => video.tags && video.tags.length > 0);
 
   if (loading) {
     return (
@@ -1607,10 +1491,7 @@ export default function TagVideosPage() {
         <h1 className="text-2xl font-bold mb-4" data-oid="fk5vyhz">
           Tag Videos (Service Layer)
         </h1>
-        <div
-          className="flex items-center justify-center min-h-64"
-          data-oid="w:zv44s"
-        >
+        <div className="flex items-center justify-center min-h-64" data-oid="w:zv44s">
           <div className="text-lg text-gray-600" data-oid="qjf16xw">
             Loading videos...
           </div>
@@ -1621,7 +1502,7 @@ export default function TagVideosPage() {
 
   const getVideoThumbnail = (video: AdminVideo) => {
     // Return thumbnail URL if available, otherwise a default placeholder
-    return video.thumbnailUrl || "/images/video-placeholder.png";
+    return video.thumbnailUrl || '/images/video-placeholder.png';
   };
 
   return (
@@ -1647,21 +1528,15 @@ export default function TagVideosPage() {
       )}
 
       {/* Service Configuration Status */}
-      <div
-        className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6"
-        data-oid="q1x:ea2"
-      >
-        <h3
-          className="text-sm font-semibold text-green-800 mb-2"
-          data-oid="wnkkuf6"
-        >
+      <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6" data-oid="q1x:ea2">
+        <h3 className="text-sm font-semibold text-green-800 mb-2" data-oid="wnkkuf6">
           Service Layer Configuration
         </h3>
         <div className="text-sm space-y-1" data-oid="5i23q-:">
           <div data-oid="u-higbo">
             <span className="text-green-700" data-oid="l7m339c">
               Videos:
-            </span>{" "}
+            </span>{' '}
             <span className="text-green-600" data-oid="skcd8m4">
               ✅ Using Video Service Abstraction
             </span>
@@ -1669,14 +1544,14 @@ export default function TagVideosPage() {
           <div data-oid="dnyhdpa">
             <span className="text-green-700" data-oid="6vzk:a9">
               Operations:
-            </span>{" "}
+            </span>{' '}
             <span className="text-green-600" data-oid="4r9tigy">
               ✅ CRUD operations via service layer
             </span>
           </div>
           <div className="text-xs text-green-600 mt-2" data-oid="8okujy5">
-            All database operations go through the service layer for better
-            maintainability and multi-tenant support.
+            All database operations go through the service layer for better maintainability and
+            multi-tenant support.
           </div>
         </div>
       </div>
@@ -1689,12 +1564,12 @@ export default function TagVideosPage() {
             disabled={batchSaving}
             className={`px-3 py-2 text-white text-sm rounded ${
               batchSaving
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-500 hover:bg-red-600 cursor-pointer"
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-red-500 hover:bg-red-600 cursor-pointer'
             }`}
             data-oid="n8wr8ia"
           >
-            📺 {batchSaving ? "Syncing..." : "Sync with YouTube"}
+            📺 {batchSaving ? 'Syncing...' : 'Sync with YouTube'}
           </button>
 
           <button
@@ -1703,7 +1578,7 @@ export default function TagVideosPage() {
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 text-sm"
             data-oid="70m9l58"
           >
-            {loading ? "Loading..." : "🔄 Refresh Videos"}
+            {loading ? 'Loading...' : '🔄 Refresh Videos'}
           </button>
 
           <button
@@ -1712,21 +1587,15 @@ export default function TagVideosPage() {
             className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-300 text-sm"
             data-oid="-f8pk-p"
           >
-            {parsingDates ? "Parsing Dates..." : "📅 Automatic Date Parsing"}
+            {parsingDates ? 'Parsing Dates...' : '📅 Automatic Date Parsing'}
           </button>
         </div>
       </div>
 
       {/* Statistics */}
-      <div
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
-        data-oid="8thbbky"
-      >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" data-oid="8thbbky">
         <div className="bg-white p-4 rounded-lg shadow" data-oid="-7toujv">
-          <h3
-            className="text-lg font-semibold text-gray-700"
-            data-oid="bqmug9g"
-          >
+          <h3 className="text-lg font-semibold text-gray-700" data-oid="bqmug9g">
             Total Videos
           </h3>
           <p className="text-3xl font-bold text-blue-600" data-oid="04c5o-_">
@@ -1734,10 +1603,7 @@ export default function TagVideosPage() {
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="fo9t3.q">
-          <h3
-            className="text-lg font-semibold text-gray-700"
-            data-oid="kn33wve"
-          >
+          <h3 className="text-lg font-semibold text-gray-700" data-oid="kn33wve">
             Untagged Videos
           </h3>
           <p className="text-3xl font-bold text-orange-600" data-oid="ru1yz:f">
@@ -1745,10 +1611,7 @@ export default function TagVideosPage() {
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="h7:c8xz">
-          <h3
-            className="text-lg font-semibold text-gray-700"
-            data-oid="kmxb2my"
-          >
+          <h3 className="text-lg font-semibold text-gray-700" data-oid="kmxb2my">
             Tagged Videos
           </h3>
           <p className="text-3xl font-bold text-green-600" data-oid="-ryhu8r">
@@ -1758,16 +1621,10 @@ export default function TagVideosPage() {
       </div>
 
       {/* Filter Controls */}
-      <div
-        className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6"
-        data-oid=":bk8dx-"
-      >
+      <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6" data-oid=":bk8dx-">
         {/* Tag Filters */}
         <div className="flex gap-6 mb-4" data-oid="9iem8ps">
-          <label
-            className="flex items-center cursor-pointer"
-            data-oid=":976vpi"
-          >
+          <label className="flex items-center cursor-pointer" data-oid=":976vpi">
             <input
               type="checkbox"
               checked={showTaggedVideos}
@@ -1780,10 +1637,7 @@ export default function TagVideosPage() {
               Show Tagged Videos ({taggedVideos.length})
             </span>
           </label>
-          <label
-            className="flex items-center cursor-pointer"
-            data-oid="3pm2fe7"
-          >
+          <label className="flex items-center cursor-pointer" data-oid="3pm2fe7">
             <input
               type="checkbox"
               checked={showUntaggedVideos}
@@ -1799,22 +1653,16 @@ export default function TagVideosPage() {
         </div>
 
         {/* Date Range Filter */}
-        <div
-          className="flex flex-wrap items-center gap-4 mb-4"
-          data-oid="f23gk3v"
-        >
-          <label
-            className="flex items-center cursor-pointer"
-            data-oid="3yvdua_"
-          >
+        <div className="flex flex-wrap items-center gap-4 mb-4" data-oid="f23gk3v">
+          <label className="flex items-center cursor-pointer" data-oid="3yvdua_">
             <input
               type="checkbox"
               checked={enableDateFilter}
               onChange={(e) => {
                 setEnableDateFilter(e.target.checked);
                 if (!e.target.checked) {
-                  setDateFilterFrom("");
-                  setDateFilterTo("");
+                  setDateFilterFrom('');
+                  setDateFilterTo('');
                 }
               }}
               className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mr-2"
@@ -1827,7 +1675,7 @@ export default function TagVideosPage() {
           </label>
           <div className="flex items-center gap-2" data-oid="_qqkosm">
             <label
-              className={`text-sm ${enableDateFilter ? "text-gray-700" : "text-gray-400"}`}
+              className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}
               data-oid="n:m.hpq"
             >
               From:
@@ -1838,14 +1686,14 @@ export default function TagVideosPage() {
               onChange={(e) => setDateFilterFrom(e.target.value)}
               disabled={!enableDateFilter}
               className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                enableDateFilter ? "bg-white" : "bg-gray-100 text-gray-400"
+                enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
               }`}
               data-oid="es5wt_6"
             />
           </div>
           <div className="flex items-center gap-2" data-oid="ty:4fxg">
             <label
-              className={`text-sm ${enableDateFilter ? "text-gray-700" : "text-gray-400"}`}
+              className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}
               data-oid="8n4doyk"
             >
               To:
@@ -1856,7 +1704,7 @@ export default function TagVideosPage() {
               onChange={(e) => setDateFilterTo(e.target.value)}
               disabled={!enableDateFilter}
               className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                enableDateFilter ? "bg-white" : "bg-gray-100 text-gray-400"
+                enableDateFilter ? 'bg-white' : 'bg-gray-100 text-gray-400'
               }`}
               data-oid=".v3dcyo"
             />
@@ -1864,8 +1712,8 @@ export default function TagVideosPage() {
           {enableDateFilter && (dateFilterFrom || dateFilterTo) && (
             <button
               onClick={() => {
-                setDateFilterFrom("");
-                setDateFilterTo("");
+                setDateFilterFrom('');
+                setDateFilterTo('');
               }}
               className="text-sm text-blue-600 hover:text-blue-800 underline"
               data-oid="37f:p6y"
@@ -1873,10 +1721,7 @@ export default function TagVideosPage() {
               Clear dates
             </button>
           )}
-          <label
-            className="flex items-center cursor-pointer"
-            data-oid="gcq49-."
-          >
+          <label className="flex items-center cursor-pointer" data-oid="gcq49-.">
             <input
               type="checkbox"
               checked={showVideosWithoutTimestamp}
@@ -1886,8 +1731,7 @@ export default function TagVideosPage() {
             />
 
             <span className="text-sm text-gray-700" data-oid="2akisn5">
-              Show Videos Without Timestamp (
-              {videos.filter((v) => !v.createdTime).length})
+              Show Videos Without Timestamp ({videos.filter((v) => !v.createdTime).length})
             </span>
           </label>
         </div>
@@ -1917,11 +1761,7 @@ export default function TagVideosPage() {
               </label>
               <select
                 value={sortBy}
-                onChange={(e) =>
-                  setSortBy(
-                    e.target.value as "created" | "uploaded" | "updated",
-                  )
-                }
+                onChange={(e) => setSortBy(e.target.value as 'created' | 'uploaded' | 'updated')}
                 className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
                 data-oid="gkx4b4_"
               >
@@ -1937,7 +1777,7 @@ export default function TagVideosPage() {
               </select>
               <select
                 value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
                 className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
                 data-oid="i7d04:u"
               >
@@ -1974,8 +1814,7 @@ export default function TagVideosPage() {
               </select>
             </div>
             <div className="text-sm text-gray-600" data-oid="86o:q1b">
-              Showing {startIndex + 1}-
-              {Math.min(endIndex, filteredVideos.length)} of{" "}
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredVideos.length)} of{' '}
               {filteredVideos.length} videos
             </div>
           </div>
@@ -1984,18 +1823,12 @@ export default function TagVideosPage() {
 
       {/* Batch Actions */}
       {showBatchActions && (
-        <div
-          className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4"
-          data-oid="z.5rz9d"
-        >
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4" data-oid="z.5rz9d">
           <h3 className="text-lg font-semibold mb-2" data-oid="0bcedeh">
             Batch Actions ({selectedVideos.size} videos selected)
           </h3>
 
-          <div
-            className="grid grid-cols-1 md:grid-cols-3 gap-3"
-            data-oid="mpmneae"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3" data-oid="mpmneae">
             {/* Tags Section */}
             <div
               className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg"
@@ -2031,7 +1864,7 @@ export default function TagVideosPage() {
               {/* Tag chips */}
               {batchTags && (
                 <div className="flex flex-wrap gap-1 mb-2" data-oid="1_y_83j">
-                  {batchTags.split(",").map((tag, index) => {
+                  {batchTags.split(',').map((tag, index) => {
                     const trimmedTag = tag.trim();
                     if (!trimmedTag) return null;
                     return (
@@ -2045,10 +1878,10 @@ export default function TagVideosPage() {
                           type="button"
                           onClick={() => {
                             const newTags = batchTags
-                              .split(",")
+                              .split(',')
                               .map((t) => t.trim())
                               .filter((t) => t !== trimmedTag)
-                              .join(", ");
+                              .join(', ');
                             setBatchTags(newTags);
                           }}
                           className="ml-1 text-blue-600 hover:text-blue-800"
@@ -2068,7 +1901,7 @@ export default function TagVideosPage() {
                 className="w-full px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
                 data-oid="4ec.mh-"
               >
-                {savingTags ? "Saving..." : "Save Tags"}
+                {savingTags ? 'Saving...' : 'Save Tags'}
               </button>
               <p className="text-xs text-yellow-700 mt-1" data-oid=":qum3s7">
                 ⚠️ Updates YouTube directly
@@ -2100,7 +1933,7 @@ export default function TagVideosPage() {
                 className="w-full px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
                 data-oid=":yn-305"
               >
-                {savingDate ? "Saving..." : "Save Date"}
+                {savingDate ? 'Saving...' : 'Save Date'}
               </button>
               <p className="text-xs text-purple-700 mt-1" data-oid="p_hhrgh">
                 ⚠️ Updates YouTube directly
@@ -2108,10 +1941,7 @@ export default function TagVideosPage() {
             </div>
 
             {/* Playlists Section */}
-            <div
-              className="bg-green-50 border border-green-200 p-3 rounded-lg"
-              data-oid="_:mh5v7"
-            >
+            <div className="bg-green-50 border border-green-200 p-3 rounded-lg" data-oid="_:mh5v7">
               <h4
                 className="text-sm font-semibold text-green-800 mb-2 flex items-center"
                 data-oid="rngas84"
@@ -2127,15 +1957,9 @@ export default function TagVideosPage() {
                     {Array.from(selectedPlaylists)
                       .slice(0, 2)
                       .map((playlistId) => {
-                        const playlist = allPlaylists.find(
-                          (p) => p.id === playlistId,
-                        );
+                        const playlist = allPlaylists.find((p) => p.id === playlistId);
                         return playlist ? (
-                          <div
-                            key={playlistId}
-                            className="truncate"
-                            data-oid="cizxunf"
-                          >
+                          <div key={playlistId} className="truncate" data-oid="cizxunf">
                             {playlist.title}
                           </div>
                         ) : null;
@@ -2149,21 +1973,20 @@ export default function TagVideosPage() {
                 ) : (
                   <div className="text-gray-500 italic" data-oid="t68vltp">
                     None selected
-
                   </div>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  setPlaylistSelectorContext("batch");
+                  setPlaylistSelectorContext('batch');
                   setShowPlaylistSelector(true);
                 }}
                 disabled={loadingPlaylists}
                 className="w-full px-2 py-1 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 text-sm"
                 data-oid="t00lsus"
               >
-                {loadingPlaylists ? "Loading..." : "✏️ Select Playlists"}
+                {loadingPlaylists ? 'Loading...' : '✏️ Select Playlists'}
               </button>
               <p className="text-xs text-green-700 mt-1" data-oid="jbp:qlp">
                 ✅ Save button in modal
@@ -2206,12 +2029,12 @@ export default function TagVideosPage() {
                     key={video.id}
                     className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                       selectedVideo?.id === video.id
-                        ? "border-blue-500"
+                        ? 'border-blue-500'
                         : processingVideos.has(video.id)
-                          ? "border-purple-500 shadow-md"
+                          ? 'border-purple-500 shadow-md'
                           : video.tags && video.tags.length > 0
-                            ? "border-green-200"
-                            : "border-gray-200"
+                            ? 'border-green-200'
+                            : 'border-gray-200'
                     }`}
                     data-oid="j_2y5ex"
                   >
@@ -2231,10 +2054,7 @@ export default function TagVideosPage() {
                     )}
 
                     {/* Checkbox */}
-                    <div
-                      className="absolute top-2 left-2 z-10"
-                      data-oid="2s-r.8t"
-                    >
+                    <div className="absolute top-2 left-2 z-10" data-oid="2s-r.8t">
                       <input
                         type="checkbox"
                         checked={selectedVideos.has(video.id)}
@@ -2246,10 +2066,7 @@ export default function TagVideosPage() {
                     </div>
 
                     {/* Status indicator */}
-                    <div
-                      className="absolute top-2 right-2 z-10 flex gap-1"
-                      data-oid="ohqq7_h"
-                    >
+                    <div className="absolute top-2 right-2 z-10 flex gap-1" data-oid="ohqq7_h">
                       {video.tags && video.tags.length > 0 ? (
                         <span
                           className="bg-green-500 text-white text-xs px-2 py-1 rounded"
@@ -2268,19 +2085,14 @@ export default function TagVideosPage() {
                     </div>
 
                     {/* Video type indicator */}
-                    <div
-                      className="absolute bottom-2 right-2 z-10"
-                      data-oid=":csqj2o"
-                    >
+                    <div className="absolute bottom-2 right-2 z-10" data-oid=":csqj2o">
                       <span
                         className={`text-white text-xs px-2 py-1 rounded ${
-                          video.videoType === "youtube"
-                            ? "bg-red-600"
-                            : "bg-gray-600"
+                          video.videoType === 'youtube' ? 'bg-red-600' : 'bg-gray-600'
                         }`}
                         data-oid="vazpqwp"
                       >
-                        {video.videoType === "youtube" ? "YouTube" : "Storage"}
+                        {video.videoType === 'youtube' ? 'YouTube' : 'Storage'}
                       </span>
                     </div>
 
@@ -2289,11 +2101,11 @@ export default function TagVideosPage() {
                       <div className="relative" data-oid="kmb.gso">
                         <img
                           src={getVideoThumbnail(video)}
-                          alt={video.title || video.id || "Video"}
+                          alt={video.title || video.id || 'Video'}
                           className="w-full h-36 object-cover rounded-t-lg"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "/images/arrow_north.svg";
+                            target.src = '/images/arrow_north.svg';
                           }}
                           data-oid="tkas6_p"
                         />
@@ -2301,36 +2113,27 @@ export default function TagVideosPage() {
 
                       {/* Video Info */}
                       <div className="p-3" data-oid=":pma7lf">
-                        <h3
-                          className="font-medium text-sm line-clamp-2 mb-1"
-                          data-oid="ius0m:m"
-                        >
+                        <h3 className="font-medium text-sm line-clamp-2 mb-1" data-oid="ius0m:m">
                           {video.title || video.description || video.id}
                         </h3>
                         {video.uploadDate && (
-                          <p
-                            className="text-xs text-gray-500 mb-1"
-                            data-oid="kduux3."
-                          >
-                            Published:{" "}
+                          <p className="text-xs text-gray-500 mb-1" data-oid="kduux3.">
+                            Published:{' '}
                             {(() => {
                               try {
                                 const date = new Date(video.uploadDate);
                                 if (!isNaN(date.getTime())) {
                                   return date.toLocaleDateString();
                                 }
-                                return "Invalid date";
+                                return 'Invalid date';
                               } catch (e) {
-                                return "Invalid date";
+                                return 'Invalid date';
                               }
                             })()}
                           </p>
                         )}
-                        <p
-                          className="text-xs text-gray-500 mb-1"
-                          data-oid="v:hhmr1"
-                        >
-                          Created:{" "}
+                        <p className="text-xs text-gray-500 mb-1" data-oid="v:hhmr1">
+                          Created:{' '}
                           {video.createdTime
                             ? (() => {
                                 try {
@@ -2338,28 +2141,26 @@ export default function TagVideosPage() {
                                   if (video.createdTime instanceof Date) {
                                     date = video.createdTime;
                                   } else if (
-                                    typeof video.createdTime === "object" &&
+                                    typeof video.createdTime === 'object' &&
                                     video.createdTime !== null &&
-                                    "seconds" in video.createdTime
+                                    'seconds' in video.createdTime
                                   ) {
                                     // Firebase Timestamp
-                                    date = new Date(
-                                      (video.createdTime as any).seconds * 1000,
-                                    );
+                                    date = new Date((video.createdTime as any).seconds * 1000);
                                   } else {
                                     // String or other format
                                     date = new Date(video.createdTime as any);
                                   }
                                   return !isNaN(date.getTime())
                                     ? date.toLocaleDateString()
-                                    : "Invalid date";
+                                    : 'Invalid date';
                                 } catch (e) {
-                                  return "Invalid date";
+                                  return 'Invalid date';
                                 }
                               })()
-                            : "null"}
+                            : 'null'}
                         </p>
-                        {video.videoType === "youtube" && (
+                        {video.videoType === 'youtube' && (
                           <p
                             className="text-xs text-blue-600 mb-2 font-mono break-all"
                             data-oid="r2tifa0"
@@ -2368,18 +2169,12 @@ export default function TagVideosPage() {
                           </p>
                         )}
                         {video.duration && (
-                          <p
-                            className="text-xs text-gray-500 mb-2"
-                            data-oid="p37u_uu"
-                          >
+                          <p className="text-xs text-gray-500 mb-2" data-oid="p37u_uu">
                             Duration: {formatDuration(video.duration)}
                           </p>
                         )}
                         {video.tags && video.tags.length > 0 && (
-                          <div
-                            className="flex flex-wrap gap-1"
-                            data-oid="nyzmx7c"
-                          >
+                          <div className="flex flex-wrap gap-1" data-oid="nyzmx7c">
                             {video.tags.slice(0, 3).map((tag, index) => (
                               <span
                                 key={index}
@@ -2390,10 +2185,7 @@ export default function TagVideosPage() {
                               </span>
                             ))}
                             {video.tags.length > 3 && (
-                              <span
-                                className="text-xs text-gray-500"
-                                data-oid="xle0dlc"
-                              >
+                              <span className="text-xs text-gray-500" data-oid="xle0dlc">
                                 +{video.tags.length - 3} more
                               </span>
                             )}
@@ -2407,10 +2199,7 @@ export default function TagVideosPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div
-                  className="flex justify-center items-center mt-6 gap-2"
-                  data-oid="xd2qj5x"
-                >
+                <div className="flex justify-center items-center mt-6 gap-2" data-oid="xd2qj5x">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
@@ -2439,8 +2228,8 @@ export default function TagVideosPage() {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-2 text-sm border rounded ${
                           currentPage === pageNum
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "border-gray-300 hover:bg-gray-50"
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'border-gray-300 hover:bg-gray-50'
                         }`}
                         data-oid="gnluo38"
                       >
@@ -2450,9 +2239,7 @@ export default function TagVideosPage() {
                   })}
 
                   <button
-                    onClick={() =>
-                      setCurrentPage(Math.min(totalPages, currentPage + 1))
-                    }
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     data-oid="r4gz9bj"
@@ -2476,20 +2263,17 @@ export default function TagVideosPage() {
                 <div className="mb-4" data-oid="2xg8j8v">
                   <img
                     src={getVideoThumbnail(selectedVideo)}
-                    alt={selectedVideo.title || selectedVideo.id || "Video"}
+                    alt={selectedVideo.title || selectedVideo.id || 'Video'}
                     className="w-full h-32 object-cover rounded mb-2"
                     data-oid="togz2fs"
                   />
 
                   {/* Video Information Block */}
-                  <h4
-                    className="font-medium text-sm line-clamp-2"
-                    data-oid=":tramz3"
-                  >
+                  <h4 className="font-medium text-sm line-clamp-2" data-oid=":tramz3">
                     {selectedVideo.title || selectedVideo.id}
                   </h4>
                   <p className="text-xs text-gray-500 mb-1" data-oid="sdf.:f9">
-                    Published:{" "}
+                    Published:{' '}
                     {(() => {
                       try {
                         const date = selectedVideo.uploadDate
@@ -2497,14 +2281,14 @@ export default function TagVideosPage() {
                           : null;
                         return date && !isNaN(date.getTime())
                           ? date.toLocaleDateString()
-                          : "Unknown";
+                          : 'Unknown';
                       } catch (e) {
-                        return "Unknown";
+                        return 'Unknown';
                       }
                     })()}
                   </p>
                   <p className="text-xs text-gray-500 mb-1" data-oid="dqshn.-">
-                    Created:{" "}
+                    Created:{' '}
                     {selectedVideo.createdTime
                       ? (() => {
                           try {
@@ -2512,48 +2296,43 @@ export default function TagVideosPage() {
                             if (selectedVideo.createdTime instanceof Date) {
                               date = selectedVideo.createdTime;
                             } else if (
-                              typeof selectedVideo.createdTime === "object" &&
+                              typeof selectedVideo.createdTime === 'object' &&
                               selectedVideo.createdTime !== null &&
-                              "seconds" in selectedVideo.createdTime
+                              'seconds' in selectedVideo.createdTime
                             ) {
                               // Firebase Timestamp
-                              date = new Date(
-                                (selectedVideo.createdTime as any).seconds *
-                                  1000,
-                              );
+                              date = new Date((selectedVideo.createdTime as any).seconds * 1000);
                             } else {
                               // String or other format
                               date = new Date(selectedVideo.createdTime as any);
                             }
                             return !isNaN(date.getTime())
                               ? date.toLocaleDateString()
-                              : "Invalid date";
+                              : 'Invalid date';
                           } catch (e) {
-                            return "Invalid date";
+                            return 'Invalid date';
                           }
                         })()
-                      : "null"}
+                      : 'null'}
                   </p>
                   <p className="text-xs text-gray-500 mb-1" data-oid="zhjmyo6">
-                    Metadata Updated:{" "}
+                    Metadata Updated:{' '}
                     {selectedVideo.updated
                       ? (() => {
                           try {
                             const date = new Date(selectedVideo.updated);
-                            return !isNaN(date.getTime())
-                              ? date.toLocaleDateString()
-                              : "Unknown";
+                            return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Unknown';
                           } catch (e) {
-                            return "Unknown";
+                            return 'Unknown';
                           }
                         })()
-                      : "Never"}
+                      : 'Never'}
                   </p>
-                  {selectedVideo.videoType === "youtube" && (
+                  {selectedVideo.videoType === 'youtube' && (
                     <>
                       <div className="text-xs mb-2" data-oid="p5vkh0c">
                         <span className="text-gray-500" data-oid="4g:ea8i">
-                          YouTube:{" "}
+                          YouTube:{' '}
                         </span>
                         <a
                           href={`https://youtu.be/${selectedVideo.youtubeId || selectedVideo.id}`}
@@ -2580,7 +2359,7 @@ export default function TagVideosPage() {
 
                 <div className="space-y-4" data-oid="mdmb933">
                   {/* YouTube Title */}
-                  {selectedVideo.videoType === "youtube" && (
+                  {selectedVideo.videoType === 'youtube' && (
                     <div data-oid="3bqboba">
                       <label
                         className="block text-sm font-medium text-gray-700 mb-1"
@@ -2597,18 +2376,14 @@ export default function TagVideosPage() {
                         data-oid="rcgyly8"
                       />
 
-                      <div
-                        className="text-xs text-gray-500 mt-1"
-                        data-oid="4ygdjy4"
-                      >
-                        ✏️ Changes will be saved to YouTube and synced to
-                        Firebase
+                      <div className="text-xs text-gray-500 mt-1" data-oid="4ygdjy4">
+                        ✏️ Changes will be saved to YouTube and synced to Firebase
                       </div>
                     </div>
                   )}
 
                   {/* YouTube Tags */}
-                  {selectedVideo.videoType === "youtube" && (
+                  {selectedVideo.videoType === 'youtube' && (
                     <div data-oid="2aj8-:4">
                       <label
                         className="block text-sm font-medium text-gray-700 mb-1"
@@ -2639,11 +2414,8 @@ export default function TagVideosPage() {
 
                       {/* Tag chips */}
                       {youtubeTags && (
-                        <div
-                          className="flex flex-wrap gap-1 mt-2"
-                          data-oid="uz:y.ys"
-                        >
-                          {youtubeTags.split(",").map((tag, index) => {
+                        <div className="flex flex-wrap gap-1 mt-2" data-oid="uz:y.ys">
+                          {youtubeTags.split(',').map((tag, index) => {
                             const trimmedTag = tag.trim();
                             if (!trimmedTag) return null;
                             return (
@@ -2667,18 +2439,14 @@ export default function TagVideosPage() {
                         </div>
                       )}
 
-                      <div
-                        className="text-xs text-gray-500 mt-1"
-                        data-oid="mwzpbja"
-                      >
-                        ✏️ Changes will be saved to YouTube and synced to
-                        Firebase
+                      <div className="text-xs text-gray-500 mt-1" data-oid="mwzpbja">
+                        ✏️ Changes will be saved to YouTube and synced to Firebase
                       </div>
                     </div>
                   )}
 
                   {/* YouTube Description */}
-                  {selectedVideo.videoType === "youtube" && (
+                  {selectedVideo.videoType === 'youtube' && (
                     <div data-oid="c9.ac:y">
                       <label
                         className="block text-sm font-medium text-gray-700 mb-1"
@@ -2695,18 +2463,14 @@ export default function TagVideosPage() {
                         data-oid="6sb0avc"
                       />
 
-                      <div
-                        className="text-xs text-gray-500 mt-1"
-                        data-oid="a07bs4o"
-                      >
-                        ✏️ Changes will be saved to YouTube and synced to
-                        Firebase
+                      <div className="text-xs text-gray-500 mt-1" data-oid="a07bs4o">
+                        ✏️ Changes will be saved to YouTube and synced to Firebase
                       </div>
                     </div>
                   )}
 
                   {/* Recording Date */}
-                  {selectedVideo.videoType === "youtube" && (
+                  {selectedVideo.videoType === 'youtube' && (
                     <div data-oid="olzhg8s">
                       <label
                         className="block text-sm font-medium text-gray-700 mb-1"
@@ -2718,9 +2482,7 @@ export default function TagVideosPage() {
                         <input
                           type="date"
                           value={youtubeCreatedTime}
-                          onChange={(e) =>
-                            setYoutubeCreatedTime(e.target.value)
-                          }
+                          onChange={(e) => setYoutubeCreatedTime(e.target.value)}
                           className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
                           data-oid="57iry89"
                         />
@@ -2729,24 +2491,16 @@ export default function TagVideosPage() {
                           type="button"
                           onClick={() => {
                             if (selectedVideo && selectedVideo.title) {
-                              const parsedDate = parseRecordingDateFromTitle(
-                                selectedVideo.title,
-                              );
+                              const parsedDate = parseRecordingDateFromTitle(selectedVideo.title);
                               if (parsedDate) {
                                 // Convert to UTC+9 timezone (Korea Standard Time)
                                 const utcTime = parsedDate.getTime();
-                                const utcPlus9Time = new Date(
-                                  utcTime + 9 * 60 * 60 * 1000,
-                                );
-                                const dateStr = utcPlus9Time
-                                  .toISOString()
-                                  .split("T")[0];
+                                const utcPlus9Time = new Date(utcTime + 9 * 60 * 60 * 1000);
+                                const dateStr = utcPlus9Time.toISOString().split('T')[0];
                                 setYoutubeCreatedTime(dateStr);
                                 alert(`✅ Parsed date from title: ${dateStr}`);
                               } else {
-                                alert(
-                                  "❌ Could not parse date from video title",
-                                );
+                                alert('❌ Could not parse date from video title');
                               }
                             }
                           }}
@@ -2756,12 +2510,8 @@ export default function TagVideosPage() {
                           📅 Parse Date from Title
                         </button>
                       </div>
-                      <div
-                        className="text-xs text-gray-500 mt-1"
-                        data-oid="r:w.0-c"
-                      >
-                        ✏️ Changes will be saved to YouTube and synced to
-                        Firebase
+                      <div className="text-xs text-gray-500 mt-1" data-oid="r:w.0-c">
+                        ✏️ Changes will be saved to YouTube and synced to Firebase
                       </div>
                     </div>
                   )}
@@ -2774,10 +2524,10 @@ export default function TagVideosPage() {
                       data-oid="kbe7otr"
                     >
                       {updatingYoutube
-                        ? "Updating YouTube..."
+                        ? 'Updating YouTube...'
                         : saving
-                          ? "Saving..."
-                          : "Save Changes"}
+                          ? 'Saving...'
+                          : 'Save Changes'}
                     </button>
                     {/* Delete button removed */}
                   </div>
@@ -2787,68 +2537,46 @@ export default function TagVideosPage() {
                       className="text-xs text-gray-500 bg-blue-50 p-3 rounded border-l-4 border-blue-400"
                       data-oid="v37lci7"
                     >
-                      <div
-                        className="font-medium text-blue-700 mb-1"
-                        data-oid="e8-_qs6"
-                      >
+                      <div className="font-medium text-blue-700 mb-1" data-oid="e8-_qs6">
                         Save Process:
                       </div>
                       <div className="space-y-1" data-oid="3ka4wja">
                         <div
-                          className={
-                            updatingYoutube ? "text-blue-600" : "text-gray-500"
-                          }
+                          className={updatingYoutube ? 'text-blue-600' : 'text-gray-500'}
                           data-oid="r318a_e"
                         >
-                          1.{" "}
-                          {updatingYoutube
-                            ? "🔄 Updating YouTube..."
-                            : "✅ YouTube updated"}
+                          1. {updatingYoutube ? '🔄 Updating YouTube...' : '✅ YouTube updated'}
                         </div>
                         <div
-                          className={
-                            saving && !updatingYoutube
-                              ? "text-blue-600"
-                              : "text-gray-500"
-                          }
+                          className={saving && !updatingYoutube ? 'text-blue-600' : 'text-gray-500'}
                           data-oid="bah-bca"
                         >
-                          2.{" "}
+                          2.{' '}
                           {saving && !updatingYoutube
-                            ? "⏳ Waiting for YouTube propagation..."
+                            ? '⏳ Waiting for YouTube propagation...'
                             : updatingYoutube
-                              ? "⏳ Pending"
-                              : "✅ Changes propagated"}
+                              ? '⏳ Pending'
+                              : '✅ Changes propagated'}
                         </div>
                         <div
-                          className={
-                            saving && !updatingYoutube
-                              ? "text-blue-600"
-                              : "text-gray-500"
-                          }
+                          className={saving && !updatingYoutube ? 'text-blue-600' : 'text-gray-500'}
                           data-oid="4c-8nwo"
                         >
-                          3.{" "}
+                          3.{' '}
                           {saving && !updatingYoutube
-                            ? "🔄 Syncing to Firebase..."
+                            ? '🔄 Syncing to Firebase...'
                             : updatingYoutube
-                              ? "⏳ Pending"
-                              : "✅ Firebase synced"}
+                              ? '⏳ Pending'
+                              : '✅ Firebase synced'}
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* YouTube Playlists - Separate Management Section */}
-                  {selectedVideo.videoType === "youtube" && (
-                    <div
-                      className="border-t border-gray-200 pt-4 mt-4"
-                      data-oid="6192ft7"
-                    >
-                      <h4
-                        className="text-sm font-medium text-gray-700 mb-3"
-                        data-oid="3li:a-m"
-                      >
+                  {selectedVideo.videoType === 'youtube' && (
+                    <div className="border-t border-gray-200 pt-4 mt-4" data-oid="6192ft7">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3" data-oid="3li:a-m">
                         Playlist Management
                       </h4>
 
@@ -2860,12 +2588,8 @@ export default function TagVideosPage() {
                         >
                           Current Playlists:
                         </label>
-                        {selectedVideo.allPlaylists &&
-                        selectedVideo.allPlaylists.length > 0 ? (
-                          <div
-                            className="flex flex-wrap gap-1"
-                            data-oid=":c-1qg4"
-                          >
+                        {selectedVideo.allPlaylists && selectedVideo.allPlaylists.length > 0 ? (
+                          <div className="flex flex-wrap gap-1" data-oid=":c-1qg4">
                             {selectedVideo.allPlaylists.map((playlist) => (
                               <span
                                 key={playlist.id}
@@ -2877,10 +2601,7 @@ export default function TagVideosPage() {
                             ))}
                           </div>
                         ) : (
-                          <span
-                            className="text-xs text-gray-500 italic"
-                            data-oid="ad8prf:"
-                          >
+                          <span className="text-xs text-gray-500 italic" data-oid="ad8prf:">
                             Not in any playlists
                           </span>
                         )}
@@ -2895,18 +2616,15 @@ export default function TagVideosPage() {
                         data-oid="wul1h1p"
                       >
                         {loadingPlaylists
-                          ? "⏳ Loading Playlists..."
+                          ? '⏳ Loading Playlists...'
                           : savingPlaylists
-                            ? "💾 Saving Changes..."
-                            : "📋 Manage Playlists"}
+                            ? '💾 Saving Changes...'
+                            : '📋 Manage Playlists'}
                       </button>
 
-                      <div
-                        className="text-xs text-gray-500 mt-2"
-                        data-oid="br5ao2s"
-                      >
-                        💡 Playlist changes are saved directly to YouTube and
-                        synced to Firebase automatically
+                      <div className="text-xs text-gray-500 mt-2" data-oid="br5ao2s">
+                        💡 Playlist changes are saved directly to YouTube and synced to Firebase
+                        automatically
                       </div>
                     </div>
                   )}
@@ -2933,19 +2651,16 @@ export default function TagVideosPage() {
             className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
             data-oid="tys76iv"
           >
-            <div
-              className="flex justify-between items-center mb-4"
-              data-oid="34qb22l"
-            >
+            <div className="flex justify-between items-center mb-4" data-oid="34qb22l">
               <h3 className="text-lg font-semibold" data-oid="e-c73t9">
-                Select Cats{" "}
-                {catSelectorContext === "batch"
-                  ? "(Batch Tagging)"
-                  : catSelectorContext === "youtube-individual"
-                    ? "(YouTube Tags - Individual)"
-                    : catSelectorContext === "youtube-batch"
-                      ? "(YouTube Tags - Batch)"
-                      : "(Individual Video)"}
+                Select Cats{' '}
+                {catSelectorContext === 'batch'
+                  ? '(Batch Tagging)'
+                  : catSelectorContext === 'youtube-individual'
+                    ? '(YouTube Tags - Individual)'
+                    : catSelectorContext === 'youtube-batch'
+                      ? '(YouTube Tags - Batch)'
+                      : '(Individual Video)'}
               </h3>
               <button
                 onClick={() => setShowCatSelector(false)}
@@ -2974,13 +2689,8 @@ export default function TagVideosPage() {
               data-oid="_gr-lpj"
             >
               {filteredCats.length === 0 ? (
-                <div
-                  className="p-4 text-center text-gray-500"
-                  data-oid="kdkatss"
-                >
-                  {cats.length === 0
-                    ? "No cats found in database"
-                    : "No cats match your search"}
+                <div className="p-4 text-center text-gray-500" data-oid="kdkatss">
+                  {cats.length === 0 ? 'No cats found in database' : 'No cats match your search'}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 p-4" data-oid="7gaiylw">
@@ -2989,8 +2699,8 @@ export default function TagVideosPage() {
                       key={cat.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedCats.has(cat.id)
-                          ? "bg-blue-50 border border-blue-200"
-                          : "border border-gray-200"
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'border border-gray-200'
                       }`}
                       data-oid="j5u3cxf"
                     >
@@ -2998,11 +2708,9 @@ export default function TagVideosPage() {
                         type="checkbox"
                         checked={selectedCats.has(cat.id)}
                         onChange={() => {
-                          if (catSelectorContext === "batch") {
+                          if (catSelectorContext === 'batch') {
                             handleCatToggleBatch(cat.id, cat.name);
-                          } else if (
-                            catSelectorContext === "youtube-individual"
-                          ) {
+                          } else if (catSelectorContext === 'youtube-individual') {
                             handleCatToggleYoutubeIndividual(cat.id, cat.name);
                           }
                           // Note: individual local tags context has been removed
@@ -3016,10 +2724,7 @@ export default function TagVideosPage() {
                           {cat.name}
                         </div>
                         {cat.alt_name && (
-                          <div
-                            className="text-xs text-gray-500"
-                            data-oid="0uv9mk7"
-                          >
+                          <div className="text-xs text-gray-500" data-oid="0uv9mk7">
                             ({cat.alt_name})
                           </div>
                         )}
@@ -3035,11 +2740,11 @@ export default function TagVideosPage() {
               <button
                 onClick={() => {
                   setSelectedCats(new Set());
-                  if (catSelectorContext === "batch") {
-                    setBatchTags("");
-                  } else if (catSelectorContext === "youtube-individual") {
-                    setYoutubeTags("");
-                  } else if (catSelectorContext === "youtube-batch") {
+                  if (catSelectorContext === 'batch') {
+                    setBatchTags('');
+                  } else if (catSelectorContext === 'youtube-individual') {
+                    setYoutubeTags('');
+                  } else if (catSelectorContext === 'youtube-batch') {
                     // Clear YouTube batch tags if implemented
                   }
                 }}
@@ -3070,13 +2775,9 @@ export default function TagVideosPage() {
             className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
             data-oid="iavnu52"
           >
-            <div
-              className="flex justify-between items-center mb-4"
-              data-oid="o8v5u1v"
-            >
+            <div className="flex justify-between items-center mb-4" data-oid="o8v5u1v">
               <h3 className="text-lg font-semibold" data-oid="ij82ao6">
-                Select Playlists{" "}
-                {playlistSelectorContext === "batch" ? "(Batch Action)" : ""}
+                Select Playlists {playlistSelectorContext === 'batch' ? '(Batch Action)' : ''}
               </h3>
               <button
                 onClick={() => setShowPlaylistSelector(false)}
@@ -3100,8 +2801,7 @@ export default function TagVideosPage() {
                     data-oid="f:a_83z"
                   ></div>
                   <span className="text-blue-800 text-sm" data-oid="ksnf.5q">
-                    Saving playlist changes to YouTube and syncing to
-                    Firestore...
+                    Saving playlist changes to YouTube and syncing to Firestore...
                   </span>
                 </div>
               </div>
@@ -3113,10 +2813,7 @@ export default function TagVideosPage() {
               data-oid="bnb3:pc"
             >
               {allPlaylists.length === 0 ? (
-                <div
-                  className="p-4 text-center text-gray-500"
-                  data-oid="prcyn.2"
-                >
+                <div className="p-4 text-center text-gray-500" data-oid="prcyn.2">
                   No playlists found. Create a playlist first.
                 </div>
               ) : (
@@ -3126,11 +2823,9 @@ export default function TagVideosPage() {
                       key={playlist.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedPlaylists.has(playlist.id)
-                          ? "bg-blue-50 border border-blue-200"
-                          : "border border-gray-200"
-                      } ${
-                        savingPlaylists ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'border border-gray-200'
+                      } ${savingPlaylists ? 'opacity-50 cursor-not-allowed' : ''}`}
                       data-oid="28aygn7"
                     >
                       <input
@@ -3146,18 +2841,12 @@ export default function TagVideosPage() {
                         <div className="font-medium text-sm" data-oid="egn8jag">
                           {playlist.title}
                         </div>
-                        <div
-                          className="text-xs text-gray-500"
-                          data-oid="8g33we8"
-                        >
+                        <div className="text-xs text-gray-500" data-oid="8g33we8">
                           {playlist.description}
                         </div>
-                        <div
-                          className="text-xs text-gray-400"
-                          data-oid="ba-amzt"
-                        >
+                        <div className="text-xs text-gray-400" data-oid="ba-amzt">
                           {playlist.itemCount} video
-                          {playlist.itemCount !== 1 ? "s" : ""}
+                          {playlist.itemCount !== 1 ? 's' : ''}
                         </div>
                       </div>
                     </label>
@@ -3173,9 +2862,7 @@ export default function TagVideosPage() {
                   setShowPlaylistSelector(false);
                   // Reset selected playlists to original state
                   const videoPlaylists = selectedVideo?.allPlaylists || [];
-                  const preSelectedPlaylists = new Set(
-                    videoPlaylists.map((p) => p.id),
-                  );
+                  const preSelectedPlaylists = new Set(videoPlaylists.map((p) => p.id));
                   setSelectedPlaylists(preSelectedPlaylists);
                 }}
                 disabled={savingPlaylists}
@@ -3191,7 +2878,7 @@ export default function TagVideosPage() {
                 data-oid="6beezti"
               >
                 {savingPlaylists
-                  ? "Saving..."
+                  ? 'Saving...'
                   : `Save Changes (${selectedPlaylists.size} selected)`}
               </button>
             </div>

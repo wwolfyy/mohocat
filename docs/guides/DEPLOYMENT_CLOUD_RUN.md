@@ -146,11 +146,11 @@ The application uses a multi-stage Docker build:
 ### Resource Allocation
 
 ```yaml
-Memory: 2Gi          # Sufficient for image optimization
-CPU: 2 vCPU          # Good balance for Next.js server
-Max Instances: 10    # Handle traffic spikes
-Min Instances: 0     # Cost optimization (scale to zero)
-Timeout: 300s        # Allow for image processing
+Memory: 2Gi # Sufficient for image optimization
+CPU: 2 vCPU # Good balance for Next.js server
+Max Instances: 10 # Handle traffic spikes
+Min Instances: 0 # Cost optimization (scale to zero)
+Timeout: 300s # Allow for image processing
 ```
 
 ### Auto-scaling Behavior
@@ -162,13 +162,13 @@ Timeout: 300s        # Allow for image processing
 
 ### Image Optimization Performance
 
-| Metric | Firebase Hosting (Static) | Cloud Run (Optimized) |
-|--------|-------------------------|---------------------|
-| **Image Format** | JPEG only | WebP/AVIF (auto) |
-| **File Size** | 500KB-2MB | 50KB-200KB |
-| **Loading Time** | 2-5 seconds | 0.5-1 second |
-| **Caching** | Browser only | Server + Browser |
-| **Responsive** | Manual | Automatic |
+| Metric           | Firebase Hosting (Static) | Cloud Run (Optimized) |
+| ---------------- | ------------------------- | --------------------- |
+| **Image Format** | JPEG only                 | WebP/AVIF (auto)      |
+| **File Size**    | 500KB-2MB                 | 50KB-200KB            |
+| **Loading Time** | 2-5 seconds               | 0.5-1 second          |
+| **Caching**      | Browser only              | Server + Browser      |
+| **Responsive**   | Manual                    | Automatic             |
 
 ## Multi-Mountain Deployment
 
@@ -189,11 +189,11 @@ gcloud run deploy mtcat-seoraksan --env-vars-file .env.seoraksan
 
 ### Cost Sharing Model
 
-| Mountain | Traffic | Monthly Cost | Revenue Share |
-|----------|---------|-------------|---------------|
-| **Geyang** | High | $15-25 | 60% |
-| **Jirisan** | Medium | $8-15 | 25% |
-| **Seoraksan** | Low | $3-8 | 15% |
+| Mountain      | Traffic | Monthly Cost | Revenue Share |
+| ------------- | ------- | ------------ | ------------- |
+| **Geyang**    | High    | $15-25       | 60%           |
+| **Jirisan**   | Medium  | $8-15        | 25%           |
+| **Seoraksan** | Low     | $3-8         | 15%           |
 
 ### Benefits vs Firebase Hosting
 
@@ -242,6 +242,7 @@ Access Google Cloud Console → Cloud Run → mtcat-next:
 ### Common Issues
 
 #### 1. Service Won't Start
+
 ```bash
 # Check logs
 gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=mtcat-next" --limit 50
@@ -253,6 +254,7 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 ```
 
 #### 2. Images Not Loading
+
 ```bash
 # Verify image optimization
 curl https://your-service-url.com/_next/image?url=FIREBASE_URL&w=40&q=85
@@ -261,6 +263,7 @@ curl https://your-service-url.com/_next/image?url=FIREBASE_URL&w=40&q=85
 ```
 
 #### 3. High Memory Usage
+
 ```bash
 # Increase memory allocation
 gcloud run services update mtcat-next --memory 4Gi
@@ -271,6 +274,7 @@ gcloud run services update mtcat-next --memory 4Gi
 ```
 
 #### 4. Slow Cold Starts
+
 ```bash
 # Set minimum instances to avoid cold starts
 gcloud run services update mtcat-next --min-instances 1
@@ -281,6 +285,7 @@ gcloud run services update mtcat-next --min-instances 1
 ### Performance Optimization
 
 #### 1. Faster Builds
+
 ```dockerfile
 # Use npm ci instead of npm install
 RUN npm ci --only=production
@@ -292,6 +297,7 @@ COPY . .
 ```
 
 #### 2. Smaller Images
+
 ```dockerfile
 # Use Alpine Linux
 FROM node:18-alpine
@@ -301,6 +307,7 @@ RUN rm -rf docs/ tests/ *.md
 ```
 
 #### 3. Better Caching
+
 ```javascript
 // next.config.js - extend cache TTL
 images: {
@@ -312,13 +319,13 @@ images: {
 
 ### What Changed
 
-| Aspect | Firebase Hosting | Cloud Run |
-|--------|-----------------|-----------|
-| **Deployment** | `firebase deploy` | `gcloud run deploy` |
-| **URL Format** | `*.web.app` | `*.run.app` |
-| **Environment** | Static files | Node.js server |
-| **Scaling** | CDN only | Auto-scaling containers |
-| **Cost** | Fixed ($5-25/month) | Usage-based ($3-30/month) |
+| Aspect          | Firebase Hosting    | Cloud Run                 |
+| --------------- | ------------------- | ------------------------- |
+| **Deployment**  | `firebase deploy`   | `gcloud run deploy`       |
+| **URL Format**  | `*.web.app`         | `*.run.app`               |
+| **Environment** | Static files        | Node.js server            |
+| **Scaling**     | CDN only            | Auto-scaling containers   |
+| **Cost**        | Fixed ($5-25/month) | Usage-based ($3-30/month) |
 
 ### Migration Steps
 
@@ -349,24 +356,28 @@ firebase deploy --only hosting
 ## Best Practices
 
 ### 1. Security
+
 - ✅ Use service accounts with minimal permissions
 - ✅ Store secrets in Google Secret Manager
 - ✅ Enable audit logging
 - ✅ Regular security updates
 
 ### 2. Performance
+
 - ✅ Use CDN for static assets (if needed)
 - ✅ Enable compression
 - ✅ Monitor Core Web Vitals
 - ✅ Optimize image cache settings
 
 ### 3. Cost Optimization
+
 - ✅ Set appropriate min/max instances
 - ✅ Monitor resource usage
 - ✅ Use regional deployment (asia-northeast3)
 - ✅ Scale to zero during low traffic
 
 ### 4. Reliability
+
 - ✅ Set up health checks
 - ✅ Configure proper timeouts
 - ✅ Monitor error rates

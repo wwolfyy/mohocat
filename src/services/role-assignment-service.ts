@@ -19,10 +19,14 @@ export class RoleAssignmentService {
   /**
    * Automatically assign role to user based on email and mountain configuration
    */
-  async assignUserRole(userId: string, email: string, mountainId: string = 'geyang'): Promise<void> {
+  async assignUserRole(
+    userId: string,
+    email: string,
+    mountainId: string = 'geyang'
+  ): Promise<void> {
     try {
       const config = this.loadConfig();
-      
+
       // Check if user is admin for the mountain
       const mountainConfig = config.mountains[mountainId];
       if (!mountainConfig) {
@@ -31,17 +35,23 @@ export class RoleAssignmentService {
       }
 
       let assignedRole = mountainConfig.defaultRole || 'viewer';
-      
+
       // Check if user is admin
       if (mountainConfig.adminUsers && mountainConfig.adminUsers.includes(email)) {
         assignedRole = 'admin';
       }
       // Check if user is butler-ground
-      else if (mountainConfig.butlerGroundUsers && mountainConfig.butlerGroundUsers.includes(email)) {
+      else if (
+        mountainConfig.butlerGroundUsers &&
+        mountainConfig.butlerGroundUsers.includes(email)
+      ) {
         assignedRole = 'butler-ground';
       }
       // Check if user is butler-internet
-      else if (mountainConfig.butlerInternetUsers && mountainConfig.butlerInternetUsers.includes(email)) {
+      else if (
+        mountainConfig.butlerInternetUsers &&
+        mountainConfig.butlerInternetUsers.includes(email)
+      ) {
         assignedRole = 'butler-internet';
       }
 
@@ -58,7 +68,7 @@ export class RoleAssignmentService {
         mountainId,
         assignedBy: 'system',
         assignedAt: new Date(),
-        isActive: true
+        isActive: true,
       };
 
       // Create or update user permissions document
@@ -67,11 +77,15 @@ export class RoleAssignmentService {
 
       if (userDoc.exists()) {
         // Update existing user permissions
-        await setDoc(userRef, {
-          email,
-          currentRole: userRole,
-          updatedAt: new Date()
-        }, { merge: true });
+        await setDoc(
+          userRef,
+          {
+            email,
+            currentRole: userRole,
+            updatedAt: new Date(),
+          },
+          { merge: true }
+        );
       } else {
         // Create new user permissions
         const newUserPermissions: UserPermissions = {
@@ -80,9 +94,9 @@ export class RoleAssignmentService {
           currentRole: userRole,
           roleHistory: [],
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
-        
+
         await setDoc(userRef, newUserPermissions);
       }
 
@@ -95,10 +109,15 @@ export class RoleAssignmentService {
   /**
    * Manually assign a specific role to a user (for admin use)
    */
-  async assignSpecificRole(userId: string, role: string, assignedBy: string, mountainId: string = 'geyang'): Promise<void> {
+  async assignSpecificRole(
+    userId: string,
+    role: string,
+    assignedBy: string,
+    mountainId: string = 'geyang'
+  ): Promise<void> {
     try {
       const config = await this.loadConfig();
-      
+
       // Validate role exists
       const roleConfig = config.roles[role];
       if (!roleConfig) {
@@ -111,7 +130,7 @@ export class RoleAssignmentService {
         mountainId,
         assignedBy: assignedBy,
         assignedAt: new Date(),
-        isActive: true
+        isActive: true,
       };
 
       // Create or update user permissions document
@@ -120,22 +139,26 @@ export class RoleAssignmentService {
 
       if (userDoc.exists()) {
         const userData = userDoc.data() as UserPermissions;
-        
+
         // Add current role to history
         const roleHistory = userData.roleHistory || [];
         if (userData.currentRole) {
           roleHistory.push({
             ...userData.currentRole,
-            isActive: false
+            isActive: false,
           });
         }
 
         // Update existing user permissions
-        await setDoc(userRef, {
-          currentRole: userRole,
-          roleHistory: roleHistory,
-          updatedAt: new Date()
-        }, { merge: true });
+        await setDoc(
+          userRef,
+          {
+            currentRole: userRole,
+            roleHistory: roleHistory,
+            updatedAt: new Date(),
+          },
+          { merge: true }
+        );
       } else {
         // Create new user permissions
         const newUserPermissions: UserPermissions = {
@@ -144,15 +167,15 @@ export class RoleAssignmentService {
           currentRole: userRole,
           roleHistory: [],
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
-        
+
         await setDoc(userRef, newUserPermissions);
       }
 
       // Log the role assignment
       await this.logRoleChange(userId, role, mountainId, assignedBy);
-      
+
       console.log(`Assigned role ${role} to user ${userId} for mountain ${mountainId}`);
     } catch (error) {
       console.error('Failed to assign specific role:', error);
@@ -167,7 +190,7 @@ export class RoleAssignmentService {
     try {
       const userRef = doc(this.db, 'user_permissions', userId);
       const userDoc = await getDoc(userRef);
-      
+
       return !userDoc.exists();
     } catch (error) {
       console.error('Error checking role assignment status:', error);
@@ -182,11 +205,11 @@ export class RoleAssignmentService {
     try {
       const userRef = doc(this.db, 'user_permissions', userId);
       const userDoc = await getDoc(userRef);
-      
+
       if (!userDoc.exists()) {
         return null;
       }
-      
+
       const userData = userDoc.data() as UserPermissions;
       return userData.currentRole?.role || null;
     } catch (error) {
@@ -211,11 +234,16 @@ export class RoleAssignmentService {
   /**
    * Log role change for audit purposes
    */
-  async logRoleChange(userId: string, newRole: string, mountainId: string, changedBy: string): Promise<void> {
+  async logRoleChange(
+    userId: string,
+    newRole: string,
+    mountainId: string,
+    changedBy: string
+  ): Promise<void> {
     try {
       const { getFirestore, addDoc, collection } = await import('firebase/firestore');
       const db = getFirestore();
-      
+
       await addDoc(collection(db, 'permission_logs'), {
         userId,
         action: 'role-assigned',
@@ -224,8 +252,8 @@ export class RoleAssignmentService {
         changedBy,
         timestamp: new Date(),
         metadata: {
-          source: 'admin-interface'
-        }
+          source: 'admin-interface',
+        },
       });
     } catch (error) {
       console.error('Failed to log role change:', error);

@@ -11,22 +11,25 @@ async function updateCatData() {
     // Use the same options as the Python script
     let firebaseApp;
     try {
-      firebaseApp = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        options: {
+      firebaseApp = admin.initializeApp(
+        {
+          credential: admin.credential.cert(serviceAccount),
+          options: {
             projectId: 'mountaincats-61543',
             databaseURL: 'mountaincats-61543.firebaseio.com',
             storageBucket: 'mountaincats-61543.appspot.com',
-            serviceAccountId: '104983902960398669570'
-        }
-      }, 'mtcat-app'); // Use the same app name
+            serviceAccountId: '104983902960398669570',
+          },
+        },
+        'mtcat-app'
+      ); // Use the same app name
     } catch (error) {
-        // If the app is already initialized, get it
-        if (error.code === 'app/duplicate-app') {
-            firebaseApp = admin.app('mtcat-app');
-        } else {
-            throw error; // Re-throw other errors
-        }
+      // If the app is already initialized, get it
+      if (error.code === 'app/duplicate-app') {
+        firebaseApp = admin.app('mtcat-app');
+      } else {
+        throw error; // Re-throw other errors
+      }
     }
 
     const db = admin.firestore(firebaseApp);
@@ -66,15 +69,15 @@ async function updateCatData() {
     const rows = values.slice(1); // Skip header row
 
     // Convert rows to an array of objects (similar to pandas DataFrame rows to dict)
-    const dataToImport = rows.map(row => {
-        const data = {};
-        headers.forEach((header, colIndex) => {
-            // Ensure header exists and row has value at colIndex
-            if (header !== undefined && row.length > colIndex) {
-                 data[header] = row[colIndex];
-            }
-        });
-        return data;
+    const dataToImport = rows.map((row) => {
+      const data = {};
+      headers.forEach((header, colIndex) => {
+        // Ensure header exists and row has value at colIndex
+        if (header !== undefined && row.length > colIndex) {
+          data[header] = row[colIndex];
+        }
+      });
+      return data;
     });
 
     // Write to Firestore using batch writes for efficiency
@@ -93,8 +96,7 @@ async function updateCatData() {
 
     await batch.commit();
 
-    console.log("Data successfully written to Firestore!");
-
+    console.log('Data successfully written to Firestore!');
   } catch (err) {
     console.error('Error updating data:', err);
   }

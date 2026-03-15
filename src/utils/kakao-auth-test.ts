@@ -10,13 +10,13 @@ import { FirebaseAuthService } from '../services/auth-service';
  */
 export async function testKakaoAuth() {
   const authService = new FirebaseAuthService();
-  
+
   try {
     console.log('=== TESTING KAKAOTALK AUTHENTICATION ===');
     console.log('Attempting KakaoTalk sign-in with two-step approach...');
-    
+
     const result = await authService.signInWithKakao();
-    
+
     console.log('=== KAKAOTALK AUTHENTICATION SUCCESS ===');
     console.log('Authentication result:', {
       userUid: result.user.uid,
@@ -25,9 +25,9 @@ export async function testKakaoAuth() {
       displayName: result.user.displayName,
       email: result.user.email,
       isNewUser: (result as any).additionalUserInfo?.isNewUser,
-      providerId: (result as any).additionalUserInfo?.providerId
+      providerId: (result as any).additionalUserInfo?.providerId,
     });
-    
+
     return result;
   } catch (error) {
     console.error('=== KAKAOTALK AUTHENTICATION FAILED ===');
@@ -41,48 +41,48 @@ export async function testKakaoAuth() {
  */
 export function testUserCreationErrorDetection() {
   const authService = new FirebaseAuthService();
-  
+
   // Test cases for user creation error detection
   const testCases = [
     {
       name: 'Internal error',
       error: { code: 'auth/internal-error', message: 'Something went wrong' },
-      expected: true
+      expected: true,
     },
     {
       name: 'Operation not allowed',
       error: { code: 'auth/operation-not-allowed', message: 'Operation not allowed' },
-      expected: true
+      expected: true,
     },
     {
       name: 'User creation message',
       error: { code: 'auth/some-error', message: 'User creation failed' },
-      expected: true
+      expected: true,
     },
     {
       name: 'Sign up error',
       error: { code: 'auth/some-error', message: 'Sign up failed' },
-      expected: true
+      expected: true,
     },
     {
       name: 'Popup closed',
       error: { code: 'auth/popup-closed-by-user', message: 'Popup closed' },
-      expected: false
+      expected: false,
     },
     {
       name: 'Valid error',
       error: { code: 'auth/invalid-credential', message: 'Invalid credential' },
-      expected: false
-    }
+      expected: false,
+    },
   ];
-  
+
   console.log('=== TESTING USER CREATION ERROR DETECTION ===');
-  
+
   // Note: Since isKakaoUserCreationError is private, we can't test it directly
   // This would need to be tested through the actual signInWithKakao method
   // or by making the method public for testing purposes
-  
-  testCases.forEach(testCase => {
+
+  testCases.forEach((testCase) => {
     console.log(`Test case: ${testCase.name}`);
     console.log(`Expected: ${testCase.expected}`);
     console.log(`Error:`, testCase.error);

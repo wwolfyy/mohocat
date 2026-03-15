@@ -45,7 +45,7 @@ export class AboutContentService {
       const updateData = {
         ...content,
         lastUpdated: serverTimestamp(),
-        lastUpdatedBy: userEmail || 'unknown'
+        lastUpdatedBy: userEmail || 'unknown',
       };
 
       await setDoc(docRef, updateData, { merge: true });
@@ -61,7 +61,7 @@ export class AboutContentService {
       const createData = {
         ...content,
         lastUpdated: serverTimestamp(),
-        lastUpdatedBy: userEmail || 'unknown'
+        lastUpdatedBy: userEmail || 'unknown',
       };
 
       await setDoc(docRef, createData);

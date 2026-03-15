@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         // Add service checks here if needed
         // firebase: await checkFirebaseConnection(),
         // database: await checkDatabaseConnection(),
-      }
+      },
     };
 
     return NextResponse.json(healthCheck, { status: 200 });
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 503 }
     );

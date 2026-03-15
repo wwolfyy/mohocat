@@ -24,7 +24,7 @@ function getFirebaseApp() {
     console.log('Firebase config check:', {
       hasApiKey: !!firebaseConfig.apiKey,
       hasProjectId: !!firebaseConfig.projectId,
-      hasAuthDomain: !!firebaseConfig.authDomain
+      hasAuthDomain: !!firebaseConfig.authDomain,
     });
 
     if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
           displayName: data.displayName || data.email?.split('@')[0] || 'Unknown',
           permissions: data.currentRole?.permissions || [],
           assignedAt: data.currentRole?.assignedAt || null,
-          isActive: data.currentRole?.isActive !== false
+          isActive: data.currentRole?.isActive !== false,
         });
         processedCount++;
       } catch (docError) {
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
         admin: 4,
         'butler-ground': 3,
         'butler-internet': 2,
-        viewer: 1
+        viewer: 1,
       };
       const aRole = roleOrder[a.role] || 0;
       const bRole = roleOrder[b.role] || 0;
@@ -108,10 +108,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(users);
   } catch (error) {
     console.error('Error fetching user permissions:', error);
-    return NextResponse.json({
-      error: 'Failed to fetch user permissions',
-      details: (error as Error).message,
-      stack: (error as Error).stack
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch user permissions',
+        details: (error as Error).message,
+        stack: (error as Error).stack,
+      },
+      { status: 500 }
+    );
   }
 }

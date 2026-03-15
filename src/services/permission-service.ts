@@ -1,6 +1,22 @@
-import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, FieldValue, query, where, getDocs } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  FieldValue,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
 import { loadPermissionConfig, getPermissionMatrix } from '@/config/permission-config';
-import type { UserPermissions, UserRole, PermissionLog, PermissionConfig } from '@/types/permissions';
+import type {
+  UserPermissions,
+  UserRole,
+  PermissionLog,
+  PermissionConfig,
+} from '@/types/permissions';
 
 export class PermissionService {
   private db = getFirestore();
@@ -98,7 +114,7 @@ export class PermissionService {
    */
   async hasAnyPermission(userId: string, permissions: string[]): Promise<boolean> {
     const userPermissions = await this.getUserPermissions(userId);
-    return permissions.some(permission => userPermissions.includes(permission));
+    return permissions.some((permission) => userPermissions.includes(permission));
   }
 
   /**
@@ -106,7 +122,7 @@ export class PermissionService {
    */
   async hasAllPermissions(userId: string, permissions: string[]): Promise<boolean> {
     const userPermissions = await this.getUserPermissions(userId);
-    return permissions.every(permission => userPermissions.includes(permission));
+    return permissions.every((permission) => userPermissions.includes(permission));
   }
 
   /**
@@ -143,7 +159,7 @@ export class PermissionService {
       mountainId,
       assignedBy,
       assignedAt: new Date(),
-      isActive: true
+      isActive: true,
     };
 
     const userRef = doc(this.db, this.usersCollection, userId);
@@ -157,14 +173,14 @@ export class PermissionService {
         userData.roleHistory = userData.roleHistory || [];
         userData.roleHistory.push({
           ...userData.currentRole,
-          isActive: false
+          isActive: false,
         });
       }
 
       await updateDoc(userRef, {
         currentRole: newRole,
         roleHistory: userData.roleHistory || [],
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
     } else {
       // Create new user permissions record
@@ -174,7 +190,7 @@ export class PermissionService {
         currentRole: newRole,
         roleHistory: [],
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       await setDoc(userRef, newUserPermissions);
@@ -201,32 +217,26 @@ export class PermissionService {
     userData.roleHistory = userData.roleHistory || [];
     userData.roleHistory.push({
       ...userData.currentRole,
-      isActive: false
+      isActive: false,
     });
 
     // Set current role as inactive
     const suspendedRole = {
       ...userData.currentRole,
-      isActive: false
+      isActive: false,
     };
 
     await updateDoc(userRef, {
       currentRole: suspendedRole,
       roleHistory: userData.roleHistory,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     // Log the suspension
-    await this.logRoleChange(
-      userId,
-      'suspended',
-      userData.currentRole.mountainId,
-      suspendedBy,
-      {
-        reason: reason || 'No reason provided',
-        previousRole: userData.currentRole.role
-      }
-    );
+    await this.logRoleChange(userId, 'suspended', userData.currentRole.mountainId, suspendedBy, {
+      reason: reason || 'No reason provided',
+      previousRole: userData.currentRole.role,
+    });
   }
 
   /**
@@ -249,21 +259,16 @@ export class PermissionService {
     // Reactivate the role
     const reactivatedRole = {
       ...userData.currentRole,
-      isActive: true
+      isActive: true,
     };
 
     await updateDoc(userRef, {
       currentRole: reactivatedRole,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     // Log the reactivation
-    await this.logRoleChange(
-      userId,
-      'reactivated',
-      userData.currentRole.mountainId,
-      reactivatedBy
-    );
+    await this.logRoleChange(userId, 'reactivated', userData.currentRole.mountainId, reactivatedBy);
   }
 
   /**
@@ -291,10 +296,13 @@ export class PermissionService {
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as any as UserPermissions));
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        }) as any as UserPermissions
+    );
   }
 
   /**
@@ -308,10 +316,13 @@ export class PermissionService {
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as any as UserPermissions));
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        }) as any as UserPermissions
+    );
   }
 
   /**
@@ -331,7 +342,7 @@ export class PermissionService {
       mountainId,
       changedBy,
       timestamp: new Date(),
-      metadata
+      metadata,
     };
 
     await setDoc(doc(collection(this.db, 'permission_logs')), logEntry);
@@ -343,16 +354,19 @@ export class PermissionService {
   async getUserPermissionLogs(userId: string, limit: number = 50): Promise<PermissionLog[]> {
     const q = query(
       collection(this.db, 'permission_logs'),
-      where('userId', '==', userId),
+      where('userId', '==', userId)
       // orderBy('timestamp', 'desc'),
       // limit(limit)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as any as PermissionLog));
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        }) as any as PermissionLog
+    );
   }
 
   /**
@@ -366,10 +380,13 @@ export class PermissionService {
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as any as PermissionLog));
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        }) as any as PermissionLog
+    );
   }
 
   /**
@@ -392,7 +409,7 @@ export class PermissionService {
         photoURL: user.photoURL || '',
         phoneNumber: user.phoneNumber || '',
         emailVerified: user.emailVerified || false,
-        updatedAt: timestamp
+        updatedAt: timestamp,
       };
 
       if (!userDoc.exists()) {
@@ -403,14 +420,14 @@ export class PermissionService {
           mountainId: 'default', // Default mountain
           assignedBy: 'system',
           assignedAt: timestamp,
-          isActive: true
+          isActive: true,
         };
 
         const newUser: UserPermissions = {
-          ...userData as UserPermissions,
+          ...(userData as UserPermissions),
           currentRole: defaultRole,
           roleHistory: [],
-          createdAt: timestamp
+          createdAt: timestamp,
         };
 
         await setDoc(userRef, newUser);
@@ -453,17 +470,17 @@ export class PermissionService {
     try {
       const userRef = doc(this.db, this.usersCollection, uid);
       // We store a simplified version of provider data
-      const providers = providerData.map(p => ({
+      const providers = providerData.map((p) => ({
         providerId: p.providerId,
         uid: p.uid, // The persistent ID from the provider (e.g. Google sub)
         displayName: p.displayName || null,
         email: p.email || null,
-        linkedAt: new Date()
+        linkedAt: new Date(),
       }));
 
       await updateDoc(userRef, {
         providers: providers,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       console.log(`Updated providers for user ${uid}`);
     } catch (error) {

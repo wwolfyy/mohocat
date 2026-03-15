@@ -19,7 +19,7 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+    setLogs((prev) => [...prev, `[${timestamp}] ${message}`]);
   };
 
   const clearLogs = () => {
@@ -30,22 +30,22 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
   // Test environment configuration
   const testEnvironment = async () => {
     addLog('🔍 Testing KakaoTalk environment configuration...');
-    
+
     try {
       // Test environment variables
       const kakaoConfig = getKakaoOAuthConfig();
       addLog(`📋 Kakao OAuth Config found: ${!!kakaoConfig}`);
-      
+
       if (kakaoConfig) {
         addLog(`✅ Client ID set: ${kakaoConfig.clientId ? 'YES' : 'NO'}`);
         addLog(`✅ Client Secret set: ${kakaoConfig.clientSecret ? 'YES' : 'NO'}`);
         addLog(`✅ OAuth enabled: ${kakaoConfig.enabled}`);
       }
-      
+
       // Test Firebase auth instance
       addLog(`🔥 Firebase auth instance: ${!!auth}`);
       addLog(`👤 Current user: ${auth.currentUser ? 'SIGNED_IN' : 'NOT SIGNED IN'}`);
-      
+
       // Test OAuth provider creation
       try {
         const testProvider = new OAuthProvider('oidc.kakao');
@@ -54,7 +54,7 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
       } catch (error) {
         addLog(`❌ OAuthProvider creation failed: ${error}`);
       }
-      
+
       setTestResults({
         config: kakaoConfig,
         firebaseAuth: !!auth,
@@ -62,10 +62,10 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
         environment: {
           NEXT_PUBLIC_KAKAO_CLIENT_ID: process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID,
           NEXT_PUBLIC_KAKAO_CLIENT_SECRET: process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET,
-          NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
-        }
+          NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+        },
       });
-      
+
       addLog('✅ Environment test completed');
     } catch (error) {
       addLog(`❌ Environment test failed: ${error}`);
@@ -75,24 +75,23 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
   // Test KakaoTalk sign-in
   const testKakaoSignIn = async () => {
     if (isTesting) return;
-    
+
     setIsTesting(true);
     addLog('🚀 Testing KakaoTalk sign-in...');
-    
+
     try {
       const authService = getAuthService();
       const result = await authService.signInWithKakao();
-      
+
       addLog(`✅ Sign-in successful!`);
       addLog(`👤 User: ${result.user.displayName || 'No display name'}`);
       addLog(`📧 Email: ${result.user.email || 'No email'}`);
       addLog(`🆔 UID: ${result.user.uid}`);
       addLog(`🆕 Sign-in completed successfully`);
-      
     } catch (error: any) {
       addLog(`❌ Sign-in failed: ${error.message}`);
       addLog(`📋 Error code: ${error.code}`);
-      
+
       // Provide specific debugging advice
       if (error.code === 'auth/operation-not-allowed') {
         addLog('🔧 DEBUG TIP: Enable OpenID Connect provider "oidc.kakao" in Firebase Console');
@@ -109,19 +108,18 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
   // Test direct OAuth provider
   const testDirectProvider = async () => {
     addLog('🔗 Testing direct OAuth provider...');
-    
+
     try {
       const provider = new OAuthProvider('oidc.kakao');
       provider.addScope('profile');
       provider.addScope('account');
-      
+
       addLog('Attempting direct signIn with popup...');
       const result = await signInWithPopup(auth, provider);
-      
+
       addLog(`✅ Direct provider test successful!`);
       addLog(`👤 User: ${result.user.displayName || 'No display name'}`);
       addLog(`📧 Email: ${result.user.email || 'No email'}`);
-      
     } catch (error: any) {
       addLog(`❌ Direct provider test failed: ${error.message}`);
       addLog(`📋 Error code: ${error.code}`);
@@ -142,7 +140,7 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
   }, []);
 
   return (
-    <div className={cn("max-w-4xl mx-auto p-6 space-y-6", className)}>
+    <div className={cn('max-w-4xl mx-auto p-6 space-y-6', className)}>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">KakaoTalk Debug Console</h2>
@@ -204,9 +202,7 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
                 {log}
               </div>
             ))}
-            {logs.length === 0 && (
-              <div className="text-gray-500">No logs yet...</div>
-            )}
+            {logs.length === 0 && <div className="text-gray-500">No logs yet...</div>}
           </div>
         </div>
 
@@ -214,12 +210,14 @@ const KakaoTalkDebug: React.FC<KakaoTalkDebugProps> = ({ className }) => {
         <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 className="font-semibold text-yellow-900 mb-2">Debug Instructions:</h3>
           <ul className="text-sm text-yellow-800 space-y-1">
-            <li>1. Click "Test Environment" to check configuration</li>
-            <li>2. If environment is OK, click "Test KakaoTalk Sign-in"</li>
+            <li>1. Click &quot;Test Environment&quot; to check configuration</li>
+            <li>2. If environment is OK, click &quot;Test KakaoTalk Sign-in&quot;</li>
             <li>3. Review logs for any error messages</li>
             <li>4. Follow debugging tips in the logs</li>
             <li>5. Copy logs and share for troubleshooting help</li>
-            <li>6. Use the "KakaoTalk Fallback Debug" section below for advanced testing</li>
+            <li>
+              6. Use the &quot;KakaoTalk Fallback Debug&quot; section below for advanced testing
+            </li>
           </ul>
         </div>
       </div>

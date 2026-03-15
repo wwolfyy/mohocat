@@ -35,14 +35,15 @@ export default function RoleManagement() {
 
       if (!usersCollection.ok) {
         const errorData = await usersCollection.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(`Failed to load users: ${usersCollection.status} - ${errorData.error || 'No error details'}`);
+        throw new Error(
+          `Failed to load users: ${usersCollection.status} - ${errorData.error || 'No error details'}`
+        );
       }
 
       const allUsers = await usersCollection.json();
       console.log('Users loaded from API:', allUsers);
       setUsers(allUsers);
       setMessage(`Loaded ${allUsers.length} users from Firestore`);
-
     } catch (error) {
       console.error('Failed to load users:', error);
       setMessage(`Error loading users: ${(error as Error).message}`);
@@ -100,7 +101,7 @@ export default function RoleManagement() {
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   🛡️ Admin Users
                   <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-200">
-                    {users.filter(u => u.role === 'admin').length}
+                    {users.filter((u) => u.role === 'admin').length}
                   </span>
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
@@ -108,10 +109,12 @@ export default function RoleManagement() {
                 </p>
               </div>
               <div className="space-y-3">
-                {users.filter(u => u.role === 'admin').map(userItem => (
-                  <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
-                ))}
-                {users.filter(u => u.role === 'admin').length === 0 && (
+                {users
+                  .filter((u) => u.role === 'admin')
+                  .map((userItem) => (
+                    <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
+                  ))}
+                {users.filter((u) => u.role === 'admin').length === 0 && (
                   <p className="text-sm text-gray-400 italic">No admin users found.</p>
                 )}
               </div>
@@ -123,7 +126,7 @@ export default function RoleManagement() {
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   🧹 Butler (Ground)
                   <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-200">
-                    {users.filter(u => u.role === 'butler-ground').length}
+                    {users.filter((u) => u.role === 'butler-ground').length}
                   </span>
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
@@ -131,10 +134,12 @@ export default function RoleManagement() {
                 </p>
               </div>
               <div className="space-y-3">
-                {users.filter(u => u.role === 'butler-ground').map(userItem => (
-                  <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
-                ))}
-                {users.filter(u => u.role === 'butler-ground').length === 0 && (
+                {users
+                  .filter((u) => u.role === 'butler-ground')
+                  .map((userItem) => (
+                    <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
+                  ))}
+                {users.filter((u) => u.role === 'butler-ground').length === 0 && (
                   <p className="text-sm text-gray-400 italic">No ground butlers found.</p>
                 )}
               </div>
@@ -146,7 +151,7 @@ export default function RoleManagement() {
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   💻 Butler (Internet)
                   <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-200">
-                    {users.filter(u => u.role === 'butler-internet').length}
+                    {users.filter((u) => u.role === 'butler-internet').length}
                   </span>
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
@@ -154,10 +159,12 @@ export default function RoleManagement() {
                 </p>
               </div>
               <div className="space-y-3">
-                {users.filter(u => u.role === 'butler-internet').map(userItem => (
-                  <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
-                ))}
-                {users.filter(u => u.role === 'butler-internet').length === 0 && (
+                {users
+                  .filter((u) => u.role === 'butler-internet')
+                  .map((userItem) => (
+                    <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
+                  ))}
+                {users.filter((u) => u.role === 'butler-internet').length === 0 && (
                   <p className="text-sm text-gray-400 italic">No internet butlers found.</p>
                 )}
               </div>
@@ -169,20 +176,24 @@ export default function RoleManagement() {
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   👀 Viewers
                   <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
-                    {users.filter(u => !['admin', 'butler-ground', 'butler-internet'].includes(u.role)).length}
+                    {
+                      users.filter(
+                        (u) => !['admin', 'butler-ground', 'butler-internet'].includes(u.role)
+                      ).length
+                    }
                   </span>
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Read-only access to public content.
-                </p>
+                <p className="text-sm text-gray-600 mt-1">Read-only access to public content.</p>
               </div>
               <div className="space-y-3">
-                {users.filter(u => !['admin', 'butler-ground', 'butler-internet'].includes(u.role)).map(userItem => (
-                  <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
-                ))}
-                {users.filter(u => !['admin', 'butler-ground', 'butler-internet'].includes(u.role)).length === 0 && (
-                  <p className="text-sm text-gray-400 italic">No viewers found.</p>
-                )}
+                {users
+                  .filter((u) => !['admin', 'butler-ground', 'butler-internet'].includes(u.role))
+                  .map((userItem) => (
+                    <UserCard key={userItem.uid} userItem={userItem} assignRole={assignRole} />
+                  ))}
+                {users.filter(
+                  (u) => !['admin', 'butler-ground', 'butler-internet'].includes(u.role)
+                ).length === 0 && <p className="text-sm text-gray-400 italic">No viewers found.</p>}
               </div>
             </div>
           </div>
@@ -193,7 +204,13 @@ export default function RoleManagement() {
 }
 
 // User Card Component for reusability
-const UserCard = ({ userItem, assignRole }: { userItem: any, assignRole: (uid: string, role: string) => void }) => (
+const UserCard = ({
+  userItem,
+  assignRole,
+}: {
+  userItem: any;
+  assignRole: (uid: string, role: string) => void;
+}) => (
   <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
     <div>
       <div className="font-medium text-gray-900">{userItem.displayName}</div>
@@ -216,10 +233,10 @@ const UserCard = ({ userItem, assignRole }: { userItem: any, assignRole: (uid: s
           onClick={() => assignRole(userItem.uid, role)}
           disabled={userItem.role === role}
           className={cn(
-            "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 border",
+            'px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 border',
             userItem.role === role
-              ? "bg-blue-100 text-blue-700 border-blue-200 cursor-default font-bold"
-              : "bg-white text-gray-600 border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
+              ? 'bg-blue-100 text-blue-700 border-blue-200 cursor-default font-bold'
+              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'
           )}
         >
           {role}

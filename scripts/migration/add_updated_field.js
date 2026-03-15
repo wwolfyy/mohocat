@@ -32,7 +32,9 @@ Object.entries(firebaseConfig).forEach(([key, value]) => {
 });
 
 if (!firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration is incomplete. Please check your environment variables.');
+  console.error(
+    '❌ Firebase configuration is incomplete. Please check your environment variables.'
+  );
   process.exit(1);
 }
 
@@ -96,15 +98,16 @@ async function addUpdatedFieldToAllDocuments() {
       try {
         // Update the document with the "updated" field
         await updateDoc(doc(db, 'cat_images', docSnapshot.id), {
-          updated: currentTimestamp
+          updated: currentTimestamp,
         });
 
-        console.log(`✅ Updated document ${docSnapshot.id} (${docData.fileName || 'unknown file'})`);
+        console.log(
+          `✅ Updated document ${docSnapshot.id} (${docData.fileName || 'unknown file'})`
+        );
         updatedCount++;
 
         // Add a small delay to avoid overwhelming Firestore
-        await new Promise(resolve => setTimeout(resolve, 100));
-
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(`❌ Failed to update document ${docSnapshot.id}:`, error);
       }
@@ -115,7 +118,6 @@ async function addUpdatedFieldToAllDocuments() {
     console.log(`⏭️  Skipped (already had field): ${skippedCount} documents`);
     console.log(`📊 Total processed: ${querySnapshot.docs.length} documents`);
     console.log(`🕐 Timestamp used: ${currentTimestamp.toISOString()}`);
-
   } catch (error) {
     console.error('❌ Error adding updated field to documents:', error);
     console.error('Error details:', error.code, error.message);

@@ -25,13 +25,13 @@ if (serviceAccountPath) {
   console.log(`Storage bucket: ${storageBucket}`);
   app = initializeApp({
     credential: cert(require(serviceAccountPath)),
-    storageBucket: storageBucket
+    storageBucket: storageBucket,
   });
 } else {
   console.log('Using default Firebase credentials');
   console.log(`Storage bucket: ${storageBucket}`);
   app = initializeApp({
-    storageBucket: storageBucket
+    storageBucket: storageBucket,
   });
 }
 
@@ -82,22 +82,21 @@ async function moveFileInStorage(oldPath, newPath, deleteOriginal = true) {
     // 1. Copy the file to the new location
     console.log(`Attempting to copy '${oldPath}' to '${newPath}'...`);
     await sourceFile.copy(destinationFile);
-    console.log("File copied successfully.");
+    console.log('File copied successfully.');
 
     // 2. Delete the original file
     if (!deleteOriginal) {
-      console.log("Skipping deletion of the original file.");
+      console.log('Skipping deletion of the original file.');
       return { success: true };
     }
     console.log(`Attempting to delete original file '${oldPath}'...`);
     await sourceFile.delete();
-    console.log("Original file deleted successfully.");
+    console.log('Original file deleted successfully.');
 
     console.log(`Successfully moved file from '${oldPath}' to '${newPath}'.`);
     return { success: true };
-
   } catch (error) {
-    console.error("Error moving file:", error);
+    console.error('Error moving file:', error);
     // Important: Handle cases where the copy succeeds but the delete fails.
     // You might end up with two copies of the file.
     // Your logic should be robust enough to handle this (e.g., by retrying the delete).
@@ -119,7 +118,7 @@ async function moveFilesInDirectory(oldDir, newDir, deleteOriginal = true) {
     return { success: true };
   }
   // Filter out directories and only keep actual files
-  const actualFiles = files.filter(file => {
+  const actualFiles = files.filter((file) => {
     const fileName = file.name;
     const isFile = isActualFile(fileName, normalizedOldDir);
 
@@ -141,7 +140,9 @@ async function moveFilesInDirectory(oldDir, newDir, deleteOriginal = true) {
     return { success: true };
   }
 
-  console.log(`Found ${actualFiles.length} files to process (${files.length - actualFiles.length} directories/subfolders skipped)`);
+  console.log(
+    `Found ${actualFiles.length} files to process (${files.length - actualFiles.length} directories/subfolders skipped)`
+  );
 
   const results = [];
   let successCount = 0;
@@ -196,10 +197,10 @@ async function moveRootFilesToThumbnails() {
     if (result.success) {
       console.log("All files moved to 'thumbnails' successfully.");
     } else {
-      console.error("Error moving files:", result.error);
+      console.error('Error moving files:', result.error);
     }
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error('Unexpected error:', error);
   }
 }
 
@@ -212,5 +213,5 @@ if (require.main === module) {
 module.exports = {
   moveFileInStorage,
   moveFilesInDirectory,
-  moveRootFilesToThumbnails
+  moveRootFilesToThumbnails,
 };

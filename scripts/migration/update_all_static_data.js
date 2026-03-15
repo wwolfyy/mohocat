@@ -15,18 +15,18 @@ const scripts = [
   {
     name: 'Cats Data',
     script: 'export_cats_to_static.js',
-    outputFile: '../../src/lib/cats-static-data.json'
+    outputFile: '../../src/lib/cats-static-data.json',
   },
   {
     name: 'Points Data',
     script: 'export_points_to_static.js',
-    outputFile: '../../src/lib/points-static-data.json'
+    outputFile: '../../src/lib/points-static-data.json',
   },
   {
     name: 'Feeding Spots Data',
     script: 'export_feeding_spots_to_static.js',
-    outputFile: '../../src/lib/feeding-spots-static-data.json'
-  }
+    outputFile: '../../src/lib/feeding-spots-static-data.json',
+  },
 ];
 
 let totalUpdated = 0;
@@ -43,7 +43,7 @@ for (const { name, script, outputFile } of scripts) {
     // Run the export script
     execSync(`node ${script}`, {
       cwd: __dirname,
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
 
     // Check if file was updated
@@ -56,7 +56,6 @@ for (const { name, script, outputFile } of scripts) {
     } else {
       results.push(`⏸️  ${name}: No changes`);
     }
-
   } catch (error) {
     results.push(`❌ ${name}: Failed - ${error.message}`);
     console.error(`Error updating ${name}:`, error);
@@ -68,7 +67,7 @@ for (const { name, script, outputFile } of scripts) {
 // Summary
 console.log('📊 Update Summary:');
 console.log('==================');
-results.forEach(result => console.log(result));
+results.forEach((result) => console.log(result));
 console.log(`\nTotal files updated: ${totalUpdated}`);
 
 if (totalUpdated > 0) {

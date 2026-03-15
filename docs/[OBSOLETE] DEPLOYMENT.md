@@ -6,10 +6,10 @@ This guide covers deploying the Next.js app to a home server (laptop) using Dock
 
 ## Current Strategy
 
-| Phase | Infrastructure | Capacity |
-|-------|---------------|----------|
+| Phase                  | Infrastructure              | Capacity             |
+| ---------------------- | --------------------------- | -------------------- |
 | **Beta / Low Traffic** | Home server (4-core laptop) | ~50 concurrent users |
-| **Growth (Future)** | Google Cloud Run | Auto-scaling |
+| **Growth (Future)**    | Google Cloud Run            | Auto-scaling         |
 
 ---
 

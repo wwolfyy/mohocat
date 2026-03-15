@@ -11,13 +11,13 @@ export async function POST(request: NextRequest) {
       // For future implementation of Google Sheets import
       return NextResponse.json({
         success: false,
-        error: 'Google Sheets import not implemented yet'
+        error: 'Google Sheets import not implemented yet',
       });
     }
 
     return NextResponse.json({
       success: false,
-      error: 'Invalid action'
+      error: 'Invalid action',
     });
   } catch (error) {
     console.error('Error processing request:', error);
@@ -36,13 +36,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       cats,
-      count: cats.length
+      count: cats.length,
     });
   } catch (error) {
     console.error('Error fetching cats:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch cats' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to fetch cats' }, { status: 500 });
   }
 }

@@ -65,9 +65,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ signedUrl });
   } catch (error) {
     console.error('Error generating YouTube signed URL:', error);
-    return NextResponse.json({
-      error: 'Failed to generate signed URL',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to generate signed URL',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

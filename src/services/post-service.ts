@@ -6,7 +6,20 @@
  */
 
 import type { IPostService } from './interfaces';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, query, where, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  Timestamp,
+  query,
+  where,
+  orderBy,
+  updateDoc,
+  increment,
+  deleteDoc,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebasePostService implements IPostService {
@@ -14,20 +27,23 @@ export class FirebasePostService implements IPostService {
 
   async getAllPosts(): Promise<any[]> {
     try {
-      console.log('FirebasePostService: Starting to fetch posts from collection:', this.COLLECTION_NAME);
+      console.log(
+        'FirebasePostService: Starting to fetch posts from collection:',
+        this.COLLECTION_NAME
+      );
 
       // First try without ordering to see if there are any posts at all
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
 
       console.log('FirebasePostService: Query snapshot size:', querySnapshot.size);
 
-      const allPosts = querySnapshot.docs.map(doc => {
+      const allPosts = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         console.log('FirebasePostService: Document data:', { id: doc.id, ...data });
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       });
 
@@ -59,10 +75,10 @@ export class FirebasePostService implements IPostService {
       const querySnapshot = await getDocs(
         query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'))
       );
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
       }));
     } catch (error) {
       console.error('Error fetching all posts including replies:', error);
@@ -85,7 +101,7 @@ export class FirebasePostService implements IPostService {
         return {
           id: docSnap.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       }
 
@@ -104,7 +120,7 @@ export class FirebasePostService implements IPostService {
         replyCount: 0,
         depth: 0,
         isReply: false,
-        threadId: null // Will be set to post ID after creation for root posts
+        threadId: null, // Will be set to post ID after creation for root posts
       };
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), postData);
@@ -118,7 +134,7 @@ export class FirebasePostService implements IPostService {
         id: docRef.id,
         ...postData,
         threadId: post.parentId ? post.threadId : docRef.id,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
     } catch (error) {
       console.error('Error creating post:', error);
@@ -132,21 +148,18 @@ export class FirebasePostService implements IPostService {
 
       // Remove orderBy to avoid requiring a composite index
       // We'll sort in the application layer instead
-      const q = query(
-        collection(db, this.COLLECTION_NAME),
-        where('parentId', '==', postId)
-      );
+      const q = query(collection(db, this.COLLECTION_NAME), where('parentId', '==', postId));
 
       const querySnapshot = await getDocs(q);
       console.log('FirebasePostService: Reply query snapshot size:', querySnapshot.size);
 
-      const replies = querySnapshot.docs.map(doc => {
+      const replies = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         console.log('FirebasePostService: Reply document data:', { id: doc.id, ...data });
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       });
 
@@ -179,7 +192,7 @@ export class FirebasePostService implements IPostService {
         isReply: true,
         depth: (parentPost.depth || 0) + 1,
         threadId: parentPost.threadId || parentPost.id,
-        replyCount: 0
+        replyCount: 0,
       };
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), replyData);
@@ -194,7 +207,7 @@ export class FirebasePostService implements IPostService {
         isReply: true,
         depth: (parentPost.depth || 0) + 1,
         threadId: parentPost.threadId || parentPost.id,
-        replyCount: 0
+        replyCount: 0,
       };
     } catch (error) {
       console.error('Error creating reply:', error);
@@ -206,7 +219,7 @@ export class FirebasePostService implements IPostService {
     try {
       const [post, replies] = await Promise.all([
         this.getPostById(postId),
-        this.getReplies(postId)
+        this.getReplies(postId),
       ]);
 
       if (!post) {
@@ -224,7 +237,7 @@ export class FirebasePostService implements IPostService {
     try {
       const docRef = doc(db, this.COLLECTION_NAME, postId);
       await updateDoc(docRef, {
-        replyCount: increment(1)
+        replyCount: increment(1),
       });
     } catch (error) {
       console.error('Error updating reply count:', error);

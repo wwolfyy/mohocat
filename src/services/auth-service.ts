@@ -28,15 +28,12 @@ import {
   verifyBeforeUpdateEmail,
   updatePhoneNumber,
   PhoneAuthProvider,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from './firebase';
 import { getKakaoOAuthConfig, isKakaoOAuthEnabled } from '@/utils/config';
 
-import {
-  setPersistence,
-  browserLocalPersistence
-} from 'firebase/auth';
+import { setPersistence, browserLocalPersistence } from 'firebase/auth';
 
 // ... (existing imports)
 
@@ -106,8 +103,6 @@ export class FirebaseAuthService implements IAuthService {
     return firebaseOnAuthStateChanged(auth, callback);
   }
 
-
-
   async signInWithKakao(forceFallback: boolean = false): Promise<UserCredential> {
     if (!isKakaoOAuthEnabled()) {
       throw new Error('Kakao OAuth is not enabled');
@@ -126,12 +121,16 @@ export class FirebaseAuthService implements IAuthService {
       console.log('Kakao OAuth Config:', {
         clientId: config.clientId ? '***HIDDEN***' : 'NOT_SET',
         clientSecret: config.clientSecret ? '***HIDDEN***' : 'NOT_SET',
-        enabled: config.enabled
+        enabled: config.enabled,
       });
       console.log('Environment Variables:', {
-        NEXT_PUBLIC_KAKAO_CLIENT_ID: process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID ? '***SET***' : 'NOT_SET',
-        NEXT_PUBLIC_KAKAO_CLIENT_SECRET: process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET ? '***SET***' : 'NOT_SET',
-        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
+        NEXT_PUBLIC_KAKAO_CLIENT_ID: process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID
+          ? '***SET***'
+          : 'NOT_SET',
+        NEXT_PUBLIC_KAKAO_CLIENT_SECRET: process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET
+          ? '***SET***'
+          : 'NOT_SET',
+        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
       });
 
       // According to reference guide, use 'oidc.kakao' for OpenID Connect
@@ -161,7 +160,7 @@ export class FirebaseAuthService implements IAuthService {
         providerId: kakaoProvider.providerId,
         redirectUri: firebaseRedirectUri,
         clientId: config.clientId ? '***SET***' : '***NOT_SET***',
-        clientSecret: config.clientSecret ? '***SET***' : '***NOT_SET***'
+        clientSecret: config.clientSecret ? '***SET***' : '***NOT_SET***',
       });
 
       // Note: Only add scopes if they are available in your Kakao Developers application
@@ -171,16 +170,16 @@ export class FirebaseAuthService implements IAuthService {
       // kakaoProvider.addScope('openid');
 
       console.log('OAuth Provider Configuration:', {
-        providerId: kakaoProvider.providerId
+        providerId: kakaoProvider.providerId,
       });
 
       console.log('Attempting to sign in with KakaoTalk using popup...');
       console.log('OAuth Provider Debug Info:', {
-        providerId: kakaoProvider.providerId
+        providerId: kakaoProvider.providerId,
       });
 
       // Add delay to prevent popup blocking issues
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       console.log('Opening KakaoTalk popup...');
 
@@ -196,7 +195,7 @@ export class FirebaseAuthService implements IAuthService {
         displayName: result.user.displayName,
         email: result.user.email,
         photoURL: result.user.photoURL,
-        uid: result.user.uid
+        uid: result.user.uid,
       });
 
       return result;
@@ -207,17 +206,20 @@ export class FirebaseAuthService implements IAuthService {
         code: error.code,
         message: error.message,
         stack: error.stack,
-        customData: error.customData
+        customData: error.customData,
       });
 
       // DEBUG: Log the exact error code that should trigger fallback
       console.log('=== DEBUG: ERROR CODE ANALYSIS ===');
       console.log('Error code:', error.code);
       console.log('Error message:', error.message);
-      console.log('Should trigger fallback based on current logic:', this.isKakaoUserCreationError(error));
+      console.log(
+        'Should trigger fallback based on current logic:',
+        this.isKakaoUserCreationError(error)
+      );
       console.log('All recognized error codes:', [
         'auth/internal-error',
-        'auth/operation-not-allowed'
+        'auth/operation-not-allowed',
       ]);
       console.log('=== DEBUG: END ===');
 
@@ -231,7 +233,9 @@ export class FirebaseAuthService implements IAuthService {
 
       if (isUserCreationError) {
         console.log('=== FALLING BACK TO ANONYMOUS USER + LINKING APPROACH ===');
-        console.log('Detected user creation error, attempting anonymous user creation and linking...');
+        console.log(
+          'Detected user creation error, attempting anonymous user creation and linking...'
+        );
 
         try {
           // Step 1: Create anonymous user
@@ -239,7 +243,7 @@ export class FirebaseAuthService implements IAuthService {
           const anonymousResult = await signInAnonymously(auth);
           console.log('Anonymous user created:', {
             uid: anonymousResult.user.uid,
-            isAnonymous: anonymousResult.user.isAnonymous
+            isAnonymous: anonymousResult.user.isAnonymous,
           });
 
           // Step 2: Link KakaoTalk account to anonymous user
@@ -258,9 +262,9 @@ export class FirebaseAuthService implements IAuthService {
           }
 
           kakaoProvider.setCustomParameters({
-            'client_id': linkingConfig.clientId || '',
-            'redirect_uri': firebaseRedirectUri,
-            'response_type': 'code',
+            client_id: linkingConfig.clientId || '',
+            redirect_uri: firebaseRedirectUri,
+            response_type: 'code',
           });
 
           const linkingResult = await linkWithPopup(anonymousResult.user, kakaoProvider);
@@ -274,7 +278,7 @@ export class FirebaseAuthService implements IAuthService {
             email: linkingResult.user.email,
             photoURL: linkingResult.user.photoURL,
             uid: linkingResult.user.uid,
-            providerData: linkingResult.user.providerData
+            providerData: linkingResult.user.providerData,
           });
 
           return linkingResult;
@@ -283,7 +287,7 @@ export class FirebaseAuthService implements IAuthService {
           console.error('Linking error details:', {
             code: linkingError.code,
             message: linkingError.message,
-            stack: linkingError.stack
+            stack: linkingError.stack,
           });
 
           // Clean up anonymous user if linking failed
@@ -297,7 +301,9 @@ export class FirebaseAuthService implements IAuthService {
           }
 
           // Throw original error since fallback also failed
-          throw new Error(`KakaoTalk authentication failed and fallback approach also failed. Original error: ${error.message}`);
+          throw new Error(
+            `KakaoTalk authentication failed and fallback approach also failed. Original error: ${error.message}`
+          );
         }
       }
 
@@ -305,7 +311,8 @@ export class FirebaseAuthService implements IAuthService {
       let errorMessage = 'Failed to sign in with Kakaotalk';
       switch (error.code) {
         case 'auth/popup-closed-by-user':
-          errorMessage = 'Kakaotalk sign-in was cancelled. This could mean: 1) User closed popup 2) Popup was blocked 3) Authentication completed but result not processed. Please try again.';
+          errorMessage =
+            'Kakaotalk sign-in was cancelled. This could mean: 1) User closed popup 2) Popup was blocked 3) Authentication completed but result not processed. Please try again.';
           console.error('=== POPUP CLOSED DEBUG ===');
           console.error('Possible causes:');
           console.error('1. User manually closed the popup');
@@ -315,36 +322,46 @@ export class FirebaseAuthService implements IAuthService {
           console.error('SOLUTION: Try again, disable popup blocker, or sign out and retry');
           break;
         case 'auth/cancelled-popup-request':
-          errorMessage = 'Kakaotalk sign-in request was cancelled. Please wait a moment and try again.';
+          errorMessage =
+            'Kakaotalk sign-in request was cancelled. Please wait a moment and try again.';
           console.error('=== POPUP REQUEST CANCELLED ===');
           console.error('The popup request was cancelled before completion');
           console.error('This often happens when multiple requests are made simultaneously');
           console.error('SOLUTION: Wait a few seconds and try again');
           break;
         case 'auth/popup-blocked':
-          errorMessage = 'Kakaotalk sign-in was blocked by popup blocker. Please disable popup blocker and try again.';
+          errorMessage =
+            'Kakaotalk sign-in was blocked by popup blocker. Please disable popup blocker and try again.';
           console.error('=== POPUP BLOCKED ===');
           console.error('Browser popup blocker prevented the authentication popup');
-          console.error('SOLUTION: 1) Disable popup blocker 2) Allow popups for this site 3) Try different browser');
+          console.error(
+            'SOLUTION: 1) Disable popup blocker 2) Allow popups for this site 3) Try different browser'
+          );
           break;
         case 'auth/timeout':
-          errorMessage = 'Kakaotalk sign-in timed out. Please check your internet connection and try again.';
+          errorMessage =
+            'Kakaotalk sign-in timed out. Please check your internet connection and try again.';
           console.error('=== TIMEOUT ERROR ===');
           console.error('Authentication request timed out');
           console.error('SOLUTION: Check internet connection, try again, or use different browser');
           break;
         case 'auth/account-exists-with-different-credential':
-          errorMessage = 'An account already exists with this email address. Please sign in using the original method.';
+          errorMessage =
+            'An account already exists with this email address. Please sign in using the original method.';
           break;
         case 'auth/operation-not-allowed':
-          errorMessage = 'Kakaotalk sign-in is not enabled in Firebase Console. Please check the authentication providers settings.';
-          console.error('FIREBASE SETUP REQUIRED: Enable OpenID Connect provider "oidc.kakao" in Firebase Console > Authentication > Sign-in method');
+          errorMessage =
+            'Kakaotalk sign-in is not enabled in Firebase Console. Please check the authentication providers settings.';
+          console.error(
+            'FIREBASE SETUP REQUIRED: Enable OpenID Connect provider "oidc.kakao" in Firebase Console > Authentication > Sign-in method'
+          );
           break;
         case 'auth/internal-error':
-          errorMessage = 'Kakaotalk login failed. Since linking works but login doesn\'t, this suggests a session or flow issue rather than credentials.';
+          errorMessage =
+            "Kakaotalk login failed. Since linking works but login doesn't, this suggests a session or flow issue rather than credentials.";
           console.error('=== KAKAOTALK LOGIN VS LINKING DEBUG ===');
           console.error('OBSERVATION: Provider linking works but login fails');
-          console.error('This indicates the credentials are correct but there\'s a flow difference');
+          console.error("This indicates the credentials are correct but there's a flow difference");
           console.error('');
           console.error('POSSIBLE CAUSES:');
           console.error('1. Firebase session state conflict - user already authenticated');
@@ -363,22 +380,27 @@ export class FirebaseAuthService implements IAuthService {
           console.error('This is likely a Firebase configuration or session state issue.');
           break;
         case 'auth/invalid-custom-parameter':
-          errorMessage = 'Invalid Kakaotalk OAuth configuration. Please check the client ID and redirect URI settings.';
-          console.error('CONFIGURATION ERROR: Check environment variables and Firebase provider setup');
+          errorMessage =
+            'Invalid Kakaotalk OAuth configuration. Please check the client ID and redirect URI settings.';
+          console.error(
+            'CONFIGURATION ERROR: Check environment variables and Firebase provider setup'
+          );
           break;
         case 'auth/unsupported-popup-redirect':
-          errorMessage = 'Kakaotalk OAuth provider is not properly configured in Firebase Console. Please add OpenID Connect provider with ID "oidc.kakao".';
+          errorMessage =
+            'Kakaotalk OAuth provider is not properly configured in Firebase Console. Please add OpenID Connect provider with ID "oidc.kakao".';
           console.error('FIREBASE SETUP: Add OpenID Connect provider with ID "oidc.kakao"');
           break;
         default:
           errorMessage = `Kakaotalk authentication failed: ${error.message || 'Unknown error'}`;
           // Check for client credentials error
-          if (error.message && (
-            error.message.includes('invalid-client') ||
-            error.message.includes('Bad client credentials') ||
-            error.message.includes('KOE010') ||
-            error.message.includes('invalid_credential')
-          )) {
+          if (
+            error.message &&
+            (error.message.includes('invalid-client') ||
+              error.message.includes('Bad client credentials') ||
+              error.message.includes('KOE010') ||
+              error.message.includes('invalid_credential'))
+          ) {
             console.error('=== CLIENT CREDENTIALS ERROR DETECTED ===');
             console.error('ERROR: Firebase is sending wrong credentials to KakaoTalk');
             console.error('SOLUTION: Update Firebase OpenID Connect provider configuration');
@@ -388,14 +410,15 @@ export class FirebaseAuthService implements IAuthService {
             console.error('4. Check for extra spaces or typos');
           }
           // Check if the error message contains consent-related keywords
-          else if (error.message && (
-            error.message.includes('동의 항목') ||
-            error.message.includes('consent') ||
-            error.message.includes('scope') ||
-            error.message.includes('openid') ||
-            error.message.includes('profile') ||
-            error.message.includes('account')
-          )) {
+          else if (
+            error.message &&
+            (error.message.includes('동의 항목') ||
+              error.message.includes('consent') ||
+              error.message.includes('scope') ||
+              error.message.includes('openid') ||
+              error.message.includes('profile') ||
+              error.message.includes('account'))
+          ) {
             console.error('=== CONSENT ITEMS ERROR DETECTED ===');
             console.error('SOLUTION 1: Enable consent items in Kakao Developers Console');
             console.error('Navigate to: 내 애플리케이션 > 카카오 로그인 > 동의항목');
@@ -423,33 +446,33 @@ export class FirebaseAuthService implements IAuthService {
 
     // User creation errors that can be resolved with anonymous + linking approach
     const userCreationErrorCodes = [
-      'auth/internal-error',           // Often indicates user creation issues
-      'auth/operation-not-allowed',    // Could be provider not allowing new user creation
-      'auth/account-exists-with-different-credential',  // Account exists with different provider
-      'auth/email-already-in-use',     // Email already registered with different provider
-      'auth/user-not-found',           // User not found in Firebase but exists in Kakao
-      'auth/invalid-credential',       // Credential validation issues that might be resolved with linking
-      'auth/user-disabled',            // User account disabled in Firebase
-      'auth/wrong-password',           // Password mismatch scenarios
+      'auth/internal-error', // Often indicates user creation issues
+      'auth/operation-not-allowed', // Could be provider not allowing new user creation
+      'auth/account-exists-with-different-credential', // Account exists with different provider
+      'auth/email-already-in-use', // Email already registered with different provider
+      'auth/user-not-found', // User not found in Firebase but exists in Kakao
+      'auth/invalid-credential', // Credential validation issues that might be resolved with linking
+      'auth/user-disabled', // User account disabled in Firebase
+      'auth/wrong-password', // Password mismatch scenarios
     ];
 
     // Check for specific error messages that indicate user creation problems
     const userCreationErrorMessages = [
-      'user creation',                 // Generic user creation error
-      'create user',                   // User creation attempt failed
-      'new user',                      // New user creation not allowed
-      'sign up',                       // Sign up/registration failed
-      'registration',                  // User registration failed
-      'account creation',              // Account creation failed
-      'user already exists',           // User exists but can't be found/created
-      'duplicate user',                // Duplicate user creation attempt
-      'credential already linked',     // Credential already linked to another account
-      'different credential',          // Account exists with different credential
-      'email already in use',          // Email already registered
-      'firebase user',                 // Firebase user-related issues
-      'provider mismatch',             // Provider configuration mismatch
-      'linking failed',                // Previous linking attempts failed
-      'authentication failed',         // General authentication failures that might be user-related
+      'user creation', // Generic user creation error
+      'create user', // User creation attempt failed
+      'new user', // New user creation not allowed
+      'sign up', // Sign up/registration failed
+      'registration', // User registration failed
+      'account creation', // Account creation failed
+      'user already exists', // User exists but can't be found/created
+      'duplicate user', // Duplicate user creation attempt
+      'credential already linked', // Credential already linked to another account
+      'different credential', // Account exists with different credential
+      'email already in use', // Email already registered
+      'firebase user', // Firebase user-related issues
+      'provider mismatch', // Provider configuration mismatch
+      'linking failed', // Previous linking attempts failed
+      'authentication failed', // General authentication failures that might be user-related
     ];
 
     // Check if error code matches known user creation errors
@@ -550,11 +573,13 @@ export class FirebaseAuthService implements IAuthService {
         default:
           errorMessage = error.message || `Failed to link ${providerId} provider`;
           // Check for consent items error in linking
-          if (providerId.includes('kakao') && error.message && (
-            error.message.includes('동의 항목') ||
-            error.message.includes('consent') ||
-            error.message.includes('scope')
-          )) {
+          if (
+            providerId.includes('kakao') &&
+            error.message &&
+            (error.message.includes('동의 항목') ||
+              error.message.includes('consent') ||
+              error.message.includes('scope'))
+          ) {
             console.error('=== KAKAOTALK LINKING CONSENT ERROR ===');
             console.error('Linking failed due to missing consent items');
             console.error('SOLUTION: The implementation has been updated to work without scopes');
@@ -600,7 +625,7 @@ export class FirebaseAuthService implements IAuthService {
     try {
       await updateProfile(user, {
         displayName: displayName || undefined,
-        photoURL: photoURL || undefined
+        photoURL: photoURL || undefined,
       });
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -614,7 +639,7 @@ export class FirebaseAuthService implements IAuthService {
       return [];
     }
 
-    return user.providerData.map(providerData => ({
+    return user.providerData.map((providerData) => ({
       providerId: providerData.providerId,
       uid: providerData.uid,
       displayName: providerData.displayName,
@@ -698,5 +723,4 @@ export class FirebaseAuthService implements IAuthService {
       throw error;
     }
   }
-
 }

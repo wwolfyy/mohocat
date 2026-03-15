@@ -1,9 +1,11 @@
 # Secrets Management Strategy
 
 ## Overview
+
 This document outlines the secure management of API keys, service account files, and other sensitive configuration data for the multi-tenant mountain cat platform.
 
 ## Problem Statement
+
 - Each mountain instance requires different Firebase configurations, YouTube API keys, and service account credentials
 - Secrets cannot be stored in the shared repository for security reasons
 - Need to inject different secrets per deployment target while maintaining single codebase
@@ -12,6 +14,7 @@ This document outlines the secure management of API keys, service account files,
 ## Recommended Solution: GitHub Secrets + Environment Variables
 
 ### Architecture
+
 ```
 Single Repository
 ├── Public Config (mountains.json)
@@ -29,6 +32,7 @@ Single Repository
 ## Implementation Details
 
 ### GitHub Repository Secrets Structure
+
 ```
 # Naming Convention: {MOUNTAIN_NAME}_{SECRET_TYPE}
 
@@ -46,6 +50,7 @@ JIRISAN_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"jirisan-cats
 ```
 
 ### GitHub Actions Deployment
+
 ```yaml
 # .github/workflows/deploy-all.yml
 name: Deploy All Mountains
@@ -93,6 +98,7 @@ jobs:
 ```
 
 ### Configuration Loading in Application
+
 ```javascript
 // utils/config.js
 export function getMountainConfig() {
@@ -112,7 +118,7 @@ export function getMountainConfig() {
   const secretConfig = {
     firebase: JSON.parse(process.env.FIREBASE_CONFIG || '{}'),
     youtubeApiKey: process.env.YOUTUBE_API_KEY,
-    serviceAccount: JSON.parse(process.env.SERVICE_ACCOUNT_KEY || '{}')
+    serviceAccount: JSON.parse(process.env.SERVICE_ACCOUNT_KEY || '{}'),
   };
 
   // Validate required secrets
@@ -126,7 +132,7 @@ export function getMountainConfig() {
 
   return {
     ...publicConfig,
-    secrets: secretConfig
+    secrets: secretConfig,
   };
 }
 
@@ -145,6 +151,7 @@ export const auth = getAuth(app);
 ```
 
 ## File Structure
+
 ```
 mtcat-platform/
 ├── src/
@@ -168,18 +175,21 @@ mtcat-platform/
 ## Security Best Practices
 
 ### Repository Security
+
 - **Never commit secrets** to the repository
 - **Use .gitignore** to exclude sensitive files
 - **Validate configurations** during build process
 - **Rotate secrets regularly** (quarterly recommended)
 
 ### Access Control
+
 - **Limit GitHub repository access** to essential personnel
 - **Use least-privilege principle** for service accounts
 - **Enable two-factor authentication** for all GitHub accounts
 - **Monitor secret access** through GitHub audit logs
 
 ### Secret Rotation
+
 ```bash
 # Script for rotating secrets
 #!/bin/bash
@@ -206,6 +216,7 @@ gh workflow run deploy-all.yml
 ## Admin Onboarding Process
 
 ### What Admins Provide
+
 1. **Firebase Project Details**
    - Project ID
    - Web app configuration (from Firebase console)
@@ -220,7 +231,9 @@ gh workflow run deploy-all.yml
    - YouTube API access permissions
 
 ### What Platform Owner Does
+
 1. **Add secrets to GitHub repository**
+
    ```bash
    # Using GitHub CLI
    gh secret set NEWMOUNTAIN_FIREBASE_CONFIG --body "$FIREBASE_CONFIG_JSON"
@@ -229,6 +242,7 @@ gh workflow run deploy-all.yml
    ```
 
 2. **Update public configuration**
+
    ```json
    // config/mountains/mountains.json
    {
@@ -250,6 +264,7 @@ gh workflow run deploy-all.yml
    ```
 
 3. **Update deployment configuration**
+
    ```yaml
    # Add to .github/workflows/deploy-all.yml matrix
    strategy:
@@ -265,6 +280,7 @@ gh workflow run deploy-all.yml
 ## Environment Variables Reference
 
 ### Required Environment Variables (Per Mountain)
+
 ```bash
 # Mountain identification
 MOUNTAIN_ID=geyang
@@ -283,6 +299,7 @@ FIREBASE_TOKEN=1//...
 ```
 
 ### Development Environment
+
 ```bash
 # .env.local (for local development)
 MOUNTAIN_ID=geyang
@@ -294,12 +311,14 @@ SERVICE_ACCOUNT_KEY={"type":"service_account",...}
 ## Monitoring and Alerting
 
 ### Secret Health Checks
+
 - **API key validity** - Test YouTube API access weekly
 - **Service account permissions** - Verify Firebase access monthly
 - **Certificate expiration** - Monitor service account key expiration
 - **Usage quotas** - Alert on approaching API limits
 
 ### Deployment Monitoring
+
 - **Failed deployments** - Alert on any deployment failures
 - **Configuration errors** - Monitor application startup errors
 - **Secret injection failures** - Track environment variable loading issues
@@ -324,6 +343,7 @@ SERVICE_ACCOUNT_KEY={"type":"service_account",...}
    - Multi-cloud support
 
 ### When to Consider Alternatives
+
 - **> 50 mountain instances** - GitHub secrets become unwieldy
 - **Regulatory compliance requirements** - Need for HSM-backed secrets
 - **Complex secret rotation needs** - Automatic rotation requirements

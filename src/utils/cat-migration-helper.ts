@@ -50,7 +50,7 @@ export class CatMigrationHelper {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -75,8 +75,8 @@ export class CatMigrationHelper {
 
           // Check if cat already exists
           const existingCats = await this.catService.getAllCats();
-          const existingCat = existingCats.find(cat =>
-            cat.name.toLowerCase() === row.name.toLowerCase()
+          const existingCat = existingCats.find(
+            (cat) => cat.name.toLowerCase() === row.name.toLowerCase()
           );
 
           if (existingCat) {
@@ -99,13 +99,13 @@ export class CatMigrationHelper {
         message: `Migration completed: ${importedCount} cats imported, ${skippedCount} skipped`,
         importedCount,
         skippedCount,
-        errors
+        errors,
       };
     } catch (error) {
       return {
         success: false,
         message: `Migration failed: ${error}`,
-        errors: [String(error)]
+        errors: [String(error)],
       };
     }
   }
@@ -118,12 +118,12 @@ export class CatMigrationHelper {
       const cats = await this.catService.getAllCats();
       return {
         success: true,
-        data: cats
+        data: cats,
       };
     } catch (error) {
       return {
         success: false,
-        error: String(error)
+        error: String(error),
       };
     }
   }
@@ -153,7 +153,7 @@ export class CatMigrationHelper {
       sex: row.sex || row.Sex || row.gender || '',
       status: row.status || row.Status || 'active',
       character: row.character || row.Character || row.personality || '',
-      sickness: row.sickness || row.Sickness || row.health || ''
+      sickness: row.sickness || row.Sickness || row.health || '',
     };
   }
 
@@ -173,14 +173,14 @@ export class CatMigrationHelper {
 
       return {
         totalCats: cats.length,
-        activeCats: cats.filter(cat => cat.status === '산냥이').length,
-        inactiveCats: cats.filter(cat => cat.status !== '산냥이').length,
-        missingThumbnails: cats.filter(cat => !cat.thumbnailUrl).length,
-        missingLocations: cats.filter(cat => !cat.dwelling).length,
-        recentlyUpdated: cats.filter(cat => {
+        activeCats: cats.filter((cat) => cat.status === '산냥이').length,
+        inactiveCats: cats.filter((cat) => cat.status !== '산냥이').length,
+        missingThumbnails: cats.filter((cat) => !cat.thumbnailUrl).length,
+        missingLocations: cats.filter((cat) => !cat.dwelling).length,
+        recentlyUpdated: cats.filter((cat) => {
           // This would require a timestamp field in the future
           return false;
-        }).length
+        }).length,
       };
     } catch (error) {
       throw new Error(`Failed to generate migration report: ${error}`);

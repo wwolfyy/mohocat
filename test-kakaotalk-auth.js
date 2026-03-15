@@ -10,11 +10,11 @@ const requiredFiles = [
   'src/services/auth-service.ts',
   'src/services/interfaces.ts',
   'src/hooks/useAuth.ts',
-  'src/components/LoginForm.tsx'
+  'src/components/LoginForm.tsx',
 ];
 
 console.log('1. Checking required files exist:');
-requiredFiles.forEach(file => {
+requiredFiles.forEach((file) => {
   const exists = fs.existsSync(file);
   console.log(`   ${exists ? '✓' : '✗'} ${file}`);
 });
@@ -22,12 +22,9 @@ requiredFiles.forEach(file => {
 // Test 2: Check if new methods are implemented in auth service
 console.log('\n2. Checking auth service methods:');
 const authServiceContent = fs.readFileSync('src/services/auth-service.ts', 'utf8');
-const newMethods = [
-  'linkKakaoToExistingUser',
-  'createAccountAndLinkKakao'
-];
+const newMethods = ['linkKakaoToExistingUser', 'createAccountAndLinkKakao'];
 
-newMethods.forEach(method => {
+newMethods.forEach((method) => {
   const hasMethod = authServiceContent.includes(`async ${method}`);
   console.log(`   ${hasMethod ? '✓' : '✗'} ${method} method implemented`);
 });
@@ -35,12 +32,9 @@ newMethods.forEach(method => {
 // Test 3: Check if interfaces are updated
 console.log('\n3. Checking interface updates:');
 const interfacesContent = fs.readFileSync('src/services/interfaces.ts', 'utf8');
-const interfaceMethods = [
-  'linkKakaoToExistingUser',
-  'createAccountAndLinkKakao'
-];
+const interfaceMethods = ['linkKakaoToExistingUser', 'createAccountAndLinkKakao'];
 
-interfaceMethods.forEach(method => {
+interfaceMethods.forEach((method) => {
   const hasMethod = interfacesContent.includes(method);
   console.log(`   ${hasMethod ? '✓' : '✗'} ${method} in interface`);
 });
@@ -52,10 +46,10 @@ const hookMethods = [
   'linkKakaoToExistingUser',
   'createAccountAndLinkKakao',
   'signIn',
-  'createUser'
+  'createUser',
 ];
 
-hookMethods.forEach(method => {
+hookMethods.forEach((method) => {
   const hasMethod = useAuthContent.includes(method);
   console.log(`   ${hasMethod ? '✓' : '✗'} ${method} in useAuth`);
 });
@@ -68,10 +62,10 @@ const componentFeatures = [
   'Link KakaoTalk to Existing Account',
   'handleCreateAccountFirst',
   'handleLinkToExistingAccount',
-  'AuthStep interface'
+  'AuthStep interface',
 ];
 
-componentFeatures.forEach(feature => {
+componentFeatures.forEach((feature) => {
   const hasFeature = kakaoAuthContent.includes(feature);
   console.log(`   ${hasFeature ? '✓' : '✗'} ${feature} implemented`);
 });

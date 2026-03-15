@@ -41,7 +41,6 @@ export function useAboutPhoto(filename: string): UseAboutPhotoResult {
         const storagePath = `about-photos/${mountainId}/${filename}`;
         const url = await getStorageUrl(storagePath);
         setPhotoUrl(url);
-
       } catch (err) {
         console.error('Error loading about photo:', err);
         setError('Failed to load photo');

@@ -1,6 +1,7 @@
 # Migration Script for createdTime Field
 
 This script adds an empty `createdTime` field to all existing documents in the following Firestore collections:
+
 - `images` (used by image tagging interface)
 - `cat_images` (if it exists)
 - `cat_videos` (used by video tagging interface)
@@ -18,11 +19,13 @@ This script adds an empty `createdTime` field to all existing documents in the f
 ## Running the Migration
 
 **Option 1: JavaScript version (recommended)**
+
 ```bash
 node scripts/migrate-created-time.js
 ```
 
 **Option 2: TypeScript version (requires ts-node)**
+
 ```bash
 npx ts-node scripts/migrate-created-time-new.ts
 ```

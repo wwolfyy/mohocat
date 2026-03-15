@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
     const { tokens } = await oauth2Client.getToken(code);
 
     if (!tokens.refresh_token) {
-      return new Response(`
+      return new Response(
+        `
           <html>
             <body>
               <h1>Token Error</h1>
@@ -42,21 +43,27 @@ export async function GET(request: NextRequest) {
               <p><a href="https://myaccount.google.com/permissions" target="_blank">Manage Google Account Permissions</a></p>
             </body>
           </html>
-        `, {
-        headers: { 'Content-Type': 'text/html' },
-        status: 400,
-      });
+        `,
+        {
+          headers: { 'Content-Type': 'text/html' },
+          status: 400,
+        }
+      );
     }
 
     // Store the new refresh token in Firestore
-    await db.collection('admin_config').doc('youtube_auth').set({
-      refreshToken: tokens.refresh_token,
-      updatedAt: new Date().toISOString(),
-      // Note: Refresh tokens typically expire in 7-14 days, but Google doesn't provide exact expiry
-      refreshTokenGeneratedAt: new Date().toISOString(),
-    }, { merge: true });
+    await db.collection('admin_config').doc('youtube_auth').set(
+      {
+        refreshToken: tokens.refresh_token,
+        updatedAt: new Date().toISOString(),
+        // Note: Refresh tokens typically expire in 7-14 days, but Google doesn't provide exact expiry
+        refreshTokenGeneratedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
 
-    return new Response(`
+    return new Response(
+      `
         <html>
           <body>
             <h1>YouTube Authorization Successful!</h1>
@@ -75,13 +82,15 @@ export async function GET(request: NextRequest) {
             </script>
           </body>
         </html>
-      `, {
-      headers: { 'Content-Type': 'text/html' },
-    });
-
+      `,
+      {
+        headers: { 'Content-Type': 'text/html' },
+      }
+    );
   } catch (error) {
     console.error('YouTube OAuth callback error:', error);
-    return new Response(`
+    return new Response(
+      `
         <html>
           <body>
             <h1>Authorization Error</h1>
@@ -89,9 +98,11 @@ export async function GET(request: NextRequest) {
             <p>Please close this window and try again.</p>
           </body>
         </html>
-      `, {
-      headers: { 'Content-Type': 'text/html' },
-      status: 500,
-    });
+      `,
+      {
+        headers: { 'Content-Type': 'text/html' },
+        status: 500,
+      }
+    );
   }
 }

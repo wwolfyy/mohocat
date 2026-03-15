@@ -60,11 +60,7 @@ export class AuthIntegrationTester {
    * Test environment configuration
    */
   private async testConfiguration(): Promise<void> {
-    this.addTestResult(
-      'config-test',
-      'Environment Configuration',
-      'running'
-    );
+    this.addTestResult('config-test', 'Environment Configuration', 'running');
 
     const startTime = Date.now();
 
@@ -91,7 +87,6 @@ export class AuthIntegrationTester {
         `Kakaotalk OAuth: ${kakaoEnabled ? 'Enabled' : 'Disabled'}`,
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'config-test',
@@ -106,11 +101,7 @@ export class AuthIntegrationTester {
    * Test service instantiation and basic functionality
    */
   private async testServiceInstantiation(): Promise<void> {
-    this.addTestResult(
-      'service-test',
-      'Authentication Service Instantiation',
-      'running'
-    );
+    this.addTestResult('service-test', 'Authentication Service Instantiation', 'running');
 
     const startTime = Date.now();
 
@@ -145,7 +136,6 @@ export class AuthIntegrationTester {
         'All required service methods are properly implemented',
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'service-test',
@@ -160,11 +150,7 @@ export class AuthIntegrationTester {
    * Test OAuth provider availability
    */
   private async testOAuthAvailability(): Promise<void> {
-    this.addTestResult(
-      'oauth-availability',
-      'OAuth Provider Availability',
-      'running'
-    );
+    this.addTestResult('oauth-availability', 'OAuth Provider Availability', 'running');
 
     const startTime = Date.now();
 
@@ -195,7 +181,6 @@ export class AuthIntegrationTester {
         `Kakaotalk: ${kakaoEnabled ? 'Available' : 'Disabled'}`,
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'oauth-availability',
@@ -210,11 +195,7 @@ export class AuthIntegrationTester {
    * Test auth provider methods
    */
   private async testAuthProviderMethods(): Promise<void> {
-    this.addTestResult(
-      'auth-methods',
-      'Authentication Provider Methods',
-      'running'
-    );
+    this.addTestResult('auth-methods', 'Authentication Provider Methods', 'running');
 
     const startTime = Date.now();
 
@@ -256,7 +237,6 @@ export class AuthIntegrationTester {
         'All provider methods have correct signatures and are implemented',
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'auth-methods',
@@ -271,11 +251,7 @@ export class AuthIntegrationTester {
    * Test error handling scenarios
    */
   private async testErrorHandling(): Promise<void> {
-    this.addTestResult(
-      'error-handling',
-      'Error Handling Scenarios',
-      'running'
-    );
+    this.addTestResult('error-handling', 'Error Handling Scenarios', 'running');
 
     const startTime = Date.now();
 
@@ -284,7 +260,10 @@ export class AuthIntegrationTester {
       const kakaoErrorTests = [
         { code: 'auth/popup-closed-by-user', expected: 'Kakaotalk sign-in was cancelled' },
         { code: 'auth/popup-blocked', expected: 'Kakaotalk sign-in was blocked by popup blocker' },
-        { code: 'auth/account-exists-with-different-credential', expected: 'An account already exists with this email address' },
+        {
+          code: 'auth/account-exists-with-different-credential',
+          expected: 'An account already exists with this email address',
+        },
       ];
 
       // These would normally be tested with actual Firebase errors
@@ -300,7 +279,6 @@ export class AuthIntegrationTester {
         'Error handling structures are properly implemented for all OAuth providers',
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'error-handling',
@@ -315,11 +293,7 @@ export class AuthIntegrationTester {
    * Test admin integration
    */
   private async testAdminIntegration(): Promise<void> {
-    this.addTestResult(
-      'admin-integration',
-      'Admin System Integration',
-      'running'
-    );
+    this.addTestResult('admin-integration', 'Admin System Integration', 'running');
 
     const startTime = Date.now();
 
@@ -353,7 +327,6 @@ export class AuthIntegrationTester {
         'Admin components can properly integrate with authentication service',
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'admin-integration',
@@ -368,11 +341,7 @@ export class AuthIntegrationTester {
    * Test mobile compatibility
    */
   private async testMobileCompatibility(): Promise<void> {
-    this.addTestResult(
-      'mobile-compatibility',
-      'Mobile Device Compatibility',
-      'running'
-    );
+    this.addTestResult('mobile-compatibility', 'Mobile Device Compatibility', 'running');
 
     const startTime = Date.now();
 
@@ -395,7 +364,7 @@ export class AuthIntegrationTester {
         'signInWithKakao',
         'linkProvider',
         'unlinkProvider',
-        'getProviderData'
+        'getProviderData',
       ];
 
       for (const method of methods) {
@@ -413,7 +382,6 @@ export class AuthIntegrationTester {
         `All authentication methods are available on mobile devices (${isMobile ? 'mobile' : 'desktop'})`,
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'mobile-compatibility',
@@ -428,11 +396,7 @@ export class AuthIntegrationTester {
    * Test backward compatibility
    */
   private async testBackwardCompatibility(): Promise<void> {
-    this.addTestResult(
-      'backward-compatibility',
-      'Backward Compatibility',
-      'running'
-    );
+    this.addTestResult('backward-compatibility', 'Backward Compatibility', 'running');
 
     const startTime = Date.now();
 
@@ -466,7 +430,6 @@ export class AuthIntegrationTester {
         'All existing authentication functionality remains intact',
         duration
       );
-
     } catch (error: any) {
       this.addTestResult(
         'backward-compatibility',
@@ -487,7 +450,7 @@ export class AuthIntegrationTester {
     message?: string,
     duration?: number
   ): void {
-    const existingIndex = this.testResults.findIndex(result => result.testId === testId);
+    const existingIndex = this.testResults.findIndex((result) => result.testId === testId);
 
     const result: IntegrationTestResult = {
       testId,
@@ -495,7 +458,7 @@ export class AuthIntegrationTester {
       status,
       message,
       timestamp: new Date().toISOString(),
-      duration
+      duration,
     };
 
     if (existingIndex >= 0) {
@@ -525,10 +488,10 @@ export class AuthIntegrationTester {
     const results = this.getTestResults();
     return {
       total: results.length,
-      passed: results.filter(r => r.status === 'success').length,
-      failed: results.filter(r => r.status === 'error').length,
-      running: results.filter(r => r.status === 'running').length,
-      pending: results.filter(r => r.status === 'pending').length,
+      passed: results.filter((r) => r.status === 'success').length,
+      failed: results.filter((r) => r.status === 'error').length,
+      running: results.filter((r) => r.status === 'running').length,
+      pending: results.filter((r) => r.status === 'pending').length,
     };
   }
 
@@ -552,14 +515,14 @@ export async function runAuthIntegrationTests(): Promise<IntegrationTestResult[]
  * Check if all tests passed
  */
 export function allTestsPassed(results: IntegrationTestResult[]): boolean {
-  return results.every(result => result.status === 'success');
+  return results.every((result) => result.status === 'success');
 }
 
 /**
  * Get failed tests
  */
 export function getFailedTests(results: IntegrationTestResult[]): IntegrationTestResult[] {
-  return results.filter(result => result.status === 'error');
+  return results.filter((result) => result.status === 'error');
 }
 
 /**
@@ -568,10 +531,10 @@ export function getFailedTests(results: IntegrationTestResult[]): IntegrationTes
 export function printTestResults(results: IntegrationTestResult[]): void {
   const summary = {
     total: results.length,
-    passed: results.filter(r => r.status === 'success').length,
-    failed: results.filter(r => r.status === 'error').length,
-    running: results.filter(r => r.status === 'running').length,
-    pending: results.filter(r => r.status === 'pending').length,
+    passed: results.filter((r) => r.status === 'success').length,
+    failed: results.filter((r) => r.status === 'error').length,
+    running: results.filter((r) => r.status === 'running').length,
+    pending: results.filter((r) => r.status === 'pending').length,
   };
 
   console.log('\n📊 Integration Test Results:');
@@ -580,8 +543,8 @@ export function printTestResults(results: IntegrationTestResult[]): void {
   if (summary.failed > 0) {
     console.log('\n❌ Failed Tests:');
     results
-      .filter(r => r.status === 'error')
-      .forEach(result => {
+      .filter((r) => r.status === 'error')
+      .forEach((result) => {
         console.log(`  - ${result.testName}: ${result.message}`);
       });
   }
@@ -589,8 +552,8 @@ export function printTestResults(results: IntegrationTestResult[]): void {
   if (summary.passed > 0) {
     console.log('\n✅ Passed Tests:');
     results
-      .filter(r => r.status === 'success')
-      .forEach(result => {
+      .filter((r) => r.status === 'success')
+      .forEach((result) => {
         console.log(`  - ${result.testName}`);
       });
   }

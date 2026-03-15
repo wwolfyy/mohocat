@@ -7,7 +7,14 @@ const admin = require('firebase-admin');
 const path = require('path');
 
 // Try to use the service account key file
-const serviceAccountPath = path.join(__dirname, '..', '..', 'config', 'firebase', 'mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'firebase',
+  'mountaincats-61543-7329e795c352.json'
+);
 
 try {
   // Initialize Firebase Admin SDK
@@ -15,7 +22,7 @@ try {
     const serviceAccount = require(serviceAccountPath);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      projectId: serviceAccount.project_id
+      projectId: serviceAccount.project_id,
     });
     console.log(`🔥 Connected to Firebase project: ${serviceAccount.project_id}`);
   }
@@ -62,7 +69,7 @@ async function migrateCollection(collectionName, stats) {
 
         // Simply add an empty createdTime field
         const updateData = {
-          createdTime: null
+          createdTime: null,
         };
 
         // Update the document
@@ -76,7 +83,6 @@ async function migrateCollection(collectionName, stats) {
         }
 
         console.log(`✅ Added empty createdTime field to ${docId}`);
-
       } catch (error) {
         const errorMsg = `Failed to update ${docId}: ${error}`;
         console.error(`❌ ${errorMsg}`);
@@ -85,7 +91,6 @@ async function migrateCollection(collectionName, stats) {
     }
 
     console.log(`✨ Completed migration for ${collectionName}`);
-
   } catch (error) {
     const errorMsg = `Failed to migrate ${collectionName}: ${error}`;
     console.error(`💥 ${errorMsg}`);
@@ -102,7 +107,7 @@ async function runMigration() {
     videosProcessed: 0,
     imagesUpdated: 0,
     videosUpdated: 0,
-    errors: []
+    errors: [],
   };
 
   try {
@@ -133,7 +138,6 @@ async function runMigration() {
 
     console.log('\n✅ Migration completed successfully!');
     console.log('⏰ Finished at:', new Date().toISOString());
-
   } catch (error) {
     console.error('💥 Migration failed:', error);
     process.exit(1);
@@ -142,13 +146,15 @@ async function runMigration() {
 
 // Run the migration
 if (require.main === module) {
-  runMigration().then(() => {
-    console.log('👋 Migration script finished');
-    process.exit(0);
-  }).catch((error) => {
-    console.error('💥 Unhandled error:', error);
-    process.exit(1);
-  });
+  runMigration()
+    .then(() => {
+      console.log('👋 Migration script finished');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('💥 Unhandled error:', error);
+      process.exit(1);
+    });
 }
 
 module.exports = { runMigration };

@@ -11,6 +11,7 @@ This document outlines the comprehensive authentication and member management sy
 ## 🏗️ **Architecture Overview**
 
 ### **Centralized Authentication Service**
+
 - **Project**: `mountain-cats-users` (Firebase)
 - **Purpose**: Single source of truth for user identity and authentication
 - **Responsibilities**:
@@ -20,6 +21,7 @@ This document outlines the comprehensive authentication and member management sy
   - SMS cost attribution tracking
 
 ### **Mountain-Specific Services**
+
 - **Projects**: `geyang-cats`, `jirisan-cats`, etc.
 - **Purpose**: Mountain-specific data and operations
 - **Responsibilities**:
@@ -31,6 +33,7 @@ This document outlines the comprehensive authentication and member management sy
 ## 👥 **User Roles & Permissions**
 
 ### **Role Hierarchy**
+
 1. **admin**: Full mountain management access
    - Permissions: `["manage-cats", "manage-posts", "manage-users", "view-analytics", "manage-settings", "export-data"]`
 
@@ -44,6 +47,7 @@ This document outlines the comprehensive authentication and member management sy
    - Permissions: `["view-analytics"]`
 
 ### **Cross-Mountain Access**
+
 - Users can have different roles in different mountains
 - Example: Admin in Geyang, Butler-online in Jirisan
 - Each mountain admin manages access for their mountain only
@@ -53,6 +57,7 @@ This document outlines the comprehensive authentication and member management sy
 ### **Central User Service Collections**
 
 #### **butlers Collection**
+
 ```javascript
 // butlers/{userId}
 {
@@ -113,6 +118,7 @@ This document outlines the comprehensive authentication and member management sy
 ```
 
 #### **mountainAccess Collection**
+
 ```javascript
 // mountainAccess/{requestId}
 {
@@ -140,6 +146,7 @@ This document outlines the comprehensive authentication and member management sy
 ```
 
 #### **smsLogs Collection**
+
 ```javascript
 // smsLogs/{logId}
 {
@@ -163,6 +170,7 @@ This document outlines the comprehensive authentication and member management sy
 ```
 
 #### **monthlySmsReport Collection**
+
 ```javascript
 // monthlySmsReport/{year-month}
 {
@@ -210,6 +218,7 @@ This document outlines the comprehensive authentication and member management sy
    - If existing: Skip to step 5
 
 4. **New Butler Creation**
+
    ```javascript
    // Create new butler record
    {
@@ -222,6 +231,7 @@ This document outlines the comprehensive authentication and member management sy
    ```
 
 5. **Access Request Creation**
+
    ```javascript
    // Create access request
    {
@@ -251,6 +261,7 @@ This document outlines the comprehensive authentication and member management sy
    - Links new mountain request to existing account
 
 4. **Additional Mountain Request**
+
    ```javascript
    {
      userId: "existing-butler-id",
@@ -268,17 +279,20 @@ This document outlines the comprehensive authentication and member management sy
 ## 🔐 **Security & Authentication**
 
 ### **Identity Verification Rules**
+
 - **Primary Key**: Phone number serves as unique identifier
 - **SMS Required**: Every access request requires SMS verification
 - **Cost Attribution**: Each mountain pays for their SMS verifications
 - **Audit Trail**: All verifications logged with attribution
 
 ### **Admin Access Control**
+
 - Mountain admins can only see users with access to their mountain
 - Cannot view or modify users' access to other mountains
 - Full CRUD operations for their mountain's user roles
 
 ### **Firestore Security Rules**
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -311,6 +325,7 @@ service cloud.firestore {
 ```
 
 ### **JWT Token Structure**
+
 ```javascript
 // JWT payload for cross-mountain access
 {
@@ -328,6 +343,7 @@ service cloud.firestore {
 ## 🛡️ **Fallback Strategy**
 
 ### **Firebase Built-in Reliability**
+
 - **99.95% uptime SLA** for Firebase Authentication
 - **Multi-region replication** for Firestore
 - **Automatic failover** in Firebase infrastructure
@@ -335,6 +351,7 @@ service cloud.firestore {
 ### **Application-Level Fallbacks**
 
 #### **Authentication Service Down**
+
 ```javascript
 if (centralAuthService.isDown()) {
   // Use cached JWT tokens (24-hour validity)
@@ -345,6 +362,7 @@ if (centralAuthService.isDown()) {
 ```
 
 #### **User Data Service Down**
+
 ```javascript
 if (centralUserService.isDown()) {
   // Use cached mountain roles from JWT
@@ -355,6 +373,7 @@ if (centralUserService.isDown()) {
 ```
 
 #### **Admin Panel Fallback**
+
 ```javascript
 if (cannotReachCentralService()) {
   // Show cached user list with last known status
@@ -369,6 +388,7 @@ if (cannotReachCentralService()) {
 ### **Mountain Admin Dashboard**
 
 #### **User Management Section**
+
 - **User List**: All users with access to admin's mountain
 - **Pending Requests**: New access requests requiring approval
 - **Role Management**: Change user roles within mountain
@@ -376,6 +396,7 @@ if (cannotReachCentralService()) {
 - **SMS Cost Report**: Monthly attribution costs
 
 #### **User Profile View**
+
 ```
 User Profile: 김철수
 Phone: +82-10-****-5678
@@ -395,6 +416,7 @@ Actions Available:
 ```
 
 #### **Cross-Mountain Request Review**
+
 ```
 Access Request from Existing User
 
@@ -410,18 +432,21 @@ Verified: 2025-06-29 14:05 (SMS)
 ## 💰 **Cost Management**
 
 ### **SMS Cost Attribution**
+
 - Each mountain pays for SMS verifications they trigger
 - New user registrations attributed to registration mountain
 - Cross-mountain requests attributed to target mountain
 - Monthly reports show detailed breakdown
 
 ### **Cost Optimization**
+
 - JWT tokens valid for 24 hours (reduce re-authentication)
 - Cached user permissions (reduce database queries)
 - Batch SMS operations where possible
 - Test phone numbers for development
 
 ### **Monthly Report Example**
+
 ```
 SMS Cost Report - June 2025
 
@@ -441,6 +466,7 @@ Total Platform Cost: $24.09
 ## 🚀 **Implementation Timeline**
 
 ### **Phase 1: Central Service Setup (Weeks 1-2)**
+
 - [ ] Create `mountain-cats-users` Firebase project
 - [ ] Configure SMS authentication for Korea region
 - [ ] Design and implement Firestore collections
@@ -448,6 +474,7 @@ Total Platform Cost: $24.09
 - [ ] Create Cloud Functions for user management APIs
 
 ### **Phase 2: Admin Interface (Weeks 3-4)**
+
 - [ ] Build admin API endpoints for user management
 - [ ] Create admin dashboard UI components
 - [ ] Implement role-based access control
@@ -455,6 +482,7 @@ Total Platform Cost: $24.09
 - [ ] Add user approval/rejection workflows
 
 ### **Phase 3: User Registration (Weeks 5-6)**
+
 - [ ] Update 동참 page for new registration flow
 - [ ] Integrate SMS verification with central service
 - [ ] Build access request submission system
@@ -462,6 +490,7 @@ Total Platform Cost: $24.09
 - [ ] Add cross-mountain request handling
 
 ### **Phase 4: Integration & Testing (Weeks 7-8)**
+
 - [ ] Implement JWT token system for cross-mountain auth
 - [ ] Update mountain applications to verify against central service
 - [ ] Build and test fallback mechanisms
@@ -469,6 +498,7 @@ Total Platform Cost: $24.09
 - [ ] End-to-end testing of all user flows
 
 ### **Phase 5: Deployment & Monitoring (Week 9)**
+
 - [ ] Deploy central authentication service
 - [ ] Migrate existing development data
 - [ ] Set up monitoring and alerting
@@ -478,30 +508,35 @@ Total Platform Cost: $24.09
 ## 🔍 **Edge Cases & Considerations**
 
 ### **Phone Number Changes**
+
 - Future feature: Allow verified phone number updates
 - Maintain history of previous phone numbers
 - Require SMS verification for changes
 - Update all mountain access records
 
 ### **Shared Phone Numbers**
+
 - Policy: One phone number = one account
 - Family members sharing phone share the account
 - Individual access requires individual phone numbers
 - Clear documentation of this limitation
 
 ### **International Expansion**
+
 - SMS regions configurable per mountain
 - Support for multiple country codes
 - Localized SMS message templates
 - Regional cost tracking and attribution
 
 ### **Account Suspension**
+
 - Mountain-specific suspension (doesn't affect other mountains)
 - Platform-wide suspension for serious violations
 - Clear appeal process for suspended users
 - Audit trail for all suspension actions
 
 ### **Data Privacy & GDPR**
+
 - User data deletion requests
 - Mountain-specific data retention policies
 - Export user data functionality

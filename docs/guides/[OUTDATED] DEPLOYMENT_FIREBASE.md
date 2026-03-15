@@ -121,11 +121,13 @@ Build (once) → Deploy Geyang (with Geyang env vars)
 ### 3. Deployment Execution
 
 Each deployment follows this pattern:
+
 - **Uses same built files** - Identical application code and bundled `mountains.json`
 - **Loads different environment variables** - Mountain-specific secrets from deployment platform
 - **Serves mountain-specific content** - Runtime configuration based on `MOUNTAIN_ID`
 
 This approach ensures:
+
 - ✅ **Single Codebase Maintenance** - One set of code to update and test
 - ✅ **Consistent Features** - All mountains get identical functionality
 - ✅ **Secure Secret Management** - Each deployment has isolated credentials
@@ -143,7 +145,7 @@ Edit `config/mountains/mountains.json` to add your new mountain:
 {
   "geyang": {
     "id": "geyang",
-    "name": "계양산 냥이들",
+    "name": "계양산 냥이들"
     // ... existing configuration
   },
   "jirisan": {
@@ -243,7 +245,7 @@ const path = require('path');
 
 const mountains = ['geyang', 'jirisan']; // Add more as needed
 
-mountains.forEach(mountain => {
+mountains.forEach((mountain) => {
   console.log(`Deploying ${mountain}...`);
 
   // Copy environment file
@@ -265,17 +267,14 @@ mountains.forEach(mountain => {
 ## Firebase Configuration Files
 
 ### firebase.json
+
 The project includes a `config/firebase/firebase.json` file with hosting configuration:
 
 ```json
 {
   "hosting": {
     "public": "out",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "**",
@@ -287,6 +286,7 @@ The project includes a `config/firebase/firebase.json` file with hosting configu
 ```
 
 ### Firestore Rules
+
 Security rules are in `config/firebase/firestore.rules`. Make sure to deploy them:
 
 ```bash
@@ -294,6 +294,7 @@ firebase deploy --only firestore:rules
 ```
 
 ### Storage CORS
+
 CORS configuration for Firebase Storage is in `config/firebase/cors_fbstorage.json`.
 
 ## CI/CD Pipeline
@@ -341,6 +342,7 @@ The application uses Firebase Storage for static assets, including about page ph
    - Upload your main photo (e.g., `about-main-geyang.jpg`)
 
 2. **Configure in mountains.json**:
+
    ```json
    {
      "geyang": {
@@ -368,7 +370,9 @@ The application uses Firebase Storage for static assets, including about page ph
 For multi-tenant deployments, each mountain needs its own about photos:
 
 #### **Step 1: Organize Photos by Mountain**
+
 Create separate folders for each mountain in Firebase Storage:
+
 ```
 /about-photos/
   ├── geyang/
@@ -380,6 +384,7 @@ Create separate folders for each mountain in Firebase Storage:
 ```
 
 #### **Step 2: Upload Process for Each Mountain**
+
 1. **Access Firebase Console**: Go to the specific mountain's Firebase project
 2. **Navigate to Storage**: Firebase Console > Storage > Files
 3. **Create Mountain Folder**:
@@ -388,6 +393,7 @@ Create separate folders for each mountain in Firebase Storage:
 4. **Upload Photo**: Place the about photo in `/about-photos/[mountain-id]/`
 
 #### **Step 3: Configure Each Mountain**
+
 Update `config/mountains/mountains.json` for each mountain:
 
 ```json
@@ -414,7 +420,9 @@ Update `config/mountains/mountains.json` for each mountain:
 ```
 
 #### **Step 4: Deploy to Each Mountain**
+
 Each mountain deployment will automatically load its own photo:
+
 ```bash
 # Deploy to Geyang
 MOUNTAIN_ID=geyang npm run build

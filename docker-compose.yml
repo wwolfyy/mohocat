@@ -26,7 +26,7 @@ services:
         # Application Configuration
         NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
     ports:
-      - "8080:8080"
+      - '8080:8080'
     env_file:
       - .env.local
     restart: always

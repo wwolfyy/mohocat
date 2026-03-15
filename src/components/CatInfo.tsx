@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { cn } from "@/utils/cn";
-import { Cat } from "@/types";
-import { processTextWithLinks } from "@/utils/text-processing";
-import { getCatService } from "@/services";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import PhotoAlbum from "./PhotoAlbum";
-import VideoAlbum from "./VideoAlbum";
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { cn } from '@/utils/cn';
+import { Cat } from '@/types';
+import { processTextWithLinks } from '@/utils/text-processing';
+import { getCatService } from '@/services';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import PhotoAlbum from './PhotoAlbum';
+import VideoAlbum from './VideoAlbum';
 
 interface CatInfoProps {
   cat: Cat;
@@ -16,12 +16,12 @@ interface CatInfoProps {
 
 const getStatusEmoji = (status?: string) => {
   const statusToEmoji: Record<string, string> = {
-    산냥이: "ᨒ",
-    집냥이: "🏠",
-    별냥이: "🌈",
-    행방불명: "❓",
+    산냥이: 'ᨒ',
+    집냥이: '🏠',
+    별냥이: '🌈',
+    행방불명: '❓',
   };
-  return statusToEmoji[status || ""] || "❓";
+  return statusToEmoji[status || ''] || '❓';
 };
 
 export default function CatInfo({ cat }: CatInfoProps) {
@@ -102,9 +102,8 @@ export default function CatInfo({ cat }: CatInfoProps) {
             <span className="text-gray-600">
               {cat.date_of_birth}
               {cat.dob_certainty && (
-                <span className="ml-2 text-sm text-gray-500">(
-                  {cat.dob_certainty === "certain" ? "확실함" : "불확실"}
-                  )
+                <span className="ml-2 text-sm text-gray-500">
+                  ({cat.dob_certainty === 'certain' ? '확실함' : '불확실'})
                 </span>
               )}
             </span>
@@ -161,7 +160,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
         <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">중성화 여부:</span>
           <span className="text-gray-600">
-            {cat.isNeutered === true ? "O" : cat.isNeutered === false ? "X" : "?"}
+            {cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}
           </span>
         </div>
         {cat.note && (
@@ -172,7 +171,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
               dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.note) }}
             />
           </div>
-        )}{" "}
+        )}{' '}
         <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">사진첩:</span>
           <button
@@ -181,7 +180,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
           >
             사진 보기 📸
           </button>
-        </div>{" "}
+        </div>{' '}
         <div className="flex items-center">
           <span className="w-24 font-semibold text-gray-700">동영상:</span>
           <button
@@ -191,7 +190,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
             동영상 보기 🎬
           </button>
         </div>
-      </div>{" "}
+      </div>{' '}
       {/* Photo Album Modal */}
       <PhotoAlbum
         isOpen={showPhotoAlbum}
@@ -204,7 +203,6 @@ export default function CatInfo({ cat }: CatInfoProps) {
         onClose={() => setShowVideoAlbum(false)}
         catName={cat.name}
       />
-
       {/* Nested Cat Modal */}
       {selectedCat && (
         <div
@@ -219,9 +217,9 @@ export default function CatInfo({ cat }: CatInfoProps) {
             <button
               onClick={() => setSelectedCat(null)}
               className={cn(
-                "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
-                "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
-                "flex items-center justify-center z-10"
+                'absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600',
+                'text-white rounded font-bold hover:shadow-lg transition-all duration-200',
+                'flex items-center justify-center z-10'
               )}
             >
               <XMarkIcon className="h-5 w-5" />
@@ -230,7 +228,6 @@ export default function CatInfo({ cat }: CatInfoProps) {
           </div>
         </div>
       )}
-
       {/* Cat Modal Loading */}
       {catModalLoading && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">

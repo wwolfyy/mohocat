@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { getAnnouncementService } from "@/services";
-import AnnouncementModal from "@/components/AnnouncementModal";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getAnnouncementService } from '@/services';
+import AnnouncementModal from '@/components/AnnouncementModal';
 
 interface AnnouncementModalContextType {
   showModal: (announcement: any) => void;
@@ -25,7 +25,9 @@ interface AnnouncementModalProviderProps {
   children: React.ReactNode;
 }
 
-export const AnnouncementModalProvider: React.FC<AnnouncementModalProviderProps> = ({ children }) => {
+export const AnnouncementModalProvider: React.FC<AnnouncementModalProviderProps> = ({
+  children,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAnnouncement, setCurrentAnnouncement] = useState<any | null>(null);
   const [hasCheckedOnLoad, setHasCheckedOnLoad] = useState(false);

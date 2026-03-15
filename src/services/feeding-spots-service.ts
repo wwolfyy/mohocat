@@ -1,4 +1,13 @@
-import { collection, getDocs, query, orderBy, Timestamp, doc, updateDoc, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  Timestamp,
+  doc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface FeedingSpot {
@@ -16,7 +25,8 @@ export interface IFeedingSpotsService {
 }
 
 export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
-  private readonly COLLECTION_NAME = 'feeding_spots';  private formatTimestamp(timestamp: any): string {
+  private readonly COLLECTION_NAME = 'feeding_spots';
+  private formatTimestamp(timestamp: any): string {
     if (!timestamp) return '';
 
     try {
@@ -32,7 +42,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          hour12: false
+          hour12: false,
         });
       }
 
@@ -44,7 +54,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          hour12: false
+          hour12: false,
         });
       }
 
@@ -98,7 +108,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
       const q = query(feedingSpotsRef, orderBy('id', 'asc'));
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => {
+      return querySnapshot.docs.map((doc) => {
         const data = doc.data();
         const lastAttendedDate = this.getDateFromTimestamp(data.last_attended);
         const hoursAgo = this.calculateHoursAgo(lastAttendedDate);
@@ -109,7 +119,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
           last_attended: this.formatTimestamp(data.last_attended),
           last_attended_by: data.last_attended_by || '',
           hoursAgo,
-          lastAttendedDate
+          lastAttendedDate,
         };
       });
     } catch (error) {
@@ -118,7 +128,11 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
     }
   }
 
-  async updateFeedingSpots(spotIds: number[], attendedBy: string, attendedAt?: string): Promise<void> {
+  async updateFeedingSpots(
+    spotIds: number[],
+    attendedBy: string,
+    attendedAt?: string
+  ): Promise<void> {
     if (spotIds.length === 0) return;
 
     try {
@@ -135,7 +149,7 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
           const docRef = querySnapshot.docs[0].ref;
           await updateDoc(docRef, {
             last_attended: timestamp,
-            last_attended_by: attendedBy
+            last_attended_by: attendedBy,
           });
         } else {
           console.warn(`Feeding spot with id ${spotId} not found`);
@@ -143,7 +157,9 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
       });
 
       await Promise.all(updatePromises);
-      console.log(`Successfully updated ${spotIds.length} feeding spots with timestamp: ${attendedAt || 'current time'}`);
+      console.log(
+        `Successfully updated ${spotIds.length} feeding spots with timestamp: ${attendedAt || 'current time'}`
+      );
     } catch (error) {
       console.error('Error updating feeding spots:', error);
       throw error;

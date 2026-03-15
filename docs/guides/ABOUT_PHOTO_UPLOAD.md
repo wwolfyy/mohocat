@@ -11,6 +11,7 @@ About page photos are stored in Firebase Storage under the following structure:
 ```
 
 Examples:
+
 - `/about-photos/geyang/about-main-geyang.jpg`
 - `/about-photos/jirisan/about-main-jirisan.jpg`
 
@@ -38,16 +39,19 @@ Examples:
 For each mountain's Firebase project:
 
 #### **Mountain 1: Geyang**
+
 1. Access **Geyang's Firebase Console** (project: `mountaincats-61543`)
 2. Storage > Files > Create folder: `about-photos/geyang/`
 3. Upload: `about-main-geyang.jpg`
 
 #### **Mountain 2: Jirisan**
+
 1. Access **Jirisan's Firebase Console** (project: `jirisan-cats-project`)
 2. Storage > Files > Create folder: `about-photos/jirisan/`
 3. Upload: `about-main-jirisan.jpg`
 
 #### **Mountain N: New Mountain**
+
 1. Access **New Mountain's Firebase Console**
 2. Storage > Files > Create folder: `about-photos/[new-mountain-id]/`
 3. Upload: `about-main-[new-mountain-id].jpg`
@@ -57,6 +61,7 @@ For each mountain's Firebase project:
 Edit `config/mountains/mountains.json` to add the photo configuration:
 
 **Single Mountain:**
+
 ```json
 {
   "your-mountain-id": {
@@ -77,6 +82,7 @@ Edit `config/mountains/mountains.json` to add the photo configuration:
 ```
 
 **Multi-Tenant Setup:**
+
 ```json
 {
   "geyang": {
@@ -103,6 +109,7 @@ Edit `config/mountains/mountains.json` to add the photo configuration:
 ### 4. Deploy Changes
 
 **Single Mountain Deployment:**
+
 ```bash
 # Build the application
 npm run build
@@ -112,6 +119,7 @@ firebase deploy --only hosting
 ```
 
 **Multi-Tenant Deployment:**
+
 ```bash
 # Deploy to Geyang mountain
 MOUNTAIN_ID=geyang npm run build
@@ -131,6 +139,7 @@ firebase deploy --only hosting --project [mountain-project]
 ## File Naming Conventions
 
 ### Main About Photo
+
 - Pattern: `about-main-[mountain-id].[extension]`
 - Examples:
   - `about-main-geyang.jpg`
@@ -138,6 +147,7 @@ firebase deploy --only hosting --project [mountain-project]
   - `about-main-seoraksan.webp`
 
 ### Additional Photos (Future Use)
+
 - Pattern: `about-[purpose]-[mountain-id].[extension]`
 - Examples:
   - `about-team-geyang.jpg`
@@ -147,18 +157,21 @@ firebase deploy --only hosting --project [mountain-project]
 ## Photo Guidelines
 
 ### Technical Requirements
+
 - **Aspect Ratio**: 3:2 (landscape) or 4:3 recommended
 - **Resolution**: At least 1200px wide
 - **File Size**: Under 500KB
 - **Format**: JPG (best compatibility) or WebP (best compression)
 
 ### Content Guidelines
+
 - **Subject**: Should relate to your mountain or cat community
 - **Quality**: High resolution, well-lit, sharp focus
 - **Composition**: Consider text overlay space if needed
 - **Rights**: Ensure you have rights to use the image
 
 ### Accessibility
+
 - **Alt Text**: Provide descriptive alt text in the configuration
 - **Caption**: Add meaningful captions that add context
 - **Contrast**: Ensure good contrast if text will overlay the image
@@ -168,12 +181,15 @@ firebase deploy --only hosting --project [mountain-project]
 After uploading and configuring:
 
 1. **Local Testing**:
+
    ```bash
    npm run dev
    ```
+
    Navigate to `/pages/about` to see your photo
 
 2. **Build Testing**:
+
    ```bash
    npm run build
    npm start
@@ -184,17 +200,20 @@ After uploading and configuring:
 ## Troubleshooting
 
 ### Photo Not Loading
+
 - Check Firebase Storage permissions
 - Verify the file path matches the configuration
 - Ensure the file was uploaded successfully
 - Check browser network tab for 404 errors
 
 ### Slow Loading
+
 - Optimize image file size
 - Use WebP format for better compression
 - Consider using responsive images
 
 ### Configuration Not Updating
+
 - Clear browser cache
 - Verify the JSON syntax in mountains.json
 - Restart the development server
@@ -231,6 +250,7 @@ service firebase.storage {
 ### Applying Security Rules
 
 **For Each Mountain's Firebase Project:**
+
 1. Go to Firebase Console > Storage > Rules
 2. Replace the existing rules with the above configuration
 3. Click **"Publish"** to deploy the rules

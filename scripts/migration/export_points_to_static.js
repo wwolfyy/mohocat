@@ -14,7 +14,7 @@ const fs = require('fs');
 const possiblePaths = [
   path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
   path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json')
+  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
 ];
 
 let serviceAccountPath = null;
@@ -55,7 +55,7 @@ async function exportPointsToStaticData() {
       const data = doc.data();
       points.push({
         id: doc.id,
-        ...data
+        ...data,
       });
     });
 
@@ -77,7 +77,6 @@ async function exportPointsToStaticData() {
     points.forEach((point, index) => {
       console.log(`${index + 1}. ${point.id} - ${point.name || 'Unnamed'}`);
     });
-
   } catch (error) {
     console.error('Export failed:', error);
     process.exit(1);

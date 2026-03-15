@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Edit,
   SimpleForm,
@@ -19,7 +19,7 @@ import {
   ListButton,
   ShowButton,
   DeleteButton,
-} from "react-admin";
+} from 'react-admin';
 import {
   Box,
   Card,
@@ -41,43 +41,43 @@ import {
   DialogActions,
   Alert,
   Divider,
-} from "@mui/material";
-import { Add, Remove, Visibility, Edit as EditIcon } from "@mui/icons-material";
+} from '@mui/material';
+import { Add, Remove, Visibility, Edit as EditIcon } from '@mui/icons-material';
 
 // Available cat tags - in a real app, this would come from Firestore
 const AVAILABLE_TAGS = [
-  "개똥이",
-  "깡패",
-  "꽃분이",
-  "누렁이",
-  "대장이",
-  "땅콩이",
-  "뚜껑이",
-  "마니",
-  "메리",
-  "블타",
-  "삼숙이",
-  "삼순이",
-  "송이",
-  "순돌이",
-  "아들조로",
-  "아롱이",
-  "알콩이",
-  "엄마조로",
-  "예쁜이",
-  "예쁜이엄마",
-  "점돌이",
-  "점순이",
-  "정상노랑이",
-  "찰리",
-  "초롱이",
-  "코순이",
-  "판다",
-  "팔랑이",
-  "팔봉이",
-  "팔봉이친구",
-  "하느재노랑이",
-  "하얀코",
+  '개똥이',
+  '깡패',
+  '꽃분이',
+  '누렁이',
+  '대장이',
+  '땅콩이',
+  '뚜껑이',
+  '마니',
+  '메리',
+  '블타',
+  '삼숙이',
+  '삼순이',
+  '송이',
+  '순돌이',
+  '아들조로',
+  '아롱이',
+  '알콩이',
+  '엄마조로',
+  '예쁜이',
+  '예쁜이엄마',
+  '점돌이',
+  '점순이',
+  '정상노랑이',
+  '찰리',
+  '초롱이',
+  '코순이',
+  '판다',
+  '팔랑이',
+  '팔봉이',
+  '팔봉이친구',
+  '하느재노랑이',
+  '하얀코',
 ];
 
 // Custom toolbar with enhanced save options
@@ -87,8 +87,8 @@ const ImageEditToolbar = () => {
 
   const handleSaveAndContinue = () => {
     // This would save and redirect to the next untagged image
-    notify("Image saved. Redirecting to next untagged image...", {
-      type: "info",
+    notify('Image saved. Redirecting to next untagged image...', {
+      type: 'info',
     });
   };
 
@@ -128,23 +128,23 @@ const ImagePreview = () => {
         <Typography variant="h6" gutterBottom>
           Image Preview
         </Typography>
-        <Box sx={{ textAlign: "center", mb: 2 }}>
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
           <img
             src={record.imageUrl}
             alt={record.fileName}
             style={{
-              maxWidth: "100%",
-              maxHeight: "400px",
-              objectFit: "contain",
-              borderRadius: "8px",
-              border: "1px solid #ddd",
+              maxWidth: '100%',
+              maxHeight: '400px',
+              objectFit: 'contain',
+              borderRadius: '8px',
+              border: '1px solid #ddd',
             }}
           />
-        </Box>{" "}
+        </Box>{' '}
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 2,
           }}
         >
@@ -155,15 +155,13 @@ const ImagePreview = () => {
           </Box>
           <Box>
             <Typography variant="body2" color="textSecondary">
-              <strong>Upload Date:</strong>{" "}
-              {new Date(record.uploadDate).toLocaleDateString()}
+              <strong>Upload Date:</strong> {new Date(record.uploadDate).toLocaleDateString()}
             </Typography>
           </Box>
           {record.fileSize && (
             <Box>
               <Typography variant="body2" color="textSecondary">
-                <strong>File Size:</strong>{" "}
-                {(record.fileSize / 1024 / 1024).toFixed(2)} MB
+                <strong>File Size:</strong> {(record.fileSize / 1024 / 1024).toFixed(2)} MB
               </Typography>
             </Box>
           )}
@@ -183,10 +181,8 @@ const ImagePreview = () => {
 // Enhanced tag editing component
 const TagEditor = () => {
   const record = useRecordContext();
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    record?.tags || [],
-  );
-  const [customTag, setCustomTag] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>(record?.tags || []);
+  const [customTag, setCustomTag] = useState('');
   const [customTagDialogOpen, setCustomTagDialogOpen] = useState(false);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
@@ -196,9 +192,7 @@ const TagEditor = () => {
       const suggestions = AVAILABLE_TAGS.filter(
         (tag) =>
           record.fileName.toLowerCase().includes(tag.toLowerCase()) ||
-          tag
-            .toLowerCase()
-            .includes(record.fileName.toLowerCase().substring(0, 3)),
+          tag.toLowerCase().includes(record.fileName.toLowerCase().substring(0, 3))
       );
       setTagSuggestions(suggestions.slice(0, 5)); // Limit to 5 suggestions
     }
@@ -212,7 +206,7 @@ const TagEditor = () => {
     if (customTag.trim() && !selectedTags.includes(customTag.trim())) {
       const newTags = [...selectedTags, customTag.trim()];
       setSelectedTags(newTags);
-      setCustomTag("");
+      setCustomTag('');
       setCustomTagDialogOpen(false);
     }
   };
@@ -240,7 +234,7 @@ const TagEditor = () => {
             <Typography variant="subtitle2" color="textSecondary" gutterBottom>
               Suggestions based on filename:
             </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {tagSuggestions.map((suggestion) => (
                 <Chip
                   key={suggestion}
@@ -263,7 +257,7 @@ const TagEditor = () => {
           <Typography variant="subtitle2" gutterBottom>
             Current Tags:
           </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
             {selectedTags.map((tag) => (
               <Chip
                 key={tag}
@@ -290,13 +284,10 @@ const TagEditor = () => {
               value={selectedTags}
               onChange={(event, newValue) => handleTagChange(newValue)}
               renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                  />
-                ))
+                value.map((option, index) => {
+                  const { key, ...tagProps } = getTagProps({ index });
+                  return <Chip key={key} variant="outlined" label={option} {...tagProps} />;
+                })
               }
               renderInput={(params) => (
                 <TextField
@@ -310,7 +301,7 @@ const TagEditor = () => {
         </Box>
 
         {/* Custom Tag Button */}
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
             startIcon={<Add />}
@@ -341,16 +332,14 @@ const TagEditor = () => {
               value={customTag}
               onChange={(e) => setCustomTag(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === 'Enter') {
                   handleAddCustomTag();
                 }
               }}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setCustomTagDialogOpen(false)}>
-              Cancel
-            </Button>
+            <Button onClick={() => setCustomTagDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleAddCustomTag} variant="contained">
               Add Tag
             </Button>
@@ -384,13 +373,7 @@ const ImageEdit = () => {
             fullWidth
           />
 
-          <TextInput
-            source="description"
-            label="Description"
-            multiline
-            rows={3}
-            fullWidth
-          />
+          <TextInput source="description" label="Description" multiline rows={3} fullWidth />
 
           <BooleanInput
             source="needsTagging"
@@ -406,19 +389,9 @@ const ImageEdit = () => {
           </ArrayInput>
 
           {/* Metadata fields (read-only) */}
-          <TextInput
-            source="uploadDate"
-            label="Upload Date"
-            disabled
-            fullWidth
-          />
+          <TextInput source="uploadDate" label="Upload Date" disabled fullWidth />
 
-          <TextInput
-            source="fileSize"
-            label="File Size (bytes)"
-            disabled
-            fullWidth
-          />
+          <TextInput source="fileSize" label="File Size (bytes)" disabled fullWidth />
         </SimpleForm>
       </Box>
     </Edit>

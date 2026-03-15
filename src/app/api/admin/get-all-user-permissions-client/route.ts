@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         console.log(`Processing user ${doc.id}:`, {
           email: data.email,
           role: data.currentRole?.role,
-          displayName: data.displayName
+          displayName: data.displayName,
         });
 
         users.push({
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
           displayName: data.displayName || data.email?.split('@')[0] || 'Unknown',
           permissions: data.currentRole?.permissions || [],
           assignedAt: data.currentRole?.assignedAt || null,
-          isActive: data.currentRole?.isActive !== false
+          isActive: data.currentRole?.isActive !== false,
         });
         processedCount++;
       } catch (docError) {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       admin: 4,
       'butler-ground': 3,
       'butler-internet': 2,
-      viewer: 1
+      viewer: 1,
     };
 
     users.sort((a, b) => {
@@ -72,17 +72,20 @@ export async function GET(request: NextRequest) {
     });
 
     console.log('=== FINAL USER LIST FROM FIRESTORE ===');
-    users.forEach(user => {
+    users.forEach((user) => {
       console.log(`${user.displayName} (${user.email}) - ${user.role}`);
     });
 
     return NextResponse.json(users);
   } catch (error) {
     console.error('❌ Error fetching users from Firestore:', error);
-    return NextResponse.json({
-      error: 'Failed to fetch user permissions from Firestore',
-      details: (error as Error).message,
-      stack: (error as Error).stack
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch user permissions from Firestore',
+        details: (error as Error).message,
+        stack: (error as Error).stack,
+      },
+      { status: 500 }
+    );
   }
 }

@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import Link from "next/link";
-import { cn } from "@/utils/cn";
-import { Post as PostType } from "@/types";
-import { useAuth } from "@/hooks/useAuth";
-import ReplyButton from "./ReplyButton";
-import ReplyForm from "./ReplyForm";
-import ReplyList, { ReplyListRef } from "./ReplyList";
-import { IPostService } from "@/services";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { cn } from '@/utils/cn';
+import { Post as PostType } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import ReplyButton from './ReplyButton';
+import ReplyForm from './ReplyForm';
+import ReplyList, { ReplyListRef } from './ReplyList';
+import { IPostService } from '@/services';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -62,7 +62,7 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
     let koreaTime: Date;
     if (typeof targetDate.getTimezoneOffset === 'function') {
       // For dates that might be in UTC, convert to Korea time
-      koreaTime = new Date(targetDate.getTime() + (9 * 60 * 60 * 1000));
+      koreaTime = new Date(targetDate.getTime() + 9 * 60 * 60 * 1000);
     } else {
       koreaTime = targetDate;
     }
@@ -87,7 +87,7 @@ interface Post {
   title: string;
   message: string;
   thumbnailUrl?: string;
-  mediaType?: "video" | "image";
+  mediaType?: 'video' | 'image';
   videoUrls?: string[];
   videoUrl?: string; // Keep for backward compatibility
   imageUrls?: string[];
@@ -113,13 +113,11 @@ const PostList: React.FC<PostListProps> = ({
   onPageChange,
   postService,
 }) => {
-  const [postReplyCounts, setPostReplyCounts] = useState<
-    Record<string, number>
-  >({});
-  const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>(
-    {},
+  const [postReplyCounts, setPostReplyCounts] = useState<Record<string, number>>({});
+  const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>({});
+  const [replyListRefs, setReplyListRefs] = useState<Record<string, React.RefObject<ReplyListRef>>>(
+    {}
   );
-  const [replyListRefs, setReplyListRefs] = useState<Record<string, React.RefObject<ReplyListRef>>>({});
   const { isAuthenticated } = useAuth();
 
   const handleReplyCountUpdate = (postId: string, count: number) => {
@@ -128,7 +126,7 @@ const PostList: React.FC<PostListProps> = ({
 
   const handleToggleReplyForm = (postId: string) => {
     if (!isAuthenticated) {
-      alert("댓글을 작성하려면 로그인이 필요합니다.");
+      alert('댓글을 작성하려면 로그인이 필요합니다.');
       return;
     }
     setShowReplyForms((prev) => ({ ...prev, [postId]: !prev[postId] }));
@@ -136,9 +134,7 @@ const PostList: React.FC<PostListProps> = ({
 
   const handleReplySuccess = (postId: string, reply: PostType) => {
     const currentCount =
-      postReplyCounts[postId] ||
-      posts.find((p) => p.id === postId)?.replyCount ||
-      0;
+      postReplyCounts[postId] || posts.find((p) => p.id === postId)?.replyCount || 0;
     handleReplyCountUpdate(postId, currentCount + 1);
     setShowReplyForms((prev) => ({ ...prev, [postId]: false }));
 
@@ -152,10 +148,9 @@ const PostList: React.FC<PostListProps> = ({
   return (
     <div data-oid="3b9e81w">
       <div className="space-y-4" data-oid="-9-82_z">
-        {posts.length === 0 && <div data-oid="-9.mua2">No posts yet.</div>}{" "}
+        {posts.length === 0 && <div data-oid="-9.mua2">No posts yet.</div>}{' '}
         {posts.map((post) => {
-          const currentReplyCount =
-            postReplyCounts[post.id] ?? post.replyCount ?? 0;
+          const currentReplyCount = postReplyCounts[post.id] ?? post.replyCount ?? 0;
           const showingReplyForm = showReplyForms[post.id] || false;
 
           // Create a ref for this post's ReplyList if it doesn't exist
@@ -172,28 +167,20 @@ const PostList: React.FC<PostListProps> = ({
               <div className="flex items-start space-x-4" data-oid="znsva14">
                 <div className="flex-shrink-0" data-oid="uzxozoi">
                   {/* Show video thumbnail if video exists */}
-                  {((post.videoUrls && post.videoUrls.length > 0) ||
-                    post.videoUrl) &&
+                  {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                     (() => {
                       // Support both new videoUrls array and legacy videoUrl
-                      const firstVideoUrl =
-                        post.videoUrls?.[0] || post.videoUrl;
+                      const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
                       const match = firstVideoUrl?.match(
-                        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+                        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
                       );
                       const videoId = match ? match[1] : null;
                       if (videoId) {
                         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                         const videoCount = post.videoUrls?.length || 1;
                         return (
-                          <Link
-                            href={`/pages/posts/${post.id}`}
-                            data-oid="-luwmz."
-                          >
-                            <div
-                              className="relative cursor-pointer"
-                              data-oid="2v1k_yo"
-                            >
+                          <Link href={`/pages/posts/${post.id}`} data-oid="-luwmz.">
+                            <div className="relative cursor-pointer" data-oid="2v1k_yo">
                               <img
                                 src={thumbnailUrl}
                                 alt="Video thumbnail"
@@ -220,10 +207,7 @@ const PostList: React.FC<PostListProps> = ({
                                     fill="currentColor"
                                     data-oid="on.llpv"
                                   >
-                                    <path
-                                      d="M8 5v14l11-7z"
-                                      data-oid="mro1i4z"
-                                    />
+                                    <path d="M8 5v14l11-7z" data-oid="mro1i4z" />
                                   </svg>
                                 </div>
                               </div>
@@ -243,10 +227,7 @@ const PostList: React.FC<PostListProps> = ({
                       return null;
                     })()}
                   {/* Show image thumbnail only if no video exists */}
-                  {!(
-                    (post.videoUrls && post.videoUrls.length > 0) ||
-                    post.videoUrl
-                  ) &&
+                  {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                     post.thumbnailUrl && (
                       <Link href={`/pages/posts/${post.id}`} data-oid="epramt8">
                         <img
@@ -296,9 +277,7 @@ const PostList: React.FC<PostListProps> = ({
                   <ReplyForm
                     parentId={post.id}
                     parentUsername={post.username}
-                    onReplySuccess={(reply) =>
-                      handleReplySuccess(post.id, reply)
-                    }
+                    onReplySuccess={(reply) => handleReplySuccess(post.id, reply)}
                     onCancel={() => handleToggleReplyForm(post.id)}
                     postService={postService}
                     data-oid="gaff14q"
@@ -309,9 +288,7 @@ const PostList: React.FC<PostListProps> = ({
                   ref={replyListRefs[post.id]}
                   postId={post.id}
                   replyCount={currentReplyCount}
-                  onReplyCountUpdate={(count) =>
-                    handleReplyCountUpdate(post.id, count)
-                  }
+                  onReplyCountUpdate={(count) => handleReplyCountUpdate(post.id, count)}
                   postService={postService}
                   data-oid="84ehpq2"
                 />
@@ -328,9 +305,9 @@ const PostList: React.FC<PostListProps> = ({
             <button
               key={page}
               className={cn(
-                "px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow",
-                "border border-yellow-500",
-                "transition-all duration-200",
+                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
+                'border border-yellow-500',
+                'transition-all duration-200'
               )}
               disabled
               data-oid="51.e9_i"
@@ -342,8 +319,8 @@ const PostList: React.FC<PostListProps> = ({
               key={page}
               onClick={() => onPageChange(page)}
               className={cn(
-                "px-4 py-2 rounded text-gray-700 hover:bg-gray-100",
-                "transition-all duration-200",
+                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
+                'transition-all duration-200'
               )}
               data-oid="fl5gnwa"
             >
@@ -353,14 +330,14 @@ const PostList: React.FC<PostListProps> = ({
         })}
       </div>
       <div className="flex justify-between mt-4" data-oid="xj_b5pb">
-        {" "}
+        {' '}
         <div data-oid="cbu9l42">
           {currentPage > 1 && (
             <button
               onClick={() => onPageChange(currentPage - 1)}
               className={cn(
-                "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
+                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
               data-oid="qk1:r56"
             >
@@ -373,8 +350,8 @@ const PostList: React.FC<PostListProps> = ({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               className={cn(
-                "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
+                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
               data-oid="g9d7zmy"
             >

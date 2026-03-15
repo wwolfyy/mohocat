@@ -6,7 +6,7 @@ import {
   browserPopupRedirectResolver,
   indexedDBLocalPersistence,
   inMemoryPersistence,
-  Auth
+  Auth,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
@@ -16,7 +16,9 @@ import { getFirebaseConfig } from '@/utils/config';
 const firebaseConfig = getFirebaseConfig();
 
 if (!firebaseConfig || !firebaseConfig.apiKey) {
-  throw new Error('Firebase configuration is missing or invalid. Please check your environment variables.');
+  throw new Error(
+    'Firebase configuration is missing or invalid. Please check your environment variables.'
+  );
 }
 
 // Enable verbose logging for debugging auth delays
@@ -34,14 +36,14 @@ const auth: Auth = (() => {
     if (typeof window === 'undefined') {
       // Server-side (SSR)
       return initializeAuth(app, {
-        persistence: inMemoryPersistence
+        persistence: inMemoryPersistence,
         // No popupRedirectResolver needed on server
       });
     } else {
       // Client-side
       return initializeAuth(app, {
         persistence: browserLocalPersistence,
-        popupRedirectResolver: browserPopupRedirectResolver
+        popupRedirectResolver: browserPopupRedirectResolver,
       });
     }
   } catch (e: any) {

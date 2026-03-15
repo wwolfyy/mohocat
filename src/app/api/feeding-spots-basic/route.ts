@@ -9,9 +9,6 @@ export async function GET() {
     return NextResponse.json({ feedingSpots: basicSpots });
   } catch (error) {
     console.error('Error fetching basic feeding spots:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch feeding spots' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch feeding spots' }, { status: 500 });
   }
 }

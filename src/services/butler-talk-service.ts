@@ -6,7 +6,20 @@
  */
 
 import type { IPostService } from './interfaces';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, query, where, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  Timestamp,
+  query,
+  where,
+  orderBy,
+  updateDoc,
+  increment,
+  deleteDoc,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebaseButlerTalkService implements IPostService {
@@ -14,18 +27,21 @@ export class FirebaseButlerTalkService implements IPostService {
 
   async getAllPosts(): Promise<any[]> {
     try {
-      console.log('FirebaseButlerTalkService: Starting to fetch posts from collection:', this.COLLECTION_NAME);
+      console.log(
+        'FirebaseButlerTalkService: Starting to fetch posts from collection:',
+        this.COLLECTION_NAME
+      );
 
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
       console.log('FirebaseButlerTalkService: Query snapshot size:', querySnapshot.size);
 
-      const allPosts = querySnapshot.docs.map(doc => {
+      const allPosts = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         console.log('FirebaseButlerTalkService: Document data:', { id: doc.id, ...data });
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       });
 
@@ -52,10 +68,10 @@ export class FirebaseButlerTalkService implements IPostService {
       const querySnapshot = await getDocs(
         query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'))
       );
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
       }));
     } catch (error) {
       console.error('Error fetching all butler talk posts including replies:', error);
@@ -78,7 +94,7 @@ export class FirebaseButlerTalkService implements IPostService {
         return {
           id: docSnap.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       } else {
         return null;
@@ -123,7 +139,7 @@ export class FirebaseButlerTalkService implements IPostService {
         isReply: true,
         depth: (parentPost.depth || 0) + 1,
         threadId: parentPost.threadId || parentPost.id,
-        replyCount: 0
+        replyCount: 0,
       };
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), replyData);
@@ -138,7 +154,7 @@ export class FirebaseButlerTalkService implements IPostService {
         isReply: true,
         depth: (parentPost.depth || 0) + 1,
         threadId: parentPost.threadId || parentPost.id,
-        replyCount: 0
+        replyCount: 0,
       };
     } catch (error) {
       console.error('Error creating butler talk reply:', error);
@@ -148,18 +164,15 @@ export class FirebaseButlerTalkService implements IPostService {
 
   async getReplies(postId: string): Promise<any[]> {
     try {
-      const q = query(
-        collection(db, this.COLLECTION_NAME),
-        where('parentId', '==', postId)
-      );
+      const q = query(collection(db, this.COLLECTION_NAME), where('parentId', '==', postId));
 
       const querySnapshot = await getDocs(q);
-      const replies = querySnapshot.docs.map(doc => {
+      const replies = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       });
 

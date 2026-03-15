@@ -1,33 +1,29 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import Navigation from "@/components/Navigation";
-import MountainSelector from "@/components/MountainSelector";
-import Link from "next/link";
-import Image from "next/image";
-import { AnnouncementModalProvider } from "@/contexts/AnnouncementModalContext";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Navigation from '@/components/Navigation';
+import MountainSelector from '@/components/MountainSelector';
+import Link from 'next/link';
+import Image from 'next/image';
+import { AnnouncementModalProvider } from '@/contexts/AnnouncementModalContext';
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Mountain Cats",
-  description: "Explore cats living in the mountains",
+  title: 'Mountain Cats',
+  description: 'Explore cats living in the mountains',
 };
 
 // Add a new viewport export
 export const viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1, // Optional: Prevents user zooming, can improve perceived stability
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-oid="axlgnem">
       <body className={inter.className} data-oid="jwk6i0o">
@@ -38,15 +34,12 @@ export default function RootLayout({
               className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 overflow-x-hidden"
               data-oid="7-_qmcr"
             >
-              <header
-                className="bg-white shadow-sm relative z-10"
-                data-oid="rho93zh"
-              >
+              <header className="bg-white shadow-sm relative z-10" data-oid="rho93zh">
                 <div
                   className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4 pb-1 flex justify-between items-center"
                   data-oid="s43864t"
                 >
-                  {" "}
+                  {' '}
                   {/* Added pb-1 for a small space */}
                   <div className="flex items-center space-x-4" data-oid="bvc1q.c">
                     <Link

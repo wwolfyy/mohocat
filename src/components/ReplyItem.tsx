@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Post } from "@/types";
-import ReplyButton from "./ReplyButton";
-import ReplyForm from "./ReplyForm";
-import { IPostService } from "@/services";
+import { useState, useEffect } from 'react';
+import { Post } from '@/types';
+import ReplyButton from './ReplyButton';
+import ReplyForm from './ReplyForm';
+import { IPostService } from '@/services';
 
 interface ReplyItemProps {
   reply: Post;
@@ -38,12 +38,12 @@ export default function ReplyItem({
 
     setLoadingNested(true);
     try {
-      console.log("Loading nested replies for reply:", reply.id);
+      console.log('Loading nested replies for reply:', reply.id);
       const fetchedNestedReplies = await postService.getReplies(reply.id);
-      console.log("Fetched nested replies:", fetchedNestedReplies);
+      console.log('Fetched nested replies:', fetchedNestedReplies);
       setNestedReplies(fetchedNestedReplies);
     } catch (error) {
-      console.error("Error loading nested replies:", error);
+      console.error('Error loading nested replies:', error);
     } finally {
       setLoadingNested(false);
     }
@@ -59,7 +59,7 @@ export default function ReplyItem({
   const handleReplySuccess = (newReply: Post) => {
     // Add the new reply to nested replies
     setNestedReplies((prev) => [...prev, newReply]);
-    setNestedReplyCount(prev => prev + 1);
+    setNestedReplyCount((prev) => prev + 1);
     setShowReplyForm(false);
     setShowNestedReplies(true); // Automatically show nested replies when a new one is added
     // Notify parent about the new reply
@@ -68,13 +68,13 @@ export default function ReplyItem({
 
   const handleNestedReplySuccess = (newReply: Post) => {
     // When a deeply nested reply is created, just pass it up and update count
-    setNestedReplyCount(prev => prev + 1);
+    setNestedReplyCount((prev) => prev + 1);
     onReplySuccess(newReply);
   };
 
   return (
     <div
-      className={`mt-3 ${indentLevel > 0 ? `ml-${indentLevel * 4} border-l-2 border-gray-200 pl-4` : ""}`}
+      className={`mt-3 ${indentLevel > 0 ? `ml-${indentLevel * 4} border-l-2 border-gray-200 pl-4` : ''}`}
     >
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         {/* Reply content */}
@@ -119,9 +119,9 @@ export default function ReplyItem({
               disabled={loadingNested}
             >
               {loadingNested
-                ? "로딩 중..."
+                ? '로딩 중...'
                 : showNestedReplies
-                  ? "답글 숨기기"
+                  ? '답글 숨기기'
                   : `답글 ${nestedReplyCount}개 보기`}
             </button>
           )}
@@ -154,9 +154,12 @@ export default function ReplyItem({
           </div>
         )}
 
-        {showNestedReplies && nestedReplies.length === 0 && !loadingNested && nestedReplyCount > 0 && (
-          <div className="text-gray-500 text-sm py-4 ml-4">답글을 불러올 수 없습니다.</div>
-        )}
+        {showNestedReplies &&
+          nestedReplies.length === 0 &&
+          !loadingNested &&
+          nestedReplyCount > 0 && (
+            <div className="text-gray-500 text-sm py-4 ml-4">답글을 불러올 수 없습니다.</div>
+          )}
       </div>
     </div>
   );

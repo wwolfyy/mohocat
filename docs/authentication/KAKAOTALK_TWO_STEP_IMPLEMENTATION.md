@@ -7,6 +7,7 @@ This document describes the enhanced KakaoTalk authentication implementation tha
 ## Problem Statement
 
 The original implementation of KakaoTalk authentication using Firebase's OpenID Connect provider (`oidc.kakao`) encountered issues where:
+
 1. Direct sign-in with `signInWithPopup` would fail with user creation errors
 2. However, linking an existing user with `linkWithPopup` would work successfully
 3. This created a situation where users couldn't sign in initially but could link their accounts if they had existing Firebase users
@@ -16,11 +17,13 @@ The original implementation of KakaoTalk authentication using Firebase's OpenID 
 The enhanced implementation uses a two-step fallback mechanism:
 
 ### Step 1: Standard OpenID Connect Sign-in
+
 - Attempts the original `signInWithPopup` approach with the KakaoTalk OAuth provider
 - If successful, returns the result immediately
 - If it fails with user creation-related errors, proceeds to Step 2
 
 ### Step 2: Anonymous User + Linking Approach
+
 - Creates a temporary anonymous Firebase user using `signInAnonymously`
 - Links the KakaoTalk account to the anonymous user using `linkWithPopup`
 - Returns the linked credential result, which contains the fully authenticated user with KakaoTalk provider data
@@ -31,13 +34,13 @@ The enhanced implementation uses a two-step fallback mechanism:
 
 The implementation includes a `isKakaoUserCreationError()` method that detects user creation errors by checking:
 
-1. **Error Codes**: 
+1. **Error Codes**:
    - `auth/internal-error` - Often indicates user creation issues
    - `auth/operation-not-allowed` - Could indicate provider not allowing new user creation
 
 2. **Error Messages**: Checks for keywords like:
    - "user creation"
-   - "create user" 
+   - "create user"
    - "new user"
    - "sign up"
    - "registration"
@@ -79,7 +82,7 @@ async signInWithKakao(): Promise<UserCredential> {
 2. **Maintains User Experience**: Single sign-in button flow, fallback is transparent
 3. **Robust Error Handling**: Comprehensive error detection and appropriate fallbacks
 4. **Debugging Support**: Extensive logging to help diagnose issues
-5. **Clean Resource Management**: Proper cleanup of anonymous users if linking failswell, to think about it, 
+5. **Clean Resource Management**: Proper cleanup of anonymous users if linking failswell, to think about it,
 
 ## Testing
 
@@ -88,6 +91,7 @@ A test utility is provided in `src/utils/kakao-auth-test.ts` to verify the imple
 ## Configuration Requirements
 
 The implementation requires the same Firebase configuration as before:
+
 - OpenID Connect provider with ID `oidc.kakao` configured in Firebase Console
 - Proper client ID and client secret from Kakao Developers Console
 - Correct redirect URI configuration
@@ -95,6 +99,7 @@ The implementation requires the same Firebase configuration as before:
 ## Migration Notes
 
 This enhancement is backward compatible:
+
 - Existing working installations will continue to work unchanged
 - Only installations with user creation issues will use the fallback mechanism
 - No changes required to client code or configuration

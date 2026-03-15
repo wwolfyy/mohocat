@@ -12,7 +12,7 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
     if (match1) {
       const dateTimeStr = match1[1];
       // Convert format: "2024-03-15 14.30.45" -> "2024-03-15T14:30:45"
-      const isoFormat = dateTimeStr.replace(/\s+/, "T").replace(/\./g, ":");
+      const isoFormat = dateTimeStr.replace(/\s+/, 'T').replace(/\./g, ':');
       const date = new Date(isoFormat);
       if (!isNaN(date.getTime())) {
         return date;
@@ -46,7 +46,7 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
 
     if (match3) {
       const dateStr = match3[1];
-      const date = new Date(dateStr + "T00:00:00");
+      const date = new Date(dateStr + 'T00:00:00');
       if (!isNaN(date.getTime())) {
         return date;
       }
@@ -80,7 +80,7 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
  * Converts a Date object to YYYY-MM-DD format for HTML date inputs
  */
 export const formatDateForInput = (date: Date): string => {
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split('T')[0];
 };
 
 /**

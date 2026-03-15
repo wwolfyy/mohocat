@@ -41,9 +41,9 @@ export interface Post {
   time: string;
 
   // Reply functionality
-  parentId?: string;          // null for root posts, postId for replies
-  replyCount?: number;        // cached count for performance
-  depth?: number;             // 0 for root, 1+ for replies
-  threadId?: string;          // root post ID for entire thread
-  isReply?: boolean;          // true for replies, false/undefined for root posts
+  parentId?: string; // null for root posts, postId for replies
+  replyCount?: number; // cached count for performance
+  depth?: number; // 0 for root, 1+ for replies
+  threadId?: string; // root post ID for entire thread
+  isReply?: boolean; // true for replies, false/undefined for root posts
 }

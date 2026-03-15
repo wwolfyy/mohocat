@@ -1,6 +1,18 @@
 // Service functions for media album system
 import { db, storage } from './firebase';
-import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, doc, getDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  updateDoc,
+  doc,
+  getDoc,
+  deleteDoc,
+  writeBatch,
+} from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { CatImage, CatVideo, MediaQueryOptions } from '@/types/media';
 
@@ -45,7 +57,7 @@ const parseDate = (dateValue: any): Date => {
 export const COLLECTIONS = {
   CAT_IMAGES: 'cat_images',
   CAT_VIDEOS: 'cat_videos',
-  TAGGING_SESSIONS: 'tagging_sessions'
+  TAGGING_SESSIONS: 'tagging_sessions',
 } as const;
 
 // Get images for a specific cat
@@ -59,7 +71,7 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
 
     const querySnapshot = await getDocs(q);
 
-    const images = querySnapshot.docs.map(doc => {
+    const images = querySnapshot.docs.map((doc) => {
       const data = doc.data();
 
       return {
@@ -67,7 +79,7 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
         ...data,
         uploadDate: parseDate(data.uploadDate),
         createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
-        updated: data.updated ? parseDate(data.updated) : undefined
+        updated: data.updated ? parseDate(data.updated) : undefined,
       };
     }) as CatImage[];
 
@@ -90,7 +102,7 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
 
     const querySnapshot = await getDocs(q);
 
-    const videos = querySnapshot.docs.map(doc => {
+    const videos = querySnapshot.docs.map((doc) => {
       const data = doc.data();
 
       return {
@@ -98,7 +110,7 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
         ...data,
         uploadDate: parseDate(data.uploadDate),
         createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
-        updated: data.updated ? parseDate(data.updated) : undefined
+        updated: data.updated ? parseDate(data.updated) : undefined,
       };
     }) as CatVideo[];
 
@@ -125,7 +137,7 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
     const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
     const querySnapshot = await getDocs(queryRef);
 
-    let results = querySnapshot.docs.map(doc => {
+    let results = querySnapshot.docs.map((doc) => {
       const data = doc.data();
 
       return {
@@ -133,7 +145,7 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
         ...data,
         uploadDate: parseDate(data.uploadDate),
         createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
-        updated: data.updated ? parseDate(data.updated) : undefined
+        updated: data.updated ? parseDate(data.updated) : undefined,
       };
     }) as CatImage[];
 
@@ -179,7 +191,7 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
     const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
     const querySnapshot = await getDocs(queryRef);
 
-    let results = querySnapshot.docs.map(doc => {
+    let results = querySnapshot.docs.map((doc) => {
       const data = doc.data();
 
       return {
@@ -187,7 +199,7 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
         ...data,
         uploadDate: parseDate(data.uploadDate),
         createdTime: data.createdTime ? parseDate(data.createdTime) : undefined,
-        updated: data.updated ? parseDate(data.updated) : undefined
+        updated: data.updated ? parseDate(data.updated) : undefined,
       };
     }) as CatVideo[];
 
@@ -224,7 +236,7 @@ export const updateImageTags = async (imageId: string, tags: string[]): Promise<
     const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
     await updateDoc(imageRef, {
       tags: tags,
-      updated: new Date()
+      updated: new Date(),
     });
     return true;
   } catch (error) {
@@ -237,8 +249,12 @@ export const updateImageTags = async (imageId: string, tags: string[]): Promise<
 // This function is kept for backwards compatibility but will not actually update tags
 export const updateVideoTags = async (videoId: string, tags: string[]): Promise<boolean> => {
   try {
-    console.warn('WARNING: Video tags are now YouTube-sourced only. Cannot update tags directly in Firebase.');
-    console.warn('To update video tags, please edit them in YouTube Studio and then refresh metadata.');
+    console.warn(
+      'WARNING: Video tags are now YouTube-sourced only. Cannot update tags directly in Firebase.'
+    );
+    console.warn(
+      'To update video tags, please edit them in YouTube Studio and then refresh metadata.'
+    );
     console.warn(`Attempted to update video ${videoId} with tags:`, tags);
     return false; // Always return false to indicate the operation is not allowed
   } catch (error) {
@@ -254,7 +270,7 @@ export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<s
     const cleanedData = Object.fromEntries(
       Object.entries({
         ...imageData,
-        uploadDate: new Date()
+        uploadDate: new Date(),
       }).filter(([_, value]) => value !== undefined)
     );
 
@@ -273,7 +289,7 @@ export const addVideoRecord = async (videoData: Omit<CatVideo, 'id'>): Promise<s
     const cleanedData = Object.fromEntries(
       Object.entries({
         ...videoData,
-        uploadDate: new Date()
+        uploadDate: new Date(),
       }).filter(([_, value]) => value !== undefined)
     );
 
@@ -323,7 +339,7 @@ export const getImageById = async (imageId: string): Promise<CatImage | null> =>
       thumbnailUrl: data.thumbnailUrl,
       autoTagged: data.autoTagged || false,
       fileSize: data.fileSize,
-      dimensions: data.dimensions
+      dimensions: data.dimensions,
     };
   } catch (error) {
     console.error('Error getting image by ID:', error);
@@ -331,7 +347,10 @@ export const getImageById = async (imageId: string): Promise<CatImage | null> =>
   }
 };
 
-export const updateImageRecord = async (imageId: string, updateData: Partial<CatImage>): Promise<boolean> => {
+export const updateImageRecord = async (
+  imageId: string,
+  updateData: Partial<CatImage>
+): Promise<boolean> => {
   try {
     const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
     const { id, ...dataToUpdate } = updateData; // Remove id from update data
@@ -354,7 +373,9 @@ export const deleteImageRecord = async (imageId: string): Promise<boolean> => {
   }
 };
 
-export const batchUpdateImages = async (updates: Array<{ id: string; data: Partial<CatImage> }>): Promise<boolean> => {
+export const batchUpdateImages = async (
+  updates: Array<{ id: string; data: Partial<CatImage> }>
+): Promise<boolean> => {
   try {
     const batch = writeBatch(db);
 
@@ -376,7 +397,7 @@ export const batchDeleteImages = async (imageIds: string[]): Promise<boolean> =>
   try {
     const batch = writeBatch(db);
 
-    imageIds.forEach(id => {
+    imageIds.forEach((id) => {
       const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, id);
       batch.delete(imageRef);
     });
@@ -412,16 +433,18 @@ export const syncImages = async (): Promise<boolean> => {
         let listResult;
         try {
           listResult = await listAll(folderRef);
-          console.log(`Successfully listed contents of ${folder} - found ${listResult.items.length} items`);
+          console.log(
+            `Successfully listed contents of ${folder} - found ${listResult.items.length} items`
+          );
         } catch (listError) {
           console.log(`Folder ${folder} does not exist or is empty:`, listError);
           continue;
         }
 
         // Filter for image files
-        const imageFiles = listResult.items.filter(item => {
+        const imageFiles = listResult.items.filter((item) => {
           const fileName = item.name.toLowerCase();
-          const isImage = IMAGE_EXTENSIONS.some(ext => fileName.endsWith(ext));
+          const isImage = IMAGE_EXTENSIONS.some((ext) => fileName.endsWith(ext));
           if (isImage) {
             console.log(`Found image file: ${item.name} at path: ${item.fullPath}`);
           }
@@ -463,7 +486,7 @@ export const syncImages = async (): Promise<boolean> => {
               uploadedBy: 'system_sync',
               description: '',
               location: '',
-              autoTagged: false
+              autoTagged: false,
               // fileSize and dimensions omitted when undefined to avoid Firestore errors
             };
 
@@ -471,7 +494,6 @@ export const syncImages = async (): Promise<boolean> => {
             const docRef = await addDoc(collection(db, COLLECTIONS.CAT_IMAGES), imageData);
             console.log(`✅ Imported: ${fileRef.name} with ID: ${docRef.id}`);
             totalImported++;
-
           } catch (error) {
             console.error(`❌ Failed to import ${fileRef.name}:`, error);
           }
@@ -516,7 +538,7 @@ export const getVideoById = async (videoId: string): Promise<CatVideo | null> =>
       autoTagged: data.autoTagged || false,
       fileSize: data.fileSize,
       videoType: data.videoType || 'storage',
-      allPlaylists: data.allPlaylists || []
+      allPlaylists: data.allPlaylists || [],
     };
   } catch (error) {
     console.error('Error getting video by ID:', error);
@@ -524,7 +546,10 @@ export const getVideoById = async (videoId: string): Promise<CatVideo | null> =>
   }
 };
 
-export const updateVideoRecord = async (videoId: string, updateData: Partial<CatVideo>): Promise<boolean> => {
+export const updateVideoRecord = async (
+  videoId: string,
+  updateData: Partial<CatVideo>
+): Promise<boolean> => {
   try {
     const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
     const { id, ...dataToUpdate } = updateData; // Remove id from update data
@@ -547,7 +572,9 @@ export const deleteVideoRecord = async (videoId: string): Promise<boolean> => {
   }
 };
 
-export const batchUpdateVideos = async (updates: Array<{ id: string; data: Partial<CatVideo> }>): Promise<boolean> => {
+export const batchUpdateVideos = async (
+  updates: Array<{ id: string; data: Partial<CatVideo> }>
+): Promise<boolean> => {
   try {
     const batch = writeBatch(db);
 
@@ -569,7 +596,7 @@ export const batchDeleteVideos = async (videoIds: string[]): Promise<boolean> =>
   try {
     const batch = writeBatch(db);
 
-    videoIds.forEach(id => {
+    videoIds.forEach((id) => {
       const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, id);
       batch.delete(videoRef);
     });
@@ -599,7 +626,7 @@ export const syncVideos = async (): Promise<boolean> => {
     const existingVideosSnapshot = await getDocs(existingVideosQuery);
     const existingYouTubeIds = new Set();
 
-    existingVideosSnapshot.forEach(doc => {
+    existingVideosSnapshot.forEach((doc) => {
       const data = doc.data();
       if (data.youtubeId) {
         existingYouTubeIds.add(data.youtubeId);
@@ -609,7 +636,7 @@ export const syncVideos = async (): Promise<boolean> => {
     console.log(`Found ${existingYouTubeIds.size} existing videos in Firestore`);
 
     // Find new videos that aren't in Firestore yet
-    const newVideos = youtubeVideos.filter(video => !existingYouTubeIds.has(video.id));
+    const newVideos = youtubeVideos.filter((video) => !existingYouTubeIds.has(video.id));
     console.log(`Found ${newVideos.length} new videos to import`);
 
     // Import new videos to Firestore
@@ -631,7 +658,7 @@ export const syncVideos = async (): Promise<boolean> => {
           uploadedBy: 'youtube_sync',
           autoTagged: false,
           needsTagging: true,
-          catName: ''
+          catName: '',
         };
 
         console.log(`Importing new video: ${video.title} (${video.id})`);

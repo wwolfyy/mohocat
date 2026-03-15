@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { getFeedingSpotsService, FeedingSpot } from '@/services';
@@ -11,7 +11,9 @@ const FeedingSpotsList = () => {
   const feedingSpotsService = getFeedingSpotsService();
 
   // Calculate color based on hours ago (0 hours = green, 60+ hours = red)
-  const getColorForHours = (hoursAgo: number | null): { className: string; style?: React.CSSProperties } => {
+  const getColorForHours = (
+    hoursAgo: number | null
+  ): { className: string; style?: React.CSSProperties } => {
     if (hoursAgo === null) return { className: 'text-gray-500' };
 
     if (hoursAgo >= 60) return { className: 'text-red-600' };
@@ -24,7 +26,7 @@ const FeedingSpotsList = () => {
 
     return {
       className: '',
-      style: { color: `rgb(${red}, ${green}, 0)` }
+      style: { color: `rgb(${red}, ${green}, 0)` },
     };
   };
 

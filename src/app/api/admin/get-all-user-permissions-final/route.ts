@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     console.log('=== FETCHING USERS FROM FIRESTORE USING CLIENT CONFIG ===');
-    
+
     // Get Firebase configuration from environment variables (same as client)
     const firebaseConfig = {
       apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     console.log('Firebase config check:', {
       hasApiKey: !!firebaseConfig.apiKey,
       hasProjectId: !!firebaseConfig.projectId,
-      projectId: firebaseConfig.projectId
+      projectId: firebaseConfig.projectId,
     });
 
     if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
@@ -30,31 +30,37 @@ export async function GET(request: NextRequest) {
     // For API routes, we need to use a different approach
     // Since we can't use the client-side Firebase SDK directly in API routes,
     // we'll use the REST API approach
-    
+
     console.log('Using Firebase REST API approach...');
-    
+
     // Build the Firestore REST API URL
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/user_permissions`;
-    
-    console.log('Firestore REST API URL:', firestoreUrl);
-    
-    // For now, let's return an error that explains what needs to be done
-    return NextResponse.json({
-      error: "Firebase REST API access needed",
-      message: "API routes need Firebase Authentication tokens to access Firestore",
-      suggestion: "Use Firebase Admin SDK with service account, or implement proper auth token passing",
-      currentConfig: {
-        projectId: firebaseConfig.projectId,
-        authDomain: firebaseConfig.authDomain
-      }
-    }, { status: 501 });
 
+    console.log('Firestore REST API URL:', firestoreUrl);
+
+    // For now, let's return an error that explains what needs to be done
+    return NextResponse.json(
+      {
+        error: 'Firebase REST API access needed',
+        message: 'API routes need Firebase Authentication tokens to access Firestore',
+        suggestion:
+          'Use Firebase Admin SDK with service account, or implement proper auth token passing',
+        currentConfig: {
+          projectId: firebaseConfig.projectId,
+          authDomain: firebaseConfig.authDomain,
+        },
+      },
+      { status: 501 }
+    );
   } catch (error) {
     console.error('❌ Error in user permissions API:', error);
-    return NextResponse.json({
-      error: 'Failed to fetch user permissions',
-      details: (error as Error).message,
-      stack: (error as Error).stack
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch user permissions',
+        details: (error as Error).message,
+        stack: (error as Error).stack,
+      },
+      { status: 500 }
+    );
   }
 }

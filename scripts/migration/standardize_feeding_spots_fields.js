@@ -10,7 +10,10 @@ const path = require('path');
 const fs = require('fs');
 
 // Initialize Firebase Admin
-const serviceAccountPath = path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(
+  __dirname,
+  '../../config/firebase/mountaincats-61543-7329e795c352.json'
+);
 
 if (!fs.existsSync(serviceAccountPath)) {
   console.error('Firebase service account file not found at:', serviceAccountPath);
@@ -45,7 +48,7 @@ async function standardizeFeedingSpotsFields() {
         has_last_attended: !!data.last_attended,
         has_last_attended_at: !!data.last_attended_at,
         last_attended_value: data.last_attended,
-        last_attended_at_value: data.last_attended_at
+        last_attended_at_value: data.last_attended_at,
       });
 
       const updates = {};
@@ -62,7 +65,8 @@ async function standardizeFeedingSpotsFields() {
       if (data.last_attended_at && data.last_attended) {
         // Use whichever timestamp is more recent
         const lastAttendedTime = data.last_attended?.toDate?.() || new Date(data.last_attended);
-        const lastAttendedAtTime = data.last_attended_at?.toDate?.() || new Date(data.last_attended_at);
+        const lastAttendedAtTime =
+          data.last_attended_at?.toDate?.() || new Date(data.last_attended_at);
 
         if (lastAttendedAtTime > lastAttendedTime) {
           updates.last_attended = data.last_attended_at;
@@ -93,7 +97,6 @@ async function standardizeFeedingSpotsFields() {
     console.log(`Documents migrated: ${migratedCount}`);
     console.log(`Documents skipped: ${skippedCount}`);
     console.log(`Total documents: ${snapshot.size}`);
-
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);

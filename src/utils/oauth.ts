@@ -29,11 +29,11 @@ export function generateOAuthState(provider: 'google' | 'kakao', redirectUrl?: s
     redirectUrl: redirectUrl || window.location.pathname,
     timestamp: Date.now(),
   };
-  
+
   // Store state in sessionStorage for callback verification
   const stateKey = `oauth_state_${provider}`;
   sessionStorage.setItem(stateKey, JSON.stringify(state));
-  
+
   return btoa(JSON.stringify(state));
 }
 
@@ -44,19 +44,19 @@ export function verifyOAuthState(provider: 'google' | 'kakao', state?: string): 
   if (!state) {
     return null;
   }
-  
+
   try {
     const stateKey = `oauth_state_${provider}`;
     const storedState = sessionStorage.getItem(stateKey);
     const parsedState = JSON.parse(atob(state)) as OAuthState;
-    
+
     // Verify stored state matches callback state
     if (storedState && JSON.parse(storedState) === JSON.stringify(parsedState)) {
       // Clean up stored state
       sessionStorage.removeItem(stateKey);
       return parsedState;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Failed to verify OAuth state:', error);
@@ -68,7 +68,7 @@ export function verifyOAuthState(provider: 'google' | 'kakao', state?: string): 
  * Handle OAuth success callback
  */
 export function handleOAuthSuccess(
-  credential: UserCredential, 
+  credential: UserCredential,
   provider: 'google' | 'kakao',
   redirectUrl?: string
 ): void {
@@ -76,11 +76,11 @@ export function handleOAuthSuccess(
     user: credential.user,
     isNewUser: credential.user.metadata.creationTime === credential.user.metadata.lastSignInTime,
   });
-  
+
   // Clean up OAuth state
   const stateKey = `oauth_state_${provider}`;
   sessionStorage.removeItem(stateKey);
-  
+
   // Redirect to original page or dashboard
   const targetUrl = redirectUrl || '/admin';
   if (typeof window !== 'undefined') {
@@ -91,23 +91,20 @@ export function handleOAuthSuccess(
 /**
  * Handle OAuth error callback
  */
-export function handleOAuthError(
-  error: any, 
-  provider: 'google' | 'kakao'
-): OAuthError {
+export function handleOAuthError(error: any, provider: 'google' | 'kakao'): OAuthError {
   console.error(`${provider} OAuth error:`, error);
-  
+
   // Clean up OAuth state on error
   const stateKey = `oauth_state_${provider}`;
   sessionStorage.removeItem(stateKey);
-  
+
   const oauthError: OAuthError = {
     code: error.code || 'unknown_error',
     message: error.message || `Failed to authenticate with ${provider}`,
     provider,
     originalError: error,
   };
-  
+
   // Set user-friendly error messages
   switch (error.code) {
     case 'auth/popup-closed-by-user':
@@ -120,7 +117,8 @@ export function handleOAuthError(
       oauthError.message = `${provider} authentication was blocked. Please disable popup blockers.`;
       break;
     case 'auth/account-exists-with-different-credential':
-      oauthError.message = 'An account with this email already exists. Please sign in with the original method.';
+      oauthError.message =
+        'An account with this email already exists. Please sign in with the original method.';
       break;
     case 'auth/network-request-failed':
       oauthError.message = 'Network error occurred. Please check your connection and try again.';
@@ -128,7 +126,7 @@ export function handleOAuthError(
     default:
       oauthError.message = error.message || `Authentication failed with ${provider}.`;
   }
-  
+
   return oauthError;
 }
 
@@ -136,8 +134,7 @@ export function handleOAuthError(
  * Check if OAuth is supported in current environment
  */
 export function isOAuthSupported(): boolean {
-  return typeof window !== 'undefined' && 
-         typeof window.sessionStorage !== 'undefined';
+  return typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
 }
 
 /**

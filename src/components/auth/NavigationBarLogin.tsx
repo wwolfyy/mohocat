@@ -20,10 +20,10 @@ export function NavigationBarLogin() {
     <Link
       href={`/login?redirect=${encodeURIComponent(pathname)}`}
       className={cn(
-        "flex items-center gap-2 px-3 py-1.5",
-        "bg-white border border-gray-200 rounded-full shadow-sm",
-        "text-sm font-semibold text-gray-700",
-        "transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-blue-600"
+        'flex items-center gap-2 px-3 py-1.5',
+        'bg-white border border-gray-200 rounded-full shadow-sm',
+        'text-sm font-semibold text-gray-700',
+        'transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-blue-600'
       )}
     >
       <span>Log In</span>

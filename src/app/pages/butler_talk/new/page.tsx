@@ -1,5 +1,5 @@
-import React from "react";
-import NewButlerTalkForm from "@/components/NewButlerTalkForm";
+import React from 'react';
+import NewButlerTalkForm from '@/components/NewButlerTalkForm';
 
 const NewButlerTalkPage = async () => {
   return (

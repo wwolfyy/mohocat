@@ -7,7 +7,14 @@ const admin = require('firebase-admin');
 const path = require('path');
 
 // Load service account key
-const serviceAccountPath = path.join(__dirname, '..', '..', 'config', 'firebase', 'mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'firebase',
+  'mountaincats-61543-7329e795c352.json'
+);
 
 if (!require('fs').existsSync(serviceAccountPath)) {
   console.error('Service account key file not found:', serviceAccountPath);
@@ -20,7 +27,7 @@ const serviceAccount = require(serviceAccountPath);
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
   });
 }
 
@@ -44,7 +51,7 @@ async function addMissingLocationField() {
 
     const batch = db.batch();
 
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
       const docId = doc.id;
 
@@ -77,7 +84,6 @@ async function addMissingLocationField() {
     console.log(`   Videos updated: ${updated}`);
     console.log(`   Videos skipped: ${skipped}`);
     console.log(`   Total processed: ${snapshot.size}`);
-
   } catch (error) {
     console.error('Error adding missing location field:', error);
     throw error;

@@ -7,7 +7,17 @@
 
 import type { ICatService } from './interfaces';
 import type { Cat } from '../types';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebaseCatService implements ICatService {
@@ -16,9 +26,9 @@ export class FirebaseCatService implements ICatService {
   async getAllCats(): Promise<Cat[]> {
     try {
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Cat[];
     } catch (error) {
       console.error('Error fetching cats:', error);
@@ -34,7 +44,7 @@ export class FirebaseCatService implements ICatService {
       if (docSnap.exists()) {
         return {
           id: docSnap.id,
-          ...docSnap.data()
+          ...docSnap.data(),
         } as Cat;
       }
 
@@ -47,17 +57,14 @@ export class FirebaseCatService implements ICatService {
 
   async getCatByName(name: string): Promise<Cat | null> {
     try {
-      const q = query(
-        collection(db, this.COLLECTION_NAME),
-        where('name', '==', name)
-      );
+      const q = query(collection(db, this.COLLECTION_NAME), where('name', '==', name));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0]; // Get the first match
         return {
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         } as Cat;
       }
 
@@ -76,9 +83,9 @@ export class FirebaseCatService implements ICatService {
         where('dwelling', '==', pointId)
       );
       const currentSnapshot = await getDocs(currentQuery);
-      const current = currentSnapshot.docs.map(doc => ({
+      const current = currentSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Cat[];
 
       // Get former cats - those with prev_dwelling matching pointId
@@ -87,9 +94,9 @@ export class FirebaseCatService implements ICatService {
         where('prev_dwelling', '==', pointId)
       );
       const formerSnapshot = await getDocs(formerQuery);
-      const former = formerSnapshot.docs.map(doc => ({
+      const former = formerSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Cat[];
 
       return { current, former };
@@ -104,7 +111,7 @@ export class FirebaseCatService implements ICatService {
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), cat);
       return {
         id: docRef.id,
-        ...cat
+        ...cat,
       };
     } catch (error) {
       console.error('Error creating cat:', error);

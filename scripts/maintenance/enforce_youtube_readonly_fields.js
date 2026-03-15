@@ -8,7 +8,14 @@ const admin = require('firebase-admin');
 const path = require('path');
 
 // Load service account key
-const serviceAccountPath = path.join(__dirname, '..', '..', 'config', 'firebase', 'mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'firebase',
+  'mountaincats-61543-7329e795c352.json'
+);
 
 if (!require('fs').existsSync(serviceAccountPath)) {
   console.error('Service account key file not found:', serviceAccountPath);
@@ -21,7 +28,7 @@ const serviceAccount = require(serviceAccountPath);
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
   });
 }
 
@@ -29,22 +36,22 @@ const db = admin.firestore();
 
 // YouTube read-only fields that CANNOT be edited in Firebase
 const YOUTUBE_READONLY_FIELDS = [
-  'tags',        // YouTube tags - must be edited in YouTube Studio
-  'videoUrl',    // YouTube video URL - generated from videoId
+  'tags', // YouTube tags - must be edited in YouTube Studio
+  'videoUrl', // YouTube video URL - generated from videoId
   'createdTime', // Mapped from YouTube recordingDate
-  'location'     // YouTube video location data
+  'location', // YouTube video location data
 ];
 
 // Fields that are allowed to be updated in Firebase
 const FIREBASE_EDITABLE_FIELDS = [
-  'description',        // Firestore-specific description (can differ from YouTube)
-  'catName',           // Our custom cat identification
-  'needsTagging',      // Our internal flag
-  'autoTagged',        // Our internal flag
-  'uploadedBy',        // Who added it to our system
-  'uploadDate',        // When added to our system
+  'description', // Firestore-specific description (can differ from YouTube)
+  'catName', // Our custom cat identification
+  'needsTagging', // Our internal flag
+  'autoTagged', // Our internal flag
+  'uploadedBy', // Who added it to our system
+  'uploadDate', // When added to our system
   'lastMetadataRefresh', // Tracking field
-  'allPlaylists'       // While sourced from YouTube, this is our processed version
+  'allPlaylists', // While sourced from YouTube, this is our processed version
 ];
 
 /**
@@ -58,7 +65,7 @@ function validateVideoUpdate(updateData, videoId = 'unknown') {
   const sanitizedData = { ...updateData };
 
   // Check for violations
-  YOUTUBE_READONLY_FIELDS.forEach(field => {
+  YOUTUBE_READONLY_FIELDS.forEach((field) => {
     if (updateData.hasOwnProperty(field)) {
       violations.push(`Attempted to update read-only field '${field}' for video ${videoId}`);
       delete sanitizedData[field]; // Remove the violating field
@@ -68,7 +75,7 @@ function validateVideoUpdate(updateData, videoId = 'unknown') {
   return {
     isValid: violations.length === 0,
     violations,
-    sanitizedData
+    sanitizedData,
   };
 }
 
@@ -123,14 +130,14 @@ async function auditVideoCollection() {
     let storageVideos = 0;
     let violations = [];
 
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
       const docId = doc.id;
 
       // Check if this is a YouTube video
       if (data.youtubeId || data.videoType === 'youtube') {
-        youtubeVideos++;        // Verify YouTube read-only fields are present and properly sourced
-        YOUTUBE_READONLY_FIELDS.forEach(field => {
+        youtubeVideos++; // Verify YouTube read-only fields are present and properly sourced
+        YOUTUBE_READONLY_FIELDS.forEach((field) => {
           if (field === 'location') {
             // Location is optional - it can be null if not available from YouTube
             // We just check that the field exists (even if null)
@@ -139,7 +146,7 @@ async function auditVideoCollection() {
                 docId,
                 type: 'missing_field',
                 field,
-                message: `YouTube video missing location field (should be null if no location data from YouTube)`
+                message: `YouTube video missing location field (should be null if no location data from YouTube)`,
               });
             }
           } else if (!data.hasOwnProperty(field)) {
@@ -147,7 +154,7 @@ async function auditVideoCollection() {
               docId,
               type: 'missing_field',
               field,
-              message: `YouTube video missing required field '${field}'`
+              message: `YouTube video missing required field '${field}'`,
             });
           }
         });
@@ -158,10 +165,9 @@ async function auditVideoCollection() {
             docId,
             type: 'inconsistent_data',
             field: 'videoUrl',
-            message: `Video URL does not match YouTube ID: ${data.videoUrl} vs ${data.youtubeId}`
+            message: `Video URL does not match YouTube ID: ${data.videoUrl} vs ${data.youtubeId}`,
           });
         }
-
       } else {
         storageVideos++;
         // Storage videos don't need YouTube read-only fields
@@ -190,9 +196,8 @@ async function auditVideoCollection() {
       youtubeVideos,
       storageVideos,
       violations,
-      totalVideos: snapshot.size
+      totalVideos: snapshot.size,
     };
-
   } catch (error) {
     console.error('Error during audit:', error);
     throw error;
@@ -217,7 +222,7 @@ function createValidationMiddleware() {
           error: 'Forbidden: Cannot update YouTube read-only fields',
           violations: validation.violations,
           readOnlyFields: YOUTUBE_READONLY_FIELDS,
-          message: 'To update these fields, edit them in YouTube Studio and refresh metadata'
+          message: 'To update these fields, edit them in YouTube Studio and refresh metadata',
         });
       }
 
@@ -239,7 +244,7 @@ async function safeUpdateVideo(docId, updateData) {
 
   if (validation.violations.length > 0) {
     console.warn('Update contains read-only fields that will be ignored:');
-    validation.violations.forEach(violation => console.warn(`  - ${violation}`));
+    validation.violations.forEach((violation) => console.warn(`  - ${violation}`));
   }
 
   if (Object.keys(validation.sanitizedData).length === 0) {
@@ -251,8 +256,10 @@ async function safeUpdateVideo(docId, updateData) {
     const docRef = db.collection('cat_videos').doc(docId);
     await docRef.update(validation.sanitizedData);
 
-    console.log('✅ Video updated successfully with sanitized data:',
-      Object.keys(validation.sanitizedData));
+    console.log(
+      '✅ Video updated successfully with sanitized data:',
+      Object.keys(validation.sanitizedData)
+    );
     return true;
   } catch (error) {
     console.error('Error updating video:', error);
@@ -268,7 +275,7 @@ module.exports = {
   createSecurityRule,
   auditVideoCollection,
   createValidationMiddleware,
-  safeUpdateVideo
+  safeUpdateVideo,
 };
 
 // Run audit if this script is executed directly

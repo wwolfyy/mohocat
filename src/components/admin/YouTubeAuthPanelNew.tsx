@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
@@ -42,7 +42,7 @@ export default function YouTubeAuthPanel() {
       setAuthStatus({
         status: 'error',
         message: 'Failed to check authentication status',
-        tokens: []
+        tokens: [],
       });
     } finally {
       setLoading(false);
@@ -82,14 +82,16 @@ export default function YouTubeAuthPanel() {
       }, 1000);
 
       // Timeout after 5 minutes
-      setTimeout(() => {
-        clearInterval(pollTimer);
-        if (authWindow && !authWindow.closed) {
-          authWindow.close();
-        }
-        setRefreshing(false);
-      }, 5 * 60 * 1000);
-
+      setTimeout(
+        () => {
+          clearInterval(pollTimer);
+          if (authWindow && !authWindow.closed) {
+            authWindow.close();
+          }
+          setRefreshing(false);
+        },
+        5 * 60 * 1000
+      );
     } catch (error) {
       console.error('Failed to refresh YouTube token:', error);
       alert('Failed to start token refresh process');
@@ -103,21 +105,31 @@ export default function YouTubeAuthPanel() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'valid': return '#10b981';
-      case 'expired': return '#f59e0b';
-      case 'error': return '#ef4444';
-      case 'not_configured': return '#6b7280';
-      default: return '#6b7280';
+      case 'valid':
+        return '#10b981';
+      case 'expired':
+        return '#f59e0b';
+      case 'error':
+        return '#ef4444';
+      case 'not_configured':
+        return '#6b7280';
+      default:
+        return '#6b7280';
     }
   };
 
   const getStatusEmoji = (status: string) => {
     switch (status) {
-      case 'valid': return '✅';
-      case 'expired': return '⚠️';
-      case 'error': return '❌';
-      case 'not_configured': return '⚙️';
-      default: return '❓';
+      case 'valid':
+        return '✅';
+      case 'expired':
+        return '⚠️';
+      case 'error':
+        return '❌';
+      case 'not_configured':
+        return '⚙️';
+      default:
+        return '❓';
     }
   };
 
@@ -141,7 +153,7 @@ export default function YouTubeAuthPanel() {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: false
+        hour12: false,
       });
 
       return `${formattedDate} (${diffHours}시간 전)`;
@@ -151,19 +163,23 @@ export default function YouTubeAuthPanel() {
   };
 
   return (
-    <div style={{
-      backgroundColor: '#ffffff',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      padding: '1.5rem',
-      marginBottom: '1.5rem',
-    }}>
-      <h3 style={{
-        fontSize: '1.1rem',
-        fontWeight: '600',
-        marginBottom: '1rem',
-        color: '#374151',
-      }}>
+    <div
+      style={{
+        backgroundColor: '#ffffff',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '1.5rem',
+        marginBottom: '1.5rem',
+      }}
+    >
+      <h3
+        style={{
+          fontSize: '1.1rem',
+          fontWeight: '600',
+          marginBottom: '1rem',
+          color: '#374151',
+        }}
+      >
         🎬 YouTube API 토큰 관리
       </h3>
 
@@ -173,51 +189,58 @@ export default function YouTubeAuthPanel() {
         </div>
       ) : authStatus ? (
         <div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-            padding: '0.75rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '6px',
-            border: `1px solid ${getStatusColor(authStatus.status)}20`,
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>
-              {getStatusEmoji(authStatus.status)}
-            </span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '1rem',
+              padding: '0.75rem',
+              backgroundColor: '#f9fafb',
+              borderRadius: '6px',
+              border: `1px solid ${getStatusColor(authStatus.status)}20`,
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>{getStatusEmoji(authStatus.status)}</span>
             <div style={{ flex: 1 }}>
-              <div style={{
-                fontWeight: '500',
-                color: getStatusColor(authStatus.status),
-              }}>
-                {authStatus.status === 'valid' ? 'YouTube API 토큰이 유효합니다' :
-                 authStatus.status === 'expired' ? 'YouTube API 토큰이 만료되었습니다' :
-                 authStatus.status === 'missing' ? 'YouTube API 토큰이 없습니다' :
-                 authStatus.message}
+              <div
+                style={{
+                  fontWeight: '500',
+                  color: getStatusColor(authStatus.status),
+                }}
+              >
+                {authStatus.status === 'valid'
+                  ? 'YouTube API 토큰이 유효합니다'
+                  : authStatus.status === 'expired'
+                    ? 'YouTube API 토큰이 만료되었습니다'
+                    : authStatus.status === 'missing'
+                      ? 'YouTube API 토큰이 없습니다'
+                      : authStatus.message}
               </div>
 
               {authStatus.status === 'valid' && (
-                <div style={{
-                  fontSize: '0.875rem',
-                  color: '#6b7280',
-                  marginTop: '0.5rem',
-                }}>
+                <div
+                  style={{
+                    fontSize: '0.875rem',
+                    color: '#6b7280',
+                    marginTop: '0.5rem',
+                  }}
+                >
                   {authStatus.envTokenInfo?.issuedAt && (
-                    <div>
-                      📅 토큰 발급: {formatDate(authStatus.envTokenInfo.issuedAt)}
-                    </div>
+                    <div>📅 토큰 발급: {formatDate(authStatus.envTokenInfo.issuedAt)}</div>
                   )}
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{
-            display: 'flex',
-            gap: '0.75rem',
-            alignItems: 'center',
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center',
+            }}
+          >
             <button
               onClick={handleRefreshToken}
               disabled={refreshing}
@@ -255,17 +278,19 @@ export default function YouTubeAuthPanel() {
             </button>
           </div>
 
-          <div style={{
-            marginTop: '1rem',
-            padding: '0.75rem',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '6px',
-            fontSize: '0.8rem',
-            color: '#4b5563',
-          }}>
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem',
+              backgroundColor: '#f3f4f6',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              color: '#4b5563',
+            }}
+          >
             <strong>📝 사용법:</strong>
             <ul style={{ margin: '0.5rem 0', paddingLeft: '1rem' }}>
-              <li>토큰이 만료되면 "토큰 갱신" 버튼을 클릭하세요</li>
+              <li>토큰이 만료되면 &quot;토큰 갱신&quot; 버튼을 클릭하세요</li>
               <li>새 창이 열리면 Google 계정으로 로그인하세요</li>
               <li>승인 후 창이 자동으로 닫히면 완료됩니다</li>
               <li>토큰은 약 7-14일간 유효합니다</li>

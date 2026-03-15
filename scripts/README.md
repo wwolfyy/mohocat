@@ -45,6 +45,7 @@ This directory contains utility scripts for various project operations, organize
 ## 🚀 **Key Features**
 
 ### **Static Data Management**
+
 The platform now uses Google Cloud Storage for all static data with significant performance benefits:
 
 - **Build Integration**: `npm run build` automatically exports data to Cloud Storage
@@ -55,6 +56,7 @@ The platform now uses Google Cloud Storage for all static data with significant 
 ### **Available Scripts**
 
 #### **Static Data Operations** (Recommended)
+
 ```bash
 npm run update:static-data    # Update all static data
 npm run update:cats          # Update cats data only
@@ -63,6 +65,7 @@ npm run update:feeding-spots # Update feeding spots only
 ```
 
 #### **Direct Script Execution**
+
 ```bash
 node scripts/migration/export_all_to_cloud_storage.js    # Export all to Cloud Storage
 node scripts/migration/export_cats_to_static.js         # Export cats to Cloud Storage
@@ -74,6 +77,7 @@ node scripts/migration/update_all_static_data.js        # Batch update with prog
 Each script is self-contained and includes robust error handling. Scripts automatically detect and use the correct Firebase service account path for different execution contexts (terminal, Next.js API routes, etc.).
 
 **Example:**
+
 ```bash
 # Static data updates (recommended)
 npm run update:static-data

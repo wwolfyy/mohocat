@@ -7,13 +7,16 @@ export async function GET() {
     return NextResponse.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      message: 'Auth service is available'
+      message: 'Auth service is available',
     });
   } catch (error) {
-    return NextResponse.json({
-      status: 'error',
-      error: 'Auth service unavailable',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: 'error',
+        error: 'Auth service unavailable',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
   }
 }

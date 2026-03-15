@@ -66,14 +66,15 @@ The Permission Service provides the core functionality for role-based access con
 
 ```typescript
 class PermissionService {
-  async getUserRole(userId: string): Promise<string | null>
-  async hasPermission(userId: string, permission: string): Promise<boolean>
-  async getUserPermissions(userId: string): Promise<string[]>
-  async checkRoleHierarchy(userRole: string, requiredRole: string): Promise<boolean>
+  async getUserRole(userId: string): Promise<string | null>;
+  async hasPermission(userId: string, permission: string): Promise<boolean>;
+  async getUserPermissions(userId: string): Promise<string[]>;
+  async checkRoleHierarchy(userRole: string, requiredRole: string): Promise<boolean>;
 }
 ```
 
 Key features:
+
 - **Role validation** against the hierarchy
 - **Permission inheritance** from roles
 - **Caching** for performance optimization
@@ -85,13 +86,18 @@ The Role Assignment Service handles role management:
 
 ```typescript
 class RoleAssignmentService {
-  async assignUserRole(userId: string, role: string, assignedBy: string): Promise<void>
-  async updateUserRole(userId: string, updates: Partial<RoleData>): Promise<void>
-  async validateRoleAssignment(currentRole: string, newRole: string, assignerRole: string): Promise<boolean>
+  async assignUserRole(userId: string, role: string, assignedBy: string): Promise<void>;
+  async updateUserRole(userId: string, updates: Partial<RoleData>): Promise<void>;
+  async validateRoleAssignment(
+    currentRole: string,
+    newRole: string,
+    assignerRole: string
+  ): Promise<boolean>;
 }
 ```
 
 Key features:
+
 - **Role validation** against business rules
 - **Audit trail** for role changes
 - **Permission validation** before assignment
@@ -125,11 +131,13 @@ The admin interface has been comprehensively updated to use the permission syste
 ### Authentication Simplification
 
 #### KakaoTalk Authentication
+
 - **Simplified flow**: Removed complex multi-step authentication
 - **Clear user guidance**: Added disabled button with informative warning
 - **Streamlined experience**: Users create email/password accounts first, then link KakaoTalk
 
 #### Email/Password Authentication
+
 - **Enhanced signup**: Improved email/password registration flow
 - **Standard authentication**: Users can create accounts with email/password first
 - **Linking capability**: After account creation, users can link social accounts
@@ -137,6 +145,7 @@ The admin interface has been comprehensively updated to use the permission syste
 ### API Integration
 
 #### Role Management API
+
 ```typescript
 // src/app/api/admin/get-all-user-permissions-client/route.ts
 // Uses Firebase Admin SDK to fetch all users from Firestore
@@ -148,6 +157,7 @@ export async function GET(request: NextRequest) {
 ```
 
 Key features:
+
 - **Firebase Admin SDK**: Uses service account authentication from `.env.local`
 - **Complete user data**: Fetches all users with their roles and permissions
 - **Role hierarchy sorting**: Orders users by role importance
@@ -156,21 +166,25 @@ Key features:
 ## Security Considerations
 
 ### 1. Firestore Security Rules
+
 - Role assignments can only be made by admin users
 - Users can only read their own permission data
 - Audit trail is immutable
 
 ### 2. Authentication Security
+
 - **Service Account Protection**: Firebase Admin SDK uses secure service account file
 - **Environment Variables**: Credentials stored securely in environment variables
 - **No Client-Side Secrets**: Sensitive credentials not exposed to client
 
 ### 3. Client-Side Validation
+
 - All permission checks are performed on the client
 - Server-side validation in API routes
 - Graceful degradation for permission errors
 
 ### 4. Data Integrity
+
 - Role assignments are validated against hierarchy
 - Permission inheritance is calculated consistently
 - Audit trail maintains change history
@@ -226,12 +240,11 @@ function AdminComponent() {
 
   useEffect(() => {
     if (user) {
-      permissionService.hasPermission(user.uid, 'manage-users')
-        .then(hasAccess => {
-          if (!hasAccess) {
-            // Redirect or show access denied
-          }
-        });
+      permissionService.hasPermission(user.uid, 'manage-users').then((hasAccess) => {
+        if (!hasAccess) {
+          // Redirect or show access denied
+        }
+      });
     }
   }, [user]);
 }
@@ -251,11 +264,11 @@ function AdminDashboard() {
       {permissionService.hasPermission(user.uid, 'manage-cats') && (
         <CatManagementPanel />
       )}
-      
+
       {permissionService.hasPermission(user.uid, 'manage-posts') && (
         <ContentManagementPanel />
       )}
-      
+
       {permissionService.hasPermission(user.uid, 'manage-users') && (
         <UserManagementPanel />
       )}
@@ -269,20 +282,20 @@ function AdminDashboard() {
 ```typescript
 function RoleManagement() {
   const [users, setUsers] = useState([]);
-  
+
   // Fetch all users from Firestore
   const loadUsers = async () => {
     const response = await fetch('/api/admin/get-all-user-permissions-client');
     const allUsers = await response.json();
     setUsers(allUsers);
   };
-  
+
   // Assign role to user
   const assignRole = async (userId, role) => {
     await roleAssignmentService.assignUserRole(userId, role, 'geyang');
     loadUsers(); // Refresh user list
   };
-  
+
   return (
     <div>
       <h2>Role Management</h2>
@@ -305,28 +318,33 @@ function RoleManagement() {
 ## Technical Implementation
 
 ### API Routes
+
 - `src/app/api/admin/get-all-user-permissions-client/route.ts` - Fetches all users from Firestore
 - Uses Firebase Admin SDK with service account authentication from `.env.local`
 - Returns complete user data with roles and permissions
 - Comprehensive error handling and logging
 
 ### Service Layer
+
 - `src/services/permission-service.ts` - Core permission validation
 - `src/services/role-assignment-service.ts` - Role management
 - `src/services/auth-service.ts` - Simplified authentication
 - Clear interfaces and error handling
 
 ### Component Updates
+
 - `src/components/admin/RoleManagement.tsx` - Complete user management interface
 - `src/components/KakaoTalkAuthOptions.tsx` - Simplified authentication options
 - `src/components/admin/AdminAuth.tsx` - Permission-based access control
 
 ### Hook Updates
+
 - `src/hooks/useAuth.ts` - Simplified authentication methods
 - Removed complex multi-step flows
 - Maintained essential functionality
 
 ### Environment Configuration
+
 - `GOOGLE_APPLICATION_CREDENTIALS=config/firebase/mountaincats-61543-7329e795c352.json` - Service account file path
 - Firebase Admin SDK authentication for server-side operations
 
@@ -340,11 +358,11 @@ const ADMIN_EMAILS = ['admin1@example.com', 'admin2@example.com'];
 
 function AdminOnlyComponent() {
   const { user } = useAuth();
-  
+
   if (!ADMIN_EMAILS.includes(user?.email || '')) {
     return <AccessDenied />;
   }
-  
+
   return <AdminContent />;
 }
 ```
@@ -356,10 +374,10 @@ function AdminOnlyComponent() {
 function AdminOnlyComponent() {
   const { user } = useAuth();
   const permissionService = new PermissionService();
-  
+
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     if (user) {
       permissionService.hasPermission(user.uid, 'manage-users')
@@ -367,10 +385,10 @@ function AdminOnlyComponent() {
         .finally(() => setLoading(false));
     }
   }, [user]);
-  
+
   if (loading) return <LoadingSpinner />;
   if (!hasAccess) return <AccessDenied />;
-  
+
   return <AdminContent />;
 }
 ```
@@ -378,27 +396,32 @@ function AdminOnlyComponent() {
 ## Benefits
 
 ### 1. Flexibility
+
 - Roles can be assigned dynamically without code changes
 - Permission system can be extended easily
 - Role hierarchy can be modified as needed
 
 ### 2. Security
+
 - Centralized permission management
 - Audit trail for role changes
 - Consistent permission checking across the application
 
 ### 3. Maintainability
+
 - No hardcoded email addresses
 - Clear separation of concerns
 - Easy to understand permission logic
 
 ### 4. User Experience
+
 - **Simplified Authentication**: Clear, straightforward login flows
 - **Real User Management**: Complete visibility and control over all users
 - **Professional Interface**: Clean, intuitive admin interface
 - **Error Handling**: Clear feedback and guidance
 
 ### 5. Scalability
+
 - Supports unlimited users and roles
 - Performance optimized with caching
 - Database queries are efficient
@@ -412,27 +435,31 @@ function AdminOnlyComponent() {
 ✅ **Security First** - Robust authentication and authorization  
 ✅ **API Integration** - Complete backend/frontend integration  
 ✅ **Service Account Setup** - Proper Firebase Admin SDK configuration  
-✅ **Documentation** - Comprehensive implementation documentation  
+✅ **Documentation** - Comprehensive implementation documentation
 
 ## Files Modified/Created
 
 ### Core Implementation
+
 - `src/services/permission-service.ts` - Permission validation service
-- `src/services/role-assignment-service.ts` - Role management service  
+- `src/services/role-assignment-service.ts` - Role management service
 - `src/components/admin/RoleManagement.tsx` - Complete user management interface
 - `src/app/api/admin/get-all-user-permissions-client/route.ts` - API for fetching all users
 
 ### Authentication Updates
+
 - `src/components/KakaoTalkAuthOptions.tsx` - Simplified authentication options
 - `src/services/auth-service.ts` - Streamlined authentication service
 - `src/hooks/useAuth.ts` - Simplified authentication hook
 
 ### Admin Interface
+
 - `src/components/admin/AdminAuth.tsx` - Permission-based access control
 - `src/app/pages/butler_stream/page.tsx` - Updated permission checking
 - `src/app/pages/butler_talk/page.tsx` - Updated permission checking
 
 ### Configuration
+
 - `config/firebase/mountaincats-61543-7329e795c352.json` - Service account file
 - `.env.local` - Environment variables with service account configuration
 

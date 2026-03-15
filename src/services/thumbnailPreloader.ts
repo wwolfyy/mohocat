@@ -1,5 +1,5 @@
-import { getCatService } from "@/services";
-import type { Cat } from "@/types";
+import { getCatService } from '@/services';
+import type { Cat } from '@/types';
 
 class ThumbnailPreloader {
   private loadedThumbnails = new Set<string>();
@@ -16,7 +16,7 @@ class ThumbnailPreloader {
     const allCatsPromises = pointIds.map(async (pointId) => {
       try {
         const { current } = await catService.getCatsByPointId(pointId);
-        return current.filter(cat => cat.thumbnailUrl && cat.thumbnailUrl.trim() !== '');
+        return current.filter((cat) => cat.thumbnailUrl && cat.thumbnailUrl.trim() !== '');
       } catch (error) {
         console.error(`Error loading cats for point ${pointId}:`, error);
         return [];
@@ -28,22 +28,22 @@ class ThumbnailPreloader {
 
     // Get unique thumbnail URLs (filter out duplicates and empty URLs)
     const thumbnailUrls = allCats
-      .map(cat => cat.thumbnailUrl)
-      .filter(url => url && url.trim() !== '');
+      .map((cat) => cat.thumbnailUrl)
+      .filter((url) => url && url.trim() !== '');
     const uniqueThumbnailUrls = Array.from(new Set(thumbnailUrls));
 
     // Preload all thumbnails
     await this.preloadThumbnailsPrivate(uniqueThumbnailUrls);
 
     // Mark these points as preloaded
-    pointIds.forEach(pointId => this.preloadedPoints.add(pointId));
+    pointIds.forEach((pointId) => this.preloadedPoints.add(pointId));
   }
 
   /**
    * Preload individual thumbnails (public method)
    */
   async preloadThumbnails(urls: string[]): Promise<void> {
-    const loadPromises = urls.map(url => this.preloadSingleThumbnail(url));
+    const loadPromises = urls.map((url) => this.preloadSingleThumbnail(url));
     await Promise.all(loadPromises);
   }
 
@@ -51,7 +51,7 @@ class ThumbnailPreloader {
    * Preload individual thumbnails (private method)
    */
   private async preloadThumbnailsPrivate(urls: string[]): Promise<void> {
-    const loadPromises = urls.map(url => this.preloadSingleThumbnail(url));
+    const loadPromises = urls.map((url) => this.preloadSingleThumbnail(url));
     await Promise.all(loadPromises);
   }
 

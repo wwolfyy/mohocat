@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getPostService } from "@/services";
-import { Post } from "@/types";
-import ReplyButton from "@/components/ReplyButton";
-import ReplyForm from "@/components/ReplyForm";
-import ReplyList from "@/components/ReplyList";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getPostService } from '@/services';
+import { Post } from '@/types';
+import ReplyButton from '@/components/ReplyButton';
+import ReplyForm from '@/components/ReplyForm';
+import ReplyList from '@/components/ReplyList';
 
 const PostDetailsPage = () => {
   // Service references
@@ -18,7 +18,7 @@ const PostDetailsPage = () => {
 
   useEffect(() => {
     const fetchPost = async () => {
-      const id = window.location.pathname.split("/").pop();
+      const id = window.location.pathname.split('/').pop();
       if (!id) return;
 
       try {
@@ -31,7 +31,7 @@ const PostDetailsPage = () => {
           setPost(null);
         }
       } catch (error) {
-        console.error("Error fetching post:", error);
+        console.error('Error fetching post:', error);
         setPost(null);
       }
     };
@@ -65,9 +65,7 @@ const PostDetailsPage = () => {
       {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (
         <div className="mt-4" data-oid="-lefipm">
           <h2 className="text-xl font-semibold mb-2" data-oid="pdg-0.z">
-            {post.videoUrls?.length > 1
-              ? `Videos (${post.videoUrls.length}):`
-              : "Video:"}
+            {post.videoUrls?.length > 1 ? `Videos (${post.videoUrls.length}):` : 'Video:'}
           </h2>
           <div className="space-y-4" data-oid="kmf5wsd">
             {(() => {
@@ -75,9 +73,7 @@ const PostDetailsPage = () => {
               const videoUrls = post.videoUrls || [post.videoUrl];
               return videoUrls.map((videoUrl: string, index: number) => {
                 // Extract YouTube video ID from URL
-                const match = videoUrl.match(
-                  /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
-                );
+                const match = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
                 const videoId = match ? match[1] : null;
 
                 if (videoId) {
@@ -85,10 +81,7 @@ const PostDetailsPage = () => {
                   return (
                     <div key={index} data-oid="jf:vmdm">
                       {videoUrls.length > 1 && (
-                        <h3
-                          className="text-lg font-medium mb-2"
-                          data-oid="sctacn8"
-                        >
+                        <h3 className="text-lg font-medium mb-2" data-oid="sctacn8">
                           Video {index + 1}
                         </h3>
                       )}
@@ -138,10 +131,7 @@ const PostDetailsPage = () => {
                   return (
                     <div key={index} data-oid="wt09hvd">
                       {videoUrls.length > 1 && (
-                        <h3
-                          className="text-lg font-medium mb-2"
-                          data-oid="kg:sav:"
-                        >
+                        <h3 className="text-lg font-medium mb-2" data-oid="kg:sav:">
                           Video {index + 1}
                         </h3>
                       )}

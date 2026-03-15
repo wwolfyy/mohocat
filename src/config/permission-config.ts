@@ -2,15 +2,21 @@
 let configCache: PermissionConfig | null = null;
 
 export interface PermissionConfig {
-  roles: Record<string, {
-    permissions: string[];
-    description: string;
-  }>;
-  mountains: Record<string, {
-    name: string;
-    adminUsers: string[];
-    defaultRole: string;
-  }>;
+  roles: Record<
+    string,
+    {
+      permissions: string[];
+      description: string;
+    }
+  >;
+  mountains: Record<
+    string,
+    {
+      name: string;
+      adminUsers: string[];
+      defaultRole: string;
+    }
+  >;
 }
 
 export type Role = 'admin' | 'butler-ground' | 'butler-internet' | 'viewer';
@@ -71,7 +77,9 @@ export function getAvailableRoles(): string[] {
 /**
  * Get role details including permissions and description
  */
-export function getRoleDetails(role: string): { permissions: string[], description: string } | null {
+export function getRoleDetails(
+  role: string
+): { permissions: string[]; description: string } | null {
   const config = loadPermissionConfig();
   const roleData = config.roles[role];
 
@@ -81,7 +89,7 @@ export function getRoleDetails(role: string): { permissions: string[], descripti
 
   return {
     permissions: roleData.permissions,
-    description: roleData.description
+    description: roleData.description,
   };
 }
 

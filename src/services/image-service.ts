@@ -16,11 +16,10 @@ import {
   deleteImageRecord as deleteImageRecordFromMediaAlbums,
   batchUpdateImages as batchUpdateImagesFromMediaAlbums,
   batchDeleteImages as batchDeleteImagesFromMediaAlbums,
-  syncImages as syncImagesFromMediaAlbums
+  syncImages as syncImagesFromMediaAlbums,
 } from './media-albums';
 
 export class FirebaseImageService implements IImageService {
-
   async getAllImages(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
@@ -91,7 +90,7 @@ export class FirebaseImageService implements IImageService {
       // Automatically set the updated timestamp
       const updatesWithTimestamp = {
         ...updates,
-        updated: new Date()
+        updated: new Date(),
       };
 
       const success = await updateImageRecordFromMediaAlbums(id, updatesWithTimestamp);
@@ -123,8 +122,8 @@ export class FirebaseImageService implements IImageService {
         id,
         data: {
           ...updates,
-          updated: new Date()
-        }
+          updated: new Date(),
+        },
       }));
       const success = await batchUpdateImagesFromMediaAlbums(mediaAlbumsUpdates);
       if (!success) {

@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # General Priciples
 
-- When working as an agent or ochestrator, do not make code edits unless specifically asked. 
-- Do not do more than what you're asked to do. 
+- When working as an agent or ochestrator, do not make code edits unless specifically asked.
+- Do not do more than what you're asked to do.
 
 # Project-Specific Information
 
@@ -21,11 +21,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Next.js 14 app using the App Router, configured for static export (`output: 'export'`) with Firebase hosting.
 
 ### Core Structure
+
 - **Static Generation**: App is built as a static site with unoptimized images for export compatibility
 - **Build-time Data Fetching**: All data is fetched from Firebase at build time and served statically from CDN
 - **Korean Content**: Site title "계양산 고양이들" (Gyeyang Mountain Cats) with Korean UI text
 
 ### Data Architecture
+
 The app uses Static Site Generation (SSG) to fetch all data at build time:
 
 - **Build-time fetching**: `src/lib/static-data.ts` contains functions to fetch all data during build
@@ -38,20 +40,24 @@ The app uses Static Site Generation (SSG) to fetch all data at build time:
 - **Client-side filtering**: Cat data is filtered on the client using `getCatsByPointId()` helper
 
 ### Component Patterns
+
 - **MountainViewer**: Main interactive component for point selection (receives points and cats as props)
 - **CatGallery**: Modal showing cats for a selected location with current/former resident sections (receives cats as props)
 - **CatInfo**: Detailed view of individual cats in nested modal
 - **Props-based data flow**: All data flows down from the root page component through props
 
 ### Styling
+
 - TailwindCSS with custom gradient backgrounds
 - Responsive grid layouts that center items including incomplete rows
 - Modal layers with proper z-indexing (CatGallery: z-50, CatInfo: z-[60])
 
 ### Environment Variables
+
 Requires Firebase config in environment variables:
+
 - `NEXT_PUBLIC_FIREBASE_API_KEY`
-- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` 
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
 - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
 - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
 - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`

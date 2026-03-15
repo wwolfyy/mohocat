@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface Post {
   id: string;
@@ -7,7 +7,7 @@ interface Post {
   date: string;
   time: string;
   thumbnailUrl: string;
-  mediaType: "video" | "image";
+  mediaType: 'video' | 'image';
 }
 
 interface PostItemProps {
@@ -18,11 +18,7 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
   const { thumbnailUrl, date, time, username, mediaType, title } = post;
   return (
     <div className="flex items-center p-4 border-b">
-      <img
-        src={thumbnailUrl}
-        alt="Post Thumbnail"
-        className="w-16 h-16 rounded"
-      />
+      <img src={thumbnailUrl} alt="Post Thumbnail" className="w-16 h-16 rounded" />
 
       <div className="ml-4 flex-1">
         <div className="flex justify-between">
@@ -31,7 +27,7 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
         </div>
         <div className="font-bold mt-1">{title}</div>
         <div className="flex mt-1">
-          {mediaType === "video" ? (
+          {mediaType === 'video' ? (
             <span className="text-blue-500">🎥 Video</span>
           ) : (
             <span className="text-green-500">🖼️ Image</span>

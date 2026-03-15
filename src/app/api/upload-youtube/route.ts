@@ -44,14 +44,17 @@ export async function POST(request: NextRequest) {
     // Get YouTube OAuth configuration from centralized config or Firestore
     const tokenConfig = await getYouTubeRefreshToken();
     if (!tokenConfig) {
-      return NextResponse.json({
-        error: 'YouTube OAuth credentials not configured'
-      }, { status: 500 });
-    }    // Parse the multipart form data
+      return NextResponse.json(
+        {
+          error: 'YouTube OAuth credentials not configured',
+        },
+        { status: 500 }
+      );
+    } // Parse the multipart form data
     const formData = await request.formData();
     const file = formData.get('video') as File;
     const title = formData.get('title') as string;
-    const description = formData.get('description') as string;    // Enhanced metadata options
+    const description = formData.get('description') as string; // Enhanced metadata options
     const tags = formData.get('tags') as string; // Comma-separated tags
     const createdTime = formData.get('createdTime') as string; // ISO date string
     const playlistId = formData.get('playlistId') as string; // Playlist ID
@@ -73,16 +76,19 @@ export async function POST(request: NextRequest) {
       await oauth2Client.getAccessToken();
     } catch (authError) {
       console.error('OAuth2 authentication failed:', authError);
-      return NextResponse.json({
-        error: 'YouTube authentication failed',
-        details: authError instanceof Error ? authError.message : 'Unknown auth error'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          error: 'YouTube authentication failed',
+          details: authError instanceof Error ? authError.message : 'Unknown auth error',
+        },
+        { status: 401 }
+      );
     }
 
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
-    const buffer = Buffer.from(await file.arrayBuffer());    // Convert buffer to readable stream for YouTube API
-    const stream = Readable.from(buffer);    // Prepare snippet data with enhanced metadata
+    const buffer = Buffer.from(await file.arrayBuffer()); // Convert buffer to readable stream for YouTube API
+    const stream = Readable.from(buffer); // Prepare snippet data with enhanced metadata
     const snippetData: any = {
       title: title || file.name,
       description: description || 'Uploaded via Mountain Cats app',
@@ -90,7 +96,10 @@ export async function POST(request: NextRequest) {
 
     // Add tags if provided
     if (tags && tags.trim()) {
-      snippetData.tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      snippetData.tags = tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
     }
 
     // Prepare recording details if provided
@@ -100,7 +109,7 @@ export async function POST(request: NextRequest) {
         const date = new Date(createdTime);
         if (!isNaN(date.getTime())) {
           recordingDetails = {
-            recordingDate: date.toISOString()
+            recordingDate: date.toISOString(),
           };
         }
       } catch (e) {
@@ -117,7 +126,7 @@ export async function POST(request: NextRequest) {
     const requestBody: any = {
       snippet: snippetData,
       status: statusData,
-    };    // Add recording details as a separate top-level property
+    }; // Add recording details as a separate top-level property
     if (recordingDetails) {
       requestBody.recordingDetails = recordingDetails;
     }
@@ -147,50 +156,55 @@ export async function POST(request: NextRequest) {
               playlistId: playlistId,
               resourceId: {
                 kind: 'youtube#video',
-                videoId: videoId
-              }
-            }
-          }
+                videoId: videoId,
+              },
+            },
+          },
         });
       } catch (playlistError) {
         console.warn('Failed to add video to playlist:', playlistError);
         // Don't fail the entire upload if playlist addition fails
       }
-    } const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    }
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     // Create Firestore entry in cat_videos collection
     try {
-      const tagsArray = tags && tags.trim()
-        ? tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-        : []; const videoData = {
-          videoUrl,
-          fileName: response.data.snippet?.title || title || file.name,
-          storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
-          tags: tagsArray,
-          uploadDate: new Date(),
-          createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
-          uploadedBy: 'user', // or get from authentication context
-          description: response.data.snippet?.description || description || '',
-          thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-          duration: undefined, // YouTube doesn't return duration in upload response
-          needsTagging: tagsArray.length === 0, // Needs tagging if no tags provided
-          videoType: 'youtube' as const,
-          youtubeId: videoId, // Important: YouTube video ID
-          title: response.data.snippet?.title || title || file.name,
-          publishedAt: new Date().toISOString(),
-          channelTitle: 'Mountain Cats', // or get from YouTube API
-          catName: '', // Empty initially, can be filled later through tagging
-          playlist: playlistId || '', // Add playlist field
-          autoTagged: false, // User manually provided tags
-          // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
-        };
+      const tagsArray =
+        tags && tags.trim()
+          ? tags
+              .split(',')
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0)
+          : [];
+      const videoData = {
+        videoUrl,
+        fileName: response.data.snippet?.title || title || file.name,
+        storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
+        tags: tagsArray,
+        uploadDate: new Date(),
+        createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
+        uploadedBy: 'user', // or get from authentication context
+        description: response.data.snippet?.description || description || '',
+        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        duration: undefined, // YouTube doesn't return duration in upload response
+        needsTagging: tagsArray.length === 0, // Needs tagging if no tags provided
+        videoType: 'youtube' as const,
+        youtubeId: videoId, // Important: YouTube video ID
+        title: response.data.snippet?.title || title || file.name,
+        publishedAt: new Date().toISOString(),
+        channelTitle: 'Mountain Cats', // or get from YouTube API
+        catName: '', // Empty initially, can be filled later through tagging
+        playlist: playlistId || '', // Add playlist field
+        autoTagged: false, // User manually provided tags
+        // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
+      };
 
       console.log('Creating Firestore entry for uploaded video:', videoData);
 
       const videoService = getVideoService();
       const firestoreVideoId = await videoService.createVideo(videoData);
       console.log('Created cat_videos entry with ID:', firestoreVideoId);
-
     } catch (firestoreError) {
       console.error('Failed to create Firestore entry:', firestoreError);
       // Don't fail the entire upload if Firestore creation fails
@@ -200,15 +214,18 @@ export async function POST(request: NextRequest) {
       videoId,
       videoUrl,
       title: response.data.snippet?.title,
-      description: response.data.snippet?.description
+      description: response.data.snippet?.description,
     });
   } catch (error) {
     console.error('Error uploading video to YouTube:', error);
 
-    return NextResponse.json({
-      error: 'Failed to upload video to YouTube',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      type: error instanceof Error ? error.name : 'UnknownError'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to upload video to YouTube',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.name : 'UnknownError',
+      },
+      { status: 500 }
+    );
   }
 }

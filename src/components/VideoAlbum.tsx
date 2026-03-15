@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { getVideoService } from "@/services";
-import { CatVideo } from "@/types/media";
-import { cn } from "@/utils/cn";
-import { formatDuration } from "@/utils/duration";
+import { useState, useEffect } from 'react';
+import { getVideoService } from '@/services';
+import { CatVideo } from '@/types/media';
+import { cn } from '@/utils/cn';
+import { formatDuration } from '@/utils/duration';
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -17,27 +17,24 @@ const parseDate = (dateValue: any): Date | null => {
     }
 
     // If it's a Firebase Timestamp with seconds property
-    if (typeof dateValue === "object" && dateValue.seconds) {
+    if (typeof dateValue === 'object' && dateValue.seconds) {
       return new Date(dateValue.seconds * 1000);
     }
 
     // If it's a Firebase Timestamp with toDate method
-    if (
-      typeof dateValue === "object" &&
-      typeof dateValue.toDate === "function"
-    ) {
+    if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
       return dateValue.toDate();
     }
 
     // If it's a string or number
-    if (typeof dateValue === "string" || typeof dateValue === "number") {
+    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
       const date = new Date(dateValue);
       return isNaN(date.getTime()) ? null : date;
     }
 
     return null;
   } catch (error) {
-    console.warn("Error parsing date:", dateValue, error);
+    console.warn('Error parsing date:', dateValue, error);
     return null;
   }
 };
@@ -71,29 +68,28 @@ function VideoPlayer({
 
   const handleKeyDown = (e: KeyboardEvent) => {
     switch (e.key) {
-      case "Escape":
+      case 'Escape':
         onClose();
         break;
-      case "ArrowLeft":
+      case 'ArrowLeft':
         if (hasPrevious) onPrevious();
         break;
-      case "ArrowRight":
+      case 'ArrowRight':
         if (hasNext) onNext();
         break;
     }
   };
 
   useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [hasPrevious, hasNext]);
 
   const renderVideoPlayer = () => {
-    if (video.videoType === "youtube") {
+    if (video.videoType === 'youtube') {
       // Extract YouTube video ID from URL
       const getYouTubeVideoId = (url: string) => {
-        const regExp =
-          /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
         const match = url.match(regExp);
         return match && match[7].length === 11 ? match[7] : null;
       };
@@ -146,12 +142,7 @@ function VideoPlayer({
           className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 p-2 z-10"
           aria-label="Previous video"
         >
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -168,18 +159,8 @@ function VideoPlayer({
           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 p-2 z-10"
           aria-label="Next video"
         >
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       )}
@@ -193,10 +174,7 @@ function VideoPlayer({
         ×
       </button>
 
-      <div
-        className="w-full max-w-4xl max-h-[80vh] mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="w-full max-w-4xl max-h-[80vh] mx-4" onClick={(e) => e.stopPropagation()}>
         {/* Video player */}
         <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
           {videoLoading && (
@@ -217,25 +195,19 @@ function VideoPlayer({
         {/* Video info */}
         {!videoLoading && !videoError && (
           <div className="mt-4 text-white text-center">
-            <p className="text-lg font-semibold">
-              {video.description || "제목 없음"}
-            </p>
+            <p className="text-lg font-semibold">{video.description || '제목 없음'}</p>
             <div className="flex justify-center items-center gap-4 mt-2 text-sm text-gray-300">
               <span>
                 {(() => {
                   const createdDate = parseDate(video.createdTime);
-                  return createdDate
-                    ? createdDate.toLocaleDateString("ko-KR")
-                    : "날짜 없음";
+                  return createdDate ? createdDate.toLocaleDateString('ko-KR') : '날짜 없음';
                 })()}
               </span>
               {video.duration && <span>{formatDuration(video.duration)}</span>}
               <span className="capitalize">{video.videoType}</span>
             </div>
             {video.tags && video.tags.length > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                태그: {video.tags.join(", ")}
-              </p>
+              <p className="text-xs text-gray-400 mt-1">태그: {video.tags.join(', ')}</p>
             )}
           </div>
         )}
@@ -244,17 +216,11 @@ function VideoPlayer({
   );
 }
 
-export default function VideoAlbum({
-  isOpen,
-  onClose,
-  catName,
-}: VideoAlbumProps) {
+export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps) {
   const [videos, setVideos] = useState<CatVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(
-    null,
-  );
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
 
   // Load videos when the album opens
   useEffect(() => {
@@ -287,8 +253,8 @@ export default function VideoAlbum({
         setVideos(catVideos);
       }
     } catch (err) {
-      console.error("Error loading videos:", err);
-      setError("동영상을 불러오는 중 오류가 발생했습니다.");
+      console.error('Error loading videos:', err);
+      setError('동영상을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -332,9 +298,9 @@ export default function VideoAlbum({
           <button
             onClick={onClose}
             className={cn(
-              "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
-              "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
-              "flex items-center justify-center z-10",
+              'absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600',
+              'text-white rounded font-bold hover:shadow-lg transition-all duration-200',
+              'flex items-center justify-center z-10'
             )}
             aria-label="Close album"
           >
@@ -351,12 +317,7 @@ export default function VideoAlbum({
                 className="text-blue-600 hover:text-blue-800 disabled:text-gray-400 p-1"
                 title="새로고침"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -400,7 +361,7 @@ export default function VideoAlbum({
                     {video.thumbnailUrl ? (
                       <img
                         src={video.thumbnailUrl}
-                        alt={video.description || "동영상 썸네일"}
+                        alt={video.description || '동영상 썸네일'}
                         className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                       />
                     ) : (
@@ -437,15 +398,15 @@ export default function VideoAlbum({
                     {/* Video info overlay */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
                       <p className="text-white text-xs truncate">
-                        {video.description || "제목 없음"}
+                        {video.description || '제목 없음'}
                       </p>
                       <div className="flex justify-between items-center mt-1">
                         <p className="text-white text-xs opacity-75">
                           {(() => {
                             const createdDate = parseDate(video.createdTime);
                             return createdDate
-                              ? createdDate.toLocaleDateString("ko-KR")
-                              : "날짜 없음";
+                              ? createdDate.toLocaleDateString('ko-KR')
+                              : '날짜 없음';
                           })()}
                         </p>
                         {video.duration && (
@@ -458,14 +419,12 @@ export default function VideoAlbum({
 
                     {/* Video type indicator */}
                     <div className="absolute top-2 right-2">
-                      {video.videoType === "youtube" ? (
+                      {video.videoType === 'youtube' ? (
                         <div className="bg-red-600 text-white text-xs px-2 py-1 rounded">
                           YouTube
                         </div>
                       ) : (
-                        <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                          파일
-                        </div>
+                        <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded">파일</div>
                       )}
                     </div>
                   </div>

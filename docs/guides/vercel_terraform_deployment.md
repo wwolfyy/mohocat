@@ -14,6 +14,7 @@ This guide covers how to deploy the Mountaincats Next.js application to Vercel a
 ## 1. Directory Structure
 
 Our Terraform configuration resides in `infra/terraform/`:
+
 - `main.tf`: Contains the provider configuration, project creation, domain mapping, and environment variables.
 - `variables.tf`: Contains the declarations of all variables without default values for secrets.
 - `outputs.tf`: Contains output values, such as the Vercel project ID and domains.
@@ -32,7 +33,7 @@ Before running Terraform, you must create a `terraform.tfvars` file to supply th
    cp terraform.tfvars.example terraform.tfvars
    ```
    **Important:** `terraform.tfvars` is ignored by Git, ensuring your secrets are not committed.
-3. Open `terraform.tfvars` and replace all `PLACEHOLDER_*` values. 
+3. Open `terraform.tfvars` and replace all `PLACEHOLDER_*` values.
    - `vercel_api_token`: Your Vercel API token.
    - `github_repo`: Your GitHub repository in `username/repo` format (e.g., `github_username/mtcat_next`).
    - `production_domain`: Your custom production domain (e.g., `www.mcathcat.org`).
@@ -47,14 +48,17 @@ Before running Terraform, you must create a `terraform.tfvars` file to supply th
 Once your `terraform.tfvars` is fully configured:
 
 1. **Initialize Terraform:** This downloads the necessary provider plugins (e.g., the Vercel provider).
+
    ```bash
    terraform init
    ```
 
 2. **Plan the Deployment:** Review the resources Terraform is going to create or modify. This is a dry run and safe to execute.
+
    ```bash
    terraform plan
    ```
+
    Check the output to ensure the environment variables, the project, and the domains are correctly mapped.
 
 3. **Apply the Configuration:** Instruct Terraform to make the changes in your Vercel account.
@@ -64,22 +68,27 @@ Once your `terraform.tfvars` is fully configured:
    You will be prompted to confirm the changes by typing `yes`.
 
 ### What Terraform Automatically Does in Vercel
+
 When you run `terraform apply`, you **do not** need to manually click through the Vercel dashboard to set up your project. Terraform automatically:
+
 1. Creates the Vercel project and links it to your GitHub repository.
 2. Injects all your environment variables, explicitly assigning them to **Production** or **Preview** environments as defined in `main.tf`.
 3. Adds your `production_domain` and assigns it to the `main` branch.
 4. Adds your `staging_domain` and explicitly pins it to the `dev` branch.
 
 ### Manual Actions Required Outside Terraform
+
 While Terraform configures Vercel, there are two initial steps you must do manually:
+
 1. **GitHub App Installation**: Vercel requires permission to read your GitHub repository. The first time you use Vercel, you must install the Vercel GitHub App on your account/organization so Terraform has permission to link the repo.
 2. **DNS Configuration**: Terraform tells Vercel to expect your custom domains, but you still need to log into your domain registrar (e.g., Namecheap, GoDaddy, Route53) and add the CNAME or A records pointing your domains to Vercel's servers. Vercel's dashboard will show you exactly which records to add once Terraform creates the project.
 
 ## 4. How the CI/CD Pipeline Works
 
 By linking your GitHub repository via Terraform, Vercel automatically creates a CI/CD pipeline based on branches:
+
 1. **Production Deployment**: Any commits merged or pushed to the default branch (e.g., `main`) trigger a Production build. This deployment uses the variables mapped to the `production` environment, and is served on your `production_domain`.
-2. **Preview (Staging) Deployment**: Any commits pushed to non-default branches (e.g., `dev`), or Pull Requests targeting *any* branch (including `dev` or `main`), trigger a Preview build. This handles your Staging environment.
+2. **Preview (Staging) Deployment**: Any commits pushed to non-default branches (e.g., `dev`), or Pull Requests targeting _any_ branch (including `dev` or `main`), trigger a Preview build. This handles your Staging environment.
    - With our Terraform config, your staging domain (`staging_domain`) is explicitly pinned to the `dev` branch.
    - Vercel injects the preview-specific Environment Variables (like the correct `NEXT_PUBLIC_BASE_URL` and OAuth redirect definitions) specifically for this domain.
 
@@ -103,6 +112,7 @@ Both the production and staging domains must be explicitly whitelisted, otherwis
 ## Ongoing Maintenance
 
 If you ever need to add a new environment variable or update an existing one:
+
 1. Add the variable to `variables.tf`.
 2. Map it to the appropriate environments (`production`, `preview`, etc.) in `main.tf`.
 3. Add the value to your local `terraform.tfvars` file.

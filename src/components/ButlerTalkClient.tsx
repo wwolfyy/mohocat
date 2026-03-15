@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getAuthService, getButlerTalkService } from "@/services";
-import PostList from "@/components/PostList";
-import { User } from "firebase/auth";
-import { cn } from "@/utils/cn";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getAuthService, getButlerTalkService } from '@/services';
+import PostList from '@/components/PostList';
+import { User } from 'firebase/auth';
+import { cn } from '@/utils/cn';
 
 const ButlerTalkClient = () => {
   // Service references
@@ -34,11 +34,11 @@ const ButlerTalkClient = () => {
   const fetchPosts = async (page = 1) => {
     if (isAuthenticated) {
       try {
-        console.log("Fetching butler talk posts...");
+        console.log('Fetching butler talk posts...');
         // Use service layer for butler talk posts
         const allPosts = await butlerTalkService.getAllPosts();
-        console.log("Raw butler talk posts from service:", allPosts);
-        console.log("Number of butler talk posts fetched:", allPosts.length);
+        console.log('Raw butler talk posts from service:', allPosts);
+        console.log('Number of butler talk posts fetched:', allPosts.length);
 
         // Check if posts have date/time fields or use createdAt
         const sortedPosts = allPosts.sort((a: any, b: any) => {
@@ -70,19 +70,16 @@ const ButlerTalkClient = () => {
           return dateB.getTime() - dateA.getTime();
         });
 
-        console.log("Sorted butler talk posts:", sortedPosts);
+        console.log('Sorted butler talk posts:', sortedPosts);
 
         const startIndex = (page - 1) * postsPerPage;
-        const paginatedPosts = sortedPosts.slice(
-          startIndex,
-          startIndex + postsPerPage,
-        );
+        const paginatedPosts = sortedPosts.slice(startIndex, startIndex + postsPerPage);
 
-        console.log("Paginated butler talk posts for display:", paginatedPosts);
+        console.log('Paginated butler talk posts for display:', paginatedPosts);
         setPosts(paginatedPosts);
         setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
       } catch (error) {
-        console.error("Error in fetchPosts:", error);
+        console.error('Error in fetchPosts:', error);
       }
     }
   };
@@ -103,10 +100,10 @@ const ButlerTalkClient = () => {
     <>
       <div className="flex justify-end mb-4" data-oid="s64j5_s">
         <button
-          onClick={() => router.push("/pages/butler_talk/new")}
+          onClick={() => router.push('/pages/butler_talk/new')}
           className={cn(
-            "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-            "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
+            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
           )}
           data-oid="q0:d1d3"
         >

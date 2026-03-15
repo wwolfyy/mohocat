@@ -77,18 +77,11 @@ The system uses a JSON configuration file to define roles and permissions:
       "description": "Full administrative access"
     },
     "butler-ground": {
-      "permissions": [
-        "manage-cats",
-        "manage-posts",
-        "view-analytics"
-      ],
+      "permissions": ["manage-cats", "manage-posts", "view-analytics"],
       "description": "Physical cat care management"
     },
     "butler-internet": {
-      "permissions": [
-        "manage-posts",
-        "view-analytics"
-      ],
+      "permissions": ["manage-posts", "view-analytics"],
       "description": "Digital content management"
     },
     "viewer": {
@@ -187,7 +180,7 @@ export function AdminContent() {
       {canManageUsers && (
         <UserManagementPanel />
       )}
-      
+
       {canViewAnalytics && (
         <AnalyticsPanel />
       )}
@@ -203,7 +196,7 @@ import { checkUserPermission } from '@/utils/permission-utils';
 
 export async function getServerSideProps(context) {
   const userId = getCurrentUserId(context);
-  
+
   if (!(await checkUserPermission(userId, 'manage-users'))) {
     return {
       redirect: {
@@ -224,15 +217,15 @@ import { PermissionService } from '@/services/permission-service';
 
 export async function assignUserRole(userId: string, role: string) {
   const permissionService = new PermissionService();
-  
+
   try {
     await permissionService.assignRole(
       userId,
       role,
-      'geyang',  // mountain ID
-      getCurrentUserId()  // admin who is assigning
+      'geyang', // mountain ID
+      getCurrentUserId() // admin who is assigning
     );
-    
+
     console.log(`Successfully assigned ${role} to user ${userId}`);
   } catch (error) {
     console.error('Failed to assign role:', error);
@@ -245,7 +238,9 @@ export async function assignUserRole(userId: string, role: string) {
 The system uses the following Firestore collections:
 
 ### `user_permissions`
+
 Stores user role information:
+
 ```javascript
 {
   uid: "user-uid",
@@ -265,7 +260,9 @@ Stores user role information:
 ```
 
 ### `permission_logs`
+
 Audit trail for permission changes:
+
 ```javascript
 {
   userId: "user-uid",
@@ -292,7 +289,7 @@ function hasPermission(userId, permission) {
 
 // Protect admin collections
 match /admin_data/{document} {
-  allow read, write: if request.auth != null && 
+  allow read, write: if request.auth != null &&
     hasPermission(request.auth.uid, 'manage-users');
 }
 ```
@@ -302,26 +299,23 @@ match /admin_data/{document} {
 ### From Hardcoded Admin Emails
 
 1. **Populate initial admin users**:
+
    ```typescript
    const permissionService = new PermissionService();
-   
+
    // Assign admin role to existing hardcoded admin users
-   await permissionService.assignRole(
-     'user-uid',
-     'admin',
-     'geyang',
-     'migration-script'
-   );
+   await permissionService.assignRole('user-uid', 'admin', 'geyang', 'migration-script');
    ```
 
 2. **Update admin components**:
    Replace hardcoded email checks with permission-based checks:
+
    ```typescript
    // Before
    if (user.email === 'admin@geyang-cats.com') {
      // Show admin features
    }
-   
+
    // After
    const { canManageUsers } = usePermissions();
    if (canManageUsers) {
@@ -351,10 +345,14 @@ match /admin_data/{document} {
 ### Debugging
 
 Enable debug logging in the permission service:
+
 ```typescript
 // Add debug logging
 console.log('User permissions:', await permissionService.getUserPermissions(userId));
-console.log('Permission check result:', await permissionService.checkPermission(userId, 'manage-posts'));
+console.log(
+  'Permission check result:',
+  await permissionService.checkPermission(userId, 'manage-posts')
+);
 ```
 
 ## Future Enhancements

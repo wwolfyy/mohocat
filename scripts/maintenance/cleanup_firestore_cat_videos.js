@@ -14,7 +14,14 @@ const fs = require('fs');
 const path = require('path');
 
 // Load service account key
-const serviceAccountPath = path.join(__dirname, '..', '..', 'config', 'firebase', 'mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'firebase',
+  'mountaincats-61543-7329e795c352.json'
+);
 
 if (!fs.existsSync(serviceAccountPath)) {
   console.error('Service account key file not found:', serviceAccountPath);
@@ -27,20 +34,14 @@ const serviceAccount = require(serviceAccountPath);
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
   });
 }
 
 const db = admin.firestore();
 
 // Fields to remove from all documents
-const FIELDS_TO_REMOVE = [
-  'catName',
-  'fileName',
-  'needsTagging',
-  'playlist',
-  'playlistTitle'
-];
+const FIELDS_TO_REMOVE = ['catName', 'fileName', 'needsTagging', 'playlist', 'playlistTitle'];
 
 async function cleanupCatVideosCollection() {
   try {
@@ -68,7 +69,7 @@ async function cleanupCatVideosCollection() {
       const fieldsToRemove = [];
 
       // Check which fields exist and need to be removed
-      FIELDS_TO_REMOVE.forEach(field => {
+      FIELDS_TO_REMOVE.forEach((field) => {
         if (data.hasOwnProperty(field)) {
           fieldsToRemove.push(field);
           needsUpdate = true;
@@ -80,7 +81,7 @@ async function cleanupCatVideosCollection() {
 
         // Create update object with FieldValue.delete() for each field to remove
         const updateData = {};
-        fieldsToRemove.forEach(field => {
+        fieldsToRemove.forEach((field) => {
           updateData[field] = admin.firestore.FieldValue.delete();
         });
 
@@ -105,7 +106,6 @@ async function cleanupCatVideosCollection() {
     console.log(`Documents updated: ${updatedCount}`);
     console.log(`Documents skipped (no cleanup needed): ${skipCount}`);
     console.log(`Fields removed: ${FIELDS_TO_REMOVE.join(', ')}`);
-
   } catch (error) {
     console.error('Error during cleanup:', error);
     process.exit(1);

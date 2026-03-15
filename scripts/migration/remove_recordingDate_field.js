@@ -5,7 +5,7 @@ if (admin.apps.length === 0) {
   const serviceAccount = require('../../config/firebase/mountaincats-61543-7329e795c352.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://mountaincats-61543-default-rtdb.firebaseio.com'
+    databaseURL: 'https://mountaincats-61543-default-rtdb.firebaseio.com',
   });
 }
 
@@ -46,7 +46,7 @@ async function removeRecordingDateField() {
 
           // Add update operation to batch
           batch.update(doc.ref, {
-            recordingDate: admin.firestore.FieldValue.delete()
+            recordingDate: admin.firestore.FieldValue.delete(),
           });
 
           updated++;
@@ -66,7 +66,6 @@ async function removeRecordingDateField() {
         if (processed % 50 === 0) {
           console.log(`Progress: ${processed}/${snapshot.size} documents processed`);
         }
-
       } catch (error) {
         console.error(`Error processing document ${doc.id}:`, error);
         errors++;
@@ -84,7 +83,6 @@ async function removeRecordingDateField() {
     console.log(`Documents updated (recordingDate field removed): ${updated}`);
     console.log(`Errors encountered: ${errors}`);
     console.log('recordingDate field removal completed successfully!');
-
   } catch (error) {
     console.error('Error during recordingDate field removal:', error);
     throw error;
@@ -98,7 +96,9 @@ async function dryRunRemoveRecordingDateField() {
   try {
     console.log('=== DRY RUN MODE ===');
     console.log('This will show what would be changed without making actual changes.');
-    console.log('Starting dry run for removing recordingDate field from cat_videos collection...\n');
+    console.log(
+      'Starting dry run for removing recordingDate field from cat_videos collection...\n'
+    );
 
     // Get all documents from cat_videos collection
     const collectionRef = db.collection('cat_videos');
@@ -139,7 +139,6 @@ async function dryRunRemoveRecordingDateField() {
     console.log(`Documents that would be updated: ${wouldUpdate}`);
     console.log(`Documents that would remain unchanged: ${processed - wouldUpdate}`);
     console.log('\nTo execute the actual removal, run this script without the --dry-run flag.');
-
   } catch (error) {
     console.error('Error during dry run:', error);
     throw error;

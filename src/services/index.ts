@@ -6,7 +6,7 @@ import {
   IPostService,
   IContactService,
   IStorageService,
-  IAuthService
+  IAuthService,
 } from './interfaces';
 
 import { FirebaseCatService } from './cat-service';
@@ -168,7 +168,7 @@ export type {
   IContactService,
   IStorageService,
   IAuthService,
-  IFeedingSpotsService
+  IFeedingSpotsService,
 } from './interfaces';
 
 // Also export the FeedingSpot type

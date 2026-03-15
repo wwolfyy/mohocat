@@ -16,11 +16,10 @@ import {
   deleteVideoRecord as deleteVideoRecordFromMediaAlbums,
   batchUpdateVideos as batchUpdateVideosFromMediaAlbums,
   batchDeleteVideos as batchDeleteVideosFromMediaAlbums,
-  syncVideos as syncVideosFromMediaAlbums
+  syncVideos as syncVideosFromMediaAlbums,
 } from './media-albums';
 
 export class FirebaseVideoService implements IVideoService {
-
   async getAllVideos(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
@@ -91,7 +90,7 @@ export class FirebaseVideoService implements IVideoService {
       // Automatically set the updated timestamp
       const updatesWithTimestamp = {
         ...updates,
-        updated: new Date()
+        updated: new Date(),
       };
 
       const success = await updateVideoRecordFromMediaAlbums(id, updatesWithTimestamp);
@@ -123,8 +122,8 @@ export class FirebaseVideoService implements IVideoService {
         id,
         data: {
           ...updates,
-          updated: new Date()
-        }
+          updated: new Date(),
+        },
       }));
       const success = await batchUpdateVideosFromMediaAlbums(mediaAlbumsUpdates);
       if (!success) {

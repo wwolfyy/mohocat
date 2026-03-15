@@ -8,7 +8,10 @@
 export function convertMarkdownLinks(text: string): string {
   // Match [text](url) pattern
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  return text.replace(markdownLinkRegex, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
+  return text.replace(
+    markdownLinkRegex,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>'
+  );
 }
 
 /**
@@ -17,7 +20,10 @@ export function convertMarkdownLinks(text: string): string {
 export function convertCatModalLinks(text: string): string {
   // Match [catmodal:name] pattern
   const catModalLinkRegex = /\[catmodal:([^\]]+)\]/g;
-  return text.replace(catModalLinkRegex, '<span class="cat-modal-link text-blue-600 hover:text-blue-800 underline cursor-pointer" data-cat-name="$1">$1</span>');
+  return text.replace(
+    catModalLinkRegex,
+    '<span class="cat-modal-link text-blue-600 hover:text-blue-800 underline cursor-pointer" data-cat-name="$1">$1</span>'
+  );
 }
 
 /**
@@ -49,13 +55,15 @@ export function processTextWithLinks(text: string): string {
   // Split by existing HTML tags to avoid converting URLs inside href attributes
   const parts = processed.split(/(<a[^>]*>.*?<\/a>|<span[^>]*>.*?<\/span>)/gi);
 
-  processed = parts.map((part, index) => {
-    // Only process parts that are not already links or spans (odd indices are the tags)
-    if (index % 2 === 0) {
-      return autoLinkUrls(part);
-    }
-    return part;
-  }).join('');
+  processed = parts
+    .map((part, index) => {
+      // Only process parts that are not already links or spans (odd indices are the tags)
+      if (index % 2 === 0) {
+        return autoLinkUrls(part);
+      }
+      return part;
+    })
+    .join('');
 
   return processed;
 }

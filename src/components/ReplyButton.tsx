@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import { useAuth } from "@/hooks/useAuth";
+import { useState } from 'react';
+import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ReplyButtonProps {
   postId: string;
@@ -37,7 +37,7 @@ export default function ReplyButton({
           className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all duration-200"
         >
           <ChatBubbleLeftIcon className="h-4 w-4" />
-          <span>{showingReplyForm ? "취소" : "댓글"}</span>
+          <span>{showingReplyForm ? '취소' : '댓글'}</span>
         </button>
       ) : (
         <div className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-400">

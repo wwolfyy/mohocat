@@ -17,9 +17,12 @@ export async function PUT(request: NextRequest) {
     // Get YouTube OAuth configuration from centralized config
     const youtubeOAuth = getYouTubeOAuthConfig();
     if (!youtubeOAuth) {
-      return NextResponse.json({
-        error: 'YouTube OAuth credentials not configured'
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'YouTube OAuth credentials not configured',
+        },
+        { status: 500 }
+      );
     }
 
     // Set up OAuth2 client
@@ -39,10 +42,14 @@ export async function PUT(request: NextRequest) {
       console.log('✅ OAuth2 credentials validated successfully');
     } catch (authError) {
       console.error('❌ OAuth2 credential validation failed:', authError);
-      return NextResponse.json({
-        error: 'YouTube authentication failed. The refresh token may be expired or invalid. Please re-authorize the application.',
-        details: authError instanceof Error ? authError.message : 'Unknown auth error'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          error:
+            'YouTube authentication failed. The refresh token may be expired or invalid. Please re-authorize the application.',
+          details: authError instanceof Error ? authError.message : 'Unknown auth error',
+        },
+        { status: 401 }
+      );
     }
 
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -67,7 +74,8 @@ export async function PUT(request: NextRequest) {
       id: videoId,
       snippet: {
         title: updates.title !== undefined ? updates.title : currentSnippet?.title,
-        description: updates.description !== undefined ? updates.description : currentSnippet?.description,
+        description:
+          updates.description !== undefined ? updates.description : currentSnippet?.description,
         tags: updates.tags !== undefined ? updates.tags : currentSnippet?.tags,
         categoryId: currentSnippet?.categoryId,
         defaultLanguage: currentSnippet?.defaultLanguage,
@@ -108,7 +116,6 @@ export async function PUT(request: NextRequest) {
       updatedFields: Object.keys(updates),
       data: updateResponse.data,
     });
-
   } catch (error) {
     console.error('Error updating YouTube video:', error);
 
@@ -134,9 +141,12 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      error: errorMessage,
-      details: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: statusCode });
+    return NextResponse.json(
+      {
+        error: errorMessage,
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: statusCode }
+    );
   }
 }

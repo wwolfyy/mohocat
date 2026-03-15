@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { getAnnouncementService, getStorageService } from "@/services";
-import { useRouter } from "next/navigation";
-import { cn } from "@/utils/cn";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useState } from 'react';
+import { getAnnouncementService, getStorageService } from '@/services';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/utils/cn';
+import { useAuth } from '@/hooks/useAuth';
 
 const NewAnnouncementForm = () => {
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
   const [showInModal, setShowInModal] = useState(false);
 
   // File upload states
@@ -20,8 +20,8 @@ const NewAnnouncementForm = () => {
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
 
   const [uploading, setUploading] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState("");
-  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
+  const [currentImageUrl, setCurrentImageUrl] = useState('');
+  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
 
   const announcementService = getAnnouncementService();
   const storageService = getStorageService();
@@ -31,8 +31,8 @@ const NewAnnouncementForm = () => {
   // Helper function to format date for datetime-local input in Korea timezone
   const formatKoreaTimeForInput = (date: Date): string => {
     // Convert to Korea time (UTC+9)
-    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const koreaTime = new Date(utcTime + (9 * 3600000));
+    const utcTime = date.getTime() + date.getTimezoneOffset() * 60000;
+    const koreaTime = new Date(utcTime + 9 * 3600000);
 
     // Format as YYYY-MM-DDTHH:MM for datetime-local input
     const year = koreaTime.getFullYear();
@@ -70,7 +70,7 @@ const NewAnnouncementForm = () => {
   const addImageUrl = () => {
     if (currentImageUrl.trim()) {
       setImageUrls([...imageUrls, currentImageUrl.trim()]);
-      setCurrentImageUrl("");
+      setCurrentImageUrl('');
     }
   };
 
@@ -81,7 +81,7 @@ const NewAnnouncementForm = () => {
   const addVideoUrl = () => {
     if (currentVideoUrl.trim()) {
       setVideoUrls([...videoUrls, currentVideoUrl.trim()]);
-      setCurrentVideoUrl("");
+      setCurrentVideoUrl('');
     }
   };
 
@@ -101,21 +101,19 @@ const NewAnnouncementForm = () => {
   const uploadVideosToYouTube = async (files: File[]): Promise<string[]> => {
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData();
-      formData.append("video", file);
-      formData.append("title", title || "공지사항 동영상");
-      formData.append("description", message || "공지사항 동영상");
-      formData.append("tags", "공지사항");
+      formData.append('video', file);
+      formData.append('title', title || '공지사항 동영상');
+      formData.append('description', message || '공지사항 동영상');
+      formData.append('tags', '공지사항');
 
-      const response = await fetch("/api/upload-youtube", {
-        method: "POST",
+      const response = await fetch('/api/upload-youtube', {
+        method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `Failed to upload video: ${response.statusText} - ${errorText}`,
-        );
+        throw new Error(`Failed to upload video: ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
@@ -131,23 +129,23 @@ const NewAnnouncementForm = () => {
 
     try {
       if (!title.trim()) {
-        alert("제목을 입력해주세요.");
+        alert('제목을 입력해주세요.');
         return;
       }
 
       if (!message.trim()) {
-        alert("내용을 입력해주세요.");
+        alert('내용을 입력해주세요.');
         return;
       }
 
       if (!user?.email) {
-        alert("사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.");
+        alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
         return;
       }
 
       // Upload files and combine with URLs
-      let allImageUrls = [...imageUrls.filter(url => url.trim())];
-      let allVideoUrls = [...videoUrls.filter(url => url.trim())];
+      let allImageUrls = [...imageUrls.filter((url) => url.trim())];
+      let allVideoUrls = [...videoUrls.filter((url) => url.trim())];
 
       // Upload image files if any
       if (imageFiles.length > 0) {
@@ -155,7 +153,9 @@ const NewAnnouncementForm = () => {
           const uploadedImageUrls = await uploadImages(imageFiles);
           allImageUrls = [...allImageUrls, ...uploadedImageUrls];
         } catch (error) {
-          alert("이미지 업로드 실패: " + (error instanceof Error ? error.message : "Unknown error"));
+          alert(
+            '이미지 업로드 실패: ' + (error instanceof Error ? error.message : 'Unknown error')
+          );
           return;
         }
       }
@@ -166,55 +166,57 @@ const NewAnnouncementForm = () => {
           const uploadedVideoUrls = await uploadVideosToYouTube(videoFiles);
           allVideoUrls = [...allVideoUrls, ...uploadedVideoUrls];
         } catch (error) {
-          alert("동영상 업로드 실패: " + (error instanceof Error ? error.message : "Unknown error"));
+          alert(
+            '동영상 업로드 실패: ' + (error instanceof Error ? error.message : 'Unknown error')
+          );
           return;
         }
       }
 
       // Get current time in Korea timezone
       const now = new Date();
-      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+      const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
       const postData = {
         title: title.trim(),
         message: message.trim(),
         username: user.email,
         date: koreaTime.toISOString().split('T')[0], // YYYY-MM-DD
-        time: koreaTime.toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
+        time: koreaTime.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
           hour12: false,
         }),
         imageUrls: allImageUrls,
         videoUrls: allVideoUrls,
         thumbnailUrl: allImageUrls.length > 0 ? allImageUrls[0] : null,
-        mediaType: allVideoUrls.length > 0 ? "video" : allImageUrls.length > 0 ? "image" : null,
+        mediaType: allVideoUrls.length > 0 ? 'video' : allImageUrls.length > 0 ? 'image' : null,
         showInModal: showInModal,
       };
 
-      console.log("Creating announcement with data:", postData);
+      console.log('Creating announcement with data:', postData);
       await announcementService.createPost(postData);
 
       // Reset form
-      setTitle("");
-      setMessage("");
+      setTitle('');
+      setMessage('');
       setShowInModal(false);
       setImageFiles([]);
       setVideoFiles([]);
       setImageUrls([]);
       setVideoUrls([]);
-      setCurrentImageUrl("");
-      setCurrentVideoUrl("");
+      setCurrentImageUrl('');
+      setCurrentVideoUrl('');
 
-      alert("공지사항이 성공적으로 작성되었습니다!");
+      alert('공지사항이 성공적으로 작성되었습니다!');
 
       // Redirect to the announcements page
-      router.push("/pages/announcements");
+      router.push('/pages/announcements');
     } catch (error) {
       alert(
-        "공지사항 작성 중 오류가 발생했습니다: " +
-          (error instanceof Error ? error.message : "Unknown error"),
+        '공지사항 작성 중 오류가 발생했습니다: ' +
+          (error instanceof Error ? error.message : 'Unknown error')
       );
     } finally {
       setUploading(false);
@@ -259,8 +261,8 @@ const NewAnnouncementForm = () => {
             <div
               onClick={() => setShowInModal(!showInModal)}
               className={cn(
-                "relative inline-flex items-center h-8 w-14 rounded-full cursor-pointer transition-colors duration-200",
-                showInModal ? "bg-yellow-500" : "bg-gray-300"
+                'relative inline-flex items-center h-8 w-14 rounded-full cursor-pointer transition-colors duration-200',
+                showInModal ? 'bg-yellow-500' : 'bg-gray-300'
               )}
               role="switch"
               aria-checked={showInModal}
@@ -268,27 +270,27 @@ const NewAnnouncementForm = () => {
               {/* Toggle circle */}
               <span
                 className={cn(
-                  "inline-block w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform duration-200",
-                  showInModal ? "translate-x-8" : "translate-x-1"
+                  'inline-block w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform duration-200',
+                  showInModal ? 'translate-x-8' : 'translate-x-1'
                 )}
               />
               {/* ON label */}
               <span
                 className={cn(
-                  "absolute left-1.5 text-xs font-medium transition-opacity duration-200",
-                  showInModal ? "text-white opacity-100" : "text-gray-500 opacity-0"
+                  'absolute left-1.5 text-xs font-medium transition-opacity duration-200',
+                  showInModal ? 'text-white opacity-100' : 'text-gray-500 opacity-0'
                 )}
-                style={{ fontSize: "10px" }}
+                style={{ fontSize: '10px' }}
               >
                 ON
               </span>
               {/* OFF label */}
               <span
                 className={cn(
-                  "absolute right-1.5 text-xs font-medium transition-opacity duration-200",
-                  !showInModal ? "text-gray-600 opacity-100" : "text-white opacity-0"
+                  'absolute right-1.5 text-xs font-medium transition-opacity duration-200',
+                  !showInModal ? 'text-gray-600 opacity-100' : 'text-white opacity-0'
                 )}
-                style={{ fontSize: "10px" }}
+                style={{ fontSize: '10px' }}
               >
                 OFF
               </span>
@@ -318,7 +320,10 @@ const NewAnnouncementForm = () => {
             <div className="mt-2 space-y-2">
               <p className="text-sm text-gray-600">업로드할 이미지:</p>
               {imageFiles.map((file, index) => (
-                <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-2 bg-gray-100 rounded"
+                >
                   <span className="text-sm truncate">{file.name}</span>
                   <button
                     type="button"
@@ -356,7 +361,10 @@ const NewAnnouncementForm = () => {
             <div className="space-y-2">
               <p className="text-sm text-gray-600">추가된 이미지 URL:</p>
               {imageUrls.map((url, index) => (
-                <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-2 bg-gray-100 rounded"
+                >
                   <span className="text-sm truncate">{url}</span>
                   <button
                     type="button"
@@ -378,7 +386,9 @@ const NewAnnouncementForm = () => {
 
         {/* File Upload */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">파일 업로드 (YouTube에 업로드됩니다):</label>
+          <label className="block text-sm font-medium mb-2">
+            파일 업로드 (YouTube에 업로드됩니다):
+          </label>
           <input
             type="file"
             accept="video/*"
@@ -390,7 +400,10 @@ const NewAnnouncementForm = () => {
             <div className="mt-2 space-y-2">
               <p className="text-sm text-gray-600">업로드할 동영상:</p>
               {videoFiles.map((file, index) => (
-                <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-2 bg-gray-100 rounded"
+                >
                   <span className="text-sm truncate">{file.name}</span>
                   <button
                     type="button"
@@ -428,7 +441,10 @@ const NewAnnouncementForm = () => {
             <div className="space-y-2">
               <p className="text-sm text-gray-600">추가된 동영상 URL:</p>
               {videoUrls.map((url, index) => (
-                <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-2 bg-gray-100 rounded"
+                >
                   <span className="text-sm truncate">{url}</span>
                   <button
                     type="button"
@@ -444,23 +460,21 @@ const NewAnnouncementForm = () => {
         </div>
       </div>
 
-
-
       <div className="flex gap-4">
         <button
           type="submit"
           disabled={uploading}
           className={cn(
-            "w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-            "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
-            uploading && "opacity-50 cursor-not-allowed"
+            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200',
+            uploading && 'opacity-50 cursor-not-allowed'
           )}
         >
-          {uploading ? "작성 중..." : "공지사항 작성"}
+          {uploading ? '작성 중...' : '공지사항 작성'}
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/posts")}
+          onClick={() => router.push('/admin/posts')}
           className="w-full py-3 bg-gray-500 text-white rounded-lg font-bold hover:bg-gray-600 transition-all duration-200"
         >
           취소

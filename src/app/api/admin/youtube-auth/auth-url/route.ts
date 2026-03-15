@@ -7,9 +7,12 @@ export async function GET() {
     const oauthConfig = getYouTubeOAuthConfig();
 
     if (!oauthConfig) {
-      return NextResponse.json({
-        error: 'YouTube OAuth not configured'
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'YouTube OAuth not configured',
+        },
+        { status: 500 }
+      );
     }
 
     const oauth2Client = new google.auth.OAuth2(
@@ -23,7 +26,7 @@ export async function GET() {
       access_type: 'offline',
       scope: [
         'https://www.googleapis.com/auth/youtube.upload',
-        'https://www.googleapis.com/auth/youtube.readonly'
+        'https://www.googleapis.com/auth/youtube.readonly',
       ],
       prompt: 'consent', // Force consent screen to ensure we get a refresh token
     });
@@ -31,9 +34,12 @@ export async function GET() {
     return NextResponse.json({ authUrl });
   } catch (error) {
     console.error('YouTube auth URL generation failed:', error);
-    return NextResponse.json({
-      error: 'Failed to generate auth URL',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to generate auth URL',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

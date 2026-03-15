@@ -1,18 +1,20 @@
 # Permission System Implementation Plan
 
 ## Overview
+
 Implement a configuration-driven permission system to replace hardcoded admin emails with 4 privilege levels: admin, butler-ground, butler-internet, and viewer.
 
 ## Configuration Files
 
 ### 1. Permission Configuration (`config/permissions.json`)
+
 ```json
 {
   "roles": {
     "admin": {
       "permissions": [
         "manage-cats",
-        "manage-posts", 
+        "manage-posts",
         "manage-users",
         "view-analytics",
         "manage-settings",
@@ -21,18 +23,11 @@ Implement a configuration-driven permission system to replace hardcoded admin em
       "description": "Full administrative access"
     },
     "butler-ground": {
-      "permissions": [
-        "manage-cats",
-        "manage-posts",
-        "view-analytics"
-      ],
+      "permissions": ["manage-cats", "manage-posts", "view-analytics"],
       "description": "Physical cat care management"
     },
     "butler-internet": {
-      "permissions": [
-        "manage-posts",
-        "view-analytics"
-      ],
+      "permissions": ["manage-posts", "view-analytics"],
       "description": "Digital content management"
     },
     "viewer": {
@@ -56,17 +51,24 @@ Implement a configuration-driven permission system to replace hardcoded admin em
 ```
 
 ### 2. Configuration Loader (`src/config/permission-config.ts`)
+
 ```typescript
 export interface PermissionConfig {
-  roles: Record<string, {
-    permissions: string[];
-    description: string;
-  }>;
-  mountains: Record<string, {
-    name: string;
-    adminUsers: string[];
-    defaultRole: string;
-  }>;
+  roles: Record<
+    string,
+    {
+      permissions: string[];
+      description: string;
+    }
+  >;
+  mountains: Record<
+    string,
+    {
+      name: string;
+      adminUsers: string[];
+      defaultRole: string;
+    }
+  >;
 }
 
 export async function loadPermissionConfig(): Promise<PermissionConfig> {
@@ -88,19 +90,20 @@ export async function getPermissionMatrix(): Promise<Record<string, string[]>> {
 ## Data Models
 
 ### User Permissions Model (`src/types/permissions.ts`)
+
 ```typescript
 export interface UserPermissions {
   uid: string;
   email: string;
   displayName?: string;
   photoURL?: string;
-  
+
   // Current mountain role
   currentRole: UserRole;
-  
+
   // Historical roles for audit purposes
   roleHistory: UserRole[];
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +121,7 @@ export interface UserRole {
 ## Permission Service
 
 ### Core Service (`src/services/permission-service.ts`)
+
 ```typescript
 export class PermissionService {
   private db = getFirestore();
@@ -133,10 +137,10 @@ export class PermissionService {
   async getUserPermissions(userId: string): Promise<string[]> {
     const userDoc = await this.db.collection('user_permissions').doc(userId).get();
     if (!userDoc.exists) return [];
-    
+
     const userData = userDoc.data() as UserPermissions;
     const currentRole = userData.currentRole;
-    
+
     return currentRole.isActive ? currentRole.permissions : [];
   }
 
@@ -152,7 +156,7 @@ export class PermissionService {
     assignedBy: string
   ): Promise<void> {
     const config = await this.loadConfig();
-    
+
     if (!config.roles[role]) {
       throw new Error(`Invalid role: ${role}`);
     }
@@ -163,7 +167,7 @@ export class PermissionService {
       mountainId,
       assignedBy,
       assignedAt: new Date(),
-      isActive: true
+      isActive: true,
     };
 
     const userRef = this.db.collection('user_permissions').doc(userId);
@@ -171,20 +175,20 @@ export class PermissionService {
 
     if (userDoc.exists) {
       const userData = userDoc.data() as UserPermissions;
-      
+
       // Deactivate previous role
       if (userData.currentRole) {
         userData.roleHistory = userData.roleHistory || [];
         userData.roleHistory.push({
           ...userData.currentRole,
-          isActive: false
+          isActive: false,
         });
       }
 
       await userRef.update({
         currentRole: newRole,
         roleHistory: userData.roleHistory,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
     } else {
       // Create new user permissions record
@@ -194,7 +198,7 @@ export class PermissionService {
         currentRole: newRole,
         roleHistory: [],
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
     }
 
@@ -214,7 +218,7 @@ export class PermissionService {
       newRole,
       mountainId,
       changedBy,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 }
@@ -223,6 +227,7 @@ export class PermissionService {
 ## Permission Hooks
 
 ### Permission Hook (`src/hooks/usePermissions.ts`)
+
 ```typescript
 export function usePermissions() {
   const { user } = useAuth();
@@ -254,8 +259,10 @@ export function usePermissions() {
   }, [user?.uid]);
 
   // Convenience methods
-  const hasPermission = useCallback((permission: string) => 
-    permissions.includes(permission), [permissions]);
+  const hasPermission = useCallback(
+    (permission: string) => permissions.includes(permission),
+    [permissions]
+  );
 
   const canManageCats = hasPermission('manage-cats');
   const canManagePosts = hasPermission('manage-posts');
@@ -276,7 +283,7 @@ export function usePermissions() {
     canManageSettings,
     canExportData,
     // Raw permission check
-    checkPermission: hasPermission
+    checkPermission: hasPermission,
   };
 }
 ```
@@ -288,7 +295,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Public collections - no auth required
     match /points/{x} {
       allow read: if true;
@@ -309,7 +316,7 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
-    
+
     match /cat_videos/{x} {
       allow read: if true;
       allow write: if false;
@@ -323,13 +330,13 @@ service cloud.firestore {
     // Permission-managed collections
     match /posts_feeding/{document} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
+      allow write: if request.auth != null &&
         hasPermission(request.auth.uid, 'manage-posts');
     }
 
     match /posts_butler/{document} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
+      allow write: if request.auth != null &&
         hasPermission(request.auth.uid, 'manage-posts');
     }
 
@@ -337,30 +344,30 @@ service cloud.firestore {
     match /user_permissions/{userId} {
       // Users can read their own permissions
       allow read: if request.auth != null && request.auth.uid == userId;
-      
+
       // Only admins can modify permissions (via cloud functions)
       allow write: if false;
     }
 
     match /permission_logs/{logId} {
       // Read access for admins
-      allow read: if request.auth != null && 
+      allow read: if request.auth != null &&
         hasPermission(request.auth.uid, 'view-analytics');
-      
+
       // Write access only via cloud functions
       allow write: if false;
     }
 
     // Admin-only collections
     match /admin_data/{document} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         hasPermission(request.auth.uid, 'manage-users');
     }
 
     match /analytics/{document} {
-      allow read: if request.auth != null && 
+      allow read: if request.auth != null &&
         hasPermission(request.auth.uid, 'view-analytics');
-      allow write: if request.auth != null && 
+      allow write: if request.auth != null &&
         hasPermission(request.auth.uid, 'manage-settings');
     }
 
@@ -382,37 +389,44 @@ function hasPermission(userId, permission) {
 ## Implementation Steps
 
 ### Step 1: Create Configuration Files
+
 1. Create `config/permissions.json` with role definitions
 2. Create `src/config/permission-config.ts` for loading configuration
 
 ### Step 2: Create Data Models
+
 1. Create `src/types/permissions.ts` with TypeScript interfaces
 2. Set up Firestore collections:
    - `user_permissions` - stores user roles and permissions
    - `permission_logs` - audit trail of permission changes
 
 ### Step 3: Implement Permission Service
+
 1. Create `src/services/permission-service.ts`
 2. Implement permission checking and role assignment methods
 3. Add logging for audit trail
 
 ### Step 4: Create Permission Hooks
+
 1. Create `src/hooks/usePermissions.ts`
 2. Add convenience methods for common permission checks
 3. Integrate with existing useAuth hook
 
 ### Step 5: Update Security Rules
+
 1. Replace existing security rules with permission-based rules
 2. Add `hasPermission` helper function
 3. Protect admin collections with appropriate permission checks
 
 ### Step 6: Create Admin Interface
+
 1. Build admin component for role management
 2. Add user listing with current roles
 3. Implement role assignment interface
 4. Add permission audit log viewer
 
 ### Step 7: Populate Initial Data
+
 1. Create admin user records in `user_permissions` collection
 2. Assign initial roles to existing admin users
 3. Test permission checking throughout the application

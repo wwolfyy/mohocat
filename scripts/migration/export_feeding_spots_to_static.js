@@ -14,7 +14,7 @@ const fs = require('fs');
 const possiblePaths = [
   path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
   path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json')
+  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
 ];
 
 let serviceAccountPath = null;
@@ -64,7 +64,7 @@ async function exportFeedingSpotsToStaticData() {
           id: doc.id,
           name: spotName,
           ...(data.description && { description: data.description }),
-          ...(data.location && { location: data.location })
+          ...(data.location && { location: data.location }),
         });
       }
     });
@@ -82,14 +82,15 @@ async function exportFeedingSpotsToStaticData() {
     const outputPath = path.join(__dirname, '../../src/lib/feeding-spots-static-data.json');
     fs.writeFileSync(outputPath, JSON.stringify(feedingSpots, null, 2));
 
-    console.log(`Successfully exported ${feedingSpots.length} unique feeding spots to ${outputPath}`);
+    console.log(
+      `Successfully exported ${feedingSpots.length} unique feeding spots to ${outputPath}`
+    );
 
     // Display summary of exported data
     console.log('\n=== Exported Feeding Spots Summary ===');
     feedingSpots.forEach((spot, index) => {
       console.log(`${index + 1}. ${spot.name} (${spot.id})`);
     });
-
   } catch (error) {
     console.error('Export failed:', error);
     process.exit(1);

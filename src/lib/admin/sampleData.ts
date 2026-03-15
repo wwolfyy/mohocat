@@ -14,18 +14,18 @@ const sampleImages = [
     location: {
       lat: 37.3032,
       lng: 126.8378,
-      name: '계양산 등산로'
+      name: '계양산 등산로',
     },
     metadata: {
       size: 245760,
       width: 800,
       height: 600,
-      format: 'jpg'
+      format: 'jpg',
     },
     uploadedAt: serverTimestamp(),
     uploadedBy: 'admin',
     isPublic: true,
-    featured: false
+    featured: false,
   },
   {
     id: 'img_002',
@@ -38,18 +38,18 @@ const sampleImages = [
     location: {
       lat: 37.3045,
       lng: 126.8395,
-      name: '계양산 정상 근처'
+      name: '계양산 정상 근처',
     },
     metadata: {
       size: 312450,
       width: 1024,
       height: 768,
-      format: 'jpg'
+      format: 'jpg',
     },
     uploadedAt: serverTimestamp(),
     uploadedBy: 'admin',
     isPublic: true,
-    featured: true
+    featured: true,
   },
   {
     id: 'img_003',
@@ -62,19 +62,19 @@ const sampleImages = [
     location: {
       lat: 37.3028,
       lng: 126.8372,
-      name: '계양산 중턱'
+      name: '계양산 중턱',
     },
     metadata: {
       size: 189340,
       width: 640,
       height: 480,
-      format: 'jpg'
+      format: 'jpg',
     },
     uploadedAt: serverTimestamp(),
     uploadedBy: 'admin',
     isPublic: true,
-    featured: false
-  }
+    featured: false,
+  },
 ];
 
 const sampleVideos = [
@@ -90,7 +90,7 @@ const sampleVideos = [
     location: {
       lat: 37.3051,
       lng: 126.8401,
-      name: '계양산 정상'
+      name: '계양산 정상',
     },
     metadata: {
       size: 15728640,
@@ -98,12 +98,12 @@ const sampleVideos = [
       width: 1920,
       height: 1080,
       format: 'mp4',
-      fps: 30
+      fps: 30,
     },
     uploadedAt: serverTimestamp(),
     uploadedBy: 'admin',
     isPublic: true,
-    featured: true
+    featured: true,
   },
   {
     id: 'vid_002',
@@ -117,7 +117,7 @@ const sampleVideos = [
     location: {
       lat: 37.3041,
       lng: 126.8388,
-      name: '계양산 바위지대'
+      name: '계양산 바위지대',
     },
     metadata: {
       size: 8945120,
@@ -125,13 +125,13 @@ const sampleVideos = [
       width: 1280,
       height: 720,
       format: 'mp4',
-      fps: 24
+      fps: 24,
     },
     uploadedAt: serverTimestamp(),
     uploadedBy: 'admin',
     isPublic: true,
-    featured: false
-  }
+    featured: false,
+  },
 ];
 
 const sampleCats = [
@@ -146,17 +146,17 @@ const sampleCats = [
     personality: ['friendly', 'curious', 'active'],
     lastSeen: {
       date: serverTimestamp(),
-      location: '계양산 등산로'
+      location: '계양산 등산로',
     },
     health: {
       status: 'healthy',
       vaccinated: true,
-      neutered: true
+      neutered: true,
     },
     images: ['img_001'],
     videos: ['vid_001'],
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
   },
   {
     id: 'cat_kkotbun',
@@ -169,17 +169,17 @@ const sampleCats = [
     personality: ['gentle', 'photogenic', 'calm'],
     lastSeen: {
       date: serverTimestamp(),
-      location: '계양산 정상 근처'
+      location: '계양산 정상 근처',
     },
     health: {
       status: 'healthy',
       vaccinated: true,
-      neutered: true
+      neutered: true,
     },
     images: ['img_002'],
     videos: ['vid_001'],
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
   },
   {
     id: 'cat_nureong',
@@ -192,18 +192,18 @@ const sampleCats = [
     personality: ['lazy', 'sunny', 'wise'],
     lastSeen: {
       date: serverTimestamp(),
-      location: '계양산 중턱'
+      location: '계양산 중턱',
     },
     health: {
       status: 'healthy',
       vaccinated: true,
-      neutered: true
+      neutered: true,
     },
     images: ['img_003'],
     videos: [],
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  }
+    updatedAt: serverTimestamp(),
+  },
 ];
 
 export async function seedDatabase() {

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { IPostService } from "@/services";
-import { useAuth } from "@/hooks/useAuth";
+import { useState } from 'react';
+import { IPostService } from '@/services';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ReplyFormProps {
   parentId: string;
@@ -21,7 +21,7 @@ export default function ReplyForm({
   depth = 0,
   postService,
 }: ReplyFormProps) {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, isAuthenticated, loading } = useAuth();
 
@@ -39,10 +39,7 @@ export default function ReplyForm({
       <div className="mt-3 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
         <div className="text-sm text-gray-600">
           댓글을 작성하려면 로그인이 필요합니다.
-          <button
-            onClick={onCancel}
-            className="ml-2 text-blue-600 hover:text-blue-800 underline"
-          >
+          <button onClick={onCancel} className="ml-2 text-blue-600 hover:text-blue-800 underline">
             닫기
           </button>
         </div>
@@ -54,12 +51,12 @@ export default function ReplyForm({
     e.preventDefault();
 
     if (!message.trim()) {
-      alert("댓글 내용을 입력해주세요.");
+      alert('댓글 내용을 입력해주세요.');
       return;
     }
 
     if (!user?.email) {
-      alert("사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.");
+      alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
       return;
     }
 
@@ -71,24 +68,24 @@ export default function ReplyForm({
         parentId,
         message: message.trim(),
         username: user.email, // Use authenticated user's email
-        date: now.toLocaleDateString("ko-KR"),
-        time: now.toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
+        date: now.toLocaleDateString('ko-KR'),
+        time: now.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
           hour12: false,
         }),
         title: `Re: ${parentUsername}님의 글`, // Auto-generated title for replies
         depth: depth + 1, // Increment depth for nested replies
       };
 
-      console.log("Creating reply with data:", replyData);
+      console.log('Creating reply with data:', replyData);
       const newReply = await postService.createReply(replyData);
-      console.log("Created reply:", newReply);
+      console.log('Created reply:', newReply);
       onReplySuccess(newReply);
-      setMessage("");
+      setMessage('');
     } catch (error) {
-      console.error("Error creating reply:", error);
-      alert("댓글 작성 중 오류가 발생했습니다.");
+      console.error('Error creating reply:', error);
+      alert('댓글 작성 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +94,7 @@ export default function ReplyForm({
   return (
     <div
       className={`mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400 ${
-        depth > 0 ? "ml-4" : ""
+        depth > 0 ? 'ml-4' : ''
       }`}
     >
       <div className="text-sm text-gray-600 mb-3">
@@ -124,7 +121,7 @@ export default function ReplyForm({
             disabled={isSubmitting || !message.trim()}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
-            {isSubmitting ? "작성 중..." : "댓글 작성"}
+            {isSubmitting ? '작성 중...' : '댓글 작성'}
           </button>
 
           <button

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { cn } from "@/utils/cn";
+import React, { useEffect, useState } from 'react';
+import { cn } from '@/utils/cn';
 
 interface AnnouncementModalProps {
   announcement: any;
@@ -43,27 +43,23 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
       targetDate = new Date();
     }
 
-    const koreaTime = new Date(targetDate.getTime() + (9 * 60 * 60 * 1000));
+    const koreaTime = new Date(targetDate.getTime() + 9 * 60 * 60 * 1000);
 
-    return koreaTime.toLocaleString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Seoul",
+    return koreaTime.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Seoul',
     });
   } catch (error) {
-    console.error("Error formatting date:", error);
-    return new Date().toLocaleString("ko-KR");
+    console.error('Error formatting date:', error);
+    return new Date().toLocaleString('ko-KR');
   }
 };
 
-const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
-  announcement,
-  isOpen,
-  onClose,
-}) => {
+const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ announcement, isOpen, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -91,17 +87,17 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center p-4",
-        "bg-black bg-opacity-50 transition-opacity duration-150",
-        isVisible ? "opacity-100" : "opacity-0"
+        'fixed inset-0 z-50 flex items-center justify-center p-4',
+        'bg-black bg-opacity-50 transition-opacity duration-150',
+        isVisible ? 'opacity-100' : 'opacity-0'
       )}
       onClick={handleClose}
     >
       <div
         className={cn(
-          "bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden",
-          "transform transition-transform duration-150",
-          isVisible ? "scale-100" : "scale-95"
+          'bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden',
+          'transform transition-transform duration-150',
+          isVisible ? 'scale-100' : 'scale-95'
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -175,12 +171,7 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                   }
 
                   return (
-                    <video
-                      key={index}
-                      src={url}
-                      controls
-                      className="w-full max-h-64 rounded"
-                    >
+                    <video key={index} src={url} controls className="w-full max-h-64 rounded">
                       Your browser does not support the video tag.
                     </video>
                   );

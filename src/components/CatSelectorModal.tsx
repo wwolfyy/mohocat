@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { getCatService } from "@/services";
-import { Cat } from "@/types";
+import React, { useState, useEffect } from 'react';
+import { getCatService } from '@/services';
+import { Cat } from '@/types';
 
 interface CatSelectorModalProps {
   isOpen: boolean;
@@ -17,11 +17,12 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
   onClose,
   selectedTags,
   onTagsChange,
-  title = "고양이 선택"
+  title = '고양이 선택',
 }) => {
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");  const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
 
   // Load cats when component mounts (not just when modal opens)
   useEffect(() => {
@@ -32,16 +33,16 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
   useEffect(() => {
     if (isOpen && cats.length > 0) {
       // Parse existing tags to pre-select cats
-      const existingTagNames = selectedTags.filter(tag => tag.trim());
+      const existingTagNames = selectedTags.filter((tag) => tag.trim());
       const selectedCatIds = new Set<string>();
 
       // Add "이름 없음" if it exists in selected tags
-      if (existingTagNames.includes("이름 없음")) {
-        selectedCatIds.add("unnamed");
+      if (existingTagNames.includes('이름 없음')) {
+        selectedCatIds.add('unnamed');
       }
 
       // Find cat IDs for existing tag names
-      cats.forEach(cat => {
+      cats.forEach((cat) => {
         if (existingTagNames.includes(cat.name)) {
           selectedCatIds.add(cat.id);
         }
@@ -54,25 +55,33 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
   const loadCats = async () => {
     try {
       setLoading(true);
-      console.log("CatSelectorModal: Loading cats...");
+      console.log('CatSelectorModal: Loading cats...');
       const catService = getCatService();
       const catsData = await catService.getAllCats();
-      console.log("CatSelectorModal: Loaded cats:", catsData.length, catsData);
+      console.log('CatSelectorModal: Loaded cats:', catsData.length, catsData);
       setCats(catsData);
     } catch (error) {
-      console.error("CatSelectorModal: Error loading cats:", error);
+      console.error('CatSelectorModal: Error loading cats:', error);
     } finally {
       setLoading(false);
     }
   };
 
   // Filter cats based on search query
-  const filteredCats = cats.filter(cat =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (cat.alt_name && cat.alt_name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredCats = cats.filter(
+    (cat) =>
+      cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (cat.alt_name && cat.alt_name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  console.log("CatSelectorModal: cats.length:", cats.length, "filteredCats.length:", filteredCats.length, "searchQuery:", searchQuery);
+  console.log(
+    'CatSelectorModal: cats.length:',
+    cats.length,
+    'filteredCats.length:',
+    filteredCats.length,
+    'searchQuery:',
+    searchQuery
+  );
 
   const handleCatToggle = (catId: string, catName: string) => {
     const newSelectedCats = new Set(selectedCats);
@@ -89,14 +98,14 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
     const selectedCatNames: string[] = [];
 
     // Add "이름 없음" if selected
-    if (selectedCats.has("unnamed")) {
-      selectedCatNames.push("이름 없음");
+    if (selectedCats.has('unnamed')) {
+      selectedCatNames.push('이름 없음');
     }
 
     // Add other cat names
-    Array.from(selectedCats).forEach(catId => {
-      if (catId !== "unnamed") {
-        const cat = cats.find(c => c.id === catId);
+    Array.from(selectedCats).forEach((catId) => {
+      if (catId !== 'unnamed') {
+        const cat = cats.find((c) => c.id === catId);
         if (cat) {
           selectedCatNames.push(cat.name);
         }
@@ -118,10 +127,7 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-xl"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xl">
             ×
           </button>
         </div>
@@ -140,27 +146,23 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
         {/* Cat list */}
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded">
           {loading ? (
-            <div className="p-4 text-center text-gray-500">
-              고양이 목록을 불러오는 중...
-            </div>
+            <div className="p-4 text-center text-gray-500">고양이 목록을 불러오는 중...</div>
           ) : cats.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              등록된 고양이가 없습니다
-            </div>
+            <div className="p-4 text-center text-gray-500">등록된 고양이가 없습니다</div>
           ) : (
             <div className="grid grid-cols-2 gap-2 p-4">
               {/* "이름 없음" option first */}
               <label
                 className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
-                  selectedCats.has("unnamed")
-                    ? "bg-blue-50 border border-blue-200"
-                    : "border border-gray-200"
+                  selectedCats.has('unnamed')
+                    ? 'bg-blue-50 border border-blue-200'
+                    : 'border border-gray-200'
                 }`}
               >
                 <input
                   type="checkbox"
-                  checked={selectedCats.has("unnamed")}
-                  onChange={() => handleCatToggle("unnamed", "이름 없음")}
+                  checked={selectedCats.has('unnamed')}
+                  onChange={() => handleCatToggle('unnamed', '이름 없음')}
                   className="mr-2"
                 />
                 <div className="flex-1">
@@ -170,17 +172,15 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
 
               {/* Regular cats */}
               {filteredCats.length === 0 && searchQuery ? (
-                <div className="col-span-2 p-4 text-center text-gray-500">
-                  검색 결과가 없습니다
-                </div>
+                <div className="col-span-2 p-4 text-center text-gray-500">검색 결과가 없습니다</div>
               ) : (
                 filteredCats.map((cat) => (
                   <label
                     key={cat.id}
                     className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                       selectedCats.has(cat.id)
-                        ? "bg-blue-50 border border-blue-200"
-                        : "border border-gray-200"
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'border border-gray-200'
                     }`}
                   >
                     <input
@@ -192,9 +192,7 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
                     <div className="flex-1">
                       <div className="font-medium text-sm">{cat.name}</div>
                       {cat.alt_name && (
-                        <div className="text-xs text-gray-500">
-                          ({cat.alt_name})
-                        </div>
+                        <div className="text-xs text-gray-500">({cat.alt_name})</div>
                       )}
                     </div>
                   </label>

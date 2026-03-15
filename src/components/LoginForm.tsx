@@ -1,16 +1,16 @@
-import React, { useState, Suspense } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/services/firebase";
-import { cn } from "@/utils/cn";
-import { useAuth } from "@/hooks/useAuth";
-import SocialLoginButton from "@/components/SocialLoginButton";
-import KakaoLoginGuidanceModal from "@/components/auth/KakaoLoginGuidanceModal";
-import PhoneLoginForm from "@/components/auth/PhoneLoginForm";
+import React, { useState, Suspense } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/services/firebase';
+import { cn } from '@/utils/cn';
+import { useAuth } from '@/hooks/useAuth';
+import SocialLoginButton from '@/components/SocialLoginButton';
+import KakaoLoginGuidanceModal from '@/components/auth/KakaoLoginGuidanceModal';
+import PhoneLoginForm from '@/components/auth/PhoneLoginForm';
 import { useRouter, useSearchParams } from 'next/navigation';
-import UserNotFoundModal from "@/components/auth/UserNotFoundModal";
-import EmailVerificationModal from "@/components/auth/EmailVerificationModal";
-import PasswordResetModal from "@/components/auth/PasswordResetModal";
-import { getPermissionService } from "@/services";
+import UserNotFoundModal from '@/components/auth/UserNotFoundModal';
+import EmailVerificationModal from '@/components/auth/EmailVerificationModal';
+import PasswordResetModal from '@/components/auth/PasswordResetModal';
+import { getPermissionService } from '@/services';
 
 interface LoginFormProps {
   onLoginSuccess?: () => void;
@@ -21,15 +21,15 @@ interface LoginFormProps {
 const LoginFormContent: React.FC<LoginFormProps> = ({
   onLoginSuccess,
   onLoginError,
-  onSwitchToSignup
+  onSwitchToSignup,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/';
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isEmailLoginLoading, setIsEmailLoginLoading] = useState(false);
   const [isUserNotFoundModalOpen, setIsUserNotFoundModalOpen] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
@@ -44,7 +44,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
     kakaoSignInError,
     kakaoSignInSuccess,
     signOut,
-    sendEmailVerification
+    sendEmailVerification,
   } = useAuth();
 
   React.useEffect(() => {
@@ -89,7 +89,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         await signOut();
       }
     } catch (err) {
-      console.error("Error checking user existence:", err);
+      console.error('Error checking user existence:', err);
       // Fallback: assume success or show error?
       // Generous fallback: let them in. Strict: Block.
       handleSuccess();
@@ -105,7 +105,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
 
   const handleSuccess = () => {
     // Emit custom event for login success
-    const loginSuccessEvent = new Event("loginSuccess");
+    const loginSuccessEvent = new Event('loginSuccess');
     window.dispatchEvent(loginSuccessEvent);
     onLoginSuccess?.();
 
@@ -118,35 +118,31 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError("");
+    setError('');
     setIsEmailLoginLoading(true);
 
     try {
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+      await signInWithEmailAndPassword(auth, email, password);
       // After email login, check existence too?
       // Usually email/pass implies they registered, so record SHOULD exist.
       // But let's be consistent.
       handleCheckUser('email');
     } catch (err: any) {
-      console.error("Error signing in:", err);
-      const errorMessage = err.code === 'auth/invalid-credential'
-        ? "Invalid email or password. Please check your credentials."
-        : err.code === 'auth/user-not-found'
-          ? "No user found with this email address."
-          : err.code === 'auth/wrong-password'
-            ? "Incorrect password. Please try again."
-            : "Failed to login. Please check your credentials.";
+      console.error('Error signing in:', err);
+      const errorMessage =
+        err.code === 'auth/invalid-credential'
+          ? 'Invalid email or password. Please check your credentials.'
+          : err.code === 'auth/user-not-found'
+            ? 'No user found with this email address.'
+            : err.code === 'auth/wrong-password'
+              ? 'Incorrect password. Please try again.'
+              : 'Failed to login. Please check your credentials.';
 
       setError(errorMessage);
       onLoginError?.(errorMessage);
       setIsEmailLoginLoading(false); // Only set false on error, success handles redirect
     }
   };
-
 
   return (
     <div className="space-y-6">
@@ -196,10 +192,12 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         onSend={async () => {
           try {
             await sendEmailVerification();
-            alert(`Verification email sent to ${auth.currentUser?.email}! Please check your email and log in again.`);
+            alert(
+              `Verification email sent to ${auth.currentUser?.email}! Please check your email and log in again.`
+            );
           } catch (e) {
             console.error(e);
-            alert("Failed to send verification email.");
+            alert('Failed to send verification email.');
           }
           // Strict Mode: After sending, sign out so they can't access app.
           setIsVerificationModalOpen(false);
@@ -222,7 +220,6 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
 
         {/* KakaoTalk Authentication Options */}
         <div className="border-t border-gray-200 pt-4 mt-4">
-
           {/* KakaoTalk Authentication Options */}
           <div className="mt-4">
             <SocialLoginButton
@@ -247,7 +244,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         {/* Social Login Success Messages */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <p className="text-green-700 text-sm text-center">
-            {kakaoSignInSuccess && "Successfully signed in with Kakaotalk!"}
+            {kakaoSignInSuccess && 'Successfully signed in with Kakaotalk!'}
           </p>
         </div>
       </div>
@@ -265,18 +262,16 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
           Log in with email
         </h3>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Email Address
-          </label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             className={cn(
-              "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors",
-              "text-gray-900 placeholder-gray-500",
-              "border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500"
+              'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
+              'text-gray-900 placeholder-gray-500',
+              'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
             )}
             placeholder="Enter your email address"
             disabled={isSigningInWithKakao || isEmailLoginLoading}
@@ -284,18 +279,16 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Password
-          </label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             className={cn(
-              "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors",
-              "text-gray-900 placeholder-gray-500",
-              "border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500"
+              'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
+              'text-gray-900 placeholder-gray-500',
+              'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
             )}
             placeholder="Enter your password"
             disabled={isSigningInWithKakao || isEmailLoginLoading}
@@ -332,14 +325,14 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
           type="submit"
           disabled={isSigningInWithKakao || isEmailLoginLoading}
           className={cn(
-            "w-full py-3 rounded-lg font-bold transition-all duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-offset-2",
-            "bg-gradient-to-r from-yellow-400 to-orange-300 text-black",
-            "hover:shadow-lg hover:-translate-y-1",
-            "focus:ring-yellow-500",
+            'w-full py-3 rounded-lg font-bold transition-all duration-200',
+            'focus:outline-none focus:ring-2 focus:ring-offset-2',
+            'bg-gradient-to-r from-yellow-400 to-orange-300 text-black',
+            'hover:shadow-lg hover:-translate-y-1',
+            'focus:ring-yellow-500',
             {
-              "opacity-50 cursor-not-allowed": isSigningInWithKakao || isEmailLoginLoading,
-              "cursor-pointer": !isSigningInWithKakao && !isEmailLoginLoading,
+              'opacity-50 cursor-not-allowed': isSigningInWithKakao || isEmailLoginLoading,
+              'cursor-pointer': !isSigningInWithKakao && !isEmailLoginLoading,
             }
           )}
         >
@@ -349,7 +342,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
               Signing in...
             </div>
           ) : (
-            "Sign In with Email"
+            'Sign In with Email'
           )}
         </button>
       </form>

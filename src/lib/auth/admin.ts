@@ -10,20 +10,15 @@ import { PermissionService } from '@/services/permission-service';
  */
 export async function isAdmin(user: User | null): Promise<boolean> {
   if (!user?.uid) return false;
-  
+
   try {
     const permissionService = new PermissionService();
     const permissions = await permissionService.getUserPermissions(user.uid);
-    
+
     // Check if user has any admin-level permissions
-    const adminPermissions = [
-      'manage-cats',
-      'manage-posts',
-      'manage-users',
-      'manage-settings'
-    ];
-    
-    return permissions.some(permission => adminPermissions.includes(permission));
+    const adminPermissions = ['manage-cats', 'manage-posts', 'manage-users', 'manage-settings'];
+
+    return permissions.some((permission) => adminPermissions.includes(permission));
   } catch (error) {
     console.error('Error checking admin status:', error);
     return false;
@@ -35,11 +30,11 @@ export async function isAdmin(user: User | null): Promise<boolean> {
  */
 export async function getUserRole(user: User | null): Promise<string | null> {
   if (!user?.uid) return null;
-  
+
   try {
     const permissionService = new PermissionService();
     const permissions = await permissionService.getUserPermissions(user.uid);
-    
+
     // Determine role based on permissions
     if (permissions.includes('manage-users')) {
       return 'admin';
@@ -50,7 +45,7 @@ export async function getUserRole(user: User | null): Promise<string | null> {
     } else if (permissions.length > 0) {
       return 'viewer';
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error getting user role:', error);
@@ -61,12 +56,9 @@ export async function getUserRole(user: User | null): Promise<string | null> {
 /**
  * Check if user has permission for a specific action on a resource
  */
-export async function hasPermission(
-  user: User | null,
-  permission: string
-): Promise<boolean> {
+export async function hasPermission(user: User | null, permission: string): Promise<boolean> {
   if (!user?.uid) return false;
-  
+
   try {
     const permissionService = new PermissionService();
     return await permissionService.checkPermission(user.uid, permission);
@@ -93,17 +85,23 @@ export async function createAdminUser(user: User): Promise<AdminUser | null> {
 
   // Map permission system permissions to admin interface permissions
   const adminPermissions: AdminPermission[] = [];
-  
-  permissions.forEach(permission => {
+
+  permissions.forEach((permission) => {
     switch (permission) {
       case 'manage-cats':
-        adminPermissions.push({ resource: 'cats', actions: ['create', 'read', 'update', 'delete'] });
+        adminPermissions.push({
+          resource: 'cats',
+          actions: ['create', 'read', 'update', 'delete'],
+        });
         break;
       case 'manage-posts':
         adminPermissions.push({ resource: 'users', actions: ['create', 'read', 'update'] });
         break;
       case 'manage-users':
-        adminPermissions.push({ resource: 'users', actions: ['create', 'read', 'update', 'delete'] });
+        adminPermissions.push({
+          resource: 'users',
+          actions: ['create', 'read', 'update', 'delete'],
+        });
         break;
       case 'view-analytics':
         adminPermissions.push({ resource: 'images', actions: ['read'] });
@@ -171,6 +169,6 @@ export function logAdminAction(
     resource,
     resourceId,
     details,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }

@@ -49,20 +49,54 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
     switch (providerId) {
       case 'google.com':
         return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48" fill="#4285F4" />
-            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48" fill="#34A853" />
-            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48" fill="#FBBC05" />
-            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48" fill="#EA4335" />
+          <svg
+            className="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48"
+              fill="#4285F4"
+            />
+            <path
+              d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48"
+              fill="#34A853"
+            />
+            <path
+              d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48"
+              fill="#FBBC05"
+            />
+            <path
+              d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.12l-2.8-2.16c-.84.56-1.84.88-3.26.88-2.48 0-4.48-2-4.48-4.48s2-4.48 4.48-4.48c1.4 0 2.4.32 3.26.88l2.8-2.16c.92 1 1.547 2.367 1.787 4.12H12.48v3.28H8.96v-3.28c0-3.64 2.84-6.48 6.48-6.48s6.48 2.84 6.48 6.48-2.84 6.48-6.48 6.48"
+              fill="#EA4335"
+            />
           </svg>
         );
       case 'https://kakao.com':
         return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8z" fill="#FFEB00" />
-            <path d="M12 6c-3.314 0-6 2.686-6 6s1.567 6 6 6 6-2.686 6-6-2.686-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" fill="#FFEB00" />
+          <svg
+            className="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8z"
+              fill="#FFEB00"
+            />
+            <path
+              d="M12 6c-3.314 0-6 2.686-6 6s1.567 6 6 6 6-2.686 6-6-2.686-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
+              fill="#FFEB00"
+            />
             <ellipse cx="12" cy="9.5" rx="1.5" ry="1.5" fill="#3A2400" />
-            <path d="M8.5 14.5c0-1.933 1.567-3.5 3.5-3.5s3.5 1.567 3.5 3.5" stroke="#3A2400" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M8.5 14.5c0-1.933 1.567-3.5 3.5-3.5s3.5 1.567 3.5 3.5"
+              stroke="#3A2400"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         );
       default:
@@ -97,7 +131,7 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
   };
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn('space-y-6', className)}>
       {/* Section Header */}
       <div>
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Connected Accounts</h3>
@@ -112,13 +146,17 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                {linkProviderSuccess && "Provider linked successfully!"}
-                {unlinkProviderSuccess && "Provider unlinked successfully!"}
+                {linkProviderSuccess && 'Provider linked successfully!'}
+                {unlinkProviderSuccess && 'Provider unlinked successfully!'}
               </p>
             </div>
             <div className="ml-auto pl-3">
@@ -129,7 +167,11 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
                 >
                   <span className="sr-only">Dismiss</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.28 3.28a.75.75 0 00-1.06 1.06L8.94 10l-5.72 5.72a.75.75 0 001.06 1.06L10 10.06l5.72 5.72a.75.75 0 001.06-1.06L10.06 10 15.72-5.72a.75.75 0 00-1.06-1.06L10 8.94 4.28 3.28Z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M4.28 3.28a.75.75 0 00-1.06 1.06L8.94 10l-5.72 5.72a.75.75 0 001.06 1.06L10 10.06l5.72 5.72a.75.75 0 001.06-1.06L10.06 10 15.72-5.72a.75.75 0 00-1.06-1.06L10 8.94 4.28 3.28Z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </div>
@@ -144,7 +186,11 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 11-1.414-1.414L7.172 10l-1.293-1.293a1 1 0 011.414-1.414L10 8.707l1.293-1.293a1 1 0 011.414 1.414L12.707 10l1.293 1.293a1 1 0 11-1.414 1.414L11.414 10l1.293-1.293a1 1 0 011.414-1.414L10 8.707l-1.293-1.293Z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 11-1.414-1.414L7.172 10l-1.293-1.293a1 1 0 011.414-1.414L10 8.707l1.293-1.293a1 1 0 011.414 1.414L12.707 10l1.293 1.293a1 1 0 11-1.414 1.414L11.414 10l1.293-1.293a1 1 0 011.414-1.414L10 8.707l-1.293-1.293Z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
@@ -160,7 +206,11 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
                 >
                   <span className="sr-only">Dismiss</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.28 3.28a.75.75 0 00-1.06 1.06L8.94 10l-5.72 5.72a.75.75 0 001.06 1.06L10 10.06l5.72 5.72a.75.75 0 001.06-1.06L10.06 10 15.72-5.72a.75.75 0 00-1.06-1.06L10 8.94 4.28 3.28Z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M4.28 3.28a.75.75 0 00-1.06 1.06L8.94 10l-5.72 5.72a.75.75 0 001.06 1.06L10 10.06l5.72 5.72a.75.75 0 001.06-1.06L10.06 10 15.72-5.72a.75.75 0 00-1.06-1.06L10 8.94 4.28 3.28Z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </div>
@@ -181,9 +231,7 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
                 className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    {getProviderIcon(provider.providerId)}
-                  </div>
+                  <div className="flex-shrink-0">{getProviderIcon(provider.providerId)}</div>
                   <div>
                     <div className="font-medium text-gray-900">
                       {getProviderDisplayName(provider.providerId)}
@@ -197,11 +245,11 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
                   onClick={() => handleUnlinkProvider(provider.providerId)}
                   disabled={isUnlinkingProvider}
                   className={cn(
-                    "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                    "focus:outline-none focus:ring-2 focus:ring-offset-2",
+                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                    'focus:outline-none focus:ring-2 focus:ring-offset-2',
                     isUnlinkingProvider
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500"
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500'
                   )}
                 >
                   {isUnlinkingProvider ? (
@@ -210,7 +258,7 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
                       Unlinking...
                     </div>
                   ) : (
-                    "Unlink"
+                    'Unlink'
                   )}
                 </button>
               </div>
@@ -237,11 +285,11 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
               onClick={() => handleLinkProvider('https://kakao.com')}
               disabled={isLinkingKakao}
               className={cn(
-                "w-full flex items-center justify-between p-4 border-2 rounded-lg transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-offset-2",
-                "bg-yellow-50 text-black border-yellow-300 hover:border-yellow-400",
-                "focus:ring-yellow-500 hover:shadow-md",
-                isLinkingKakao && "opacity-50 cursor-not-allowed"
+                'w-full flex items-center justify-between p-4 border-2 rounded-lg transition-colors',
+                'focus:outline-none focus:ring-2 focus:ring-offset-2',
+                'bg-yellow-50 text-black border-yellow-300 hover:border-yellow-400',
+                'focus:ring-yellow-500 hover:shadow-md',
+                isLinkingKakao && 'opacity-50 cursor-not-allowed'
               )}
             >
               <div className="flex items-center space-x-3">
@@ -251,8 +299,18 @@ const ProviderManagement: React.FC<ProviderManagementProps> = ({
               {isLinkingKakao ? (
                 <div className="w-5 h-5 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <svg
+                  className="w-5 h-5 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
                 </svg>
               )}
             </button>

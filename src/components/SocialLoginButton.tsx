@@ -169,10 +169,9 @@ const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
       {getIcon()}
       <span className="whitespace-nowrap">{getButtonText()}</span>
       <span id={`${provider}-button-desc`} className="sr-only">
-        {provider === 'google' 
-          ? 'Sign in using your Google account' 
-          : 'Sign in using your Kakaotalk account'
-        }
+        {provider === 'google'
+          ? 'Sign in using your Google account'
+          : 'Sign in using your Kakaotalk account'}
       </span>
     </button>
   );

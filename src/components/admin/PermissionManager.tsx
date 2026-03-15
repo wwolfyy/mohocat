@@ -14,7 +14,7 @@ interface PermissionManagerProps {
 export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerProps) {
   const { user } = useAuth();
   const permissionService = new PermissionService();
-  
+
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,12 +62,7 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
     setSuccess(null);
 
     try {
-      await permissionService.assignRole(
-        selectedUserId,
-        selectedRole,
-        mountainId,
-        user!.uid
-      );
+      await permissionService.assignRole(selectedUserId, selectedRole, mountainId, user!.uid);
 
       setSuccess(`Successfully assigned ${selectedRole} role to user`);
       setSelectedUserId('');
@@ -125,14 +120,14 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
       role: role.role,
       isActive: role.isActive,
       assignedAt: role.assignedAt?.toDate?.()?.toLocaleDateString() || 'Unknown',
-      assignedBy: role.assignedBy
+      assignedBy: role.assignedBy,
     };
   };
 
   if (!canManageUsers) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p className="text-yellow-800">You don't have permission to manage users.</p>
+        <p className="text-yellow-800">You don&apos;t have permission to manage users.</p>
       </div>
     );
   }
@@ -145,7 +140,7 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
           <p className="text-green-800">{success}</p>
         </div>
       )}
-      
+
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">{error}</p>
@@ -155,18 +150,16 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
       {/* Role Assignment Form */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Assign User Role</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select User
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
             <select
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
               className={cn(
-                "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2",
-                "focus:ring-blue-500 focus:border-transparent"
+                'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2',
+                'focus:ring-blue-500 focus:border-transparent'
               )}
             >
               <option value="">Select a user</option>
@@ -179,15 +172,13 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Role
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Select Role</label>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
               className={cn(
-                "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2",
-                "focus:ring-blue-500 focus:border-transparent"
+                'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2',
+                'focus:ring-blue-500 focus:border-transparent'
               )}
             >
               <option value="">Select a role</option>
@@ -204,10 +195,10 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
               onClick={handleRoleAssignment}
               disabled={actionLoading || !selectedUserId || !selectedRole}
               className={cn(
-                "w-full px-4 py-2 rounded-lg font-medium transition-colors",
-                "bg-blue-500 hover:bg-blue-600 text-white",
-                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
+                'w-full px-4 py-2 rounded-lg font-medium transition-colors',
+                'bg-blue-500 hover:bg-blue-600 text-white',
+                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
               {actionLoading ? (
@@ -216,7 +207,7 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
                   Assigning...
                 </div>
               ) : (
-                "Assign Role"
+                'Assign Role'
               )}
             </button>
           </div>
@@ -283,21 +274,25 @@ export function PermissionManager({ mountainId = 'geyang' }: PermissionManagerPr
                         {userItem.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={cn(
-                          "px-2 py-1 rounded-full text-xs font-medium",
-                          roleInfo.role === 'admin' && "bg-red-100 text-red-800",
-                          roleInfo.role === 'butler-ground' && "bg-orange-100 text-orange-800",
-                          roleInfo.role === 'butler-internet' && "bg-blue-100 text-blue-800",
-                          roleInfo.role === 'viewer' && "bg-gray-100 text-gray-800"
-                        )}>
+                        <span
+                          className={cn(
+                            'px-2 py-1 rounded-full text-xs font-medium',
+                            roleInfo.role === 'admin' && 'bg-red-100 text-red-800',
+                            roleInfo.role === 'butler-ground' && 'bg-orange-100 text-orange-800',
+                            roleInfo.role === 'butler-internet' && 'bg-blue-100 text-blue-800',
+                            roleInfo.role === 'viewer' && 'bg-gray-100 text-gray-800'
+                          )}
+                        >
                           {roleInfo.role.toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={cn(
-                          "px-2 py-1 rounded-full text-xs font-medium",
-                          isSuspended ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                        )}>
+                        <span
+                          className={cn(
+                            'px-2 py-1 rounded-full text-xs font-medium',
+                            isSuspended ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                          )}
+                        >
                           {isSuspended ? 'SUSPENDED' : 'ACTIVE'}
                         </span>
                       </td>

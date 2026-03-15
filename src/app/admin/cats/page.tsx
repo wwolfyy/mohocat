@@ -1,9 +1,19 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { getCatService } from "@/services";
-import { Cat } from "@/types";
-import { FiEdit2, FiTrash2, FiPlus, FiSearch, FiSave, FiX, FiChevronUp, FiChevronDown, FiFilter } from "react-icons/fi";
+import { useState, useEffect, useRef } from 'react';
+import { getCatService } from '@/services';
+import { Cat } from '@/types';
+import {
+  FiEdit2,
+  FiTrash2,
+  FiPlus,
+  FiSearch,
+  FiSave,
+  FiX,
+  FiChevronUp,
+  FiChevronDown,
+  FiFilter,
+} from 'react-icons/fi';
 
 interface CatFormData {
   name: string;
@@ -25,22 +35,22 @@ interface CatFormData {
 }
 
 const initialFormData: CatFormData = {
-  name: "",
-  alt_name: "",
-  description: "",
-  thumbnailUrl: "",
-  dwelling: "",
-  prev_dwelling: "",
+  name: '',
+  alt_name: '',
+  description: '',
+  thumbnailUrl: '',
+  dwelling: '',
+  prev_dwelling: '',
   date_of_birth: undefined,
-  dob_certainty: "",
-  sex: "",
-  status: "",
-  character: "",
-  sickness: "",
-  parents: "",
-  offspring: "",
+  dob_certainty: '',
+  sex: '',
+  status: '',
+  character: '',
+  sickness: '',
+  parents: '',
+  offspring: '',
   isNeutered: undefined,
-  note: "",
+  note: '',
 };
 
 export default function CatsCMSPage() {
@@ -49,7 +59,7 @@ export default function CatsCMSPage() {
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingCat, setEditingCat] = useState<Cat | null>(null);
   const [formData, setFormData] = useState<CatFormData>(initialFormData);
@@ -75,41 +85,44 @@ export default function CatsCMSPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Get unique locations and statuses for filters
-  const uniqueLocations = Array.from(new Set([
-    ...cats.map(cat => cat.dwelling).filter(Boolean),
-    ...cats.map(cat => cat.prev_dwelling).filter(Boolean)
-  ])).sort();
+  const uniqueLocations = Array.from(
+    new Set([
+      ...cats.map((cat) => cat.dwelling).filter(Boolean),
+      ...cats.map((cat) => cat.prev_dwelling).filter(Boolean),
+    ])
+  ).sort();
 
-  const uniqueStatuses = Array.from(new Set(
-    cats.map(cat => cat.status).filter(Boolean)
-  )).sort();
+  const uniqueStatuses = Array.from(new Set(cats.map((cat) => cat.status).filter(Boolean))).sort();
 
   // Get unique values for new filters
-  const uniqueGenders = Array.from(new Set(
-    cats.map(cat => cat.sex).filter(Boolean)
-  )).sort();
+  const uniqueGenders = Array.from(new Set(cats.map((cat) => cat.sex).filter(Boolean))).sort();
 
-  const uniqueBirthYears = Array.from(new Set(
-    cats.map(cat => cat.date_of_birth).filter((year): year is number => year !== undefined)
-  )).sort((a, b) => b - a); // Sort years in descending order
+  const uniqueBirthYears = Array.from(
+    new Set(
+      cats.map((cat) => cat.date_of_birth).filter((year): year is number => year !== undefined)
+    )
+  ).sort((a, b) => b - a); // Sort years in descending order
 
   const neuteredOptions = [
     { value: 'true', label: 'O (중성화됨)' },
     { value: 'false', label: 'X (중성화 안됨)' },
-    { value: 'unknown', label: '? (알 수 없음)' }
+    { value: 'unknown', label: '? (알 수 없음)' },
   ];
 
   // Get unique dwelling values for dropdown options
-  const allDwellingValues = Array.from(new Set([
-    ...cats.map(cat => cat.dwelling).filter(Boolean),
-    ...cats.map(cat => cat.prev_dwelling).filter(Boolean)
-  ])).sort() as string[];
+  const allDwellingValues = Array.from(
+    new Set([
+      ...cats.map((cat) => cat.dwelling).filter(Boolean),
+      ...cats.map((cat) => cat.prev_dwelling).filter(Boolean),
+    ])
+  ).sort() as string[];
 
   // Filter and sort cats
   const filteredCats = cats
-    .filter(cat => {
+    .filter((cat) => {
       // Search filter
-      const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch =
+        cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cat.alt_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cat.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cat.character?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -122,25 +135,31 @@ export default function CatsCMSPage() {
       const matchesStatus = !statusFilter || cat.status === statusFilter;
 
       // Location filter
-      const matchesLocation = !locationFilter ||
-        cat.dwelling === locationFilter ||
-        cat.prev_dwelling === locationFilter;
+      const matchesLocation =
+        !locationFilter || cat.dwelling === locationFilter || cat.prev_dwelling === locationFilter;
 
       // Gender filter
       const matchesGender = !genderFilter || cat.sex === genderFilter;
 
       // Birth year filter
-      const matchesBirthYear = !birthYearFilter ||
-        cat.date_of_birth?.toString() === birthYearFilter;
+      const matchesBirthYear =
+        !birthYearFilter || cat.date_of_birth?.toString() === birthYearFilter;
 
       // Neutered filter
-      const matchesNeutered = !neuteredFilter ||
+      const matchesNeutered =
+        !neuteredFilter ||
         (neuteredFilter === 'true' && cat.isNeutered === true) ||
         (neuteredFilter === 'false' && cat.isNeutered === false) ||
         (neuteredFilter === 'unknown' && cat.isNeutered === undefined);
 
-      return matchesSearch && matchesStatus && matchesLocation &&
-             matchesGender && matchesBirthYear && matchesNeutered;
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesLocation &&
+        matchesGender &&
+        matchesBirthYear &&
+        matchesNeutered
+      );
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -218,7 +237,7 @@ export default function CatsCMSPage() {
       const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (err: any) {
-      setError("Failed to load cats: " + err.message);
+      setError('Failed to load cats: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -235,17 +254,13 @@ export default function CatsCMSPage() {
       // Convert form data to Cat format
       const catData = {
         ...formData,
-        isNeutered: formData.isNeutered
+        isNeutered: formData.isNeutered,
       };
 
       if (editingCat) {
         // Update existing cat
         await catService.updateCat(editingCat.id, catData);
-        setCats(cats.map(cat =>
-          cat.id === editingCat.id
-            ? { ...cat, ...catData }
-            : cat
-        ));
+        setCats(cats.map((cat) => (cat.id === editingCat.id ? { ...cat, ...catData } : cat)));
       } else {
         // Create new cat
         const newCat = await catService.createCat(catData);
@@ -257,7 +272,7 @@ export default function CatsCMSPage() {
       setShowForm(false);
       setEditingCat(null);
     } catch (err: any) {
-      setError("Failed to save cat: " + err.message);
+      setError('Failed to save cat: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -267,22 +282,22 @@ export default function CatsCMSPage() {
   const handleEdit = (cat: Cat) => {
     setEditingCat(cat);
     setFormData({
-      name: cat.name || "",
-      alt_name: cat.alt_name || "",
-      description: cat.description || "",
-      thumbnailUrl: cat.thumbnailUrl || "",
-      dwelling: cat.dwelling || "",
-      prev_dwelling: cat.prev_dwelling || "",
+      name: cat.name || '',
+      alt_name: cat.alt_name || '',
+      description: cat.description || '',
+      thumbnailUrl: cat.thumbnailUrl || '',
+      dwelling: cat.dwelling || '',
+      prev_dwelling: cat.prev_dwelling || '',
       date_of_birth: cat.date_of_birth || undefined,
-      dob_certainty: cat.dob_certainty || "",
-      sex: cat.sex || "",
-      status: cat.status || "",
-      character: cat.character || "",
-      sickness: cat.sickness || "",
-      parents: cat.parents || "",
-      offspring: cat.offspring || "",
+      dob_certainty: cat.dob_certainty || '',
+      sex: cat.sex || '',
+      status: cat.status || '',
+      character: cat.character || '',
+      sickness: cat.sickness || '',
+      parents: cat.parents || '',
+      offspring: cat.offspring || '',
       isNeutered: cat.isNeutered,
-      note: cat.note || "",
+      note: cat.note || '',
     });
     setShowForm(true);
   };
@@ -292,10 +307,10 @@ export default function CatsCMSPage() {
     try {
       setError(null);
       await catService.deleteCat(catId);
-      setCats(cats.filter(cat => cat.id !== catId));
+      setCats(cats.filter((cat) => cat.id !== catId));
       setDeleteConfirm(null);
     } catch (err: any) {
-      setError("Failed to delete cat: " + err.message);
+      setError('Failed to delete cat: ' + err.message);
     }
   };
 
@@ -324,11 +339,10 @@ export default function CatsCMSPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Cat Management System
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Cat Management System</h1>
         <p className="text-gray-600">
-          Manage cat information directly in Firestore. All changes are saved immediately to the database.
+          Manage cat information directly in Firestore. All changes are saved immediately to the
+          database.
         </p>
       </div>
 
@@ -369,13 +383,15 @@ export default function CatsCMSPage() {
           {/* Data Migration Button */}
           <button
             onClick={async () => {
-              const confirmed = confirm("This will migrate all cats' neutering status from strings to booleans. Continue?");
+              const confirmed = confirm(
+                "This will migrate all cats' neutering status from strings to booleans. Continue?"
+              );
               if (!confirmed) return;
 
               try {
                 let migratedCount = 0;
-                const catsToMigrate = cats.filter(cat =>
-                  typeof (cat.isNeutered as any) === 'string'
+                const catsToMigrate = cats.filter(
+                  (cat) => typeof (cat.isNeutered as any) === 'string'
                 );
 
                 console.log(`Found ${catsToMigrate.length} cats to migrate`);
@@ -384,9 +400,9 @@ export default function CatsCMSPage() {
                   let newIsNeutered: boolean | undefined;
                   const currentValue = cat.isNeutered as any; // Type assertion to handle legacy string data
 
-                  if (currentValue === "TRUE" || currentValue === "true") {
+                  if (currentValue === 'TRUE' || currentValue === 'true') {
                     newIsNeutered = true;
-                  } else if (currentValue === "FALSE" || currentValue === "false") {
+                  } else if (currentValue === 'FALSE' || currentValue === 'false') {
                     newIsNeutered = false;
                   } else {
                     newIsNeutered = undefined;
@@ -401,8 +417,8 @@ export default function CatsCMSPage() {
                 alert(`Successfully migrated ${migratedCount} cats!`);
                 loadCats(); // Reload the data
               } catch (err) {
-                console.error("Migration failed:", err);
-                alert("Migration failed: " + err);
+                console.error('Migration failed:', err);
+                alert('Migration failed: ' + err);
               }
             }}
             className="px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
@@ -413,13 +429,17 @@ export default function CatsCMSPage() {
           {/* Date of Birth Migration Button */}
           <button
             onClick={async () => {
-              const confirmed = confirm("This will migrate all cats' date_of_birth from strings to numbers. Continue?");
+              const confirmed = confirm(
+                "This will migrate all cats' date_of_birth from strings to numbers. Continue?"
+              );
               if (!confirmed) return;
 
               try {
                 let migratedCount = 0;
-                const catsToMigrate = cats.filter(cat =>
-                  typeof (cat.date_of_birth as any) === 'string' && (cat.date_of_birth as any).trim() !== ""
+                const catsToMigrate = cats.filter(
+                  (cat) =>
+                    typeof (cat.date_of_birth as any) === 'string' &&
+                    (cat.date_of_birth as any).trim() !== ''
                 );
 
                 console.log(`Found ${catsToMigrate.length} cats to migrate date_of_birth`);
@@ -440,8 +460,8 @@ export default function CatsCMSPage() {
                 alert(`Successfully migrated ${migratedCount} cats' birth dates!`);
                 loadCats(); // Reload the data
               } catch (err) {
-                console.error("Date migration failed:", err);
-                alert("Date migration failed: " + err);
+                console.error('Date migration failed:', err);
+                alert('Date migration failed: ' + err);
               }
             }}
             className="px-3 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors"
@@ -465,7 +485,7 @@ export default function CatsCMSPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Statuses</option>
-                {uniqueStatuses.map(status => (
+                {uniqueStatuses.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>
@@ -482,7 +502,7 @@ export default function CatsCMSPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Locations</option>
-                {uniqueLocations.map(location => (
+                {uniqueLocations.map((location) => (
                   <option key={location} value={location}>
                     {location}
                   </option>
@@ -499,7 +519,7 @@ export default function CatsCMSPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Genders</option>
-                {uniqueGenders.map(gender => (
+                {uniqueGenders.map((gender) => (
                   <option key={gender} value={gender}>
                     {gender === 'M' ? '남 (Male)' : gender === 'F' ? '여 (Female)' : gender}
                   </option>
@@ -516,7 +536,7 @@ export default function CatsCMSPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Years</option>
-                {uniqueBirthYears.map(year => (
+                {uniqueBirthYears.map((year) => (
                   <option key={year} value={year.toString()}>
                     {year}년
                   </option>
@@ -533,7 +553,7 @@ export default function CatsCMSPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All</option>
-                {neuteredOptions.map(option => (
+                {neuteredOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -560,14 +580,12 @@ export default function CatsCMSPage() {
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
-            {cats.filter(cat => cat.status === "산냥이").length}
+            {cats.filter((cat) => cat.status === '산냥이').length}
           </div>
           <div className="text-sm text-gray-600">산냥이 (Mountain Cats)</div>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">
-            {filteredCats.length}
-          </div>
+          <div className="text-2xl font-bold text-purple-600">{filteredCats.length}</div>
           <div className="text-sm text-gray-600">Filtered Results</div>
         </div>
       </div>
@@ -577,13 +595,8 @@ export default function CatsCMSPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
-                {editingCat ? "Edit Cat" : "Add New Cat"}
-              </h2>
-              <button
-                onClick={handleCancel}
-                className="text-gray-500 hover:text-gray-700"
-              >
+              <h2 className="text-xl font-semibold">{editingCat ? 'Edit Cat' : 'Add New Cat'}</h2>
+              <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
                 <FiX size={24} />
               </button>
             </div>
@@ -591,14 +604,12 @@ export default function CatsCMSPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -610,18 +621,16 @@ export default function CatsCMSPage() {
                   <input
                     type="text"
                     value={formData.alt_name}
-                    onChange={(e) => setFormData({...formData, alt_name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, alt_name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sex
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
                   <select
                     value={formData.sex}
-                    onChange={(e) => setFormData({...formData, sex: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select...</option>
@@ -632,12 +641,10 @@ export default function CatsCMSPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select...</option>
@@ -649,17 +656,15 @@ export default function CatsCMSPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Birth Year
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Birth Year</label>
                   <input
                     type="number"
-                    value={formData.date_of_birth || ""}
+                    value={formData.date_of_birth || ''}
                     onChange={(e) => {
                       const value = e.target.value;
                       setFormData({
                         ...formData,
-                        date_of_birth: value ? parseInt(value, 10) : undefined
+                        date_of_birth: value ? parseInt(value, 10) : undefined,
                       });
                     }}
                     placeholder="e.g., 2020"
@@ -675,7 +680,7 @@ export default function CatsCMSPage() {
                   </label>
                   <select
                     value={formData.dob_certainty}
-                    onChange={(e) => setFormData({...formData, dob_certainty: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, dob_certainty: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select...</option>
@@ -691,7 +696,7 @@ export default function CatsCMSPage() {
                   <input
                     type="url"
                     value={formData.thumbnailUrl}
-                    onChange={(e) => setFormData({...formData, thumbnailUrl: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -704,7 +709,7 @@ export default function CatsCMSPage() {
                     <input
                       type="text"
                       value={formData.dwelling}
-                      onChange={(e) => setFormData({...formData, dwelling: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, dwelling: e.target.value })}
                       onFocus={() => setDwellingDropdownOpen(true)}
                       placeholder="Select from list or type new dwelling..."
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -714,21 +719,26 @@ export default function CatsCMSPage() {
                       onClick={() => setDwellingDropdownOpen(!dwellingDropdownOpen)}
                       className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
                     >
-                      {dwellingDropdownOpen ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                      {dwellingDropdownOpen ? (
+                        <FiChevronUp size={16} />
+                      ) : (
+                        <FiChevronDown size={16} />
+                      )}
                     </button>
                     {dwellingDropdownOpen && allDwellingValues.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                         {allDwellingValues
-                          .filter(dwelling =>
-                            formData.dwelling === '' ||
-                            dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
+                          .filter(
+                            (dwelling) =>
+                              formData.dwelling === '' ||
+                              dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
                           )
                           .map((dwelling) => (
                             <button
                               key={dwelling}
                               type="button"
                               onClick={() => {
-                                setFormData({...formData, dwelling});
+                                setFormData({ ...formData, dwelling });
                                 setDwellingDropdownOpen(false);
                               }}
                               className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
@@ -736,12 +746,14 @@ export default function CatsCMSPage() {
                               {dwelling}
                             </button>
                           ))}
-                        {allDwellingValues.filter(dwelling =>
-                          formData.dwelling === '' ||
-                          dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
-                        ).length === 0 && formData.dwelling && (
-                          <div className="px-3 py-2 text-gray-500 italic">No matches found</div>
-                        )}
+                        {allDwellingValues.filter(
+                          (dwelling) =>
+                            formData.dwelling === '' ||
+                            dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
+                        ).length === 0 &&
+                          formData.dwelling && (
+                            <div className="px-3 py-2 text-gray-500 italic">No matches found</div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -755,7 +767,7 @@ export default function CatsCMSPage() {
                     <input
                       type="text"
                       value={formData.prev_dwelling}
-                      onChange={(e) => setFormData({...formData, prev_dwelling: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, prev_dwelling: e.target.value })}
                       onFocus={() => setPrevDwellingDropdownOpen(true)}
                       placeholder="Select from list or type new dwelling..."
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -765,21 +777,26 @@ export default function CatsCMSPage() {
                       onClick={() => setPrevDwellingDropdownOpen(!prevDwellingDropdownOpen)}
                       className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
                     >
-                      {prevDwellingDropdownOpen ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                      {prevDwellingDropdownOpen ? (
+                        <FiChevronUp size={16} />
+                      ) : (
+                        <FiChevronDown size={16} />
+                      )}
                     </button>
                     {prevDwellingDropdownOpen && allDwellingValues.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                         {allDwellingValues
-                          .filter(dwelling =>
-                            formData.prev_dwelling === '' ||
-                            dwelling.toLowerCase().includes(formData.prev_dwelling.toLowerCase())
+                          .filter(
+                            (dwelling) =>
+                              formData.prev_dwelling === '' ||
+                              dwelling.toLowerCase().includes(formData.prev_dwelling.toLowerCase())
                           )
                           .map((dwelling) => (
                             <button
                               key={dwelling}
                               type="button"
                               onClick={() => {
-                                setFormData({...formData, prev_dwelling: dwelling});
+                                setFormData({ ...formData, prev_dwelling: dwelling });
                                 setPrevDwellingDropdownOpen(false);
                               }}
                               className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
@@ -787,12 +804,14 @@ export default function CatsCMSPage() {
                               {dwelling}
                             </button>
                           ))}
-                        {allDwellingValues.filter(dwelling =>
-                          formData.prev_dwelling === '' ||
-                          dwelling.toLowerCase().includes(formData.prev_dwelling.toLowerCase())
-                        ).length === 0 && formData.prev_dwelling && (
-                          <div className="px-3 py-2 text-gray-500 italic">No matches found</div>
-                        )}
+                        {allDwellingValues.filter(
+                          (dwelling) =>
+                            formData.prev_dwelling === '' ||
+                            dwelling.toLowerCase().includes(formData.prev_dwelling.toLowerCase())
+                        ).length === 0 &&
+                          formData.prev_dwelling && (
+                            <div className="px-3 py-2 text-gray-500 italic">No matches found</div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -800,12 +819,10 @@ export default function CatsCMSPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={5}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -817,7 +834,7 @@ export default function CatsCMSPage() {
                 </label>
                 <textarea
                   value={formData.character}
-                  onChange={(e) => setFormData({...formData, character: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, character: e.target.value })}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -829,7 +846,7 @@ export default function CatsCMSPage() {
                 </label>
                 <textarea
                   value={formData.sickness}
-                  onChange={(e) => setFormData({...formData, sickness: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, sickness: e.target.value })}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -843,7 +860,7 @@ export default function CatsCMSPage() {
                   <input
                     type="text"
                     value={formData.parents}
-                    onChange={(e) => setFormData({...formData, parents: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, parents: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -855,7 +872,7 @@ export default function CatsCMSPage() {
                   <input
                     type="text"
                     value={formData.offspring}
-                    onChange={(e) => setFormData({...formData, offspring: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, offspring: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -866,12 +883,18 @@ export default function CatsCMSPage() {
                   Neutering Status
                 </label>
                 <select
-                  value={formData.isNeutered === true ? "true" : formData.isNeutered === false ? "false" : ""}
+                  value={
+                    formData.isNeutered === true
+                      ? 'true'
+                      : formData.isNeutered === false
+                        ? 'false'
+                        : ''
+                  }
                   onChange={(e) => {
                     const value = e.target.value;
                     setFormData({
                       ...formData,
-                      isNeutered: value === "true" ? true : value === "false" ? false : undefined
+                      isNeutered: value === 'true' ? true : value === 'false' ? false : undefined,
                     });
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -888,7 +911,7 @@ export default function CatsCMSPage() {
                 </label>
                 <textarea
                   value={formData.note}
-                  onChange={(e) => setFormData({...formData, note: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   rows={4}
                   placeholder="Any special notes or remarks about this cat..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -937,9 +960,12 @@ export default function CatsCMSPage() {
                     className="flex items-center gap-1 hover:text-gray-700"
                   >
                     Cat
-                    {sortBy === 'name' && (
-                      sortOrder === 'asc' ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />
-                    )}
+                    {sortBy === 'name' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp size={14} />
+                      ) : (
+                        <FiChevronDown size={14} />
+                      ))}
                   </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -948,9 +974,12 @@ export default function CatsCMSPage() {
                     className="flex items-center gap-1 hover:text-gray-700"
                   >
                     Details
-                    {sortBy === 'date_of_birth' && (
-                      sortOrder === 'asc' ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />
-                    )}
+                    {sortBy === 'date_of_birth' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp size={14} />
+                      ) : (
+                        <FiChevronDown size={14} />
+                      ))}
                   </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -959,9 +988,12 @@ export default function CatsCMSPage() {
                     className="flex items-center gap-1 hover:text-gray-700"
                   >
                     Location
-                    {sortBy === 'dwelling' && (
-                      sortOrder === 'asc' ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />
-                    )}
+                    {sortBy === 'dwelling' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp size={14} />
+                      ) : (
+                        <FiChevronDown size={14} />
+                      ))}
                   </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -970,9 +1002,12 @@ export default function CatsCMSPage() {
                     className="flex items-center gap-1 hover:text-gray-700"
                   >
                     Status
-                    {sortBy === 'status' && (
-                      sortOrder === 'asc' ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />
-                    )}
+                    {sortBy === 'status' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp size={14} />
+                      ) : (
+                        <FiChevronDown size={14} />
+                      ))}
                   </button>
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -994,20 +1029,14 @@ export default function CatsCMSPage() {
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-500 text-sm">
-                              {cat.name.charAt(0)}
-                            </span>
+                            <span className="text-gray-500 text-sm">{cat.name.charAt(0)}</span>
                           </div>
                         )}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {cat.name}
-                        </div>
+                        <div className="text-sm font-medium text-gray-900">{cat.name}</div>
                         {cat.alt_name && (
-                          <div className="text-sm text-gray-500">
-                            {cat.alt_name}
-                          </div>
+                          <div className="text-sm text-gray-500">{cat.alt_name}</div>
                         )}
                       </div>
                     </div>
@@ -1018,16 +1047,15 @@ export default function CatsCMSPage() {
                       {(cat.sex || cat.date_of_birth || cat.isNeutered !== undefined) && (
                         <div className="mb-1">
                           {cat.sex && (
-                            <span>
-                              {cat.sex === 'M' ? '남' : cat.sex === 'F' ? '여' : cat.sex}
-                            </span>
+                            <span>{cat.sex === 'M' ? '남' : cat.sex === 'F' ? '여' : cat.sex}</span>
                           )}
                           {(cat.date_of_birth || cat.isNeutered !== undefined) && (
                             <span>
-                              {' '}(
-                              {cat.date_of_birth && `${cat.date_of_birth}년 생`}
+                              {' '}
+                              ({cat.date_of_birth && `${cat.date_of_birth}년 생`}
                               {cat.date_of_birth && cat.isNeutered !== undefined && ', '}
-                              {cat.isNeutered !== undefined && `중성화 ${cat.isNeutered === true ? "O" : cat.isNeutered === false ? "X" : "?"}`}
+                              {cat.isNeutered !== undefined &&
+                                `중성화 ${cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}`}
                               )
                             </span>
                           )}
@@ -1050,14 +1078,20 @@ export default function CatsCMSPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
-                      cat.status === "산냥이" ? "bg-green-100 text-green-800" :
-                      cat.status === "집냥이" ? "bg-blue-100 text-blue-800" :
-                      cat.status === "별냥이" ? "bg-gray-100 text-gray-800" :
-                      cat.status === "행방불명" ? "bg-red-100 text-red-800" :
-                      "bg-gray-100 text-gray-800"
-                    }`}>
-                      {cat.status || "Unknown"}
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
+                        cat.status === '산냥이'
+                          ? 'bg-green-100 text-green-800'
+                          : cat.status === '집냥이'
+                            ? 'bg-blue-100 text-blue-800'
+                            : cat.status === '별냥이'
+                              ? 'bg-gray-100 text-gray-800'
+                              : cat.status === '행방불명'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {cat.status || 'Unknown'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1085,9 +1119,14 @@ export default function CatsCMSPage() {
         {filteredCats.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">
-              {searchTerm || statusFilter || locationFilter || genderFilter || birthYearFilter || neuteredFilter
-                ? "No cats found matching your filters."
-                : "No cats found."}
+              {searchTerm ||
+              statusFilter ||
+              locationFilter ||
+              genderFilter ||
+              birthYearFilter ||
+              neuteredFilter
+                ? 'No cats found matching your filters.'
+                : 'No cats found.'}
             </p>
           </div>
         )}

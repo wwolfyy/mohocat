@@ -66,7 +66,7 @@ export interface IImageService {
   createImage(imageData: any): Promise<string>;
   updateImage(id: string, updates: Partial<any>): Promise<void>;
   deleteImage(id: string): Promise<void>;
-  batchUpdateImages(updates: Array<{ id: string, updates: Partial<any> }>): Promise<void>;
+  batchUpdateImages(updates: Array<{ id: string; updates: Partial<any> }>): Promise<void>;
   batchDeleteImages(ids: string[]): Promise<void>;
   syncWithStorage(): Promise<any[]>; // Returns StorageImage[] with metadata sync
 }
@@ -84,7 +84,7 @@ export interface IVideoService {
   createVideo(videoData: any): Promise<string>;
   updateVideo(id: string, updates: Partial<any>): Promise<void>;
   deleteVideo(id: string): Promise<void>;
-  batchUpdateVideos(updates: Array<{ id: string, updates: Partial<any> }>): Promise<void>;
+  batchUpdateVideos(updates: Array<{ id: string; updates: Partial<any> }>): Promise<void>;
   batchDeleteVideos(ids: string[]): Promise<void>;
   syncWithYouTube?(): Promise<any[]>; // Optional YouTube sync
 }
@@ -134,10 +134,12 @@ export interface IAuthService {
 
 // Feeding spots service interface
 export interface IFeedingSpotsService {
-  getAllFeedingSpots(): Promise<Array<{
-    id: number;
-    name: string;
-    last_attended: string;
-    last_attended_by: string;
-  }>>;
+  getAllFeedingSpots(): Promise<
+    Array<{
+      id: number;
+      name: string;
+      last_attended: string;
+      last_attended_by: string;
+    }>
+  >;
 }

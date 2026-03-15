@@ -11,7 +11,7 @@ const serviceAccount = require(path.join(__dirname, '..', serviceAccountPath));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  projectId: 'mountaincats-61543'
+  projectId: 'mountaincats-61543',
 });
 
 const db = admin.firestore();
@@ -44,13 +44,15 @@ async function removeNeedsTaggingField() {
       if (data.hasOwnProperty('needsTagging')) {
         // Remove the needsTagging field using FieldValue.delete()
         batch.update(doc.ref, {
-          needsTagging: admin.firestore.FieldValue.delete()
+          needsTagging: admin.firestore.FieldValue.delete(),
         });
 
         updatedCount++;
         batchCount++;
 
-        console.log(`🗑️ Queued removal of needsTagging field from document: ${doc.id} (fileName: ${data.fileName || 'unknown'})`);
+        console.log(
+          `🗑️ Queued removal of needsTagging field from document: ${doc.id} (fileName: ${data.fileName || 'unknown'})`
+        );
 
         // Commit batch if we reach the limit
         if (batchCount >= maxBatchSize) {
@@ -87,7 +89,6 @@ async function removeNeedsTaggingField() {
     } else {
       console.log('\n✨ No documents had the needsTagging field to remove.');
     }
-
   } catch (error) {
     console.error('❌ Error removing needsTagging field:', error);
     throw error;

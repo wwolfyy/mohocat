@@ -3,7 +3,7 @@ import {
   exportAllToCloudStorage,
   exportCatsToCloudStorage,
   exportPointsToCloudStorage,
-  exportFeedingSpotsToCloudStorage
+  exportFeedingSpotsToCloudStorage,
 } from '../../../../../scripts/migration/export_all_to_cloud_storage';
 
 export async function POST(request: NextRequest) {
@@ -47,16 +47,15 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Successfully updated ${description} in Cloud Storage`,
       dataType,
-      result: Array.isArray(result) ? { count: result.length } : result
+      result: Array.isArray(result) ? { count: result.length } : result,
     });
-
   } catch (error: any) {
     console.error('Static data update failed:', error);
 
     return NextResponse.json(
       {
         error: 'Static data update failed',
-        details: error.message
+        details: error.message,
       },
       { status: 500 }
     );

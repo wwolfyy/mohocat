@@ -11,6 +11,7 @@ GitHub Push → GitHub Actions → Self-Hosted Runner (on your server) → Docke
 ```
 
 The runner executes directly on your home server, so:
+
 - ✅ No need to expose SSH to the internet
 - ✅ No need for a container registry
 - ✅ Secrets stay on your server
@@ -119,13 +120,13 @@ jobs:
 2. Navigate to **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret** for each variable:
 
-| Secret Name | Value |
-|-------------|-------|
-| `MOUNTAIN_ID` | `geyang` |
-| `NEXT_PUBLIC_BASE_URL` | `https://yourdomain.com` |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Your Firebase API key |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Your Firebase auth domain |
-| ... | (all other variables from .env) |
+| Secret Name                        | Value                           |
+| ---------------------------------- | ------------------------------- |
+| `MOUNTAIN_ID`                      | `geyang`                        |
+| `NEXT_PUBLIC_BASE_URL`             | `https://yourdomain.com`        |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`     | Your Firebase API key           |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Your Firebase auth domain       |
+| ...                                | (all other variables from .env) |
 
 ---
 
@@ -136,6 +137,7 @@ jobs:
 3. Watch the workflow run
 
 Or trigger manually:
+
 1. Go to **Actions** → **Deploy to Home Server**
 2. Click **Run workflow**
 
@@ -174,6 +176,7 @@ jobs:
 ```
 
 Required secrets for SSH approach:
+
 - `SERVER_HOST`: Your server's public IP or domain
 - `SERVER_USER`: SSH username
 - `SSH_PRIVATE_KEY`: Private key for authentication
@@ -182,18 +185,18 @@ Required secrets for SSH approach:
 
 ## Comparison
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Self-Hosted Runner** | No SSH exposure, fast builds, secrets stay local | Requires runner installation |
-| **SSH Deployment** | No runner to maintain | Exposes SSH, slower (pulls code each time) |
+| Approach               | Pros                                             | Cons                                       |
+| ---------------------- | ------------------------------------------------ | ------------------------------------------ |
+| **Self-Hosted Runner** | No SSH exposure, fast builds, secrets stay local | Requires runner installation               |
+| **SSH Deployment**     | No runner to maintain                            | Exposes SSH, slower (pulls code each time) |
 
 ---
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Runner offline | Check service: `sudo ./svc.sh status` |
+| Issue                    | Solution                                                         |
+| ------------------------ | ---------------------------------------------------------------- |
+| Runner offline           | Check service: `sudo ./svc.sh status`                            |
 | Docker permission denied | Add runner user to docker group: `sudo usermod -aG docker $USER` |
-| Workflow stuck | Check runner logs: `~/actions-runner/_diag/` |
-| Build fails | Check secrets are correctly set in GitHub |
+| Workflow stuck           | Check runner logs: `~/actions-runner/_diag/`                     |
+| Build fails              | Check secrets are correctly set in GitHub                        |

@@ -10,7 +10,7 @@ export default function PermissionDebug() {
   const { user } = useAuth();
   const [roleAssignmentService] = useState(() => new RoleAssignmentService());
   const [permissionService] = useState(() => new PermissionService());
-  
+
   const [debugInfo, setDebugInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -23,19 +23,21 @@ export default function PermissionDebug() {
 
     setLoading(true);
     setMessage('Running debug checks...');
-    
+
     try {
       const debugData: any = {
         user: {
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName
+          displayName: user.displayName,
         },
-        checks: {}
+        checks: {},
       };
 
       // Check 1: Does user need role assignment?
-      debugData.checks.needsRoleAssignment = await roleAssignmentService.needsRoleAssignment(user.uid);
+      debugData.checks.needsRoleAssignment = await roleAssignmentService.needsRoleAssignment(
+        user.uid
+      );
       setMessage('✓ Checked role assignment status');
 
       // Check 2: Get user role
@@ -47,13 +49,21 @@ export default function PermissionDebug() {
       setMessage('✓ Retrieved user permissions');
 
       // Check 4: Test permission checks
-      debugData.checks.canManageCats = await permissionService.checkPermission(user.uid, 'manage-cats');
-      debugData.checks.canManagePosts = await permissionService.checkPermission(user.uid, 'manage-posts');
-      debugData.checks.canManageUsers = await permissionService.checkPermission(user.uid, 'manage-users');
-      
+      debugData.checks.canManageCats = await permissionService.checkPermission(
+        user.uid,
+        'manage-cats'
+      );
+      debugData.checks.canManagePosts = await permissionService.checkPermission(
+        user.uid,
+        'manage-posts'
+      );
+      debugData.checks.canManageUsers = await permissionService.checkPermission(
+        user.uid,
+        'manage-users'
+      );
+
       setDebugInfo(debugData);
       setMessage('Debug completed successfully!');
-
     } catch (error: any) {
       console.error('Debug failed:', error);
       setMessage(`Debug failed: ${error.message}`);
@@ -64,10 +74,10 @@ export default function PermissionDebug() {
 
   const assignRole = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     setMessage('Assigning role...');
-    
+
     try {
       await roleAssignmentService.assignUserRole(user.uid, user.email || user.uid, 'geyang');
       setMessage('Role assigned successfully!');
@@ -85,7 +95,7 @@ export default function PermissionDebug() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">🔧 Permission Debug Tool</h2>
-        
+
         {message && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-sm">{message}</p>
@@ -114,12 +124,16 @@ export default function PermissionDebug() {
             <div className="mt-6">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Debug Results:</h3>
               <pre className="bg-gray-100 p-4 rounded-lg text-sm overflow-auto max-h-96">
-                {JSON.stringify(debugInfo, (key, value) => {
-                  if (key === 'assignedAt' || key === 'createdAt' || key === 'updatedAt') {
-                    return value?.toISOString?.() || value;
-                  }
-                  return value;
-                }, 2)}
+                {JSON.stringify(
+                  debugInfo,
+                  (key, value) => {
+                    if (key === 'assignedAt' || key === 'createdAt' || key === 'updatedAt') {
+                      return value?.toISOString?.() || value;
+                    }
+                    return value;
+                  },
+                  2
+                )}
               </pre>
             </div>
           )}

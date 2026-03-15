@@ -43,14 +43,13 @@ export default function RoleManagementDirect() {
           displayName: user.displayName || user.email?.split('@')[0] || 'Unknown',
           permissions: currentUserRole ? ['view-photo'] : [],
           assignedAt: new Date().toISOString(),
-          isActive: true
-        }
+          isActive: true,
+        },
       ];
 
       console.log('Mock users created:', mockUsers);
       setUsers(mockUsers);
       setMessage(`Loaded ${mockUsers.length} user(s)`);
-
     } catch (error) {
       console.error('Failed to load users:', error);
       setMessage('Failed to load users - check console for details');
@@ -107,7 +106,10 @@ export default function RoleManagementDirect() {
           ) : (
             <div className="space-y-3">
               {users.map((userItem) => (
-                <div key={userItem.uid} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div
+                  key={userItem.uid}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                >
                   <div>
                     <div className="font-medium text-gray-900">{userItem.displayName}</div>
                     <div className="text-sm text-gray-600">{userItem.email}</div>
@@ -119,10 +121,10 @@ export default function RoleManagementDirect() {
                         key={role}
                         onClick={() => assignRole(userItem.uid, role)}
                         className={cn(
-                          "px-3 py-1 rounded text-sm font-medium transition-colors",
+                          'px-3 py-1 rounded text-sm font-medium transition-colors',
                           userItem.role === role
-                            ? "bg-gray-300 text-gray-700 cursor-not-allowed"
-                            : "bg-blue-500 text-white hover:bg-blue-600"
+                            ? 'bg-gray-300 text-gray-700 cursor-not-allowed'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
                         )}
                       >
                         {role}
@@ -139,8 +141,8 @@ export default function RoleManagementDirect() {
           <h3 className="text-lg font-medium text-gray-900">Note</h3>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">
-              Currently showing only the current user. To see all users in the system,
-              the permission service needs to be enhanced to support fetching all user permissions.
+              Currently showing only the current user. To see all users in the system, the
+              permission service needs to be enhanced to support fetching all user permissions.
             </p>
           </div>
         </div>

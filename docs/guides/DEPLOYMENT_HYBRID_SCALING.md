@@ -1,4 +1,5 @@
 # Hybrid Scaling Deployment Guide
+
 ## Physical Server + Cloud Run Auto-Scaling
 
 This guide explains how to set up a hybrid scaling solution that uses your physical server as the primary backend with Cloud Run as overflow/backup capacity.
@@ -6,44 +7,52 @@ This guide explains how to set up a hybrid scaling solution that uses your physi
 ## Executive Summary
 
 ### **Core Concept**
+
 - **Primary**: Physical server handles 80% of normal traffic (cost-effective)
 - **Overflow**: Cloud Run handles 20% + peak traffic (auto-scaling)
 - **Load Balancer**: Google Cloud Load Balancer distributes traffic based on server health
 
 ### **Monitoring Architecture**
+
 - **Shell Commands**: Use `top`, `free`, `netstat`, `curl` for system metrics
 - **Enhanced Health Endpoint**: `/api/health` provides structured JSON metrics
 - **Traffic Manager**: Bash script polls health endpoint every 30 seconds
 - **Direct Control**: Uses `gcloud` CLI to update load balancer weights
 
 ### **Key Insight: No Prometheus Needed (Initially)**
+
 - **Single Server**: Shell-based monitoring is perfect
 - **2-3 Servers**: Extended shell scripts still manageable
 - **4+ Servers**: Consider Prometheus for better visualization
 
 ### **Scaling Triggers**
+
 - **CPU > 80%** → Reduce physical server traffic, increase Cloud Run
 - **Memory > 85%** → Same response
 - **Server unhealthy** → Route 80% traffic to Cloud Run
 - **Server recovering** → Gradually shift back to physical server
 
 ### **Traffic Distribution Examples**
+
 - **Normal**: Physical 80%, Cloud Run 20%
 - **Stressed**: Physical 50%, Cloud Run 50%
 - **Emergency**: Physical 20%, Cloud Run 80%
 
 ### **Evolution Path**
+
 1. **Start**: Single physical server + Cloud Run (shell monitoring)
 2. **Scale**: Multiple physical servers (extended shell scripts)
 3. **Enterprise**: 5+ servers (Prometheus + Grafana)
 
 ### **Cost Benefits**
+
 - **Physical server**: Your existing hardware costs
 - **Cloud Run**: Pay-per-use for overflow only (~$10-50/month)
 - **Load Balancer**: ~$18/month
 - **Total additional cost**: ~$28-68/month
 
 ### **Why This Works**
+
 - **Container consistency**: Same Docker image runs everywhere
 - **Firebase independence**: External services work from any server
 - **Gradual scaling**: Can add servers incrementally
@@ -83,6 +92,7 @@ gcloud run deploy mtcat-next \
 ## Step 2: Set Up Physical Server
 
 ### Install Dependencies
+
 ```bash
 # Install Docker and required tools
 sudo apt update
@@ -98,6 +108,7 @@ sudo apt install -y htop iotop nethogs
 ```
 
 ### Deploy Application
+
 ```bash
 # Clone repository
 git clone https://github.com/your-username/mtcat_next.git /opt/mtcat-next
@@ -128,6 +139,7 @@ sudo certbot --nginx -d your-domain.com
 ```
 
 ### Nginx Configuration Example
+
 ```nginx
 server {
     listen 80;
@@ -226,6 +238,7 @@ sudo systemctl start mtcat-traffic-manager
 ## Step 6: Test the Setup
 
 ### Health Check Tests
+
 ```bash
 # Test physical server health
 curl -s https://your-domain.com/api/health | jq
@@ -238,6 +251,7 @@ curl -s https://mtcat-next-[hash]-uc.a.run.app/api/health | jq
 ```
 
 ### Load Testing
+
 ```bash
 # Install Apache Bench
 sudo apt install -y apache2-utils
@@ -250,6 +264,7 @@ ab -n 5000 -c 50 https://your-domain.com/
 ```
 
 ### Monitor Traffic Distribution
+
 ```bash
 # Check load balancer metrics
 gcloud compute backend-services describe physical-server-backend --global
@@ -262,6 +277,7 @@ gcloud run services describe mtcat-next --region=asia-northeast3
 ## Step 7: Monitoring and Alerting
 
 ### Log Monitoring
+
 ```bash
 # Physical server monitoring logs
 sudo journalctl -u mtcat-monitor -f
@@ -274,6 +290,7 @@ docker logs -f mtcat-next
 ```
 
 ### Set Up Alerting (Optional)
+
 ```bash
 # Install alerting tools
 sudo apt install -y mailutils
@@ -286,6 +303,7 @@ sudo apt install -y mailutils
 ## Configuration Reference
 
 ### Environment Variables
+
 ```env
 # Physical server .env.production
 NODE_ENV=production
@@ -305,6 +323,7 @@ SCALING_CONNECTIONS_THRESHOLD=1000
 ```
 
 ### Scaling Thresholds
+
 - **CPU > 80%**: Scale up Cloud Run, reduce physical server traffic
 - **Memory > 85%**: Scale up Cloud Run, reduce physical server traffic
 - **Connections > 1000**: Scale up Cloud Run
@@ -312,6 +331,7 @@ SCALING_CONNECTIONS_THRESHOLD=1000
 - **Error rate > 5%**: Scale up Cloud Run
 
 ### Traffic Distribution Logic
+
 - **Normal operation**: Physical 80%, Cloud Run 20%
 - **Physical degraded**: Physical 60%, Cloud Run 40%
 - **Physical under high load**: Physical 50%, Cloud Run 50%
@@ -323,6 +343,7 @@ SCALING_CONNECTIONS_THRESHOLD=1000
 ### Common Issues
 
 1. **Physical server not receiving traffic**
+
    ```bash
    # Check health check status
    gcloud compute backend-services get-health physical-server-backend --global
@@ -332,6 +353,7 @@ SCALING_CONNECTIONS_THRESHOLD=1000
    ```
 
 2. **Cloud Run not scaling**
+
    ```bash
    # Check Cloud Run logs
    gcloud run services logs read mtcat-next --region=asia-northeast3
@@ -341,6 +363,7 @@ SCALING_CONNECTIONS_THRESHOLD=1000
    ```
 
 3. **Health checks failing**
+
    ```bash
    # Test health endpoint directly
    curl -v https://your-domain.com/api/health
@@ -377,6 +400,7 @@ gcloud compute backend-services remove-backend physical-server-backend \
 - **Bandwidth**: Pay for egress traffic from Google Cloud
 
 Expected costs with moderate traffic:
+
 - Load Balancer: ~$18/month
 - Cloud Run (overflow): ~$10-50/month depending on usage
 - Total additional cost: ~$28-68/month

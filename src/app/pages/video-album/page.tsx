@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { getVideoService, getCatService } from "@/services";
-import { CatVideo } from "@/types/media";
-import { Cat } from "@/types";
-import { cn } from "@/utils/cn";
-import { formatDuration } from "@/utils/duration";
+import { useState, useEffect } from 'react';
+import { getVideoService, getCatService } from '@/services';
+import { CatVideo } from '@/types/media';
+import { Cat } from '@/types';
+import { cn } from '@/utils/cn';
+import { formatDuration } from '@/utils/duration';
 
 // Helper function to safely convert various date formats to a JavaScript Date
 const parseDate = (dateValue: any): Date | null => {
@@ -18,27 +18,24 @@ const parseDate = (dateValue: any): Date | null => {
     }
 
     // If it's a Firebase Timestamp with seconds property
-    if (typeof dateValue === "object" && dateValue.seconds) {
+    if (typeof dateValue === 'object' && dateValue.seconds) {
       return new Date(dateValue.seconds * 1000);
     }
 
     // If it's a Firebase Timestamp with toDate method
-    if (
-      typeof dateValue === "object" &&
-      typeof dateValue.toDate === "function"
-    ) {
+    if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
       return dateValue.toDate();
     }
 
     // If it's a string or number
-    if (typeof dateValue === "string" || typeof dateValue === "number") {
+    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
       const date = new Date(dateValue);
       return isNaN(date.getTime()) ? null : date;
     }
 
     return null;
   } catch (error) {
-    console.warn("Error parsing date:", dateValue, error);
+    console.warn('Error parsing date:', dateValue, error);
     return null;
   }
 };
@@ -68,20 +65,20 @@ function VideoPlayer({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case "Escape":
+        case 'Escape':
           onClose();
           break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
           if (hasPrevious) onPrevious();
           break;
-        case "ArrowRight":
+        case 'ArrowRight':
           if (hasNext) onNext();
           break;
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose, onPrevious, onNext, hasPrevious, hasNext]);
 
   // Reset loading state when video changes
@@ -91,17 +88,14 @@ function VideoPlayer({
   }, [video.videoUrl]);
 
   const renderVideoPlayer = () => {
-    if (video.videoType === "youtube") {
+    if (video.videoType === 'youtube') {
       // Extract YouTube video ID from URL
       const videoId = video.videoUrl.match(
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
       )?.[1];
       if (!videoId) {
         return (
-          <div
-            className="flex items-center justify-center w-full h-64"
-            data-oid="j5-_er."
-          >
+          <div className="flex items-center justify-center w-full h-64" data-oid="j5-_er.">
             <div className="text-white" data-oid=".fkd662">
               유효하지 않은 YouTube URL입니다.
             </div>
@@ -187,10 +181,7 @@ function VideoPlayer({
         data-oid="ujibwh_"
       >
         {videoLoading && !videoError && (
-          <div
-            className="flex items-center justify-center w-full h-64"
-            data-oid="_z4_wtt"
-          >
+          <div className="flex items-center justify-center w-full h-64" data-oid="_z4_wtt">
             <div className="text-white" data-oid="r1n1r_8">
               동영상을 불러오는 중...
             </div>
@@ -198,10 +189,7 @@ function VideoPlayer({
         )}
 
         {videoError && (
-          <div
-            className="flex items-center justify-center w-full h-64"
-            data-oid="dt5uz2g"
-          >
+          <div className="flex items-center justify-center w-full h-64" data-oid="dt5uz2g">
             <div className="text-white" data-oid=":tn45vw">
               동영상을 불러올 수 없습니다.
             </div>
@@ -230,21 +218,17 @@ function VideoPlayer({
               <span data-oid="j_bryw0">
                 {(() => {
                   const createdDate = parseDate(video.createdTime);
-                  return createdDate
-                    ? createdDate.toLocaleDateString("ko-KR")
-                    : "날짜 없음";
+                  return createdDate ? createdDate.toLocaleDateString('ko-KR') : '날짜 없음';
                 })()}
               </span>
-              {video.duration && (
-                <span data-oid="8_vbufl">{formatDuration(video.duration)}</span>
-              )}
+              {video.duration && <span data-oid="8_vbufl">{formatDuration(video.duration)}</span>}
               <span className="capitalize" data-oid="706b.48">
                 {video.videoType}
               </span>
             </div>
             {video.tags && video.tags.length > 0 && (
               <p className="text-xs text-gray-400 mt-1" data-oid="gk-be20">
-                태그: {video.tags.join(", ")}
+                태그: {video.tags.join(', ')}
               </p>
             )}
           </div>
@@ -266,19 +250,15 @@ export default function VideoAlbumPage() {
   const [videos, setVideos] = useState<CatVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(
-    null,
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filteredVideos, setFilteredVideos] = useState<CatVideo[]>([]);
 
   // Filter states
   const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
-  const [catSearchQuery, setCatSearchQuery] = useState("");
-  const [selectedCatNames, setSelectedCatNames] = useState<Set<string>>(
-    new Set(),
-  );
+  const [catSearchQuery, setCatSearchQuery] = useState('');
+  const [selectedCatNames, setSelectedCatNames] = useState<Set<string>>(new Set());
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
 
   // Load all videos when component mounts
@@ -295,20 +275,14 @@ export default function VideoAlbumPage() {
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (video) =>
-          video.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          video.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase()),
-          ),
+          video.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          video.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
     // Apply cat name filter
     if (selectedCatNames.size > 0) {
-      filtered = filtered.filter((video) =>
-        video.tags.some((tag) => selectedCatNames.has(tag)),
-      );
+      filtered = filtered.filter((video) => video.tags.some((tag) => selectedCatNames.has(tag)));
     }
 
     setFilteredVideos(filtered);
@@ -318,7 +292,7 @@ export default function VideoAlbumPage() {
     try {
       setLoading(true);
       setError(null);
-      console.log("Loading all videos...");
+      console.log('Loading all videos...');
 
       const videoService = getVideoService();
       const allVideos = await videoService.getAllVideos({ limit: 100 }); // Get first 100 videos
@@ -326,8 +300,8 @@ export default function VideoAlbumPage() {
 
       setVideos(allVideos);
     } catch (err) {
-      console.error("Error loading videos:", err);
-      setError("동영상을 불러오는 중 오류가 발생했습니다.");
+      console.error('Error loading videos:', err);
+      setError('동영상을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -339,7 +313,7 @@ export default function VideoAlbumPage() {
       const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (error) {
-      console.error("Error loading cats:", error);
+      console.error('Error loading cats:', error);
     }
   };
 
@@ -358,10 +332,7 @@ export default function VideoAlbumPage() {
   };
 
   const goToNext = () => {
-    if (
-      selectedVideoIndex !== null &&
-      selectedVideoIndex < filteredVideos.length - 1
-    ) {
+    if (selectedVideoIndex !== null && selectedVideoIndex < filteredVideos.length - 1) {
       setSelectedVideoIndex(selectedVideoIndex + 1);
     }
   };
@@ -406,21 +377,15 @@ export default function VideoAlbumPage() {
   const filteredCats = cats.filter(
     (cat) =>
       cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
-      cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase()),
+      cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-50" data-oid="gfvx-xq">
       {/* Header */}
       <div className="bg-white shadow-sm" data-oid="yfskekg">
-        <div
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-          data-oid="3wi9ab4"
-        >
-          <h1
-            className="text-3xl font-bold text-gray-900 text-center"
-            data-oid="u.kev1j"
-          >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-oid="3wi9ab4">
+          <h1 className="text-3xl font-bold text-gray-900 text-center" data-oid="u.kev1j">
             동영상
           </h1>
           <p className="text-gray-600 text-center mt-2" data-oid="s-3bu97">
@@ -430,17 +395,11 @@ export default function VideoAlbumPage() {
       </div>
 
       {/* Content */}
-      <div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-        data-oid="8qw_o01"
-      >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-oid="8qw_o01">
         {/* Search and Filter bar */}
         <div className="mb-8" data-oid="syox3r:">
           <div className="max-w-4xl mx-auto" data-oid="kzau10z">
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              data-oid="eqx8opd"
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-oid="eqx8opd">
               {/* Search input */}
               <div className="relative" data-oid="82i9-3:">
                 <input
@@ -506,13 +465,10 @@ export default function VideoAlbumPage() {
                 >
                   <span className="text-gray-600 text-sm" data-oid="uj_z_pt">
                     {selectedCatNames.size > 0
-                      ? "클릭하여 더 많은 고양이 추가"
-                      : "클릭하여 고양이 선택"}
+                      ? '클릭하여 더 많은 고양이 추가'
+                      : '클릭하여 고양이 선택'}
                   </span>
-                  <span
-                    className="text-blue-500 hover:text-blue-700 text-sm"
-                    data-oid="s.6rq8p"
-                  >
+                  <span className="text-blue-500 hover:text-blue-700 text-sm" data-oid="s.6rq8p">
                     🐱 고양이 선택
                   </span>
                 </div>
@@ -584,10 +540,7 @@ export default function VideoAlbumPage() {
 
         {/* Loading state */}
         {loading && (
-          <div
-            className="flex justify-center items-center py-12"
-            data-oid="odq0yjy"
-          >
+          <div className="flex justify-center items-center py-12" data-oid="odq0yjy">
             <div className="text-gray-600" data-oid="4_a7gji">
               동영상을 불러오는 중...
             </div>
@@ -596,10 +549,7 @@ export default function VideoAlbumPage() {
 
         {/* Error state */}
         {error && (
-          <div
-            className="flex justify-center items-center py-12"
-            data-oid="lm1q9ny"
-          >
+          <div className="flex justify-center items-center py-12" data-oid="lm1q9ny">
             <div className="text-red-600" data-oid="ua.jg72">
               {error}
             </div>
@@ -607,25 +557,16 @@ export default function VideoAlbumPage() {
         )}
 
         {/* Empty state */}
-        {!loading &&
-          !error &&
-          filteredVideos.length === 0 &&
-          videos.length > 0 && (
-            <div
-              className="flex justify-center items-center py-12"
-              data-oid="ik1h-x2"
-            >
-              <div className="text-gray-600" data-oid="li2ue1n">
-                검색 결과가 없습니다.
-              </div>
+        {!loading && !error && filteredVideos.length === 0 && videos.length > 0 && (
+          <div className="flex justify-center items-center py-12" data-oid="ik1h-x2">
+            <div className="text-gray-600" data-oid="li2ue1n">
+              검색 결과가 없습니다.
             </div>
-          )}
+          </div>
+        )}
 
         {!loading && !error && videos.length === 0 && (
-          <div
-            className="flex justify-center items-center py-12"
-            data-oid="t1:ahn-"
-          >
+          <div className="flex justify-center items-center py-12" data-oid="t1:ahn-">
             <div className="text-gray-600" data-oid="qnfenfu">
               등록된 동영상이 없습니다.
             </div>
@@ -637,14 +578,13 @@ export default function VideoAlbumPage() {
           <>
             <div className="mb-4 text-center text-gray-600" data-oid="sa6hyrh">
               {(() => {
-                const hasFilters =
-                  searchQuery.trim() || selectedCatNames.size > 0;
+                const hasFilters = searchQuery.trim() || selectedCatNames.size > 0;
                 if (hasFilters) {
                   const filterDesc = [];
                   if (searchQuery.trim()) filterDesc.push(`"${searchQuery}"`);
                   if (selectedCatNames.size > 0)
                     filterDesc.push(`${selectedCatNames.size}마리 고양이`);
-                  return `${filterDesc.join(" + ")} 검색 결과: ${filteredVideos.length}개`;
+                  return `${filterDesc.join(' + ')} 검색 결과: ${filteredVideos.length}개`;
                 } else {
                   return `전체 ${filteredVideos.length}개`;
                 }
@@ -666,12 +606,12 @@ export default function VideoAlbumPage() {
                   {video.thumbnailUrl ? (
                     <img
                       src={video.thumbnailUrl}
-                      alt={video.description || "Video thumbnail"}
+                      alt={video.description || 'Video thumbnail'}
                       className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                       onError={(e) => {
                         // Fallback for missing thumbnails
                         const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
+                        target.style.display = 'none';
                       }}
                       data-oid="irslk96"
                     />
@@ -726,11 +666,8 @@ export default function VideoAlbumPage() {
                     className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2"
                     data-oid="ktdhhf."
                   >
-                    <p
-                      className="text-white text-xs truncate"
-                      data-oid="w2qjfiu"
-                    >
-                      {video.description || "설명 없음"}
+                    <p className="text-white text-xs truncate" data-oid="w2qjfiu">
+                      {video.description || '설명 없음'}
                     </p>
                     <div
                       className="flex justify-between items-center text-white text-xs opacity-75 mt-1"
@@ -740,21 +677,19 @@ export default function VideoAlbumPage() {
                         {(() => {
                           const createdDate = parseDate(video.createdTime);
                           return createdDate
-                            ? createdDate.toLocaleDateString("ko-KR")
-                            : "날짜 없음";
+                            ? createdDate.toLocaleDateString('ko-KR')
+                            : '날짜 없음';
                         })()}
                       </span>
                       {video.duration && (
-                        <span data-oid="a.dnzkd">
-                          {formatDuration(video.duration)}
-                        </span>
+                        <span data-oid="a.dnzkd">{formatDuration(video.duration)}</span>
                       )}
                     </div>
                   </div>
 
                   {/* Video type indicator - moved outside bottom overlay to top right */}
                   <div className="absolute top-1 right-1" data-oid="4-p29cf">
-                    {video.videoType === "youtube" ? (
+                    {video.videoType === 'youtube' ? (
                       <div
                         className="bg-red-600 text-white text-xs px-1 py-0.5 rounded text-center leading-tight"
                         data-oid="ex65x-5"
@@ -800,10 +735,7 @@ export default function VideoAlbumPage() {
             className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
             data-oid="i1nqdig"
           >
-            <div
-              className="flex justify-between items-center mb-4"
-              data-oid="lxcf1yl"
-            >
+            <div className="flex justify-between items-center mb-4" data-oid="lxcf1yl">
               <h3 className="text-lg font-semibold" data-oid="bm:ar-u">
                 고양이 선택
               </h3>
@@ -834,13 +766,8 @@ export default function VideoAlbumPage() {
               data-oid="7b_9kue"
             >
               {filteredCats.length === 0 ? (
-                <div
-                  className="p-4 text-center text-gray-500"
-                  data-oid="4-zlk-d"
-                >
-                  {cats.length === 0
-                    ? "데이터베이스에 고양이가 없습니다"
-                    : "검색 결과가 없습니다"}
+                <div className="p-4 text-center text-gray-500" data-oid="4-zlk-d">
+                  {cats.length === 0 ? '데이터베이스에 고양이가 없습니다' : '검색 결과가 없습니다'}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 p-4" data-oid="1bdku4k">
@@ -849,8 +776,8 @@ export default function VideoAlbumPage() {
                       key={cat.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedCats.has(cat.id)
-                          ? "bg-blue-50 border border-blue-200"
-                          : "border border-gray-200"
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'border border-gray-200'
                       }`}
                       data-oid="qw8mi7j"
                     >
@@ -867,10 +794,7 @@ export default function VideoAlbumPage() {
                           {cat.name}
                         </div>
                         {cat.alt_name && (
-                          <div
-                            className="text-xs text-gray-500"
-                            data-oid="z281ak9"
-                          >
+                          <div className="text-xs text-gray-500" data-oid="z281ak9">
                             ({cat.alt_name})
                           </div>
                         )}
@@ -904,7 +828,6 @@ export default function VideoAlbumPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

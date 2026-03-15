@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Post } from "@/types";
-import ReplyButton from "./ReplyButton";
-import ReplyForm from "./ReplyForm";
-import { IPostService } from "@/services";
-import { cn } from "@/utils/cn";
+import { useState, useEffect } from 'react';
+import { Post } from '@/types';
+import ReplyButton from './ReplyButton';
+import ReplyForm from './ReplyForm';
+import { IPostService } from '@/services';
+import { cn } from '@/utils/cn';
 
 interface AdminReplyItemProps {
   reply: Post;
@@ -42,12 +42,12 @@ export default function AdminReplyItem({
 
     setLoadingNested(true);
     try {
-      console.log("Loading nested replies for reply:", reply.id);
+      console.log('Loading nested replies for reply:', reply.id);
       const fetchedNestedReplies = await postService.getReplies(reply.id);
-      console.log("Fetched nested replies:", fetchedNestedReplies);
+      console.log('Fetched nested replies:', fetchedNestedReplies);
       setNestedReplies(fetchedNestedReplies);
     } catch (error) {
-      console.error("Error loading nested replies:", error);
+      console.error('Error loading nested replies:', error);
     } finally {
       setLoadingNested(false);
     }
@@ -63,7 +63,7 @@ export default function AdminReplyItem({
   const handleReplySuccess = (newReply: Post) => {
     // Add the new reply to nested replies
     setNestedReplies((prev) => [...prev, newReply]);
-    setNestedReplyCount(prev => prev + 1);
+    setNestedReplyCount((prev) => prev + 1);
     setShowReplyForm(false);
     setShowNestedReplies(true); // Automatically show nested replies when a new one is added
     // Notify parent about the new reply
@@ -72,20 +72,24 @@ export default function AdminReplyItem({
 
   const handleNestedReplySuccess = (newReply: Post) => {
     // When a deeply nested reply is created, just pass it up and update count
-    setNestedReplyCount(prev => prev + 1);
+    setNestedReplyCount((prev) => prev + 1);
     onReplySuccess(newReply);
   };
 
   const handleNestedReplyDeleted = (replyId: string) => {
     // Remove from local state
-    setNestedReplies(prev => prev.filter(r => r.id !== replyId));
-    setNestedReplyCount(prev => prev - 1);
+    setNestedReplies((prev) => prev.filter((r) => r.id !== replyId));
+    setNestedReplyCount((prev) => prev - 1);
     // Notify parent
     onReplyDeleted(replyId);
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this reply? This will also delete all nested replies.")) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this reply? This will also delete all nested replies.'
+      )
+    ) {
       return;
     }
 
@@ -94,8 +98,8 @@ export default function AdminReplyItem({
       await postService.deleteReply(reply.id);
       onReplyDeleted(reply.id);
     } catch (error) {
-      console.error("Error deleting reply:", error);
-      alert("Failed to delete reply. Please try again.");
+      console.error('Error deleting reply:', error);
+      alert('Failed to delete reply. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -103,7 +107,7 @@ export default function AdminReplyItem({
 
   return (
     <div
-      className={`mt-3 ${indentLevel > 0 ? `ml-${indentLevel * 4} border-l-2 border-gray-200 pl-4` : ""}`}
+      className={`mt-3 ${indentLevel > 0 ? `ml-${indentLevel * 4} border-l-2 border-gray-200 pl-4` : ''}`}
     >
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         {/* Reply content */}
@@ -149,9 +153,9 @@ export default function AdminReplyItem({
                 disabled={loadingNested}
               >
                 {loadingNested
-                  ? "로딩 중..."
+                  ? '로딩 중...'
                   : showNestedReplies
-                    ? "답글 숨기기"
+                    ? '답글 숨기기'
                     : `답글 ${nestedReplyCount}개 보기`}
               </button>
             )}
@@ -162,12 +166,12 @@ export default function AdminReplyItem({
             onClick={handleDelete}
             disabled={isDeleting}
             className={cn(
-              "px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600",
-              "transition-colors duration-200",
-              isDeleting && "opacity-50 cursor-not-allowed"
+              'px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600',
+              'transition-colors duration-200',
+              isDeleting && 'opacity-50 cursor-not-allowed'
             )}
           >
-            {isDeleting ? "삭제 중..." : "삭제"}
+            {isDeleting ? '삭제 중...' : '삭제'}
           </button>
         </div>
 
@@ -199,9 +203,12 @@ export default function AdminReplyItem({
           </div>
         )}
 
-        {showNestedReplies && nestedReplies.length === 0 && !loadingNested && nestedReplyCount > 0 && (
-          <div className="text-gray-500 text-sm py-4 ml-4">답글을 불러올 수 없습니다.</div>
-        )}
+        {showNestedReplies &&
+          nestedReplies.length === 0 &&
+          !loadingNested &&
+          nestedReplyCount > 0 && (
+            <div className="text-gray-500 text-sm py-4 ml-4">답글을 불러올 수 없습니다.</div>
+          )}
       </div>
     </div>
   );

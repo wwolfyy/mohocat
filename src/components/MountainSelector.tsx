@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import {
-  getCurrentMountainId,
-  getAllMountains,
-  getMountainName,
-} from "@/utils/config";
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { getCurrentMountainId, getAllMountains, getMountainName } from '@/utils/config';
 
 interface MountainOption {
   id: string;
@@ -27,17 +23,14 @@ export default function MountainSelector() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         handleClose();
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -62,7 +55,7 @@ export default function MountainSelector() {
       // For now, we'll just reload the page with a query parameter
       // In the future, this could be enhanced with proper routing
       const url = new URL(window.location.href);
-      url.searchParams.set("mountain", mountainId);
+      url.searchParams.set('mountain', mountainId);
       window.location.href = url.toString();
     }
     handleClose();
@@ -76,14 +69,10 @@ export default function MountainSelector() {
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <span className="transition-colors duration-300">
-          {currentMountainName}
-        </span>
+        <span className="transition-colors duration-300">{currentMountainName}</span>
         <ChevronDownIcon
           className={`h-4 w-4 transition-all duration-300 group-hover:text-blue-600 ${
-            isOpen
-              ? "rotate-180 text-blue-600"
-              : "group-hover:animate-bounce-gentle"
+            isOpen ? 'rotate-180 text-blue-600' : 'group-hover:animate-bounce-gentle'
           }`}
         />
       </button>
@@ -91,7 +80,7 @@ export default function MountainSelector() {
       {isOpen && (
         <div
           className={`absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 ${
-            isAnimating ? "animate-dropdown-exit" : "animate-dropdown-enter"
+            isAnimating ? 'animate-dropdown-exit' : 'animate-dropdown-enter'
           }`}
         >
           <div className="py-1" role="menu" aria-orientation="vertical">
@@ -101,17 +90,15 @@ export default function MountainSelector() {
                 onClick={() => handleMountainSelect(mountain.id)}
                 className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-all duration-200 hover:translate-x-1 hover:shadow-sm ${
                   mountain.id === currentMountainId
-                    ? "bg-blue-50 text-blue-700 border-l-2 border-blue-500"
-                    : "text-gray-700 hover:text-gray-900"
+                    ? 'bg-blue-50 text-blue-700 border-l-2 border-blue-500'
+                    : 'text-gray-700 hover:text-gray-900'
                 }`}
                 style={{
                   animationDelay: `${index * 50}ms`,
                 }}
                 role="menuitem"
               >
-                <div className="font-medium transition-colors duration-200">
-                  {mountain.name}
-                </div>
+                <div className="font-medium transition-colors duration-200">{mountain.name}</div>
                 <div className="text-xs text-gray-500 mt-1 transition-colors duration-200">
                   {mountain.description}
                 </div>

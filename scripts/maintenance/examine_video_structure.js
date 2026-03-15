@@ -7,7 +7,14 @@ const admin = require('firebase-admin');
 const path = require('path');
 
 // Load service account key
-const serviceAccountPath = path.join(__dirname, '..', '..', 'config', 'firebase', 'mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'firebase',
+  'mountaincats-61543-7329e795c352.json'
+);
 
 if (!require('fs').existsSync(serviceAccountPath)) {
   console.error('Service account key file not found:', serviceAccountPath);
@@ -20,7 +27,7 @@ const serviceAccount = require(serviceAccountPath);
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
   });
 }
 
@@ -31,7 +38,7 @@ const YOUTUBE_READONLY_FIELDS = [
   'tags', // YouTube tags - cannot be edited in Firebase
   'videoUrl', // YouTube video URL - cannot be edited in Firebase
   'createdTime', // Mapped from YouTube recordingDate - cannot be edited in Firebase
-  'location' // YouTube video location - cannot be edited in Firebase
+  'location', // YouTube video location - cannot be edited in Firebase
 ];
 
 // Other fields that come from YouTube API but may be editable
@@ -43,7 +50,7 @@ const YOUTUBE_SOURCED_FIELDS = [
   'duration',
   'channelTitle',
   'youtubeId',
-  'allPlaylists' // Derived from YouTube playlists
+  'allPlaylists', // Derived from YouTube playlists
 ];
 
 // Fields that are Firestore-only (not available in YouTube) and can be edited
@@ -55,7 +62,7 @@ const FIRESTORE_ONLY_FIELDS = [
   'autoTagged', // Our system flag
   'fileSize', // Not available for YouTube videos
   'videoType', // Our classification
-  'lastMetadataRefresh' // Our system timestamp
+  'lastMetadataRefresh', // Our system timestamp
 ];
 
 async function examineVideoStructure() {
@@ -75,33 +82,38 @@ async function examineVideoStructure() {
     const allFields = new Set();
     const documents = [];
 
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
       documents.push({ id: doc.id, data });
-      Object.keys(data).forEach(field => allFields.add(field));
-    });    console.log('=== FIELD ANALYSIS ===\n');
+      Object.keys(data).forEach((field) => allFields.add(field));
+    });
+    console.log('=== FIELD ANALYSIS ===\n');
 
     console.log('� YOUTUBE READ-ONLY FIELDS (cannot be edited in Firebase):');
-    YOUTUBE_READONLY_FIELDS.forEach(field => {
+    YOUTUBE_READONLY_FIELDS.forEach((field) => {
       const hasField = allFields.has(field);
       console.log(`  ${hasField ? '✅' : '❌'} ${field}`);
     });
 
     console.log('\n🔵 OTHER YOUTUBE-SOURCED FIELDS (sync from YouTube):');
-    YOUTUBE_SOURCED_FIELDS.forEach(field => {
+    YOUTUBE_SOURCED_FIELDS.forEach((field) => {
       const hasField = allFields.has(field);
       console.log(`  ${hasField ? '✅' : '❌'} ${field}`);
     });
 
     console.log('\n🟢 FIRESTORE-ONLY FIELDS (local to our system):');
-    FIRESTORE_ONLY_FIELDS.forEach(field => {
+    FIRESTORE_ONLY_FIELDS.forEach((field) => {
       const hasField = allFields.has(field);
       console.log(`  ${hasField ? '✅' : '❌'} ${field}`);
     });
 
     console.log('\n🟡 UNEXPECTED FIELDS (not in our categories):');
-    const categorizedFields = new Set([...YOUTUBE_READONLY_FIELDS, ...YOUTUBE_SOURCED_FIELDS, ...FIRESTORE_ONLY_FIELDS]);
-    allFields.forEach(field => {
+    const categorizedFields = new Set([
+      ...YOUTUBE_READONLY_FIELDS,
+      ...YOUTUBE_SOURCED_FIELDS,
+      ...FIRESTORE_ONLY_FIELDS,
+    ]);
+    allFields.forEach((field) => {
       if (!categorizedFields.has(field)) {
         console.log(`  ⚠️  ${field}`);
       }
@@ -110,23 +122,32 @@ async function examineVideoStructure() {
     console.log('\n=== SAMPLE DOCUMENT STRUCTURE ===\n');
     documents.forEach((doc, index) => {
       console.log(`Document ${index + 1} (${doc.id}):`);
-      Object.keys(doc.data).sort().forEach(field => {
-        const value = doc.data[field];
-        const type = Array.isArray(value) ? 'array' : typeof value;
-        const preview = type === 'string' && value.length > 50
-          ? value.substring(0, 50) + '...'
-          : type === 'object' && value !== null
-          ? Array.isArray(value)
-            ? `[${value.length} items]`
-            : '{object}'
-          : String(value);        const category = YOUTUBE_READONLY_FIELDS.includes(field) ? '🔴' :
-                        YOUTUBE_SOURCED_FIELDS.includes(field) ? '🔵' :
-                        FIRESTORE_ONLY_FIELDS.includes(field) ? '🟢' : '🟡';
+      Object.keys(doc.data)
+        .sort()
+        .forEach((field) => {
+          const value = doc.data[field];
+          const type = Array.isArray(value) ? 'array' : typeof value;
+          const preview =
+            type === 'string' && value.length > 50
+              ? value.substring(0, 50) + '...'
+              : type === 'object' && value !== null
+                ? Array.isArray(value)
+                  ? `[${value.length} items]`
+                  : '{object}'
+                : String(value);
+          const category = YOUTUBE_READONLY_FIELDS.includes(field)
+            ? '🔴'
+            : YOUTUBE_SOURCED_FIELDS.includes(field)
+              ? '🔵'
+              : FIRESTORE_ONLY_FIELDS.includes(field)
+                ? '🟢'
+                : '🟡';
 
-        console.log(`  ${category} ${field}: (${type}) ${preview}`);
-      });
+          console.log(`  ${category} ${field}: (${type}) ${preview}`);
+        });
       console.log('');
-    });    console.log('=== DATA FLOW ANALYSIS ===\n');
+    });
+    console.log('=== DATA FLOW ANALYSIS ===\n');
     console.log('Based on this analysis:');
     console.log('');
     console.log('� YOUTUBE READ-ONLY fields MUST be:');
@@ -146,7 +167,6 @@ async function examineVideoStructure() {
     console.log('   - Not affected by YouTube metadata sync');
     console.log('');
     console.log('🟡 UNEXPECTED fields need investigation');
-
   } catch (error) {
     console.error('Error examining video structure:', error);
     process.exit(1);
@@ -166,4 +186,9 @@ if (require.main === module) {
     });
 }
 
-module.exports = { examineVideoStructure, YOUTUBE_READONLY_FIELDS, YOUTUBE_SOURCED_FIELDS, FIRESTORE_ONLY_FIELDS };
+module.exports = {
+  examineVideoStructure,
+  YOUTUBE_READONLY_FIELDS,
+  YOUTUBE_SOURCED_FIELDS,
+  FIRESTORE_ONLY_FIELDS,
+};

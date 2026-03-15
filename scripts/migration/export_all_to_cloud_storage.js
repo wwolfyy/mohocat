@@ -14,7 +14,7 @@ const fs = require('fs');
 const possiblePaths = [
   path.join(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
   path.join(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json'),
-  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json')
+  path.resolve(process.cwd(), 'config/firebase/mountaincats-61543-7329e795c352.json'),
 ];
 
 let serviceAccountPath = null;
@@ -38,7 +38,7 @@ const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 if (getApps().length === 0) {
   initializeApp({
     credential: cert(serviceAccount),
-    storageBucket: 'mountaincats-61543.firebasestorage.app' // Use the correct bucket name
+    storageBucket: 'mountaincats-61543.firebasestorage.app', // Use the correct bucket name
   });
 }
 
@@ -56,14 +56,14 @@ async function uploadToCloudStorage(data, filename) {
   await file.save(jsonContent, {
     metadata: {
       contentType: 'application/json',
-      cacheControl: 'public, max-age=300' // Cache for 5 minutes
-    }
+      cacheControl: 'public, max-age=300', // Cache for 5 minutes
+    },
   });
 
   // Get a signed URL that doesn't expire (for public access)
   const [downloadUrl] = await file.getSignedUrl({
     action: 'read',
-    expires: '03-09-2491' // Far future expiry date
+    expires: '03-09-2491', // Far future expiry date
   });
 
   console.log(`✅ ${filename} uploaded successfully to: ${downloadUrl}`);
@@ -82,7 +82,7 @@ async function exportCatsToCloudStorage() {
     const data = doc.data();
     cats.push({
       id: doc.id,
-      ...data
+      ...data,
     });
   });
 
@@ -112,7 +112,7 @@ async function exportPointsToCloudStorage() {
     const data = doc.data();
     points.push({
       id: doc.id,
-      ...data
+      ...data,
     });
   });
 
@@ -160,7 +160,7 @@ async function exportAllToCloudStorage() {
     const [cats, points, feedingSpots] = await Promise.all([
       exportCatsToCloudStorage(),
       exportPointsToCloudStorage(),
-      exportFeedingSpotsToCloudStorage()
+      exportFeedingSpotsToCloudStorage(),
     ]);
 
     console.log('\n✅ All data exported successfully to Cloud Storage!');
@@ -170,7 +170,6 @@ async function exportAllToCloudStorage() {
     console.log(`- ${feedingSpots.length} feeding spot names`);
 
     return { cats, points, feedingSpots };
-
   } catch (error) {
     console.error('❌ Export failed:', error);
     throw error;
@@ -195,5 +194,5 @@ module.exports = {
   exportCatsToCloudStorage,
   exportPointsToCloudStorage,
   exportFeedingSpotsToCloudStorage,
-  uploadToCloudStorage
+  uploadToCloudStorage,
 };

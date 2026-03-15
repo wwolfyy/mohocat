@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({
         status: 'not_configured',
         message: 'YouTube OAuth not configured',
-        tokens: []
+        tokens: [],
       });
     }
 
@@ -54,7 +54,7 @@ export async function GET() {
     if (firestoreTokenData?.refreshToken) {
       const firestoreConfig = {
         ...oauthConfig,
-        refreshToken: firestoreTokenData.refreshToken
+        refreshToken: firestoreTokenData.refreshToken,
       };
       const firestoreTokenInfo = await checkToken(firestoreConfig, 'firestore');
       firestoreTokenInfo.updatedAt = firestoreTokenData.updatedAt;
@@ -62,42 +62,53 @@ export async function GET() {
     }
 
     // Determine overall status
-    const validTokens = tokens.filter(t => t.isValid);
+    const validTokens = tokens.filter((t) => t.isValid);
     const hasValidToken = validTokens.length > 0;
 
     // Find specific token info for UI
-    const envToken = tokens.find(t => t.source === 'environment');
-    const firestoreToken = tokens.find(t => t.source === 'firestore');
+    const envToken = tokens.find((t) => t.source === 'environment');
+    const firestoreToken = tokens.find((t) => t.source === 'firestore');
 
     return NextResponse.json({
-      status: hasValidToken ? 'valid' : (tokens.length > 0 ? 'expired' : 'not_configured'),
-      message: hasValidToken ?
-        `${validTokens.length}개의 유효한 토큰 (${validTokens.map(t => t.source).join(', ')})` :
-        (tokens.length > 0 ? '모든 토큰이 만료됨' : '토큰이 설정되지 않음'),
+      status: hasValidToken ? 'valid' : tokens.length > 0 ? 'expired' : 'not_configured',
+      message: hasValidToken
+        ? `${validTokens.length}개의 유효한 토큰 (${validTokens.map((t) => t.source).join(', ')})`
+        : tokens.length > 0
+          ? '모든 토큰이 만료됨'
+          : '토큰이 설정되지 않음',
       tokens,
       expiresAt: validTokens.length > 0 ? validTokens[0].expiresAt : null,
-      envTokenInfo: envToken ? {
-        issuedAt: envToken.updatedAt || '환경변수 (발급일 불명)',
-        status: envToken.isValid ? 'valid' : 'expired'
-      } : undefined,
-      firestoreTokenInfo: firestoreToken ? {
-        issuedAt: firestoreToken.updatedAt || 'Firestore (발급일 불명)',
-        status: firestoreToken.isValid ? 'valid' : 'expired'
-      } : undefined
+      envTokenInfo: envToken
+        ? {
+            issuedAt: envToken.updatedAt || '환경변수 (발급일 불명)',
+            status: envToken.isValid ? 'valid' : 'expired',
+          }
+        : undefined,
+      firestoreTokenInfo: firestoreToken
+        ? {
+            issuedAt: firestoreToken.updatedAt || 'Firestore (발급일 불명)',
+            status: firestoreToken.isValid ? 'valid' : 'expired',
+          }
+        : undefined,
     });
-
   } catch (error) {
     console.error('YouTube auth status check failed:', error);
-    return NextResponse.json({
-      status: 'error',
-      message: 'Failed to check token status',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      tokens: []
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: 'error',
+        message: 'Failed to check token status',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        tokens: [],
+      },
+      { status: 500 }
+    );
   }
 }
 
-async function checkToken(oauthConfig: any, source: 'environment' | 'firestore'): Promise<TokenInfo> {
+async function checkToken(
+  oauthConfig: any,
+  source: 'environment' | 'firestore'
+): Promise<TokenInfo> {
   const oauth2Client = new google.auth.OAuth2(
     oauthConfig.clientId,
     oauthConfig.clientSecret,
@@ -115,7 +126,7 @@ async function checkToken(oauthConfig: any, source: 'environment' | 'firestore')
       source,
       token: oauthConfig.refreshToken,
       isValid: true,
-      expiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null
+      expiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
     };
   } catch (error) {
     return {
@@ -123,7 +134,7 @@ async function checkToken(oauthConfig: any, source: 'environment' | 'firestore')
       token: oauthConfig.refreshToken,
       isValid: false,
       expiresAt: null,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }

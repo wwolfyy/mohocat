@@ -25,13 +25,13 @@ if (serviceAccountPath) {
   console.log(`Storage bucket: ${storageBucket}`);
   app = initializeApp({
     credential: cert(require(serviceAccountPath)),
-    storageBucket: storageBucket
+    storageBucket: storageBucket,
   });
 } else {
   console.log('Using default Firebase credentials');
   console.log(`Storage bucket: ${storageBucket}`);
   app = initializeApp({
-    storageBucket: storageBucket
+    storageBucket: storageBucket,
   });
 }
 
@@ -65,7 +65,7 @@ async function getFileMetadata(file) {
       size: parseInt(metadata.size) || 0,
       contentType: metadata.contentType || 'unknown',
       timeCreated: metadata.timeCreated ? new Date(metadata.timeCreated) : new Date(),
-      updated: metadata.updated ? new Date(metadata.updated) : new Date()
+      updated: metadata.updated ? new Date(metadata.updated) : new Date(),
     };
   } catch (error) {
     console.warn(`Could not get metadata for ${file.name}:`, error.message);
@@ -73,7 +73,7 @@ async function getFileMetadata(file) {
       size: 0,
       contentType: 'unknown',
       timeCreated: new Date(),
-      updated: new Date()
+      updated: new Date(),
     };
   }
 }
@@ -83,7 +83,7 @@ async function getPublicUrl(file) {
   try {
     const [url] = await file.getSignedUrl({
       action: 'read',
-      expires: Date.now() + 1000 * 60 * 60 * 24 * 365 * 10 // 10 years
+      expires: Date.now() + 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
     });
     return url;
   } catch (error) {
@@ -177,11 +177,13 @@ async function importImages() {
       const [files] = await storage.getFiles({ prefix: folder });
 
       // Filter for actual image files
-      const imageFiles = files.filter(file => {
+      const imageFiles = files.filter((file) => {
         const fileName = file.name;
-        return !fileName.endsWith('/') && // Not a directory
-               fileName !== folder.slice(0, -1) && // Not the folder itself
-               isImageFile(fileName);
+        return (
+          !fileName.endsWith('/') && // Not a directory
+          fileName !== folder.slice(0, -1) && // Not the folder itself
+          isImageFile(fileName)
+        );
       });
 
       console.log(`Found ${imageFiles.length} image files in ${folder}`);
@@ -199,7 +201,8 @@ async function importImages() {
           }
 
           // Check if already exists in Firestore
-          const existingQuery = await db.collection('cat_images')
+          const existingQuery = await db
+            .collection('cat_images')
             .where('storagePath', '==', file.name)
             .get();
 
@@ -218,13 +221,12 @@ async function importImages() {
             uploadedBy: 'system_import',
             needsTagging: true,
             fileSize: metadata.size,
-            autoTagged: false
+            autoTagged: false,
           };
 
           await db.collection('cat_images').add(imageData);
           console.log(`✅ Imported: ${fileName}`);
           importedImages++;
-
         } catch (error) {
           console.error(`❌ Failed to import ${file.name}:`, error.message);
         }
@@ -251,11 +253,13 @@ async function importVideos() {
       const [files] = await storage.getFiles({ prefix: folder });
 
       // Filter for actual video files
-      const videoFiles = files.filter(file => {
+      const videoFiles = files.filter((file) => {
         const fileName = file.name;
-        return !fileName.endsWith('/') && // Not a directory
-               fileName !== folder.slice(0, -1) && // Not the folder itself
-               isVideoFile(fileName);
+        return (
+          !fileName.endsWith('/') && // Not a directory
+          fileName !== folder.slice(0, -1) && // Not the folder itself
+          isVideoFile(fileName)
+        );
       });
 
       console.log(`Found ${videoFiles.length} video files in ${folder}`);
@@ -273,7 +277,8 @@ async function importVideos() {
           }
 
           // Check if already exists in Firestore
-          const existingQuery = await db.collection('cat_videos')
+          const existingQuery = await db
+            .collection('cat_videos')
             .where('storagePath', '==', file.name)
             .get();
 
@@ -293,13 +298,12 @@ async function importVideos() {
             needsTagging: true,
             fileSize: metadata.size,
             autoTagged: false,
-            videoType: 'storage'
+            videoType: 'storage',
           };
 
           await db.collection('cat_videos').add(videoData);
           console.log(`✅ Imported: ${fileName}`);
           importedVideos++;
-
         } catch (error) {
           console.error(`❌ Failed to import ${file.name}:`, error.message);
         }
@@ -333,7 +337,7 @@ async function main() {
 
 // Run the script
 if (require.main === module) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('Unhandled error during import:', error);
     process.exit(1);
   });
@@ -343,5 +347,5 @@ module.exports = {
   importImages,
   importVideos,
   cleanupOrphanedEntries,
-  main
+  main,
 };

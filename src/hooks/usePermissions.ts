@@ -37,14 +37,22 @@ export function usePermissions() {
   }, [user?.uid]);
 
   // Permission checking functions
-  const hasPermission = useCallback((permission: string) =>
-    permissions.includes(permission), [permissions]);
+  const hasPermission = useCallback(
+    (permission: string) => permissions.includes(permission),
+    [permissions]
+  );
 
-  const hasAnyPermission = useCallback((permissionList: string[]) =>
-    permissionList.some(permission => permissions.includes(permission)), [permissions]);
+  const hasAnyPermission = useCallback(
+    (permissionList: string[]) =>
+      permissionList.some((permission) => permissions.includes(permission)),
+    [permissions]
+  );
 
-  const hasAllPermissions = useCallback((permissionList: string[]) =>
-    permissionList.every(permission => permissions.includes(permission)), [permissions]);
+  const hasAllPermissions = useCallback(
+    (permissionList: string[]) =>
+      permissionList.every((permission) => permissions.includes(permission)),
+    [permissions]
+  );
 
   // Convenience getters for specific permissions
   const canManageCats = hasPermission('manage-cat');
@@ -111,7 +119,7 @@ export function usePermissions() {
 
     // Utility functions
     hasRequiredPermissions: (requiredPermissions: string[]) =>
-      requiredPermissions.every(permission => permissions.includes(permission)),
+      requiredPermissions.every((permission) => permissions.includes(permission)),
 
     // Refresh permissions (useful after role changes)
     refreshPermissions: async () => {
@@ -125,7 +133,7 @@ export function usePermissions() {
           setError(error.message || 'Failed to refresh permissions');
         }
       }
-    }
+    },
   };
 }
 
@@ -137,42 +145,51 @@ export function usePermissionCheck() {
   const { user } = useAuth();
   const [permissionService] = useState(() => new PermissionService());
 
-  const checkPermission = useCallback(async (permission: string): Promise<boolean> => {
-    if (!user) return false;
+  const checkPermission = useCallback(
+    async (permission: string): Promise<boolean> => {
+      if (!user) return false;
 
-    try {
-      return await permissionService.checkPermission(user.uid, permission);
-    } catch (error) {
-      console.error('Permission check failed:', error);
-      return false;
-    }
-  }, [user?.uid, permissionService]);
+      try {
+        return await permissionService.checkPermission(user.uid, permission);
+      } catch (error) {
+        console.error('Permission check failed:', error);
+        return false;
+      }
+    },
+    [user?.uid, permissionService]
+  );
 
-  const checkAnyPermission = useCallback(async (permissions: string[]): Promise<boolean> => {
-    if (!user) return false;
+  const checkAnyPermission = useCallback(
+    async (permissions: string[]): Promise<boolean> => {
+      if (!user) return false;
 
-    try {
-      return await permissionService.hasAnyPermission(user.uid, permissions);
-    } catch (error) {
-      console.error('Permission check failed:', error);
-      return false;
-    }
-  }, [user?.uid, permissionService]);
+      try {
+        return await permissionService.hasAnyPermission(user.uid, permissions);
+      } catch (error) {
+        console.error('Permission check failed:', error);
+        return false;
+      }
+    },
+    [user?.uid, permissionService]
+  );
 
-  const checkAllPermissions = useCallback(async (permissions: string[]): Promise<boolean> => {
-    if (!user) return false;
+  const checkAllPermissions = useCallback(
+    async (permissions: string[]): Promise<boolean> => {
+      if (!user) return false;
 
-    try {
-      return await permissionService.hasAllPermissions(user.uid, permissions);
-    } catch (error) {
-      console.error('Permission check failed:', error);
-      return false;
-    }
-  }, [user?.uid, permissionService]);
+      try {
+        return await permissionService.hasAllPermissions(user.uid, permissions);
+      } catch (error) {
+        console.error('Permission check failed:', error);
+        return false;
+      }
+    },
+    [user?.uid, permissionService]
+  );
 
   return {
     checkPermission,
     checkAnyPermission,
-    checkAllPermissions
+    checkAllPermissions,
   };
 }

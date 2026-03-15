@@ -3,29 +3,37 @@
 ## Current Configuration Analysis
 
 ### What's Happening Now
+
 With `images.unoptimized: true` in `next.config.js`:
+
 - **No Next.js image optimization** is performed
 - **Images served directly** from Firebase Storage (Google CDN)
 - **No local storage** of optimized images
 - **Direct passthrough** from Firebase to browser
 
 ### Architecture Reality Check
+
 **Your app is NOT a static export** - it's a **full-stack Next.js application** with:
+
 - ✅ **16 API routes** using Firebase Admin SDK
 - ✅ **Server runtime** for authentication, file uploads, YouTube integration
 - ✅ **Real-time Firebase operations** via server-side functions
 - ✅ **Admin dashboard** with server-side data processing
 
 ### Why `unoptimized: true` is Set
+
 The reason is likely **NOT** static export compatibility, but rather:
+
 - **Development convenience** (faster builds during development)
 - **Firebase Storage preference** (direct serving from Google CDN)
 - **Legacy configuration** (may have been set for older deployment strategy)
 
 ### The Truth: Image Optimization is Possible
+
 Since your app has server runtime, **Next.js Image optimization would work perfectly**.
 
 ### Image Flow
+
 ```
 Firebase Storage → Google CDN → Browser
 ```
@@ -33,6 +41,7 @@ Firebase Storage → Google CDN → Browser
 ## If Full Next.js Optimization Was Enabled
 
 ### Configuration Change Required
+
 ```javascript
 // next.config.js
 const nextConfig = {
@@ -46,6 +55,7 @@ const nextConfig = {
 ### Where Optimized Images Would Be Stored
 
 #### Development (.next/cache/images/)
+
 ```
 .next/
 ├── cache/
@@ -57,11 +67,13 @@ const nextConfig = {
 ```
 
 #### Production (Vercel)
+
 - **Edge Network**: Cached at Vercel's edge locations globally
 - **Lambda**: Generated on-demand by serverless function
 - **CDN**: Distributed through Vercel's CDN
 
 #### Production (Self-hosted)
+
 ```
 .next/
 ├── cache/
@@ -70,6 +82,7 @@ const nextConfig = {
 ```
 
 ### Image Flow (If Enabled)
+
 ```
 Firebase Storage → Next.js Optimization → Local Cache → Browser
 ```
@@ -77,6 +90,7 @@ Firebase Storage → Next.js Optimization → Local Cache → Browser
 ## Why Current Setup Works Well
 
 ### Benefits of `unoptimized: true`
+
 1. **Static Export Compatible**: Required for `output: 'export'` deployment
 2. **Google CDN**: Firebase Storage uses Google's global CDN
 3. **No server runtime needed**: Pure static hosting (cheaper, more reliable)
@@ -84,6 +98,7 @@ Firebase Storage → Next.js Optimization → Local Cache → Browser
 5. **Fast serving**: Direct from Google's edge network
 
 ### Trade-offs
+
 - **No automatic WebP conversion**
 - **No on-demand resizing**
 - **Manual optimization required**
@@ -91,14 +106,18 @@ Firebase Storage → Next.js Optimization → Local Cache → Browser
 ## Recommendations
 
 ### Current Setup (Re-evaluate)
+
 The `unoptimized: true` setting may be **outdated** because:
+
 - **Server runtime is available** (16 API routes prove this)
 - **Image optimization is possible** with current architecture
 - **Better performance** could be achieved with Next.js optimization
 - **Firebase Storage + Next.js optimization** can work together
 
 ### Alternative: Enable Full Optimization (Recommended)
+
 You **can and should** enable Next.js Image optimization because:
+
 - **Server runtime exists** (API routes, Firebase Admin, etc.)
 - **Performance benefits** (WebP conversion, automatic resizing)
 - **Better user experience** (optimized loading, format selection)
@@ -107,11 +126,13 @@ You **can and should** enable Next.js Image optimization because:
 ## Storage Requirements
 
 ### Current Setup
+
 - **Local storage**: None (images served from Firebase)
 - **Build size**: No image cache
 - **Runtime storage**: None
 
 ### With Full Optimization
+
 - **Development**: `.next/cache/images/` grows over time
 - **Production**: Cache storage depends on deployment platform
 - **Build size**: Potentially larger due to optimization pipeline
@@ -119,6 +140,7 @@ You **can and should** enable Next.js Image optimization because:
 ## Reality Check: Current Next.js Image Implementation
 
 ### What's Actually Happening
+
 With `images.unoptimized: true`, the Next.js `<Image>` components we implemented are **essentially acting as enhanced `<img>` tags**. The major optimization benefits are NOT active:
 
 ❌ **No automatic WebP conversion**
@@ -127,12 +149,14 @@ With `images.unoptimized: true`, the Next.js `<Image>` components we implemented
 ❌ **No Next.js optimization pipeline**
 
 ### Limited Benefits Still Active
+
 ✅ **Layout stability** (width/height prevent layout shift)
 ✅ **Built-in lazy loading**
 ✅ **Error handling** (onError/onLoad callbacks)
 ✅ **Priority loading** (resource hints)
 
 ### The Truth
+
 The main performance optimizations we implemented (format conversion, automatic resizing, etc.) are **completely bypassed** due to the `unoptimized: true` configuration.
 
 ## Conclusion
@@ -140,6 +164,7 @@ The main performance optimizations we implemented (format conversion, automatic 
 Your application is a **full-stack Next.js app** with server runtime, not a static export. The `unoptimized: true` setting may be **preventing you from getting better performance**.
 
 **Recommendation**: Enable Next.js Image optimization by removing `unoptimized: true`. You'll get:
+
 - **Automatic WebP conversion** (~70% smaller files)
 - **Responsive image sizes** (automatically optimized for different screens)
 - **Better caching** (optimized by Next.js)
@@ -150,6 +175,7 @@ The Next.js Image optimization will work **alongside** Firebase Storage, not rep
 ## How Next.js Image Optimization Works with Firebase Storage
 
 ### What Actually Happens
+
 When you remove `unoptimized: true`, Next.js doesn't replace Firebase Storage - it **adds optimization on top of it**:
 
 1. **First request**: Next.js fetches the original image from Firebase Storage (Google CDN)
@@ -158,12 +184,14 @@ When you remove `unoptimized: true`, Next.js doesn't replace Firebase Storage - 
 4. **Subsequent requests**: Optimized image served directly from Next.js cache
 
 ### Google CDN Still Used
+
 - ✅ **Original images** still served from Firebase Storage (Google CDN)
 - ✅ **Fast initial fetch** from Google's global network
 - ✅ **Reliable storage** with Firebase's infrastructure
 - ✅ **Added optimization** via Next.js processing
 
 ### Performance Benefits
+
 - **First load**: Slightly slower (optimization processing time)
 - **Subsequent loads**: Much faster (optimized images from cache)
 - **Overall**: Better performance due to smaller file sizes
@@ -171,6 +199,7 @@ When you remove `unoptimized: true`, Next.js doesn't replace Firebase Storage - 
 ## Image Serving Comparison
 
 ### Current Setup (unoptimized: true)
+
 ```
 Request: cat-thumbnail.jpg (100KB JPEG)
 ├── Firebase Storage
@@ -179,6 +208,7 @@ Request: cat-thumbnail.jpg (100KB JPEG)
 ```
 
 ### With Optimization Enabled
+
 ```
 Request: cat-thumbnail.jpg?w=40&q=75
 ├── Next.js checks cache
@@ -194,18 +224,21 @@ Request: cat-thumbnail.jpg?w=40&q=75
 ## Trade-offs Analysis
 
 ### What You Keep
+
 - ✅ **Firebase Storage reliability** (still the source of truth)
 - ✅ **Google CDN speed** (for initial fetches)
 - ✅ **Current upload workflow** (no changes needed)
 - ✅ **Existing image URLs** (work exactly the same)
 
 ### What You Gain
+
 - ✅ **70% smaller files** (WebP conversion)
 - ✅ **Responsive images** (automatic sizing)
 - ✅ **Better caching** (optimized images cached)
 - ✅ **Format selection** (WebP for modern browsers, JPEG fallback)
 
 ### What Changes
+
 - ⚠️ **First load latency** (optimization processing time)
 - ⚠️ **Server storage** (cached optimized images)
 - ⚠️ **Build complexity** (image optimization pipeline)
@@ -213,6 +246,7 @@ Request: cat-thumbnail.jpg?w=40&q=75
 ## Deployment Considerations
 
 ### Where Optimized Images Are Stored
+
 - **Development**: `.next/cache/images/` (local filesystem)
 - **Production**: Depends on deployment platform
   - **Vercel**: Edge network cache
@@ -220,6 +254,7 @@ Request: cat-thumbnail.jpg?w=40&q=75
   - **Docker**: Container filesystem (configure persistent volume)
 
 ### Cache Management
+
 - **Automatic**: Next.js handles cache invalidation
 - **Manual**: Can clear cache by deleting `.next/cache/images/`
 - **Production**: Platform-specific cache management
@@ -231,6 +266,7 @@ Request: cat-thumbnail.jpg?w=40&q=75
 **Important**: Firebase Hosting is **static hosting only** - it cannot run your Next.js API routes or server-side functions. Your current architecture with 16 API routes **cannot be deployed to Firebase Hosting alone**.
 
 ### What Firebase Hosting Provides
+
 - ✅ **Static file serving** (HTML, CSS, JS, images)
 - ✅ **CDN distribution** (Google's global network)
 - ✅ **Custom domains** and SSL certificates
@@ -238,7 +274,9 @@ Request: cat-thumbnail.jpg?w=40&q=75
 - ❌ **No server runtime** (no API routes, no server-side rendering)
 
 ### Your Current Architecture Requirements
+
 Your app needs server runtime for:
+
 - **16 API routes** (`/api/*`)
 - **Firebase Admin SDK** operations
 - **YouTube API integration**
@@ -249,32 +287,39 @@ Your app needs server runtime for:
 ## Deployment Options Analysis
 
 ### Option 1: Current (Likely Using Vercel/Similar)
+
 **Platform**: Vercel, Netlify, or similar serverless platform
 **Cost**:
+
 - **Free tier**: Usually sufficient for small projects
 - **Pro tier**: ~$20-100/month for production apps
 - **Serverless functions**: Pay per invocation
 
 **Complexity**:
+
 - ✅ **Simple deployment** (git push)
 - ✅ **Automatic scaling**
 - ✅ **Built-in CDN**
 - ✅ **No server management**
 
 ### Option 2: Firebase Hosting + Cloud Functions for Firebase
+
 **Platform**: Firebase Hosting + Cloud Functions for Firebase
 **Cost**:
+
 - **Firebase Hosting**: Free tier generous, $25/month for production
 - **Cloud Functions**: Pay per invocation (~$0.40/million invocations)
 - **Firestore**: Pay per read/write operation
 
 **Complexity**:
+
 - ⚠️ **Requires refactoring** all API routes to Cloud Functions
 - ⚠️ **Different deployment process**
 - ⚠️ **Cold start latency** for functions
 - ⚠️ **Limited by Cloud Functions runtime**
 
 **Benefits vs. Other Serverless Options:**
+
 - ✅ **Tight Firebase integration** - Direct access to Firestore, Storage, Auth
 - ✅ **Unified billing** - Single Google Cloud bill
 - ✅ **Built-in security** - Automatic Firebase Admin SDK authentication
@@ -282,38 +327,46 @@ Your app needs server runtime for:
 - ✅ **Simplified deployment** - Single `firebase deploy` command
 
 **Drawbacks vs. Other Serverless Options:**
+
 - ❌ **Runtime limitations** - Limited to Node.js 18/20
 - ❌ **Cold start penalty** - Slower than AWS Lambda
 - ❌ **Memory/timeout constraints** - Max 8GB RAM, 9 minutes timeout
 - ❌ **Vendor lock-in** - Firebase-specific patterns
 
 ### Option 3: Full Server (VPS/Cloud)
+
 **Platform**: DigitalOcean, AWS EC2, Google Cloud Run
 **Cost**:
+
 - **VPS**: $10-50/month for basic server
 - **Cloud Run**: Pay per request (~$0.24/million requests)
 - **AWS/GCP**: Variable based on usage
 
 **Complexity**:
+
 - ❌ **Server management** required
 - ❌ **Scaling complexity**
 - ❌ **Security maintenance**
 - ❌ **Infrastructure setup**
 
 ### Option 4: AWS Lambda + S3 + CloudFront
+
 **Platform**: AWS Lambda + S3 Static Hosting + CloudFront CDN
 **Cost**:
+
 - **S3 Static Hosting**: $0.023/GB/month + requests
 - **Lambda Functions**: $0.20/million requests + compute time
 - **CloudFront CDN**: $0.085/GB data transfer
 
 **Complexity**:
+
 - ⚠️ **Requires refactoring** all API routes to Lambda functions
 - ⚠️ **AWS infrastructure setup** (S3, CloudFront, API Gateway)
 - ⚠️ **Multiple service orchestration**
 - ⚠️ **IAM permissions management**
 
 **Benefits vs. Firebase Cloud Functions:**
+
 - ✅ **Superior performance** - Faster cold starts, better scaling
 - ✅ **More runtime options** - Python, Java, C#, Go, etc.
 - ✅ **Better resource limits** - Up to 10GB RAM, 15 minutes timeout
@@ -321,25 +374,30 @@ Your app needs server runtime for:
 - ✅ **Enterprise-grade** - Better monitoring, logging, debugging
 
 **Drawbacks vs. Firebase Cloud Functions:**
+
 - ❌ **Higher complexity** - Multiple services to manage
 - ❌ **No built-in Firebase integration** - Manual SDK setup
 - ❌ **Steeper learning curve** - AWS ecosystem complexity
 - ❌ **Migration effort** - Firestore to DynamoDB considerations
 
 ### Option 5: Google Cloud Run
+
 **Platform**: Google Cloud Run (Containerized Serverless)
 **Cost**:
+
 - **Cloud Run**: $0.24/million requests + CPU/memory usage
 - **Cloud Storage**: $0.020/GB/month
 - **Cloud CDN**: $0.08/GB data transfer
 
 **Complexity**:
+
 - ✅ **Minimal refactoring** - Deploy existing Next.js app as container
 - ✅ **Docker-based deployment** - Familiar containerization
 - ✅ **Auto-scaling** - 0 to 1000+ instances
 - ✅ **Custom domains** - Built-in SSL certificates
 
 **Benefits vs. Firebase Cloud Functions:**
+
 - ✅ **No code changes needed** - Deploy current Next.js app as-is
 - ✅ **Better performance** - No cold starts for HTTP workloads
 - ✅ **Full framework support** - Any language, any framework
@@ -347,6 +405,7 @@ Your app needs server runtime for:
 - ✅ **Firebase integration** - Same Google Cloud, easy Firebase access
 
 **Drawbacks vs. Firebase Cloud Functions:**
+
 - ❌ **Container overhead** - Slightly more complex deployment
 - ❌ **Not "functions"** - Full application deployment vs. individual functions
 - ❌ **Different pricing model** - Instance-based vs. invocation-based
@@ -354,49 +413,56 @@ Your app needs server runtime for:
 ## Serverless Platform Comparison
 
 ### Performance Comparison
-| Platform | Cold Start | Runtime Options | Memory Limit | Timeout |
-|----------|------------|-----------------|--------------|---------|
-| **Firebase Cloud Functions** | 1-3 seconds | Node.js only | 8GB | 9 minutes |
-| **AWS Lambda** | 200-800ms | Multiple | 10GB | 15 minutes |
-| **Google Cloud Run** | ~300ms | Any language | 32GB | 60 minutes |
-| **Vercel Functions** | 100-500ms | Node.js, Python | 1GB | 10 seconds |
+
+| Platform                     | Cold Start  | Runtime Options | Memory Limit | Timeout    |
+| ---------------------------- | ----------- | --------------- | ------------ | ---------- |
+| **Firebase Cloud Functions** | 1-3 seconds | Node.js only    | 8GB          | 9 minutes  |
+| **AWS Lambda**               | 200-800ms   | Multiple        | 10GB         | 15 minutes |
+| **Google Cloud Run**         | ~300ms      | Any language    | 32GB         | 60 minutes |
+| **Vercel Functions**         | 100-500ms   | Node.js, Python | 1GB          | 10 seconds |
 
 ### Cost Comparison (Monthly estimates for your app)
-| Platform | Static Hosting | Functions | Total |
-|----------|----------------|-----------|-------|
-| **Firebase** | $0-25 | $10-30 | $10-55 |
-| **AWS** | $5-15 | $15-35 | $20-50 |
-| **Google Cloud Run** | $0-5 | $2-15 | $2-20 |
-| **Vercel** | $0-20 | $25-100 | $25-120 |
+
+| Platform             | Static Hosting | Functions | Total   |
+| -------------------- | -------------- | --------- | ------- |
+| **Firebase**         | $0-25          | $10-30    | $10-55  |
+| **AWS**              | $5-15          | $15-35    | $20-50  |
+| **Google Cloud Run** | $0-5           | $2-15     | $2-20   |
+| **Vercel**           | $0-20          | $25-100   | $25-120 |
 
 ### Migration Effort Comparison
-| Platform | Refactoring Needed | Deployment Changes | Learning Curve |
-|----------|-------------------|-------------------|----------------|
-| **Firebase Cloud Functions** | ⚠️ High | ⚠️ Medium | ⭐⭐⭐ |
-| **AWS Lambda** | ⚠️ High | ⚠️ High | ⭐⭐⭐⭐⭐ |
-| **Google Cloud Run** | ✅ None | ✅ Low | ⭐⭐ |
-| **Vercel** | ✅ None | ✅ None | ⭐ |
+
+| Platform                     | Refactoring Needed | Deployment Changes | Learning Curve |
+| ---------------------------- | ------------------ | ------------------ | -------------- |
+| **Firebase Cloud Functions** | ⚠️ High            | ⚠️ Medium          | ⭐⭐⭐         |
+| **AWS Lambda**               | ⚠️ High            | ⚠️ High            | ⭐⭐⭐⭐⭐     |
+| **Google Cloud Run**         | ✅ None            | ✅ Low             | ⭐⭐           |
+| **Vercel**                   | ✅ None            | ✅ None            | ⭐             |
 
 ## Recommendation: Google Cloud Run
 
 **Why Google Cloud Run is the best choice for your migration:**
 
 ### ✅ **Minimal Migration Effort**
+
 - **No API route conversion** - Deploy your existing Next.js app as-is
 - **Container-based** - Simple `docker build` and deploy
 - **Keep all existing code** - No refactoring of 16 API routes
 
 ### ✅ **Superior Performance**
+
 - **No cold starts** for HTTP workloads
 - **Better resource limits** - Up to 32GB RAM, 60 minutes timeout
 - **Auto-scaling** - 0 to 1000+ instances based on demand
 
 ### ✅ **Firebase Integration**
+
 - **Same Google Cloud ecosystem** - Easy Firebase access
 - **Built-in authentication** - Works with Firebase Auth
 - **Shared billing** - Single Google Cloud bill
 
 ### ✅ **Cost Effective**
+
 - **Pay per use** - Only pay when serving requests
 - **No idle costs** - Scales to zero when not in use
 - **Extremely affordable** - Likely $0-5/month for your traffic
@@ -404,6 +470,7 @@ Your app needs server runtime for:
 ### Migration Path to Google Cloud Run
 
 #### Step 1: Containerize Your App (30 minutes)
+
 ```dockerfile
 # Dockerfile
 FROM node:18-alpine
@@ -420,6 +487,7 @@ CMD ["npm", "start"]
 ```
 
 #### Step 2: Deploy to Cloud Run (15 minutes)
+
 ```bash
 # Build and deploy
 gcloud builds submit --tag gcr.io/YOUR-PROJECT/mtcat-app
@@ -431,6 +499,7 @@ gcloud run deploy mtcat-app \
 ```
 
 #### Step 3: Static Assets to Cloud Storage (Optional)
+
 ```bash
 # Upload static files to Cloud Storage
 gsutil -m cp -r ./public/* gs://your-bucket/
@@ -439,6 +508,7 @@ gsutil -m cp -r ./public/* gs://your-bucket/
 ### Why NOT Firebase Cloud Functions
 
 **Despite Firebase integration benefits:**
+
 - ❌ **2+ weeks of refactoring** - Convert all 16 API routes
 - ❌ **Cold start penalties** - 1-3 second delays
 - ❌ **Runtime limitations** - Node.js only
@@ -478,6 +548,7 @@ gsutil -m cp -r ./public/* gs://your-bucket/
 ```
 
 **This gives you:**
+
 - ✅ **Zero refactoring** - Deploy existing codebase
 - ✅ **Better performance** - No cold starts
 - ✅ **Firebase integration** - Keep all existing Firebase features
@@ -496,6 +567,7 @@ This section analyzes whether the user-facing part of the application can be ful
 ### User-Facing Pages Analysis
 
 **PUBLIC PAGES (Non-Admin):**
+
 - `/` - Home page with mountain map ✅ **STATIC-READY**
 - `/pages/about` - About page ⚠️ **REQUIRES BACKEND**
 - `/pages/photo-album` - Photo gallery ⚠️ **REQUIRES BACKEND**
@@ -510,11 +582,13 @@ This section analyzes whether the user-facing part of the application can be ful
 ### Data Dependencies Analysis
 
 **STATIC DATA (Already Implemented):**
+
 - Points data: `getAllPoints()` - Fetches from Cloud Storage JSON ✅
 - Cat data: `getAllCats()` - Fetches from Cloud Storage JSON ✅
 - Feeding spots: `getFeedingSpotNames()` - Fetches from Cloud Storage JSON ✅
 
 **DYNAMIC DATA (Requires Firestore):**
+
 - **Images/Photos**: `getImageService()` - Direct Firestore queries in photo-album page
 - **Videos**: `getVideoService()` - Direct Firestore queries in video-album page
 - **Posts**: `getPostService()`, `getButlerTalkService()`, `getAnnouncementService()` - Real-time post data
@@ -523,6 +597,7 @@ This section analyzes whether the user-facing part of the application can be ful
 - **Authentication**: `getAuthService()` - Firebase Auth requires client-side SDK
 
 **SERVER-SIDE FEATURES:**
+
 - API Routes: 16 different `/api/*` endpoints for various functionalities
 - Authentication flows: Login, session management
 - File uploads: Image/video processing
@@ -546,17 +621,20 @@ The user-facing application **cannot be fully static** due to:
 **BEST APPROACH: Static + Serverless Hybrid**
 
 **Static Components:**
+
 - Main mountain map (already implemented)
 - Basic cat/point data (already implemented)
 - FAQ and simple informational pages
 
 **Serverless Components:**
+
 - User authentication (Firebase Auth)
 - Dynamic galleries (Firestore queries)
 - Community features (real-time posts)
 - Form processing (API routes)
 
 **Implementation Strategy:**
+
 ```javascript
 // Static build-time data
 export async function getStaticProps() {
@@ -583,16 +661,19 @@ useEffect(() => {
 ### Migration Options
 
 **Option A: Current Architecture (Recommended)**
+
 - Keep the current Next.js setup with serverless functions
 - Deploy to Vercel or Firebase Hosting with Cloud Functions
 - Best balance of features and simplicity
 
 **Option B: Hybrid Split (Complex)**
+
 - Extract truly static parts to separate static site
 - Keep dynamic parts as serverless functions
 - Requires significant refactoring
 
 **Option C: Full Static (Not Feasible)**
+
 - Would require removing all dynamic features
 - Loss of community features, galleries, and user interactions
 - Not recommended for this application
@@ -600,6 +681,7 @@ useEffect(() => {
 ### Final Recommendation
 
 **Keep the current architecture** as it provides the best balance of:
+
 - ✅ **Performance**: Server-side rendering + static generation where possible
 - ✅ **Features**: Full dynamic functionality preserved
 - ✅ **Cost**: Firebase Hosting + Cloud Functions is cost-effective
@@ -607,6 +689,7 @@ useEffect(() => {
 - ✅ **Maintainability**: No complex data synchronization between systems
 
 The current setup with Firebase Hosting and Cloud Functions is already optimized for your use case. Focus on:
+
 1. **Image optimization** (completed)
 2. **Static data generation** (completed)
 3. **Performance monitoring** and fine-tuning
@@ -621,12 +704,14 @@ You're absolutely right to question those figures! Let me provide a detailed bre
 ### Google Cloud Run Pricing Model
 
 **Cloud Run pricing is based on:**
+
 - **CPU allocation** (vCPU per second)
 - **Memory allocation** (GB per second)
 - **Number of requests**
 - **Network egress** (outbound data transfer)
 
 **Pricing (as of 2025):**
+
 - **vCPU**: $0.00002400 per vCPU-second
 - **Memory**: $0.00000250 per GB-second
 - **Requests**: $0.40 per million requests
@@ -635,12 +720,14 @@ You're absolutely right to question those figures! Let me provide a detailed bre
 ### Realistic Usage Estimates for Your Cat App
 
 **Traffic Assumptions:**
+
 - **Monthly visitors**: 1,000-5,000 unique visitors
 - **Page views**: 10,000-50,000 per month
 - **API calls**: 20,000-100,000 per month (including image loads, data fetches)
 - **Average response time**: 200-500ms per request
 
 **Resource Configuration:**
+
 - **CPU**: 1 vCPU (standard for Next.js apps)
 - **Memory**: 2GB (sufficient for your app with Firebase operations)
 - **Concurrency**: 100 requests per instance
@@ -648,6 +735,7 @@ You're absolutely right to question those figures! Let me provide a detailed bre
 ### Monthly Cost Calculation
 
 #### Scenario 1: Low Traffic (1,000 visitors, 10,000 page views)
+
 ```
 Requests: 20,000/month
 CPU time: 20,000 × 0.3s = 6,000 vCPU-seconds
@@ -663,6 +751,7 @@ Total: ~$1.37/month
 ```
 
 #### Scenario 2: Medium Traffic (3,000 visitors, 30,000 page views)
+
 ```
 Requests: 60,000/month
 CPU time: 60,000 × 0.3s = 18,000 vCPU-seconds
@@ -678,6 +767,7 @@ Total: ~$4.14/month
 ```
 
 #### Scenario 3: High Traffic (5,000 visitors, 50,000 page views)
+
 ```
 Requests: 100,000/month
 CPU time: 100,000 × 0.3s = 30,000 vCPU-seconds
@@ -695,6 +785,7 @@ Total: ~$6.91/month
 ### Why My Previous Estimate Was Too High
 
 **My previous estimate of $25-55/month was inflated because:**
+
 - ❌ **Overestimated traffic** - Assumed enterprise-level usage
 - ❌ **Included unnecessary services** - Added Cloud Storage, CDN costs
 - ❌ **Conservative resource allocation** - Assumed higher CPU/memory needs
@@ -704,6 +795,7 @@ Total: ~$6.91/month
 ### Additional Considerations
 
 **Free Tier Benefits:**
+
 - **2 million requests** per month free
 - **360,000 GB-seconds** of memory free
 - **180,000 vCPU-seconds** free
@@ -718,6 +810,7 @@ You're absolutely right - I've been focusing only on compute costs! Firebase ser
 ### Firebase Services Your App Uses
 
 **Current Firebase Services:**
+
 - **Firestore Database** - Document reads/writes for cats, images, posts, videos
 - **Firebase Storage** - Image and video file storage
 - **Firebase Auth** - User authentication and session management
@@ -727,6 +820,7 @@ You're absolutely right - I've been focusing only on compute costs! Firebase ser
 ### Firestore Database Costs
 
 **Pricing (as of 2025):**
+
 - **Document reads**: $0.36 per 100,000 reads
 - **Document writes**: $1.08 per 100,000 writes
 - **Document deletes**: $0.18 per 100,000 deletes
@@ -736,6 +830,7 @@ You're absolutely right - I've been focusing only on compute costs! Firebase ser
 **Your App's Firestore Usage Estimates:**
 
 #### Scenario 1: Low Traffic (1,000 visitors, 10,000 page views)
+
 ```
 Monthly Operations:
 - Page loads: 10,000 × 5 docs = 50,000 reads
@@ -752,6 +847,7 @@ Total Firestore: ~$0.62/month
 ```
 
 #### Scenario 2: Medium Traffic (3,000 visitors, 30,000 page views)
+
 ```
 Monthly Operations:
 - Page loads: 30,000 × 5 docs = 150,000 reads
@@ -768,6 +864,7 @@ Total Firestore: ~$1.67/month
 ```
 
 #### Scenario 3: High Traffic (5,000 visitors, 50,000 page views)
+
 ```
 Monthly Operations:
 - Page loads: 50,000 × 5 docs = 250,000 reads
@@ -786,6 +883,7 @@ Total Firestore: ~$3.10/month
 ### Firebase Storage Costs
 
 **Pricing:**
+
 - **Storage**: $0.026 per GB per month
 - **Download operations**: $0.004 per 10,000 operations
 - **Upload operations**: $0.002 per 1,000 operations
@@ -794,6 +892,7 @@ Total Firestore: ~$3.10/month
 **Your App's Storage Usage:**
 
 #### Current Storage Estimate
+
 ```
 Image Storage:
 - Cat photos: ~500 images × 2MB = 1GB
@@ -817,12 +916,14 @@ Total Storage: ~$2.46/month
 ### Firebase Auth Costs
 
 **Pricing:**
+
 - **Phone Auth**: $0.006 per verification
 - **Email/Password**: Free (unlimited)
 - **Social logins**: Free (unlimited)
 - **Multi-factor Auth**: $0.05 per verification
 
 **Your App's Auth Usage:**
+
 ```
 Monthly Auth Operations:
 - New user registrations: 50 users
@@ -838,10 +939,12 @@ Total Auth: $0/month
 ### Firebase Hosting Costs
 
 **Pricing:**
+
 - **Storage**: $0.026 per GB per month
 - **Data transfer**: $0.15 per GB
 
 **Your App's Hosting Usage:**
+
 ```
 Static Files:
 - Next.js build output: ~50MB
@@ -860,6 +963,7 @@ Total Hosting: ~$1.50/month
 ### Complete Firebase Cost Breakdown
 
 #### Low Traffic Scenario (1,000 visitors/month)
+
 ```
 Firebase Services:
 - Firestore: $0.62
@@ -873,6 +977,7 @@ TOTAL MONTHLY COST: $4.99/month
 ```
 
 #### Medium Traffic Scenario (3,000 visitors/month)
+
 ```
 Firebase Services:
 - Firestore: $1.67
@@ -886,6 +991,7 @@ TOTAL MONTHLY COST: $9.77/month
 ```
 
 #### High Traffic Scenario (5,000 visitors/month)
+
 ```
 Firebase Services:
 - Firestore: $3.10
@@ -901,6 +1007,7 @@ TOTAL MONTHLY COST: $13.97/month
 ### Firebase Free Tier Limits
 
 **What you get free each month:**
+
 - **Firestore**: 50,000 reads, 20,000 writes, 1GB storage
 - **Storage**: 5GB storage, 1GB network egress
 - **Auth**: Unlimited email/password, social logins
@@ -912,6 +1019,7 @@ Your app will likely **exceed the free tier** for Firestore reads and Storage ne
 ### Revised Total Cost Analysis
 
 #### Complete Monthly Cost Breakdown
+
 ```
 Traffic Level: Medium (3,000 visitors)
 
@@ -931,6 +1039,7 @@ TOTAL: $9.77/month
 ### Cost Optimization Strategies
 
 #### 1. **Optimize Firestore Reads**
+
 ```javascript
 // Bad: Multiple reads per page
 const cats = await getCats();
@@ -951,11 +1060,13 @@ Great question! Multi-tenant cost allocation for Cloud Run requires a different 
 ### Current Multi-Tenant Architecture
 
 **Your existing setup:**
+
 - **Firebase per tenant** - Each tenant has their own Firebase project
 - **Tenant-specific billing** - Each tenant pays for their own Firebase usage
 - **Shared codebase** - Single Next.js app handles multiple tenants
 
 **Challenge with Cloud Run:**
+
 - **Single Cloud Run instance** serves all tenants
 - **Shared compute resources** across tenants
 - **No built-in per-tenant billing** like Firebase projects
@@ -965,6 +1076,7 @@ Great question! Multi-tenant cost allocation for Cloud Run requires a different 
 **Concept**: Track usage metrics per tenant and allocate costs proportionally.
 
 #### Implementation Approach
+
 ```javascript
 // Middleware to track tenant usage
 export async function middleware(request) {
@@ -992,6 +1104,7 @@ export async function middleware(request) {
 ```
 
 #### Usage Tracking Schema
+
 ```javascript
 // Firestore collection: tenant-usage
 const tenantUsageSchema = {
@@ -1007,12 +1120,13 @@ const tenantUsageSchema = {
   },
   costs: {
     computeShare: 0.65, // 65% of total Cloud Run cost
-    estimatedCost: 3.25 // $3.25 for this tenant
-  }
+    estimatedCost: 3.25, // $3.25 for this tenant
+  },
 };
 ```
 
 #### Cost Allocation Formula
+
 ```javascript
 function calculateTenantCost(tenantUsage, totalUsage, totalCloudRunCost) {
   // Weighted allocation based on multiple factors
@@ -1021,18 +1135,18 @@ function calculateTenantCost(tenantUsage, totalUsage, totalCloudRunCost) {
   const dataSizeWeight = 0.2;
   const heavyOpsWeight = 0.1;
 
-  const tenantScore = (
+  const tenantScore =
     (tenantUsage.requestCount / totalUsage.requestCount) * requestWeight +
     (tenantUsage.totalResponseTime / totalUsage.totalResponseTime) * responseTimeWeight +
     (tenantUsage.totalResponseSize / totalUsage.totalResponseSize) * dataSizeWeight +
-    (tenantUsage.heavyOperations / totalUsage.heavyOperations) * heavyOpsWeight
-  );
+    (tenantUsage.heavyOperations / totalUsage.heavyOperations) * heavyOpsWeight;
 
   return totalCloudRunCost * tenantScore;
 }
 ```
 
 #### Monthly Cost Allocation Process
+
 ```javascript
 // Monthly billing automation
 async function allocateMonthlyCloudRunCosts(month) {
@@ -1044,7 +1158,7 @@ async function allocateMonthlyCloudRunCosts(month) {
   const totalUsage = calculateTotalUsage(tenantUsages);
 
   // Allocate costs to each tenant
-  const allocations = tenantUsages.map(tenantUsage => ({
+  const allocations = tenantUsages.map((tenantUsage) => ({
     tenantId: tenantUsage.tenantId,
     allocatedCost: calculateTenantCost(tenantUsage, totalUsage, totalCloudRunCost),
     usageMetrics: tenantUsage.metrics,
@@ -1063,17 +1177,20 @@ async function allocateMonthlyCloudRunCosts(month) {
 **Concept**: Deploy separate Cloud Run instances for each tenant.
 
 #### Pros:
+
 - ✅ **Perfect cost isolation** - Each tenant has dedicated resources
 - ✅ **Simplified billing** - Direct per-tenant Google Cloud billing
 - ✅ **Better security** - Complete tenant isolation
 - ✅ **Scalability** - Each tenant can scale independently
 
 #### Cons:
+
 - ❌ **Higher minimum costs** - Each instance has baseline cost
 - ❌ **Deployment complexity** - Multiple containers to manage
 - ❌ **Code duplication** - Separate deployments per tenant
 
 #### Implementation
+
 ```bash
 # Deploy separate Cloud Run services per tenant
 gcloud run deploy mtcat-tenant-abc \
@@ -1088,6 +1205,7 @@ gcloud run deploy mtcat-tenant-xyz \
 ```
 
 #### Cost Impact
+
 ```
 Single Shared Instance:
 - 3,000 visitors across 5 tenants = $4.14/month total
@@ -1103,22 +1221,25 @@ Separate Instances:
 **Concept**: Combine shared infrastructure with usage-based allocation.
 
 #### Small Tenants (< 1,000 visitors/month)
+
 - **Shared Cloud Run instance** with usage tracking
 - **Cost allocation** based on usage metrics
 - **Lower per-tenant costs** due to resource sharing
 
 #### Large Tenants (> 5,000 visitors/month)
+
 - **Dedicated Cloud Run instances** for better isolation
 - **Direct billing** to tenant's Google Cloud account
 - **Better performance** and security
 
 #### Implementation Strategy
+
 ```javascript
 // Tenant classification
 const tenantTiers = {
   small: { maxVisitors: 1000, sharedInstance: true },
   medium: { maxVisitors: 5000, sharedInstance: true },
-  large: { maxVisitors: Infinity, sharedInstance: false }
+  large: { maxVisitors: Infinity, sharedInstance: false },
 };
 
 // Auto-scaling tenant deployment
@@ -1140,6 +1261,7 @@ async function manageTenantDeployment(tenantId, monthlyVisitors) {
 **Concept**: Allocate costs based on actual resource consumption.
 
 #### Metrics to Track
+
 ```javascript
 const resourceMetrics = {
   // CPU usage per tenant
@@ -1155,17 +1277,19 @@ const resourceMetrics = {
   requestTypes: {
     simple: 'static page requests',
     medium: 'API calls with database queries',
-    heavy: 'file uploads, image processing'
-  }
+    heavy: 'file uploads, image processing',
+  },
 };
 ```
 
 #### Cost Allocation Formula
+
 ```javascript
 function calculateResourceBasedCost(tenantMetrics, totalMetrics, totalCost) {
   const cpuCost = (tenantMetrics.cpuTime / totalMetrics.cpuTime) * (totalCost * 0.4);
   const memoryCost = (tenantMetrics.memoryUsage / totalMetrics.memoryUsage) * (totalCost * 0.3);
-  const networkCost = (tenantMetrics.networkEgress / totalMetrics.networkEgress) * (totalCost * 0.2);
+  const networkCost =
+    (tenantMetrics.networkEgress / totalMetrics.networkEgress) * (totalCost * 0.2);
   const requestCost = (tenantMetrics.requestCount / totalMetrics.requestCount) * (totalCost * 0.1);
 
   return cpuCost + memoryCost + networkCost + requestCost;
@@ -1175,6 +1299,7 @@ function calculateResourceBasedCost(tenantMetrics, totalMetrics, totalCost) {
 ### Implementation: Usage Tracking System
 
 #### 1. Middleware for Request Tracking
+
 ```javascript
 // src/middleware.ts
 import { NextResponse } from 'next/server';
@@ -1206,6 +1331,7 @@ export async function middleware(request) {
 ```
 
 #### 2. Usage Tracking Service
+
 ```javascript
 // src/lib/usage-tracker.ts
 import { getFirestore } from 'firebase/firestore';
@@ -1228,6 +1354,7 @@ export async function trackTenantUsage(tenantId: string, metrics: any) {
 ```
 
 #### 3. Monthly Cost Allocation Script
+
 ```javascript
 // scripts/allocate-costs.js
 const { google } = require('googleapis');
@@ -1263,6 +1390,7 @@ Excellent consideration! Revenue sharing is a key monetization feature for your 
 ### Revenue Sharing Model
 
 **Your Revenue Structure:**
+
 - **Gyeyang (Default Mountain)**: 100% revenue retention
 - **Other Tenants**: 30% platform fee, 70% tenant revenue
 - **Revenue Sources**: AdSense, YouTube monetization, sponsorships, donations
@@ -1270,29 +1398,31 @@ Excellent consideration! Revenue sharing is a key monetization feature for your 
 ### 1. Revenue Tracking Architecture
 
 #### Revenue Data Schema
+
 ```javascript
 // Firestore collection: tenant-revenue
 const revenueSchema = {
   tenantId: 'tenant_123',
   month: '2025-01',
   revenue: {
-    adsense: { impressions: 50000, clicks: 250, revenue: 125.50 },
-    youtube: { views: 10000, watchTime: 25000, revenue: 89.30 },
-    sponsorships: { count: 2, revenue: 500.00 },
-    donations: { count: 15, revenue: 75.00 }
+    adsense: { impressions: 50000, clicks: 250, revenue: 125.5 },
+    youtube: { views: 10000, watchTime: 25000, revenue: 89.3 },
+    sponsorships: { count: 2, revenue: 500.0 },
+    donations: { count: 15, revenue: 75.0 },
   },
   totals: {
-    grossRevenue: 789.80,
+    grossRevenue: 789.8,
     platformFee: 236.94, // 30% for non-default tenants
     tenantRevenue: 552.86, // 70% for tenant
-    platformShare: 30
+    platformShare: 30,
   },
   status: 'calculated',
-  lastUpdated: '2025-01-31T23:59:59Z'
+  lastUpdated: '2025-01-31T23:59:59Z',
 };
 ```
 
 #### Revenue Tracking Service
+
 ```javascript
 // src/services/revenueService.ts
 export class RevenueTrackingService {
@@ -1329,6 +1459,7 @@ export class RevenueTrackingService {
 ### 2. AdSense Integration
 
 #### AdSense Revenue Tracking
+
 ```javascript
 // src/integrations/adsenseIntegration.ts
 export class AdSenseIntegration {
@@ -1356,6 +1487,7 @@ export class AdSenseIntegration {
 ### 3. YouTube Revenue Integration
 
 #### YouTube Analytics Integration
+
 ```javascript
 // src/integrations/youtubeIntegration.ts
 export class YouTubeRevenueIntegration {
@@ -1380,6 +1512,7 @@ export class YouTubeRevenueIntegration {
 ### 4. Payment Processing with Stripe
 
 #### Automated Revenue Distribution
+
 ```javascript
 // src/services/paymentDistributionService.ts
 export class PaymentDistributionService {
@@ -1437,6 +1570,7 @@ export class PaymentDistributionService {
 ### 5. Revenue Dashboard
 
 #### Tenant Revenue Dashboard Component
+
 ```javascript
 // src/components/RevenueDashboard.tsx
 export default function RevenueDashboard({ tenantId }: { tenantId: string }) {
@@ -1505,6 +1639,7 @@ export default function RevenueDashboard({ tenantId }: { tenantId: string }) {
 ### 6. Automated Processing
 
 #### Monthly Revenue Processing Cron Job
+
 ```javascript
 // src/pages/api/cron/process-revenue.ts
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -1548,11 +1683,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 ### Implementation Benefits
 
 **For Platform (You):**
+
 - **Predictable income** - 30% of all tenant revenue
 - **Scalable revenue model** - Grows with tenant success
 - **Multiple revenue streams** - AdSense, YouTube, sponsorships
 
 **For Tenants:**
+
 - **Transparent revenue sharing** - Clear 70/30 split
 - **Automated payments** - Monthly payouts via Stripe
 - **Revenue analytics** - Detailed performance metrics

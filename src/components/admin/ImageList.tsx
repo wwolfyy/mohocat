@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   List,
   Datagrid,
@@ -29,7 +29,7 @@ import {
   useNotify,
   useRefresh,
   Button,
-} from "react-admin";
+} from 'react-admin';
 import {
   Card,
   CardContent,
@@ -45,7 +45,7 @@ import {
   Select,
   MenuItem,
   OutlinedInput,
-} from "@mui/material";
+} from '@mui/material';
 
 // Custom filter for images
 const ImageFilter = (props: any) => (
@@ -56,10 +56,10 @@ const ImageFilter = (props: any) => (
       label="Contains Tag"
       choices={[
         // We'll populate this with actual cat names from Firestore
-        { id: "개똥이", name: "개똥이" },
-        { id: "깡패", name: "깡패" },
-        { id: "꽃분이", name: "꽃분이" },
-        { id: "누렁이", name: "누렁이" },
+        { id: '개똥이', name: '개똥이' },
+        { id: '깡패', name: '깡패' },
+        { id: '꽃분이', name: '꽃분이' },
+        { id: '누렁이', name: '누렁이' },
         // Add more cats as needed
       ]}
     />
@@ -76,47 +76,47 @@ const ImageListActions = () => {
   const refresh = useRefresh();
 
   const availableTags = [
-    "개똥이",
-    "깡패",
-    "꽃분이",
-    "누렁이",
-    "대장이",
-    "땅콩이",
-    "뚜껑이",
-    "마니",
-    "메리",
-    "블타",
-    "삼숙이",
-    "삼순이",
-    "송이",
-    "순돌이",
-    "아들조로",
-    "아롱이",
-    "알콩이",
-    "엄마조로",
-    "예쁜이",
-    "예쁜이엄마",
-    "점돌이",
-    "점순이",
-    "정상노랑이",
-    "찰리",
-    "초롱이",
-    "코순이",
-    "판다",
-    "팔랑이",
-    "팔봉이",
-    "팔봉이친구",
-    "하느재노랑이",
-    "하얀코",
+    '개똥이',
+    '깡패',
+    '꽃분이',
+    '누렁이',
+    '대장이',
+    '땅콩이',
+    '뚜껑이',
+    '마니',
+    '메리',
+    '블타',
+    '삼숙이',
+    '삼순이',
+    '송이',
+    '순돌이',
+    '아들조로',
+    '아롱이',
+    '알콩이',
+    '엄마조로',
+    '예쁜이',
+    '예쁜이엄마',
+    '점돌이',
+    '점순이',
+    '정상노랑이',
+    '찰리',
+    '초롱이',
+    '코순이',
+    '판다',
+    '팔랑이',
+    '팔봉이',
+    '팔봉이친구',
+    '하느재노랑이',
+    '하얀코',
   ];
 
   const handleBulkTag = async () => {
     if (selectedIds.length === 0) {
-      notify("Please select images to tag", { type: "warning" });
+      notify('Please select images to tag', { type: 'warning' });
       return;
     }
     try {
-      await updateMany("images", {
+      await updateMany('images', {
         ids: selectedIds,
         data: {
           tags: selectedTags,
@@ -124,12 +124,12 @@ const ImageListActions = () => {
         },
       });
 
-      notify(`Tagged ${selectedIds.length} images`, { type: "success" });
+      notify(`Tagged ${selectedIds.length} images`, { type: 'success' });
       setBulkTagDialogOpen(false);
       setSelectedTags([]);
       refresh();
     } catch (error) {
-      notify("Error tagging images", { type: "error" });
+      notify('Error tagging images', { type: 'error' });
     }
   };
 
@@ -161,7 +161,7 @@ const ImageListActions = () => {
               onChange={(e) => setSelectedTags(e.target.value as string[])}
               input={<OutlinedInput label="Select Cat Tags" />}
               renderValue={(selected) => (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {(selected as string[]).map((value) => (
                     <Chip key={value} label={value} />
                   ))}
@@ -202,17 +202,17 @@ const ImageRow = () => {
               src={record.imageUrl}
               alt={record.fileName}
               style={{
-                width: "100%",
-                height: "200px",
-                objectFit: "cover",
-                borderRadius: "8px",
+                width: '100%',
+                height: '200px',
+                objectFit: 'cover',
+                borderRadius: '8px',
               }}
             />
           </div>
           <div style={{ flex: '1', minWidth: '300px' }}>
             <Box>
-              <h3 style={{ margin: "0 0 8px 0" }}>{record.fileName}</h3>{" "}
-              <p style={{ margin: "4px 0", fontSize: "14px", color: "#666" }}>
+              <h3 style={{ margin: '0 0 8px 0' }}>{record.fileName}</h3>{' '}
+              <p style={{ margin: '4px 0', fontSize: '14px', color: '#666' }}>
                 Uploaded: {new Date(record.uploadDate).toLocaleDateString()}
               </p>
               {!record.tags || record.tags.length === 0 ? (
@@ -232,9 +232,7 @@ const ImageRow = () => {
                     />
                   ))
                 ) : (
-                  <span style={{ fontSize: "14px", color: "#999" }}>
-                    No tags
-                  </span>
+                  <span style={{ fontSize: '14px', color: '#999' }}>No tags</span>
                 )}
               </Box>
               <Box sx={{ mt: 2 }}>
@@ -255,11 +253,17 @@ const ImageList = () => (
     filters={<ImageFilter />}
     actions={<ImageListActions />}
     perPage={25}
-    sort={{ field: "uploadDate", order: "DESC" }}
+    sort={{ field: 'uploadDate', order: 'DESC' }}
   >
     <Box sx={{ padding: 2 }}>
       {/* Grid view for better image visualization */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '16px',
+        }}
+      >
         {/* We'll use a custom iterator here */}
         <ImageGrid />
       </div>
@@ -276,7 +280,13 @@ const ImageGrid = () => {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: '16px',
+      }}
+    >
       {data?.map((record: any) => (
         <Card key={record.id}>
           <CardContent>
@@ -284,46 +294,42 @@ const ImageGrid = () => {
               src={record.imageUrl}
               alt={record.fileName}
               style={{
-                width: "100%",
-                height: "200px",
-                  objectFit: "cover",
-                  borderRadius: "8px",
-                  marginBottom: "8px",
-                }}
-              />
-              <h4 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>
-                {record.fileName}
-              </h4>{" "}
-              <p style={{ margin: "4px 0", fontSize: "12px", color: "#666" }}>
-                {new Date(record.uploadDate).toLocaleDateString()}
-              </p>
-              {!record.tags || record.tags.length === 0 ? (
-                <Chip label="Needs Tagging" color="warning" size="small" />
+                width: '100%',
+                height: '200px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                marginBottom: '8px',
+              }}
+            />
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>{record.fileName}</h4>{' '}
+            <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>
+              {new Date(record.uploadDate).toLocaleDateString()}
+            </p>
+            {!record.tags || record.tags.length === 0 ? (
+              <Chip label="Needs Tagging" color="warning" size="small" />
+            ) : (
+              <Chip label="Tagged" color="success" size="small" />
+            )}
+            <Box sx={{ mt: 1 }}>
+              {record.tags && record.tags.length > 0 ? (
+                record.tags.map((tag: string, index: number) => (
+                  <Chip
+                    key={index}
+                    label={tag}
+                    size="small"
+                    variant="outlined"
+                    sx={{ mr: 0.5, mb: 0.5, fontSize: '10px' }}
+                  />
+                ))
               ) : (
-                <Chip label="Tagged" color="success" size="small" />
+                <span style={{ fontSize: '12px', color: '#999' }}>No tags</span>
               )}
-              <Box sx={{ mt: 1 }}>
-                {record.tags && record.tags.length > 0 ? (
-                  record.tags.map((tag: string, index: number) => (
-                    <Chip
-                      key={index}
-                      label={tag}
-                      size="small"
-                      variant="outlined"
-                      sx={{ mr: 0.5, mb: 0.5, fontSize: "10px" }}
-                    />
-                  ))
-                ) : (
-                  <span style={{ fontSize: "12px", color: "#999" }}>
-                    No tags
-                  </span>
-                )}
-              </Box>
-              <Box sx={{ mt: 1 }}>
-                <EditButton record={record} />
-              </Box>
-            </CardContent>
-          </Card>
+            </Box>
+            <Box sx={{ mt: 1 }}>
+              <EditButton record={record} />
+            </Box>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

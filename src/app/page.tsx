@@ -1,5 +1,5 @@
-import MountainViewer from "@/components/MountainViewer";
-import { getPointService } from "@/services";
+import MountainViewer from '@/components/MountainViewer';
+import { getPointService } from '@/services';
 
 export default async function Home() {
   const pointService = getPointService();

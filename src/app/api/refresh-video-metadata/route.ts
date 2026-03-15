@@ -31,7 +31,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (!videosResponse.ok) {
-      throw new Error(`Failed to fetch video details: ${videosResponse.status} ${videosResponse.statusText}`);
+      throw new Error(
+        `Failed to fetch video details: ${videosResponse.status} ${videosResponse.statusText}`
+      );
     }
 
     const videosData = await videosResponse.json();
@@ -56,27 +58,33 @@ export async function POST(request: NextRequest) {
 
       // If the recording date doesn't match and we haven't retried too many times
       if (!datesMatch && retryCount < 5) {
-        console.log(`Recording date mismatch, retrying in 2 seconds (attempt ${retryCount + 1}/5)...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log(
+          `Recording date mismatch, retrying in 2 seconds (attempt ${retryCount + 1}/5)...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Retry the request by recursively calling POST (simulated by returning a new response from a new call would be ideal, but here we just recurse logic or return error to client to retry?
         // Actually, recursing in API route is tricky without internal redirect.
         // Let's just return a specific status that client can retry, OR just do the recursion IF we can.
         // The original code tried to POST to itself: return POST(new NextRequest(request.url...))
         // We will keep that logic.
-        return POST(new NextRequest(request.url, {
-          method: 'POST',
-          headers: request.headers,
-          body: JSON.stringify({
-            videoIds,
-            expectedRecordingDate,
-            retryCount: retryCount + 1
+        return POST(
+          new NextRequest(request.url, {
+            method: 'POST',
+            headers: request.headers,
+            body: JSON.stringify({
+              videoIds,
+              expectedRecordingDate,
+              retryCount: retryCount + 1,
+            }),
           })
-        }));
+        );
       }
 
       if (!datesMatch && retryCount >= 5) {
-        console.warn(`Recording date still doesn't match after 5 retries. Expected: ${expectedRecordingDate}, Got: ${currentRecordingDate}. Proceeding anyway.`);
+        console.warn(
+          `Recording date still doesn't match after 5 retries. Expected: ${expectedRecordingDate}, Got: ${currentRecordingDate}. Proceeding anyway.`
+        );
       } else if (datesMatch) {
         console.log(`✅ Recording date matches expected value: ${expectedRecordingDate}`);
       }
@@ -94,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     if (!channelId) {
       console.warn('No channel ID configured, skipping playlist fetch');
-      videoIds.forEach(videoId => playlistMap.set(videoId as string, []));
+      videoIds.forEach((videoId) => playlistMap.set(videoId as string, []));
     } else {
       console.log('Fetching channel playlists...');
       const channelPlaylistsResponse = await fetch(
@@ -122,14 +130,14 @@ export async function POST(request: NextRequest) {
 
             if (playlistItemsResponse.ok) {
               const playlistItemsData = await playlistItemsResponse.json();
-              const containsVideo = playlistItemsData.items?.some((item: any) =>
-                item.snippet?.resourceId?.videoId === videoId
+              const containsVideo = playlistItemsData.items?.some(
+                (item: any) => item.snippet?.resourceId?.videoId === videoId
               );
 
               if (containsVideo) {
                 videoPlaylists.push({
                   id: playlist.id,
-                  title: playlist.snippet?.title || 'Unknown Playlist'
+                  title: playlist.snippet?.title || 'Unknown Playlist',
                 });
               }
             }
@@ -138,14 +146,17 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.log(`Video ${videoId} found in ${videoPlaylists.length} playlists:`,
-          videoPlaylists.length > 0 ? videoPlaylists.map(p => `${p.title} (${p.id})`).join(', ') : 'None'
+        console.log(
+          `Video ${videoId} found in ${videoPlaylists.length} playlists:`,
+          videoPlaylists.length > 0
+            ? videoPlaylists.map((p) => `${p.title} (${p.id})`).join(', ')
+            : 'None'
         );
         return { videoId, playlists: videoPlaylists };
       });
 
       const playlistResults = await Promise.all(playlistPromises);
-      playlistResults.forEach(result => {
+      playlistResults.forEach((result) => {
         playlistMap.set(result.videoId, result.playlists);
       });
     }
@@ -156,8 +167,14 @@ export async function POST(request: NextRequest) {
       console.log(`Processing video: ${videoId} (${video.snippet?.title})`);
 
       // Find the corresponding Firestore document using Admin SDK
-      const querySnapshot = await db.collection('cat_videos').where('youtubeId', '==', videoId).get();
-      console.log(`Firestore query result for ${videoId}:`, querySnapshot.empty ? 'EMPTY' : `Found ${querySnapshot.docs.length} documents`);
+      const querySnapshot = await db
+        .collection('cat_videos')
+        .where('youtubeId', '==', videoId)
+        .get();
+      console.log(
+        `Firestore query result for ${videoId}:`,
+        querySnapshot.empty ? 'EMPTY' : `Found ${querySnapshot.docs.length} documents`
+      );
 
       if (querySnapshot.empty) {
         console.warn(`No Firestore document found for YouTube video ${videoId}`);
@@ -179,7 +196,8 @@ export async function POST(request: NextRequest) {
       const updatedData = {
         title: youtubeTitle,
         description: video.snippet?.description || '',
-        thumbnailUrl: video.snippet?.thumbnails?.medium?.url ||
+        thumbnailUrl:
+          video.snippet?.thumbnails?.medium?.url ||
           video.snippet?.thumbnails?.default?.url ||
           `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         publishedAt: video.snippet?.publishedAt || '',
@@ -191,11 +209,13 @@ export async function POST(request: NextRequest) {
         storagePath: youtubeVideoUrl,
         tags: youtubeTags,
         createdTime: youtubeRecordingDate ? new Date(youtubeRecordingDate) : null,
-        location: youtubeLocation ? {
-          latitude: youtubeLocation.latitude,
-          longitude: youtubeLocation.longitude,
-          altitude: youtubeLocation.altitude
-        } : null,
+        location: youtubeLocation
+          ? {
+              latitude: youtubeLocation.latitude,
+              longitude: youtubeLocation.longitude,
+              altitude: youtubeLocation.altitude,
+            }
+          : null,
 
         // YouTube specific fields
         youtubeId: videoId,
@@ -220,13 +240,13 @@ export async function POST(request: NextRequest) {
         videoId,
         status: 'updated',
         title: updatedData.title,
-        firestoreId: docRef.id
+        firestoreId: docRef.id,
       };
     });
 
     const results = await Promise.all(updatePromises);
-    const successCount = results.filter(r => r.status === 'updated').length;
-    const notFoundCount = results.filter(r => r.status === 'not_found').length;
+    const successCount = results.filter((r) => r.status === 'updated').length;
+    const notFoundCount = results.filter((r) => r.status === 'not_found').length;
 
     console.log(`Metadata refresh completed: ${successCount} updated, ${notFoundCount} not found`);
 
@@ -237,14 +257,16 @@ export async function POST(request: NextRequest) {
       summary: {
         total: videoIds.length,
         updated: successCount,
-        notFound: notFoundCount
-      }
+        notFound: notFoundCount,
+      },
     });
-
   } catch (error) {
     console.error('Error refreshing video metadata:', error);
     return NextResponse.json(
-      { error: 'Failed to refresh video metadata', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to refresh video metadata',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

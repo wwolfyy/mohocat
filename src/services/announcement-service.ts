@@ -6,7 +6,20 @@
  */
 
 import type { IPostService } from './interfaces';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, query, where, orderBy, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  Timestamp,
+  query,
+  where,
+  orderBy,
+  updateDoc,
+  increment,
+  deleteDoc,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebaseAnnouncementService implements IPostService {
@@ -14,18 +27,21 @@ export class FirebaseAnnouncementService implements IPostService {
 
   async getAllPosts(): Promise<any[]> {
     try {
-      console.log('FirebaseAnnouncementService: Starting to fetch announcements from collection:', this.COLLECTION_NAME);
+      console.log(
+        'FirebaseAnnouncementService: Starting to fetch announcements from collection:',
+        this.COLLECTION_NAME
+      );
 
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
       console.log('FirebaseAnnouncementService: Query snapshot size:', querySnapshot.size);
 
-      const allPosts = querySnapshot.docs.map(doc => {
+      const allPosts = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         console.log('FirebaseAnnouncementService: Document data:', { id: doc.id, ...data });
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
         };
       });
 
@@ -57,7 +73,7 @@ export class FirebaseAnnouncementService implements IPostService {
     const post = await this.getPostById(postId);
     return {
       post,
-      replies: [] // Announcements don't have replies
+      replies: [], // Announcements don't have replies
     };
   }
 
@@ -78,7 +94,7 @@ export class FirebaseAnnouncementService implements IPostService {
       return {
         id: postDoc.id,
         ...postData,
-        createdAt: postData.createdAt?.toDate() || new Date()
+        createdAt: postData.createdAt?.toDate() || new Date(),
       };
     } catch (error) {
       console.error('Error fetching announcement by ID:', error);
@@ -93,7 +109,7 @@ export class FirebaseAnnouncementService implements IPostService {
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
         ...postData,
         createdAt: Timestamp.now(),
-        replyCount: 0 // Announcements don't have replies
+        replyCount: 0, // Announcements don't have replies
       });
 
       console.log('FirebaseAnnouncementService: Announcement created with ID:', docRef.id);
@@ -102,7 +118,7 @@ export class FirebaseAnnouncementService implements IPostService {
         id: docRef.id,
         ...postData,
         createdAt: new Date(),
-        replyCount: 0
+        replyCount: 0,
       };
     } catch (error) {
       console.error('Error creating announcement:', error);
@@ -117,7 +133,7 @@ export class FirebaseAnnouncementService implements IPostService {
       const postRef = doc(db, this.COLLECTION_NAME, postId);
       await updateDoc(postRef, {
         ...postData,
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
       });
 
       console.log('FirebaseAnnouncementService: Announcement updated successfully');
@@ -125,7 +141,7 @@ export class FirebaseAnnouncementService implements IPostService {
       return {
         id: postId,
         ...postData,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
     } catch (error) {
       console.error('Error updating announcement:', error);
@@ -170,10 +186,7 @@ export class FirebaseAnnouncementService implements IPostService {
   async getModalAnnouncement(): Promise<any | null> {
     try {
       // Get all announcements with showInModal = true
-      const q = query(
-        collection(db, this.COLLECTION_NAME),
-        where('showInModal', '==', true)
-      );
+      const q = query(collection(db, this.COLLECTION_NAME), where('showInModal', '==', true));
 
       const querySnapshot = await getDocs(q);
 
@@ -182,13 +195,13 @@ export class FirebaseAnnouncementService implements IPostService {
       }
 
       // Get all documents and sort them manually by updatedAt if it exists, otherwise by createdAt
-      const allDocs = querySnapshot.docs.map(doc => {
+      const allDocs = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
           ...data,
           createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || data.createdAt?.toDate() || new Date()
+          updatedAt: data.updatedAt?.toDate() || data.createdAt?.toDate() || new Date(),
         };
       });
 
@@ -214,7 +227,7 @@ export class FirebaseAnnouncementService implements IPostService {
       const postRef = doc(db, this.COLLECTION_NAME, postId);
       await updateDoc(postRef, {
         showInModal,
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
       });
     } catch (error) {
       console.error('Error toggling modal display:', error);

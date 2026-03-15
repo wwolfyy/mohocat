@@ -8,9 +8,6 @@ export async function GET() {
     return NextResponse.json({ points });
   } catch (error) {
     console.error('Error fetching points:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch points' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch points' }, { status: 500 });
   }
 }

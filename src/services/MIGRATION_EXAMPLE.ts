@@ -44,7 +44,7 @@ const exampleUsage = async () => {
   const newContact = await contactService.createContact({
     name: 'Test User',
     email: 'test@example.com',
-    message: 'Test contact'
+    message: 'Test contact',
   });
 
   return { cats, posts, newPost, newContact };

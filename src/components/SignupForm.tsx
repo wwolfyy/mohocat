@@ -33,7 +33,14 @@ function SignupFormContent() {
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const { signInWithPhoneNumber, confirmPhoneLogin, linkEmailPassword, updateProfile, clearErrors, signOut } = useAuth();
+  const {
+    signInWithPhoneNumber,
+    confirmPhoneLogin,
+    linkEmailPassword,
+    updateProfile,
+    clearErrors,
+    signOut,
+  } = useAuth();
   const permissionService = getPermissionService();
 
   useEffect(() => {
@@ -48,10 +55,10 @@ function SignupFormContent() {
     if (!recaptchaVerifierRef.current && auth) {
       try {
         recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'signup-recaptcha-container', {
-          'size': 'invisible',
+          size: 'invisible',
         });
       } catch (err) {
-        console.error("Failed to init recaptcha", err);
+        console.error('Failed to init recaptcha', err);
       }
     }
   }, [clearErrors, signOut]);
@@ -84,7 +91,7 @@ function SignupFormContent() {
     setError('');
 
     try {
-      if (!recaptchaVerifierRef.current) throw new Error("Recaptcha not initialized");
+      if (!recaptchaVerifierRef.current) throw new Error('Recaptcha not initialized');
 
       // Format phone number if needed (basic check)
       // Ensure phone number format (e.g., +82 10-1234-5678)
@@ -92,12 +99,15 @@ function SignupFormContent() {
       // If not starting with + and looks like KR local 010... -> +8210... logic could be here
       // For now, assume user knows format or raw input works for test numbers
 
-      const confirmation = await signInWithPhoneNumber(formattedPhone, recaptchaVerifierRef.current);
+      const confirmation = await signInWithPhoneNumber(
+        formattedPhone,
+        recaptchaVerifierRef.current
+      );
       setConfirmationResult(confirmation);
       setStep('verify');
     } catch (err: any) {
-      console.error("Phone verification error:", err);
-      setError(err.message || "Failed to send verification code. Please check the number.");
+      console.error('Phone verification error:', err);
+      setError(err.message || 'Failed to send verification code. Please check the number.');
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +126,7 @@ function SignupFormContent() {
     try {
       // 1. Verify Phone & Sign In (Creates User)
       const user = await confirmPhoneLogin(confirmationResult, verificationCode);
-      if (!user) throw new Error("Verification failed.");
+      if (!user) throw new Error('Verification failed.');
 
       // CRITICAL CHECK: If the user already has an email, it means this phone number
       // is already linked to an existing account. We MUST NOT proceed with "Signup"
@@ -129,7 +139,7 @@ function SignupFormContent() {
         // Exception: If they are resuming an interrupted cleanup?
         // Safer to just block and say "Account exists".
 
-        console.warn("Signup blocked: Phone number belongs to existing user", user.email);
+        console.warn('Signup blocked: Phone number belongs to existing user', user.email);
 
         // We must sign out to prevent them from being logged into someone else's account
         // (or their own old account) when they intended to create a new one.
@@ -145,7 +155,9 @@ function SignupFormContent() {
 
         if (user.email !== email) {
           await signOut(); // Kick them out of the "wrong" account
-          throw new Error(`This phone number is already linked to another account (${user.email}). Please log in with that email or use a different number.`);
+          throw new Error(
+            `This phone number is already linked to another account (${user.email}). Please log in with that email or use a different number.`
+          );
         }
 
         // If emails match, we fall through (idempotent retry).
@@ -170,8 +182,8 @@ function SignupFormContent() {
       const freshUser = {
         ...user,
         displayName: displayName, // Explicitly set latest
-        email: email,             // Explicitly set latest
-        phoneNumber: user.phoneNumber // Should be set from phone auth
+        email: email, // Explicitly set latest
+        phoneNumber: user.phoneNumber, // Should be set from phone auth
       };
 
       await permissionService.ensureUserExists(freshUser);
@@ -181,10 +193,9 @@ function SignupFormContent() {
       setTimeout(() => {
         router.push(redirectUrl);
       }, 2000);
-
     } catch (err: any) {
-      console.error("Signup completion error:", err);
-      setError(err.message || "Failed to complete signup.");
+      console.error('Signup completion error:', err);
+      setError(err.message || 'Failed to complete signup.');
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +205,12 @@ function SignupFormContent() {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-8 h-8 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -214,7 +230,9 @@ function SignupFormContent() {
       {step === 'details' && (
         <form onSubmit={handleSendCode} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nickname (Display Name)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nickname (Display Name)
+            </label>
             <input
               type="text"
               value={displayName}
@@ -254,7 +272,9 @@ function SignupFormContent() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -279,7 +299,9 @@ function SignupFormContent() {
               required
               disabled={isLoading}
             />
-            <p className="text-xs text-gray-500 mt-1">We will send a verification code to this number.</p>
+            <p className="text-xs text-gray-500 mt-1">
+              We will send a verification code to this number.
+            </p>
           </div>
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
@@ -288,12 +310,12 @@ function SignupFormContent() {
             type="submit"
             disabled={isLoading}
             className={cn(
-              "w-full py-3 px-4 rounded-lg text-white font-medium transition-colors",
-              "bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500",
-              isLoading ? "opacity-70 cursor-not-allowed" : ""
+              'w-full py-3 px-4 rounded-lg text-white font-medium transition-colors',
+              'bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500',
+              isLoading ? 'opacity-70 cursor-not-allowed' : ''
             )}
           >
-            {isLoading ? "Sending..." : "Verify Phone & Continue"}
+            {isLoading ? 'Sending...' : 'Verify Phone & Continue'}
           </button>
         </form>
       )}
@@ -301,13 +323,21 @@ function SignupFormContent() {
       {step === 'verify' && (
         <form onSubmit={handleCompleteSignup} className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg mb-4 text-sm text-gray-600">
-            <p><strong>Name:</strong> {displayName}</p>
-            <p><strong>Email:</strong> {email}</p>
-            <p><strong>Phone:</strong> {phoneNumber}</p>
+            <p>
+              <strong>Name:</strong> {displayName}
+            </p>
+            <p>
+              <strong>Email:</strong> {email}
+            </p>
+            <p>
+              <strong>Phone:</strong> {phoneNumber}
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Verification Code
+            </label>
             <input
               type="text"
               value={verificationCode}
@@ -326,12 +356,12 @@ function SignupFormContent() {
             type="submit"
             disabled={isLoading}
             className={cn(
-              "w-full py-3 px-4 rounded-lg text-white font-medium transition-colors",
-              "bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
-              isLoading ? "opacity-70 cursor-not-allowed" : ""
+              'w-full py-3 px-4 rounded-lg text-white font-medium transition-colors',
+              'bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500',
+              isLoading ? 'opacity-70 cursor-not-allowed' : ''
             )}
           >
-            {isLoading ? "creating Account..." : "Complete Signup"}
+            {isLoading ? 'creating Account...' : 'Complete Signup'}
           </button>
 
           <button

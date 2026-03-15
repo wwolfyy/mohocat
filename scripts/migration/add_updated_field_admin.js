@@ -13,7 +13,10 @@ console.log(`📁 Current working directory: ${process.cwd()}`);
 console.log(`🗂️  Script directory: ${__dirname}`);
 
 // Check for service account key file
-const serviceAccountPath = path.resolve(__dirname, '../../config/firebase/mountaincats-61543-7329e795c352.json');
+const serviceAccountPath = path.resolve(
+  __dirname,
+  '../../config/firebase/mountaincats-61543-7329e795c352.json'
+);
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -21,7 +24,7 @@ if (!admin.apps.length) {
     const serviceAccount = require(serviceAccountPath);
 
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: admin.credential.cert(serviceAccount),
     });
 
     console.log('🔐 Firebase Admin initialized with service account');
@@ -29,7 +32,9 @@ if (!admin.apps.length) {
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin:', error.message);
     console.log('\n📋 To fix this issue:');
-    console.log('1. Make sure the service account key file exists: config/firebase/mountaincats-61543-7329e795c352.json');
+    console.log(
+      '1. Make sure the service account key file exists: config/firebase/mountaincats-61543-7329e795c352.json'
+    );
     console.log('2. Place it in the root directory of your project');
     process.exit(1);
   }
@@ -70,15 +75,16 @@ async function addUpdatedFieldToAllDocuments() {
       try {
         // Update the document with the "updated" field using Admin SDK
         await docSnapshot.ref.update({
-          updated: currentTimestamp
+          updated: currentTimestamp,
         });
 
-        console.log(`✅ Updated document ${docSnapshot.id} (${docData.fileName || 'unknown file'})`);
+        console.log(
+          `✅ Updated document ${docSnapshot.id} (${docData.fileName || 'unknown file'})`
+        );
         updatedCount++;
 
         // Add a small delay to avoid overwhelming Firestore
-        await new Promise(resolve => setTimeout(resolve, 100));
-
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(`❌ Failed to update document ${docSnapshot.id}:`, error);
       }
@@ -89,7 +95,6 @@ async function addUpdatedFieldToAllDocuments() {
     console.log(`⏭️  Skipped (already had field): ${skippedCount} documents`);
     console.log(`📊 Total processed: ${querySnapshot.docs.length} documents`);
     console.log(`🕐 Timestamp used: ${currentTimestamp.toDate().toISOString()}`);
-
   } catch (error) {
     console.error('❌ Error adding updated field to documents:', error);
     console.error('Error details:', error.code, error.message);

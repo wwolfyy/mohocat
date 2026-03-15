@@ -1,6 +1,6 @@
 /**
  * Firebase Point Service Implementation
- * 
+ *
  * Handles all point-related data operations using Firebase Firestore.
  * Uses the current mountain's configuration for database access.
  */
@@ -16,9 +16,9 @@ export class FirebasePointService implements IPointService {
   async getAllPoints(): Promise<Point[]> {
     try {
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Point[];
     } catch (error) {
       console.error('Error fetching points:', error);
@@ -30,14 +30,14 @@ export class FirebasePointService implements IPointService {
     try {
       const docRef = doc(db, this.COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         return {
           id: docSnap.id,
-          ...docSnap.data()
+          ...docSnap.data(),
         } as Point;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error fetching point:', error);
@@ -50,7 +50,7 @@ export class FirebasePointService implements IPointService {
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), point);
       return {
         id: docRef.id,
-        ...point
+        ...point,
       };
     } catch (error) {
       console.error('Error creating point:', error);
@@ -62,13 +62,13 @@ export class FirebasePointService implements IPointService {
     try {
       const docRef = doc(db, this.COLLECTION_NAME, id);
       await updateDoc(docRef, updates);
-      
+
       // Fetch and return the updated point
       const updatedPoint = await this.getPointById(id);
       if (!updatedPoint) {
         throw new Error('Point not found after update');
       }
-      
+
       return updatedPoint;
     } catch (error) {
       console.error('Error updating point:', error);

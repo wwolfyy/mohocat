@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { getMountainAbout, getMountainTheme } from "@/utils/config";
-import { useAboutPhoto } from "@/hooks/useAboutPhoto";
-import { getAboutContentService, getCatService } from "@/services";
-import { AboutContent } from "@/services/about-content-service";
-import { processTextWithLinks } from "@/utils/text-processing";
-import { Cat } from "@/types";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import CatInfo from "@/components/CatInfo";
-import { cn } from "@/utils/cn";
-import Image from "next/image";
+import { useState, useEffect, useRef } from 'react';
+import { getMountainAbout, getMountainTheme } from '@/utils/config';
+import { useAboutPhoto } from '@/hooks/useAboutPhoto';
+import { getAboutContentService, getCatService } from '@/services';
+import { AboutContent } from '@/services/about-content-service';
+import { processTextWithLinks } from '@/utils/text-processing';
+import { Cat } from '@/types';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import CatInfo from '@/components/CatInfo';
+import { cn } from '@/utils/cn';
+import Image from 'next/image';
 
 export default function About() {
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
@@ -50,9 +50,9 @@ export default function About() {
                 ? jsonConfig.mainPhoto.caption.join('')
                 : jsonConfig.mainPhoto?.caption || '',
               altText: jsonConfig.mainPhoto?.altText || '',
-              localPath: jsonConfig.mainPhoto?.localPath
+              localPath: jsonConfig.mainPhoto?.localPath,
             },
-            sections: jsonConfig.sections || []
+            sections: jsonConfig.sections || [],
           };
           setAboutData(fallbackContent);
         }
@@ -74,9 +74,9 @@ export default function About() {
               ? jsonConfig.mainPhoto.caption.join('')
               : jsonConfig.mainPhoto?.caption || '',
             altText: jsonConfig.mainPhoto?.altText || '',
-            localPath: jsonConfig.mainPhoto?.localPath
+            localPath: jsonConfig.mainPhoto?.localPath,
           },
-          sections: jsonConfig.sections || []
+          sections: jsonConfig.sections || [],
         };
         setAboutData(fallbackContent);
       } finally {
@@ -128,7 +128,7 @@ export default function About() {
     photoUrl,
     loading: photoLoading,
     error: photoError,
-  } = useAboutPhoto(aboutData?.mainPhoto?.filename || "");
+  } = useAboutPhoto(aboutData?.mainPhoto?.filename || '');
 
   if (loading) {
     return (
@@ -158,10 +158,7 @@ export default function About() {
   }
 
   return (
-    <div
-      className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8"
-      data-oid="3kim:bs"
-    >
+    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8" data-oid="3kim:bs">
       <div className="prose prose-lg mx-auto" data-oid="your4.g">
         {/* Page Title */}
         <h1
@@ -276,9 +273,9 @@ export default function About() {
             <button
               onClick={() => setSelectedCat(null)}
               className={cn(
-                "absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600",
-                "text-white rounded font-bold hover:shadow-lg transition-all duration-200",
-                "flex items-center justify-center z-10"
+                'absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600',
+                'text-white rounded font-bold hover:shadow-lg transition-all duration-200',
+                'flex items-center justify-center z-10'
               )}
             >
               <XMarkIcon className="h-5 w-5" />

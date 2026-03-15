@@ -29,7 +29,10 @@ async function refreshYouTubeToken() {
     console.log('✅ Token refreshed successfully');
 
     // If we got a new refresh token, update the environment file
-    if (credentials.refresh_token && credentials.refresh_token !== process.env.YOUTUBE_REFRESH_TOKEN) {
+    if (
+      credentials.refresh_token &&
+      credentials.refresh_token !== process.env.YOUTUBE_REFRESH_TOKEN
+    ) {
       console.log('🔑 New refresh token received, updating .env.local...');
 
       const envPath = path.join(__dirname, '../.env.local');
@@ -51,7 +54,6 @@ async function refreshYouTubeToken() {
     console.log('✅ Token validation successful');
 
     return { success: true, message: 'Token refreshed successfully' };
-
   } catch (error) {
     console.error('❌ Token refresh failed:', error.message);
 
@@ -67,7 +69,7 @@ async function refreshYouTubeToken() {
 // Run if called directly
 if (require.main === module) {
   refreshYouTubeToken()
-    .then(result => {
+    .then((result) => {
       if (result.success) {
         console.log('🎉 Token refresh completed successfully');
         process.exit(0);
@@ -76,7 +78,7 @@ if (require.main === module) {
         process.exit(1);
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('💥 Unexpected error:', error);
       process.exit(1);
     });

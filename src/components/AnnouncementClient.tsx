@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { getAnnouncementService } from "@/services";
-import { cn } from "@/utils/cn";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import { getAnnouncementService } from '@/services';
+import { cn } from '@/utils/cn';
+import Link from 'next/link';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -59,7 +59,7 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
     let koreaTime: Date;
     if (typeof targetDate.getTimezoneOffset === 'function') {
       // For dates that might be in UTC, convert to Korea time
-      koreaTime = new Date(targetDate.getTime() + (9 * 60 * 60 * 1000));
+      koreaTime = new Date(targetDate.getTime() + 9 * 60 * 60 * 1000);
     } else {
       koreaTime = targetDate;
     }
@@ -90,56 +90,53 @@ const AnnouncementClient = () => {
 
   const fetchPosts = async (page = 1) => {
     try {
-      console.log("Fetching announcements...");
+      console.log('Fetching announcements...');
       // Use service layer for announcements
       const allPosts = await announcementService.getAllPosts();
-      console.log("Raw announcements from service:", allPosts);
-      console.log("Number of announcements fetched:", allPosts.length);
+      console.log('Raw announcements from service:', allPosts);
+      console.log('Number of announcements fetched:', allPosts.length);
 
       // Check if posts have date/time fields or use createdAt
       const sortedPosts = allPosts.sort((a: any, b: any) => {
         // Try to use date/time fields first, fallback to createdAt
         let dateA, dateB;
 
-          if (a.date && a.time) {
-            // Parse as UTC time for consistent sorting
-            const dateTimeA = `${a.date}T${a.time}Z`;
-            dateA = new Date(dateTimeA);
-          } else if (a.createdAt) {
-            dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-          } else {
-            dateA = new Date(0); // Very old date for fallback
-          }
+        if (a.date && a.time) {
+          // Parse as UTC time for consistent sorting
+          const dateTimeA = `${a.date}T${a.time}Z`;
+          dateA = new Date(dateTimeA);
+        } else if (a.createdAt) {
+          dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        } else {
+          dateA = new Date(0); // Very old date for fallback
+        }
 
-          if (b.date && b.time) {
-            // Parse as UTC time for consistent sorting
-            const dateTimeB = `${b.date}T${b.time}Z`;
-            dateB = new Date(dateTimeB);
-          } else if (b.createdAt) {
-            dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-          } else {
-            dateB = new Date(0); // Very old date for fallback
-          }
+        if (b.date && b.time) {
+          // Parse as UTC time for consistent sorting
+          const dateTimeB = `${b.date}T${b.time}Z`;
+          dateB = new Date(dateTimeB);
+        } else if (b.createdAt) {
+          dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        } else {
+          dateB = new Date(0); // Very old date for fallback
+        }
 
-          // Sort newest first (reverse chronological order)
-          // Larger timestamp (newer date) should come first
-          return dateB.getTime() - dateA.getTime();
-        });
+        // Sort newest first (reverse chronological order)
+        // Larger timestamp (newer date) should come first
+        return dateB.getTime() - dateA.getTime();
+      });
 
-        console.log("Sorted announcements:", sortedPosts);
+      console.log('Sorted announcements:', sortedPosts);
 
-        const startIndex = (page - 1) * postsPerPage;
-        const paginatedPosts = sortedPosts.slice(
-          startIndex,
-          startIndex + postsPerPage,
-        );
+      const startIndex = (page - 1) * postsPerPage;
+      const paginatedPosts = sortedPosts.slice(startIndex, startIndex + postsPerPage);
 
-        console.log("Paginated announcements for display:", paginatedPosts);
-        setPosts(paginatedPosts);
-        setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
-      } catch (error) {
-        console.error("Error in fetchPosts:", error);
-      }
+      console.log('Paginated announcements for display:', paginatedPosts);
+      setPosts(paginatedPosts);
+      setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
+    } catch (error) {
+      console.error('Error in fetchPosts:', error);
+    }
   };
 
   useEffect(() => {
@@ -155,20 +152,15 @@ const AnnouncementClient = () => {
       <div className="space-y-4">
         {posts.length === 0 && <div>No announcements yet.</div>}
         {posts.map((post) => (
-          <div
-            key={post.id}
-            className="border p-4 rounded flex flex-col space-y-4"
-          >
+          <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
                 {/* Show video thumbnail if video exists */}
-                {((post.videoUrls && post.videoUrls.length > 0) ||
-                  post.videoUrl) &&
+                {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                   (() => {
-                    const firstVideoUrl =
-                      post.videoUrls?.[0] || post.videoUrl;
+                    const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
                     const match = firstVideoUrl?.match(
-                      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+                      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
                     );
                     const videoId = match ? match[1] : null;
                     if (videoId) {
@@ -189,12 +181,7 @@ const AnnouncementClient = () => {
                             {/* Play button overlay */}
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="bg-red-600 text-white rounded-full p-1">
-                                <svg
-                                  width="12"
-                                  height="12"
-                                  viewBox="0 0 24 24"
-                                  fill="currentColor"
-                                >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                                   <path d="M8 5v14l11-7z" />
                                 </svg>
                               </div>
@@ -212,10 +199,7 @@ const AnnouncementClient = () => {
                     return null;
                   })()}
                 {/* Show image thumbnail only if no video exists */}
-                {!(
-                  (post.videoUrls && post.videoUrls.length > 0) ||
-                  post.videoUrl
-                ) &&
+                {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                   post.thumbnailUrl && (
                     <Link href={`/pages/announcements/${post.id}`}>
                       <img
@@ -237,9 +221,7 @@ const AnnouncementClient = () => {
               </div>
               <div className="text-right text-sm text-gray-500 flex flex-col items-end">
                 <p>{post.username}</p>
-                <p>
-                  {formatKoreaDateTime(post.date, post.time, post.createdAt)}
-                </p>
+                <p>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</p>
               </div>
             </div>
           </div>
@@ -255,9 +237,9 @@ const AnnouncementClient = () => {
             <button
               key={page}
               className={cn(
-                "px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow",
-                "border border-yellow-500",
-                "transition-all duration-200",
+                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
+                'border border-yellow-500',
+                'transition-all duration-200'
               )}
               disabled
             >
@@ -268,8 +250,8 @@ const AnnouncementClient = () => {
               key={page}
               onClick={() => handlePageClick(page)}
               className={cn(
-                "px-4 py-2 rounded text-gray-700 hover:bg-gray-100",
-                "transition-all duration-200",
+                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
+                'transition-all duration-200'
               )}
             >
               {page}
@@ -284,8 +266,8 @@ const AnnouncementClient = () => {
             <button
               onClick={() => handlePageClick(currentPage - 1)}
               className={cn(
-                "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
+                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
             >
               previous
@@ -297,8 +279,8 @@ const AnnouncementClient = () => {
             <button
               onClick={() => handlePageClick(currentPage + 1)}
               className={cn(
-                "px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300",
-                "text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200",
+                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
             >
               next

@@ -26,15 +26,21 @@ export interface UserRole {
 }
 
 export interface PermissionConfig {
-  roles: Record<string, {
-    permissions: string[];
-    description: string;
-  }>;
-  mountains: Record<string, {
-    name: string;
-    adminUsers: string[];
-    defaultRole: string;
-  }>;
+  roles: Record<
+    string,
+    {
+      permissions: string[];
+      description: string;
+    }
+  >;
+  mountains: Record<
+    string,
+    {
+      name: string;
+      adminUsers: string[];
+      defaultRole: string;
+    }
+  >;
 }
 
 export interface PermissionLog {
@@ -57,7 +63,9 @@ export interface MountainConfig {
 }
 
 // Type guards for better type safety
-export function isValidRole(role: string): role is 'admin' | 'butler-ground' | 'butler-internet' | 'viewer' {
+export function isValidRole(
+  role: string
+): role is 'admin' | 'butler-ground' | 'butler-internet' | 'viewer' {
   return ['admin', 'butler-ground', 'butler-internet', 'viewer'].includes(role);
 }
 
@@ -74,7 +82,7 @@ export function isValidPermission(permission: string): boolean {
     'view-post-feeding',
     'view-post-butler',
     'view-photo',
-    'view-video'
+    'view-video',
   ];
   return validPermissions.includes(permission);
 }

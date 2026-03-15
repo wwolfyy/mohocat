@@ -41,7 +41,9 @@ async function migrateCatsToFirestore() {
     const existingCatsSnapshot = await getDocs(collection(db, 'cats'));
     if (!existingCatsSnapshot.empty) {
       console.log(`✅ Cats collection already contains ${existingCatsSnapshot.size} documents.`);
-      console.log('🔄 Skipping migration. To force re-migration, manually delete the collection first.');
+      console.log(
+        '🔄 Skipping migration. To force re-migration, manually delete the collection first.'
+      );
       return;
     }
 
@@ -68,7 +70,6 @@ async function migrateCatsToFirestore() {
     if (errorCount > 0) {
       console.log(`❌ Failed migrations: ${errorCount} cats`);
     }
-
   } catch (error) {
     console.error('💥 Migration failed:', error);
     process.exit(1);

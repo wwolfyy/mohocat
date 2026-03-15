@@ -6,22 +6,22 @@ import { getFirebaseAdminServiceAccount, getFirebaseConfig } from '@/utils/confi
 
 // Initialize Firebase Admin SDK
 function initAdmin(): App {
-    if (getApps().length > 0) {
-        return getApps()[0];
-    }
+  if (getApps().length > 0) {
+    return getApps()[0];
+  }
 
-    const serviceAccount = getFirebaseAdminServiceAccount();
-    const firebaseConfig = getFirebaseConfig();
+  const serviceAccount = getFirebaseAdminServiceAccount();
+  const firebaseConfig = getFirebaseConfig();
 
-    if (serviceAccount) {
-        return initializeApp({
-            credential: cert(serviceAccount),
-            storageBucket: firebaseConfig?.storageBucket
-        });
-    }
+  if (serviceAccount) {
+    return initializeApp({
+      credential: cert(serviceAccount),
+      storageBucket: firebaseConfig?.storageBucket,
+    });
+  }
 
-    // Fallback to default credentials (GOOGLE_APPLICATION_CREDENTIALS or Cloud environment)
-    return initializeApp();
+  // Fallback to default credentials (GOOGLE_APPLICATION_CREDENTIALS or Cloud environment)
+  return initializeApp();
 }
 
 const app = initAdmin();

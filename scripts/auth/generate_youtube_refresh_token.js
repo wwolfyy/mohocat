@@ -15,25 +15,21 @@ const CLIENT_ID = '266233773870-f3ih7cj734e18aoc3gc4tmt3unfgko9k.apps.googleuser
 const CLIENT_SECRET = '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';
 const REDIRECT_URI = 'http://localhost:3001/oauth/callback';
 
-const oauth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
+const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
 // YouTube API scopes for upload functionality
 const SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
   'https://www.googleapis.com/auth/youtube',
   'https://www.googleapis.com/auth/youtube.readonly',
-  'https://www.googleapis.com/auth/youtube.force-ssl'
+  'https://www.googleapis.com/auth/youtube.force-ssl',
 ];
 
 async function generateRefreshToken() {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
-    prompt: 'consent'
+    prompt: 'consent',
   });
 
   console.log('='.repeat(80));
@@ -41,7 +37,7 @@ async function generateRefreshToken() {
   console.log('='.repeat(80));
   console.log('');
   console.log('⚠️  IMPORTANT: YouTube API refresh tokens expire in 7-14 days');
-  console.log('   You\'ll need to regenerate them regularly.');
+  console.log("   You'll need to regenerate them regularly.");
   console.log('');
   console.log('💡 TIP: Use the admin GUI at /admin/youtube-auth for easier management');
   console.log('');

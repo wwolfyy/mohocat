@@ -1,5 +1,5 @@
-import { getAdminFeedingSpotsService } from "@/services/feeding-spots-admin-service";
-import NewPostForm from "@/components/NewPostForm";
+import { getAdminFeedingSpotsService } from '@/services/feeding-spots-admin-service';
+import NewPostForm from '@/components/NewPostForm';
 
 interface BasicFeedingSpot {
   id: number;

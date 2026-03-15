@@ -1,6 +1,6 @@
 /**
  * Firebase Storage Service Implementation
- * 
+ *
  * Handles all storage-related operations using Firebase Storage.
  * Uses the current mountain's configuration for storage access.
  */
@@ -10,7 +10,6 @@ import { ref, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage
 import { storage } from './firebase';
 
 export class FirebaseStorageService implements IStorageService {
-  
   async uploadFile(file: File, path: string): Promise<string> {
     try {
       const storageRef = ref(storage, path);

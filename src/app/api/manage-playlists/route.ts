@@ -14,9 +14,12 @@ export async function GET(request: NextRequest) {
     // Get YouTube OAuth configuration from centralized config
     const youtubeOAuth = getYouTubeOAuthConfig();
     if (!youtubeOAuth) {
-      return NextResponse.json({
-        error: 'YouTube OAuth credentials not configured'
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'YouTube OAuth credentials not configured',
+        },
+        { status: 500 }
+      );
     }
 
     // Set up OAuth2 client for authenticated requests
@@ -38,7 +41,7 @@ export async function GET(request: NextRequest) {
     const playlistsResponse = await youtube.playlists.list({
       part: ['snippet', 'contentDetails', 'status'],
       channelId: channelId,
-      maxResults: 50
+      maxResults: 50,
     });
 
     const playlists = playlistsResponse.data.items || [];
@@ -50,7 +53,8 @@ export async function GET(request: NextRequest) {
       id: playlist.id,
       title: playlist.snippet.title,
       description: playlist.snippet.description || '',
-      thumbnailUrl: playlist.snippet.thumbnails?.medium?.url || playlist.snippet.thumbnails?.default?.url,
+      thumbnailUrl:
+        playlist.snippet.thumbnails?.medium?.url || playlist.snippet.thumbnails?.default?.url,
       itemCount: playlist.contentDetails.itemCount || 0,
       privacy: playlist.status.privacyStatus || 'private',
       publishedAt: playlist.snippet.publishedAt,
@@ -58,13 +62,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      playlists: formattedPlaylists
+      playlists: formattedPlaylists,
     });
-
   } catch (error) {
     console.error('Error fetching playlists:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch playlists', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to fetch playlists',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -77,9 +83,12 @@ export async function POST(request: NextRequest) {
     // Get YouTube OAuth configuration from centralized config
     const youtubeOAuth = getYouTubeOAuthConfig();
     if (!youtubeOAuth) {
-      return NextResponse.json({
-        error: 'YouTube OAuth credentials not configured'
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'YouTube OAuth credentials not configured',
+        },
+        { status: 500 }
+      );
     }
 
     // Set up OAuth2 client for authenticated requests
@@ -100,7 +109,10 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'add_to_playlist':
         if (!videoId || !playlistId) {
-          return NextResponse.json({ error: 'videoId and playlistId are required for add_to_playlist' }, { status: 400 });
+          return NextResponse.json(
+            { error: 'videoId and playlistId are required for add_to_playlist' },
+            { status: 400 }
+          );
         }
 
         const addResult = await youtube.playlistItems.insert({
@@ -110,32 +122,35 @@ export async function POST(request: NextRequest) {
               playlistId: playlistId,
               resourceId: {
                 kind: 'youtube#video',
-                videoId: videoId
-              }
-            }
-          }
+                videoId: videoId,
+              },
+            },
+          },
         });
 
         return NextResponse.json({
           success: true,
           message: 'Video added to playlist successfully',
-          playlistItemId: addResult.data.id
+          playlistItemId: addResult.data.id,
         });
 
       case 'remove_from_playlist':
         if (!playlistId || !videoId) {
-          return NextResponse.json({ error: 'playlistId and videoId are required for remove_from_playlist' }, { status: 400 });
+          return NextResponse.json(
+            { error: 'playlistId and videoId are required for remove_from_playlist' },
+            { status: 400 }
+          );
         }
 
         // First, find the playlist item ID
         const playlistItemsResponse = await youtube.playlistItems.list({
           part: ['snippet'],
           playlistId: playlistId,
-          maxResults: 50
+          maxResults: 50,
         });
 
-        const playlistItem = playlistItemsResponse.data.items?.find((item: any) =>
-          item.snippet?.resourceId?.videoId === videoId
+        const playlistItem = playlistItemsResponse.data.items?.find(
+          (item: any) => item.snippet?.resourceId?.videoId === videoId
         );
 
         if (!playlistItem) {
@@ -143,17 +158,20 @@ export async function POST(request: NextRequest) {
         }
 
         await youtube.playlistItems.delete({
-          id: playlistItem.id!
+          id: playlistItem.id!,
         });
 
         return NextResponse.json({
           success: true,
-          message: 'Video removed from playlist successfully'
+          message: 'Video removed from playlist successfully',
         });
 
       case 'batch_update_playlists':
         if (!videoId || !Array.isArray(playlistIds)) {
-          return NextResponse.json({ error: 'videoId and playlistIds array are required for batch_update_playlists' }, { status: 400 });
+          return NextResponse.json(
+            { error: 'videoId and playlistIds array are required for batch_update_playlists' },
+            { status: 400 }
+          );
         }
 
         // First, get current playlists for the video
@@ -165,20 +183,20 @@ export async function POST(request: NextRequest) {
         const currentPlaylistsResponse = await youtube.playlists.list({
           part: ['snippet'],
           channelId: channelId,
-          maxResults: 50
+          maxResults: 50,
         });
 
-        const allPlaylists = currentPlaylistsResponse.data.items || [];        // Find which playlists currently contain this video
+        const allPlaylists = currentPlaylistsResponse.data.items || []; // Find which playlists currently contain this video
         const currentVideoPlaylists: string[] = [];
         for (const playlist of allPlaylists) {
           const itemsResponse = await youtube.playlistItems.list({
             part: ['snippet'],
             playlistId: playlist.id!,
-            maxResults: 50
+            maxResults: 50,
           });
 
-          const containsVideo = itemsResponse.data.items?.some((item: any) =>
-            item.snippet?.resourceId?.videoId === videoId
+          const containsVideo = itemsResponse.data.items?.some(
+            (item: any) => item.snippet?.resourceId?.videoId === videoId
           );
           if (containsVideo) {
             currentVideoPlaylists.push(playlist.id!);
@@ -189,8 +207,10 @@ export async function POST(request: NextRequest) {
         console.log(`Target playlists:`, playlistIds);
 
         // Determine what to add and remove
-        const playlistsToAdd = playlistIds.filter((id: string) => !currentVideoPlaylists.includes(id));
-        const playlistsToRemove = currentVideoPlaylists.filter(id => !playlistIds.includes(id));
+        const playlistsToAdd = playlistIds.filter(
+          (id: string) => !currentVideoPlaylists.includes(id)
+        );
+        const playlistsToRemove = currentVideoPlaylists.filter((id) => !playlistIds.includes(id));
 
         const results = [];
 
@@ -204,14 +224,19 @@ export async function POST(request: NextRequest) {
                   playlistId: playlistId,
                   resourceId: {
                     kind: 'youtube#video',
-                    videoId: videoId
-                  }
-                }
-              }
+                    videoId: videoId,
+                  },
+                },
+              },
             });
             results.push({ action: 'added', playlistId, success: true });
           } catch (error) {
-            results.push({ action: 'added', playlistId, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+            results.push({
+              action: 'added',
+              playlistId,
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
           }
         }
 
@@ -222,21 +247,26 @@ export async function POST(request: NextRequest) {
             const itemsResponse = await youtube.playlistItems.list({
               part: ['snippet'],
               playlistId: playlistId,
-              maxResults: 50
+              maxResults: 50,
             });
 
-            const playlistItem = itemsResponse.data.items?.find((item: any) =>
-              item.snippet?.resourceId?.videoId === videoId
+            const playlistItem = itemsResponse.data.items?.find(
+              (item: any) => item.snippet?.resourceId?.videoId === videoId
             );
 
             if (playlistItem) {
               await youtube.playlistItems.delete({
-                id: playlistItem.id!
+                id: playlistItem.id!,
               });
               results.push({ action: 'removed', playlistId, success: true });
             }
           } catch (error) {
-            results.push({ action: 'removed', playlistId, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+            results.push({
+              action: 'removed',
+              playlistId,
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
           }
         }
 
@@ -245,20 +275,22 @@ export async function POST(request: NextRequest) {
           message: 'Playlist batch update completed',
           results,
           summary: {
-            added: results.filter(r => r.action === 'added' && r.success).length,
-            removed: results.filter(r => r.action === 'removed' && r.success).length,
-            failed: results.filter(r => !r.success).length
-          }
+            added: results.filter((r) => r.action === 'added' && r.success).length,
+            removed: results.filter((r) => r.action === 'removed' && r.success).length,
+            failed: results.filter((r) => !r.success).length,
+          },
         });
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-
   } catch (error) {
     console.error('Error managing playlists:', error);
     return NextResponse.json(
-      { error: 'Failed to manage playlists', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to manage playlists',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

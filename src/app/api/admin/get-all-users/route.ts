@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         role: userPermissions.currentRole?.role || 'No role assigned',
         permissions: userPermissions.currentRole?.permissions || [],
         createdAt: userPermissions.createdAt?.toDate()?.toISOString() || 'Unknown',
-        isActive: userPermissions.currentRole?.isActive || false
+        isActive: userPermissions.currentRole?.isActive || false,
       };
 
       users.push(user);
@@ -36,14 +36,18 @@ export async function GET(request: NextRequest) {
 
     // Sort users by role (admin first, then others)
     users.sort((a, b) => {
-      const roleOrder: Record<string, number> = { 'admin': 0, 'butler-ground': 1, 'butler-internet': 2, 'viewer': 3 };
+      const roleOrder: Record<string, number> = {
+        admin: 0,
+        'butler-ground': 1,
+        'butler-internet': 2,
+        viewer: 3,
+      };
       const aOrder = roleOrder[a.role] ?? 999;
       const bOrder = roleOrder[b.role] ?? 999;
       return aOrder - bOrder;
     });
 
     return NextResponse.json(users, { status: 200 });
-
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });

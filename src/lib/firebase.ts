@@ -8,7 +8,9 @@ import type { Point, Cat } from '@/types';
 const firebaseConfig = getFirebaseConfig();
 
 if (!firebaseConfig || !firebaseConfig.apiKey) {
-  throw new Error('Firebase configuration is missing or invalid. Please check your environment variables.');
+  throw new Error(
+    'Firebase configuration is missing or invalid. Please check your environment variables.'
+  );
 }
 
 // Initialize Firebase
@@ -21,9 +23,9 @@ export async function getPoints(): Promise<Point[]> {
   try {
     const pointsCollection = collection(db, 'points');
     const pointsSnapshot = await getDocs(pointsCollection);
-    return pointsSnapshot.docs.map(doc => ({
+    return pointsSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     })) as Point[];
   } catch (error) {
     console.error('Error fetching points:', error);
@@ -36,9 +38,9 @@ export async function getCatsByPointId(pointId: string): Promise<Cat[]> {
     const catsCollection = collection(db, 'cats');
     const q = query(catsCollection, where('pointId', '==', pointId));
     const catsSnapshot = await getDocs(q);
-    return catsSnapshot.docs.map(doc => ({
+    return catsSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     })) as Cat[];
   } catch (error) {
     console.error('Error fetching cats:', error);
@@ -55,6 +57,8 @@ export async function getStorageUrl(path: string): Promise<string> {
     return await getDownloadURL(storageRef);
   } catch (error) {
     console.error('Error getting storage URL:', error);
-    throw new Error(`Failed to get storage URL for path: ${path}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to get storage URL for path: ${path}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
