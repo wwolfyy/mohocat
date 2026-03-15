@@ -18,29 +18,20 @@ provider "vercel" {
 # Data source: look up your existing GitHub-connected Vercel project
 # (after you import it via `terraform import`, or create fresh below)
 # ---------------------------------------------------------------------------
-resource "vercel_project" "mountaincats" {
+resource "vercel_project" "mohocat" {
   name      = var.vercel_project_name
   framework = "nextjs"
 
   git_repository = {
     type = "github"
-    repo = var.github_repo # e.g. "your-github-username/mcathcat"
+    repo = var.github_repo # e.g. "your-github-username/mohocat"
   }
 }
 
-# ---------------------------------------------------------------------------
-# Domains
-# ---------------------------------------------------------------------------
-
-# Production domain (mapped to `main` branch automatically by Vercel)
-resource "vercel_project_domain" "production" {
-  project_id = vercel_project.mountaincats.id
-  domain     = var.production_domain # e.g. "www.mountaincats.com"
-}
 
 # Static staging domain pinned to the `dev` branch
 resource "vercel_project_domain" "staging" {
-  project_id  = vercel_project.mountaincats.id
+  project_id  = vercel_project.mohocat.id
   domain      = var.staging_domain # e.g. "staging.mountaincats.com" or "mountaincats-dev.vercel.app"
   git_branch  = "dev"
 }
@@ -83,7 +74,7 @@ locals {
 resource "vercel_project_environment_variable" "shared" {
   for_each = local.shared_envs
 
-  project_id = vercel_project.mountaincats.id
+  project_id = vercel_project.mohocat.id
   key        = each.key
   value      = each.value
   # Apply to both production deployments (main) and preview deployments (dev, PRs)
@@ -95,7 +86,7 @@ resource "vercel_project_environment_variable" "shared" {
 # Environment Variables — Production-specific (main branch)
 # ---------------------------------------------------------------------------
 resource "vercel_project_environment_variable" "base_url_production" {
-  project_id = vercel_project.mountaincats.id
+  project_id = vercel_project.mohocat.id
   key        = "NEXT_PUBLIC_BASE_URL"
   value      = "https://${var.production_domain}"
   target     = ["production"]
@@ -103,7 +94,7 @@ resource "vercel_project_environment_variable" "base_url_production" {
 }
 
 resource "vercel_project_environment_variable" "youtube_redirect_uri_production" {
-  project_id = vercel_project.mountaincats.id
+  project_id = vercel_project.mohocat.id
   key        = "YOUTUBE_REDIRECT_URI"
   value      = "https://${var.production_domain}/oauth/callback"
   target     = ["production"]
@@ -114,7 +105,7 @@ resource "vercel_project_environment_variable" "youtube_redirect_uri_production"
 # Environment Variables — Preview/Staging-specific (dev branch)
 # ---------------------------------------------------------------------------
 resource "vercel_project_environment_variable" "base_url_staging" {
-  project_id    = vercel_project.mountaincats.id
+  project_id    = vercel_project.mohocat.id
   key           = "NEXT_PUBLIC_BASE_URL"
   value         = "https://${var.staging_domain}"
   target        = ["preview"]
@@ -123,7 +114,7 @@ resource "vercel_project_environment_variable" "base_url_staging" {
 }
 
 resource "vercel_project_environment_variable" "youtube_redirect_uri_staging" {
-  project_id = vercel_project.mountaincats.id
+  project_id = vercel_project.mohocat.id
   key        = "YOUTUBE_REDIRECT_URI"
   value      = "https://${var.staging_domain}/oauth/callback"
   target     = ["preview"]
