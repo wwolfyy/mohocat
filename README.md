@@ -1,4 +1,6 @@
-# Mountain Cat Tracking Platform
+# MOHOCAT (<ins>MO</ins>untain cat and <ins>HO</ins>use <ins>CAT</ins>)
+
+## Mountain Cat Tracking Platform
 
 A Next.js application for tracking and managing mountain cats with multi-tenant capabilities.
 
