@@ -1,5 +1,5 @@
 {
-  "name": "mcathcat",
+  "name": "mohocats",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,6 +7,7 @@
     "build": "node scripts/migration/export_all_to_cloud_storage.js && node scripts/maintenance/fetch-static-assets.js && next build",
     "start": "next start",
     "lint": "next lint",
+    "vercel-build": "next build",
     "script:add-updated-field": "node scripts/migration/add_updated_field.js",
     "script:add-updated-field-admin": "node scripts/migration/add_updated_field_admin.js",
     "script:remove-thumbnailUrl": "node scripts/remove_thumbnailUrl_field.js",
@@ -14,10 +15,10 @@
     "update:cats": "node scripts/migration/export_cats_to_static.js",
     "update:points": "node scripts/migration/export_points_to_static.js",
     "update:feeding-spots": "node scripts/migration/export_feeding_spots_to_static.js",
-    "docker:build": "docker build -t mcathcat .",
-    "docker:run": "docker run -p 8080:8080 --env-file .env.local mcathcat",
+    "docker:build": "docker build -t mohocats-backup .",
+    "docker:run": "docker run -p 8080:8080 --env-file .env.local mohocats-backup",
     "docker:build-and-run": "npm run docker:build && npm run docker:run",
-    "cloud-run:deploy": "gcloud run deploy mcathcat --source . --platform managed --region asia-northeast3 --allow-unauthenticated",
+    "cloud-run:deploy-backup": "gcloud run deploy mcathcat --source . --platform managed --region asia-northeast3 --allow-unauthenticated",
     "prepare": "husky"
   },
   "dependencies": {
