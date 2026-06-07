@@ -29,18 +29,39 @@ let dbInstance: Firestore | null = null;
 let storageInstance: FirebaseStorage | null = null;
 let analyticsInstance: Analytics | null = null;
 
+// Placeholder config used when no real Firebase configuration is available
+// (e.g. preview/sandbox environments where encrypted production secrets are
+// not exposed). Using a syntactically valid placeholder lets the Firebase SDK
+// initialize without throwing, so the app renders. Any actual network calls
+// will fail and are handled by the existing try/catch blocks around them.
+const PLACEHOLDER_FIREBASE_CONFIG = {
+  apiKey: 'placeholder-api-key',
+  authDomain: 'placeholder.firebaseapp.com',
+  projectId: 'placeholder',
+  storageBucket: 'placeholder.appspot.com',
+  messagingSenderId: '0000000000',
+  appId: '1:0000000000:web:0000000000000000000000',
+};
+
 function getFirebaseApp(): FirebaseApp {
   if (appInstance) return appInstance;
 
   const firebaseConfig = getFirebaseConfig();
 
-  if (!firebaseConfig || !firebaseConfig.apiKey) {
-    throw new Error(
-      'Firebase configuration is missing or invalid. Please check your environment variables.'
+  const isConfigured = Boolean(firebaseConfig?.apiKey && firebaseConfig?.projectId);
+
+  if (!isConfigured) {
+    console.warn(
+      '[firebase] Firebase configuration is missing or empty. ' +
+        'Initializing with a placeholder config so the app can render. ' +
+        'Firebase-backed features will be unavailable until the ' +
+        'NEXT_PUBLIC_FIREBASE_* environment variables are set for this environment.'
     );
   }
 
-  appInstance = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  const config = isConfigured ? firebaseConfig! : PLACEHOLDER_FIREBASE_CONFIG;
+
+  appInstance = getApps().length === 0 ? initializeApp(config) : getApp();
   return appInstance;
 }
 

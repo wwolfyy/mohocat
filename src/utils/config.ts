@@ -207,6 +207,19 @@ export function getFirebaseConfig() {
 }
 
 /**
+ * Whether a real Firebase configuration is available.
+ *
+ * Returns false when the Firebase environment variables are missing or empty
+ * (e.g. in preview/sandbox environments where encrypted production secrets are
+ * not exposed). Consumers can use this to degrade gracefully instead of
+ * crashing.
+ */
+export function isFirebaseConfigured(): boolean {
+  const firebase = getFirebaseConfig();
+  return Boolean(firebase?.apiKey && firebase?.projectId && firebase?.appId);
+}
+
+/**
  * Get YouTube API key for the current mountain
  */
 export function getYouTubeApiKey(): string {
