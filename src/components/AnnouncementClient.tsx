@@ -237,7 +237,7 @@ const AnnouncementClient = () => {
             <button
               key={page}
               className={cn(
-                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
+                'px-4 py-2 rounded bg-gradient-to-r from-brand to-accent text-ink font-bold shadow',
                 'border border-yellow-500',
                 'transition-all duration-200'
               )}
@@ -266,8 +266,8 @@ const AnnouncementClient = () => {
             <button
               onClick={() => handlePageClick(currentPage - 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+                'px-6 py-3 bg-gradient-to-r from-brand to-accent',
+                'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
             >
               previous
@@ -279,8 +279,8 @@ const AnnouncementClient = () => {
             <button
               onClick={() => handlePageClick(currentPage + 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+                'px-6 py-3 bg-gradient-to-r from-brand to-accent',
+                'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
             >
               next

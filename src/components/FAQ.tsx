@@ -30,8 +30,8 @@ const FAQAccordion: React.FC<FAQProps> = ({ items }) => {
         <div key={index} className="border border-gray-200 rounded-lg">
           <button
             className={cn(
-              'w-full px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-              'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+              'w-full px-6 py-3 bg-gradient-to-r from-brand to-accent',
+              'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
             )}
             onClick={() => toggleItem(index)}
             aria-expanded={openItems.has(index)}

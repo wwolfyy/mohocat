@@ -102,8 +102,8 @@ const ButlerTalkClient = () => {
         <button
           onClick={() => router.push('/pages/butler_talk/new')}
           className={cn(
-            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+            'w-full py-3 bg-gradient-to-r from-brand to-accent',
+            'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
           )}
           data-oid="q0:d1d3"
         >

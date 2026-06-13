@@ -667,8 +667,8 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
         type="submit"
         disabled={uploading}
         className={cn(
-          'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-          'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200',
+          'w-full py-3 bg-gradient-to-r from-brand to-accent',
+          'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200',
           uploading && 'opacity-50 cursor-not-allowed'
         )}
       >

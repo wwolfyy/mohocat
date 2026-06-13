@@ -141,8 +141,8 @@ export default function Contact() {
             type="submit"
             disabled={isSubmitting}
             className={cn(
-              'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-              'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200',
+              'w-full py-3 bg-gradient-to-r from-brand to-accent',
+              'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200',
               isSubmitting && 'opacity-50 cursor-not-allowed'
             )}
             data-oid="p6x6eai"

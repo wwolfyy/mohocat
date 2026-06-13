@@ -114,6 +114,5 @@ Spiderfy-first removes the fussy "tune zoom thresholds so clusters break apart c
 
 ## Open items / next steps
 
-1. **Phase 1 build path:** generate a v0-ready prompt for the desktop landing (frosted nav, grouped menu, intro card, restyled cat-marker with pointer-tail + hover-scale), and/or mock the layout visually before sending to v0.
-2. **Brand tokens:** lock the brand-yellow value, typography, and the cat-marker component spec so Phase 1 and Phase 2 stay visually consistent.
-3. **Phase 2 prerequisites:** confirm image dimensions for the pixel-coordinate conversion; identify the tightest pin pair to validate `maxClusterRadius` behavior.
+1. **Brand tokens:** lock the brand-yellow value, typography, and the cat-marker component spec so Phase 1 and Phase 2 stay visually consistent. Tokens are now defined in `tailwind.config.js` (single source of truth) and documented in `docs/design/design.md`; the remaining step is final sign-off on the proposed brand-yellow value.
+2. **Phase 2 prerequisites:** confirm image dimensions for the pixel-coordinate conversion; identify the tightest pin pair to validate `maxClusterRadius` behavior.

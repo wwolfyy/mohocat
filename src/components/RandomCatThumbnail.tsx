@@ -89,7 +89,7 @@ export default function RandomCatThumbnail({ pointId, className }: RandomCatThum
       className={cn(
         'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
         'w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden',
-        'transition-transform duration-200 group-hover:scale-110',
+        'transition-transform duration-200 group-hover:scale-125',
         'bg-gray-200', // Fallback background while image loads
         // Only show and animate when image is loaded
         imageLoaded ? 'animate-bubble-pop' : 'opacity-0 scale-0',

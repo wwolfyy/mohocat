@@ -85,7 +85,11 @@ body {
   }
 
   .animate-bubble-pop {
-    animation: bubble-pop-dramatic 0.8s ease-out both;
+    /* `backwards` (not `both`): preserve the no-flash entrance, but don't let the
+       filled final keyframe pin `transform` and override `group-hover:scale-125`
+       on the marker avatar. The 100% keyframe equals the resting transform, so
+       there is no snap when the animation ends. */
+    animation: bubble-pop-dramatic 0.8s ease-out backwards;
     transform-origin: center center;
   }
 

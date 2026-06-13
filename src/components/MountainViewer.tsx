@@ -5,6 +5,7 @@ import type { Point, Cat } from '@/types';
 import { cn } from '@/utils/cn';
 import CatGallery from './CatGallery';
 import RandomCatThumbnail from './RandomCatThumbnail';
+import IntroCard from './IntroCard';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
 
 interface MountainViewerProps {
@@ -174,30 +175,28 @@ export default function MountainViewer({ points }: MountainViewerProps) {
                     {/* Cat thumbnail or white circle indicator - always centered in the PointWrapper */}
                     <RandomCatThumbnail pointId={point.id} />
 
+                    {/* Map-marker pointer/tail above the avatar — signals a clickable
+                        cat-marker; brand-yellow downward triangle (redesign §2). */}
+                    <div
+                      className={cn(
+                        'absolute left-1/2 -translate-x-1/2 bottom-[calc(50%_+_1.6rem)]',
+                        'h-0 w-0 pointer-events-none',
+                        'border-l-[6px] border-r-[6px] border-t-[9px]',
+                        'border-l-transparent border-r-transparent border-t-brand',
+                        'drop-shadow-md transition-transform duration-200 group-hover:scale-125'
+                      )}
+                    />
+
                     {/* Label - positioned relative to the centered circle */}
                     <div
                       className={cn(
-                        'bg-yellow-400 text-black text-xs font-semibold px-2 py-1 rounded-md shadow-lg',
+                        'bg-brand text-ink text-xs font-semibold px-2 py-1 rounded-md shadow-lg',
                         'cursor-pointer transition-transform duration-200 group-hover:scale-110',
                         'whitespace-nowrap border border-gray-600',
                         'absolute',
-                        // Conditional positioning:
-                        {
-                          // Default: Label above point
-                          'left-1/2 -translate-x-1/2 bottom-[calc(50%_+_1.25rem)]':
-                            point.title !== '하느재 등산로 입구 부근' &&
-                            point.title !== '공원 관리소 부근',
-
-                          // "하느재 등산로 입구 부근": Right on mobile, Above on desktop
-                          'top-1/2 -translate-y-1/2 left-[calc(50%_+_1.25rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_1.25rem)] md:top-auto md:translate-y-0':
-                            point.title === '하느재 등산로 입구 부근',
-
-                          // "공원 관리소 부근": Lower-Right on mobile, Above on desktop
-                          // No -translate-y-1/2 for top on mobile as we want its top edge to align.
-                          // No -translate-x-1/2 for left on mobile as we want its left edge to align.
-                          'top-[calc(50%_+_1.25rem)] left-[calc(50%_+_1.25rem)] md:left-1/2 md:-translate-x-1/2 md:bottom-[calc(50%_+_1.25rem)] md:top-auto':
-                            point.title === '공원 관리소 부근',
-                        }
+                        // Label sits below the avatar (redesign §2). Brief overlap with
+                        // nearby labels is accepted at the current pin density.
+                        'left-1/2 -translate-x-1/2 top-[calc(50%_+_1.5rem)]'
                       )}
                     >
                       {point.title}
@@ -211,7 +210,7 @@ export default function MountainViewer({ points }: MountainViewerProps) {
                       <div
                         className={cn(
                           'absolute w-48 h-48 -translate-x-1/2 -translate-y-1/2',
-                          'border-2 border-yellow-400 rounded-full animate-pulse',
+                          'border-2 border-brand rounded-full animate-pulse',
                           'top-1/2 left-1/2' // Positioned relative to the main point container
                         )}
                       />
@@ -226,6 +225,9 @@ export default function MountainViewer({ points }: MountainViewerProps) {
           )}
         </>
       )}
+
+      {/* Dismissible nudge floating over the map's bottom-left (redesign §1) */}
+      <IntroCard />
     </div>
   );
 }

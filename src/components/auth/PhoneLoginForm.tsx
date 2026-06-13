@@ -172,7 +172,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
             className={cn(
               'w-full py-3 rounded-lg font-bold transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-offset-2',
-              'bg-gradient-to-r from-yellow-400 to-orange-300 text-black',
+              'bg-gradient-to-r from-brand to-accent text-ink',
               'hover:shadow-lg hover:-translate-y-1',
               'focus:ring-yellow-500',
               { 'opacity-50 cursor-not-allowed': isLoading }
@@ -212,7 +212,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
             className={cn(
               'w-full py-3 rounded-lg font-bold transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-offset-2',
-              'bg-gradient-to-r from-yellow-400 to-orange-300 text-black',
+              'bg-gradient-to-r from-brand to-accent text-ink',
               'hover:shadow-lg hover:-translate-y-1',
               'focus:ring-yellow-500',
               { 'opacity-50 cursor-not-allowed': isLoading }
