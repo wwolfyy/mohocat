@@ -90,8 +90,8 @@ export default function Navigation() {
     <>
       {/* Desktop navigation */}
       <nav className="hidden items-center gap-5 md:flex">
-        <NavDropdown label="동참">
-          <NavItem href="/pages/about" resourceId="about" label="소개" {...access} />
+        <NavDropdown label="소개">
+          <NavItem href="/pages/about" resourceId="about" label="산냥이와 집냥이" {...access} />
           <NavItem href="/pages/contact" resourceId="contact" label="동참" {...access} />
           <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" {...access} />
         </NavDropdown>
@@ -145,9 +145,11 @@ export default function Navigation() {
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
-            'rounded-lg p-2',
-            'bg-gradient-to-r from-brand to-accent text-ink',
-            'transition-all duration-200 hover:shadow-lg'
+            // Ghost/utility styling — no brand fill (that belongs to the 입양홍보
+            // CTA); just a quiet dark icon with a faint tap-feedback wash. Keeps
+            // the ~40px tap target via p-2.
+            'rounded-lg p-2 text-gray-800',
+            'transition-colors duration-200 hover:bg-black/5 active:bg-black/10'
           )}
           aria-expanded={isMobileMenuOpen}
         >
@@ -163,7 +165,7 @@ export default function Navigation() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
@@ -178,7 +180,7 @@ export default function Navigation() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>

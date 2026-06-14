@@ -86,9 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Navigation data-oid="3tyeu90" />
                 </div>
               </header>
-              <main className="pb-8" data-oid="7mtd9pq">
-                {children}
-              </main>
+              <main data-oid="7mtd9pq">{children}</main>
               <Footer />
             </div>
           </AuthProvider>

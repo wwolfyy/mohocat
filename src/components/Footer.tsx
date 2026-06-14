@@ -18,7 +18,7 @@ export default function Footer() {
         <div className="text-gray-500">
           <span className="font-semibold text-gray-700">산냥이집냥이</span>
           <span className="mx-2 text-gray-300">·</span>
-          <span>비영리 고양이 커뮤니티</span>
+          <span>비영리 커뮤니티</span>
         </div>
 
         {/* Placeholders — pages pending the compliance workstream. */}

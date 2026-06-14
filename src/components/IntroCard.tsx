@@ -44,7 +44,10 @@ export default function IntroCard() {
   return (
     <div
       className={cn(
-        'absolute bottom-4 left-4 z-30 md:bottom-6 md:left-6',
+        // z-[1100]: sit above Leaflet's panes/controls — `.leaflet-container`
+        // doesn't form a stacking context so its z-indexes bubble into this
+        // overlay's context, otherwise the card hides behind the map.
+        'absolute bottom-4 left-4 z-[1100] md:bottom-6 md:left-6',
         'flex items-center gap-2.5 py-2 pl-3 pr-2',
         'rounded-full bg-white/90 shadow-lg ring-1 ring-black/5 backdrop-blur-md',
         'animate-dropdown-enter'
