@@ -87,25 +87,51 @@ Section references (§) point back to that plan. Design decisions live in
 
 ## Phase 2 — Mobile + Map Engine Migration (Leaflet)
 
+> **Revised after Phase 1.** Phase 1 built the markers and intro card as **React +
+> async data** (not static HTML), added a sticky frosted header + footer, and
+> locked brand tokens. The ⚠️ items below reconcile Phase 2 with that reality —
+> the original plan understated them.
+>
+> **Resolved decisions (gating Phase 2):**
+>
+> - **Architecture:** ONE Leaflet map for desktop + mobile. Desktop **zoom enabled (free)**; clustering **mobile-only**. (Not a separate desktop renderer — single marker codebase, per design.md.)
+> - **Marker rendering:** **pre-resolved `divIcon`** on both viewports — resolve each point's thumbnail once at map level, bake plain HTML into the icon; hover/pulse via Leaflet events. (The React marker is rewritten once in source; at runtime it's cheap string templating, not a per-serve conversion. Plain desktop pins are built once per load and just repositioned on pan/zoom; only mobile cluster/spiderfy transitions rebuild pin DOM.)
+> - **Map height:** **full-height map** (fills viewport below header), footer below the fold — resolves the desktop dead-space.
+> - **Pop animation:** **kept on desktop, dropped on mobile.** Desktop pins are un-clustered → DOM created once, repositioned (not rebuilt) on pan/zoom, so the pop fires once on load. Mobile cluster/spiderfy transitions rebuild pin DOM, so it's dropped there. Marker-HTML builder takes an `animate` flag (true desktop / false mobile); keep the `fill-mode: backwards` fix and the thumbnail preloader.
+
+**▶ Status (2026-06-14 handoff):** P2-1 ✅ (tightest pair found) · P2-2 ✅ (Leaflet deps installed, tsc clean). **Resume at P2-3** — scaffold the client-only Leaflet map (and do the CSS import there). Then P2-4 → P2-9 in order. Nothing else in Phase 2 has been started; no Leaflet code written yet.
+
 ### Prerequisites (§ Open items)
 
-- [ ] Confirm satellite **image dimensions** for the pixel-coordinate conversion
-- [ ] Identify the **tightest pin pair** to validate `maxClusterRadius`
+- [x] Confirm satellite **image dimensions** — `public/images/screenshot_mt_geyang_50.png` is **1616 × 808 px** (≈2:1, NOT 16:9). CRS.Simple bounds = `[[0,0],[808,1616]]`. The current `aspect-[16/9]` box and the `new Image()` 1600×900 fallback are both wrong and get removed.
+- [x] Identify the **tightest pin pair** — **정상 (5%, 25%) ↔ 헬기장 (11%, 24.5%)**, ≈ **97 px (6% of the 1616×808 image)**. 8 points total. `maxClusterRadius` must cluster this pair on a narrow viewport without lumping distant points.
+- [x] ✅ **Marker rendering strategy — RESOLVED: pre-resolved `divIcon` (both viewports).** Why: `Leaflet.markercluster` only clusters real Leaflet marker layers, so mobile clustering **forces real `L.divIcon` markers** (React overlays wouldn't cluster). Implementation: resolve each point's chosen cat thumbnail once at map level (fetch cats per point, pick thumbnail) and bake a plain `<img>` + marker markup into the `divIcon` HTML string — no live React inside the marker. Hover/pulse via Leaflet `mouseover`/`mouseout` + CSS.
 
 ### Engine setup (§ Engine choice)
 
-- [ ] Add deps: `leaflet`, `react-leaflet`, `Leaflet.markercluster` (+ wrapper)
-- [ ] Client-only map component — dynamic import with `ssr: false`
-- [ ] `L.imageOverlay` + `L.CRS.Simple` using the hand-framed satellite image (no tiles/keys)
+- [x] Add deps: `leaflet@^1.9.4`, `react-leaflet@^4.2.1`, `leaflet.markercluster@^1.5.3` (+ `@types/leaflet`, `@types/leaflet.markercluster`) — installed, `tsc` clean
+- [ ] ⚠️ Import stylesheets: `leaflet/dist/leaflet.css` + markercluster CSS (else map/markers render broken)
+- [ ] Client-only map component — dynamic import with `ssr: false` (Leaflet touches `window`)
+- [ ] `L.imageOverlay` + `L.CRS.Simple` with bounds `[[0,0],[808,1616]]` (no tiles/keys)
+- [ ] ⚠️ **Remove obsolete static-image scaffolding** in `MountainViewer.tsx`: the `rotate-90`/counter-rotation, `--mobile-scale-factor` / `--mobile-point-counter-scale-factor`, the manual aspect-ratio math, and the `new Image()` dimension loader (+ 1600×900 fallback) — all superseded by CRS.Simple.
+- [ ] ⚠️ Re-add the **compass / north arrow** (`arrow_north.svg`) as a Leaflet control/overlay (today it's an abs-positioned img inside the rotated container).
+- [ ] ⚠️ **z-index reconciliation** — sticky header is `z-30`; Leaflet panes/controls run ~200–1000. Keep the header (and footer + intro-card overlay) above Leaflet panes.
+
+### Map container sizing (folds in the deferred "Option A")
+
+- [ ] Size the Leaflet container to **fill the viewport below the sticky header** (`100dvh − header`, footer below the fold — RESOLVED) — resolves the Phase 1 desktop dead-space. Use `100dvh` so mobile browser bars don't clip/jump.
+- [ ] ⚠️ **Preserve the IntroCard overlay** — it now lives _inside_ `MountainViewer`'s relative wrapper (`absolute` bottom-left). Keep it as an overlay over the new Leaflet container.
 
 ### Coordinate migration (§ Coordinate migration)
 
-- [ ] Convert pin positions from **percentages → image-pixel coordinates** (mechanical, lossless)
+- [ ] Convert pin positions **percentages → image-pixel coords** (`x% × 1616`, `y% × 808`, mapped into the CRS.Simple bounds). `Point` is `{ id, x, y, title }` with x/y as %.
 
-### Markers (§ Marker styling carries over)
+### Markers — carry Phase 1 visuals into Leaflet (§ Marker styling carries over)
 
-- [ ] Reimplement markers as `L.divIcon` with the Phase 1 HTML/CSS (avatar + ring + pointer + hover-scale), pixel-identical
-- [ ] Attach existing "open cat-list modal" handler to the Leaflet marker
+- [ ] Reimplement the marker (avatar + white ring + brand-yellow pointer above + label below) per the chosen strategy; keep brand-token classes **literal** (`bg-brand` / `text-ink` / `border-t-brand` / `border-brand`) so Tailwind JIT generates them.
+- [ ] ⚠️ Re-create **hover-scale** (`scale-125` on avatar+pointer) and the **large pulse ring** via Leaflet `mouseover`/`mouseout` (or CSS `:hover` on the marker root) — Tailwind `group-hover` + React `activePoint` state won't survive the port as-is.
+- [x] ✅ **Entrance pop (`animate-bubble-pop`) — RESOLVED: kept on desktop, dropped on mobile.** Desktop pins are un-clustered → DOM persists, so the pop fires once on load (not on pan/zoom). Mobile cluster/spiderfy rebuilds would re-fire it, so it's omitted there. Implement via an `animate` flag on the marker-HTML builder; render desktop markers in a plain (non-cluster) layer; keep the `fill-mode: backwards` fix + thumbnail preloader.
+- [ ] Attach the existing modal handler to the marker (`handlePointClick` → `CatGallery`, unchanged).
 
 ### Clustering — mobile only (§ Clustering)
 
@@ -127,8 +153,8 @@ Section references (§) point back to that plan. Design decisions live in
 
 ---
 
-## Out of scope (per plan §5)
+## Scope notes
 
-- [-] Desktop map zoom/pan controls and clustering (desktop pins stay un-clustered)
-- [-] Any change to the map's underlying data model on desktop
-- [-] Admin (`react-admin`) screens
+- Desktop **moves to the Leaflet engine too** (so it gains pan/zoom), but stays **un-clustered** — clustering is mobile-only.
+- [-] No change to the map's underlying **data model** (still `Point {id, x, y, title}`; only the % → pixel coordinate read changes).
+- [-] **Admin (`react-admin`) screens** — out of scope entirely.

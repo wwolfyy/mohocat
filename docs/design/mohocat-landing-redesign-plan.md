@@ -64,6 +64,27 @@ Reduce the flat 9-item row into grouped top-level items with dropdowns.
 
 ## Phase 2 — Mobile + Map Engine Migration
 
+### Reconciliation with what Phase 1 actually shipped
+
+These adjust the original assumptions below; details/tasks live in
+`mohocat-landing-redesign-tasks.md`.
+
+- **Markers are React, not static HTML.** The shipped marker is a React component
+  (`RandomCatThumbnail`: async cat fetch, Next `<Image>`, Tailwind `group-hover`,
+  React-state pulse ring). "`L.divIcon` with the Phase 1 HTML, pixel-identical" is
+  therefore **not** a 1:1 port — pick a rendering strategy first (React-in-`divIcon`
+  via portal, or React overlays synced to the map). Hover-scale, the pulse ring,
+  and the `animate-bubble-pop` entrance (with its `fill-mode: backwards` fix) all
+  need re-engineering for Leaflet.
+- **Image is 1616 × 808 px** (≈2:1, not 16:9) → CRS.Simple bounds `[[0,0],[808,1616]]`.
+  The Phase 1 `aspect-[16/9]` box and the 1600×900 fallback are removed.
+- **Remove the static-image scaffolding** (rotation/counter-rotation, mobile scale
+  CSS vars, dimension loader) and re-add the compass as a Leaflet overlay.
+- **Container sizing folds in the deferred "full-height map" decision** — sizing the
+  Leaflet map to fill the viewport below the (sticky, frosted) header resolves the
+  Phase 1 desktop dead-space. Reconcile with the new footer + intro-card overlay,
+  and with header z-index vs. Leaflet panes.
+
 ### Why migrate the map
 
 The current map is a **static satellite image** with pins positioned as **percentages relative to the image** (not GIS coordinates). On mobile this produces two distinct problems:
