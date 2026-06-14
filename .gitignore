@@ -50,8 +50,10 @@ next-env.d.ts
 config/firebase/mountaincats-61543-7329e795c352.json
 google_svs_account.json
 
-# media
+# media — fetched at build time by scripts/maintenance/fetch-static-assets.js
+# (single strategy: the build is the source of truth for these, not git).
 public/images/about-photos/*
+public/images/thumbnails/*
 
 # Terraform — never commit real secrets or local state
 infra/terraform/.terraform/
