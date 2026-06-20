@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { cn } from '@/utils/cn';
 import { Cat } from '@/types';
 import { processTextWithLinks } from '@/utils/text-processing';
 import { getCatService } from '@/services';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import Modal from './ui/Modal';
 import PhotoAlbum from './PhotoAlbum';
 import VideoAlbum from './VideoAlbum';
 
@@ -23,6 +22,51 @@ const getStatusEmoji = (status?: string) => {
   };
   return statusToEmoji[status || ''] || '❓';
 };
+
+/** Aligned label/value row used for the cat's structured facts. */
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline">
+      <span className="w-24 shrink-0 font-medium text-gray-500">{label}</span>
+      <span className="text-gray-800">{children}</span>
+    </div>
+  );
+}
+
+/** Free-text block with an optional sub-heading (성격, 건강상태, 특이사항…). */
+function InfoBlock({ heading, html }: { heading?: string; html: string }) {
+  return (
+    <div>
+      {heading && <h4 className="mb-1.5 font-semibold text-gray-700">{heading}</h4>}
+      <div
+        className="whitespace-pre-line text-gray-700"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
+  );
+}
+
+/** Brand-tinted chip for the photo / video album actions. */
+function AlbumButton({
+  onClick,
+  emoji,
+  label,
+}: {
+  onClick: () => void;
+  emoji: string;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-4 py-2 text-sm font-medium text-ink ring-1 ring-brand-200 transition-colors duration-200 hover:bg-brand-100"
+    >
+      <span>{emoji}</span>
+      {label}
+    </button>
+  );
+}
 
 export default function CatInfo({ cat }: CatInfoProps) {
   const [showPhotoAlbum, setShowPhotoAlbum] = useState(false);
@@ -70,127 +114,61 @@ export default function CatInfo({ cat }: CatInfoProps) {
   }, [cat, catService]);
 
   return (
-    <div className="p-4" ref={contentRef}>
-      <div className="flex justify-center mb-4">
-        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+    <div ref={contentRef}>
+      {/* Header: avatar, name, status badge */}
+      <div className="flex flex-col items-center text-center">
+        <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-white shadow-lg ring-2 ring-brand-100">
           <Image
             src={cat.thumbnailUrl}
             alt={cat.name}
             width={128}
             height={128}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             priority={true}
             sizes="128px"
             quality={85}
           />
         </div>
-      </div>
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold bg-white/80 py-2">{cat.name}</h3>
-        {cat.description && (
-          <div className="mt-4">
-            <h4 className="font-semibold text-gray-700"></h4>
-            <div
-              className="mt-2 text-gray-600 whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.description) }}
-            />
-          </div>
-        )}
-        {cat.date_of_birth && (
-          <div className="flex items-center">
-            <span className="w-24 font-semibold text-gray-700">출생연도:</span>
-            <span className="text-gray-600">
-              {cat.date_of_birth}
-              {cat.dob_certainty && (
-                <span className="ml-2 text-sm text-gray-500">
-                  ({cat.dob_certainty === 'certain' ? '확실함' : '불확실'})
-                </span>
-              )}
-            </span>
-          </div>
-        )}
-        {cat.sex && (
-          <div className="flex items-center">
-            <span className="w-24 font-semibold text-gray-700">성별:</span>
-            <span className="text-gray-600">{cat.sex}</span>
-          </div>
-        )}
-        {cat.dwelling && (
-          <div className="flex items-center">
-            <span className="w-24 font-semibold text-gray-700">거주지:</span>
-            <span className="text-gray-600">{cat.dwelling}</span>
-          </div>
-        )}
+        <h3 className="mt-3 text-2xl font-bold tracking-tight text-gray-900">{cat.name}</h3>
         {cat.status && (
-          <div className="flex items-center">
-            <span className="w-24 font-semibold text-gray-700">현상태:</span>
-            <span className="text-gray-600">
-              {getStatusEmoji(cat.status)} {cat.status}
-            </span>
-          </div>
-        )}
-        {cat.character && (
-          <div className="mt-4">
-            <h4 className="font-semibold text-gray-700">성격:</h4>
-            <div
-              className="mt-2 text-gray-600 whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.character) }}
-            />
-          </div>
-        )}
-        {cat.parents && (
-          <div className="flex items-center">
-            <span className="w-24 font-semibold text-gray-700">엄마:</span>
-            <span className="text-gray-600">{cat.parents}</span>
-          </div>
-        )}
-        {cat.offspring && (
-          <div className="flex items-center">
-            <span className="w-24 font-semibold text-gray-700">애:</span>
-            <span className="text-gray-600">{cat.offspring}</span>
-          </div>
-        )}
-        <div className="mt-4">
-          <h4 className="font-semibold text-gray-700">건강상태:</h4>
-          <div
-            className="mt-2 text-gray-600 whitespace-pre-line"
-            dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.sickness || 'Unknown') }}
-          />
-        </div>
-        <div className="flex items-center">
-          <span className="w-24 font-semibold text-gray-700">중성화 여부:</span>
-          <span className="text-gray-600">
-            {cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}
+          <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 ring-1 ring-gray-200">
+            <span>{getStatusEmoji(cat.status)}</span>
+            {cat.status}
           </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="mt-6 space-y-4">
+        {cat.description && <InfoBlock html={processTextWithLinks(cat.description)} />}
+        {cat.date_of_birth && (
+          <InfoRow label="출생연도">
+            {cat.date_of_birth}
+            {cat.dob_certainty && (
+              <span className="ml-2 text-sm text-gray-500">
+                ({cat.dob_certainty === 'certain' ? '확실함' : '불확실'})
+              </span>
+            )}
+          </InfoRow>
+        )}
+        {cat.sex && <InfoRow label="성별">{cat.sex}</InfoRow>}
+        {cat.dwelling && <InfoRow label="거주지">{cat.dwelling}</InfoRow>}
+        {cat.character && <InfoBlock heading="성격:" html={processTextWithLinks(cat.character)} />}
+        {cat.parents && <InfoRow label="엄마">{cat.parents}</InfoRow>}
+        {cat.offspring && <InfoRow label="애">{cat.offspring}</InfoRow>}
+        <InfoBlock heading="건강상태:" html={processTextWithLinks(cat.sickness || 'Unknown')} />
+        <InfoRow label="중성화 여부">
+          {cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}
+        </InfoRow>
+        {cat.note && <InfoBlock heading="특이사항:" html={processTextWithLinks(cat.note)} />}
+
+        {/* Album actions */}
+        <div className="flex flex-wrap justify-center gap-3 pt-2">
+          <AlbumButton onClick={() => setShowPhotoAlbum(true)} emoji="📸" label="사진 보기" />
+          <AlbumButton onClick={() => setShowVideoAlbum(true)} emoji="🎬" label="동영상 보기" />
         </div>
-        {cat.note && (
-          <div className="mt-4">
-            <h4 className="font-semibold text-gray-700">특이사항:</h4>
-            <div
-              className="mt-2 text-gray-600 whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: processTextWithLinks(cat.note) }}
-            />
-          </div>
-        )}{' '}
-        <div className="flex items-center">
-          <span className="w-24 font-semibold text-gray-700">사진첩:</span>
-          <button
-            onClick={() => setShowPhotoAlbum(true)}
-            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
-          >
-            사진 보기 📸
-          </button>
-        </div>{' '}
-        <div className="flex items-center">
-          <span className="w-24 font-semibold text-gray-700">동영상:</span>
-          <button
-            onClick={() => setShowVideoAlbum(true)}
-            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
-          >
-            동영상 보기 🎬
-          </button>
-        </div>
-      </div>{' '}
+      </div>
+
       {/* Photo Album Modal */}
       <PhotoAlbum
         isOpen={showPhotoAlbum}
@@ -205,33 +183,14 @@ export default function CatInfo({ cat }: CatInfoProps) {
       />
       {/* Nested Cat Modal */}
       {selectedCat && (
-        <div
-          className="fixed inset-0 bg-black/85 flex items-start justify-center z-[70] overflow-y-auto py-4"
-          onClick={() => setSelectedCat(null)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedCat(null)}
-              className={cn(
-                'absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600',
-                'text-white rounded font-bold hover:shadow-lg transition-all duration-200',
-                'flex items-center justify-center z-10'
-              )}
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-            <CatInfo cat={selectedCat} />
-          </div>
-        </div>
+        <Modal onClose={() => setSelectedCat(null)} size="xl" zIndexClassName="z-[70]">
+          <CatInfo cat={selectedCat} />
+        </Modal>
       )}
       {/* Cat Modal Loading */}
       {catModalLoading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-brand-400" />
         </div>
       )}
     </div>

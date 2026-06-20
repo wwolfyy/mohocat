@@ -7,9 +7,8 @@ import { getAboutContentService, getCatService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
 import { processTextWithLinks } from '@/utils/text-processing';
 import { Cat } from '@/types';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 import CatInfo from '@/components/CatInfo';
-import { cn } from '@/utils/cn';
+import Modal from '@/components/ui/Modal';
 import Image from 'next/image';
 
 export default function About() {
@@ -261,34 +260,15 @@ export default function About() {
 
       {/* Cat Modal */}
       {selectedCat && (
-        <div
-          className="fixed inset-0 bg-black/75 flex items-start justify-center z-50 overflow-y-auto py-4"
-          onClick={() => setSelectedCat(null)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedCat(null)}
-              className={cn(
-                'absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600',
-                'text-white rounded font-bold hover:shadow-lg transition-all duration-200',
-                'flex items-center justify-center z-10'
-              )}
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-            <CatInfo cat={selectedCat} />
-          </div>
-        </div>
+        <Modal onClose={() => setSelectedCat(null)} size="xl">
+          <CatInfo cat={selectedCat} />
+        </Modal>
       )}
 
       {/* Cat Modal Loading */}
       {catModalLoading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-brand-400" />
         </div>
       )}
     </div>

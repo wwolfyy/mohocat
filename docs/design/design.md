@@ -185,6 +185,46 @@ unchanged.
 - Dismissible, bottom-left, single line: "지도의 고양이 사진을 클릭해보세요".
 - Small cat-ear/paw accent + subtle bounce-in (`animate-bounce-gentle`).
 
+### Modal (`src/components/ui/Modal.tsx`)
+
+The single shared shell for all public modals — "a warm card floating over the
+map." Every public modal (cat gallery/info, photo & video albums, announcement,
+cat selector, auth) renders inside it so they stay visually identical; restyle
+the shell here, never per-modal.
+
+- **Backdrop:** frosted dark — `bg-black/50 backdrop-blur-sm` — with a fade-in
+  (`animate-modal-backdrop`). Click-outside closes.
+- **Card:** white, `rounded-xl shadow-xl`, `p-6`, scale/fade entrance
+  (`animate-modal-panel`). Deliberately **narrow** so it doesn't dominate the map
+  — size scale `sm/md/lg/xl` = `max-w-sm/md/lg/2xl`. Bump a size only when content
+  needs it; cat gallery and cat info sit at `xl` (≈672px).
+- **Close:** neutral **circular ghost** button, top-right (`ModalCloseButton`) —
+  gray, `rounded-full`, brand focus ring. **Never** a red/square close button
+  (red is reserved for destructive actions). A secondary top-left action (e.g.
+  album refresh) mirrors the same ghost style.
+- **Title:** optional centered bold heading. Section labels inside use a short
+  brand-yellow underline accent.
+- **Brand accent is restrained:** avatar rings, status pills, section underlines,
+  and brand-tinted action chips — surfaces stay neutral white/gray.
+- **Behavior:** rendered through a **portal to `<body>`** (so the frosted
+  header's `backdrop-blur` can't trap a `fixed` modal), body scroll-lock while
+  open, `role="dialog"`. ESC closes only the **topmost** overlay via the shared
+  `useModalLayer` stack — every overlay (modals, lightboxes, players) registers
+  on it, so one keypress never closes the layers beneath.
+- **Primary action** inside a modal is the brand→accent gradient with `text-ink`
+  (e.g. announcement 확인, cat-selector 완료); secondary is `bg-gray-100`.
+  Destructive confirms (logout) keep `red`; vendor buttons (Kakao `#FEE500`)
+  are never re-themed.
+
+### Media viewer (`Lightbox` / `VideoPlayer`, `src/components/ui/`)
+
+Full-bleed image/video viewers shown over an album grid — intentionally **not**
+the white Modal card but a dark immersive surface (`bg-black/90`) so the media is
+the focus. Close and prev/next use the same subtle circular-ghost language on the
+dark backdrop; they register on the shared `useModalLayer` stack (Esc closes,
+←/→ navigate, topmost only). One shared copy of each is reused by both the
+album components and the gallery pages.
+
 ---
 
 ## Do's and Don'ts

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { cn } from '@/utils/cn';
+import Modal from '@/components/ui/Modal';
 
 interface KakaoLoginGuidanceModalProps {
   isOpen: boolean;
@@ -39,18 +39,16 @@ export default function KakaoLoginGuidanceModal({
               KakaoTalk account to it.
             </p>
             <div className="flex flex-col space-y-2 mt-4">
+              {/* Kakao vendor color — must stay #FEE500 with dark text. */}
               <button
                 onClick={() => setStep('check-link')}
-                className={cn(
-                  'w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black',
-                  'bg-[#FEE500] hover:bg-[#FDD835] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500'
-                )}
+                className="w-full rounded-lg bg-[#FEE500] px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[#FDD835] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
               >
                 Proceed
               </button>
               <button
                 onClick={handleClose}
-                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
                 Cancel
               </button>
@@ -71,16 +69,13 @@ export default function KakaoLoginGuidanceModal({
                   handleClose();
                   onConfirm();
                 }}
-                className={cn(
-                  'w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white',
-                  'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                )}
+                className="w-full rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
               >
                 Yes, I have
               </button>
               <button
                 onClick={() => setStep('guidance')}
-                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
                 No, I haven't
               </button>
@@ -102,10 +97,7 @@ export default function KakaoLoginGuidanceModal({
             <div className="mt-4">
               <button
                 onClick={handleClose}
-                className={cn(
-                  'w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white',
-                  'bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500'
-                )}
+                className="w-full rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
               >
                 Got it
               </button>
@@ -116,23 +108,8 @@ export default function KakaoLoginGuidanceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl relative animate-fadeIn">
-        <button
-          onClick={handleClose}
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-        {renderContent()}
-      </div>
-    </div>
+    <Modal isOpen={isOpen} onClose={handleClose} size="sm">
+      {renderContent()}
+    </Modal>
   );
 }

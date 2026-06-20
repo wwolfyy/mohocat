@@ -1,195 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getImageService, getCatService } from '@/services';
+import { getImageService } from '@/services';
 import { CatImage } from '@/types/media';
-import { Cat } from '@/types';
-import { cn } from '@/utils/cn';
-
-// Helper function to safely convert various date formats to a JavaScript Date
-const parseDate = (dateValue: any): Date | null => {
-  if (!dateValue) return null;
-
-  try {
-    // If it's already a Date object
-    if (dateValue instanceof Date) {
-      return dateValue;
-    }
-
-    // If it's a Firebase Timestamp with seconds property
-    if (typeof dateValue === 'object' && dateValue.seconds) {
-      return new Date(dateValue.seconds * 1000);
-    }
-
-    // If it's a Firebase Timestamp with toDate method
-    if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
-      return dateValue.toDate();
-    }
-
-    // If it's a string or number
-    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
-      const date = new Date(dateValue);
-      return isNaN(date.getTime()) ? null : date;
-    }
-
-    return null;
-  } catch (error) {
-    console.warn('Error parsing date:', dateValue, error);
-    return null;
-  }
-};
-
-interface LightboxProps {
-  image: CatImage;
-  onClose: () => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  hasPrevious: boolean;
-  hasNext: boolean;
-}
-
-// Lightbox component for viewing individual images
-function Lightbox({ image, onClose, onPrevious, onNext, hasPrevious, hasNext }: LightboxProps) {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'Escape':
-          onClose();
-          break;
-        case 'ArrowLeft':
-          if (hasPrevious) onPrevious();
-          break;
-        case 'ArrowRight':
-          if (hasNext) onNext();
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, onPrevious, onNext, hasPrevious, hasNext]);
-
-  // Reset loading state when image changes
-  useEffect(() => {
-    setImageLoading(true);
-    setImageError(false);
-  }, [image.imageUrl]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-90 pt-4 pb-4 overflow-y-auto"
-      data-oid="raw0dak"
-    >
-      {/* Close button - fixed to viewport but styled to be clearly visible */}
-      <button
-        onClick={onClose}
-        className="fixed top-4 right-4 z-50 text-white hover:text-red-400 text-3xl font-bold bg-red-600 bg-opacity-90 hover:bg-opacity-100 rounded-full w-12 h-12 flex items-center justify-center shadow-xl border-2 border-white transition-all duration-200"
-        aria-label="Close"
-        data-oid="oym18wm"
-      >
-        ×
-      </button>
-
-      {/* Previous button */}
-      {hasPrevious && (
-        <button
-          onClick={onPrevious}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-gray-300 text-3xl font-bold"
-          aria-label="Previous image"
-          data-oid="tegsoto"
-        >
-          ‹
-        </button>
-      )}
-
-      {/* Next button */}
-      {hasNext && (
-        <button
-          onClick={onNext}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-gray-300 text-3xl font-bold"
-          aria-label="Next image"
-          data-oid="v_82rfe"
-        >
-          ›
-        </button>
-      )}
-
-      {/* Main image container */}
-      <div
-        className="w-full max-w-4xl max-h-[calc(100vh-2rem)] p-4 relative bg-white bg-opacity-5 rounded-2xl backdrop-blur-sm mx-4"
-        data-oid="zjdqc9a"
-      >
-        {imageLoading && !imageError && (
-          <div className="flex items-center justify-center w-full h-64" data-oid="jv9zcuc">
-            <div className="text-white" data-oid="qm:-y9u">
-              이미지를 불러오는 중...
-            </div>
-          </div>
-        )}
-
-        {imageError && (
-          <div className="flex items-center justify-center w-full h-64" data-oid="bzlt66z">
-            <div className="text-white" data-oid="6jr.vwv">
-              이미지를 불러올 수 없습니다.
-            </div>
-          </div>
-        )}
-
-        <div className="relative" data-oid="3afxwkr">
-          <img
-            src={image.imageUrl}
-            alt={image.fileName}
-            className={`max-w-full max-h-full object-contain rounded-xl ${imageLoading ? 'hidden' : ''}`}
-            onLoad={() => setImageLoading(false)}
-            onError={() => {
-              setImageLoading(false);
-              setImageError(true);
-            }}
-            data-oid="5ift86c"
-          />
-        </div>
-
-        {/* Image info */}
-        {!imageLoading && !imageError && (
-          <div className="mt-4 text-white text-center" data-oid="h-p76x8">
-            {image.description && (
-              <p
-                className="text-sm text-black mt-1 bg-white bg-opacity-90 px-3 py-1 rounded"
-                data-oid="oxlb0_g"
-              >
-                {image.description}
-              </p>
-            )}
-            <p className="text-xs text-gray-400 mt-1" data-oid="3vx:4d7">
-              {(() => {
-                const createdDate = parseDate(image.createdTime);
-                return createdDate ? createdDate.toLocaleDateString('ko-KR') : '날짜 없음';
-              })()}
-            </p>
-            {image.tags && image.tags.length > 0 && (
-              <p className="text-xs text-gray-400 mt-1" data-oid=":8r0l.6">
-                태그: {image.tags.join(', ')}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Click overlay to close */}
-      <div
-        className="absolute inset-0 -z-10"
-        onClick={onClose}
-        aria-label="Close lightbox"
-        data-oid="ua5x7n-"
-      />
-    </div>
-  );
-}
-
+import { parseDate } from '@/utils/parse-date';
+import CatSelectorModal from '@/components/CatSelectorModal';
+import Lightbox from '@/components/ui/Lightbox';
 export default function PhotoAlbumPage() {
   const [images, setImages] = useState<CatImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,15 +14,11 @@ export default function PhotoAlbumPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredImages, setFilteredImages] = useState<CatImage[]>([]);
   // Filter states
-  const [cats, setCats] = useState<Cat[]>([]);
   const [showCatSelector, setShowCatSelector] = useState(false);
-  const [catSearchQuery, setCatSearchQuery] = useState('');
   const [selectedCatNames, setSelectedCatNames] = useState<Set<string>>(new Set());
-  const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   // Load all images when component mounts
   useEffect(() => {
     loadAllImages();
-    loadCats();
   }, []);
   // Filter images based on search query and selected cat names
   useEffect(() => {
@@ -247,16 +59,6 @@ export default function PhotoAlbumPage() {
     }
   };
 
-  const loadCats = async () => {
-    try {
-      const catService = getCatService();
-      const catsData = await catService.getAllCats();
-      setCats(catsData);
-    } catch (error) {
-      console.error('Error loading cats:', error);
-    }
-  };
-
   const openLightbox = (index: number) => {
     setSelectedImageIndex(index);
   };
@@ -276,47 +78,17 @@ export default function PhotoAlbumPage() {
     }
   };
   // Cat filter handlers
-  const handleCatToggle = (catId: string, catName: string) => {
-    const newSelectedCats = new Set(selectedCats);
-    if (newSelectedCats.has(catId)) {
-      newSelectedCats.delete(catId);
-    } else {
-      newSelectedCats.add(catId);
-    }
-    setSelectedCats(newSelectedCats);
-
-    // Update selected cat names for filtering
-    const selectedCatNamesSet = new Set(selectedCatNames);
-    if (selectedCatNamesSet.has(catName)) {
-      selectedCatNamesSet.delete(catName);
-    } else {
-      selectedCatNamesSet.add(catName);
-    }
-    setSelectedCatNames(selectedCatNamesSet);
-  };
-
-  const handleFilterInputClick = () => {
-    setShowCatSelector(true);
-    // Pre-select cats that are currently filtered
-    const preSelectedCats = new Set<string>();
-    cats.forEach((cat) => {
-      if (selectedCatNames.has(cat.name)) {
-        preSelectedCats.add(cat.id);
-      }
+  const removeCatFilter = (catName: string) => {
+    setSelectedCatNames((prev) => {
+      const next = new Set(prev);
+      next.delete(catName);
+      return next;
     });
-    setSelectedCats(preSelectedCats);
   };
 
   const clearCatFilter = () => {
     setSelectedCatNames(new Set());
-    setSelectedCats(new Set());
   };
-
-  const filteredCats = cats.filter(
-    (cat) =>
-      cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
-      cat.alt_name?.toLowerCase().includes(catSearchQuery.toLowerCase())
-  );
 
   return (
     <div className="min-h-screen bg-gray-50" data-oid="f:ug0m1">
@@ -377,12 +149,7 @@ export default function PhotoAlbumPage() {
                       >
                         {catName}
                         <button
-                          onClick={() => {
-                            const cat = cats.find((c) => c.name === catName);
-                            if (cat) {
-                              handleCatToggle(cat.id, cat.name);
-                            }
-                          }}
+                          onClick={() => removeCatFilter(catName)}
                           className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 text-blue-600 hover:text-blue-800"
                           data-oid="z6poncz"
                         >
@@ -395,7 +162,7 @@ export default function PhotoAlbumPage() {
 
                 {/* Click area to open cat selector */}
                 <div
-                  onClick={handleFilterInputClick}
+                  onClick={() => setShowCatSelector(true)}
                   className="w-full border border-gray-300 rounded px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 cursor-pointer min-h-[40px] flex items-center justify-between bg-gray-50 hover:bg-gray-100"
                   data-oid="xq7gm1z"
                 >
@@ -455,12 +222,7 @@ export default function PhotoAlbumPage() {
                     >
                       {catName}{' '}
                       <button
-                        onClick={() => {
-                          const cat = cats.find((c) => c.name === catName);
-                          if (cat) {
-                            handleCatToggle(cat.id, catName);
-                          }
-                        }}
+                        onClick={() => removeCatFilter(catName)}
                         className="ml-2 text-blue-600 hover:text-blue-800"
                         data-oid="b60vxw7"
                       >
@@ -604,113 +366,15 @@ export default function PhotoAlbumPage() {
           onNext={goToNext}
           hasPrevious={selectedImageIndex > 0}
           hasNext={selectedImageIndex < filteredImages.length - 1}
-          data-oid="zwf8ift"
         />
       )}
       {/* Cat Selector Modal */}
-      {showCatSelector && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          data-oid=".q6t9ja"
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
-            data-oid="i9ktdk."
-          >
-            <div className="flex justify-between items-center mb-4" data-oid="077m_9e">
-              <h3 className="text-lg font-semibold" data-oid="bsmgajs">
-                고양이 선택
-              </h3>
-              <button
-                onClick={() => setShowCatSelector(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-                data-oid="09fzva3"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Search input */}
-            <div className="mb-4" data-oid="si-6.dh">
-              <input
-                type="text"
-                placeholder="고양이 이름으로 검색..."
-                value={catSearchQuery}
-                onChange={(e) => setCatSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                data-oid="qfo_w3z"
-              />
-            </div>
-
-            {/* Cat list */}
-            <div
-              className="flex-1 overflow-y-auto border border-gray-200 rounded"
-              data-oid="myg6hst"
-            >
-              {filteredCats.length === 0 ? (
-                <div className="p-4 text-center text-gray-500" data-oid="tg2pea3">
-                  {cats.length === 0 ? '데이터베이스에 고양이가 없습니다' : '검색 결과가 없습니다'}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 p-4" data-oid=":cugd5:">
-                  {filteredCats.map((cat) => (
-                    <label
-                      key={cat.id}
-                      className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
-                        selectedCats.has(cat.id)
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'border border-gray-200'
-                      }`}
-                      data-oid="c8o7m2."
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedCats.has(cat.id)}
-                        onChange={() => handleCatToggle(cat.id, cat.name)}
-                        className="mr-2"
-                        data-oid="_l:ssy8"
-                      />
-
-                      <div className="flex-1" data-oid="meh_2n1">
-                        <div className="font-medium text-sm" data-oid="m79gh38">
-                          {cat.name}
-                        </div>
-                        {cat.alt_name && (
-                          <div className="text-xs text-gray-500" data-oid="g:ooag5">
-                            ({cat.alt_name})
-                          </div>
-                        )}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex justify-end gap-2 mt-4" data-oid="8r9k9r-">
-              {' '}
-              <button
-                onClick={() => {
-                  setSelectedCats(new Set());
-                  setSelectedCatNames(new Set());
-                }}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
-                data-oid="pde7gvi"
-              >
-                전체 해제
-              </button>
-              <button
-                onClick={() => setShowCatSelector(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                data-oid="5oajfjp"
-              >
-                완료 ({selectedCats.size}마리 선택됨)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CatSelectorModal
+        isOpen={showCatSelector}
+        onClose={() => setShowCatSelector(false)}
+        selectedTags={Array.from(selectedCatNames)}
+        onTagsChange={(names) => setSelectedCatNames(new Set(names))}
+      />
     </div>
   );
 }
