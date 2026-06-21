@@ -43,7 +43,7 @@ export const strings = {
       title: '계정을 찾을 수 없어요',
       description: '입력하신 정보와 연결된 계정을 찾지 못했어요.',
       noteLabel: '안내',
-      note: '이미 이메일이나 전화번호로 가입한 계정이 있다면, 먼저 그 방법으로 로그인해 주세요. 그런 다음 「내 집사 정보」에서 구글·카카오 계정을 직접 연결할 수 있어요.',
+      note: '이미 이메일이나 전화번호로 등록한 계정이 있다면, 먼저 그 방법으로 로그인해 주세요. 그런 다음 「내 집사 정보」에서 구글·카카오 계정을 직접 연결할 수 있어요.',
       createPrompt: '처음이시라면, 새 계정을 만들어 볼까요?',
       create: '새 계정 만들기',
       useDifferent: '다른 방법으로 로그인',
@@ -51,7 +51,7 @@ export const strings = {
     passwordReset: {
       title: '비밀번호 재설정',
       description:
-        '가입하신 이메일 주소를 입력하시면, 비밀번호를 재설정할 수 있는 링크를 보내 드려요.',
+        '등록하신 이메일 주소를 입력하시면, 비밀번호를 재설정할 수 있는 링크를 보내 드려요.',
       emailLabel: '이메일 주소',
       emailPlaceholder: '이메일을 입력해 주세요',
       submit: '재설정 링크 보내기',
@@ -61,14 +61,14 @@ export const strings = {
       backToLogin: '로그인으로 돌아가기',
       errors: {
         generic: '비밀번호 재설정 메일을 보내지 못했어요. 잠시 후 다시 시도해 주세요.',
-        maskedSent: '이 이메일로 가입된 계정이 있다면 재설정 링크를 보내 드렸어요.',
+        maskedSent: '이 이메일로 등록된 계정이 있다면 재설정 링크를 보내 드렸어요.',
         invalidEmail: '올바른 이메일 주소를 입력해 주세요.',
       },
     },
     kakao: {
       initialTitle: '카카오톡 로그인 안내',
       initialBody:
-        '카카오톡으로 로그인하려면, 먼저 저희 사이트에 가입한 뒤 카카오톡 계정을 연결해 두셔야 해요.',
+        '카카오톡으로 로그인하려면, 먼저 저희 사이트에 집사 등록을 하신 뒤 카카오톡 계정을 연결해 두셔야 해요.',
       proceed: '계속하기',
       checkTitle: '계정 확인',
       checkBody: '이미 카카오톡 계정을 내 계정에 연결하셨나요?',
@@ -80,7 +80,7 @@ export const strings = {
       gotIt: '알겠어요',
     },
     nav: {
-      logIn: '로그인',
+      logIn: '로그인/등록',
       myPage: '내 집사 정보',
       signOut: '로그아웃',
     },
@@ -111,9 +111,9 @@ export const strings = {
   login: {
     heading: '로그인',
     signInHeading: '로그인',
-    signUpHeading: '회원가입',
+    signUpHeading: '집사등록',
     tabLogin: '로그인',
-    tabSignup: '회원가입',
+    tabSignup: '집사등록',
     // SocialLoginButton.tsx (D3a)
     social: {
       continueGoogle: 'Google로 로그인',
@@ -145,7 +145,7 @@ export const strings = {
       verificationSendFailed: '인증 메일을 보내지 못했어요.',
       errors: {
         invalidCredential: '이메일 또는 비밀번호가 올바르지 않아요. 다시 확인해 주세요.',
-        userNotFound: '이 이메일로 가입된 계정을 찾을 수 없어요.',
+        userNotFound: '이 이메일로 등록된 계정을 찾을 수 없어요.',
         wrongPassword: '비밀번호가 올바르지 않아요. 다시 시도해 주세요.',
         generic: '로그인에 실패했어요. 입력하신 정보를 다시 확인해 주세요.',
       },
@@ -168,10 +168,10 @@ export const strings = {
       summaryEmail: '이메일:',
       summaryPhone: '전화번호:',
       codeLabel: '인증번호',
-      complete: '회원가입 완료',
+      complete: '집사등록 완료',
       creating: '계정 만드는 중...',
       backToDetails: '정보 입력으로 돌아가기',
-      loadingForm: '회원가입 폼을 불러오는 중...',
+      loadingForm: '집사등록 폼을 불러오는 중...',
       errors: {
         fillAll: '모든 항목을 입력해 주세요.',
         passwordMismatch: '비밀번호가 일치하지 않아요.',
@@ -180,7 +180,7 @@ export const strings = {
         invalidCodeFormat: '6자리 인증번호를 입력해 주세요.',
         sendCodeFailed: '인증번호를 보내지 못했어요. 번호를 다시 확인해 주세요.',
         verificationFailed: '인증에 실패했어요. 다시 시도해 주세요.',
-        completeFailed: '회원가입을 완료하지 못했어요.',
+        completeFailed: '집사등록을 완료하지 못했어요.',
         phoneLinkedOther: (email: string) =>
           `이 전화번호는 이미 다른 계정(${email})에 연결되어 있어요. 해당 이메일로 로그인하거나 다른 번호를 사용해 주세요.`,
       },

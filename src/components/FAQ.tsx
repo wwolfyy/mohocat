@@ -26,32 +26,41 @@ const FAQAccordion: React.FC<FAQProps> = ({ items }) => {
 
   return (
     <div className="space-y-4">
-      {items.map((item, index) => (
-        <div key={index} className="border border-gray-200 rounded-lg">
-          <button
+      {items.map((item, index) => {
+        const isOpen = openItems.has(index);
+        return (
+          <div
+            key={index}
             className={cn(
-              'w-full px-6 py-3 bg-gradient-to-r from-brand to-accent',
-              'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+              'overflow-hidden rounded-lg border bg-white transition-colors',
+              isOpen ? 'border-brand-200' : 'border-gray-200'
             )}
-            onClick={() => toggleItem(index)}
-            aria-expanded={openItems.has(index)}
           >
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900 pr-4">{item.question}</h3>
-              {openItems.has(index) ? (
-                <ChevronUpIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
-              ) : (
-                <ChevronDownIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
+            <button
+              className={cn(
+                'w-full px-6 py-4 text-left transition-colors',
+                isOpen ? 'bg-brand-50' : 'hover:bg-gray-50'
               )}
-            </div>
-          </button>
-          {openItems.has(index) && (
-            <div className="px-6 pb-4">
-              <div className="text-gray-700 leading-relaxed">{item.answer}</div>
-            </div>
-          )}
-        </div>
-      ))}
+              onClick={() => toggleItem(index)}
+              aria-expanded={isOpen}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <h3 className={cn('text-lg font-medium', isOpen ? 'text-ink' : 'text-gray-900')}>
+                  {item.question}
+                </h3>
+                {isOpen ? (
+                  <ChevronUpIcon className="h-5 w-5 flex-shrink-0 text-brand-600" />
+                ) : (
+                  <ChevronDownIcon className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                )}
+              </div>
+            </button>
+            {isOpen && (
+              <div className="px-6 pb-4 pt-1 text-gray-700 leading-relaxed">{item.answer}</div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

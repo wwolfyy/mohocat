@@ -123,6 +123,38 @@ Brand-consistency audit of 소개(about), 공지(announcements), FAQ, 동참(con
   direction (carried over as deferred from the landing work).
 - Typography/spacing consistency with `design.md`.
 
+#### Prerequisites (blocking — must land **before** the Phase C audit)
+
+Phase C audits/restyles existing pages, but two of its target surfaces are not
+actually reachable today. Fix these first, or there is nothing to audit:
+
+- **입양홍보 (`/pages/adoption`) does not exist.** The 소개 + 소식 dropdown items
+  **and** the standalone brand-gradient CTA button in `Navigation.tsx` all link to
+  `/pages/adoption`, which has **no route** → every 입양홍보 entry point 404s. The
+  `adoption` resource already exists in `role_permissions/resource-config`
+  (default public). **Action:** create `src/app/pages/adoption/page.tsx`.
+  ⚠️ This is **net-new content/layout, not a restyle** — its scope/content is
+  undecided (adoptable-cat list? external shelter links? a contact CTA?). **Confirm
+  with the user**, and build it on the design system from the start (brand tokens,
+  shared `ui/Modal`, Korean 해요체) so it lands Phase-C-compliant rather than
+  needing a second pass.
+- **동참 is greyed out by a hardcoded "준비 중입니다" overlay** (NOT permissions —
+  verified live: `contact` and `adoption` are both `[]` = public in
+  `role_permissions/resource-config`, and the nav item links fine). 동참 →
+  `/pages/contact` (the page **exists** and loads). The greying lives **inside the
+  page component** `src/app/pages/contact/page.tsx`: an absolutely-positioned
+  `준비 중입니다` overlay (`bg-gray-100 bg-opacity-80 z-10`) sits over the form,
+  and the form wrapper carries `filter grayscale opacity-50 pointer-events-none`
+  (desaturated + unclickable). A leftover dev-reminder line ("If you use
+  router.push or links to this page elsewhere, update their paths to
+  '/pages/contact'.") is also baked in. **Action:** remove the overlay `<div>`,
+  strip the `grayscale opacity-50 pointer-events-none` classes from the content
+  wrapper, and delete the dev-reminder line. This is a **code change → needs
+  build + deploy** (not a live Firestore edit). Fold the form's restyle into the
+  Phase C audit while it's open (e.g. `focus:ring-yellow-400` → brand token).
+
+_(Tracked as **C0** in the tasks doc.)_
+
 ### Phase D — Localization: auth flow + 집사메뉴(mypage)
 
 The app is Korean, but the **auth surfaces and the mypage are still in English** —

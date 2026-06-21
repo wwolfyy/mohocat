@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getMountainAbout, getMountainTheme } from '@/utils/config';
+import { getMountainAbout } from '@/utils/config';
 import { useAboutPhoto } from '@/hooks/useAboutPhoto';
 import { getAboutContentService, getCatService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
@@ -21,7 +21,6 @@ export default function About() {
 
   const aboutContentService = getAboutContentService();
   const catService = getCatService();
-  const theme = getMountainTheme();
 
   // Load about content from Firestore or fallback to JSON
   useEffect(() => {
@@ -149,8 +148,8 @@ export default function About() {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">About</h1>
-          <p className="text-gray-600">Content not available</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">소개</h1>
+          <p className="text-gray-600">내용을 불러올 수 없어요.</p>
         </div>
       </div>
     );
@@ -160,23 +159,10 @@ export default function About() {
     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8" data-oid="3kim:bs">
       <div className="prose prose-lg mx-auto" data-oid="your4.g">
         {/* Page Title */}
-        <h1
-          className="text-4xl font-bold mb-4"
-          style={{ color: theme.primaryColor }}
-          data-oid="5f.mun5"
-        >
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-3" data-oid="5f.mun5">
           {aboutData.title}
         </h1>
-
-        {/* Subtitle */}
-        {/* {aboutData.subtitle && (
-          <p
-            className="text-xl mb-6"
-            style={{ color: theme.secondaryColor }}
-          >
-            {aboutData.subtitle}
-          </p>
-        )} */}
+        <div className="mb-8 h-1 w-12 rounded-full bg-brand" />
 
         {/* Main Photo */}
         {aboutData.mainPhoto && (
@@ -187,7 +173,7 @@ export default function About() {
                 data-oid="zf9jc29"
               >
                 <span className="text-gray-500" data-oid="2ba837f">
-                  Loading photo...
+                  사진을 불러오는 중...
                 </span>
               </div>
             )}
@@ -197,7 +183,7 @@ export default function About() {
                 data-oid="5vdi5wj"
               >
                 <span className="text-gray-400" data-oid="4b1u_oq">
-                  Photo unavailable
+                  사진을 불러올 수 없어요
                 </span>
               </div>
             )}
@@ -236,26 +222,6 @@ export default function About() {
             dangerouslySetInnerHTML={{ __html: processTextWithLinks(aboutData.mainContent) }}
           />
         </div>
-
-        {/* Dynamic Sections */}
-        {/* {aboutData.sections && aboutData.sections.length > 0 && (
-          <div className="space-y-8">
-            {aboutData.sections.map((section, index) => (
-              <div key={index} className="mb-8">
-                <h2
-                  className="text-2xl font-semibold mb-4"
-                  style={{ color: theme.primaryColor }}
-                >
-                  {section.title}
-                </h2>
-                <div
-                  className="text-lg leading-relaxed whitespace-pre-line"
-                  dangerouslySetInnerHTML={{ __html: processTextWithLinks(section.content) }}
-                />
-              </div>
-            ))}
-          </div>
-        )} */}
       </div>
 
       {/* Cat Modal */}

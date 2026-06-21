@@ -108,7 +108,6 @@ export default function Navigation() {
             label="공지"
             {...access}
           />
-          <NavItem href="/pages/faq" resourceId="faq" label="FAQ" {...access} />
           <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" {...access} />
         </NavDropdown>
 
@@ -132,6 +131,7 @@ export default function Navigation() {
             {...access}
           />
           <NavItem href="/pages/butler_talk" resourceId="butler_talk" label="집사톡" {...access} />
+          <NavItem href="/pages/faq" resourceId="faq" label="FAQ" {...access} />
         </NavDropdown>
 
         <div className="flex items-center">
@@ -244,14 +244,6 @@ export default function Navigation() {
                 onClick={closeMobile}
                 {...access}
               />
-              <NavItem
-                href="/pages/faq"
-                resourceId="faq"
-                label="FAQ"
-                mobile
-                onClick={closeMobile}
-                {...access}
-              />
 
               <div className="px-4 py-3">
                 <Link
@@ -282,9 +274,19 @@ export default function Navigation() {
                     onClick={closeMobile}
                     {...access}
                   />
+                  <NavItem
+                    href="/pages/faq"
+                    resourceId="faq"
+                    label="FAQ"
+                    mobile
+                    onClick={closeMobile}
+                    {...access}
+                  />
                 </>
               ) : (
-                <span className="block px-4 py-2 text-sm text-gray-300">급식현황 · 집사톡</span>
+                <span className="block px-4 py-2 text-sm text-gray-300">
+                  급식현황 · 집사톡 · FAQ
+                </span>
               )}
 
               <div className="my-1 border-t border-gray-200" />

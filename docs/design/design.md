@@ -108,7 +108,11 @@ and never repurpose them as app UI colors:
   tone — e.g. "로그아웃 할까요?" over a clipped "로그아웃". Avoid terse,
   word-for-word formal translations.
 - **집사 (caretaker) framing.** The app calls members 집사 (집사메뉴, 집사톡); use
-  it for identity — e.g. "내 집사 정보" rather than a literal "마이페이지".
+  it for identity — e.g. "내 집사 정보" rather than a literal "마이페이지". **Avoid
+  "회원" — use "집사"**: signup is **"집사등록"** (not "회원가입"), and the join verb
+  is **"등록"** (e.g. "등록한 계정", "집사 등록을 하신 뒤"). This makes participation
+  feel warmer and on-brand. _(Open: whether to extend the same reframe to the
+  generic "계정"/"새 계정 만들기" account wording.)_
 - **Vendor names in Korean; logos/colors unchanged** — e.g. 카카오톡 (not
   "KakaoTalk"); keep Kakao `#FEE500` and logo glyphs (the "TALK" mark) as-is.
 - **Error copy reassures and guides** — say what happened and the next step, not

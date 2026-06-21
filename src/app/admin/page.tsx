@@ -481,7 +481,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* 6. 회원 - Contacts Tile */}
+        {/* 6. 집사 - Contacts Tile */}
         <div
           style={{
             backgroundColor: 'white',
@@ -496,7 +496,7 @@ export default function AdminDashboard() {
             📧
           </div>
           <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="3ct38kf">
-            회원
+            집사
           </h3>
           <p
             style={{

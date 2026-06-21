@@ -150,9 +150,16 @@ const AnnouncementClient = () => {
   return (
     <div>
       <div className="space-y-4">
-        {posts.length === 0 && <div>No announcements yet.</div>}
+        {posts.length === 0 && (
+          <div className="rounded-lg border border-gray-200 bg-white py-12 text-center text-gray-500">
+            아직 등록된 공지사항이 없어요.
+          </div>
+        )}
         {posts.map((post) => (
-          <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
+          <div
+            key={post.id}
+            className="flex flex-col space-y-4 rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm"
+          >
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
                 {/* Show video thumbnail if video exists */}
@@ -237,8 +244,7 @@ const AnnouncementClient = () => {
             <button
               key={page}
               className={cn(
-                'px-4 py-2 rounded bg-gradient-to-r from-brand to-accent text-ink font-bold shadow',
-                'border border-yellow-500',
+                'px-4 py-2 rounded-lg bg-brand text-ink font-bold shadow-sm',
                 'transition-all duration-200'
               )}
               disabled
@@ -250,7 +256,7 @@ const AnnouncementClient = () => {
               key={page}
               onClick={() => handlePageClick(page)}
               className={cn(
-                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
+                'px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100',
                 'transition-all duration-200'
               )}
             >
@@ -266,11 +272,11 @@ const AnnouncementClient = () => {
             <button
               onClick={() => handlePageClick(currentPage - 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-brand to-accent',
-                'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+                'px-5 py-2.5 rounded-lg bg-gray-100 text-gray-800 font-medium',
+                'hover:bg-gray-200 transition-colors duration-200'
               )}
             >
-              previous
+              이전
             </button>
           )}
         </div>
@@ -279,11 +285,11 @@ const AnnouncementClient = () => {
             <button
               onClick={() => handlePageClick(currentPage + 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-brand to-accent',
-                'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+                'px-5 py-2.5 rounded-lg bg-gray-100 text-gray-800 font-medium',
+                'hover:bg-gray-200 transition-colors duration-200'
               )}
             >
-              next
+              다음
             </button>
           )}
         </div>
