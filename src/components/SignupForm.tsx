@@ -7,6 +7,9 @@ import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import { getPermissionService } from '@/services';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { strings } from '@/constants/strings';
+
+const t = strings.login.signup;
 
 function SignupFormContent() {
   const router = useRouter();
@@ -65,16 +68,16 @@ function SignupFormContent() {
 
   const validateDetails = () => {
     if (!email || !password || !confirmPassword || !displayName || !phoneNumber) {
-      return 'Please fill in all fields.';
+      return t.errors.fillAll;
     }
     if (password !== confirmPassword) {
-      return 'Passwords do not match.';
+      return t.errors.passwordMismatch;
     }
     if (password.length < 6) {
-      return 'Password must be at least 6 characters long.';
+      return t.errors.passwordTooShort;
     }
     if (phoneNumber.length < 10) {
-      return 'Please enter a valid phone number.';
+      return t.errors.invalidPhone;
     }
     return null;
   };
@@ -107,7 +110,7 @@ function SignupFormContent() {
       setStep('verify');
     } catch (err: any) {
       console.error('Phone verification error:', err);
-      setError(err.message || 'Failed to send verification code. Please check the number.');
+      setError(err.message || t.errors.sendCodeFailed);
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +119,7 @@ function SignupFormContent() {
   const handleCompleteSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode || verificationCode.length !== 6) {
-      setError('Please enter a valid 6-digit code.');
+      setError(t.errors.invalidCodeFormat);
       return;
     }
 
@@ -126,7 +129,7 @@ function SignupFormContent() {
     try {
       // 1. Verify Phone & Sign In (Creates User)
       const user = await confirmPhoneLogin(confirmationResult, verificationCode);
-      if (!user) throw new Error('Verification failed.');
+      if (!user) throw new Error(t.errors.verificationFailed);
 
       // CRITICAL CHECK: If the user already has an email, it means this phone number
       // is already linked to an existing account. We MUST NOT proceed with "Signup"
@@ -155,9 +158,7 @@ function SignupFormContent() {
 
         if (user.email !== email) {
           await signOut(); // Kick them out of the "wrong" account
-          throw new Error(
-            `This phone number is already linked to another account (${user.email}). Please log in with that email or use a different number.`
-          );
+          throw new Error(t.errors.phoneLinkedOther(user.email));
         }
 
         // If emails match, we fall through (idempotent retry).
@@ -195,7 +196,7 @@ function SignupFormContent() {
       }, 2000);
     } catch (err: any) {
       console.error('Signup completion error:', err);
-      setError(err.message || 'Failed to complete signup.');
+      setError(err.message || t.errors.completeFailed);
     } finally {
       setIsLoading(false);
     }
@@ -214,10 +215,11 @@ function SignupFormContent() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Account Created!</h3>
+        <h3 className="text-xl font-bold text-gray-900">{t.successTitle}</h3>
         <p className="text-gray-600">
-          Welcome, {displayName}!<br />
-          Redirecting you...
+          {t.successWelcome(displayName)}
+          <br />
+          {t.successRedirecting}
         </p>
       </div>
     );
@@ -231,21 +233,21 @@ function SignupFormContent() {
         <form onSubmit={handleSendCode} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nickname (Display Name)
+              {t.nicknameLabel}
             </label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-              placeholder="How should we call you?"
+              placeholder={t.nicknamePlaceholder}
               required
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.emailLabel}</label>
             <input
               type="email"
               value={email}
@@ -259,7 +261,9 @@ function SignupFormContent() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t.passwordLabel}
+              </label>
               <input
                 type="password"
                 value={password}
@@ -273,7 +277,7 @@ function SignupFormContent() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+                {t.confirmPasswordLabel}
               </label>
               <input
                 type="password"
@@ -289,7 +293,7 @@ function SignupFormContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.phoneLabel}</label>
             <input
               type="tel"
               value={phoneNumber}
@@ -299,9 +303,7 @@ function SignupFormContent() {
               required
               disabled={isLoading}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              We will send a verification code to this number.
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{t.phoneHint}</p>
           </div>
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
@@ -315,7 +317,7 @@ function SignupFormContent() {
               isLoading ? 'opacity-70 cursor-not-allowed' : ''
             )}
           >
-            {isLoading ? 'Sending...' : 'Verify Phone & Continue'}
+            {isLoading ? t.sending : t.sendCode}
           </button>
         </form>
       )}
@@ -324,20 +326,18 @@ function SignupFormContent() {
         <form onSubmit={handleCompleteSignup} className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg mb-4 text-sm text-gray-600">
             <p>
-              <strong>Name:</strong> {displayName}
+              <strong>{t.summaryName}</strong> {displayName}
             </p>
             <p>
-              <strong>Email:</strong> {email}
+              <strong>{t.summaryEmail}</strong> {email}
             </p>
             <p>
-              <strong>Phone:</strong> {phoneNumber}
+              <strong>{t.summaryPhone}</strong> {phoneNumber}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Verification Code
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.codeLabel}</label>
             <input
               type="text"
               value={verificationCode}
@@ -361,7 +361,7 @@ function SignupFormContent() {
               isLoading ? 'opacity-70 cursor-not-allowed' : ''
             )}
           >
-            {isLoading ? 'creating Account...' : 'Complete Signup'}
+            {isLoading ? t.creating : t.complete}
           </button>
 
           <button
@@ -370,7 +370,7 @@ function SignupFormContent() {
             className="w-full text-sm text-gray-500 underline"
             disabled={isLoading}
           >
-            Back to Details
+            {t.backToDetails}
           </button>
         </form>
       )}
@@ -380,7 +380,7 @@ function SignupFormContent() {
 
 export default function SignupForm() {
   return (
-    <Suspense fallback={<div>Loading signup form...</div>}>
+    <Suspense fallback={<div>{t.loadingForm}</div>}>
       <SignupFormContent />
     </Suspense>
   );

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
 import Modal from '@/components/ui/Modal';
+import { strings } from '@/constants/strings';
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export function LogoutModal({ isOpen, onClose }: LogoutModalProps) {
       onClose();
     } catch (error) {
       console.error('Logout failed:', error);
-      alert('Logout failed. Please try again.');
+      alert(strings.auth.logout.failed);
     } finally {
       setIsLoggingOut(false);
     }
@@ -51,11 +52,12 @@ export function LogoutModal({ isOpen, onClose }: LogoutModalProps) {
             />
           </svg>
         </div>
-        <h3 className="text-lg font-bold text-gray-900">Sign Out</h3>
-        <p className="mt-2 text-gray-600">Are you sure you want to sign out?</p>
+        <h3 className="text-lg font-bold text-gray-900">{strings.auth.logout.title}</h3>
+        <p className="mt-2 text-gray-600">{strings.auth.logout.confirm}</p>
         {user && (
           <p className="mt-1 text-sm text-gray-500">
-            Signed in as: <span className="font-medium text-gray-700">{user.email}</span>
+            {strings.auth.logout.signedInAs}{' '}
+            <span className="font-medium text-gray-700">{user.email}</span>
           </p>
         )}
       </div>
@@ -70,7 +72,7 @@ export function LogoutModal({ isOpen, onClose }: LogoutModalProps) {
           )}
           disabled={isLoggingOut}
         >
-          Cancel
+          {strings.common.cancel}
         </button>
         <button
           onClick={handleLogout}
@@ -85,10 +87,10 @@ export function LogoutModal({ isOpen, onClose }: LogoutModalProps) {
           {isLoggingOut ? (
             <div className="flex items-center justify-center">
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Signing out...
+              {strings.auth.logout.submitting}
             </div>
           ) : (
-            'Sign Out'
+            strings.auth.logout.submit
           )}
         </button>
       </div>

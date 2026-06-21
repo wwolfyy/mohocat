@@ -99,6 +99,26 @@ and never repurpose them as app UI colors:
 
 ---
 
+## Language & Voice
+
+- **All user-facing copy is Korean.** This is a single Korean-locale app (no i18n
+  library). English must not ship in user-facing UI — labels, placeholders,
+  buttons, titles/tooltips, `aria-label`s, `alert`/`confirm`, and error messages.
+- **Voice: warm, friendly-polite Korean (해요체)** to match the landing/intro
+  tone — e.g. "로그아웃 할까요?" over a clipped "로그아웃". Avoid terse,
+  word-for-word formal translations.
+- **집사 (caretaker) framing.** The app calls members 집사 (집사메뉴, 집사톡); use
+  it for identity — e.g. "내 집사 정보" rather than a literal "마이페이지".
+- **Vendor names in Korean; logos/colors unchanged** — e.g. 카카오톡 (not
+  "KakaoTalk"); keep Kakao `#FEE500` and logo glyphs (the "TALK" mark) as-is.
+- **Error copy reassures and guides** — say what happened and the next step, not
+  a bare failure; point users to the real in-app location (e.g. 「내 집사 정보」의
+  연결된 계정). Keep destructive/red affordances per the Modal rules.
+- **Source of truth:** user-facing strings for the **auth flow + mypage** live in
+  [`src/constants/strings.ts`](../../src/constants/strings.ts)
+  (`strings.<area>.<key>`), not inline in JSX, so the voice stays consistent and
+  edits happen in one place. Prefer this pattern for new copy-heavy surfaces.
+
 ## Layout & Spacing
 
 - Use Tailwind's default spacing scale (`4 / 8 / 12 / 16 / 24…` via `p-`, `gap-`,
@@ -226,6 +246,31 @@ dark backdrop; they register on the shared `useModalLayer` stack (Esc closes,
 album components and the gallery pages.
 
 ---
+
+### Album page (`src/components/album/`, `src/app/pages/{photo,video}-album`)
+
+The photo & video album pages share one set of building blocks so they stay
+visually identical; restyle them here, never per-page.
+
+- **`AlbumHero`** — warm, restrained page header: a brand→accent gradient icon
+  chip, a centered title with a short **brand-yellow underline accent** (the
+  modal section-label motif), and a one-line subtitle. Surface stays neutral
+  white; brand is accent only.
+- **`AlbumFilterBar`** — search input + cat-selector trigger + a **single**
+  consolidated selected-cat chip row. Brand focus rings (`ring-brand-300`),
+  brand-tinted chips (`bg-brand-50 text-ink ring-brand-200`); removing a filter
+  is **not** destructive, so its × and "모두 지우기" stay neutral (no red). Owns
+  the shared `CatSelectorModal` (commits on 완료).
+- **`MediaTile`** — uniform grid tile: `rounded-xl` (matches the modal card),
+  hover lift + image `scale-105`, a hover overlay affordance, an always-on
+  caption that shows the description **only when present** (no "설명 없음"
+  filler) plus a meta line. Photos are square cells, videos 16:9. Vendor YouTube
+  red badge is kept; the internal "직접 업로드" badge is neutral.
+- **States** (`AlbumStates`) — branded **loading** spinner and warm **empty /
+  error** messages (brand accent-chip icon + friendly Korean), not bare gray
+  text.
+- Grid stays uniform & cropped (decided): `grid-cols-2 … xl:grid-cols-6`. The
+  full, uncropped media shows in the `Lightbox` / `VideoPlayer`.
 
 ## Do's and Don'ts
 

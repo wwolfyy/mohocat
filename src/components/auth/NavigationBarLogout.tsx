@@ -6,6 +6,7 @@ import { LogoutModal } from './LogoutModal';
 import { cn } from '@/utils/cn';
 import Link from 'next/link';
 import { MdLogout } from 'react-icons/md';
+import { strings } from '@/constants/strings';
 
 export function NavigationBarLogout() {
   const { isAuthenticated, user } = useAuth();
@@ -37,7 +38,7 @@ export function NavigationBarLogout() {
       <Link
         href="/mypage"
         className="text-sm font-semibold text-gray-700 hover:text-blue-600 truncate max-w-[150px] transition-colors"
-        title="My Page"
+        title={strings.auth.nav.myPage}
       >
         {displayName}
       </Link>
@@ -52,8 +53,8 @@ export function NavigationBarLogout() {
           'transition-all duration-200',
           'focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1'
         )}
-        title="Sign Out"
-        aria-label="Sign Out"
+        title={strings.auth.nav.signOut}
+        aria-label={strings.auth.nav.signOut}
       >
         <MdLogout size={18} />
       </button>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
 import { MdLogin } from 'react-icons/md';
+import { strings } from '@/constants/strings';
 
 export function NavigationBarLogin() {
   const { isAuthenticated, loading } = useAuth();
@@ -26,7 +27,7 @@ export function NavigationBarLogin() {
         'transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-blue-600'
       )}
     >
-      <span>Log In</span>
+      <span>{strings.auth.nav.logIn}</span>
       <MdLogin size={18} />
     </Link>
   );

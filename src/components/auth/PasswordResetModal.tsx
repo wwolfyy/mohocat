@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/hooks/useAuth';
 import Modal from '@/components/ui/Modal';
+import { strings } from '@/constants/strings';
 
 interface PasswordResetModalProps {
   isOpen: boolean;
@@ -35,20 +36,20 @@ export default function PasswordResetModal({
       setIsSent(true);
     } catch (err: any) {
       console.error('Error sending password reset email:', err);
-      let errorMessage = 'Failed to send password reset email.';
+      let errorMessage: string = strings.auth.passwordReset.errors.generic;
 
       if (err.code === 'auth/user-not-found') {
         // Security: commonly we don't reveal this, but current req is user friendly.
         // Let's stick to a generic message or be helpful if it's internal tool style.
         // Given the context of `LoginForm` showing specific errors, we might show specific here.
         // But standard practice is generic. Let's show generic but log specific.
-        errorMessage = 'If an account exists with this email, a reset link has been sent.';
+        errorMessage = strings.auth.passwordReset.errors.maskedSent;
         // Actually for UX, seeing "Sent" is better even if not found (security best practice).
         // So let's treat user-not-found as success for the UI.
         setIsSent(true);
         return;
       } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Please enter a valid email address.';
+        errorMessage = strings.auth.passwordReset.errors.invalidEmail;
       }
 
       setError(errorMessage);
@@ -84,17 +85,15 @@ export default function PasswordResetModal({
           </svg>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900">Reset Password</h3>
+        <h3 className="text-lg font-bold text-gray-900">{strings.auth.passwordReset.title}</h3>
 
         {!isSent ? (
           <>
-            <p className="text-sm text-gray-500">
-              Enter your email address and we'll send you a link to reset your password.
-            </p>
+            <p className="text-sm text-gray-500">{strings.auth.passwordReset.description}</p>
 
             <form onSubmit={handleSubmit} className="mt-4 text-left">
               <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Email Address
+                {strings.auth.passwordReset.emailLabel}
               </label>
               <input
                 type="email"
@@ -106,7 +105,7 @@ export default function PasswordResetModal({
                   'text-gray-900 placeholder-gray-500',
                   'border-gray-300 hover:border-gray-400 focus:border-brand-400 focus:ring-brand-200'
                 )}
-                placeholder="Enter your email"
+                placeholder={strings.auth.passwordReset.emailPlaceholder}
                 disabled={isLoading}
               />
 
@@ -121,23 +120,22 @@ export default function PasswordResetModal({
                   { 'cursor-not-allowed opacity-70': isLoading }
                 )}
               >
-                {isLoading ? 'Sending...' : 'Send Reset Link'}
+                {isLoading
+                  ? strings.auth.passwordReset.submitting
+                  : strings.auth.passwordReset.submit}
               </button>
             </form>
           </>
         ) : (
           <div className="space-y-4">
             <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-              <p className="text-sm text-green-700">
-                Check your email for a link to reset your password. If it doesn't appear within a
-                few minutes, check your spam folder.
-              </p>
+              <p className="text-sm text-green-700">{strings.auth.passwordReset.success}</p>
             </div>
             <button
               onClick={handleClose}
               className="w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
-              Back to Login
+              {strings.auth.passwordReset.backToLogin}
             </button>
           </div>
         )}

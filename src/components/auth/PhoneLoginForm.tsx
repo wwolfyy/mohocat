@@ -5,6 +5,9 @@ import { RecaptchaVerifier } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
+import { strings } from '@/constants/strings';
+
+const t = strings.auth.phoneLogin;
 
 interface PhoneLoginFormProps {
   onLoginSuccess?: () => void;
@@ -36,7 +39,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
             console.log('Recaptcha verified');
           },
           'expired-callback': () => {
-            setError('Recaptcha expired. Please try again.');
+            setError(t.errors.recaptchaExpired);
           },
         });
 
@@ -70,7 +73,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
     setIsLoading(true);
 
     if (!phoneNumber || phoneNumber.length < 10) {
-      setError('Please enter a valid phone number.');
+      setError(t.errors.invalidPhone);
       setIsLoading(false);
       return;
     }
@@ -97,14 +100,14 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
       console.error('Phone sign-in error', err);
       // Nice error messages
       if (err.code === 'auth/invalid-phone-number') {
-        setError('The phone number is invalid.');
+        setError(t.errors.invalidPhoneFirebase);
       } else if (err.code === 'auth/missing-phone-number') {
-        setError('Phone number is missing.');
+        setError(t.errors.missingPhone);
       } else if (err.code === 'auth/quota-exceeded') {
-        setError('SMS quota exceeded. Please try again later.');
+        setError(t.errors.quotaExceeded);
       } else {
         // Handle "already rendered" specifically if it leaks through?
-        setError(err.message || 'Failed to send verification code.');
+        setError(err.message || t.errors.sendFailed);
       }
     } finally {
       setIsLoading(false);
@@ -117,7 +120,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
     setIsLoading(true);
 
     if (!verificationCode || verificationCode.length !== 6) {
-      setError('Please enter a valid 6-digit code.');
+      setError(t.errors.invalidCodeFormat);
       setIsLoading(false);
       return;
     }
@@ -128,9 +131,9 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
     } catch (err: any) {
       console.error('Verification error', err);
       if (err.code === 'auth/invalid-verification-code') {
-        setError('Invalid verification code.');
+        setError(t.errors.invalidCode);
       } else {
-        setError(err.message || 'Failed to verify code.');
+        setError(err.message || t.errors.verifyFailed);
       }
     } finally {
       setIsLoading(false);
@@ -145,7 +148,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
       {step === 'phone' ? (
         <form onSubmit={handleSendCode} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">{t.phoneLabel}</label>
             <input
               type="tel"
               value={phoneNumber}
@@ -159,9 +162,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
               disabled={isLoading}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Test number: +1 650-555-1234 (Code: 123456)
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{t.testHint}</p>
           </div>
 
           {error && <div className="text-red-600 text-sm">{error}</div>}
@@ -178,15 +179,13 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
               { 'opacity-50 cursor-not-allowed': isLoading }
             )}
           >
-            {isLoading ? 'Sending Code...' : 'Send Verification Code'}
+            {isLoading ? t.sendingCode : t.sendCode}
           </button>
         </form>
       ) : (
         <form onSubmit={handleVerifyCode} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Verification Code
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">{t.codeLabel}</label>
             <input
               type="text"
               value={verificationCode}
@@ -218,7 +217,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
               { 'opacity-50 cursor-not-allowed': isLoading }
             )}
           >
-            {isLoading ? 'Verifying...' : 'Verify & Sign In'}
+            {isLoading ? t.verifying : t.verify}
           </button>
 
           <button
@@ -230,7 +229,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
             className="w-full text-sm text-gray-500 hover:text-gray-700 underline"
             disabled={isLoading}
           >
-            Back to Phone Number
+            {t.backToPhone}
           </button>
         </form>
       )}

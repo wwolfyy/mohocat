@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from '@/components/ui/Modal';
+import { strings } from '@/constants/strings';
 
 interface EmailVerificationModalProps {
   isOpen: boolean;
@@ -17,23 +18,20 @@ const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Verify your Email" size="sm">
-      <p className="text-sm text-gray-600">
-        Your email address ({email}) is not verified yet. <br />
-        Would you like us to send a verification link?
-      </p>
+    <Modal isOpen={isOpen} onClose={onClose} title={strings.auth.emailVerification.title} size="sm">
+      <p className="text-sm text-gray-600">{strings.auth.emailVerification.body(email)}</p>
       <div className="mt-6 flex justify-end gap-3">
         <button
           onClick={onClose}
           className="rounded-lg px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
         >
-          Later
+          {strings.auth.emailVerification.later}
         </button>
         <button
           onClick={onSend}
           className="rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md"
         >
-          Send Verification
+          {strings.auth.emailVerification.send}
         </button>
       </div>
     </Modal>

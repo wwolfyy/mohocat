@@ -7,6 +7,7 @@ import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
 import { cn } from '@/utils/cn';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { strings } from '@/constants/strings';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ function LoginContent() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo or Title could go here */}
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          {activeTab === 'login' ? 'Sign in to your account' : 'Create a new account'}
+          {activeTab === 'login' ? strings.login.signInHeading : strings.login.signUpHeading}
         </h2>
       </div>
 
@@ -56,7 +57,7 @@ function LoginContent() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               )}
             >
-              Log In
+              {strings.login.tabLogin}
             </button>
             <button
               onClick={() => handleTabChange('signup')}
@@ -67,7 +68,7 @@ function LoginContent() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               )}
             >
-              Sign Up
+              {strings.login.tabSignup}
             </button>
           </div>
 
@@ -89,7 +90,9 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          {strings.common.loading}
+        </div>
       }
     >
       <LoginContent />

@@ -11,6 +11,9 @@ import UserNotFoundModal from '@/components/auth/UserNotFoundModal';
 import EmailVerificationModal from '@/components/auth/EmailVerificationModal';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import { getPermissionService } from '@/services';
+import { strings } from '@/constants/strings';
+
+const t = strings.login.form;
 
 interface LoginFormProps {
   onLoginSuccess?: () => void;
@@ -131,12 +134,12 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
       console.error('Error signing in:', err);
       const errorMessage =
         err.code === 'auth/invalid-credential'
-          ? 'Invalid email or password. Please check your credentials.'
+          ? t.errors.invalidCredential
           : err.code === 'auth/user-not-found'
-            ? 'No user found with this email address.'
+            ? t.errors.userNotFound
             : err.code === 'auth/wrong-password'
-              ? 'Incorrect password. Please try again.'
-              : 'Failed to login. Please check your credentials.';
+              ? t.errors.wrongPassword
+              : t.errors.generic;
 
       setError(errorMessage);
       onLoginError?.(errorMessage);
@@ -192,12 +195,10 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         onSend={async () => {
           try {
             await sendEmailVerification();
-            alert(
-              `Verification email sent to ${auth.currentUser?.email}! Please check your email and log in again.`
-            );
+            alert(t.verificationSentAlert(auth.currentUser?.email || ''));
           } catch (e) {
             console.error(e);
-            alert('Failed to send verification email.');
+            alert(t.verificationSendFailed);
           }
           // Strict Mode: After sending, sign out so they can't access app.
           setIsVerificationModalOpen(false);
@@ -214,8 +215,8 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
       {/* Social Login Section */}
       <div className="space-y-3">
         <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-700">Sign in with</h2>
-          <p className="text-sm text-gray-500 mt-1">Choose your preferred authentication method</p>
+          <h2 className="text-lg font-semibold text-gray-700">{t.socialTitle}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t.socialSubtitle}</p>
         </div>
 
         {/* KakaoTalk Authentication Options */}
@@ -244,7 +245,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         {/* Social Login Success Messages */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <p className="text-green-700 text-sm text-center">
-            {kakaoSignInSuccess && 'Successfully signed in with Kakaotalk!'}
+            {kakaoSignInSuccess && t.kakaoSuccess}
           </p>
         </div>
       </div>
@@ -252,17 +253,17 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
       {/* Divider */}
       <div className="flex items-center justify-between">
         <div className="border-t border-gray-300 flex-grow"></div>
-        <span className="px-4 text-sm text-gray-500">or</span>
+        <span className="px-4 text-sm text-gray-500">{t.or}</span>
         <div className="border-t border-gray-300 flex-grow"></div>
       </div>
 
       {/* Email/Password Login Section */}
       <form onSubmit={handleLogin} className="space-y-4">
         <h3 className="text-sm font-semibold text-gray-700 text-center uppercase tracking-wide">
-          Log in with email
+          {t.emailSectionTitle}
         </h3>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">{t.emailLabel}</label>
           <input
             type="email"
             value={email}
@@ -273,13 +274,15 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
               'text-gray-900 placeholder-gray-500',
               'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
             )}
-            placeholder="Enter your email address"
+            placeholder={t.emailPlaceholder}
             disabled={isSigningInWithKakao || isEmailLoginLoading}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            {t.passwordLabel}
+          </label>
           <input
             type="password"
             value={password}
@@ -290,7 +293,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
               'text-gray-900 placeholder-gray-500',
               'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
             )}
-            placeholder="Enter your password"
+            placeholder={t.passwordPlaceholder}
             disabled={isSigningInWithKakao || isEmailLoginLoading}
           />
         </div>
@@ -301,7 +304,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
             onClick={() => setIsPasswordResetModalOpen(true)}
             className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
           >
-            Forgot Password?
+            {t.forgotPassword}
           </button>
         </div>
 
@@ -339,10 +342,10 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
           {isEmailLoginLoading ? (
             <div className="flex items-center justify-center">
               <div className="w-4 h-4 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-              Signing in...
+              {t.submitting}
             </div>
           ) : (
-            'Sign In with Email'
+            t.submit
           )}
         </button>
       </form>
@@ -350,14 +353,14 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
       {/* Divider for Phone Login */}
       <div className="flex items-center justify-between">
         <div className="border-t border-gray-300 flex-grow"></div>
-        <span className="px-4 text-sm text-gray-500">or</span>
+        <span className="px-4 text-sm text-gray-500">{t.or}</span>
         <div className="border-t border-gray-300 flex-grow"></div>
       </div>
 
       {/* Phone Login Section (Alternative) */}
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-gray-700 text-center uppercase tracking-wide">
-          Log in with phone
+          {t.phoneSectionTitle}
         </h3>
         <PhoneLoginForm
           onLoginSuccess={() => handleCheckUser('phone')}
@@ -367,9 +370,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
 
       {/* Help Text */}
       <div className="text-center">
-        <p className="text-xs text-gray-500">
-          Having trouble signing in? Contact your administrator.
-        </p>
+        <p className="text-xs text-gray-500">{t.helpText}</p>
       </div>
     </div>
   );
@@ -377,7 +378,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
 
 const LoginForm: React.FC<LoginFormProps> = (props) => {
   return (
-    <Suspense fallback={<div>Loading login form...</div>}>
+    <Suspense fallback={<div>{t.loadingForm}</div>}>
       <LoginFormContent {...props} />
     </Suspense>
   );

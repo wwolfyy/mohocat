@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 import LoginForm from '@/components/LoginForm';
+import { strings } from '@/constants/strings';
 
 const LoginContent = () => {
   const router = useRouter();
@@ -25,7 +26,7 @@ const LoginContent = () => {
     <div className="flex items-center justify-center h-screen" data-oid="0m4l1dh">
       <div className="w-full max-w-md p-4 bg-white rounded shadow-md" data-oid="p5o6d1h">
         <h1 className="text-2xl font-bold mb-4" data-oid="7a4_aol">
-          Login
+          {strings.login.heading}
         </h1>
         <LoginForm data-oid="1_qv9ef" />
       </div>
@@ -35,7 +36,7 @@ const LoginContent = () => {
 
 const LoginPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{strings.common.loading}</div>}>
       <LoginContent />
     </Suspense>
   );
