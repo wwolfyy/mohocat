@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { getAuthService } from '@/services';
 import AdminAuth from '@/components/admin/AdminAuth';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -32,15 +31,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleDisabledClick = (e: React.MouseEvent, feature: string) => {
     e.preventDefault();
     alert(`${feature} 기능은 아직 구현되지 않았습니다.`);
-  };
-
-  const handleLogout = async () => {
-    try {
-      const authService = getAuthService();
-      await authService.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
   };
 
   // Bypass authentication for the create-user utility page
@@ -133,33 +123,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   사용자 관리
                 </a>
               </nav>{' '}
-            </div>
-            <div
-              style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-              data-oid="q8p7-kk"
-            >
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#dc2626';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = '#ef4444';
-                }}
-                data-oid="02s5o15"
-              >
-                Sign Out
-              </button>
             </div>
           </div>
         </header>
