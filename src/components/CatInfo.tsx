@@ -130,12 +130,20 @@ export default function CatInfo({ cat }: CatInfoProps) {
           />
         </div>
         <h3 className="mt-3 text-2xl font-bold tracking-tight text-gray-900">{cat.name}</h3>
-        {cat.status && (
-          <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 ring-1 ring-gray-200">
-            <span>{getStatusEmoji(cat.status)}</span>
-            {cat.status}
-          </span>
-        )}
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+          {cat.status && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 ring-1 ring-gray-200">
+              <span>{getStatusEmoji(cat.status)}</span>
+              {cat.status}
+            </span>
+          )}
+          {cat.adoptable && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-sm font-medium text-brand-800 ring-1 ring-brand-200">
+              <span>🏡</span>
+              입양 가능
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Body */}

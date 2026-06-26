@@ -175,20 +175,19 @@ ring-brand-200`
 > Two Phase C target surfaces aren't reachable today; the audit can't restyle what
 > isn't there. See the plan's **Prerequisites** block for full detail.
 
-- [ ] **Create the 입양홍보 page** — `src/app/pages/adoption/page.tsx` does **not
-      exist**; the 소개/소식 dropdown links **and** the standalone brand CTA in
-      `Navigation.tsx` all 404. **Decided scope (user, 2026-06-21): an 입양 가능
-      냥이 갤러리** (adoptable-cats gallery) — _not_ just an info page, so it's a
-      small **feature**, scheduled as a later Phase C chunk (after the existing-page
-      restyles). Sub-work:
-  - [ ] Add an **`adoptable` flag** to the `Cat` model/type (the four existing
-        statuses 산냥이/집냥이/별냥이/행방불명 don't express "adoptable").
-  - [ ] **Admin tagging** — let an admin mark a cat adoptable (cats CMS / a new
-        toggle); include in static-data export if the gallery reads static JSON.
-  - [ ] **Public gallery page** — filter cats by `adoptable`, render on the shared
-        album/cat-grid building blocks (`components/album/*`), open `CatInfo` on
-        tap. Brand tokens + Korean 해요체 from the start.
-  - [ ] Wire it so the existing `/pages/adoption` links + CTA resolve (no 404).
+- [x] **Create the 입양홍보 page** — `src/app/pages/adoption/page.tsx` now exists
+      (built 2026-06-26). **Scope (user, 2026-06-21): an 입양 가능 냥이 갤러리**
+      (adoptable-cats gallery). Sub-work:
+  - [x] Added an **`adoptable?: boolean` flag** to the `Cat` type (`src/types/index.ts`).
+  - [x] **Admin tagging** — `입양 가능` checkbox in the cat edit form + a brand-tinted
+        `입양 가능` badge in the cats table row + a **"Filter by Adoptable"** select in the
+        cats filter panel (`src/app/admin/cats/page.tsx`). Field flows to Firestore via
+        the existing create/update path; no static export needed (gallery reads live).
+  - [x] **Public gallery page** — filters cats by `adoptable` (client-side), renders on
+        the extracted shared `CatCircleGrid` (`src/components/CatCircleGrid.tsx`, also now
+        used by `CatGallery`), opens `CatInfo` on tap (+ a `입양 가능` badge in CatInfo).
+        Brand tokens + 해요체, friendly empty state + 동참 CTA (never 404s).
+  - [x] The existing `/pages/adoption` links + CTA now resolve (route returns 200).
 - [x] **Activate 동참** — 동참 → `/pages/contact`. Was greyed by a hardcoded
       `준비 중입니다` overlay + a `filter grayscale opacity-50 pointer-events-none`
       wrapper (not permissions — verified live: `contact`/`adoption` are `[]` =
@@ -196,8 +195,12 @@ ring-brand-200`
       greying wrapper classes and branded the form focus rings
       (`focus:ring-yellow-400` → `focus:ring-brand-300`, ×4). _Browser-verified:
       form full-color/clickable, 보내기 = brand→accent gradient; `tsc` clean._
-- [ ] **Verify** in the browser: 동참 page shows the live form (no overlay/grey),
+- [x] **Verify** in the browser: 동참 page shows the live form (no overlay/grey),
       and 입양홍보 routes to a real page (no 404) from both the dropdowns and CTA.
+      _Browser-verified 2026-06-26 (Claude-in-Chrome): `/pages/adoption` renders the
+      circular grid (live adoptable cat 삼숙이), tap → CatInfo modal shows the 입양 가능
+      badge beside the status badge; `/admin/cats` shows the 입양 가능 row badge + the
+      edit-form checkbox (checked). `tsc`/lint clean._
 
 ### C1. Audit & restyle — per-page progress
 
@@ -235,7 +238,7 @@ Small browser-verified chunks, one page at a time. Sequence:
       neutral card; list cards → `rounded-lg border-gray-200 hover:shadow-sm`; list
       title got a brand underline accent; detail back-button → secondary token; the
       `yellow-50/200/400/800` notice box → brand-tinted card (`bg-brand-50
-    ring-brand-100`, brand-600 icon, gray-700 text). _Browser-verified list +
+  ring-brand-100`, brand-600 icon, gray-700 text). _Browser-verified list +
       detail; `tsc` clean._ ⚠️ Noted (out of scope): list vs detail show a
       different date (list uses `formatKoreaDateTime` +9h, detail prints raw
       `date time`) — pre-existing date-format drift, track under tech-debt.
@@ -249,7 +252,8 @@ Small browser-verified chunks, one page at a time. Sequence:
 - [ ] **집사메뉴 / butler** (`butler_stream`, `butler_talk` + `new/`,
       `ButlerStreamClient`, `ButlerTalkClient`, `PostList`) — `border-yellow-500`
       selected state + form/list audit _(larger chunk)_
-- [ ] **입양홍보 / adoption** — build the adoptable-cats gallery feature (see C0)
+- [x] **입양홍보 / adoption** — built the adoptable-cats gallery feature (see C0); a
+      brand audit/restyle of the new page is inherently brand-clean from the start
 - [ ] **Cross-cutting** — reconcile legacy blue `.btn-primary` (`globals.css`) +
       nav `hover:text-blue-600` with the brand direction
       _(carried over as deferred from the landing work)_

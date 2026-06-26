@@ -25,23 +25,24 @@
 
 ## 1. Snapshot (as of 2026-06-21)
 
-| Workstream                            | Status            | Notes                                                                                                                                           |
-| ------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Landing redesign (Phases 0–2)         | `[x]` done        | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                |
-| App redesign — A (Modals)             | `[x]` done        | Shared `ui/Modal` system (commit `5892b43`).                                                                                                    |
-| App redesign — B (Album pages)        | `[x]` done        | Shared `components/album/*` + `useMediaFilter`.                                                                                                 |
-| App redesign — D (Localization)       | `[x]` done        | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                  |
-| App redesign — C (other pages)        | `[ ]` not started | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴. **Blocked on prereqs:** create 입양홍보 page + activate 동참 (see redesign tasks **C0**). |
-| Redesign A4 (live-verification)       | `[~]` blocked     | Needs real sign-in / SMS (assistant can't enter creds).                                                                                         |
-| **Functional: 입양홍보 page missing** | `[ ]` todo        | **§11** — nav links + CTA 404; no `/pages/adoption` route exists.                                                                               |
-| **Functional: 동참 form end-to-end**  | `[ ]` todo        | **§11** — UI active; verify submission writes + actually reaches staff.                                                                         |
-| **Mobile UX optimization**            | 🚧 placeholder    | §4 — public-facing mobile pass.                                                                                                                 |
-| **Admin desktop cleanup**             | 🚧 placeholder    | §5 — admin UI/UX consistency.                                                                                                                   |
-| **Admin mobile optimization**         | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                    |
-| Codebase health / tech-debt           | 🚧 placeholder    | §7 — error handling, dead code, route auth.                                                                                                     |
-| Compliance / legal                    | 🚧 placeholder    | §8 — privacy policy, terms.                                                                                                                     |
-| Multi-tenant hardening                | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                           |
-| Testing & quality gates               | 🚧 placeholder    | §10 — no automated coverage today.                                                                                                              |
+| Workstream                            | Status            | Notes                                                                                                                                                                                                            |
+| ------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing redesign (Phases 0–2)         | `[x]` done        | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                 |
+| App redesign — A (Modals)             | `[x]` done        | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                     |
+| App redesign — B (Album pages)        | `[x]` done        | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                  |
+| App redesign — D (Localization)       | `[x]` done        | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                   |
+| App redesign — C (other pages)        | `[ ]` not started | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴. **Blocked on prereqs:** create 입양홍보 page + activate 동참 (see redesign tasks **C0**).                                                                  |
+| Redesign A4 (live-verification)       | `[~]` blocked     | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                          |
+| **Functional: 입양홍보 page missing** | `[x]` done        | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle). |
+| **Functional: 동참 form end-to-end**  | `[ ]` todo        | **§11** — UI active; verify submission writes + actually reaches staff.                                                                                                                                          |
+| **Perf: bake the data layer**         | `[ ]` todo 🔴     | **§7a** — client-side Firestore reads add perceived latency (landing map avatars, galleries) + ship the Firebase SDK to the client. Deferred but prominent.                                                      |
+| **Mobile UX optimization**            | 🚧 placeholder    | §4 — public-facing mobile pass.                                                                                                                                                                                  |
+| **Admin desktop cleanup**             | 🚧 placeholder    | §5 — admin UI/UX consistency.                                                                                                                                                                                    |
+| **Admin mobile optimization**         | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                     |
+| Codebase health / tech-debt           | 🚧 placeholder    | §7 — error handling, dead code, route auth.                                                                                                                                                                      |
+| Compliance / legal                    | 🚧 placeholder    | §8 — privacy policy, terms.                                                                                                                                                                                      |
+| Multi-tenant hardening                | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                                                                                            |
+| Testing & quality gates               | 🚧 placeholder    | §10 — no automated coverage today.                                                                                                                                                                               |
 
 ---
 
@@ -199,6 +200,53 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 ---
 
+## 7a. 🔴 Perceived latency — bake the data layer (DEFERRED, prominent)
+
+> **Surfaced 2026-06-26** while building the adoption gallery. **Deferred by the user
+> ("we'll deal with it later") but explicitly tracked as prominent** — it affects the
+> landing page and every gallery. Do not start without picking it up with the user.
+
+**Problem.** The app reads Firestore **live from the browser** on key surfaces. Each such
+read gates content on a serial client-side waterfall — _hydration → Firebase Web SDK init
+→ cold Firestore connection → query_ — and pulls the heavy `firebase/app + firestore +
+auth + analytics` SDK into the client bundle (`src/services/firebase.ts`, which carries
+scars of a past "48s" auth/persistence delay). Realistic worst case (first visit, mobile,
+possibly-distant Firestore region): **~0.6–1.5 s+** of spinner / late-arriving content.
+
+**Concrete hotspots found:**
+
+- **Landing map cat avatars** — `src/components/LeafletMountainMap.tsx` (`usePointMarkers`,
+  ~L63–99) resolves each marker's photo in a post-hydration `useEffect` via **N parallel
+  `getCatsByPointId` queries** (`Promise.all`, one per point). Map/points appear fast
+  (points are baked), but **cat faces pop in late**.
+- **Galleries** — `CatGallery` and the new `/pages/adoption` call `getAllCats()`
+  client-side → spinner-gated.
+
+**Baseline that already does it right (extend this):** `src/app/page.tsx` is an async
+Server Component that `await`s `getPointService().getAllPoints()` with **no
+`dynamic`/`revalidate`**, so Next statically renders it and **points/marker positions are
+baked at build**. The thumbnail _image files_ are likewise build-fetched
+(`scripts/maintenance/fetch-static-assets.js`). The fix extends "bake occasional-change
+reads" from points/images to cat **metadata**.
+
+**Direction (to design later):**
+
+- [ ] Move occasional-change reads (cats; the `{ pointId → chosen thumbnail }` map) to
+      **build/server** via Server Components with **SSG + ISR** (`revalidate`) and/or
+      **on-demand revalidation triggered on admin save** — preserving the "admin edits
+      reflect quickly" property without a manual redeploy.
+- [ ] Bake the marker `{ pointId → thumbnail }` map in the home Server Component so the
+      landing page needs **zero client Firestore queries** for avatars; consider dropping
+      the Firestore SDK from those client bundles entirely.
+- [ ] **Tech-debt:** `page.tsx` uses the **client Web SDK on the server**
+      (`firebase/firestore` `getDocs`, unauthenticated). For server/build reads, evaluate
+      the **Admin SDK** (already used by `fetch-static-assets.js`).
+- [ ] Measure real timings against the live Firestore region before/after to quantify.
+
+_Risk/size: architectural, touches the services seam and several pages — hence deferred._
+
+---
+
 ## 8. 🚧 Compliance / legal
 
 > **Goal (placeholder):** the deferred compliance workstream. Footer
@@ -260,12 +308,14 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 > from the Phase C design restyle. Both also surface in the redesign tasks doc, but
 > the _functional_ fix is the point here.
 
-- [ ] **입양홍보 (`/pages/adoption`) does not exist** — the 소식 dropdown link, both
-      mobile entries, and the standalone brand **CTA** all point at a route that
-      isn't there → every entry point 404s. Decided direction: build it as an
-      **입양 가능 냥이 갤러리** (adoptable-cats gallery) — needs a `Cat.adoptable`
-      flag + admin tagging + the public gallery page (redesign tasks **C0**). _Interim
-      option if it won't be built soon: hide the link + CTA so visitors don't 404._
+- [x] **입양홍보 (`/pages/adoption`)** — **built 2026-06-26** as an **입양 가능 냥이
+      갤러리** (adoptable-cats gallery): `Cat.adoptable?` flag (`src/types/index.ts`),
+      admin tagging (checkbox in the cat edit form + table badge,
+      `src/app/admin/cats/page.tsx`), and the public page
+      (`src/app/pages/adoption/page.tsx`) rendering adoptable cats on the shared
+      `CatCircleGrid` (extracted from `CatGallery`) → `CatInfo` on tap, with a friendly
+      해요체 empty state + 동참 CTA. All three 404 entry points now resolve (route 200,
+      `tsc` clean). _Remaining: browser/admin-session visual verification._
 - [ ] **동참 (`/pages/contact`) — confirm the form works end-to-end.** The UI is now
       active (design chunk done) and wired to `getContactService().createContact()`
       → Firestore `contacts` (the admin dashboard reads `getAllContacts()`), so the

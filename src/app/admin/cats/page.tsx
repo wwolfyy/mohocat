@@ -32,6 +32,7 @@ interface CatFormData {
   offspring: string;
   isNeutered: boolean | undefined;
   note: string;
+  adoptable: boolean;
 }
 
 const initialFormData: CatFormData = {
@@ -51,6 +52,7 @@ const initialFormData: CatFormData = {
   offspring: '',
   isNeutered: undefined,
   note: '',
+  adoptable: false,
 };
 
 export default function CatsCMSPage() {
@@ -82,6 +84,7 @@ export default function CatsCMSPage() {
   const [genderFilter, setGenderFilter] = useState<string>('');
   const [birthYearFilter, setBirthYearFilter] = useState<string>('');
   const [neuteredFilter, setNeuteredFilter] = useState<string>('');
+  const [adoptableFilter, setAdoptableFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
   // Get unique locations and statuses for filters
@@ -152,13 +155,20 @@ export default function CatsCMSPage() {
         (neuteredFilter === 'false' && cat.isNeutered === false) ||
         (neuteredFilter === 'unknown' && cat.isNeutered === undefined);
 
+      // Adoptable filter (cats without the flag are treated as not adoptable)
+      const matchesAdoptable =
+        !adoptableFilter ||
+        (adoptableFilter === 'true' && cat.adoptable === true) ||
+        (adoptableFilter === 'false' && cat.adoptable !== true);
+
       return (
         matchesSearch &&
         matchesStatus &&
         matchesLocation &&
         matchesGender &&
         matchesBirthYear &&
-        matchesNeutered
+        matchesNeutered &&
+        matchesAdoptable
       );
     })
     .sort((a, b) => {
@@ -204,6 +214,7 @@ export default function CatsCMSPage() {
     setGenderFilter('');
     setBirthYearFilter('');
     setNeuteredFilter('');
+    setAdoptableFilter('');
     setSortBy('name');
     setSortOrder('asc');
   };
@@ -298,6 +309,7 @@ export default function CatsCMSPage() {
       offspring: cat.offspring || '',
       isNeutered: cat.isNeutered,
       note: cat.note || '',
+      adoptable: cat.adoptable ?? false,
     });
     setShowForm(true);
   };
@@ -558,6 +570,20 @@ export default function CatsCMSPage() {
                     {option.label}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Filter by Adoptable
+              </label>
+              <select
+                value={adoptableFilter}
+                onChange={(e) => setAdoptableFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All</option>
+                <option value="true">입양 가능 (Adoptable)</option>
+                <option value="false">입양 대상 아님 (Not adoptable)</option>
               </select>
             </div>
           </div>
@@ -906,6 +932,20 @@ export default function CatsCMSPage() {
               </div>
 
               <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.adoptable}
+                    onChange={(e) => setFormData({ ...formData, adoptable: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    입양 가능 (show on 입양홍보 gallery)
+                  </span>
+                </label>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Special Notes
                 </label>
@@ -1078,21 +1118,28 @@ export default function CatsCMSPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
-                        cat.status === '산냥이'
-                          ? 'bg-green-100 text-green-800'
-                          : cat.status === '집냥이'
-                            ? 'bg-blue-100 text-blue-800'
-                            : cat.status === '별냥이'
-                              ? 'bg-gray-100 text-gray-800'
-                              : cat.status === '행방불명'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {cat.status || 'Unknown'}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
+                          cat.status === '산냥이'
+                            ? 'bg-green-100 text-green-800'
+                            : cat.status === '집냥이'
+                              ? 'bg-blue-100 text-blue-800'
+                              : cat.status === '별냥이'
+                                ? 'bg-gray-100 text-gray-800'
+                                : cat.status === '행방불명'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {cat.status || 'Unknown'}
+                      </span>
+                      {cat.adoptable && (
+                        <span className="inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full bg-brand-100 text-brand-800">
+                          입양 가능
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
@@ -1124,7 +1171,8 @@ export default function CatsCMSPage() {
               locationFilter ||
               genderFilter ||
               birthYearFilter ||
-              neuteredFilter
+              neuteredFilter ||
+              adoptableFilter
                 ? 'No cats found matching your filters.'
                 : 'No cats found.'}
             </p>

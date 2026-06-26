@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import type { Cat } from '@/types';
-import { cn } from '@/utils/cn';
 import CatInfo from './CatInfo';
+import CatCircleGrid from './CatCircleGrid';
 import Modal from './ui/Modal';
 import { getCatService } from '@/services';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
@@ -38,40 +37,7 @@ function CatGridSection({ title, cats, emptyLabel, priorityCount, onSelect }: Ca
       {cats.length === 0 ? (
         <p className="py-4 text-center text-sm text-gray-400">{emptyLabel}</p>
       ) : (
-        <div className="flex flex-wrap justify-center gap-4">
-          {cats.map((cat, index) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => onSelect(cat)}
-              className={cn(
-                'group w-28 cursor-pointer rounded-xl p-1 transition-transform duration-200 hover:scale-110',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400'
-              )}
-            >
-              <div
-                className={cn(
-                  'aspect-square overflow-hidden rounded-full border-4 border-white shadow-lg',
-                  'ring-0 ring-brand-300 transition-all duration-200 group-hover:ring-4'
-                )}
-              >
-                <Image
-                  src={cat.thumbnailUrl}
-                  alt={cat.name}
-                  width={112}
-                  height={112}
-                  className="h-full w-full object-cover"
-                  sizes="112px"
-                  quality={85}
-                  priority={index < priorityCount}
-                />
-              </div>
-              <div className="mt-1.5 w-full truncate text-center text-sm font-medium text-gray-700">
-                {cat.name}
-              </div>
-            </button>
-          ))}
-        </div>
+        <CatCircleGrid cats={cats} onSelect={onSelect} priorityCount={priorityCount} />
       )}
     </div>
   );

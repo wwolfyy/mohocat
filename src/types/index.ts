@@ -24,6 +24,7 @@ export interface Cat {
   offspring?: string;
   isNeutered?: boolean;
   note?: string;
+  adoptable?: boolean;
 }
 
 // Post and Reply interfaces
