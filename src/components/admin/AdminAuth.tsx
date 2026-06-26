@@ -4,7 +4,6 @@ import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
 import SocialLoginButton from '@/components/SocialLoginButton';
-import ProviderManagement from '@/components/ProviderManagement';
 import { cn } from '@/utils/cn';
 
 interface AdminAuthProps {
@@ -17,7 +16,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   const [loginError, setLoginError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showProviderManagement, setShowProviderManagement] = useState(false);
 
   // Use the enhanced useAuth hook
   const {
@@ -102,7 +100,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       setLoginError('');
       setEmail('');
       setPassword('');
-      setShowProviderManagement(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -114,7 +111,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     setEmail('');
     setPassword('');
     setLoading(false);
-    setShowProviderManagement(false);
   };
 
   // Check if user is admin for rendering
@@ -246,7 +242,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               onClick={() => {
                 setAuthError('');
                 setLoading(false);
-                setShowProviderManagement(false);
                 // This is a dev-only emergency bypass - create a mock admin state
                 console.warn(
                   'Emergency bypass activated - this should only be used in development'
@@ -333,7 +328,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             <button
               onClick={() => {
                 setLoading(false);
-                setShowProviderManagement(false);
                 // Create mock admin user for dev
                 console.warn(
                   'Emergency bypass activated - this should only be used in development'
@@ -510,12 +504,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => setShowProviderManagement(!showProviderManagement)}
-                className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                {showProviderManagement ? 'Hide' : 'Show'} Account Settings
-              </button>
-              <button
                 onClick={handleLogout}
                 className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
@@ -526,51 +514,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-3">{children}</div>
-
-          {/* Provider Management Sidebar */}
-          <div className={`lg:col-span-1 ${showProviderManagement ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Settings</h2>
-
-                {/* User Info */}
-                <div className="mb-6">
-                  <div className="flex items-center space-x-3">
-                    {user.photoURL ? (
-                      <img
-                        src={user.photoURL}
-                        alt={user.displayName || 'User'}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 font-medium">
-                          {user.displayName?.charAt(0).toUpperCase() ||
-                            user.email?.charAt(0).toUpperCase() ||
-                            '?'}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {user.displayName || 'Admin User'}
-                      </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Provider Management */}
-                <ProviderManagement className="space-y-4" showSuccessMessages={true} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">{children}</div>
     </div>
   );
 }
