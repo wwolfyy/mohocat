@@ -23,7 +23,7 @@
 
 ---
 
-## 1. Snapshot (as of 2026-06-27)
+## 1. Snapshot (as of 2026-06-28)
 
 | Workstream                            | Status            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +36,7 @@
 | **Functional: 입양홍보 page missing** | `[x]` done        | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle).                                                                                                                                                                                                                                                                                        |
 | **Functional: 동참 form end-to-end**  | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                             |
 | **Deployment-target cleanup**         | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md)) |
-| **Perf: bake the data layer**         | `[ ]` todo 🔴     | **§7a** — client-side Firestore reads add perceived latency (landing map avatars, galleries) + ship the Firebase SDK to the client. Deferred but prominent.                                                                                                                                                                                                                                                                                                                                             |
+| **Perf: bake the data layer**         | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). One follow-up: remove the dead static-data export seam (tasks-doc §6).                                                                                                          |
 | **Mobile UX optimization**            | 🚧 placeholder    | §4 — public-facing mobile pass.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | **Admin desktop cleanup**             | 🚧 placeholder    | §5 — admin UI/UX consistency.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **Admin mobile optimization**         | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -217,11 +217,13 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 ---
 
-## 7a. 🔴 Perceived latency — bake the data layer (DEFERRED, prominent)
+## 7a. ✅ Perceived latency — bake the data layer (DONE 2026-06-28; cleanup carried)
 
-> **Surfaced 2026-06-26** while building the adoption gallery. **Deferred by the user
-> ("we'll deal with it later") but explicitly tracked as prominent** — it affects the
-> landing page and every gallery. Do not start without picking it up with the user.
+> **Surfaced 2026-06-26**, picked up with the user **2026-06-28** and implemented the same
+> session. Full task log + locked design decisions:
+> [`7a-bake-data-layer-tasks.md`](./7a-bake-data-layer-tasks.md). The client cat-query
+> waterfall is gone on both baked surfaces. **One follow-up remains:** the mechanical removal
+> of the now-dead static-data export seam (§6 of the tasks doc) — see handoff-9.
 
 **Problem.** The app reads Firestore **live from the browser** on key surfaces. Each such
 read gates content on a serial client-side waterfall — _hydration → Firebase Web SDK init
@@ -246,19 +248,22 @@ baked at build**. The thumbnail _image files_ are likewise build-fetched
 (`scripts/maintenance/fetch-static-assets.js`). The fix extends "bake occasional-change
 reads" from points/images to cat **metadata**.
 
-**Direction (to design later):**
+**What shipped (hybrid freshness: on-demand revalidation + 1h ISR backstop):**
 
-- [ ] Move occasional-change reads (cats; the `{ pointId → chosen thumbnail }` map) to
-      **build/server** via Server Components with **SSG + ISR** (`revalidate`) and/or
-      **on-demand revalidation triggered on admin save** — preserving the "admin edits
-      reflect quickly" property without a manual redeploy.
-- [ ] Bake the marker `{ pointId → thumbnail }` map in the home Server Component so the
-      landing page needs **zero client Firestore queries** for avatars; consider dropping
-      the Firestore SDK from those client bundles entirely.
-- [ ] **Tech-debt:** `page.tsx` uses the **client Web SDK on the server**
-      (`firebase/firestore` `getDocs`, unauthenticated). For server/build reads, evaluate
-      the **Admin SDK** (already used by `fetch-static-assets.js`).
-- [ ] Measure real timings against the live Firestore region before/after to quantify.
+- [x] Cats moved to **build/server reads via the Admin SDK** (`src/lib/server/cat-reads.ts`),
+      baked into the home + adoption Server Components with **ISR** (`revalidate = 3600`,
+      single-sourced in `src/lib/cache-config.ts`; confirmed via `next build` →
+      `initialRevalidateSeconds: 3600`).
+- [x] The marker `{ pointId → cats }` map is baked in `page.tsx` and threaded to the map +
+      `CatGallery` → **zero client Firestore queries** for avatars (browser-verified); the
+      adoption gallery is server-rendered too. The old client `getCatsByPointId` /
+      `getAllCats()` waterfalls + the duplicate `preloadThumbnailsForPoints` are removed.
+- [x] **On-demand path:** `POST /api/revalidate` (ID-token auth) wired to every admin
+      cat-write in `src/app/admin/cats/page.tsx`, so edits reflect without a redeploy
+      (end-to-end check pending a preview deploy — dev can't exercise ISR).
+- [x] Resolved the **`page.tsx` client-Web-SDK-on-server** tech-debt (now Admin SDK).
+- [~] Timing: qualitative win proven (zero client cat reads); no ms figure captured.
+- [ ] **Carried follow-up:** remove the dead static-data export seam (tasks-doc §6).
 
 **Inherited from Phase 3B (don't re-investigate from scratch):**
 

@@ -66,7 +66,7 @@ These were debated and chosen before any code; do not silently revisit.
 
 - [x] `src/app/page.tsx`: `export const revalidate = REVALIDATE_SECONDS`; `Promise.all` of
       points + `getAllCatsServer()`; build the by-point map; pass `catsByPoint` to
-      `MountainViewer`. _(ISR-via-`next build` static-analysis check still pending — see §7.)_
+      `MountainViewer`. _ISR confirmed via `next build` — see §7._
 - [x] `MountainViewer`: accepts `catsByPoint`; **removed** the
       `thumbnailPreloader.preloadThumbnailsForPoints` waterfall (now preloads image _files_ from
       the baked URLs, no Firestore); threads data to map + gallery.
@@ -110,16 +110,43 @@ These were debated and chosen before any code; do not silently revisit.
   is a no-op under `next dev` (no ISR cache), and `/admin` needs a login. Verify on the
   Vercel **preview** deploy with an admin login (edit a cat → `/` reflects without redeploy).
 
-## 6. Static-data export seam — decide its fate (§7a entangled seam)
+## 6. Static-data export seam — decision: **REMOVE (in a dedicated cleanup pass)**
 
-- [ ] Decide `cats-static-data.json` + the `update:*` scripts: revive / replace / remove. The
-      build still writes it (`saveStaticDataJson`) and `migrate-cats-to-firestore.js` reads it;
-      the app does not read it at runtime. Document the decision here; don't rip out piecemeal.
+**Decision (2026-06-28):** remove the static-data export entirely. With §7a done, the app
+reads cats **live via the Admin SDK** at build/server time — the JSON is now provably dead
+output on every axis. Confirmed all readers/writers live in `scripts/` only (no `src/`
+runtime read): `fetch-static-assets.js` (`saveStaticDataJson` write), the `update:*` scripts
+(`export_cats/points/feeding_spots_to_static.js`, `update_all_static_data.js`), and the
+completed one-off `migrate-cats-to-firestore.js`.
+
+**What to remove (the cleanup, deferred to its own focused commit — not bundled into this
+docs wrap-up, per "don't rip out piecemeal"):**
+
+- `saveStaticDataJson()` + its call in `scripts/maintenance/fetch-static-assets.js` (pure dead
+  output each build).
+- The four `update:*` scripts in `package.json` + `scripts/migration/export_*_to_static.js` +
+  `update_all_static_data.js`.
+- `scripts/migration/migrate-cats-to-firestore.js` (completed one-off; cats already in
+  Firestore) → archive or delete.
+- `src/lib/cats-static-data.json` + `src/lib/feeding-spots-static-data.json` (the artifacts).
+
+**Why deferred, not done here:** it touches the build script + `package.json` + several
+migration scripts, and wants its own `npm run build` re-run to prove `fetch-static-assets.js`
+still succeeds without `saveStaticDataJson`. That's a code change deserving its own gate, not
+a rider on a documentation commit. Tracked as the next §7a follow-up in the handoff.
+
+- [x] Decision made + documented. Mechanical removal carried forward (see handoff).
 
 ## 7. Gates + docs
 
-- [ ] `npx tsc --noEmit` clean · `npm run test:smoke` green.
-- [ ] After-measurement vs §1 baseline recorded here.
-- [ ] Deployment README note (N hardcoded + the two locations) — **done in this session.**
-- [ ] PROJECT_PLAN §7a checkboxes + a fresh handoff.
-- [ ] Ask before committing.
+- [x] **`next build` — ISR confirmed.** Both `/` and `/pages/adoption` prerender as
+      `○ (Static)` (not `ƒ Dynamic`) and the prerender-manifest carries
+      `initialRevalidateSeconds: 3600` for each. The shared-constant
+      `export const revalidate = REVALIDATE_SECONDS` (imported from `cache-config.ts`)
+      **survives Next's static analysis** — no literal-fallback needed. The build also
+      exercised the Admin SDK server reads (`getAllCatsServer`) at build time successfully.
+- [x] `npx tsc --noEmit` clean · `npm run test:smoke` green (25/25, incl. the new route).
+- [~] After-measurement: qualitative only (see §1) — no ms figure captured.
+- [x] Deployment README note (N hardcoded + the two locations) — **done this session.**
+- [x] PROJECT_PLAN §7a checkboxes + a fresh handoff (#9).
+- [x] Ask before committing — landing/§4/§5 each committed on the user's go-ahead.
