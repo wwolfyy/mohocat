@@ -102,12 +102,11 @@ export default function AdminDashboard() {
           catService.getAllCats(),
         ]);
 
-        // Get contacts count (fallback to 0 if service doesn't support getAll)
+        // Get contacts count
         let totalContacts = 0;
         try {
-          // TODO: Add getAllContacts method to IContactService interface
-          // For now, this is a placeholder
-          totalContacts = 0;
+          const allContacts = await contactService.getAllContacts();
+          totalContacts = allContacts.length;
         } catch (error) {
           console.warn('Contacts count not available:', error);
           totalContacts = 0;

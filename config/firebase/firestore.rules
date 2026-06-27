@@ -34,6 +34,17 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // 동참(contact) submissions — members-only create, admin-only read.
+    // create: any signed-in 집사 may submit (server-enforced gate, mirrors the UI gate).
+    // read: admins with 'manage-users' (the Contact Management admin view).
+    // update/delete: never from the client.
+    match /contacts/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null &&
+        hasPermission(request.auth.uid, 'manage-users');
+      allow update, delete: if false;
+    }
+
     // Permission-managed collections
     match /posts_feeding/{document} {
       allow read: if request.auth != null;

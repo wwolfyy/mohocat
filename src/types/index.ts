@@ -27,6 +27,17 @@ export interface Cat {
   adoptable?: boolean;
 }
 
+// 동참(contact) form submission
+export interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+  // Firestore Timestamp; kept loosely-typed to avoid a firebase import in the shared types module.
+  createdAt?: { seconds: number; nanoseconds: number } | Date;
+}
+
 // Post and Reply interfaces
 export interface Post {
   id: string;

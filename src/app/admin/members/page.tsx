@@ -6,6 +6,7 @@ import RoleManagement from '@/components/admin/RoleManagement';
 import PermissionDebug from '@/components/admin/PermissionDebug';
 import RolePermissionConfig from '@/components/admin/RolePermissionConfig';
 import ResourcePermissionConfig from '@/components/admin/ResourcePermissionConfig'; // Added import
+import ContactManagement from '@/components/admin/ContactManagement';
 
 const MemberManagementPage = () => {
   const [activeTab, setActiveTab] = useState<
@@ -64,12 +65,13 @@ const MemberManagementPage = () => {
         </button>
 
         <button
-          disabled
+          onClick={() => setActiveTab('contacts')}
           className={cn(
-            'px-6 py-3 font-medium text-sm border-b-2 transition-colors cursor-not-allowed opacity-50',
-            'border-transparent text-gray-400'
+            'px-6 py-3 font-medium text-sm border-b-2 transition-colors',
+            activeTab === 'contacts'
+              ? 'border-yellow-500 text-yellow-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
-          title="연락처관리 기능은 아직 구현되지 않았습니다."
         >
           Contact Management
         </button>
@@ -81,6 +83,8 @@ const MemberManagementPage = () => {
       {activeTab === 'roles' && <RolePermissionConfig />}
 
       {activeTab === 'permissions' && <ResourcePermissionConfig />}
+
+      {activeTab === 'contacts' && <ContactManagement />}
 
       {activeTab === 'debug' && (
         <div

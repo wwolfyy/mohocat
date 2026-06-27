@@ -6,7 +6,7 @@
  * keeping components decoupled from specific backend implementations.
  */
 
-import type { Cat, Point } from '../types';
+import type { Cat, Contact, Point } from '../types';
 import type { UserCredential, User } from 'firebase/auth';
 
 // Cat-related service interface
@@ -51,6 +51,7 @@ export interface IPostService {
 // Contact service interface
 export interface IContactService {
   createContact(contact: any): Promise<any>;
+  getAllContacts(): Promise<Contact[]>;
 }
 
 // Image service interface

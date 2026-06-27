@@ -1,0 +1,4 @@
+node_modules/
+lib/
+# Build-time copy of the mountain config (source of truth: config/mountains/mountains.json)
+src/mountains.generated.ts
