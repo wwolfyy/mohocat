@@ -18,10 +18,6 @@
     "update:cats": "node scripts/migration/export_cats_to_static.js",
     "update:points": "node scripts/migration/export_points_to_static.js",
     "update:feeding-spots": "node scripts/migration/export_feeding_spots_to_static.js",
-    "docker:build": "docker build -t mohocats-backup .",
-    "docker:run": "docker run -p 8080:8080 --env-file .env.local mohocats-backup",
-    "docker:build-and-run": "npm run docker:build && npm run docker:run",
-    "cloud-run:deploy-backup": "gcloud run deploy mcathcat --source . --platform managed --region asia-northeast3 --allow-unauthenticated",
     "prepare": "husky"
   },
   "dependencies": {
