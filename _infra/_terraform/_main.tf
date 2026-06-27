@@ -66,6 +66,13 @@ locals {
     NEXT_PUBLIC_KAKAO_CLIENT_SECRET  = var.kakao_client_secret
     NEXT_PUBLIC_KAKAO_OAUTH_ENABLED  = "true"
 
+    # SMTP — 동참(contact) admin notification email (server-side only; never NEXT_PUBLIC_)
+    SMTP_HOST     = var.smtp_host
+    SMTP_PORT     = var.smtp_port
+    SMTP_USER     = var.smtp_user
+    SMTP_PASSWORD = var.smtp_password
+    SMTP_FROM     = var.smtp_from
+
     # Mountain identifier
     MOUNTAIN_ID = var.mountain_id
   }

@@ -120,6 +120,38 @@ variable "kakao_client_secret" {
 }
 
 # ---------------------------------------------------------------------------
+# SMTP — 동참(contact) admin notification email (POST /api/contact)
+# Provider-agnostic SMTP; configured for Gmail today.
+# ---------------------------------------------------------------------------
+variable "smtp_host" {
+  description = "SMTP_HOST — SMTP server hostname, e.g. 'smtp.gmail.com'"
+  type        = string
+}
+
+variable "smtp_port" {
+  description = "SMTP_PORT — SMTP server port (string; Vercel env values are strings). 587 for STARTTLS, 465 for TLS"
+  type        = string
+}
+
+variable "smtp_user" {
+  description = "SMTP_USER — SMTP auth username (the sending Gmail address)"
+  type        = string
+  sensitive   = true
+}
+
+variable "smtp_password" {
+  description = "SMTP_PASSWORD — SMTP auth password (Gmail app password, NOT the account password)"
+  type        = string
+  sensitive   = true
+}
+
+variable "smtp_from" {
+  description = "SMTP_FROM — From address on notification emails (typically same as smtp_user)"
+  type        = string
+  sensitive   = true
+}
+
+# ---------------------------------------------------------------------------
 # Misc
 # ---------------------------------------------------------------------------
 variable "mountain_id" {

@@ -55,10 +55,11 @@ google_svs_account.json
 public/images/about-photos/*
 public/images/thumbnails/*
 
-# Terraform — never commit real secrets or local state
-infra/terraform/.terraform/
-infra/terraform/terraform.tfvars
-infra/terraform/terraform.tfstate
-infra/terraform/terraform.tfstate.backup
-infra/terraform/.terraform.lock.hcl
+# Terraform — never commit real secrets or local state.
+# (Dir is parked/stale under _infra/_terraform; patterns kept current in case it's reactivated.)
+_infra/_terraform/.terraform/
+_infra/_terraform/terraform.tfvars
+_infra/_terraform/terraform.tfstate
+_infra/_terraform/terraform.tfstate.backup
+_infra/_terraform/.terraform.lock.hcl
 

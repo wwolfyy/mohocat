@@ -37,5 +37,14 @@ youtube_refresh_token = "PLACEHOLDER_YOUTUBE_REFRESH_TOKEN"
 kakao_client_id     = "a47343b7a894eeb5567fa6c90a8b1336"
 kakao_client_secret = "PLACEHOLDER_KAKAO_CLIENT_SECRET"
 
+# -- SMTP (동참 contact notification email) ----------------------------------
+# Gmail: use an App Password (Google Account → Security → App passwords),
+# NOT your normal account password. smtp_user / smtp_from are the Gmail address.
+smtp_host     = "smtp.gmail.com"
+smtp_port     = "587"
+smtp_user     = "PLACEHOLDER_SMTP_GMAIL_ADDRESS"
+smtp_password = "PLACEHOLDER_SMTP_APP_PASSWORD"
+smtp_from     = "PLACEHOLDER_SMTP_GMAIL_ADDRESS"
+
 # -- Misc --------------------------------------------------------------------
 mountain_id = "geyang"
