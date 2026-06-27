@@ -133,6 +133,11 @@ needed for `firebase deploy --only firestore:rules`. **Not** the Terraform/Verce
 
 ## Phase 3 — Broader cleanup encountered (out of strict scope — confirm before doing)
 
+> **Now fully planned:** see [`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md) for the
+> detailed, commit-by-commit Phase 3 plan (verified inventory, the static-data Half A /
+> Half B split, preservation strategy, smoke-count expectations). The notes below are the
+> original survey that fed it.
+
 Found while surveying; already noted in PROJECT_PLAN §7. List here so they're not lost.
 **Separate pass** — the user confirmed Phase 3 scope is broader than deployment.
 

@@ -5,13 +5,14 @@ This directory contains utility scripts for various project operations, organize
 ## Subdirectories
 
 - **`migration/`** - Database and data migration scripts
-  - **Static Data Cloud Storage Migration (NEW)**:
-    - `export_all_to_cloud_storage.js` - ✅ Master export script for all static data
-    - `export_cats_to_static.js` - ✅ Export cats data to Cloud Storage
-    - `export_points_to_static.js` - ✅ Export points data to Cloud Storage
-    - `export_feeding_spots_to_static.js` - ✅ Export feeding spots to Cloud Storage
-    - `update_all_static_data.js` - ✅ Batch update all static data
-    - `README_cloud_storage_migration.md` - ✅ Complete migration documentation
+  - **Local static-data export** (writes `src/lib/*-static-data.json`; output is **not
+    read by the app at runtime** — pending the data-layer redesign, PROJECT_PLAN §7a):
+    - `export_cats_to_static.js` - Export cats data to local JSON
+    - `export_points_to_static.js` - Export points data to local JSON
+    - `export_feeding_spots_to_static.js` - Export feeding spots to local JSON
+    - `update_all_static_data.js` - Batch update all local static data
+    - _The `export_all_to_cloud_storage.js` Cloud-Storage push path was removed in the
+      Phase 3 cleanup; preserved on branch `archive/static-data-cloud-export`._
   - **Legacy Database Migrations**:
     - `add_missing_location_field.js` - Adds location field to existing records
     - `add_updated_field.js` - Adds updated timestamp field
@@ -46,30 +47,21 @@ This directory contains utility scripts for various project operations, organize
 
 ### **Static Data Management**
 
-The platform now uses Google Cloud Storage for all static data with significant performance benefits:
-
-- **Build Integration**: `npm run build` automatically exports data to Cloud Storage
-- **Admin Control**: Web interface buttons for instant data refresh
-- **Performance**: ~40% faster page loads with CDN caching
-- **Cost Optimization**: ~90% reduction in Firebase database reads
+These scripts export Firestore collections to local `src/lib/*-static-data.json` files.
+**The app reads Firestore live at runtime — it does not consume these JSON files.** They
+are retained pending the data-layer "baking" redesign (PROJECT_PLAN §7a). The
+Cloud-Storage push path (and its admin "Static Data 관리" tab) was removed in the Phase 3
+cleanup; preserved on branch `archive/static-data-cloud-export`.
 
 ### **Available Scripts**
 
-#### **Static Data Operations** (Recommended)
+#### **Local Static Data Export**
 
 ```bash
-npm run update:static-data    # Update all static data
+npm run update:static-data    # Update all local static data
 npm run update:cats          # Update cats data only
 npm run update:points        # Update points data only
 npm run update:feeding-spots # Update feeding spots only
-```
-
-#### **Direct Script Execution**
-
-```bash
-node scripts/migration/export_all_to_cloud_storage.js    # Export all to Cloud Storage
-node scripts/migration/export_cats_to_static.js         # Export cats to Cloud Storage
-node scripts/migration/update_all_static_data.js        # Batch update with progress
 ```
 
 ## Usage
