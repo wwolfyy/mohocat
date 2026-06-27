@@ -2,17 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { getContactService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
 
 export default function Contact() {
-  // Service references
-  const contactService = getContactService();
-
   // Submitting the form requires a logged-in 집사 (matches the intro copy).
   // Treat the auth-loading window as "checking" so the button doesn't flash enabled.
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const canSubmit = isAuthenticated && !authLoading;
 
   const [formData, setFormData] = useState({
@@ -34,8 +30,25 @@ export default function Contact() {
     setIsError(false);
 
     try {
-      // Use service layer instead of direct Firebase access
-      await contactService.createContact(formData);
+      // Variant A: submit through the server route, which records the contact via the
+      // Admin SDK and emails the admin. Attach the Firebase ID token so the route can
+      // enforce the members-only gate server-side.
+      if (!user) throw new Error('Not authenticated');
+      const idToken = await user.getIdToken();
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Submission failed');
+      }
 
       // Clear form
       setFormData({
