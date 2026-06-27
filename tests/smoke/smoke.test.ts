@@ -43,9 +43,10 @@ function referencedApiPaths(): string[] {
   const found = new Set<string>();
   for (const file of walk(SRC)) {
     const text = readFileSync(file, 'utf8');
-    for (const m of text.matchAll(re)) found.add(m[1]);
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) found.add(m[1]);
   }
-  return [...found].sort();
+  return Array.from(found).sort();
 }
 
 describe('smoke: API route reference integrity', () => {
