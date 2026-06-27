@@ -80,13 +80,16 @@ These were debated and chosen before any code; do not silently revisit.
       Firestore request (only `Listen/channel` traffic is the app-wide auth/permission
       connection, same session id).
 
-## 4. Adoption — convert to Server Component
+## 4. Adoption — convert to Server Component ✅ browser-verified
 
-- [ ] `src/app/pages/adoption/page.tsx`: `'use client'` → async Server Component;
+- [x] `src/app/pages/adoption/page.tsx`: `'use client'` → async Server Component;
       `export const revalidate = REVALIDATE_SECONDS`; `await getAllCatsServer()`, filter
-      `adoptable` server-side. Extract the interactive bits (card grid + `selectedCat` modal)
-      into a small `'use client'` child.
-- [ ] Browser-verify: cards present on first paint, modal still opens, empty/error states intact.
+      `adoptable` server-side. Interactive bits (card grid + `selectedCat` modal) extracted into
+      a `'use client'` child `src/app/pages/adoption/AdoptionGallery.tsx`. Error/empty states
+      preserved (server-side `try/catch` logs + renders the friendly error block; no client
+      `getAllCats()` waterfall).
+- [x] Browser-verified (dev): adoptable card (삼숙이) renders on first paint with no spinner;
+      detail modal opens correctly; only `Listen/channel` (auth) traffic, no cat query.
 
 ## 5. On-demand revalidation (the instant path)
 
