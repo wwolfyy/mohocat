@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { getCatService } from '@/services';
+import { useAuth } from '@/hooks/useAuth';
+import { triggerCatRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
 import {
   FiEdit2,
@@ -57,6 +59,7 @@ const initialFormData: CatFormData = {
 
 export default function CatsCMSPage() {
   const catService = getCatService();
+  const { user } = useAuth();
 
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -278,6 +281,9 @@ export default function CatsCMSPage() {
         setCats([...cats, newCat]);
       }
 
+      // §7a: refresh the baked public pages so the edit reflects immediately.
+      await triggerCatRevalidate(user);
+
       // Reset form
       setFormData(initialFormData);
       setShowForm(false);
@@ -321,6 +327,8 @@ export default function CatsCMSPage() {
       await catService.deleteCat(catId);
       setCats(cats.filter((cat) => cat.id !== catId));
       setDeleteConfirm(null);
+      // §7a: refresh the baked public pages so the deletion reflects immediately.
+      await triggerCatRevalidate(user);
     } catch (err: any) {
       setError('Failed to delete cat: ' + err.message);
     }
@@ -427,6 +435,8 @@ export default function CatsCMSPage() {
                 }
 
                 alert(`Successfully migrated ${migratedCount} cats!`);
+                // §7a: one revalidation after the batch (not per-cat).
+                await triggerCatRevalidate(user);
                 loadCats(); // Reload the data
               } catch (err) {
                 console.error('Migration failed:', err);
@@ -470,6 +480,8 @@ export default function CatsCMSPage() {
                 }
 
                 alert(`Successfully migrated ${migratedCount} cats' birth dates!`);
+                // §7a: one revalidation after the batch (not per-cat).
+                await triggerCatRevalidate(user);
                 loadCats(); // Reload the data
               } catch (err) {
                 console.error('Date migration failed:', err);

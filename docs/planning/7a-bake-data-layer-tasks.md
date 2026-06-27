@@ -91,15 +91,24 @@ These were debated and chosen before any code; do not silently revisit.
 - [x] Browser-verified (dev): adoptable card (삼숙이) renders on first paint with no spinner;
       detail modal opens correctly; only `Listen/channel` (auth) traffic, no cat query.
 
-## 5. On-demand revalidation (the instant path)
+## 5. On-demand revalidation (the instant path) ⚠️ end-to-end pending preview deploy
 
-- [ ] `POST /api/revalidate` — Node runtime, **auth'd with the Firebase ID token** (same pattern
-      as `/api/contact`), calls `revalidatePath('/')` + `revalidatePath('/pages/adoption')`.
-      Logs + re-raises; no secrets/PII logged.
-- [ ] Hook every admin cat mutation (create / update / delete — **including `dwelling` /
-      `prev_dwelling` moves**) to call it after a successful save. Enumerate the write sites so
-      none is missed (a miss = silent staleness until the N backstop).
-- [ ] Browser-verify: edit a cat in `/admin` → public `/` reflects it without a redeploy.
+- [x] `POST /api/revalidate` (`src/app/api/revalidate/route.ts`) — Node runtime,
+      **auth'd with the Firebase ID token** (mirrors `/api/contact`), calls `revalidatePath`
+      over `BAKED_PATHS = ['/', '/pages/adoption']`. No secrets/PII logged. Verified:
+      returns **401** for missing + invalid tokens.
+- [x] Client helper `src/lib/revalidate-client.ts` → `triggerCatRevalidate(user)`:
+      best-effort POST with the ID token; **intentionally non-throwing** (the mutation already
+      committed; the N backstop catches misses — the documented hybrid contract).
+- [x] **Write-site enumeration** (the only live admin cat-write surface is
+      `src/app/admin/cats/page.tsx`): hooked all four — `handleSubmit` (create/update, incl.
+      `dwelling`/`prev_dwelling`/`adoptable`), `handleDelete`, and the two bulk migration
+      buttons (neutering / DOB — one revalidate after each batch). _Confirmed not writers:_
+      `api/admin/cats/route.ts` (POST only stubs an unimplemented import; GET reads),
+      `utils/cat-migration-helper.ts` (no callers — out-of-band, covered by N backstop).
+- [~] **End-to-end "edit → instant public reflect" NOT locally verifiable**: `revalidatePath`
+  is a no-op under `next dev` (no ISR cache), and `/admin` needs a login. Verify on the
+  Vercel **preview** deploy with an admin login (edit a cat → `/` reflects without redeploy).
 
 ## 6. Static-data export seam — decide its fate (§7a entangled seam)
 
