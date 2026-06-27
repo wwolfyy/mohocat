@@ -137,9 +137,12 @@ npm run test:smoke         # Fast structural smoke suite (gate for refactors/cle
 ### Vercel (the only target)
 
 - Next.js-optimized hosting with full SSR/SSG + image optimization.
-- Git-integration driven: Production = `main`, Preview ("staging") = `dev`.
-- Provisioned via Terraform under `infra/terraform/` (env vars incl. `SERVICE_ACCOUNT_KEY`
-  set there for production + preview).
+- **Deploy = `git push`** (Vercel Git integration): Production = `main`, Preview ("staging")
+  = `dev`. There is no deploy command. See `docs/deployment/README.md`.
+- **Env vars are managed by hand in the Vercel dashboard** (Production + Preview), not by IaC.
+- _Terraform is **parked/not in use** — the config lives under `_infra/_terraform/`
+  (underscore = stale) as a blueprint for a possible future (multi-tenant / DR). Do not treat
+  it as the live deployment path._
 - _Cloud Run, the home-server Docker path, and Firebase Hosting were removed in the
   deployment cleanup — do not reintroduce them._
 
