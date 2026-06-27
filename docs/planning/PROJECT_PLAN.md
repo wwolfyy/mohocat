@@ -135,10 +135,12 @@ _(Out of scope here: admin mobile — that's §6.)_
 - [ ] **`AdminAuth` hardening (UX side)** — the 10s loading timeout flaps to
       "Authentication timeout" on slow logins; the "🚨 Emergency Bypass (Dev
       Mode)" buttons ship in prod and should be gated to `NODE_ENV !== 'production'`.
-- [ ] **Dead/duplicate cleanup** — the 8 `get-all-user-permissions-*` route
-      variants; `MIGRATION_EXAMPLE.ts`; `role-assignment-service.ts` (not in the
-      factory); disabled-link placeholders (`급식소 관리`, `겨울집 관리`);
-      `/admin/create-user` unauthenticated bypass (verify the page exists).
+- [x] **Dead/duplicate cleanup (routes + example)** — ✅ removed in Phase 3A: the 8
+      unreferenced `get-all-user-permissions-*`/`get-all-users` routes and
+      `MIGRATION_EXAMPLE.ts`. **`role-assignment-service.ts` is NOT dead** — it's used by
+      `RoleManagement.tsx` + `PermissionDebug.tsx` (kept). Still open: disabled-link
+      placeholders (`급식소 관리`, `겨울집 관리`); `/admin/create-user` unauthenticated
+      bypass (verify the page exists).
 - [ ] **react-admin decision** — `src/lib/admin/dataProvider.ts` is partially
       used; either commit to it or remove it. Don't extend without confirming usage.
 - [ ] **Consistency of admin Korean strings** + consider centralizing (mirrors the
@@ -206,9 +208,12 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 - [ ] **RBAC collection drift** — `firestore.rules` reads `user_permissions/{uid}`
       while code writes `users/{uid}`; reconcile before relying on rule-level
       enforcement.
-- [ ] **Dead code** — the route variants, `MIGRATION_EXAMPLE.ts`,
-      `role-assignment-service.ts`. _(Overlaps §5.)_
-- [ ] **Build pipeline** — `build` re-exports to GCS on every run; review.
+- [x] **Dead code** — ✅ route variants + `MIGRATION_EXAMPLE.ts` removed (Phase 3A).
+      `role-assignment-service.ts` is **live** (used by `RoleManagement` +
+      `PermissionDebug`) — not dead. _(Overlaps §5.)_
+- [x] **Build pipeline** — ✅ `build` no longer exports to GCS (Phase 2 aligned it to
+      `fetch-static-assets.js && next build`); the GCS exporter + admin push path were
+      removed in Phase 3B Half A.
 - [ ] **Request validation** — no zod/schema at API boundaries.
 
 ---
@@ -255,6 +260,27 @@ reads" from points/images to cat **metadata**.
       (`firebase/firestore` `getDocs`, unauthenticated). For server/build reads, evaluate
       the **Admin SDK** (already used by `fetch-static-assets.js`).
 - [ ] Measure real timings against the live Firestore region before/after to quantify.
+
+**Inherited from Phase 3B (don't re-investigate from scratch):**
+
+- **Half B — local static-data export, left intact for this workstream.** The
+  `update:*` npm scripts + `export_{cats,points,feeding_spots}_to_static.js` +
+  `update_all_static_data.js` write `src/lib/{cats,feeding-spots}-static-data.json`.
+  **The app does not read these at runtime.** `cats-static-data.json` is **entangled
+  with the kept asset pipeline**: it's also written every build by
+  `scripts/maintenance/fetch-static-assets.js` (`saveStaticDataJson`) and read by the
+  legacy one-off `migrate-cats-to-firestore.js`. This is the half-built "baking" seam —
+  §7a should decide its fate holistically (revive, replace, or remove) rather than
+  ripping it out piecemeal.
+- **Half A — Cloud Storage "push" path, REMOVED in Phase 3B (preserved, not lost).**
+  What it was: an admin **"Static Data 관리" tab** (in `admin/app-management/page.tsx`)
+  → `POST /api/admin/update-static-data` → `scripts/migration/export_all_to_cloud_storage.js`
+  → wrote `static-data/*.json` to Google Cloud Storage. Removed because the app reads
+  Firestore live and nothing consumed that GCS output, and because §7a's chosen
+  direction (Server Components + SSG/ISR + Admin SDK) is **not** an admin-triggered GCS
+  push. **To revive:** the full code is on branch `archive/static-data-cloud-export`
+  (or `git show 646ef7a~1:<path>` for individual files). Reconsider only if §7a actually
+  wants an admin-button-driven re-export rather than build/server baking.
 
 _Risk/size: architectural, touches the services seam and several pages — hence deferred._
 

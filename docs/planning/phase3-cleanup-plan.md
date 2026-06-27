@@ -160,7 +160,11 @@ engineer doesn't have to reverse-engineer it from a dangling branch.
 > files) **after each commit's edits, before committing**. Commit messages end with the
 > Co-Authored-By trailer.
 
-### Commit 1 — `chore: remove dead admin permission routes + migration example (Phase 3A)`
+> **Status:** ✅ All four commits executed 2026-06-27 on `dev` — `e0763b1` (3A),
+> `646ef7a` (3B Half A), `eb155b8` (3C), + the 3D docs commit. Archive branch
+> `archive/static-data-cloud-export` created at `e0763b1`. Final: tsc clean, smoke **23**.
+
+### Commit 1 — `chore: remove dead admin permission routes + migration example (Phase 3A)` — ✅ `e0763b1`
 
 - Delete the 8 route directories from §1A (keep `-client`).
 - Delete `src/services/MIGRATION_EXAMPLE.ts`.
@@ -172,7 +176,7 @@ engineer doesn't have to reverse-engineer it from a dangling branch.
 - `git branch archive/static-data-cloud-export` (at the post-Commit-1 HEAD, i.e. the
   commit just before Half A is removed). Optionally push.
 
-### Commit 2 — `chore: remove unused Cloud Storage static-data export path (Phase 3B Half A)`
+### Commit 2 — `chore: remove unused Cloud Storage static-data export path (Phase 3B Half A)` — ✅ `646ef7a`
 
 - Delete `src/app/api/admin/update-static-data/route.ts` (+ empty dir).
 - Delete `scripts/migration/export_all_to_cloud_storage.js`.
@@ -188,13 +192,13 @@ engineer doesn't have to reverse-engineer it from a dangling branch.
   its route — expected drop), lint clean. Manually confirm `/admin/app-management`
   still renders the remaining tabs.
 
-### Commit 3 — `chore: refresh stale Docker comment in butler_stream (Phase 3C)`
+### Commit 3 — `chore: refresh stale Docker comment in butler_stream (Phase 3C)` — ✅ `eb155b8`
 
 - Reword `butler_stream/new/page.tsx:11` ("fails in Docker" → "during static build")
   or drop the Docker reference. **No code change.**
 - **Expect:** tsc clean, **smoke 23**, lint clean.
 
-### Commit 4 — `docs: correct stale architecture docs + role-assignment-service flags (Phase 3D)`
+### Commit 4 — `docs: correct stale architecture docs + role-assignment-service flags (Phase 3D)` — ✅
 
 - Rewrite `.github/copilot-instructions.md` to reflect reality (live Firestore via
   service layer; Vercel; service-factory pattern; no `src/lib/static-data.ts`; drop

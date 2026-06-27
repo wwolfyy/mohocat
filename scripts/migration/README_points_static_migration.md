@@ -1,5 +1,12 @@
 # Points Collection Static Data Migration
 
+> **⚠️ Partially obsolete (Phase 3 cleanup, 2026-06-27).** The Cloud-Storage pieces named
+> below — `export_all_to_cloud_storage.js`, `/api/admin/update-static-data`, and the
+> claim that points are "served from Cloud Storage" — were removed; the app reads
+> Firestore live. Removed code is on branch `archive/static-data-cloud-export`. The
+> standalone `export_points_to_static.js` (local JSON) still exists but its output is not
+> read at runtime (PROJECT_PLAN §7a). Retained as historical context.
+
 ## ✅ **Migration Status: COMPLETE - Cloud Storage**
 
 This migration has been **successfully completed** as part of the comprehensive Cloud Storage migration. Points data is now served from Google Cloud Storage instead of local JSON files.
