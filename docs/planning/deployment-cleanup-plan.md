@@ -131,15 +131,27 @@ needed for `firebase deploy --only firestore:rules`. **Not** the Terraform/Verce
 
 ---
 
-## Phase 3 — Broader cleanup encountered (out of strict scope — confirm before doing)
+## Phase 3 — Broader cleanup encountered — ✅ DONE (2026-06-27, `e0763b1`…`e408e30`)
 
-> **Now fully planned:** see [`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md) for the
-> detailed, commit-by-commit Phase 3 plan (verified inventory, the static-data Half A /
-> Half B split, preservation strategy, smoke-count expectations). The notes below are the
-> original survey that fed it.
+> **Executed.** Detailed plan + outcomes:
+> [`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md). Summary of how each surveyed
+> item below was resolved:
+>
+> - **Static-data export subsystem** — split into Half A (Cloud Storage push: the
+>   `update-static-data` route + admin "Static Data 관리" tab + `export_all_to_cloud_storage.js`
+>   - `test_admin_api.js`) → **removed**, preserved on branch
+>     `archive/static-data-cloud-export`; and Half B (local `src/lib/*.json` export) →
+>     **left for §7a** (entangled with the kept `fetch-static-assets.js`).
+> - **Duplicate admin API routes** — the 7 unreferenced `get-all-user-permissions-*`
+>   variants + `get-all-users` **deleted**; `-client` kept.
+> - **`MIGRATION_EXAMPLE.ts`** — **deleted**.
+> - **`role-assignment-service.ts`** — verified **live** (used by `RoleManagement` +
+>   `PermissionDebug`); **kept**; the §7 "dead" flag was corrected.
+> - **`docs/archive/` deploy docs** — left archived (not pruned, as planned).
+> - **Doc accuracy** — rewrote `.github/copilot-instructions.md`; fixed stale flags in
+>   PROJECT_PLAN §7 + `services-layer.md`; bannered the cloud-storage migration READMEs.
 
-Found while surveying; already noted in PROJECT_PLAN §7. List here so they're not lost.
-**Separate pass** — the user confirmed Phase 3 scope is broader than deployment.
+The original survey notes follow (kept for provenance).
 
 - **🚩 Cloud Storage static-data export subsystem (unconsumed)** — `build` no longer
   runs `export_all_to_cloud_storage.js`, but the script is still imported by
@@ -197,10 +209,12 @@ Found while surveying; already noted in PROJECT_PLAN §7. List here so they're n
 
 Phase 3 = its own follow-up commit(s).
 
-## Open questions for the user
+## Open questions for the user — ✅ all resolved
 
-1. **Vercel Build Command** — is it set to `vercel-build` in the dashboard? (Determines
-   whether 2a is "delete the GCS step from `build`" or "merge the two".)
-2. **Keep `/api/health`?** (generic probe vs delete)
-3. **Keep the `staging` Firebase alias?**
-4. **Fold Phase 3 in now, or separate pass?**
+1. **Vercel Build Command** — confirmed no Build Command set, so Vercel uses
+   `vercel-build`; `build` was aligned to match (Phase 2a).
+2. **Keep `/api/health`?** — deleted (Phase 2b); app monitoring is Firebase Analytics.
+3. **Keep the `staging` Firebase alias?** — removed (Phase 2d); Vercel Preview on `dev`
+   is the staging path.
+4. **Fold Phase 3 in now, or separate pass?** — done as a separate, fully-planned pass
+   ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md)), executed 2026-06-27.
