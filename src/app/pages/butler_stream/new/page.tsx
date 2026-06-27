@@ -8,7 +8,7 @@ interface BasicFeedingSpot {
 
 const NewPostPage = async () => {
   // Fetch basic feeding spots at build time using the service directly
-  // This avoids HTTP calls to self during build which fails in Docker
+  // This avoids unreliable HTTP calls to self during the static build
   let feedingSpots: BasicFeedingSpot[] = [];
 
   try {
