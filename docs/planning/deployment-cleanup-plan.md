@@ -30,7 +30,12 @@ notification down a Firebase-Functions dead end).
 
 ---
 
-## Phase 1 — Core deployment cleanup (the ask)
+## Phase 1 — Core deployment cleanup (the ask) — ✅ DONE (commit `f62816b`, 2026-06-27)
+
+All 1a–1f executed; `firebase.json` trimmed to `{ firestore: { rules } }`; docker/
+cloud-run scripts + the `functions` tsconfig exclude removed. Verified: `tsc` clean,
+`npm run test:smoke` green (24), no refs to deleted paths. Phase 2/3 pending the
+open questions at the bottom.
 
 Grouped by the dead target. Verify each before deleting.
 
