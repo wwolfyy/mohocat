@@ -1,4 +1,4 @@
-rules_version = '3';
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -59,11 +59,14 @@ service cloud.firestore {
     }
 
     // Permission system collections
-    match /user_permissions/{userId} {
-      // Users can read their own permissions
+    // NOTE: the app migrated this collection from `user_permissions` to `users`
+    // (see PermissionService.usersCollection). The rule and the hasPermission()
+    // helper below must reference `users` to match the live data.
+    match /users/{userId} {
+      // Users can read their own user/permission document
       allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Only admins can modify permissions (via cloud functions)
+
+      // Only admins can modify permissions (via Admin SDK / server)
       allow write: if false;
     }
 
@@ -98,7 +101,7 @@ service cloud.firestore {
 
 // Helper function to check user permissions
 function hasPermission(userId, permission) {
-  return exists(/databases/$(database)/documents/user_permissions/$(userId)) &&
-         get(/databases/$(database)/documents/user_permissions/$(userId)).data.currentRole.isActive &&
-         permission in get(/databases/$(database)/documents/user_permissions/$(userId)).data.currentRole.permissions;
+  return exists(/databases/$(database)/documents/users/$(userId)) &&
+         get(/databases/$(database)/documents/users/$(userId)).data.currentRole.isActive &&
+         permission in get(/databases/$(database)/documents/users/$(userId)).data.currentRole.permissions;
 }
