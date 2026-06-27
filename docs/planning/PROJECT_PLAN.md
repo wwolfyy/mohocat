@@ -31,10 +31,10 @@
 | App redesign — A (Modals)             | `[x]` done        | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | App redesign — B (Album pages)        | `[x]` done        | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | App redesign — D (Localization)       | `[x]` done        | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| App redesign — C (other pages)        | `[ ]` not started | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴. **Blocked on prereqs:** create 입양홍보 page + activate 동참 (see redesign tasks **C0**).                                                                                                                                                                                                                                                                                                                                                         |
+| App redesign — C (other pages)        | `[ ]` not started | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴. **Prereqs now met** (입양홍보 built + 동참 activated) — unblocked, ready to pick up (see redesign tasks **C0**).                                                                                                                                                                                                                                                                                                                                  |
 | Redesign A4 (live-verification)       | `[~]` blocked     | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | **Functional: 입양홍보 page missing** | `[x]` done        | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle).                                                                                                                                                                                                                                                                                        |
-| **Functional: 동참 form end-to-end**  | `[~]` next up     | **§11** — admin read path + `contacts` rule built (handoff-5); notification pivoted to a Next.js API route (Variant A). **Unblocked** — the deployment cleanup it was parked behind is done; this is the next workstream to resume.                                                                                                                                                                                                                                                                     |
+| **Functional: 동참 form end-to-end**  | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                             |
 | **Deployment-target cleanup**         | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md)) |
 | **Perf: bake the data layer**         | `[ ]` todo 🔴     | **§7a** — client-side Firestore reads add perceived latency (landing map avatars, galleries) + ship the Firebase SDK to the client. Deferred but prominent.                                                                                                                                                                                                                                                                                                                                             |
 | **Mobile UX optimization**            | 🚧 placeholder    | §4 — public-facing mobile pass.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -365,25 +365,32 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       `CatCircleGrid` (extracted from `CatGallery`) → `CatInfo` on tap, with a friendly
       해요체 empty state + 동참 CTA. All three 404 entry points now resolve (route 200,
       `tsc` clean). _Remaining: browser/admin-session visual verification._
-- [~] **동참 (`/pages/contact`) — make the form work end-to-end. NEXT UP** — the
-  deployment cleanup (§7) it was parked behind is now done, so this is unblocked.
-  Progress + decisions in
-  [`handoff-5`](../handoff/2026-06-27-handoff-5.md):
-  - **Diagnosed:** read path was dead (no `getAllContacts`, dashboard count
+- [x] **동참 (`/pages/contact`) — end-to-end, DONE 2026-06-28** (Variant A). A
+      submission now records in Firestore **and** emails the admin, all on Vercel (no
+      Firebase compute). Decisions/history in
+      [`handoff-5`](../handoff/2026-06-27-handoff-5.md) +
+      [`handoff-7`](../handoff/2026-06-27-handoff-7.md):
+  - **Diagnosed (earlier):** read path was dead (no `getAllContacts`, dashboard count
     hard-coded `0`, admin "Contact Management" tab disabled) and `contacts` had no
-    Firestore rule (default-deny; the rules file wasn't even referenced by
-    `firebase.json`). So submissions were invisible — the real gap.
-  - **Built (keepers):** `getAllContacts()` + `Contact` type + dashboard count + a
-    working admin **Contact Management** tab (`src/components/admin/ContactManagement.tsx`);
-    a `contacts` Firestore rule + wired the rules path into `firebase.json`.
-  - **Decided:** the email notification moves to a **Next.js API route (Variant A,
-    Admin SDK)** — _not_ a Firebase Cloud Function (a Firestore trigger can't run on
-    Vercel). The Cloud Function scaffolded this session (`functions/`) is **to be
-    reverted** in the cleanup. The route verifies the ID token + writes via Admin
-    SDK + emails `adminEmail` (`config/mountains/mountains.json`) over SMTP; the
-    `contacts` rule then becomes **server-only writes (deny client writes)**.
-  - **Left:** build the API route, finalize the rule, point the form at it, verify
-    (admin sees it + email arrives), deploy rules to Firebase.
+    Firestore rule. Submissions were invisible — the real gap.
+  - **Built (keepers):** `getAllContacts()` + `Contact` type + dashboard count + the
+    admin **Contact Management** tab (`src/components/admin/ContactManagement.tsx`).
+  - **Variant A route (this session):** `POST /api/contact`
+    (`src/app/api/contact/route.ts`) — verifies the Firebase **ID token**, writes the
+    contact via the **Admin SDK** (bypasses client rules), then emails `adminEmail`
+    (`config/mountains/mountains.json`) over **SMTP/nodemailer**. Body validated +
+    length-capped; email failure logs + returns `{ success, emailDelivered:false }`
+    so a notification miss never loses the recorded submission.
+  - **Form repointed:** `pages/contact/page.tsx` `handleSubmit` now `fetch`es the
+    route with `Authorization: Bearer <idToken>` (was a direct client write).
+  - **Rule tightened:** `contacts` `create → if false` (Admin SDK is the only writer);
+    deployed via `firebase deploy --only firestore:rules`.
+  - **SMTP:** Gmail SMTP (`SMTP_HOST/PORT/USER/PASSWORD/FROM`), set in local `.env`
+    **and** the Vercel dashboard (Production + Preview). Terraform plumbing for these
+    exists but is parked (`_infra/_terraform/`) — env vars are dashboard-managed; see
+    [`../deployment/README.md`](../deployment/README.md).
+  - **Verified:** local end-to-end — submission writes Firestore, admin sees it in
+    Contact Management, and the notification email arrives (`emailDelivered: true`).
 
 ---
 
@@ -405,9 +412,11 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 ## 13. How to resume
 
 1. Read the latest hand-off
-   [`docs/handoff/2026-06-27-handoff-5.md`](../handoff/2026-06-27-handoff-5.md)
-   (then `kickoff-3` for the broader debt map). **Next up: the deployment-target
-   cleanup (§7), then finish 동참 (§11).**
+   [`docs/handoff/2026-06-27-handoff-7.md`](../handoff/2026-06-27-handoff-7.md)
+   (then `kickoff-3` for the broader debt map). **Both functional gaps in §11
+   (입양홍보, 동참) and the deployment-target cleanup (§7) are now done.** Next
+   workstream is undecided — strongest candidates: §7a "bake the data layer" (perf 🔴)
+   or redesign Phase C (now unblocked by 입양홍보 + 동참).
 2. With the user, pick the next workstream from §1 and fill in its section's
    concrete specs.
 3. Spin a companion `docs/planning/<workstream>-tasks.md` (mirror the redesign
