@@ -1,4 +1,8 @@
-# Mountain Cat Tracking Platform - AI Agent Guide
+# 산냥이집냥이 (mohocat) — Agent Guide
+
+> Context for AI coding agents working in this repo. (Consolidated from the former
+> `.github/copilot-instructions.md` + `.github/instructions/.instructions.md`.)
+> `CLAUDE.md` is a symlink to this file.
 
 ## Project Overview
 
@@ -7,29 +11,56 @@ mountain cats with a Korean UI ("계양산 고양이들"). Data, auth, and image
 **Firebase**; the app is deployed to **Vercel**. The codebase is **multi-tenant ready** —
 a `MOUNTAIN_ID` drives per-mountain config, theme, and feature flags.
 
+## Where the docs live (orient here first)
+
+Before re-deriving context from scratch, check these — they hold the current state and the
+deep detail this file deliberately keeps out:
+
+- **`docs/handoff/`** — chronological engineering hand-offs. **Read the latest first** for
+  current state and what's next (e.g. what feature is mid-flight).
+- **`docs/planning/PROJECT_PLAN.md`** — the cross-workstream status tracker (what's done,
+  in progress, deferred). Companion plans sit alongside it in `docs/planning/`.
+- **`docs/codebase/`** — per-domain deep dives (auth, permissions, services, API routes,
+  admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
+  `CODEBASE_OVERVIEW.md`. _(Snapshot docs — verify against code before trusting specifics.)_
+- **`docs/design/`** — design source-of-truth + redesign plan/tasks.
+
+## Working Agreements
+
+- **Don't make code changes unless explicitly requested.** A question is not a request to
+  change code — answer it first.
+- **Reuse before writing.** Prefer existing modules, components, classes, and functions
+  over new code blocks for the same need.
+- **Separation of concerns.** Each module/component should hold a single responsibility (or
+  one group of closely related ones).
+- **Ask before committing.** Make the edits, run the gates (`npx tsc --noEmit` +
+  `npm run test:smoke`), summarize what's staged — then wait for a go-ahead before
+  `git commit` (and before pushing).
+- **Error handling (per the repo owner's global conventions):** `try/catch` that **logs and
+  re-raises** — never silently swallow errors or add fallbacks unless asked. Don't log
+  secrets or PII.
+
 ## Core Architecture Patterns
 
 ### 1. Data Flow — live Firestore via the service layer
 
 - **The app reads Firestore live**, through the service layer — there is **no** static-data
-  read path and **no** Cloud Storage data serving. (Historical docs that mention a
-  `src/lib/static-data.ts` or "static-first" Cloud Storage flow are obsolete.)
+  read path and **no** Cloud Storage data serving.
 - **Home page is a Server Component** (`src/app/page.tsx`): it `await`s
   `getPointService().getAllPoints()` with no `dynamic`/`revalidate`, so Next statically
   renders it and **point/marker positions are baked at build**.
-- **Cat data is fetched client-side, live** (e.g. `MountainViewer` /
-  `thumbnailPreloader` call `getCatsByPointId` after hydration). Reducing this
-  client-side Firestore waterfall is tracked tech-debt (PROJECT_PLAN §7a — "bake the
-  data layer"); it is not yet implemented.
-- **Build assets**: `scripts/maintenance/fetch-static-assets.js` downloads cat
-  thumbnails / about-photos from Firebase Storage into `public/` at build time.
+- **Cat data is fetched client-side, live** (e.g. `MountainViewer` / `thumbnailPreloader`
+  call `getCatsByPointId` after hydration). Reducing this client-side Firestore waterfall is
+  tracked tech-debt (PROJECT_PLAN §7a — "bake the data layer"); not yet implemented.
+- **Build assets**: `scripts/maintenance/fetch-static-assets.js` downloads cat thumbnails /
+  about-photos from Firebase Storage into `public/` at build time.
 
 ### 2. Multi-Tenant Configuration System
 
 - **Mountain configs**: `config/mountains/mountains.json` defines per-mountain settings
   (public branding/theme/features/social); secrets come from env and are merged in.
-- **Environment switching**: `MOUNTAIN_ID` (or `NEXT_PUBLIC_MOUNTAIN_ID`) selects the
-  active mountain.
+- **Environment switching**: `MOUNTAIN_ID` (or `NEXT_PUBLIC_MOUNTAIN_ID`) selects the active
+  mountain.
 - **Config utils**: `src/utils/config.ts` provides `getMountainConfig()`,
   `getCurrentMountainId()`, `isFeatureEnabled()`, etc. Import mountain context from here —
   never read `process.env.MOUNTAIN_ID` directly.
@@ -67,38 +98,19 @@ npm run test:smoke         # Fast structural smoke suite (gate for refactors/cle
 ### Admin CMS Access
 
 - Navigate to `/admin` for the Cat Management System (gated by `AdminAuth`).
-- Direct Firestore-backed editing of cats, media, posts, announcements, members/roles,
-  and the about-page content — no Google Sheets dependency.
+- Direct Firestore-backed editing of cats, media, posts, announcements, members/roles, and
+  the about-page content — no Google Sheets dependency.
 
 ## Critical Component Patterns
 
-### Data Flow Architecture
-
-```tsx
-// Home page — Server Component (SSG): points baked at build
-import MountainViewer from '@/components/MountainViewer';
-import { getPointService } from '@/services';
-
-export default async function Home() {
-  const points = await getPointService().getAllPoints();
-  return <MountainViewer points={points} />;
-}
-
-// MountainViewer — Client Component: cats fetched live via the service layer
-useEffect(() => {
-  getCatService().getCatsByPointId(pointId).then(/* … */);
-}, [pointId]);
-```
-
-### Service Usage Pattern
-
-```tsx
-import { getCatService, getImageService } from '@/services';
-
-// Always use factory functions, never direct firebase/* imports in components
-const catService = getCatService();
-const imageService = getImageService();
-```
+- **Server-render the slow-changing reads, client-fetch the rest.** The home page
+  (`src/app/page.tsx`) is an `async` Server Component that `await`s
+  `getPointService().getAllPoints()` (no `dynamic`/`revalidate` → baked at build). Cat data
+  is fetched client-side, live, via the service layer (`getCatsByPointId` in a
+  post-hydration effect).
+- **Always go through the service factory.** Components call `getCatService()`,
+  `getImageService()`, etc. from `@/services` — never `import` from `firebase/*` directly.
+  (See `docs/codebase/services-layer.md` for the full pattern.)
 
 ## Project-Specific Conventions
 
@@ -116,10 +128,9 @@ const imageService = getImageService();
 
 ### Styling Conventions
 
-- **TailwindCSS**: utility-first with custom gradients.
-- **Responsive grids**: center items including incomplete rows.
-- **Modal z-indexing**: CatGallery (z-50), CatInfo (z-60).
-- **Korean-first UI**: user-facing text should be in Korean.
+- **TailwindCSS**, utility-first (tokens in `tailwind.config.js`).
+- **Korean-first UI**: user-facing text should be in Korean (해요체 for friendly copy).
+- User-facing modals use the shared `ui/Modal` system — don't hand-roll new modal shells.
 
 ## Deployment Architecture
 
@@ -127,8 +138,8 @@ const imageService = getImageService();
 
 - Next.js-optimized hosting with full SSR/SSG + image optimization.
 - Git-integration driven: Production = `main`, Preview ("staging") = `dev`.
-- Provisioned via Terraform under `infra/terraform/` (env vars incl.
-  `SERVICE_ACCOUNT_KEY` set there for production + preview).
+- Provisioned via Terraform under `infra/terraform/` (env vars incl. `SERVICE_ACCOUNT_KEY`
+  set there for production + preview).
 - _Cloud Run, the home-server Docker path, and Firebase Hosting were removed in the
   deployment cleanup — do not reintroduce them._
 
@@ -138,8 +149,8 @@ const imageService = getImageService();
 - **Firebase Auth**: email/password, phone (SMS), Kakao OIDC.
 - **Firebase Storage**: image hosting with CDN; CORS configured.
 - **Firestore rules** still deploy to Firebase via the CLI
-  (`firebase deploy --only firestore:rules`); `firebase.json` is trimmed to the
-  `firestore` block.
+  (`firebase deploy --only firestore:rules`); `firebase.json` is trimmed to the `firestore`
+  block.
 
 ## Environment Variables Required
 
@@ -156,8 +167,8 @@ MOUNTAIN_ID=geyang                   # Optional, defaults to 'geyang'
 
 ## Testing & Debugging
 
-- **Smoke suite**: `npm run test:smoke` (`tests/smoke/`) — structural regression net;
-  keep it green when refactoring.
+- **Smoke suite**: `npm run test:smoke` (`tests/smoke/`) — structural regression net; keep
+  it green when refactoring.
 - **Migration scripts**: `scripts/migration/` for one-shot data updates.
 - **Permission inspection**: `PermissionDebug.tsx` (dev-only) resolves a user's effective
   permissions.
@@ -169,4 +180,3 @@ MOUNTAIN_ID=geyang                   # Optional, defaults to 'geyang'
 - ❌ Hard-coded mountain configs (use the config system)
 - ❌ Reintroducing Cloud Run / Docker / Firebase Hosting / a Cloud Storage data path
 - ❌ English text in user-facing UI (Korean-first platform)
-  </content>
