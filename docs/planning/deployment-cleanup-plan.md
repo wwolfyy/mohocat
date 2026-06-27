@@ -147,6 +147,12 @@ Found while surveying; already noted in PROJECT_PLAN §7. List here so they're n
 
 ## Verification (after Phase 1 + 2)
 
+0. `npm run test:smoke` — the structural smoke suite (`tests/smoke/smoke.test.ts`,
+   added 2026-06-27) must stay **green**. It's the regression net for this cleanup:
+   referenced `/api/*` routes still resolve to handler files (the dead-route guard),
+   the `firebase.json`→Firestore-rules wiring + `contacts` rule + `adminEmail`
+   survive, and the critical public pages exist. Runs in <1s, no server/env. Run it
+   **before** (baseline: 24 passing) and **after** each phase.
 1. `npx tsc --noEmit` — clean (the `functions` exclude removal must not reintroduce
    errors; it won't, since `functions/` is gone).
 2. `next lint` — no new warnings.

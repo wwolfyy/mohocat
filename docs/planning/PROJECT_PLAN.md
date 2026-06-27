@@ -298,13 +298,24 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 ## 10. 🚧 Testing & quality gates
 
-> **Goal (placeholder):** there is **no automated test coverage** today; the
-> service interfaces have no mocks. Establish a baseline.
+> **Goal (placeholder):** coverage was **zero**; a first structural baseline now
+> exists. Build it out from there.
+
+**Done:**
+
+- [x] **Test stack bootstrapped (Vitest)** — `npm test` / `npm run test:smoke`;
+      first suite `tests/smoke/smoke.test.ts` (2026-06-27, 24 tests, <1s, no
+      server/env). Structural smoke: referenced `/api/*` routes resolve to handlers,
+      deploy-config keepers survive, critical public pages exist. Added as the
+      regression net for the deployment cleanup
+      ([`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md)).
 
 **Candidate scope — _confirm with user_:**
 
-- [ ] Decide the test stack (unit / integration / UI) and what to cover first
+- [ ] Decide the broader test stack (unit / integration / UI) and what to cover first
       (permissions resolution, service layer, auth flows are high-value).
+- [ ] Runtime HTTP smoke (boot the app, key routes return 200) — deferred; needs
+      Firebase env, slower/non-deterministic. Today's structural smoke + `vercel-build` + a Vercel preview deploy cover this for now.
 - [ ] Add mock service implementations behind the existing interfaces to unblock
       component/unit tests.
 - [ ] Smoke/UI tests for the critical public paths (map loads, gallery opens,
