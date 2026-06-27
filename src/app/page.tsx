@@ -1,9 +1,19 @@
 import MountainViewer from '@/components/MountainViewer';
 import { getPointService } from '@/services';
+import { getAllCatsServer, groupCatsByPoint } from '@/lib/server/cat-reads';
+import { REVALIDATE_SECONDS } from '@/lib/cache-config';
+
+// §7a: bake cats at build/server time (Admin SDK) so the landing map needs zero
+// client Firestore queries for avatars. ISR fallback backstop — see
+// `src/lib/cache-config.ts` and docs/deployment/README.md → "ISR revalidation".
+export const revalidate = REVALIDATE_SECONDS;
 
 export default async function Home() {
   const pointService = getPointService();
-  const points = await pointService.getAllPoints();
+  // Points (positions) and cats (avatars) are both read server-side and baked
+  // into the render — the client map receives them as props.
+  const [points, cats] = await Promise.all([pointService.getAllPoints(), getAllCatsServer()]);
+  const catsByPoint = groupCatsByPoint(cats);
 
   return (
     <main data-oid="j:1oinn">
@@ -12,7 +22,7 @@ export default async function Home() {
           flush. (Previously had min-h-screen + pt/pb that created gaps around
           the map and pushed the footer away.) */}
       <div data-oid="f4ymkec">
-        <MountainViewer points={points} data-oid="gs09x5x" />
+        <MountainViewer points={points} catsByPoint={catsByPoint} data-oid="gs09x5x" />
       </div>
     </main>
   );

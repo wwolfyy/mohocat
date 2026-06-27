@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Point } from '@/types';
+import type { CatsByPoint } from '@/lib/server/cat-reads';
 import IntroCard from './IntroCard';
 import Compass from './Compass';
 import CatGallery from './CatGallery';
@@ -20,6 +21,9 @@ const LeafletMountainMap = dynamic(() => import('./LeafletMountainMap'), {
 
 interface MountainViewerProps {
   points: Point[];
+  // §7a: cats are baked server-side and threaded in as props — no client
+  // Firestore reads for the map avatars or the per-point gallery.
+  catsByPoint: CatsByPoint;
 }
 
 /**
@@ -28,28 +32,32 @@ interface MountainViewerProps {
  * client-only map full-height below the sticky header. Feeding-point markers,
  * clustering and the cat-gallery modal are layered on in later Phase 2 tasks.
  */
-export default function MountainViewer({ points }: MountainViewerProps) {
+export default function MountainViewer({ points, catsByPoint }: MountainViewerProps) {
   // Which feeding point's cat gallery is open (clicked marker → modal).
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
   // Mobile uses the 90°-CW-rotated portrait map (image + coords + compass), so
   // the container flips to a portrait aspect ratio to match.
   const isMobile = useIsMobile();
 
-  // Preload all thumbnails for current cats so map markers render instantly.
+  // Warm the marker avatars into the browser cache. The cat data is already
+  // baked (props) — this only preloads the image *files*, with no Firestore
+  // queries (§7a: the old `preloadThumbnailsForPoints` per-point waterfall is
+  // gone). URLs come straight from the baked map.
   useEffect(() => {
-    const preloadThumbnails = async () => {
-      try {
-        const pointIds = points.map((point) => point.id);
-        await thumbnailPreloader.preloadThumbnailsForPoints(pointIds);
-      } catch (error) {
+    const urls = Array.from(
+      new Set(
+        Object.values(catsByPoint)
+          .flatMap((group) => group.current)
+          .map((cat) => cat.thumbnailUrl)
+          .filter((url) => url && url.trim() !== '')
+      )
+    );
+    if (urls.length > 0) {
+      thumbnailPreloader.preloadThumbnails(urls).catch((error) => {
         console.error('Error preloading thumbnails:', error);
-      }
-    };
-
-    if (points.length > 0) {
-      preloadThumbnails();
+      });
     }
-  }, [points]);
+  }, [catsByPoint]);
 
   return (
     // Always fill the viewport width; height follows the image's aspect ratio so
@@ -65,7 +73,12 @@ export default function MountainViewer({ points }: MountainViewerProps) {
           aspectRatio: isMobile ? '808 / 1616' : '1616 / 808',
         }}
       >
-        <LeafletMountainMap points={points} onPointClick={setSelectedPointId} isMobile={isMobile} />
+        <LeafletMountainMap
+          points={points}
+          catsByPoint={catsByPoint}
+          onPointClick={setSelectedPointId}
+          isMobile={isMobile}
+        />
 
         {/* North indicator pinned top-right of the map (redesign §Engine). */}
         <Compass isMobile={isMobile} />
@@ -78,7 +91,11 @@ export default function MountainViewer({ points }: MountainViewerProps) {
           `position: fixed`, and a transformed ancestor would otherwise become
           its containing block and mis-position the modal. */}
       {selectedPointId && (
-        <CatGallery pointId={selectedPointId} onClose={() => setSelectedPointId(null)} />
+        <CatGallery
+          key={selectedPointId}
+          cats={catsByPoint[selectedPointId] ?? { current: [], former: [] }}
+          onClose={() => setSelectedPointId(null)}
+        />
       )}
     </>
   );

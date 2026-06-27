@@ -56,6 +56,25 @@ SMTP_FROM=<same gmail address>
 `SERVICE_ACCOUNT_KEY`, the recipient `adminEmail` (from `config/mountains/mountains.json`) —
 is already in place.
 
+## ISR revalidation — the `revalidate` (N) value is hardcoded in the codebase
+
+The landing + 입양홍보 pages are baked (SSG) and refreshed with **ISR**. Freshness is **hybrid**:
+admin cat-edits trigger **on-demand revalidation** (instant), backed by a **time-based fallback
+`revalidate = N`** (currently **3600s / 1h**) that bounds staleness for out-of-band changes
+(Firebase-console edits, `update:*`/migration scripts, a dropped revalidate call).
+
+**N is hardcoded in the source — not an env var, not a config file, not a Vercel dashboard
+setting.** Next.js requires the route-segment `revalidate` to be statically analyzable, and an
+env var would still need a redeploy to take effect while hiding the value from the repo. It
+lives as `export const revalidate` in **two route segments** (kept in sync; the value is
+single-sourced in `src/lib/cache-config.ts` → `REVALIDATE_SECONDS`):
+
+1. `src/app/page.tsx` — landing
+2. `src/app/pages/adoption/page.tsx` — 입양홍보
+
+**To change N:** edit the value (one literal) and `git push` → Vercel rebuilds. There is no
+runtime dial; a rebuild/redeploy is required either way.
+
 ## Things that deploy _outside_ Vercel
 
 - **Firestore security rules** — deployed via the Firebase CLI, not Vercel:

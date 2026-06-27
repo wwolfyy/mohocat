@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MapContainer, ImageOverlay, useMap } from 'react-leaflet';
 import L, { CRS, type LatLngBoundsExpression } from 'leaflet';
 import 'leaflet.markercluster'; // side-effect: augments L with markerClusterGroup
-import { getCatService } from '@/services';
 import type { Point } from '@/types';
+import type { CatsByPoint } from '@/lib/server/cat-reads';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
@@ -55,48 +55,28 @@ interface ResolvedMarker {
 }
 
 /**
- * Resolves each point's marker data once at map level: fetches the point's cats
- * and picks a random one that has a thumbnail. A per-point fetch failure logs
- * and degrades to no avatar (matching the prior RandomCatThumbnail behaviour)
- * rather than blanking the whole map.
+ * Resolves each point's marker data from the baked `catsByPoint` map (§7a — no
+ * client Firestore queries): picks a random current cat that has a thumbnail.
+ * A point with no current cat / no thumbnail degrades to no avatar (matching the
+ * prior behaviour) rather than blanking the whole map. Recomputed only when the
+ * points or baked cats change — the random pick is stable for the mount.
  */
-function usePointMarkers(points: Point[]): ResolvedMarker[] {
-  const [markers, setMarkers] = useState<ResolvedMarker[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const catService = getCatService();
-
-    const resolve = async () => {
-      const resolved = await Promise.all(
-        points.map(async (point): Promise<ResolvedMarker> => {
-          let thumbnailUrl: string | null = null;
-          try {
-            const { current } = await catService.getCatsByPointId(point.id);
-            const withThumb = current.filter(
-              (cat) => cat.thumbnailUrl && cat.thumbnailUrl.trim() !== ''
-            );
-            if (withThumb.length > 0) {
-              thumbnailUrl = withThumb[Math.floor(Math.random() * withThumb.length)].thumbnailUrl;
-            }
-          } catch (error) {
-            console.error(`Error resolving thumbnail for point ${point.id}:`, error);
-          }
-          return { id: point.id, title: point.title, x: point.x, y: point.y, thumbnailUrl };
-        })
-      );
-      if (!cancelled) setMarkers(resolved);
-    };
-
-    if (points.length > 0) resolve();
-    else setMarkers([]);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [points]);
-
-  return markers;
+function usePointMarkers(points: Point[], catsByPoint: CatsByPoint): ResolvedMarker[] {
+  return useMemo(
+    () =>
+      points.map((point): ResolvedMarker => {
+        const current = catsByPoint[point.id]?.current ?? [];
+        const withThumb = current.filter(
+          (cat) => cat.thumbnailUrl && cat.thumbnailUrl.trim() !== ''
+        );
+        const thumbnailUrl =
+          withThumb.length > 0
+            ? withThumb[Math.floor(Math.random() * withThumb.length)].thumbnailUrl
+            : null;
+        return { id: point.id, title: point.title, x: point.x, y: point.y, thumbnailUrl };
+      }),
+    [points, catsByPoint]
+  );
 }
 
 function escapeHtml(value: string): string {
@@ -318,16 +298,18 @@ function MapViewController({ bounds }: { bounds: LatLngBoundsExpression }) {
  */
 interface LeafletMountainMapProps {
   points: Point[];
+  catsByPoint: CatsByPoint;
   onPointClick: (pointId: string) => void;
   isMobile: boolean;
 }
 
 export default function LeafletMountainMap({
   points,
+  catsByPoint,
   onPointClick,
   isMobile,
 }: LeafletMountainMapProps) {
-  const markers = usePointMarkers(points);
+  const markers = usePointMarkers(points, catsByPoint);
   const { url, bounds } = getLayout(isMobile);
 
   return (

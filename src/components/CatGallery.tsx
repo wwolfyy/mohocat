@@ -5,11 +5,12 @@ import type { Cat } from '@/types';
 import CatInfo from './CatInfo';
 import CatCircleGrid from './CatCircleGrid';
 import Modal from './ui/Modal';
-import { getCatService } from '@/services';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
 
 interface CatGalleryProps {
-  pointId: string;
+  // §7a: the point's cats are baked upstream (server-read) and passed in — the
+  // gallery no longer fetches on open, so there's no spinner on marker click.
+  cats: { current: Cat[]; former: Cat[] };
   onClose: () => void;
 }
 
@@ -43,57 +44,22 @@ function CatGridSection({ title, cats, emptyLabel, priorityCount, onSelect }: Ca
   );
 }
 
-export default function CatGallery({ pointId, onClose }: CatGalleryProps) {
-  const [currentResidents, setCurrentResidents] = useState<Cat[]>([]);
-  const [formerResidents, setFormerResidents] = useState<Cat[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function CatGallery({ cats, onClose }: CatGalleryProps) {
+  const { current: currentResidents, former: formerResidents } = cats;
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
-  const [, setThumbnailsPreloaded] = useState(false);
+
+  // Warm the thumbnail image files into cache (no Firestore — data is baked).
   useEffect(() => {
-    const loadCats = async () => {
-      try {
-        const catService = getCatService();
-        const { current, former } = await catService.getCatsByPointId(pointId);
-        setCurrentResidents(current);
-        setFormerResidents(former);
+    const thumbnailUrls = [...currentResidents, ...formerResidents]
+      .map((cat) => cat.thumbnailUrl)
+      .filter((url) => url && url.trim() !== '');
 
-        // Preload all thumbnails for faster display
-        const allCats = [...current, ...former];
-        const thumbnailUrls = allCats
-          .map((cat) => cat.thumbnailUrl)
-          .filter((url) => url && url.trim() !== '');
-
-        if (thumbnailUrls.length > 0) {
-          // Start preloading thumbnails in the background
-          thumbnailPreloader
-            .preloadThumbnails(thumbnailUrls)
-            .then(() => {
-              setThumbnailsPreloaded(true);
-            })
-            .catch((error) => {
-              console.warn('Error preloading gallery thumbnails:', error);
-              setThumbnailsPreloaded(true); // Still allow display even if preloading fails
-            });
-        } else {
-          setThumbnailsPreloaded(true);
-        }
-      } catch (error) {
-        console.error('Error loading cats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCats();
-  }, [pointId]);
-
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-brand-400" />
-      </div>
-    );
-  }
+    if (thumbnailUrls.length > 0) {
+      thumbnailPreloader.preloadThumbnails(thumbnailUrls).catch((error) => {
+        console.warn('Error preloading gallery thumbnails:', error);
+      });
+    }
+  }, [currentResidents, formerResidents]);
 
   return (
     <Modal onClose={onClose} size="xl">
