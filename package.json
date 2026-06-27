@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/migration/export_all_to_cloud_storage.js && node scripts/maintenance/fetch-static-assets.js && next build",
+    "build": "node scripts/maintenance/fetch-static-assets.js && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",

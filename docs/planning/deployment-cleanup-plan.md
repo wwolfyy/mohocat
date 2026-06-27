@@ -93,49 +93,57 @@ Grouped by the dead target. Verify each before deleting.
 
 ---
 
-## Phase 2 — Deployment-adjacent cleanup encountered
+## Phase 2 — Deployment-adjacent cleanup — ✅ DONE (2026-06-27)
 
-### 2a. The `build` script runs a GCS export on every build 🔴
+> **Infra note (discovered this phase):** Vercel is wired via **Terraform**
+> (`infra/terraform/`), not just the dashboard. Production = `main`, **Vercel Preview
+> "staging" = `dev` branch** (distinct from the Firebase staging project). All env
+> vars — incl. `SERVICE_ACCOUNT_KEY` (Admin SDK creds) — are set there for both
+> `production` + `preview`. No Build Command is set, so Vercel uses **`vercel-build`**
+> by default (confirms the GCS export never ran on Vercel).
 
-`package.json`:
+### 2a. `build` ran a GCS export on every run — ✅ aligned
 
-- `build` = `export_all_to_cloud_storage.js && fetch-static-assets.js && next build`
-- `vercel-build` = `fetch-static-assets.js && next build`
+Dropped `export_all_to_cloud_storage.js` from `build`; it's now
+`fetch-static-assets.js && next build` (identical to `vercel-build`). The export was
+never part of the Vercel deploy and writes Cloud Storage JSON **nothing in the app
+reads**. _The script file stays_ (the admin route imports it — see Phase 3 flag).
 
-Vercel runs **`vercel-build`** (it takes precedence), so the GCS export only ever ran
-inside the now-deleted Docker build. This is the §7 "build re-exports to GCS every
-run" debt. **Action:** align `build` with `vercel-build` (drop the
-`export_all_to_cloud_storage.js` step from `build`), and keep that export available as
-an explicit manual script if it's still useful (e.g. `update:static-data` already
-exists for data exports). **Confirm in the Vercel dashboard** that the Build Command
-is `vercel-build` (or `build` after we align them) and the Install Command is right.
+### 2b. Orphaned health endpoint — ✅ deleted
 
-### 2b. Orphaned health endpoint
+Deleted `src/app/api/health/route.ts`. It existed only for the Cloud Run / home-server
+load-balancer probes (both gone). Confirmed: **not needed for Vercel to operate**, and
+the app's monitoring is **Firebase Analytics** (`AnalyticsTracker.tsx` /
+`services/firebase.ts` `getAnalytics`) — client-side, doesn't use the endpoint. Trivial
+to re-add if an external uptime monitor is introduced later.
 
-`src/app/api/health/route.ts` — header says "Health check endpoint for Cloud Run";
-it was hit by the Cloud Run + home-server health checks (both deleted). Not referenced
-by app code. **Action:** delete unless you want a generic uptime probe (harmless to
-keep — decide).
+### 2c. Stray deployment comments — ⏳ deferred (low priority)
 
-### 2c. Stray deployment comments
+- `src/app/pages/butler_stream/new/page.tsx:11` — "avoids HTTP calls to self … fails
+  in Docker." Keep the code; just refresh the comment. Roll into Phase 3.
 
-- `src/app/pages/butler_stream/new/page.tsx:11` — comment "avoids HTTP calls to self
-  during build which fails in Docker." The _code_ may still be worth keeping (avoiding
-  self-fetch at build is good on Vercel too); just **refresh the comment** so it
-  doesn't cite Docker. Low priority.
+### 2d. `.firebaserc` Firebase staging alias — ✅ removed
 
-### 2d. `.firebaserc` staging alias
-
-`staging` → `mountaincats-staging`. Keep `default` (needed for rules deploy). **Decide**
-whether the `staging` alias is still real; drop if not.
+Removed `staging` → `mountaincats-staging` (user confirmed the Firebase staging
+project is retired; Vercel is the deploy path). Kept `default` (mountaincats-61543),
+needed for `firebase deploy --only firestore:rules`. **Not** the Terraform/Vercel
+`staging` (that's Preview on `dev` — kept).
 
 ---
 
 ## Phase 3 — Broader cleanup encountered (out of strict scope — confirm before doing)
 
-Found while surveying; already noted in PROJECT_PLAN §7. List here so they're not lost;
-**do these as a separate pass** unless you want to fold them in.
+Found while surveying; already noted in PROJECT_PLAN §7. List here so they're not lost.
+**Separate pass** — the user confirmed Phase 3 scope is broader than deployment.
 
+- **🚩 Cloud Storage static-data export subsystem (unconsumed)** — `build` no longer
+  runs `export_all_to_cloud_storage.js`, but the script is still imported by
+  `src/app/api/admin/update-static-data/route.ts` (the admin "static-data" tab calls
+  it). It exports Firestore → Cloud Storage `static-data/*.json` that **nothing in the
+  app reads**. Investigate why the admin page references it and whether the reference +
+  the script (+ the admin tab) can be removed. Note the sibling `export_*_to_static.js`
+  writes a _local_ `src/lib/cats-static-data.json` — check if _that_ is consumed before
+  touching the family. Overlaps §7a (bake-the-data-layer may want to revive baking).
 - **Duplicate admin API routes** — `src/app/api/admin/get-all-user-permissions-*`
   has ~8 variants (`-client`, `-working`, `-final`, `-real`, `-fixed`, `-simple`,
   `-live`, plus the base). `RoleManagement.tsx` uses **`-client`**. Verify usages,
