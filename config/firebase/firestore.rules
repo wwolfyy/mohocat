@@ -11,7 +11,12 @@ service cloud.firestore {
 
     match /cats/{x} {
       allow read: if true;
-      allow write: if false;
+      // The admin Cat CMS (src/app/admin/cats/page.tsx) writes via the client
+      // SDK, so gate writes on the cat-management permission — mirroring the
+      // posts_feeding / posts_butler rules. (Future consideration: move admin
+      // writes behind Admin SDK routes and restore `write: if false` — see
+      // docs/handoff/2026-06-28-handoff-10.md.)
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-cat');
     }
 
     match /about_content/{x} {
