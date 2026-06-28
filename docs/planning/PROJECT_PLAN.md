@@ -184,17 +184,20 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm & prioritize_:**
 
-- [ ] **🔴 SECURITY (tracked, not yet fixed): the permission-matrix API route is ungated.**
-      `POST /api/admin/role-permissions` rewrites `role_permissions/role-config` via the **Admin
-      SDK** (bypasses Firestore rules) with **no ID-token / permission check** — any HTTP caller
-      who reaches it can rewrite the matrix. This became **load-bearing** once `firestore.rules`
-      `hasPermission` started resolving against that doc (this session): an unauthenticated POST
-      could add `manage-*` to `viewer` and instantly grant every viewer write access across
-      `users` / `cats` / `posts_*`. Fix = verify the caller's Firebase ID token + require
-      `manage-users` on the route, and have `RolePermissionConfig.tsx` attach the token. Part of
-      the broader **no `/api/admin/* ` gating** gap (see `admin-platform.md` watch-outs) — the GET
-      / list permission routes share it. **Owner decided (2026-06-28): track now, fix later;** do
-      not rely on the config-resolved rule in a hostile-traffic context until this lands.
+- [x] **✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated.**
+      `GET`/`POST /api/admin/role-permissions` read/rewrite `role_permissions/role-config` via the
+      **Admin SDK** (bypasses Firestore rules). Once `firestore.rules` `hasPermission` started
+      resolving against that doc, the previously-ungated **POST** became a live escalation vector
+      — an unauthenticated caller could add `manage-*` to `viewer` and instantly grant every
+      viewer write access across `users` / `cats` / `posts_*`. **Fixed:** new server-side gate
+      `src/lib/auth/requireApiPermission.ts` (verify Firebase ID token → resolve role via
+      `users/{uid}` → require the permission in `role-config`, mirroring the rule but server-side);
+      both route methods now require `manage-users`, and `RolePermissionConfig.tsx` attaches the
+      caller's ID token. **Verified:** unauthenticated/invalid → 401; admin → matrix loads + saves.
+      The helper is **reusable** for the broader **no admin-API gating** gap
+      (see `admin-platform.md` watch-outs) — the other `/api/admin/*` routes (get-all-users, list
+      permissions, update-static-data, etc.) still need the same treatment; tracked next.
+- [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
 - [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
   The deployed `firestore.rules` lock `cats` — and also `points`, `about_content`,
   `cat_images`, `cat_videos`, `posts_announcements` — to `allow write: if false`, but the
