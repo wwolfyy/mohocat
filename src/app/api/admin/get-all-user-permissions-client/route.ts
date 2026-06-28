@@ -10,9 +10,9 @@ export async function GET(request: NextRequest) {
     // db is already initialized
     console.log('Firestore instance obtained');
 
-    // Query the user_permissions collection
-    console.log('Querying user_permissions collection...');
-    const snapshot = await db.collection('user_permissions').get();
+    // Query the users collection (migrated from 'user_permissions')
+    console.log('Querying users collection...');
+    const snapshot = await db.collection('users').get();
     console.log(`Found ${snapshot.size} user documents`);
 
     // Process each document
