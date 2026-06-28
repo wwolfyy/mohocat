@@ -184,6 +184,22 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm & prioritize_:**
 
+- [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
+  The deployed `firestore.rules` lock `cats` — and also `points`, `about_content`,
+  `cat_images`, `cat_videos`, `posts_announcements` — to `allow write: if false`, but the
+  admin CMS writes through the **client SDK** → permission-denied (UI: "Failed to update
+  cat with id: …"). The lock went **live** when the 동참 rules deploy (`f84f3c1`,
+  `firebase deploy --only firestore:rules`) shipped; **not** caused by §7a. **Fix staged for
+  `cats`** (permission-gated `manage-cat`, mirroring `posts_*`) — **not yet deployed**, and
+  the other five collections still need the same treatment + per-page verification. Resume
+  brief: [handoff-10](../handoff/2026-06-28-handoff-10.md). _Secondary, latent:_ `db` has no
+  `ignoreUndefinedProperties`, so writes with unset `isNeutered`/`date_of_birth` may still
+  throw on `undefined` even after the rule fix. - _**Future consideration (not a scheduled task):** migrate admin writes to **Admin SDK
+  API routes** (verify ID token + permission → server write), restoring
+  `write: if false` and **eliminating client-SDK write reliance** — the "Admin SDK is the
+  only writer" direction the 동참 work started. Effort/risk not yet assessed; truly
+  dropping the Firebase SDK from public bundles would \*also_ require `AuthProvider` to stop
+  eagerly importing `firebase/auth`. Decide later, not committed.\_
 - [x] **✅ Deployment-target cleanup (DONE)** — **Vercel is the deployment target.**
       **Phase 1+2** (`f62816b`…`2e6fd4d`) removed the dead Cloud Run / home-server /
       Firebase-Hosting / Docker / static-export / `functions/` paths, trimmed
