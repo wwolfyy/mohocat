@@ -6,7 +6,8 @@ import { authHeader } from '@/lib/auth/authHeader';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
-  token: string;
+  // The raw refresh token is deliberately NOT returned by /api/admin/youtube-auth/status
+  // (it's a secret); the client only needs source/validity/expiry.
   isValid: boolean;
   expiresAt: string | null;
   updatedAt?: string;

@@ -209,11 +209,10 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
     currently stubs, gated ahead of implementation). Their GETs return public/stub data — left open.
   - `youtube-auth/callback` — **not gated** (Google OAuth redirect; no Authorization header to
     verify). Acts only on a valid Google `code`.
-  - **Remaining hardening (follow-ups, not blockers):** (1) `youtube-auth/status` still returns the
-    raw refresh token in its body to the authenticated admin — should be redacted to a
-    boolean/expiry. (2) `youtube-auth/callback` has no OAuth `state`/PKCE CSRF protection.
-- [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
-- [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
+  - **Token-leak follow-up DONE (2026-06-28):** `youtube-auth/status` no longer returns the raw
+    refresh token in its response body — redacted server-side to source/validity/expiry; verified
+    the authenticated response omits it. **Remaining (not a blocker):** `youtube-auth/callback`
+    has no OAuth `state`/PKCE CSRF protection.
 - [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
   The deployed `firestore.rules` lock `cats` — and also `points`, `about_content`,
   `cat_images`, `cat_videos`, `posts_announcements` — to `allow write: if false`, but the
