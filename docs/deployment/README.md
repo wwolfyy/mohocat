@@ -83,6 +83,64 @@ runtime dial; a rebuild/redeploy is required either way.
   ```
   (e.g. the `contacts` `create: if false` rule for 동참.)
 
+## Whitelisting a new domain with the auth / identity providers
+
+When you add or change a domain (see the deploy checklist below), several **external consoles**
+must learn about it — these are separate from Vercel + DNS, and missing one breaks the matching
+sign-in / share flow silently. Add the new domain in **every** place below for each domain that
+should work (production apex, `staging.` subdomain, etc.).
+
+> Quick reference for which paths actually matter: only **`/api/admin/youtube-auth/callback`**
+> is a live Google OAuth redirect (the YouTube admin flow). Kakao login redirects to the
+> **Firebase** auth handler (`…firebaseapp.com/__/auth/handler`), not the app domain — which is
+> why Kakao only needs the two domain-list places below, not a per-domain redirect URI.
+
+### Kakao (developers.kakao.com → app **산냥이집냥이**, ID 1338934)
+
+**How login works here:** the app signs in via **Firebase OIDC**
+(`OAuthProvider('oidc.kakao')` + `signInWithPopup`, in `src/services/auth-service.ts`) using the
+Kakao **REST API key** as the client ID (`NEXT_PUBLIC_KAKAO_CLIENT_ID`). It does **not** load the
+Kakao **JavaScript SDK**. The only login-load-bearing Kakao setting is the **로그인 리다이렉트
+URI**, and it points at the **Firebase** handler
+(`https://mountaincats-61543.firebaseapp.com/__/auth/handler`), **not** the app domain — so a new
+app domain does **not** require a redirect-URI change.
+
+Domain-list places (both under **앱 설정 → 앱**) — the new domain is currently added in both:
+
+1. **제품 링크 관리 → 웹 도메인** — click **웹 도메인 수정** and add `https://<domain>`. Kakao
+   strips any path (domain/origin only); one entry is the **기본 (default)**. Governs Kakao
+   share / Kakao-message link navigation.
+2. **플랫폼 키 → JavaScript 키 → JS SDK 도메인** — `https://<domain>` is registered here too, but
+   is **likely optional**: this app doesn't use the Kakao JS SDK, and login worked with it
+   registered (not tested without). Kept for completeness; safe to leave, probably safe to drop.
+
+### Google OAuth (Google Cloud Console → APIs & Services → Credentials)
+
+Open the **OAuth 2.0 Client ID named `mtcats`** (Web application, client ID `266233773870-f3ih…`)
+— **not** the "Web client (auto created by Google Service)", which is Firebase's own client for
+Google sign-in. On the client page use **+ Add URI** under each field, for every domain that runs
+the **admin YouTube upload** flow:
+
+- **Authorized redirect URIs** (load-bearing): `https://<domain>/api/admin/youtube-auth/callback`
+  — the **only** redirect path the app actually uses (the YouTube admin flow; built from
+  `NEXT_PUBLIC_BASE_URL`, so set that env var to match the domain per environment). The
+  bare-origin, `/oauth/callback`, and `/__/auth/handler` entries already in the list are
+  **vestigial** (see the redirect-URI audit above).
+- **Authorized JavaScript origins**: `https://<domain>` (exact origin; no wildcards). The client
+  lists every domain's origin, but the app has no confirmed browser-side Google API call (YouTube
+  auth is server-side), so this is likely belt-and-suspenders — add it to match the existing
+  pattern; not confirmed load-bearing.
+
+_(Adding a URI auto-adds its domain to the OAuth consent screen's authorized domains.)_
+
+### Firebase Auth (Firebase console → **Authentication → Settings → Domains → Authorized domains**)
+
+Click **Add domain** and enter the **bare host** — no scheme, no path (e.g. `mohocat.org`,
+`staging.mohocat.org`). `localhost` and the two project defaults
+(`mountaincats-61543.firebaseapp.com`, `…web.app`) are **Default**; anything you add lists as
+**Custom**. It's an exact-host allowlist — subdomains are **not** inherited from the apex, so each
+host is listed separately. Required for Phone, Google, and third-party (Kakao OIDC) auth redirects.
+
 ## Terraform — parked, not in use
 
 There **was** a Terraform config (`infra/terraform/`) intended to manage the Vercel project +
@@ -111,4 +169,5 @@ If/when you reactivate it, see:
 2. New/changed env vars → set in the **Vercel dashboard** (+ local `.env`) → redeploy.
 3. Firestore rule changes → `firebase deploy --only firestore:rules`.
 4. New custom domain → add in Vercel **Settings → Domains** + DNS at the registrar, then
-   whitelist it in Firebase Auth / Google OAuth / Kakao (see the walkthroughs §6).
+   whitelist it in Kakao / Google OAuth / Firebase Auth — see **"Whitelisting a new domain with
+   the auth / identity providers"** above for the exact places.
