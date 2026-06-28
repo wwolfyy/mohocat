@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/utils/cn';
+import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 import { Permission } from '@/types/permissions';
 
 const ALL_PERMISSIONS: Permission[] = [
@@ -29,6 +31,7 @@ interface ResourceConfigData {
 }
 
 export default function ResourcePermissionConfig() {
+  const { user } = useAuth();
   const [config, setConfig] = useState<ResourceConfigData | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -93,6 +96,7 @@ export default function ResourcePermissionConfig() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(await authHeader(user)),
         },
         body: JSON.stringify({ resources: config.resources }),
       });

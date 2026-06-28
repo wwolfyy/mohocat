@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { PermissionService } from '@/services/permission-service';
 import { RoleAssignmentService } from '@/services/role-assignment-service';
+import { authHeader } from '@/lib/auth/authHeader';
 import { cn } from '@/utils/cn';
 
 export default function RoleManagement() {
@@ -30,6 +31,7 @@ export default function RoleManagement() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          ...(await authHeader(user)),
         },
       });
 

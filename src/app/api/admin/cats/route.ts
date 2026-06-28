@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCatService } from '@/services';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
+// Gated: admin cat mutation endpoint. Require manage-cat.
+// (GET below returns public cat data — no caller, not gated.)
 export async function POST(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-cat');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const body = await request.json();
     const catService = getCatService();

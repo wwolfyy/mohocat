@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 import { Permission, Role as RoleType } from '@/types/permissions';
 
 const ALL_PERMISSIONS: Permission[] = [
@@ -37,13 +38,6 @@ export default function RolePermissionConfig() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // The /api/admin/role-permissions route is now gated on `manage-users`, so every
-  // request must carry the caller's Firebase ID token.
-  const authHeader = async (): Promise<Record<string, string>> => {
-    const token = user ? await user.getIdToken() : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   useEffect(() => {
     // Wait for auth to resolve — without a token the gated GET returns 401.
     if (user) fetchConfig();
@@ -55,7 +49,7 @@ export default function RolePermissionConfig() {
     setError(null);
     try {
       const response = await fetch('/api/admin/role-permissions', {
-        headers: await authHeader(),
+        headers: await authHeader(user),
       });
       if (!response.ok) {
         throw new Error(`Failed to load config: ${response.statusText}`);
@@ -107,7 +101,7 @@ export default function RolePermissionConfig() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(await authHeader()),
+          ...(await authHeader(user)),
         },
         body: JSON.stringify({ roles: config.roles }),
       });

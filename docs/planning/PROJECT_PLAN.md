@@ -194,9 +194,25 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       `users/{uid}` → require the permission in `role-config`, mirroring the rule but server-side);
       both route methods now require `manage-users`, and `RolePermissionConfig.tsx` attaches the
       caller's ID token. **Verified:** unauthenticated/invalid → 401; admin → matrix loads + saves.
-      The helper is **reusable** for the broader **no admin-API gating** gap
-      (see `admin-platform.md` watch-outs) — the other `/api/admin/*` routes (get-all-users, list
-      permissions, update-static-data, etc.) still need the same treatment; tracked next.
+- [x] **✅ SECURITY (FIXED 2026-06-28): gated the remaining `/api/admin/*` routes.**
+      Applied `requireApiPermission` across the admin API surface (client callers updated to send
+      the ID token via the new `src/lib/auth/authHeader.ts` helper). **All browser- + curl-verified
+      (unauth → 401; admin paths still work).**
+  - `get-all-user-permissions-client` GET → **manage-users** (returns every user's email + role).
+  - `resource-permissions` **POST** → **manage-users** (writes the page→permission map). _GET left
+    open by design_ — the **public** Navigation (`useResourceAccess`) needs the map for anonymous
+    visitors; it's non-sensitive config.
+  - `youtube-auth/status` GET → **manage-video**. ⚠️ This one was **leaking the YouTube OAuth
+    refresh token** (a secret) to any unauthenticated caller — now 401.
+  - `youtube-auth/auth-url` GET → **manage-video** (initiates the OAuth flow).
+  - `cats` POST → **manage-cat**; `posts-collections` POST → **manage-posts** (mutation endpoints;
+    currently stubs, gated ahead of implementation). Their GETs return public/stub data — left open.
+  - `youtube-auth/callback` — **not gated** (Google OAuth redirect; no Authorization header to
+    verify). Acts only on a valid Google `code`.
+  - **Remaining hardening (follow-ups, not blockers):** (1) `youtube-auth/status` still returns the
+    raw refresh token in its body to the authenticated admin — should be redacted to a
+    boolean/expiry. (2) `youtube-auth/callback` has no OAuth `state`/PKCE CSRF protection.
+- [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
 - [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
 - [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
   The deployed `firestore.rules` lock `cats` — and also `points`, `about_content`,

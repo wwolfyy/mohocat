@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,9 @@ const PAGES = {
   faq: 'FAQ',
 };
 
+// GET is intentionally NOT gated: the public Navigation (via useResourceAccess) reads this
+// page→permission map to decide which nav links to show, for anonymous visitors too. The map
+// is non-sensitive config (no user data / secrets). Only the POST (write) is gated below.
 export async function GET() {
   try {
     const configDoc = await db.collection('role_permissions').doc('resource-config').get();
@@ -44,6 +48,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authz = await requireApiPermission(request, 'manage-users');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const body = await request.json();
     const { resources } = body;

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
 import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
@@ -12,7 +13,13 @@ interface TokenInfo {
   error?: string;
 }
 
-export async function GET() {
+// Gated: the response includes the YouTube OAuth refresh token (a secret), so this must
+// never be world-readable. Require manage-video.
+export async function GET(request: Request) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const oauthConfig = getYouTubeOAuthConfig();
 

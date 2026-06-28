@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
@@ -27,6 +29,7 @@ interface YouTubeAuthStatus {
 }
 
 export default function YouTubeAuthPanel() {
+  const { user } = useAuth();
   const [authStatus, setAuthStatus] = useState<YouTubeAuthStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +37,9 @@ export default function YouTubeAuthPanel() {
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/youtube-auth/status');
+      const response = await fetch('/api/admin/youtube-auth/status', {
+        headers: await authHeader(user),
+      });
       const data = await response.json();
       setAuthStatus(data);
     } catch (error) {
@@ -54,7 +59,9 @@ export default function YouTubeAuthPanel() {
       setRefreshing(true);
 
       // Get the auth URL
-      const response = await fetch('/api/admin/youtube-auth/auth-url');
+      const response = await fetch('/api/admin/youtube-auth/auth-url', {
+        headers: await authHeader(user),
+      });
       const { authUrl, error } = await response.json();
 
       if (error) {
@@ -100,8 +107,10 @@ export default function YouTubeAuthPanel() {
   };
 
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    // Wait for auth — the status route is gated and needs the caller's ID token.
+    if (user) checkAuthStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
