@@ -3,7 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Public collections - no auth required
+    // Public collections - no auth required.
+    // points stays write-locked: there is no live admin write path (the 급식소/겨울집
+    // admin pages are disabled placeholders; PointService.create/update/deletePoint
+    // are defined but never called). Open this only when a points editor is built.
     match /points/{x} {
       allow read: if true;
       allow write: if false;
@@ -19,24 +22,34 @@ service cloud.firestore {
       allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-cat');
     }
 
+    // The admin CMS writes these collections via the client SDK, so gate writes
+    // on the relevant management permission — mirroring the cats / posts_* rules.
+    // (Future consideration: move admin writes behind Admin SDK routes and restore
+    // `write: if false` — see docs/handoff/2026-06-28-handoff-11.md §4.)
+
+    // About-page editor (src/components/admin/AboutContentEditor.tsx) → 앱관리.
     match /about_content/{x} {
       allow read: if true;
-      allow write: if false;
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-app');
     }
 
+    // Photo album tagging (src/app/admin/tag-images/page.tsx, NewPostForm, …).
     match /cat_images/{x} {
       allow read: if true;
-      allow write: if false;
-    }
-    
-    match /cat_videos/{x} {
-      allow read: if true;
-      allow write: if false;
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-photo');
     }
 
+    // Video album tagging (src/app/admin/tag-videos/page.tsx). Server-side YouTube
+    // sync/upload uses the Admin SDK and bypasses these rules.
+    match /cat_videos/{x} {
+      allow read: if true;
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-video');
+    }
+
+    // Announcements admin (src/app/admin/posts/page.tsx via announcement-service).
     match /posts_announcements/{x} {
       allow read: if true;
-      allow write: if false;
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-posts');
     }
 
     // 동참(contact) submissions — members-only create, admin-only read.
