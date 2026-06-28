@@ -17,6 +17,7 @@ export interface ICatService {
   getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }>;
   createCat(cat: Omit<Cat, 'id'>): Promise<Cat>;
   updateCat(id: string, updates: Partial<Cat>): Promise<Cat>;
+  batchUpdateCats(updates: Array<{ id: string; updates: Partial<Cat> }>): Promise<void>;
   deleteCat(id: string): Promise<void>;
 }
 

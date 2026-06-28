@@ -15,6 +15,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  writeBatch,
   query,
   where,
 } from 'firebase/firestore';
@@ -134,6 +135,33 @@ export class FirebaseCatService implements ICatService {
     } catch (error) {
       console.error('Error updating cat:', error);
       throw new Error(`Failed to update cat with id: ${id}`);
+    }
+  }
+
+  /**
+   * Commit several per-cat field patches in a single atomic Firestore batch.
+   *
+   * Each entry's `updates` is a *partial* patch applied via `batch.update()`,
+   * so only the supplied fields are written — fields omitted from the patch
+   * (e.g. app-only `adoptable`) are never touched. This is the write path for
+   * the spreadsheet grid's "Save all", and structurally avoids the full-doc
+   * overwrite hazard of the Sheets importer.
+   */
+  async batchUpdateCats(updates: Array<{ id: string; updates: Partial<Cat> }>): Promise<void> {
+    if (updates.length === 0) {
+      return;
+    }
+
+    try {
+      const batch = writeBatch(db);
+      updates.forEach(({ id, updates: patch }) => {
+        const docRef = doc(db, this.COLLECTION_NAME, id);
+        batch.update(docRef, patch);
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error('Error batch updating cats:', error);
+      throw new Error('Failed to batch update cats');
     }
   }
 
