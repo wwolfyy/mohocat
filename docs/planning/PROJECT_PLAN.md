@@ -184,6 +184,17 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm & prioritize_:**
 
+- [ ] **🔴 SECURITY (tracked, not yet fixed): the permission-matrix API route is ungated.**
+      `POST /api/admin/role-permissions` rewrites `role_permissions/role-config` via the **Admin
+      SDK** (bypasses Firestore rules) with **no ID-token / permission check** — any HTTP caller
+      who reaches it can rewrite the matrix. This became **load-bearing** once `firestore.rules`
+      `hasPermission` started resolving against that doc (this session): an unauthenticated POST
+      could add `manage-*` to `viewer` and instantly grant every viewer write access across
+      `users` / `cats` / `posts_*`. Fix = verify the caller's Firebase ID token + require
+      `manage-users` on the route, and have `RolePermissionConfig.tsx` attach the token. Part of
+      the broader **no `/api/admin/* ` gating** gap (see `admin-platform.md` watch-outs) — the GET
+      / list permission routes share it. **Owner decided (2026-06-28): track now, fix later;** do
+      not rely on the config-resolved rule in a hostile-traffic context until this lands.
 - [~] **🔴 Admin CMS writes blocked by `write: if false` (cats fix staged; others pending).**
   The deployed `firestore.rules` lock `cats` — and also `points`, `about_content`,
   `cat_images`, `cat_videos`, `posts_announcements` — to `allow write: if false`, but the
@@ -200,6 +211,59 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
   only writer" direction the 동참 work started. Effort/risk not yet assessed; truly
   dropping the Firebase SDK from public bundles would \*also_ require `AuthProvider` to stop
   eagerly importing `firebase/auth`. Decide later, not committed.\_
+- [x] **✅ `users` / role-assignment — FIXED & browser-verified (members page). Interim
+      client-SDK approach; Admin-SDK API route still deferred.**
+      Symptom: `/admin/members` showed **no users in any role group**, and assigning a role didn't
+      persist. Root cause was a chain of four bugs, each uncovered by the next. All fixed and
+      **browser-verified 2026-06-28** against live Firestore (assigned guest viewer→butler-internet:
+      persisted with admin-stamped `assignedBy` + a `roleHistory` entry, then reverted to viewer).
+      **Decision: permission-gate the client write** (same interim path as cats) rather than block
+      on the Admin-SDK migration.
+  - **Bug 0 — read path (list route).** `GET /api/admin/get-all-user-permissions-client` queried
+    the legacy, now-empty `user_permissions` collection → every group rendered 0 users. Repointed
+    to `users`. _(committed `5c096a9`)_
+  - **Bug 1 — empty per-user array.** Every user doc has `currentRole.permissions = []`
+    (permissions are derived from the role at runtime, never snapshotted per user); the old helper
+    read that empty array → always false. Fixed by resolving role → permissions from
+    `role_permissions/role-config` (the single source of truth behind the **Permission Matrix**
+    UI). No per-user backfill; editing the matrix updates enforcement.
+  - **Bug 2 — 🔴 helper scope (the real blocker).** `hasPermission` was defined **outside** the
+    `match /databases/{database}/documents { … }` block, so `$(database)` was unbound, paths
+    resolved to `/databases//documents/…`, `exists()` returned false, and **every**
+    `hasPermission`-gated rule **silently denied everyone, admins included**. → `hasPermission`
+    had _never_ worked, so `cats` (handoff-10), `posts_feeding/butler`, and `contacts` were all
+    latently broken by it. Fix: move the function **inside** the match block. One fix repairs all
+    of them. (Confirmed via the Rules REST API that the live ruleset matched the file, and via
+    the Contact Management read going green after deploy.)
+  - **Bug 3 — `users` read rule too narrow.** `assignSpecificRole` does `getDoc(users/{target})`
+    **before** writing; the read rule was self-read only (`request.auth.uid == userId`), so the
+    admin couldn't read the target doc → denied before the (working) write. Extended to also
+    allow `hasPermission(uid, 'manage-users')`.
+  - **Service:** `role-assignment-service.ts` repointed from `user_permissions` → `users`
+    (4 refs) so its client reads/writes hit the collection the rule + `hasPermission` + list route
+    all use.
+  - **Deployed + verified.** Rules deployed via `firebase deploy --only firestore:rules` (owner).
+    End-to-end role assignment confirmed persisting in `/admin/members`; Contact Management loads.
+    Cats / posts writes are repaired by the same `hasPermission` fix (not separately re-tested).
+  - **Known gaps (not fixed):**
+    - `ensureUserExists` (`permission-service.ts`) self-creates a new user's own `users/{uid}`
+      doc via client SDK; the `manage-users` gate still blocks brand-new non-admin users from
+      self-provisioning. Separate flow — revisit with the API-route work.
+    - **Audit log not persisted via client.** `assignSpecificRole` → `logRoleChange` writes
+      `permission_logs` (`allow write: if false`); the client write is denied but **swallowed**
+      (try/catch, no rethrow), so the assignment still succeeds — only the audit entry is lost.
+      Will be restored when role writes move behind the Admin SDK API route.
+  - **Still the eventual target:** migrate these writes behind an **Admin SDK API route** and
+    restore `write: if false` (the "Future consideration" above). `users` was originally
+    designed Admin-SDK-only (grouped with `permission_logs` / `admin_data`), so it's a strong
+    candidate — deferred, not dropped.
+
+  _Separately — and **not** a rules issue — a **read** bug was fixed this session:_ the members
+  list route (`/api/admin/get-all-user-permissions-client`) queried the now-empty legacy
+  `user_permissions` collection → every role group rendered 0 users despite 3 users existing in
+  `users`; the route now reads `users`. (Verified against Firestore: 3 docs in `users`, 0 in
+  `user_permissions`.)
+
 - [x] **✅ Deployment-target cleanup (DONE)** — **Vercel is the deployment target.**
       **Phase 1+2** (`f62816b`…`2e6fd4d`) removed the dead Cloud Run / home-server /
       Firebase-Hosting / Docker / static-export / `functions/` paths, trimmed

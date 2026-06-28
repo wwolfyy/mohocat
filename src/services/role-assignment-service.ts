@@ -72,7 +72,7 @@ export class RoleAssignmentService {
       };
 
       // Create or update user permissions document
-      const userRef = doc(this.db, 'user_permissions', userId);
+      const userRef = doc(this.db, 'users', userId);
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists()) {
@@ -134,7 +134,7 @@ export class RoleAssignmentService {
       };
 
       // Create or update user permissions document
-      const userRef = doc(this.db, 'user_permissions', userId);
+      const userRef = doc(this.db, 'users', userId);
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists()) {
@@ -188,7 +188,7 @@ export class RoleAssignmentService {
    */
   async needsRoleAssignment(userId: string): Promise<boolean> {
     try {
-      const userRef = doc(this.db, 'user_permissions', userId);
+      const userRef = doc(this.db, 'users', userId);
       const userDoc = await getDoc(userRef);
 
       return !userDoc.exists();
@@ -203,7 +203,7 @@ export class RoleAssignmentService {
    */
   async getUserRole(userId: string): Promise<string | null> {
     try {
-      const userRef = doc(this.db, 'user_permissions', userId);
+      const userRef = doc(this.db, 'users', userId);
       const userDoc = await getDoc(userRef);
 
       if (!userDoc.exists()) {

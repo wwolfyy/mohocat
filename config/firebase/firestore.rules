@@ -69,11 +69,19 @@ service cloud.firestore {
     // (see PermissionService.usersCollection). The rule and the hasPermission()
     // helper below must reference `users` to match the live data.
     match /users/{userId} {
-      // Users can read their own user/permission document
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // Users can read their own doc; admins (manage-users) can read any user doc.
+      // The latter is required by the client-SDK role-assignment path
+      // (RoleAssignmentService.assignSpecificRole reads the target user's doc before
+      // writing the new role).
+      allow read: if request.auth != null &&
+        (request.auth.uid == userId || hasPermission(request.auth.uid, 'manage-users'));
 
-      // Only admins can modify permissions (via Admin SDK / server)
-      allow write: if false;
+      // Role/permission writes currently go through the client SDK (the admin
+      // members page → RoleAssignmentService). Gate on `manage-users` (admin-only)
+      // so this stays a server-enforced boundary — mirroring the cats rule.
+      // Future consideration: move these writes behind an Admin SDK API route and
+      // restore `write: if false` (see PROJECT_PLAN §7 / handoff-10).
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-users');
     }
 
     match /permission_logs/{logId} {
@@ -98,16 +106,28 @@ service cloud.firestore {
         hasPermission(request.auth.uid, 'manage-settings');
     }
 
+    // Helper: does the user have `permission`?
+    // Resolves the user's role -> permissions from the single source of truth
+    // `role_permissions/role-config` (the same doc the admin Permission Matrix edits),
+    // instead of a per-user `currentRole.permissions` snapshot — that array is left
+    // empty by design; permissions are derived from the role, not stored per user.
+    //
+    // MUST live INSIDE this match block: a top-level function cannot see the match's
+    // `database` variable, so `$(database)` resolves empty and every hasPermission-
+    // gated rule silently denies (this was the bug). See
+    // docs/codebase/permissions-and-roles.md.
+    function hasPermission(userId, permission) {
+      let user = /databases/$(database)/documents/users/$(userId);
+      let config = /databases/$(database)/documents/role_permissions/role-config;
+      return exists(user) && exists(config) &&
+             get(user).data.currentRole.isActive == true &&
+             get(user).data.currentRole.role in get(config).data.roles &&
+             permission in get(config).data.roles[get(user).data.currentRole.role].permissions;
+    }
+
     // Default deny all other access
     match /{document=**} {
       allow read, write: if false;
     }
   }
-}
-
-// Helper function to check user permissions
-function hasPermission(userId, permission) {
-  return exists(/databases/$(database)/documents/users/$(userId)) &&
-         get(/databases/$(database)/documents/users/$(userId)).data.currentRole.isActive &&
-         permission in get(/databases/$(database)/documents/users/$(userId)).data.currentRole.permissions;
 }
