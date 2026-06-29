@@ -128,19 +128,24 @@ _(Out of scope here: admin mobile — that's §6.)_
 
 **Candidate scope — _confirm with user_:**
 
-- [ ] **🆕 Spreadsheet-grid cat editor (planned 2026-06-29 — see
-      [handoff-13](../handoff/2026-06-29-handoff-13.md)).** Add a cell-editable, spreadsheet-style
-      grid for `cats` **alongside** the existing card/form editor in `/admin/cats` (tab switch; keep
-      both). Locked decisions: client-SDK writes for now (flagged for the Admin-SDK migration), batch
-      **Save all** (per-field `update()` → partial, non-destructive writes), revalidate via the
-      existing `triggerCatRevalidate`, typed columns with `isNeutered`/`date_of_birth` **mandatory**;
-      per-cell validation UX to be prototyped. Recommended lib: `react-datasheet-grid` (MIT).
-      **Why it matters:** per-cell `update()` removes the overwrite/type-drift hazards and makes
-      Firestore the single source of truth. **Cleanup-on-success (owner decision):** once the grid is
-      verified working, **remove** the two CMS "Migrate" buttons, the Sheets-import workflow docs
-      (`docs/deployment/pre-deployment-checklist.md` + `cat-data-bulk-update-runbook.md`), and
-      consider retiring `scripts/maintenance/data_updater.js`. _(Supersedes the Google-Sheets
-      bulk-update path — see §7 cat-data notes.)_
+- [x] **✅ Spreadsheet-grid cat editor (shipped 2026-06-29 — see
+      [handoff-14](../handoff/2026-06-29-handoff-14.md); built per
+      [handoff-13](../handoff/2026-06-29-handoff-13.md)).** Cell-editable `react-datasheet-grid` (MIT)
+      grid for `cats` as a second tab (스프레드시트) beside the card editor in `/admin/cats` (both
+      kept). Typed columns; batch **전체 저장** via `catService.batchUpdateCats` (one Firestore
+      `writeBatch` of per-field `update()`s → partial, non-destructive — `adoptable` etc. never
+      wiped); `triggerCatRevalidate` on save; `isNeutered`/`date_of_birth` **mandatory** (validated on
+      dirty-clear) with inline red-cell highlight **+** summary banner + block-save.
+      **Filter / sort / select / bulk-edit** added: filter+sort logic extracted to the shared pure
+      util `src/utils/cat-filters.ts` (used by **both** card and grid views); sortable headers;
+      checkbox selection (+ select-all); bulk-edit toolbar for the 8 categorical + year fields.
+      Browser-verified incl. a real persisted save. **Cleanup-on-success DONE:** the two CMS "Migrate"
+      buttons, `scripts/maintenance/data_updater.js` (+ `_data_updater.py`) and
+      `src/utils/cat-migration-helper.ts` removed; `cat-data-bulk-update-runbook.md` deleted and
+      `pre-deployment-checklist.md` §4 reframed (Sheets bulk path retired). **Carry-over:** the grid's
+      client-SDK writes join the Admin-SDK-writer migration list (§7 / handoff-11) — target is
+      API-route writes + restore `write:if false`. Stale importer/runbook doc refs remain in
+      `scripts/README.md`, `docs/codebase/deployment-and-build.md`, and handoff-13 — pending sweep.
 - [ ] **Visual/UX consistency** — the admin layout mixes inline styles + Tailwind;
       decide one convention and a baseline component set (buttons, tables, forms,
       modals). Decide whether admin adopts the public brand tokens or keeps a
