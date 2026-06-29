@@ -35,7 +35,6 @@ deployment, architecture, authentication, and CI/CD documentation.
 | Database          | Firestore                                                                                   |
 | File storage      | Firebase Storage + Google Cloud Storage (static-data CDN)                                   |
 | Video integration | YouTube Data API v3 (`googleapis`)                                                          |
-| Admin scaffolding | react-admin (`ra-*` packages, dataProvider in `src/lib/admin/`)                             |
 | Build             | npm scripts orchestrating static-data export → asset fetch → next build                     |
 | Container         | `node:18-alpine` multi-stage Dockerfile (standalone output)                                 |
 | Tooling           | ESLint, Prettier, Husky, lint-staged, fnm/.nvmrc                                            |
@@ -51,7 +50,7 @@ mohocat/
 │   ├── app/                      # Next.js App Router (pages + API routes)
 │   ├── components/               # React components (organized by domain)
 │   ├── services/                 # Firebase service layer (factory pattern, 13+ services)
-│   ├── lib/                      # Cross-cutting libs (firebase init, react-admin dataProvider)
+│   ├── lib/                      # Cross-cutting libs (firebase init, auth/admin helpers)
 │   ├── hooks/                    # Custom hooks (useAuth, usePermissions, useResourceAccess, useAboutPhoto)
 │   ├── contexts/                 # React contexts (AnnouncementModalContext)
 │   ├── config/                   # In-source config helpers (permission-config.ts)

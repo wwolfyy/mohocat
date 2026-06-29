@@ -159,8 +159,16 @@ _(Out of scope here: admin mobile — that's §6.)_
       `RoleManagement.tsx` + `PermissionDebug.tsx` (kept). Still open: disabled-link
       placeholders (`급식소 관리`, `겨울집 관리`); `/admin/create-user` unauthenticated
       bypass (verify the page exists).
-- [ ] **react-admin decision** — `src/lib/admin/dataProvider.ts` is partially
-      used; either commit to it or remove it. Don't extend without confirming usage.
+- [x] **✅ react-admin decision — REMOVED (2026-06-29).** Investigation showed the
+      whole react-admin subsystem was dead: `src/lib/admin/dataProvider.ts` +
+      `sampleData.ts` were imported by nothing, and the four react-admin components
+      (`ImageList`/`ImageEdit`/`VideoList`/`VideoEdit`) were rendered by nothing (no
+      `<Admin>`/`<Resource>` host context exists). Deleted all six files and the 8 deps
+      that existed solely for them — `react-admin`, `ra-data-fakerest`,
+      `ra-data-firebase-client`, `ra-ui-materialui`, `@mui/material`,
+      `@mui/icons-material`, `@emotion/react`, `@emotion/styled` (npm pruned 85 packages).
+      `tsc` clean + smoke 25/25. The real tag-images/tag-videos admin UIs are hand-built
+      and were never react-admin.
 - [ ] **Consistency of admin Korean strings** + consider centralizing (mirrors the
       `strings.ts` pattern) if this workstream grows.
 - [ ] **Two auth listeners** — `AdminAuth` subscribes to `onAuthStateChanged`
