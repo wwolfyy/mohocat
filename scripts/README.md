@@ -26,8 +26,6 @@ This directory contains utility scripts for various project operations, organize
 
 - **`maintenance/`** - Regular maintenance and data management scripts
   - `cleanup_firestore_cat_videos.js` - Cleans up video data in Firestore
-  - `data_updater.js` - General data update utility
-  - `_data_updater.py` - Python version of data updater
   - `enforce_youtube_readonly_fields.js` - Enforces YouTube readonly constraints
   - `examine_video_structure.js` - Analyzes video data structure
   - `fetch-static-assets.js` - Fetches static assets
@@ -75,7 +73,6 @@ Each script is self-contained and includes robust error handling. Scripts automa
 npm run update:static-data
 
 # Legacy maintenance
-node scripts/maintenance/data_updater.js
 node scripts/auth/generate_refresh_token.js
 ```
 
