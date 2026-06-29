@@ -23,7 +23,7 @@
 
 ---
 
-## 1. Snapshot (as of 2026-06-28)
+## 1. Snapshot (as of 2026-06-30)
 
 | Workstream                            | Status            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,7 +38,7 @@
 | **Deployment-target cleanup**         | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                  |
 | **Perf: bake the data layer**         | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). One follow-up: remove the dead static-data export seam (tasks-doc §6).                                                                                                                                           |
 | **Mobile UX optimization**            | 🚧 placeholder    | §4 — public-facing mobile pass.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Admin desktop cleanup**             | 🚧 placeholder    | §5 — admin UI/UX consistency. **Planned 2026-06-29:** spreadsheet-grid cat editor (tab alongside the card editor) — [handoff-13](../handoff/2026-06-29-handoff-13.md); on success, removes the Migrate buttons + Sheets-workflow docs.                                                                                                                                                                                                                                                                                                   |
+| **Admin desktop cleanup**             | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps, 2026-06-29); **AdminAuth emergency-bypass buttons removed** (2026-06-29). **Remaining:** visual/UX consistency, AdminAuth 10s-timeout flapping, admin Korean-string consistency, the two auth listeners.                                                                                    |
 | **Admin mobile optimization**         | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Codebase health / tech-debt           | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation. |
 | Compliance / legal                    | 🚧 placeholder    | §8 — privacy policy, terms.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -144,15 +144,34 @@ _(Out of scope here: admin mobile — that's §6.)_
       `src/utils/cat-migration-helper.ts` removed; `cat-data-bulk-update-runbook.md` deleted and
       `pre-deployment-checklist.md` §4 reframed (Sheets bulk path retired). **Carry-over:** the grid's
       client-SDK writes join the Admin-SDK-writer migration list (§7 / handoff-11) — target is
-      API-route writes + restore `write:if false`. Stale importer/runbook doc refs remain in
-      `scripts/README.md`, `docs/codebase/deployment-and-build.md`, and handoff-13 — pending sweep.
+      API-route writes + restore `write:if false`. _Stale importer/runbook doc refs in
+      `scripts/README.md` + `docs/codebase/deployment-and-build.md` **swept 2026-06-29**
+      (commit `089bfee`); handoff-13 left intact as a historical record._
 - [ ] **Visual/UX consistency** — the admin layout mixes inline styles + Tailwind;
       decide one convention and a baseline component set (buttons, tables, forms,
       modals). Decide whether admin adopts the public brand tokens or keeps a
       deliberately utilitarian look.
-- [ ] **`AdminAuth` hardening (UX side)** — the 10s loading timeout flaps to
-      "Authentication timeout" on slow logins; the "🚨 Emergency Bypass (Dev
-      Mode)" buttons ship in prod and should be gated to `NODE_ENV !== 'production'`.
+- [~] **`AdminAuth` hardening (UX side)** — _partially done 2026-06-29._
+  - [x] **Emergency-bypass buttons removed (commit `0cd9c2c`).** The "🚨 Emergency Bypass" /
+        "Emergency Bypass (Dev Mode)" buttons were **removed** (not just gated to dev): they
+        never granted access — only cleared the error/loading flags before falling back
+        through the real `!user || !isAdmin` gate — so they were dead + misleading. Dropped
+        three unused `useAuth()` bindings (`isAuthenticated`/`providerData`/`linkedProviders`)
+        in the same pass. `tsc` + smoke + `next build` green.
+  - [ ] **10s loading-timeout — mis-scoped init guard (latent, low priority).** _Diagnosed
+        2026-06-30, not yet fixed._ The timeout is **cancelled synchronously at the top of the
+        `onAuthStateChanged` callback (before `await checkIsAdmin`)**, so a slow admin lookup
+        can't trip it — it fires **only if `onAuthStateChanged` never fires within 10s**. That
+        was a **real** historical trigger (the ~48s `indexedDBLocalPersistence` hang noted in
+        `src/services/firebase.ts`), but that root cause was **already fixed** by switching to
+        `browserLocalPersistence` (localStorage resolves near-instantly), so in normal operation
+        the timer **never fires today** — no evidence it's currently hit (no telemetry). The one
+        latent way it can still bite is a **different bug**: the effect's `[loading]` dependency
+        re-arms the timer on every `loading` toggle, **including `handleLogin`'s** — so a sign-in
+        slower than 10s would trip "Authentication timeout" mid-login even though auth is
+        progressing. **Fix (when admin UX gets a real pass): re-scope the guard to the initial
+        mount-time auth resolution only (don't re-arm on `loading` changes) — _not_ a longer
+        timeout.** Removing it outright is also defensible now the 48s cause is gone.
 - [x] **Dead/duplicate cleanup (routes + example)** — ✅ removed in Phase 3A: the 8
       unreferenced `get-all-user-permissions-*`/`get-all-users` routes and
       `MIGRATION_EXAMPLE.ts`. **`role-assignment-service.ts` is NOT dead** — it's used by
@@ -400,6 +419,18 @@ reads" from points/images to cat **metadata**.
 - [x] Resolved the **`page.tsx` client-Web-SDK-on-server** tech-debt (now Admin SDK).
 - [~] Timing: qualitative win proven (zero client cat reads); no ms figure captured.
 - [ ] **Carried follow-up:** remove the dead static-data export seam (tasks-doc §6).
+      _Re-verified 2026-06-29 (independent trace, during the §5 admin-cleanup work):_ a
+      whole-repo grep finds **zero** references to `cats-static-data.json` /
+      `points-static-data.json` / `feeding-spots-static-data.json` in `src/` — the runtime
+      cat path is `src/app/page.tsx` → `getAllCatsServer()` (`src/lib/server/cat-reads.ts`,
+      Admin SDK → Firestore), never the JSON. All readers/writers are in `scripts/` only.
+      Confirmed **firsthand** that the file is dead build output: a `npm run build` (run to
+      gate the react-admin removal) rewrote `src/lib/cats-static-data.json` from live
+      Firestore, yet nothing consumes it — the churn was reverted, harmless. So in **both**
+      prod build and dev server the JSON is never `import`ed/read; webpack never bundles it.
+      Strengthens the REMOVE decision — no new blockers found. Keep the removal in this §7a
+      pass (it untangles `saveStaticDataJson` from the still-needed asset fetcher and wants
+      its own `next build` gate), not in unrelated cleanup branches.
 
 **Inherited from Phase 3B (don't re-investigate from scratch):**
 

@@ -136,6 +136,12 @@ still succeeds without `saveStaticDataJson`. That's a code change deserving its 
 a rider on a documentation commit. Tracked as the next §7a follow-up in the handoff.
 
 - [x] Decision made + documented. Mechanical removal carried forward (see handoff).
+- [x] **Re-verified 2026-06-29** (independent trace during §5 admin cleanup): whole-repo
+      grep confirms **zero** `*-static-data.json` references in `src/`; runtime cats come from
+      `getAllCatsServer()` (`src/lib/server/cat-reads.ts`, Admin SDK → Firestore) via
+      `src/app/page.tsx`, never the JSON. Observed the dead-output mechanism firsthand — a
+      `npm run build` rewrote `cats-static-data.json` from live Firestore and nothing consumed
+      it (the churn was reverted). No new blockers; the REMOVE plan above stands as written.
 
 ## 7. Gates + docs
 
