@@ -18,16 +18,8 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   const [password, setPassword] = useState('');
 
   // Use the enhanced useAuth hook
-  const {
-    user,
-    isAuthenticated,
-    providerData,
-    linkedProviders,
-    signInWithKakao,
-    isSigningInWithKakao,
-    kakaoSignInError,
-    kakaoSignInSuccess,
-  } = useAuth();
+  const { user, signInWithKakao, isSigningInWithKakao, kakaoSignInError, kakaoSignInSuccess } =
+    useAuth();
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -238,30 +230,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               🛠️ Create Test Admin User ↗
             </a>
 
-            <button
-              onClick={() => {
-                setAuthError('');
-                setLoading(false);
-                // This is a dev-only emergency bypass - create a mock admin state
-                console.warn(
-                  'Emergency bypass activated - this should only be used in development'
-                );
-              }}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid="rf1nbb-"
-            >
-              🚨 Emergency Bypass
-            </button>
-
             <a
               href="/"
               style={{
@@ -324,27 +292,6 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               data-oid="g4xpw9g"
             >
               Stop Loading
-            </button>
-            <button
-              onClick={() => {
-                setLoading(false);
-                // Create mock admin user for dev
-                console.warn(
-                  'Emergency bypass activated - this should only be used in development'
-                );
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-              }}
-              data-oid="zroh-z9"
-            >
-              Emergency Bypass (Dev Mode)
             </button>
           </div>
         </div>
