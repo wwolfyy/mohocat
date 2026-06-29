@@ -7,6 +7,14 @@ import { triggerCatRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
 import CatGrid from '@/components/admin/cat-grid/CatGrid';
 import {
+  filterCats,
+  sortCats,
+  getUniqueLocations,
+  getUniqueStatuses,
+  getUniqueGenders,
+  getUniqueBirthYears,
+} from '@/utils/cat-filters';
+import {
   FiEdit2,
   FiTrash2,
   FiPlus,
@@ -92,24 +100,11 @@ export default function CatsCMSPage() {
   const [adoptableFilter, setAdoptableFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Get unique locations and statuses for filters
-  const uniqueLocations = Array.from(
-    new Set([
-      ...cats.map((cat) => cat.dwelling).filter(Boolean),
-      ...cats.map((cat) => cat.prev_dwelling).filter(Boolean),
-    ])
-  ).sort();
-
-  const uniqueStatuses = Array.from(new Set(cats.map((cat) => cat.status).filter(Boolean))).sort();
-
-  // Get unique values for new filters
-  const uniqueGenders = Array.from(new Set(cats.map((cat) => cat.sex).filter(Boolean))).sort();
-
-  const uniqueBirthYears = Array.from(
-    new Set(
-      cats.map((cat) => cat.date_of_birth).filter((year): year is number => year !== undefined)
-    )
-  ).sort((a, b) => b - a); // Sort years in descending order
+  // Unique values for the filter dropdowns (shared with the grid view).
+  const uniqueLocations = getUniqueLocations(cats);
+  const uniqueStatuses = getUniqueStatuses(cats);
+  const uniqueGenders = getUniqueGenders(cats);
+  const uniqueBirthYears = getUniqueBirthYears(cats);
 
   const neuteredOptions = [
     { value: 'true', label: 'O (중성화됨)' },
@@ -117,89 +112,23 @@ export default function CatsCMSPage() {
     { value: 'unknown', label: '? (알 수 없음)' },
   ];
 
-  // Get unique dwelling values for dropdown options
-  const allDwellingValues = Array.from(
-    new Set([
-      ...cats.map((cat) => cat.dwelling).filter(Boolean),
-      ...cats.map((cat) => cat.prev_dwelling).filter(Boolean),
-    ])
-  ).sort() as string[];
+  // Dwelling autocomplete options for the form (same set as the location filter).
+  const allDwellingValues = uniqueLocations;
 
-  // Filter and sort cats
-  const filteredCats = cats
-    .filter((cat) => {
-      // Search filter
-      const matchesSearch =
-        cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.alt_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.character?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.parents?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.offspring?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.note?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.dob_certainty?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Status filter
-      const matchesStatus = !statusFilter || cat.status === statusFilter;
-
-      // Location filter
-      const matchesLocation =
-        !locationFilter || cat.dwelling === locationFilter || cat.prev_dwelling === locationFilter;
-
-      // Gender filter
-      const matchesGender = !genderFilter || cat.sex === genderFilter;
-
-      // Birth year filter
-      const matchesBirthYear =
-        !birthYearFilter || cat.date_of_birth?.toString() === birthYearFilter;
-
-      // Neutered filter
-      const matchesNeutered =
-        !neuteredFilter ||
-        (neuteredFilter === 'true' && cat.isNeutered === true) ||
-        (neuteredFilter === 'false' && cat.isNeutered === false) ||
-        (neuteredFilter === 'unknown' && cat.isNeutered === undefined);
-
-      // Adoptable filter (cats without the flag are treated as not adoptable)
-      const matchesAdoptable =
-        !adoptableFilter ||
-        (adoptableFilter === 'true' && cat.adoptable === true) ||
-        (adoptableFilter === 'false' && cat.adoptable !== true);
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesLocation &&
-        matchesGender &&
-        matchesBirthYear &&
-        matchesNeutered &&
-        matchesAdoptable
-      );
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case 'name':
-          comparison = (a.name || '').localeCompare(b.name || '');
-          break;
-        case 'status':
-          comparison = (a.status || '').localeCompare(b.status || '');
-          break;
-        case 'dwelling':
-          comparison = (a.dwelling || '').localeCompare(b.dwelling || '');
-          break;
-        case 'date_of_birth':
-          const dateA = a.date_of_birth || 0;
-          const dateB = b.date_of_birth || 0;
-          comparison = dateA - dateB;
-          break;
-        default:
-          comparison = 0;
-      }
-
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
+  // Filter + sort via the shared util so both views stay in sync.
+  const filteredCats = sortCats(
+    filterCats(cats, {
+      searchTerm,
+      statusFilter,
+      locationFilter,
+      genderFilter,
+      birthYearFilter,
+      neuteredFilter,
+      adoptableFilter,
+    }),
+    sortBy,
+    sortOrder
+  );
 
   // Handle sorting
   const handleSort = (field: 'name' | 'status' | 'dwelling' | 'date_of_birth') => {

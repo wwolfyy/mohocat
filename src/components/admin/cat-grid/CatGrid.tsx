@@ -8,13 +8,32 @@ import {
   createTextColumn,
   checkboxColumn,
   keyColumn,
+  type CellProps,
   type Column,
+  type SimpleColumn,
 } from 'react-datasheet-grid';
-import { FiSave, FiRotateCcw } from 'react-icons/fi';
+import {
+  FiSave,
+  FiRotateCcw,
+  FiSearch,
+  FiFilter,
+  FiChevronUp,
+  FiChevronDown,
+} from 'react-icons/fi';
 import { getCatService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
 import { triggerCatRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
+import {
+  filterCats,
+  sortCats,
+  getUniqueLocations,
+  getUniqueStatuses,
+  getUniqueGenders,
+  getUniqueBirthYears,
+  EMPTY_CAT_FILTERS,
+  type CatFilterState,
+} from '@/utils/cat-filters';
 import { selectColumn, type SelectOption } from './selectColumn';
 
 /**
@@ -26,7 +45,14 @@ import { selectColumn, type SelectOption } from './selectColumn';
  * writes), then revalidates the baked public pages. Editing Firestore directly,
  * cell-by-cell with typed columns, removes the string/type drift and full-doc
  * overwrite hazards of the Sheets-import path.
+ *
+ * Filter / sort / select / bulk-edit are **view-layer** concerns: the full `rows`
+ * array (keyed by `id`) stays the source of truth and the save path is unchanged.
+ * A transient `__selected` flag is baked into the displayed rows for the checkbox
+ * column and stripped before any write.
  */
+
+type GridRow = Cat & { __selected?: boolean };
 
 // --- Column option sets (values match the card/form editor) -----------------
 const SEX_OPTIONS: SelectOption<string>[] = [
@@ -50,6 +76,11 @@ const DOB_CERTAINTY_OPTIONS: SelectOption<string>[] = [
 const NEUTERED_OPTIONS: SelectOption<boolean>[] = [
   { value: true, label: 'O (중성화됨)' },
   { value: false, label: 'X (중성화 안됨)' },
+];
+
+const ADOPTABLE_OPTIONS: SelectOption<boolean>[] = [
+  { value: true, label: '입양 가능' },
+  { value: false, label: '입양 대상 아님' },
 ];
 
 // A plain integer column for the birth *year*: `intColumn` formats with a
@@ -124,6 +155,68 @@ const FIELD_TYPES = FIELD_SPECS.reduce(
   {} as Record<keyof Cat, FieldType>
 );
 
+// --- Bulk edit ---------------------------------------------------------------
+type BulkEditor = 'select' | 'neutered' | 'adoptable' | 'number' | 'locations';
+
+interface BulkFieldSpec {
+  key: keyof Cat;
+  label: string;
+  editor: BulkEditor;
+  options?: SelectOption<any>[];
+}
+
+const BULK_FIELDS: BulkFieldSpec[] = [
+  { key: 'status', label: '상태', editor: 'select', options: STATUS_OPTIONS },
+  { key: 'dwelling', label: '현재 거주지', editor: 'locations' },
+  { key: 'prev_dwelling', label: '이전 거주지', editor: 'locations' },
+  { key: 'isNeutered', label: '중성화', editor: 'neutered', options: NEUTERED_OPTIONS },
+  { key: 'adoptable', label: '입양가능', editor: 'adoptable', options: ADOPTABLE_OPTIONS },
+  { key: 'sex', label: '성별', editor: 'select', options: SEX_OPTIONS },
+  { key: 'dob_certainty', label: '출생 정확도', editor: 'select', options: DOB_CERTAINTY_OPTIONS },
+  { key: 'date_of_birth', label: '출생연도', editor: 'number' },
+];
+
+/** Convert the bulk-toolbar's raw string input into the field's typed value. */
+function coerceBulkValue(spec: BulkFieldSpec, raw: string): { ok: boolean; value?: unknown } {
+  if (raw === '') return { ok: false };
+  switch (spec.editor) {
+    case 'select':
+    case 'locations':
+      return { ok: true, value: raw };
+    case 'neutered':
+    case 'adoptable':
+      return { ok: true, value: raw === 'true' };
+    case 'number': {
+      const n = parseInt(raw, 10);
+      return Number.isNaN(n) ? { ok: false } : { ok: true, value: n };
+    }
+    default:
+      return { ok: false };
+  }
+}
+
+// --- Selection checkbox (gutter) cell ---------------------------------------
+interface SelectionColumnData {
+  toggle: (id: string) => void;
+}
+
+function SelectionCell({ rowData, columnData }: CellProps<GridRow, SelectionColumnData>) {
+  return (
+    <div
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
+    >
+      <input
+        type="checkbox"
+        checked={!!rowData.__selected}
+        onChange={() => columnData.toggle(rowData.id)}
+        onClick={(e) => e.stopPropagation()}
+        aria-label="행 선택"
+      />
+    </div>
+  );
+}
+
+// --- Row diff / validation (operates on the full `rows`, unaffected by view) -
 interface CatUpdate {
   id: string;
   updates: Partial<Cat>;
@@ -227,6 +320,15 @@ export default function CatGrid() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // View state (filter / sort / selection / bulk-edit)
+  const [filters, setFilters] = useState<CatFilterState>(EMPTY_CAT_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortKey, setSortKey] = useState<keyof Cat | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkField, setBulkField] = useState<keyof Cat>(BULK_FIELDS[0].key);
+  const [bulkValue, setBulkValue] = useState('');
+
   const loadCats = useCallback(async () => {
     try {
       setLoading(true);
@@ -255,23 +357,105 @@ export default function CatGrid() {
     [rows, originalById]
   );
 
-  const columns = useMemo<Column<Cat>[]>(
+  // Unique values for the filter dropdowns (shared util; same as card view).
+  const uniqueStatuses = useMemo(() => getUniqueStatuses(rows), [rows]);
+  const uniqueLocations = useMemo(() => getUniqueLocations(rows), [rows]);
+  const uniqueGenders = useMemo(() => getUniqueGenders(rows), [rows]);
+  const uniqueBirthYears = useMemo(() => getUniqueBirthYears(rows), [rows]);
+
+  // Filter → sort → bake the transient selection flag for display.
+  const displayedRows = useMemo<GridRow[]>(() => {
+    const filtered = filterCats(rows, filters);
+    const sorted = sortKey ? sortCats(filtered, sortKey, sortOrder) : filtered;
+    return sorted.map((cat) => ({ ...cat, __selected: selectedIds.has(cat.id) }));
+  }, [rows, filters, sortKey, sortOrder, selectedIds]);
+
+  const displayedIds = useMemo(() => displayedRows.map((r) => r.id), [displayedRows]);
+  const allDisplayedSelected =
+    displayedIds.length > 0 && displayedIds.every((id) => selectedIds.has(id));
+
+  // Selection handlers (stable: use functional setState).
+  const toggleRow = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const allSelected = displayedIds.length > 0 && displayedIds.every((id) => next.has(id));
+      if (allSelected) {
+        displayedIds.forEach((id) => next.delete(id));
+      } else {
+        displayedIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }, [displayedIds]);
+
+  const handleSort = useCallback((key: keyof Cat) => {
+    setSortKey((prevKey) => {
+      if (prevKey === key) {
+        setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+        return key;
+      }
+      setSortOrder('asc');
+      return key;
+    });
+  }, []);
+
+  // Editable columns with clickable, sortable headers.
+  const columns = useMemo<Column<GridRow>[]>(
     () =>
       FIELD_SPECS.map(({ key, title, width, base }) => ({
-        ...keyColumn<Cat>(key, base),
+        ...keyColumn<GridRow>(key as keyof GridRow, base),
         id: key as string,
-        title,
+        title: (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSort(key);
+            }}
+            className="flex items-center gap-1 w-full font-medium hover:text-blue-600"
+          >
+            {title}
+            {sortKey === key &&
+              (sortOrder === 'asc' ? <FiChevronUp size={12} /> : <FiChevronDown size={12} />)}
+          </button>
+        ),
         minWidth: width,
         basis: width,
         grow: 0,
         shrink: 0,
       })),
-    []
+    [sortKey, sortOrder, handleSort]
   );
+
+  // Selection checkbox in the gutter column (replaces the row-number gutter).
+  const gutterColumn: SimpleColumn<GridRow, SelectionColumnData> = {
+    basis: 44,
+    minWidth: 44,
+    component: SelectionCell as (props: CellProps<GridRow, SelectionColumnData>) => JSX.Element,
+    columnData: { toggle: toggleRow },
+    title: (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <input
+          type="checkbox"
+          checked={allDisplayedSelected}
+          onChange={toggleSelectAll}
+          aria-label="전체 선택"
+        />
+      </div>
+    ),
+  };
 
   const cellClassName = useCallback(
     ({ rowData, columnId }: { rowData: unknown; rowIndex: number; columnId?: string }) => {
-      const cat = rowData as Cat;
+      const cat = rowData as GridRow;
       if (columnId && invalidCells.has(`${cat.id}::${columnId}`)) {
         return 'dsg-cell-invalid';
       }
@@ -279,6 +463,31 @@ export default function CatGrid() {
     },
     [invalidCells]
   );
+
+  // Grid edits come back as the displayed subset; merge by id into the full set.
+  const handleGridChange = useCallback((newRows: GridRow[]) => {
+    const byId = new Map(newRows.map((r) => [r.id, r]));
+    setRows((prev) =>
+      prev.map((r) => {
+        const edited = byId.get(r.id);
+        if (!edited) return r;
+        const { __selected, ...rest } = edited;
+        return rest as Cat;
+      })
+    );
+  }, []);
+
+  const bulkSpec = BULK_FIELDS.find((b) => b.key === bulkField)!;
+  const bulkReady = selectedIds.size > 0 && coerceBulkValue(bulkSpec, bulkValue).ok;
+
+  const applyBulkEdit = () => {
+    const { ok, value } = coerceBulkValue(bulkSpec, bulkValue);
+    if (!ok || selectedIds.size === 0) return;
+    setRows((prev) =>
+      prev.map((r) => (selectedIds.has(r.id) ? ({ ...r, [bulkSpec.key]: value } as Cat) : r))
+    );
+    setNotice(null);
+  };
 
   const handleSave = async () => {
     setNotice(null);
@@ -313,6 +522,12 @@ export default function CatGrid() {
     setRows(originalCats);
     setNotice(null);
     setError(null);
+  };
+
+  const clearFilters = () => {
+    setFilters(EMPTY_CAT_FILTERS);
+    setSortKey(null);
+    setSortOrder('asc');
   };
 
   if (loading) {
@@ -367,6 +582,134 @@ export default function CatGrid() {
         </div>
       </div>
 
+      {/* Search + filter toggle */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-3">
+        <div className="relative flex-1 max-w-md">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="고양이 검색..."
+            value={filters.searchTerm}
+            onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <FiFilter /> 필터
+        </button>
+        <div className="text-sm text-gray-500 flex items-center">
+          {displayedRows.length} / {rows.length}마리
+        </div>
+      </div>
+
+      {/* Filter panel */}
+      {showFilters && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FilterSelect
+              label="상태"
+              value={filters.statusFilter}
+              onChange={(v) => setFilters({ ...filters, statusFilter: v })}
+              options={uniqueStatuses.map((s) => ({ value: s, label: s }))}
+            />
+            <FilterSelect
+              label="거주지"
+              value={filters.locationFilter}
+              onChange={(v) => setFilters({ ...filters, locationFilter: v })}
+              options={uniqueLocations.map((l) => ({ value: l, label: l }))}
+            />
+            <FilterSelect
+              label="성별"
+              value={filters.genderFilter}
+              onChange={(v) => setFilters({ ...filters, genderFilter: v })}
+              options={uniqueGenders.map((g) => ({
+                value: g,
+                label: g === 'M' ? '남 (M)' : g === 'F' ? '여 (F)' : g,
+              }))}
+            />
+            <FilterSelect
+              label="출생연도"
+              value={filters.birthYearFilter}
+              onChange={(v) => setFilters({ ...filters, birthYearFilter: v })}
+              options={uniqueBirthYears.map((y) => ({ value: y.toString(), label: `${y}년` }))}
+            />
+            <FilterSelect
+              label="중성화"
+              value={filters.neuteredFilter}
+              onChange={(v) => setFilters({ ...filters, neuteredFilter: v })}
+              options={[
+                { value: 'true', label: 'O (중성화됨)' },
+                { value: 'false', label: 'X (중성화 안됨)' },
+                { value: 'unknown', label: '? (알 수 없음)' },
+              ]}
+            />
+            <FilterSelect
+              label="입양가능"
+              value={filters.adoptableFilter}
+              onChange={(v) => setFilters({ ...filters, adoptableFilter: v })}
+              options={[
+                { value: 'true', label: '입양 가능' },
+                { value: 'false', label: '입양 대상 아님' },
+              ]}
+            />
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+            >
+              필터 초기화
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk-edit toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-blue-800">선택 {selectedIds.size}개</span>
+          <span className="text-sm text-gray-500">·</span>
+          <span className="text-sm text-gray-600">필드</span>
+          <select
+            value={bulkField}
+            onChange={(e) => {
+              setBulkField(e.target.value as keyof Cat);
+              setBulkValue('');
+            }}
+            className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {BULK_FIELDS.map((b) => (
+              <option key={b.key as string} value={b.key as string}>
+                {b.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-sm text-gray-600">값</span>
+          <BulkValueEditor
+            spec={bulkSpec}
+            value={bulkValue}
+            onChange={setBulkValue}
+            locations={uniqueLocations}
+          />
+          <button
+            onClick={applyBulkEdit}
+            disabled={!bulkReady}
+            className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          >
+            적용
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="px-3 py-1.5 text-gray-600 border border-gray-300 rounded text-sm hover:bg-white"
+          >
+            선택 해제
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
@@ -390,15 +733,109 @@ export default function CatGrid() {
         </div>
       )}
 
-      <DataSheetGrid<Cat>
-        value={rows}
-        onChange={(newRows) => setRows(newRows)}
+      <DataSheetGrid<GridRow>
+        value={displayedRows}
+        onChange={handleGridChange}
         columns={columns}
+        gutterColumn={gutterColumn}
         cellClassName={cellClassName}
         rowKey="id"
         lockRows
         height={600}
       />
     </div>
+  );
+}
+
+// --- Small presentational helpers -------------------------------------------
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">전체</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function BulkValueEditor({
+  spec,
+  value,
+  onChange,
+  locations,
+}: {
+  spec: BulkFieldSpec;
+  value: string;
+  onChange: (value: string) => void;
+  locations: string[];
+}) {
+  const baseClass =
+    'px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+  if (spec.editor === 'number') {
+    return (
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="예: 2020"
+        min={1990}
+        max={2030}
+        className={`${baseClass} w-28`}
+      />
+    );
+  }
+
+  if (spec.editor === 'locations') {
+    const listId = `bulk-loc-${spec.key as string}`;
+    return (
+      <>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          list={listId}
+          placeholder="거주지 입력/선택"
+          className={`${baseClass} w-44`}
+        />
+        <datalist id={listId}>
+          {locations.map((l) => (
+            <option key={l} value={l} />
+          ))}
+        </datalist>
+      </>
+    );
+  }
+
+  // select / neutered / adoptable — all driven by spec.options
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={baseClass}>
+      <option value="">선택...</option>
+      {(spec.options ?? []).map((o) => (
+        <option key={String(o.value)} value={String(o.value)}>
+          {o.label}
+        </option>
+      ))}
+    </select>
   );
 }
