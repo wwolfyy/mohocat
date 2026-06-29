@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,84 +11,42 @@ interface AdminAuthProps {
 }
 
 export default function AdminAuth({ children }: AdminAuthProps) {
-  const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Use the enhanced useAuth hook
-  const { user, signInWithKakao, isSigningInWithKakao, kakaoSignInError, kakaoSignInSuccess } =
-    useAuth();
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    try {
-      // Set a timeout to avoid infinite loading
-      timeoutId = setTimeout(() => {
-        if (loading) {
-          setAuthError('Authentication timeout - please reload the page');
-          setLoading(false);
-        }
-      }, 10000); // 10 second timeout
-
-      const unsubscribe = onAuthStateChanged(auth, async (authUser: User | null) => {
-        try {
-          clearTimeout(timeoutId);
-
-          if (authUser) {
-            const adminStatus = await checkIsAdmin(authUser);
-            if (adminStatus) {
-              setLoading(false);
-            } else {
-              setAuthError('Access denied: Admin privileges required');
-              setLoading(false);
-            }
-          } else {
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error('Error in auth state change:', error);
-          setAuthError('Authentication error occurred');
-          setLoading(false);
-        }
-      });
-
-      return () => {
-        clearTimeout(timeoutId);
-        unsubscribe();
-      };
-    } catch (error) {
-      console.error('Error setting up auth listener:', error);
-      setAuthError('Failed to initialize authentication');
-      setLoading(false);
-      clearTimeout(timeoutId!);
-    }
-  }, [loading]);
+  // Auth state comes from the single app-wide AuthProvider listener (via
+  // useAuth) — AdminAuth no longer runs its own onAuthStateChanged subscription
+  // (and thus no longer needs the old 10s init-timeout guard).
+  const {
+    user,
+    loading: authLoading,
+    signInWithKakao,
+    isSigningInWithKakao,
+    kakaoSignInError,
+    kakaoSignInSuccess,
+  } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    setLoading(true);
+    setIsLoggingIn(true);
 
     try {
+      // On success, AuthProvider's listener updates `user` → this re-renders.
       await signInWithEmailAndPassword(auth, email, password);
-      // Clear any previous auth errors on successful login
-      setAuthError('');
     } catch (error: any) {
       console.error('Login error:', error);
       setLoginError(error.message || 'Login failed');
     } finally {
-      setLoading(false);
+      setIsLoggingIn(false);
     }
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // Reset all auth state
-      setAuthError('');
       setLoginError('');
       setEmail('');
       setPassword('');
@@ -97,38 +55,63 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     }
   };
 
-  const resetAuthState = () => {
-    setAuthError('');
-    setLoginError('');
-    setEmail('');
-    setPassword('');
-    setLoading(false);
-  };
-
-  // Check if user is admin for rendering
+  // Admin check — AdminAuth's own concern, layered on the shared auth state.
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user) {
-        try {
-          const adminStatus = await checkIsAdmin(user);
-          setIsAdmin(adminStatus);
-        } catch (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
+    if (!user) {
+      setIsAdmin(false);
       setIsAdminLoading(false);
-    };
+      return;
+    }
 
-    checkAdminStatus();
+    let cancelled = false;
+    setIsAdminLoading(true);
+    (async () => {
+      try {
+        const adminStatus = await checkIsAdmin(user);
+        if (!cancelled) setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        if (!cancelled) setIsAdmin(false);
+      } finally {
+        if (!cancelled) setIsAdminLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
-  if (authError) {
+  // Auth still resolving (shared listener), or the admin check is in flight.
+  if (authLoading || (user && isAdminLoading)) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#f9fafb',
+        }}
+        data-oid="molt2-t"
+      >
+        <div style={{ textAlign: 'center' }} data-oid="ri8ukco">
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }} data-oid="o1ym79x">
+            🐱
+          </div>
+          <p style={{ color: '#6b7280' }} data-oid="m.zdt.o">
+            Loading admin interface...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Signed in, but lacking admin privileges.
+  if (user && !isAdmin) {
     return (
       <div
         style={{
@@ -162,10 +145,10 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             }}
             data-oid="vd4h5h8"
           >
-            Authentication Error
+            Access denied
           </h2>
           <p style={{ color: '#6b7280', marginBottom: '1.5rem' }} data-oid="ji.gyoe">
-            {authError}
+            Access denied: Admin privileges required
           </p>
 
           <div
@@ -178,24 +161,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             data-oid="91v6y5h"
           >
             <button
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid="r.juzb9"
-            >
-              🔄 Reload Page
-            </button>
-
-            <button
-              onClick={resetAuthState}
+              onClick={handleLogout}
               style={{
                 padding: '0.75rem 1.5rem',
                 backgroundColor: '#6b7280',
@@ -208,27 +174,8 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               }}
               data-oid=".956x_u"
             >
-              🔃 Reset Auth State
+              Sign out
             </button>
-
-            <a
-              href="/admin/create-user"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#10b981',
-                color: 'white',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid="f:qvsjc"
-            >
-              🛠️ Create Test Admin User ↗
-            </a>
 
             <a
               href="/"
@@ -247,59 +194,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     );
   }
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          backgroundColor: '#f9fafb',
-        }}
-        data-oid="molt2-t"
-      >
-        <div style={{ textAlign: 'center' }} data-oid="ri8ukco">
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }} data-oid="o1ym79x">
-            🐱
-          </div>
-          <p style={{ color: '#6b7280', marginBottom: '1rem' }} data-oid="m.zdt.o">
-            Loading admin interface...
-          </p>
-          <div
-            style={{
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-            data-oid="kce.ca:"
-          >
-            <button
-              onClick={() => {
-                setLoading(false);
-                setAuthError('Authentication timeout - please check your Firebase configuration');
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-              }}
-              data-oid="g4xpw9g"
-            >
-              Stop Loading
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || !isAdmin || isAdminLoading) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
@@ -398,7 +293,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
               <button
                 type="submit"
-                disabled={isSigningInWithKakao}
+                disabled={isSigningInWithKakao || isLoggingIn}
                 className={cn(
                   'w-full py-3 rounded-lg font-bold transition-all duration-200',
                   'focus:outline-none focus:ring-2 focus:ring-offset-2',
@@ -406,31 +301,14 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                   'hover:shadow-lg hover:-translate-y-1',
                   'focus:ring-yellow-500',
                   {
-                    'opacity-50 cursor-not-allowed': isSigningInWithKakao,
-                    'cursor-pointer': !isSigningInWithKakao,
+                    'opacity-50 cursor-not-allowed': isSigningInWithKakao || isLoggingIn,
+                    'cursor-pointer': !isSigningInWithKakao && !isLoggingIn,
                   }
                 )}
               >
-                Sign In with Email
+                {isLoggingIn ? 'Signing in...' : 'Sign In with Email'}
               </button>
             </form>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center space-y-3">
-              <a
-                href="/admin/create-user"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
-              >
-                🛠️ Create Test Admin User ↗
-              </a>
-
-              <div className="text-xs text-gray-500">
-                Having trouble? Try emergency access or contact support.
-              </div>
-            </div>
           </div>
         </div>
       </div>

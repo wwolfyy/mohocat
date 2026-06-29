@@ -33,15 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     alert(`${feature} 기능은 아직 구현되지 않았습니다.`);
   };
 
-  // Bypass authentication for the create-user utility page
-  if (pathname === '/admin/create-user') {
-    return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }} data-oid="whnijy.">
-        {children}
-      </div>
-    );
-  }
-
   return (
     <AdminAuth data-oid="b2-0cee">
       <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }} data-oid="8t9ym4z">
