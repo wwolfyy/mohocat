@@ -35,6 +35,10 @@ import {
   type CatFilterState,
 } from '@/utils/cat-filters';
 import { selectColumn, type SelectOption } from './selectColumn';
+import { adminStrings } from '@/constants/adminStrings';
+import Button from '@/components/ui/Button';
+
+const { catGrid: t, common } = adminStrings;
 
 /**
  * Spreadsheet-style, cell-editable grid for the `cats` collection — a second
@@ -69,8 +73,8 @@ const STATUS_OPTIONS: SelectOption<string>[] = [
 ];
 
 const DOB_CERTAINTY_OPTIONS: SelectOption<string>[] = [
-  { value: 'certain', label: 'Certain' },
-  { value: 'uncertain', label: 'Uncertain' },
+  { value: 'certain', label: t.options.certain },
+  { value: 'uncertain', label: t.options.uncertain },
 ];
 
 const NEUTERED_OPTIONS: SelectOption<boolean>[] = [
@@ -111,8 +115,8 @@ interface FieldSpec {
 // user never touches — an untouched field is never part of a patch, so it never
 // reaches a write. `ignoreUndefinedProperties` stays off, by design.
 const MANDATORY_BLANK_MESSAGE: Partial<Record<keyof Cat, string>> = {
-  date_of_birth: '출생연도는 비워둘 수 없습니다',
-  isNeutered: '중성화 여부는 비워둘 수 없습니다',
+  date_of_birth: t.mandatory.dobBlank,
+  isNeutered: t.mandatory.neuteredBlank,
 };
 
 const FIELD_SPECS: FieldSpec[] = [
@@ -210,7 +214,7 @@ function SelectionCell({ rowData, columnData }: CellProps<GridRow, SelectionColu
         checked={!!rowData.__selected}
         onChange={() => columnData.toggle(rowData.id)}
         onClick={(e) => e.stopPropagation()}
-        aria-label="행 선택"
+        aria-label={t.selectRow}
       />
     </div>
   );
@@ -337,7 +341,7 @@ export default function CatGrid() {
       setOriginalCats(data);
       setRows(data);
     } catch (err: any) {
-      setError('고양이 데이터를 불러오지 못했습니다: ' + err.message);
+      setError(t.loadFailed(err.message));
     } finally {
       setLoading(false);
     }
@@ -420,7 +424,7 @@ export default function CatGrid() {
               e.stopPropagation();
               handleSort(key);
             }}
-            className="flex items-center gap-1 w-full font-medium hover:text-blue-600"
+            className="flex items-center gap-1 w-full font-medium hover:text-brand-600"
           >
             {title}
             {sortKey === key &&
@@ -447,7 +451,7 @@ export default function CatGrid() {
           type="checkbox"
           checked={allDisplayedSelected}
           onChange={toggleSelectAll}
-          aria-label="전체 선택"
+          aria-label={t.selectAll}
         />
       </div>
     ),
@@ -499,7 +503,7 @@ export default function CatGrid() {
       return;
     }
     if (updates.length === 0) {
-      setNotice('변경사항이 없습니다.');
+      setNotice(t.noChanges);
       return;
     }
 
@@ -510,9 +514,9 @@ export default function CatGrid() {
       await triggerCatRevalidate(user);
       const count = updates.length;
       await loadCats();
-      setNotice(`${count}마리의 정보를 저장했어요.`);
+      setNotice(t.saved(count));
     } catch (err: any) {
-      setError('저장에 실패했습니다: ' + err.message);
+      setError(t.saveFailed(err.message));
     } finally {
       setSaving(false);
     }
@@ -533,7 +537,7 @@ export default function CatGrid() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -549,36 +553,38 @@ export default function CatGrid() {
       {/* Save bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="text-sm text-gray-600">
-          셀을 직접 수정한 뒤 <span className="font-medium">전체 저장</span>을 누르면 변경된 칸만
-          저장돼요.
+          {t.editHintPre}
+          <span className="font-medium">{t.saveAll}</span>
+          {t.editHintPost}
           {dirtyCount > 0 && (
-            <span className="ml-2 text-amber-700 font-medium">미저장 {dirtyCount}행</span>
+            <span className="ml-2 text-amber-700 font-medium">{t.unsavedRows(dirtyCount)}</span>
           )}
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="secondary"
             onClick={handleDiscard}
             disabled={saving || dirtyCount === 0}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            className="gap-2"
           >
-            <FiRotateCcw /> 되돌리기
-          </button>
-          <button
+            <FiRotateCcw /> {t.discard}
+          </Button>
+          <Button
             onClick={handleSave}
             disabled={saving || dirtyCount === 0 || errorMessages.length > 0}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="gap-2"
           >
             {saving ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                저장 중...
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ink"></div>
+                {common.saving}
               </>
             ) : (
               <>
-                <FiSave /> 전체 저장
+                <FiSave /> {t.saveAll}
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -588,20 +594,17 @@ export default function CatGrid() {
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="고양이 검색..."
+            placeholder={t.searchPlaceholder}
             value={filters.searchTerm}
             onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-transparent"
           />
         </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <FiFilter /> 필터
-        </button>
+        <Button variant="secondary" onClick={() => setShowFilters(!showFilters)} className="gap-2">
+          <FiFilter /> {t.filterToggle}
+        </Button>
         <div className="text-sm text-gray-500 flex items-center">
-          {displayedRows.length} / {rows.length}마리
+          {t.count(displayedRows.length, rows.length)}
         </div>
       </div>
 
@@ -610,76 +613,76 @@ export default function CatGrid() {
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <FilterSelect
-              label="상태"
+              label={t.filters.status}
               value={filters.statusFilter}
               onChange={(v) => setFilters({ ...filters, statusFilter: v })}
               options={uniqueStatuses.map((s) => ({ value: s, label: s }))}
             />
             <FilterSelect
-              label="거주지"
+              label={t.filters.location}
               value={filters.locationFilter}
               onChange={(v) => setFilters({ ...filters, locationFilter: v })}
               options={uniqueLocations.map((l) => ({ value: l, label: l }))}
             />
             <FilterSelect
-              label="성별"
+              label={t.filters.gender}
               value={filters.genderFilter}
               onChange={(v) => setFilters({ ...filters, genderFilter: v })}
               options={uniqueGenders.map((g) => ({
                 value: g,
-                label: g === 'M' ? '남 (M)' : g === 'F' ? '여 (F)' : g,
+                label: g === 'M' ? t.filters.male : g === 'F' ? t.filters.female : g,
               }))}
             />
             <FilterSelect
-              label="출생연도"
+              label={t.filters.birthYear}
               value={filters.birthYearFilter}
               onChange={(v) => setFilters({ ...filters, birthYearFilter: v })}
-              options={uniqueBirthYears.map((y) => ({ value: y.toString(), label: `${y}년` }))}
+              options={uniqueBirthYears.map((y) => ({
+                value: y.toString(),
+                label: t.filters.yearLabel(y),
+              }))}
             />
             <FilterSelect
-              label="중성화"
+              label={t.filters.neutered}
               value={filters.neuteredFilter}
               onChange={(v) => setFilters({ ...filters, neuteredFilter: v })}
               options={[
-                { value: 'true', label: 'O (중성화됨)' },
-                { value: 'false', label: 'X (중성화 안됨)' },
-                { value: 'unknown', label: '? (알 수 없음)' },
+                { value: 'true', label: t.filters.neuteredYes },
+                { value: 'false', label: t.filters.neuteredNo },
+                { value: 'unknown', label: t.filters.neuteredUnknown },
               ]}
             />
             <FilterSelect
-              label="입양가능"
+              label={t.filters.adoptable}
               value={filters.adoptableFilter}
               onChange={(v) => setFilters({ ...filters, adoptableFilter: v })}
               options={[
-                { value: 'true', label: '입양 가능' },
-                { value: 'false', label: '입양 대상 아님' },
+                { value: 'true', label: t.filters.adoptableYes },
+                { value: 'false', label: t.filters.adoptableNo },
               ]}
             />
           </div>
           <div className="mt-3 flex justify-end">
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-            >
-              필터 초기화
-            </button>
+            <Button variant="secondary" size="sm" onClick={clearFilters}>
+              {t.clearFilters}
+            </Button>
           </div>
         </div>
       )}
 
       {/* Bulk-edit toolbar */}
       {selectedIds.size > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-blue-800">선택 {selectedIds.size}개</span>
+        <div className="mb-4 p-3 bg-brand-50 border border-brand-200 rounded-lg flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-ink">{t.bulk.selected(selectedIds.size)}</span>
           <span className="text-sm text-gray-500">·</span>
-          <span className="text-sm text-gray-600">필드</span>
+          <span className="text-sm text-gray-600">{t.bulk.field}</span>
           <select
             value={bulkField}
             onChange={(e) => {
               setBulkField(e.target.value as keyof Cat);
               setBulkValue('');
             }}
-            className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
           >
             {BULK_FIELDS.map((b) => (
               <option key={b.key as string} value={b.key as string}>
@@ -687,26 +690,19 @@ export default function CatGrid() {
               </option>
             ))}
           </select>
-          <span className="text-sm text-gray-600">값</span>
+          <span className="text-sm text-gray-600">{t.bulk.value}</span>
           <BulkValueEditor
             spec={bulkSpec}
             value={bulkValue}
             onChange={setBulkValue}
             locations={uniqueLocations}
           />
-          <button
-            onClick={applyBulkEdit}
-            disabled={!bulkReady}
-            className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
-          >
-            적용
-          </button>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="px-3 py-1.5 text-gray-600 border border-gray-300 rounded text-sm hover:bg-white"
-          >
-            선택 해제
-          </button>
+          <Button onClick={applyBulkEdit} disabled={!bulkReady} size="sm">
+            {t.bulk.apply}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setSelectedIds(new Set())}>
+            {t.bulk.deselect}
+          </Button>
         </div>
       )}
 
@@ -724,7 +720,7 @@ export default function CatGrid() {
 
       {errorMessages.length > 0 && (
         <div className="mb-4 p-4 bg-red-50 border border-red-300 text-red-700 rounded text-sm">
-          <p className="font-medium mb-1">아래 항목을 먼저 수정해 주세요 (빨간 칸):</p>
+          <p className="font-medium mb-1">{t.fixFirst}</p>
           <ul className="list-disc pl-5 space-y-0.5">
             {Array.from(new Set(errorMessages)).map((msg) => (
               <li key={msg}>{msg}</li>
@@ -765,9 +761,9 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
       >
-        <option value="">전체</option>
+        <option value="">{t.all}</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
@@ -790,7 +786,7 @@ function BulkValueEditor({
   locations: string[];
 }) {
   const baseClass =
-    'px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+    'px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-300';
 
   if (spec.editor === 'number') {
     return (
@@ -798,7 +794,7 @@ function BulkValueEditor({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="예: 2020"
+        placeholder={t.bulk.yearPlaceholder}
         min={1990}
         max={2030}
         className={`${baseClass} w-28`}
@@ -815,7 +811,7 @@ function BulkValueEditor({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           list={listId}
-          placeholder="거주지 입력/선택"
+          placeholder={t.bulk.locationPlaceholder}
           className={`${baseClass} w-44`}
         />
         <datalist id={listId}>
@@ -830,7 +826,7 @@ function BulkValueEditor({
   // select / neutered / adoptable — all driven by spec.options
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} className={baseClass}>
-      <option value="">선택...</option>
+      <option value="">{t.bulk.selectPlaceholder}</option>
       {(spec.options ?? []).map((o) => (
         <option key={String(o.value)} value={String(o.value)}>
           {o.label}

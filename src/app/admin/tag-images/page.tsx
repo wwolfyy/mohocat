@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { getImageService, getCatService } from '@/services';
 import { Cat } from '@/types';
 import { CatImage } from '@/types/media';
+import { adminStrings } from '@/constants/adminStrings';
+import Button from '@/components/ui/Button';
+
+const { tagImages: t } = adminStrings;
 
 interface AdminImage extends CatImage {
   // Additional admin-specific properties can be added here
@@ -92,7 +96,7 @@ export default function TagImagesPage() {
       setImages(adminImages);
     } catch (err: any) {
       console.error('Error loading images:', err);
-      setError('Failed to load images: ' + err.message);
+      setError(t.alerts.loadFailed(err.message));
     } finally {
       setLoading(false);
     }
@@ -159,10 +163,10 @@ export default function TagImagesPage() {
       setImages(images.map((img) => (img.id === selectedImage.id ? updatedImage : img)));
       setSelectedImage(updatedImage);
 
-      alert('Image metadata saved successfully!');
+      alert(t.alerts.saved);
     } catch (err: any) {
       console.error('Error saving metadata:', err);
-      alert('Failed to save metadata: ' + err.message);
+      alert(t.alerts.saveFailed(err.message));
     } finally {
       setSaving(false);
     }
@@ -171,8 +175,7 @@ export default function TagImagesPage() {
   const deleteImageAndMetadata = async () => {
     if (!selectedImage) return;
 
-    if (!confirm('Are you sure you want to delete this image metadata? (Storage file will remain)'))
-      return;
+    if (!confirm(t.alerts.deleteConfirm)) return;
 
     try {
       setSaving(true);
@@ -184,10 +187,10 @@ export default function TagImagesPage() {
       setImages(images.filter((img) => img.id !== selectedImage.id));
       setSelectedImage(null);
 
-      alert('Image metadata deleted successfully!');
+      alert(t.alerts.deleted);
     } catch (err: any) {
       console.error('Error deleting image:', err);
-      alert('Failed to delete image: ' + err.message);
+      alert(t.alerts.deleteFailed(err.message));
     } finally {
       setSaving(false);
     }
@@ -224,10 +227,10 @@ export default function TagImagesPage() {
       // Refresh images after batch update
       await loadImages();
       clearSelection();
-      alert(`Successfully updated ${selectedImagesList.length} images!`);
+      alert(t.alerts.batchUpdated(selectedImagesList.length));
     } catch (err: any) {
       console.error('Error batch updating:', err);
-      alert('Failed to update images: ' + err.message);
+      alert(t.alerts.batchUpdateFailed(err.message));
     } finally {
       setBatchSaving(false);
     }
@@ -262,11 +265,11 @@ export default function TagImagesPage() {
       // Refresh images after batch update
       await loadImages();
 
-      alert(`Successfully updated tags for ${selectedImagesList.length} images!`);
+      alert(t.alerts.tagsUpdated(selectedImagesList.length));
       setBatchTags(''); // Clear tags after successful update
     } catch (err: any) {
       console.error('Error batch updating tags:', err);
-      alert('Failed to update tags: ' + err.message);
+      alert(t.alerts.tagsUpdateFailed(err.message));
     } finally {
       setSavingTags(false);
     }
@@ -296,11 +299,11 @@ export default function TagImagesPage() {
       // Refresh images after batch update
       await loadImages();
 
-      alert(`Successfully updated creation date for ${selectedImagesList.length} images!`);
+      alert(t.alerts.dateUpdated(selectedImagesList.length));
       setBatchCreatedTime(''); // Clear date after successful update
     } catch (err: any) {
       console.error('Error batch updating date:', err);
-      alert('Failed to update creation date: ' + err.message);
+      alert(t.alerts.dateUpdateFailed(err.message));
     } finally {
       setSavingDate(false);
     }
@@ -309,7 +312,7 @@ export default function TagImagesPage() {
   // Removed batchDeleteImages functionality
 
   const syncWithStorage = async () => {
-    if (!confirm('This will sync metadata with storage files. Continue?')) return;
+    if (!confirm(t.alerts.syncConfirm)) return;
 
     try {
       setBatchSaving(true);
@@ -324,10 +327,10 @@ export default function TagImagesPage() {
       }));
 
       setImages(adminImages);
-      alert('Sync completed successfully!');
+      alert(t.alerts.synced);
     } catch (err: any) {
       console.error('Error syncing:', err);
-      alert('Failed to sync: ' + err.message);
+      alert(t.alerts.syncFailed(err.message));
     } finally {
       setBatchSaving(false);
     }
@@ -343,20 +346,11 @@ export default function TagImagesPage() {
     });
 
     if (imagesNeedingDates.length === 0) {
-      alert(
-        '❌ No images found that need date parsing.\n\nEither all images already have creation dates, or no image filenames contain parseable date patterns.'
-      );
+      alert(t.alerts.noImagesNeedParsing);
       return;
     }
 
-    const confirmed = confirm(
-      `🤖 Automatic Date Parsing\n\n` +
-        `This will parse creation dates from image filenames and update:\n` +
-        `• Image createdTime field\n\n` +
-        `Found ${imagesNeedingDates.length} image(s) that could benefit from date parsing.\n\n` +
-        `⚠️ This will make changes to the database and may take time to process.\n\n` +
-        `Continue?`
-    );
+    const confirmed = confirm(t.alerts.autoParseConfirm(imagesNeedingDates.length));
 
     if (!confirmed) return;
 
@@ -437,12 +431,12 @@ export default function TagImagesPage() {
       setImages(updatedImages);
 
       // Show results
-      let resultMessage = `🎉 Automatic Date Parsing Complete!\n\n`;
-      resultMessage += `✅ Successfully processed: ${successCount} images\n`;
+      let resultMessage = `${t.alerts.doneHeader}\n\n`;
+      resultMessage += `${t.alerts.successLine(successCount)}\n`;
       if (failCount > 0) {
-        resultMessage += `❌ Failed: ${failCount} images\n`;
+        resultMessage += `${t.alerts.failLine(failCount)}\n`;
       }
-      resultMessage += `\n📋 Detailed Results:\n`;
+      resultMessage += t.alerts.detailsHeader;
 
       results.forEach((result) => {
         if (result.success) {
@@ -460,9 +454,7 @@ export default function TagImagesPage() {
       });
     } catch (error) {
       console.error('❌ Error during automatic date parsing:', error);
-      setError(
-        'Failed to parse dates: ' + (error instanceof Error ? error.message : 'Unknown error')
-      );
+      setError(t.alerts.parseFailed(error instanceof Error ? error.message : '알 수 없는 오류'));
     } finally {
       setParsingDates(false);
       setProcessingImages(new Set()); // Clear processing state
@@ -764,12 +756,13 @@ export default function TagImagesPage() {
   if (loading) {
     return (
       <div className="p-6" data-oid="1_6oxhi">
-        <h1 className="text-2xl font-bold mb-4" data-oid="ymu63k_">
-          Tag Images (Service Layer)
+        <h1 className="text-2xl font-bold" data-oid="ymu63k_">
+          {t.title}
         </h1>
+        <div className="mt-2 mb-4 h-1 w-12 rounded-full bg-brand" />
         <div className="flex items-center justify-center min-h-64" data-oid="rag90_w">
           <div className="text-lg text-gray-600" data-oid="k1g-00q">
-            Loading images...
+            {t.loading}
           </div>
         </div>
       </div>
@@ -778,9 +771,10 @@ export default function TagImagesPage() {
 
   return (
     <div className="p-6" data-oid="u3rlnwp">
-      <h1 className="text-2xl font-bold mb-4" data-oid="cls0yll">
-        Tag Images (Service Layer)
+      <h1 className="text-2xl font-bold" data-oid="cls0yll">
+        {t.title}
       </h1>
+      <div className="mt-2 mb-4 h-1 w-12 rounded-full bg-brand" />
       {error && (
         <div
           className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
@@ -799,83 +793,70 @@ export default function TagImagesPage() {
       {/* Service Configuration Status */}
       <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6" data-oid="s.jdfwy">
         <h3 className="text-sm font-semibold text-green-800 mb-2" data-oid="6u8.lu.">
-          Service Layer Configuration
+          {t.serviceBox.title}
         </h3>
         <div className="text-sm space-y-1" data-oid="q5fg353">
           <div data-oid="b3tkekd">
             <span className="text-green-700" data-oid="44b_qfm">
-              Images:
+              {t.serviceBox.imagesLabel}
             </span>{' '}
             <span className="text-green-600" data-oid="-t.ik8g">
-              ✅ Using Image Service Abstraction
+              {t.serviceBox.imagesValue}
             </span>
           </div>
           <div data-oid="x.09el-">
             <span className="text-green-700" data-oid="dvr-ijt">
-              Operations:
+              {t.serviceBox.operationsLabel}
             </span>{' '}
             <span className="text-green-600" data-oid="x_6:7yh">
-              ✅ CRUD operations via service layer
+              {t.serviceBox.operationsValue}
             </span>
           </div>
           <div className="text-xs text-green-600 mt-2" data-oid="xcqrmt8">
-            All database operations go through the service layer for better maintainability and
-            multi-tenant support.
+            {t.serviceBox.note}
           </div>
         </div>
       </div>{' '}
       {/* Action Buttons */}
       <div className="mb-6" data-oid="ajg-85v">
         <div className="mb-4 flex gap-3" data-oid="8pjpewl">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={syncWithStorage}
             disabled={batchSaving}
-            className={`px-3 py-2 text-white text-sm rounded ${
-              batchSaving
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'
-            }`}
             data-oid="8:t-dmv"
           >
-            🔄 {batchSaving ? 'Syncing...' : 'Sync with Storage'}
-          </button>
+            🔄 {batchSaving ? t.actions.syncing : t.actions.sync}
+          </Button>
 
-          <button
-            onClick={() => loadImages()}
-            disabled={loading}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 text-sm"
-            data-oid="1xydmf7"
-          >
-            {loading ? 'Loading...' : '🔄 Refresh Images'}
-          </button>
+          <Button size="sm" onClick={() => loadImages()} disabled={loading} data-oid="1xydmf7">
+            🔄 {loading ? t.actions.refreshing : t.actions.refresh}
+          </Button>
 
-          <button
+          <Button
+            size="sm"
             onClick={handleAutomaticDateParsing}
             disabled={parsingDates || loading}
-            className={`px-4 py-2 text-white rounded text-sm ${
-              parsingDates || loading
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-purple-500 hover:bg-purple-600 cursor-pointer'
-            }`}
             data-oid="oqdwg.x"
           >
-            {parsingDates ? '📅 Parsing...' : '🤖 Automatic Date Parsing'}
-          </button>
+            🤖 {parsingDates ? t.actions.parsing : t.actions.autoDateParse}
+          </Button>
         </div>
       </div>
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" data-oid="8-jj_bq">
         <div className="bg-white p-4 rounded-lg shadow" data-oid=":p_1kr3">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="v:w_540">
-            Total Images
+            {t.stats.total}
           </h3>
-          <p className="text-3xl font-bold text-blue-600" data-oid="mz9wf.7">
+          <p className="text-3xl font-bold text-ink" data-oid="mz9wf.7">
             {images.length}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="i:6omei">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="xkrqzld">
-            Untagged Images
+            {t.stats.untagged}
           </h3>
           <p className="text-3xl font-bold text-orange-600" data-oid="jhxii-h">
             {untaggedImages.length}
@@ -883,7 +864,7 @@ export default function TagImagesPage() {
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="ve8jtya">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="-uxk8de">
-            Tagged Images
+            {t.stats.tagged}
           </h3>
           <p className="text-3xl font-bold text-green-600" data-oid="s:475ar">
             {taggedImages.length}
@@ -891,9 +872,9 @@ export default function TagImagesPage() {
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="ir:hevy">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="jq_cnv8">
-            Need Date Parsing
+            {t.stats.needDateParse}
           </h3>
-          <p className="text-3xl font-bold text-purple-600" data-oid="s7bqu78">
+          <p className="text-3xl font-bold text-brand-600" data-oid="s7bqu78">
             {
               images.filter((image) => {
                 const hasNoCreatedTime = !image.createdTime;
@@ -903,8 +884,8 @@ export default function TagImagesPage() {
             }
           </p>
           {processingImages.size > 0 && (
-            <p className="text-sm text-purple-500 mt-1" data-oid="wqy-.dq">
-              📅 Processing: {processingImages.size}
+            <p className="text-sm text-brand-500 mt-1" data-oid="wqy-.dq">
+              {t.stats.processing(processingImages.size)}
             </p>
           )}
         </div>
@@ -912,7 +893,7 @@ export default function TagImagesPage() {
       {/* Filter Controls */}
       <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6" data-oid="0sa3yzy">
         <h3 className="text-sm font-semibold text-gray-700 mb-3" data-oid="g1q:5t.">
-          Filter Images
+          {t.filters.title}
         </h3>
 
         {/* Tag Filters */}
@@ -922,12 +903,12 @@ export default function TagImagesPage() {
               type="checkbox"
               checked={showTaggedImages}
               onChange={(e) => setShowTaggedImages(e.target.checked)}
-              className="w-4 h-4 text-green-600 rounded focus:ring-green-500 mr-2"
+              className="w-4 h-4 accent-brand-500 rounded mr-2"
               data-oid="hccztv:"
             />
 
             <span className="text-sm text-gray-700" data-oid="efzns_2">
-              Show Tagged Images ({taggedImages.length})
+              {t.filters.showTagged(taggedImages.length)}
             </span>
           </label>
           <label className="flex items-center cursor-pointer" data-oid="zp05ga9">
@@ -935,12 +916,12 @@ export default function TagImagesPage() {
               type="checkbox"
               checked={showUntaggedImages}
               onChange={(e) => setShowUntaggedImages(e.target.checked)}
-              className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 mr-2"
+              className="w-4 h-4 accent-brand-500 rounded mr-2"
               data-oid="vq:9pn9"
             />
 
             <span className="text-sm text-gray-700" data-oid="buj5d5t">
-              Show Untagged Images ({untaggedImages.length})
+              {t.filters.showUntagged(untaggedImages.length)}
             </span>
           </label>
         </div>
@@ -948,7 +929,7 @@ export default function TagImagesPage() {
         {/* Date Filters */}
         <div className="border-t border-gray-300 pt-4" data-oid="a85.3f6">
           <h4 className="text-sm font-semibold text-gray-700 mb-3" data-oid=".pgiw1l">
-            Filter by Created Date
+            {t.filters.byCreatedDate}
           </h4>
           <div className="flex flex-wrap items-center gap-4" data-oid="9pwftck">
             <label className="flex items-center cursor-pointer" data-oid="m4e7n0e">
@@ -956,12 +937,12 @@ export default function TagImagesPage() {
                 type="checkbox"
                 checked={showImagesWithoutTimestamp}
                 onChange={(e) => setShowImagesWithoutTimestamp(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2"
+                className="w-4 h-4 accent-brand-500 rounded mr-2"
                 data-oid="_lvs38s"
               />
 
               <span className="text-sm text-gray-700" data-oid="zdfp0f4">
-                Show images without timestamp ({images.filter((img) => !img.createdTime).length})
+                {t.filters.showWithoutTimestamp(images.filter((img) => !img.createdTime).length)}
               </span>
             </label>
             <label className="flex items-center cursor-pointer" data-oid="k3qx0lx">
@@ -975,12 +956,12 @@ export default function TagImagesPage() {
                     setDateFilterTo('');
                   }
                 }}
-                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mr-2"
+                className="w-4 h-4 accent-brand-500 rounded mr-2"
                 data-oid="iold6qx"
               />
 
               <span className="text-sm text-gray-700" data-oid="k5gmqww">
-                Apply date range filter
+                {t.filters.applyDateRange}
               </span>
             </label>
             <div className="flex items-center gap-2" data-oid="8.7cwpi">
@@ -988,7 +969,7 @@ export default function TagImagesPage() {
                 className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}
                 data-oid="e82g8a8"
               >
-                From:
+                {t.filters.from}
               </label>
               <input
                 type="date"
@@ -1006,7 +987,7 @@ export default function TagImagesPage() {
                 className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}
                 data-oid="hnodu-g"
               >
-                To:
+                {t.filters.to}
               </label>
               <input
                 type="date"
@@ -1025,28 +1006,20 @@ export default function TagImagesPage() {
         {/* Selection and Display Controls */}
         <div className="border-t border-gray-300 pt-4" data-oid="_9nw0wu">
           <h4 className="text-sm font-semibold text-gray-700 mb-3" data-oid="z4ft83-">
-            Selection & Display
+            {t.filters.selectionDisplay}
           </h4>
           <div className="flex flex-wrap items-center gap-4" data-oid="em_6sks">
-            <button
-              onClick={selectAllImages}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm"
-              data-oid="h7:6y73"
-            >
-              Select All
-            </button>
+            <Button size="sm" onClick={selectAllImages} data-oid="h7:6y73">
+              {t.filters.selectAll}
+            </Button>
             {selectedImages.size > 0 && (
-              <button
-                onClick={clearSelection}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-                data-oid="7e1uq.m"
-              >
-                Clear Selection ({selectedImages.size})
-              </button>
+              <Button variant="secondary" size="sm" onClick={clearSelection} data-oid="7e1uq.m">
+                {t.filters.clearSelection(selectedImages.size)}
+              </Button>
             )}
             <div className="flex items-center gap-2" data-oid="buxz8js">
               <label className="text-sm text-gray-700" data-oid="03r-27z">
-                Sort by:
+                {t.filters.sortBy}
               </label>
               <select
                 value={sortBy}
@@ -1055,10 +1028,10 @@ export default function TagImagesPage() {
                 data-oid="-fuhl8o"
               >
                 <option value="created" data-oid="a0s.ith">
-                  Created
+                  {t.filters.sortCreated}
                 </option>
                 <option value="uploaded" data-oid="pk960fc">
-                  Uploaded
+                  {t.filters.sortUploaded}
                 </option>
               </select>
               <select
@@ -1068,16 +1041,16 @@ export default function TagImagesPage() {
                 data-oid="3rwh8ot"
               >
                 <option value="desc" data-oid="e0f8ga3">
-                  Newest First
+                  {t.filters.newestFirst}
                 </option>
                 <option value="asc" data-oid="newp0:1">
-                  Oldest First
+                  {t.filters.oldestFirst}
                 </option>
               </select>
             </div>
             <div className="flex items-center gap-2" data-oid="-x0qavn">
               <label className="text-sm text-gray-700" data-oid="f-t.a61">
-                Images per page:
+                {t.filters.perPage}
               </label>
               <select
                 value={imagesPerPage}
@@ -1103,17 +1076,20 @@ export default function TagImagesPage() {
               </select>
             </div>
             <div className="text-sm text-gray-600" data-oid="h7i63hw">
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredImages.length)} of{' '}
-              {filteredImages.length} images
+              {t.filters.showingRange(
+                startIndex + 1,
+                Math.min(endIndex, filteredImages.length),
+                filteredImages.length
+              )}
             </div>
           </div>
         </div>
       </div>
       {/* Batch Actions */}
       {showBatchActions && (
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4" data-oid="5096-fj">
+        <div className="bg-brand-50 border border-brand-200 p-3 rounded-lg mb-4" data-oid="5096-fj">
           <h3 className="text-lg font-semibold mb-2" data-oid="2j59n_u">
-            Batch Actions ({selectedImages.size} images selected)
+            {t.batch.title(selectedImages.size)}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-oid="02pnyy5">
@@ -1126,7 +1102,7 @@ export default function TagImagesPage() {
                 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center"
                 data-oid="7qoihvz"
               >
-                🏷️ Tags
+                {t.batch.tags}
               </h4>
               <div className="relative mb-2" data-oid="o0q90i0">
                 <input
@@ -1134,7 +1110,7 @@ export default function TagImagesPage() {
                   value={batchTags}
                   onChange={(e) => setBatchTags(e.target.value)}
                   onClick={handleBatchTagsInputClick}
-                  placeholder="Click to select cats..."
+                  placeholder={t.batch.clickToSelect}
                   className="border border-gray-300 rounded px-2 py-1 w-full cursor-pointer pr-12 text-sm"
                   data-oid="0i0o0hc"
                 />
@@ -1142,7 +1118,7 @@ export default function TagImagesPage() {
                 <button
                   type="button"
                   onClick={handleBatchTagsInputClick}
-                  className="absolute right-1 top-1 text-blue-500 hover:text-blue-700 text-xs"
+                  className="absolute right-1 top-1 text-brand-600 hover:text-brand-700 text-xs"
                   data-oid="rfkorsw"
                 >
                   🐱
@@ -1158,7 +1134,7 @@ export default function TagImagesPage() {
                     return (
                       <span
                         key={index}
-                        className="inline-flex items-center bg-blue-100 text-blue-800 text-xs px-1 py-0.5 rounded"
+                        className="inline-flex items-center bg-brand-100 text-ink text-xs px-1 py-0.5 rounded"
                         data-oid="m8o2.cc"
                       >
                         {trimmedTag}
@@ -1172,7 +1148,7 @@ export default function TagImagesPage() {
                               .join(', ');
                             setBatchTags(newTags);
                           }}
-                          className="ml-1 text-blue-600 hover:text-blue-800"
+                          className="ml-1 text-ink/70 hover:text-ink"
                           data-oid="20564_y"
                         >
                           ×
@@ -1183,16 +1159,17 @@ export default function TagImagesPage() {
                 </div>
               )}
 
-              <button
+              <Button
+                size="sm"
                 onClick={batchUpdateTags}
                 disabled={savingTags || !batchTags.trim()}
-                className="w-full px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                className="w-full"
                 data-oid="l.oc.rs"
               >
-                {savingTags ? 'Saving...' : 'Save Tags'}
-              </button>
+                {savingTags ? t.batch.saving : t.batch.saveTags}
+              </Button>
               <p className="text-xs text-yellow-700 mt-1" data-oid="1o3w7ic">
-                ⚠️ Adds to existing tags
+                {t.batch.addsToExisting}
               </p>
             </div>
 
@@ -1205,7 +1182,7 @@ export default function TagImagesPage() {
                 className="text-sm font-semibold text-purple-800 mb-2 flex items-center"
                 data-oid="1wmqq-t"
               >
-                📅 Creation Date
+                {t.batch.creationDate}
               </h4>
               <input
                 type="datetime-local"
@@ -1215,29 +1192,26 @@ export default function TagImagesPage() {
                 data-oid="hfs1233"
               />
 
-              <button
+              <Button
+                size="sm"
                 onClick={batchUpdateDate}
                 disabled={savingDate || !batchCreatedTime.trim()}
-                className="w-full px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                className="w-full"
                 data-oid="5v-kk_."
               >
-                {savingDate ? 'Saving...' : 'Save Date'}
-              </button>
+                {savingDate ? t.batch.saving : t.batch.saveDate}
+              </Button>
               <p className="text-xs text-purple-700 mt-1" data-oid="a6cgrr7">
-                ⚠️ Overwrites existing date
+                {t.batch.overwritesDate}
               </p>
             </div>
           </div>
 
           <div className="flex gap-2 mt-3" data-oid="vvfobmn">
             {/* Delete Metadata button removed */}
-            <button
-              onClick={clearSelection}
-              className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-              data-oid="ca-d9q4"
-            >
-              Cancel
-            </button>
+            <Button variant="secondary" size="sm" onClick={clearSelection} data-oid="ca-d9q4">
+              {t.batch.cancel}
+            </Button>
           </div>
         </div>
       )}
@@ -1248,7 +1222,7 @@ export default function TagImagesPage() {
           {filteredImages.length === 0 ? (
             <div className="text-center py-12" data-oid="hljn4ce">
               <p className="text-gray-600 text-lg" data-oid="5yilazb">
-                No images match the current filter settings.
+                {t.grid.noMatch}
               </p>
             </div>
           ) : (
@@ -1263,7 +1237,7 @@ export default function TagImagesPage() {
                     key={image.id}
                     className={`relative border-2 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                       selectedImage?.id === image.id
-                        ? 'border-blue-500 shadow-lg'
+                        ? 'border-brand-500 shadow-lg'
                         : processingImages.has(image.id)
                           ? 'border-purple-500 shadow-md'
                           : 'border-gray-200'
@@ -1280,7 +1254,7 @@ export default function TagImagesPage() {
                           className="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium"
                           data-oid="sw0on_9"
                         >
-                          📅 Parsing Date...
+                          {t.grid.parsingDate}
                         </div>
                       </div>
                     )}
@@ -1291,7 +1265,7 @@ export default function TagImagesPage() {
                         type="checkbox"
                         checked={selectedImages.has(image.id)}
                         onChange={() => toggleImageSelection(image.id)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        className="w-4 h-4 accent-brand-500 rounded"
                         onClick={(e) => e.stopPropagation()}
                         data-oid="y05e36c"
                       />
@@ -1304,14 +1278,14 @@ export default function TagImagesPage() {
                           className="bg-green-500 text-white text-xs px-2 py-1 rounded"
                           data-oid="x-ggn2k"
                         >
-                          Tagged
+                          {t.grid.tagged}
                         </span>
                       ) : (
                         <span
                           className="bg-orange-500 text-white text-xs px-2 py-1 rounded"
                           data-oid="yg4.n1i"
                         >
-                          Untagged
+                          {t.grid.untagged}
                         </span>
                       )}
                     </div>
@@ -1331,28 +1305,29 @@ export default function TagImagesPage() {
                         </p>
                         {image.uploadDate && (
                           <p className="text-xs text-gray-500 mb-1" data-oid="afz37rn">
-                            Uploaded: {new Date(image.uploadDate).toLocaleDateString()}{' '}
-                            {new Date(image.uploadDate).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {t.grid.uploaded(
+                              `${new Date(image.uploadDate).toLocaleDateString()} ${new Date(
+                                image.uploadDate
+                              ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                            )}
                           </p>
                         )}
                         {image.createdTime && (
                           <p className="text-xs text-gray-500 mb-1" data-oid="us2sb9m">
-                            Created:{' '}
-                            {(() => {
-                              try {
-                                // Handle both Firebase Timestamp and regular Date objects
-                                const createdTime = image.createdTime as any;
-                                const date = createdTime.seconds
-                                  ? new Date(createdTime.seconds * 1000)
-                                  : new Date(createdTime);
-                                return date.toLocaleDateString();
-                              } catch (error) {
-                                return 'Invalid Date';
-                              }
-                            })()}
+                            {t.grid.created(
+                              (() => {
+                                try {
+                                  // Handle both Firebase Timestamp and regular Date objects
+                                  const createdTime = image.createdTime as any;
+                                  const date = createdTime.seconds
+                                    ? new Date(createdTime.seconds * 1000)
+                                    : new Date(createdTime);
+                                  return date.toLocaleDateString();
+                                } catch (error) {
+                                  return t.grid.invalidDate;
+                                }
+                              })()
+                            )}
                           </p>
                         )}
                         {image.tags && image.tags.length > 0 && (
@@ -1360,7 +1335,7 @@ export default function TagImagesPage() {
                             {image.tags.slice(0, 3).map((tag, index) => (
                               <span
                                 key={index}
-                                className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                                className="bg-brand-100 text-ink text-xs px-2 py-1 rounded"
                                 data-oid="z5f896k"
                               >
                                 {tag}
@@ -1368,7 +1343,7 @@ export default function TagImagesPage() {
                             ))}
                             {image.tags.length > 3 && (
                               <span className="text-xs text-gray-500" data-oid="ouz9bry">
-                                +{image.tags.length - 3} more
+                                {t.grid.moreCount(image.tags.length - 3)}
                               </span>
                             )}
                           </div>
@@ -1388,7 +1363,7 @@ export default function TagImagesPage() {
                     className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     data-oid="99xcad1"
                   >
-                    Previous
+                    {t.grid.previous}
                   </button>
 
                   {/* Page numbers */}
@@ -1410,7 +1385,7 @@ export default function TagImagesPage() {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-2 text-sm border rounded ${
                           currentPage === pageNum
-                            ? 'bg-blue-500 text-white border-blue-500'
+                            ? 'bg-brand text-ink border-brand font-bold'
                             : 'border-gray-300 hover:bg-gray-50'
                         }`}
                         data-oid="c8-z7j3"
@@ -1426,7 +1401,7 @@ export default function TagImagesPage() {
                     className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     data-oid="m7idtk8"
                   >
-                    Next
+                    {t.grid.next}
                   </button>
                 </div>
               )}
@@ -1454,10 +1429,10 @@ export default function TagImagesPage() {
                     <button
                       onClick={() => setShowLightbox(true)}
                       className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs hover:bg-opacity-70 transition-all"
-                      title="View full size"
+                      title={t.form.viewFullSize}
                       data-oid="k2lv7bi"
                     >
-                      🔍 Full Size
+                      {t.form.fullSize}
                     </button>
                   </div>
 
@@ -1466,21 +1441,21 @@ export default function TagImagesPage() {
                     {selectedImage.fileName}
                   </h4>
                   <p className="text-xs text-gray-500 mb-1" data-oid="z12pv_j">
-                    Uploaded:{' '}
+                    {t.form.uploaded}{' '}
                     {(() => {
                       try {
                         const date = new Date(selectedImage.uploadDate);
                         if (!isNaN(date.getTime())) {
                           return date.toLocaleDateString();
                         }
-                        return 'Unknown';
+                        return t.form.unknown;
                       } catch (e) {
-                        return 'Unknown';
+                        return t.form.unknown;
                       }
                     })()}
                   </p>
                   <p className="text-xs text-gray-500 mb-1" data-oid="4rjifhh">
-                    Created:{' '}
+                    {t.form.created}{' '}
                     {selectedImage.createdTime
                       ? (() => {
                           try {
@@ -1488,18 +1463,18 @@ export default function TagImagesPage() {
                             if (!isNaN(date.getTime())) {
                               return date.toLocaleDateString();
                             }
-                            return 'Invalid date';
+                            return t.form.invalidDate;
                           } catch (e) {
-                            return 'Invalid date';
+                            return t.form.invalidDate;
                           }
                         })()
-                      : 'null'}
+                      : t.form.nullDate}
                   </p>
                   <div className="text-xs mb-2" data-oid="h2cpid2">
                     <span className="text-gray-500" data-oid="80xpgv0">
-                      Storage:{' '}
+                      {t.form.storage}
                     </span>
-                    <span className="text-blue-600 font-mono break-all text-xs" data-oid="1gnawen">
+                    <span className="text-gray-700 font-mono break-all text-xs" data-oid="1gnawen">
                       {selectedImage.storagePath?.replace('cat_images/', '') ||
                         selectedImage.fileName}
                     </span>
@@ -1512,7 +1487,7 @@ export default function TagImagesPage() {
                       className="block text-sm font-medium text-gray-700 mb-1"
                       data-oid="vbyowmu"
                     >
-                      Tags
+                      {t.form.tags}
                     </label>
 
                     {/* Display existing tags as removable buttons */}
@@ -1525,14 +1500,14 @@ export default function TagImagesPage() {
                           .map((tag, index) => (
                             <span
                               key={index}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand-100 text-ink"
                               data-oid="i.62gql"
                             >
                               {tag}
                               <button
                                 type="button"
                                 onClick={() => removeTag(tag)}
-                                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 text-blue-600 hover:text-blue-800"
+                                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-brand-200 text-ink/70 hover:text-ink"
                                 data-oid="sjtncbq"
                               >
                                 ×
@@ -1553,17 +1528,17 @@ export default function TagImagesPage() {
                     {/* Click area to open cat selector */}
                     <div
                       onClick={handleTagsInputClick}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 cursor-pointer min-h-[40px] flex items-center justify-between bg-gray-50 hover:bg-gray-100"
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus-within:ring-2 focus-within:ring-brand-300 cursor-pointer min-h-[40px] flex items-center justify-between bg-gray-50 hover:bg-gray-100"
                       data-oid="zad9wla"
                     >
                       <span className="text-gray-600 text-sm" data-oid="kypmjou">
-                        {tags ? 'Click to add more cats' : 'Click to select cats'}
+                        {tags ? t.form.addMoreCats : t.form.selectCats}
                       </span>
                       <span
-                        className="text-blue-500 hover:text-blue-700 text-sm"
+                        className="text-brand-600 hover:text-brand-700 text-sm"
                         data-oid="fxo606b"
                       >
-                        🐱 Select Cats
+                        {t.form.selectCatsBtn}
                       </span>
                     </div>
                   </div>
@@ -1573,12 +1548,12 @@ export default function TagImagesPage() {
                       className="block text-sm font-medium text-gray-700 mb-1"
                       data-oid="3cnz2-f"
                     >
-                      Description
+                      {t.form.description}
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Enter description..."
+                      placeholder={t.form.descriptionPlaceholder}
                       className="border border-gray-300 rounded px-3 py-2 w-full h-20"
                       data-oid="lq0pufx"
                     />
@@ -1589,18 +1564,18 @@ export default function TagImagesPage() {
                       className="block text-sm font-medium text-gray-700 mb-1"
                       data-oid="j15b2ik"
                     >
-                      Created Date
+                      {t.form.createdDate}
                     </label>
                     <input
                       type="date"
                       value={createdTime}
                       onChange={(e) => setCreatedTime(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-brand-300 focus:border-transparent"
                       data-oid="mux6zel"
                     />
 
                     <div className="text-xs text-gray-500 mt-1 mb-2" data-oid="m31qoft">
-                      When the image was originally taken/created
+                      {t.form.createdDateHelp}
                     </div>
                     <button
                       type="button"
@@ -1610,37 +1585,37 @@ export default function TagImagesPage() {
                           if (parsedDate) {
                             setCreatedTime(parsedDate.toISOString().split('T')[0]);
                             alert(
-                              `✅ Parsed date from filename: ${parsedDate.toISOString().split('T')[0]}`
+                              t.alerts.parsedFromFilename(parsedDate.toISOString().split('T')[0])
                             );
                           } else {
-                            alert('❌ Could not parse date from filename');
+                            alert(t.alerts.parseFromFilenameFailed);
                           }
                         }
                       }}
-                      className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 text-sm"
+                      className="w-full px-3 py-2 text-brand-700 bg-brand-50 border border-brand-200 rounded hover:bg-brand-100 text-sm"
                       data-oid="m9to11b"
                     >
-                      📅 Parse Date from Filename
+                      {t.form.parseFromFilename}
                     </button>
                   </div>
 
                   <div className="flex gap-2" data-oid="22m018p">
-                    <button
+                    <Button
                       onClick={saveImageMetadata}
                       disabled={saving}
-                      className="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-300"
+                      className="flex-1"
                       data-oid="p-tm877"
                     >
-                      {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button
+                      {saving ? t.form.saving : t.form.saveChanges}
+                    </Button>
+                    <Button
+                      variant="danger"
                       onClick={deleteImageAndMetadata}
                       disabled={saving}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:bg-gray-300"
                       data-oid="267g_h5"
                     >
-                      Delete
-                    </button>
+                      {t.form.delete}
+                    </Button>
                   </div>
                 </div>
               </>
@@ -1649,47 +1624,45 @@ export default function TagImagesPage() {
                 <div className="text-5xl mb-4" data-oid="d0xp162">
                   👆
                 </div>
-                <p data-oid="ajpg6:n">Select an image from the grid to start tagging</p>
+                <p data-oid="ajpg6:n">{t.form.emptyPrompt}</p>
               </div>
             )}
           </div>
         </div>
       </div>
       {/* Date Parsing Configuration */}
-      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6" data-oid="dmx1qou">
-        <h3 className="text-sm font-semibold text-blue-700 mb-3" data-oid="wo.d925">
-          🤖 Automatic Date Parsing
+      <div className="bg-brand-50 border border-brand-200 p-4 rounded-lg mb-6" data-oid="dmx1qou">
+        <h3 className="text-sm font-semibold text-ink mb-3" data-oid="wo.d925">
+          {t.dateParsing.title}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm" data-oid="sn_65vr">
           <div data-oid="5u0sqha">
-            <p className="text-blue-600 mb-2" data-oid="4yi:0l:">
-              <strong data-oid="y-0hpo2">Supported Date Formats:</strong>
+            <p className="text-ink/80 mb-2" data-oid="4yi:0l:">
+              <strong data-oid="y-0hpo2">{t.dateParsing.supportedFormats}</strong>
             </p>
-            <ul className="text-blue-600 space-y-1 ml-4" data-oid="z3_878k">
-              <li data-oid="3znbltb">• YYYY-MM-DD HH.MM.SS (e.g., "2024-03-15 14.30.45")</li>
-              <li data-oid="b850jxb">• YYYYMMDD_HHMMSS (e.g., "20240315_143045")</li>
-              <li data-oid="qp2vkmr">• YYYY-MM-DD (date only, e.g., "2024-03-15")</li>
-              <li data-oid="2hpi7j:">• YYYYMMDD (date only, e.g., "20240315")</li>
+            <ul className="text-ink/80 space-y-1 ml-4" data-oid="z3_878k">
+              <li data-oid="3znbltb">• YYYY-MM-DD HH.MM.SS (예: "2024-03-15 14.30.45")</li>
+              <li data-oid="b850jxb">• YYYYMMDD_HHMMSS (예: "20240315_143045")</li>
+              <li data-oid="qp2vkmr">• YYYY-MM-DD (날짜만, 예: "2024-03-15")</li>
+              <li data-oid="2hpi7j:">• YYYYMMDD (날짜만, 예: "20240315")</li>
             </ul>
           </div>
           <div data-oid="wv9fai8">
-            <p className="text-blue-600 mb-2" data-oid="cd0:y5v">
-              <strong data-oid="2txvn4s">Feature Status:</strong>
+            <p className="text-ink/80 mb-2" data-oid="cd0:y5v">
+              <strong data-oid="2txvn4s">{t.dateParsing.featureStatus}</strong>
             </p>
-            <ul className="text-blue-600 space-y-1" data-oid="alyqkpo">
-              <li data-oid="v97jgwd">✅ Individual date parsing (edit form)</li>
-              <li data-oid="nzmpwpb">✅ Automatic batch date parsing (button)</li>
-              <li data-oid="5db9jrr">✅ Service layer integration</li>
+            <ul className="text-ink/80 space-y-1" data-oid="alyqkpo">
+              <li data-oid="v97jgwd">{t.dateParsing.statusIndividual}</li>
+              <li data-oid="nzmpwpb">{t.dateParsing.statusBatch}</li>
+              <li data-oid="5db9jrr">{t.dateParsing.statusService}</li>
               <li data-oid="iafs.:_">
-                📊{' '}
-                {
+                {t.dateParsing.readyCount(
                   images.filter((image) => {
                     const hasNoCreatedTime = !image.createdTime;
                     const couldParseDate = parseCreatedDateFromFilename(image.fileName) !== null;
                     return hasNoCreatedTime && couldParseDate;
                   }).length
-                }{' '}
-                images ready for date parsing
+                )}
               </li>
             </ul>
           </div>
@@ -1707,8 +1680,7 @@ export default function TagImagesPage() {
           >
             <div className="flex justify-between items-center mb-4" data-oid="g83qdjf">
               <h3 className="text-lg font-semibold" data-oid="7669hnk">
-                Select Cats{' '}
-                {catSelectorContext === 'batch' ? '(Batch Tagging)' : '(Individual Image)'}
+                {t.catSelector.title(catSelectorContext === 'batch')}
               </h3>
               <button
                 onClick={() => setShowCatSelector(false)}
@@ -1723,7 +1695,7 @@ export default function TagImagesPage() {
             <div className="mb-4" data-oid="9accuaa">
               <input
                 type="text"
-                placeholder="Search cats..."
+                placeholder={t.catSelector.search}
                 value={catSearchQuery}
                 onChange={(e) => setCatSearchQuery(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
@@ -1738,7 +1710,7 @@ export default function TagImagesPage() {
             >
               {filteredCats.length === 0 ? (
                 <div className="p-4 text-center text-gray-500" data-oid="w99sk7p">
-                  {cats.length === 0 ? 'No cats found in database' : 'No cats match your search'}
+                  {cats.length === 0 ? t.catSelector.noneInDb : t.catSelector.noMatch}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 p-4" data-oid="up_m:w7">
@@ -1747,7 +1719,7 @@ export default function TagImagesPage() {
                       key={cat.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedCats.has(cat.id)
-                          ? 'bg-blue-50 border border-blue-200'
+                          ? 'bg-brand-50 border border-brand-200'
                           : 'border border-gray-200'
                       }`}
                       data-oid="oah0mjd"
@@ -1794,15 +1766,11 @@ export default function TagImagesPage() {
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
                 data-oid="cl4hmn3"
               >
-                Clear All
+                {t.catSelector.clearAll}
               </button>
-              <button
-                onClick={() => setShowCatSelector(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                data-oid="e7-z0qy"
-              >
-                Done ({selectedCats.size} selected)
-              </button>
+              <Button size="sm" onClick={() => setShowCatSelector(false)} data-oid="e7-z0qy">
+                {t.catSelector.done(selectedCats.size)}
+              </Button>
             </div>
           </div>
         </div>
@@ -1818,7 +1786,7 @@ export default function TagImagesPage() {
             <button
               onClick={() => setShowLightbox(false)}
               className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all text-xl"
-              title="Close"
+              title={t.lightbox.close}
               data-oid="5s:z4d2"
             >
               ×
@@ -1840,44 +1808,46 @@ export default function TagImagesPage() {
               <div className="text-xs space-y-1" data-oid="48pen62">
                 {selectedImage.uploadDate && (
                   <p data-oid="hz0oka_">
-                    <strong data-oid="o6o_h0l">Uploaded:</strong>{' '}
+                    <strong data-oid="o6o_h0l">{t.lightbox.uploaded}</strong>{' '}
                     {(() => {
                       try {
                         const date = new Date(selectedImage.uploadDate);
                         if (!isNaN(date.getTime())) {
                           return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                         }
-                        return 'Invalid date';
+                        return t.lightbox.invalidDate;
                       } catch (e) {
-                        return 'Invalid date';
+                        return t.lightbox.invalidDate;
                       }
                     })()}
                   </p>
                 )}
                 {selectedImage.createdTime && (
                   <p data-oid="jia7zpk">
-                    <strong data-oid="81bblfv">Created:</strong>{' '}
+                    <strong data-oid="81bblfv">{t.lightbox.created}</strong>{' '}
                     {(() => {
                       try {
                         const date = new Date(selectedImage.createdTime);
                         if (!isNaN(date.getTime())) {
                           return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                         }
-                        return 'Invalid date';
+                        return t.lightbox.invalidDate;
                       } catch (e) {
-                        return 'Invalid date';
+                        return t.lightbox.invalidDate;
                       }
                     })()}
                   </p>
                 )}
                 {selectedImage.tags && selectedImage.tags.length > 0 && (
                   <p data-oid="is6pg__">
-                    <strong data-oid="01s8dvs">Tags:</strong> {selectedImage.tags.join(', ')}
+                    <strong data-oid="01s8dvs">{t.lightbox.tags}</strong>{' '}
+                    {selectedImage.tags.join(', ')}
                   </p>
                 )}
                 {selectedImage.description && (
                   <p data-oid="1131mfs">
-                    <strong data-oid="w2i:3te">Description:</strong> {selectedImage.description}
+                    <strong data-oid="w2i:3te">{t.lightbox.description}</strong>{' '}
+                    {selectedImage.description}
                   </p>
                 )}
               </div>

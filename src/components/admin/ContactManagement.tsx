@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getContactService } from '@/services';
 import type { Contact } from '@/types';
+import { adminStrings } from '@/constants/adminStrings';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+
+const { contacts: t, common } = adminStrings;
 
 /** Render a Firestore Timestamp / Date / undefined as a localized Korean date-time. */
 function formatCreatedAt(createdAt: Contact['createdAt']): string {
@@ -30,7 +35,7 @@ export default function ContactManagement() {
       setContacts(all);
     } catch (err) {
       console.error('Failed to load contacts:', err);
-      setError('연락처를 불러오지 못했어요. 다시 시도해 주세요.');
+      setError(t.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -41,22 +46,18 @@ export default function ContactManagement() {
   }, [loadContacts]);
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+    <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900">연락처 관리</h3>
-        <button
-          onClick={loadContacts}
-          disabled={loading}
-          className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-        >
-          {loading ? '불러오는 중…' : '새로고침'}
-        </button>
+        <h3 className="text-lg font-bold text-gray-900">{t.title}</h3>
+        <Button variant="secondary" size="sm" onClick={loadContacts} disabled={loading}>
+          {loading ? common.loading : common.refresh}
+        </Button>
       </div>
 
       {error && <div className="mb-4 text-sm font-medium text-red-600">{error}</div>}
 
       {!loading && !error && contacts.length === 0 && (
-        <div className="py-12 text-center text-gray-500">아직 접수된 동참 신청이 없어요.</div>
+        <div className="py-12 text-center text-gray-500">{t.empty}</div>
       )}
 
       {contacts.length > 0 && (
@@ -64,11 +65,11 @@ export default function ContactManagement() {
           <table className="w-full text-sm text-left">
             <thead className="text-gray-500 border-b border-gray-200">
               <tr>
-                <th className="py-2 pr-4 font-medium">접수일</th>
-                <th className="py-2 pr-4 font-medium">이름</th>
-                <th className="py-2 pr-4 font-medium">전화번호</th>
-                <th className="py-2 pr-4 font-medium">이메일</th>
-                <th className="py-2 font-medium">메시지</th>
+                <th className="py-2 pr-4 font-medium">{t.columns.createdAt}</th>
+                <th className="py-2 pr-4 font-medium">{t.columns.name}</th>
+                <th className="py-2 pr-4 font-medium">{t.columns.phone}</th>
+                <th className="py-2 pr-4 font-medium">{t.columns.email}</th>
+                <th className="py-2 font-medium">{t.columns.message}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -87,6 +88,6 @@ export default function ContactManagement() {
           </table>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
