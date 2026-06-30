@@ -192,12 +192,20 @@ _(Out of scope here: admin mobile — that's §6.)_
       `@mui/icons-material`, `@emotion/react`, `@emotion/styled` (npm pruned 85 packages).
       `tsc` clean + smoke 25/25. The real tag-images/tag-videos admin UIs are hand-built
       and were never react-admin.
-- [-] **Consistency of admin Korean strings — DEFERRED (owner decision 2026-06-30).** The
-  admin UI carries substantial English (e.g. `AdminAuth`: "Mountain Cats Admin", "Please
-  sign in to continue", "Sign In with Email", "Sign Out"; access-denied copy) across ~22
-  admin files. **Scope when picked up:** translate user-facing admin English → Korean
-  (해요체); decide then whether to centralize via a shared admin strings module (mirrors
-  the public `strings.ts`) or keep inline. Not started.
+- [~] **Unified branded design + admin Korean — IN PROGRESS (2026-06-30, handoffs 17–18).**
+  Picks up the retired "utilitarian, no re-skin" target as ONE token-driven primitive set
+  across public + admin, admin re-skinned to the brand, admin Korean (해요체) folded into the
+  same pass via a centralized **`src/constants/adminStrings.ts`** (mirrors the public
+  `strings.ts`). **Done:** Phase 1 shared primitives + admin-silo reconcile (`8e065fb`);
+  Phase 3 chunk 1 nav/CMS-core (`c8aba2d`), chunk 2 members/roles (`17a2509`); **chunk 3
+  media-tagging** (`tag-images`, `tag-videos`, `cat-grid`) + **chunk 4 content**
+  (`ContactManagement`, `AboutContentEditor`) — _this session (handoff-18)_: ~600 strings
+  centralized, `bg-blue/purple → <Button>`/brand, brand focus rings, `accent-brand-500`
+  checkboxes; YouTube-red vendor color kept. tsc + smoke 25/25 green after each.
+  **Remaining:** AdminAuth login/access-denied live-verify; the deferred public
+  hand-rolled-button sweep; then §6 admin-mobile. **Dead-code candidates surfaced** (English
+  left in unused fns/components): `tag-videos` `batchUpdateVideos`/`batchUpdatePlaylists`,
+  `RoleManagementDirect.tsx`, `PermissionManager.tsx`.
 - [x] **✅ Two auth listeners — CONSOLIDATED (commit `dc1d748`).** `AdminAuth` no longer runs
       its own `onAuthStateChanged` subscription; it now derives `user` + `loading` from the
       single app-wide `AuthProvider` via `useAuth()`, keeping only its own admin-privilege
