@@ -65,9 +65,21 @@ service cloud.firestore {
     }
 
     // Permission-managed collections
+
+    // Feeding-spot status (급식소 현황) read by FeedingSpotsList on the butler-stream
+    // page and written by the client SDK when a butler logs a feeding post
+    // (feeding-spots-service.updateFeedingSpots, via NewPostForm) — so gate writes on
+    // 'manage-posts', mirroring posts_feeding. The server-side admin path uses the
+    // Admin SDK (feeding-spots-admin-service) and bypasses these rules.
+    match /feeding_spots/{document} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        hasPermission(request.auth.uid, 'manage-posts');
+    }
+
     match /posts_feeding/{document} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
+      allow write: if request.auth != null &&
         hasPermission(request.auth.uid, 'manage-posts');
     }
 
@@ -95,6 +107,21 @@ service cloud.firestore {
       // Future consideration: move these writes behind an Admin SDK API route and
       // restore `write: if false` (see PROJECT_PLAN §7 / handoff-10).
       allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-users');
+    }
+
+    // Role→permission matrix — the single source of truth for role permissions:
+    // both hasPermission() (below) and requireApiPermission (server API gate) read
+    // this doc live. Allow authed clients to read it too, so the client UI resolves
+    // permissions from the LIVE matrix instead of the stale bundled JSON fallback
+    // (permission-service.loadConfig). Not sensitive — role→permission config, no
+    // PII/secrets. Writes stay Admin-SDK-only (POST /api/admin/role-permissions,
+    // manage-users) → never from the client.
+    // (resource-config in this same collection is intentionally NOT matched here: it
+    // is read/written only via /api/admin/resource-permissions, so it stays on the
+    // default-deny below.)
+    match /role_permissions/role-config {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
 
     match /permission_logs/{logId} {

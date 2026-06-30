@@ -9,6 +9,10 @@
 > Client-SDK write paths by _why_ they exist, so the migrate-vs-keep analysis can be
 > done bucket-by-bucket rather than as one blanket call.
 >
+> **Scope = writes.** The read side (client-vs-Admin SDK reads + a `firestore.rules`
+> read-coverage audit) lives in its companion,
+> [`firebase-read-access-inventory.md`](./firebase-read-access-inventory.md).
+>
 > _Snapshot date: 2026-06-30. Verify against code before acting on specifics._
 
 ---
@@ -38,10 +42,10 @@ build/migration scripts under `scripts/`.
 
 ### Reads (server render / build)
 
-| Path                                                                             | Collection    | Purpose                                                                    |
-| -------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------- |
-| `src/lib/server/cat-reads.ts`                                                    | `cats`        | §7a — baked into home + adoption Server Components (ISR `revalidate=3600`) |
-| `src/services/feeding-spots-admin-service.ts` + `basic-feeding-spots-service.ts` | feeding spots | read-only; powers `butler_stream` pages + `/api/feeding-spots-basic`       |
+| Path                                                                             | Collection      | Purpose                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/lib/server/cat-reads.ts`                                                    | `cats`          | §7a — baked into home + adoption Server Components (ISR `revalidate=3600`)                                                                                                                                                                             |
+| `src/services/feeding-spots-admin-service.ts` + `basic-feeding-spots-service.ts` | `feeding_spots` | read-only, server-side; backs `/api/feeding-spots-basic` + the `butler_stream/new` build. **NB:** the `butler_stream` _page_ itself reads feeding spots via the **client** `feeding-spots-service.ts` (subject to rules) — see the reads inventory R2. |
 
 ### Writes (API routes)
 
