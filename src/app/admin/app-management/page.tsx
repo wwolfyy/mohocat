@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { cn } from '@/utils/cn';
 import AboutContentEditor from '@/components/admin/AboutContentEditor';
+import Button from '@/components/admin/ui/Button';
+import Card from '@/components/admin/ui/Card';
 import { useSearchParams } from 'next/navigation';
 
 function AppManagementContent() {
@@ -67,7 +69,7 @@ function AppManagementContent() {
 
   return (
     <div className="p-4">
-      <h1 className="text-center text-2xl font-bold mb-6">App Management</h1>
+      <h1 className="text-center text-2xl font-bold mb-6">앱 관리</h1>
 
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200 mb-6">
@@ -109,61 +111,19 @@ function AppManagementContent() {
       {activeTab === 'about' && <AboutContentEditor />}
 
       {activeTab === 'posts-config' && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <h3
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            📝 Configure Posts Collections
+        <Card>
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            📝 게시물 컬렉션 설정
           </h3>
-          <p
-            style={{
-              color: '#6b7280',
-              fontSize: '0.9rem',
-              marginBottom: '1rem',
-              lineHeight: '1.4',
-            }}
-          >
-            Specify which Firestore collections should be considered "posts" collections. Enter one
-            collection name per line. The dashboard will show document counts for each collection.
+          <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+            어떤 Firestore 컬렉션을 "게시물" 컬렉션으로 볼지 지정해요. 한 줄에 하나씩 컬렉션 이름을
+            입력하면, 대시보드가 각 컬렉션의 문서 수를 보여줘요.
           </p>
 
-          <div
-            style={{
-              backgroundColor: '#f9fafb',
-              border: '1px solid #e5e7eb',
-              borderRadius: '6px',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              fontSize: '0.8rem',
-              color: '#374151',
-            }}
-          >
-            <strong>Example:</strong>
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-3 mb-4 text-xs text-gray-700">
+            <strong>예시:</strong>
             <br />
-            <code
-              style={{
-                fontFamily: 'monospace',
-                backgroundColor: '#f3f4f6',
-                padding: '0.125rem 0.25rem',
-                borderRadius: '3px',
-              }}
-            >
+            <code className="font-mono bg-gray-100 px-1 py-0.5 rounded">
               posts_main
               <br />
               posts_feeding
@@ -174,53 +134,29 @@ function AppManagementContent() {
             </code>
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                color: '#374151',
-                marginBottom: '0.5rem',
-              }}
-            >
-              Collection Names (one per line):
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              컬렉션 이름 (한 줄에 하나씩):
             </label>
             <textarea
               value={postsCollectionNames}
               onChange={(e) => setPostsCollectionNames(e.target.value)}
               placeholder="posts_main&#10;posts_feeding&#10;posts_announcements"
-              style={{
-                width: '100%',
-                minHeight: '100px',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontFamily: 'monospace',
-                resize: 'vertical',
-                outline: 'none',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3b82f6';
-                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#d1d5db';
-                e.target.style.boxShadow = 'none';
-              }}
+              className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md text-sm font-mono resize-y focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500/10"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <button
+          <div className="flex gap-3 items-center">
+            <Button
+              size="sm"
+              className={cn(configSuccess && 'bg-green-600 hover:bg-green-600')}
               onClick={async () => {
                 setConfigLoading(true);
                 setConfigSuccess(false);
                 try {
                   const saved = savePostsCollectionConfig(postsCollectionNames);
                   if (!saved) {
-                    throw new Error('Failed to save configuration');
+                    throw new Error('설정을 저장하지 못했어요');
                   }
 
                   const collectionNames = postsCollectionNames
@@ -229,66 +165,33 @@ function AppManagementContent() {
                     .filter((name) => name.length > 0);
 
                   if (collectionNames.length === 0) {
-                    throw new Error('Please specify at least one collection name');
+                    throw new Error('컬렉션 이름을 하나 이상 입력해 주세요');
                   }
 
                   setConfigSuccess(true);
                   setTimeout(() => {
                     setConfigSuccess(false);
-                    alert(
-                      'Configuration saved! The dashboard will reflect these changes on next load.'
-                    );
+                    alert('설정을 저장했어요! 대시보드는 다음에 불러올 때 반영돼요.');
                   }, 500);
                 } catch (error) {
                   console.error('Failed to update posts collections config:', error);
-                  alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                  alert(`오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
                 } finally {
                   setConfigLoading(false);
                 }
               }}
               disabled={configLoading}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: configLoading ? '#9ca3af' : configSuccess ? '#10b981' : '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: configLoading ? 'not-allowed' : 'pointer',
-              }}
             >
-              {configLoading ? 'Saving...' : configSuccess ? '✓ Saved!' : 'Save Configuration'}
-            </button>
+              {configLoading ? '저장 중...' : configSuccess ? '✓ 저장됐어요!' : '설정 저장'}
+            </Button>
 
-            <button
-              onClick={() => {
-                loadPostsCollectionConfig();
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-              }}
-            >
-              Reset to Saved
-            </button>
+            <Button variant="secondary" size="sm" onClick={() => loadPostsCollectionConfig()}>
+              저장된 값으로 되돌리기
+            </Button>
 
-            <div
-              style={{
-                fontSize: '0.8rem',
-                color: '#6b7280',
-                marginLeft: 'auto',
-              }}
-            >
-              Configuration saved to browser storage
-            </div>
+            <div className="text-xs text-gray-500 ml-auto">설정은 브라우저에 저장돼요</div>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -296,7 +199,7 @@ function AppManagementContent() {
 
 export default function AppManagementPage() {
   return (
-    <Suspense fallback={<div className="p-4">Loading App Management...</div>}>
+    <Suspense fallback={<div className="p-4">앱 관리를 불러오고 있어요...</div>}>
       <AppManagementContent />
     </Suspense>
   );

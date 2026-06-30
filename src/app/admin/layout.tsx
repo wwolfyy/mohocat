@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import AdminAuth from '@/components/admin/AdminAuth';
+import { cn } from '@/utils/cn';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,18 +15,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname.startsWith(path);
   };
 
-  // Helper function to get nav item styles
-  const getNavItemStyles = (path: string, isDisabled = false) => ({
-    padding: '0.5rem 1rem',
-    color: isDisabled ? '#9ca3af' : isActivePath(path) ? '#111827' : '#6b7280',
-    backgroundColor: isActivePath(path) ? '#f3f4f6' : 'transparent',
-    textDecoration: 'none',
-    borderRadius: '4px',
-    transition: 'background-color 0.2s',
-    fontWeight: isActivePath(path) ? '500' : 'normal',
-    cursor: isDisabled ? 'not-allowed' : 'pointer',
-    opacity: isDisabled ? 0.6 : 1,
-  });
+  // Tailwind classes for a nav item (active / inactive / disabled).
+  const getNavItemClasses = (path: string, isDisabled = false) =>
+    cn(
+      'px-4 py-2 rounded transition-colors',
+      isDisabled
+        ? 'text-gray-400 opacity-60 cursor-not-allowed'
+        : isActivePath(path)
+          ? 'bg-gray-100 text-gray-900 font-medium'
+          : 'text-gray-500 hover:bg-gray-50 cursor-pointer'
+    );
 
   // Handle click on disabled items
   const handleDisabledClick = (e: React.MouseEvent, feature: string) => {
@@ -34,92 +33,56 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <AdminAuth data-oid="b2-0cee">
-      <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }} data-oid="8t9ym4z">
+    <AdminAuth>
+      <div className="min-h-screen bg-gray-50">
         {/* Admin Navigation Bar */}
-        <header
-          style={{
-            backgroundColor: 'white',
-            borderBottom: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="2jiq:on"
-        >
-          <div
-            style={{
-              maxWidth: '1200px',
-              margin: '0 auto',
-              padding: '1rem 2rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-            data-oid="hs85_8e"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }} data-oid="uiiiy_1">
-              <nav style={{ display: 'flex', gap: '1rem' }} data-oid="viu778z">
-                <a href="/admin" style={getNavItemStyles('/admin')} data-oid="l1y0wkd">
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-[1200px] mx-auto px-8 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-8">
+              <nav className="flex gap-4">
+                <a href="/admin" className={getNavItemClasses('/admin')}>
                   대쉬보드
                 </a>
                 <a
                   href="/admin/app-management"
-                  style={getNavItemStyles('/admin/app-management')}
-                  data-oid="app_mgmt"
+                  className={getNavItemClasses('/admin/app-management')}
                 >
                   앱관리
                 </a>
-                <a href="/admin/cats" style={getNavItemStyles('/admin/cats')} data-oid="cat_mgmt">
+                <a href="/admin/cats" className={getNavItemClasses('/admin/cats')}>
                   고양이 관리
                 </a>
                 <span
-                  style={getNavItemStyles('/admin/points', true)}
+                  className={getNavItemClasses('/admin/points', true)}
                   onClick={(e) => handleDisabledClick(e, '급식소 관리')}
-                  data-oid="points_mgmt"
                 >
                   급식소 관리
                 </span>
                 <span
-                  style={getNavItemStyles('/admin/winter-houses', true)}
+                  className={getNavItemClasses('/admin/winter-houses', true)}
                   onClick={(e) => handleDisabledClick(e, '겨울집 관리')}
-                  data-oid="winter_houses_mgmt"
                 >
                   겨울집 관리
                 </span>
-                <a
-                  href="/admin/tag-images"
-                  style={getNavItemStyles('/admin/tag-images')}
-                  data-oid="251u7o9"
-                >
+                <a href="/admin/tag-images" className={getNavItemClasses('/admin/tag-images')}>
                   사진 관리
                 </a>
-                <a
-                  href="/admin/tag-videos"
-                  style={getNavItemStyles('/admin/tag-videos')}
-                  data-oid="zh478e2"
-                >
+                <a href="/admin/tag-videos" className={getNavItemClasses('/admin/tag-videos')}>
                   동영상 관리
                 </a>
-                <a
-                  href="/admin/posts"
-                  style={getNavItemStyles('/admin/posts')}
-                  data-oid="post_mgmt"
-                >
+                <a href="/admin/posts" className={getNavItemClasses('/admin/posts')}>
                   게시물 관리
                 </a>
-                <a
-                  href="/admin/members"
-                  style={getNavItemStyles('/admin/members')}
-                  data-oid="members_mgmt"
-                >
+                <a href="/admin/members" className={getNavItemClasses('/admin/members')}>
                   사용자 관리
                 </a>
-              </nav>{' '}
+              </nav>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main data-oid="y7xo3dd">{children}</main>
+        <main>{children}</main>
       </div>
     </AdminAuth>
   );

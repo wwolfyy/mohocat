@@ -9,6 +9,8 @@ import {
   getPostService,
 } from '@/services';
 import YouTubeAuthPanel from '@/components/admin/YouTubeAuthPanelNew';
+import Card from '@/components/admin/ui/Card';
+import Alert from '@/components/admin/ui/Alert';
 
 interface AdminStats {
   // Images stats
@@ -151,13 +153,13 @@ export default function AdminDashboard() {
         console.error('Error fetching stats:', err);
 
         // Provide more specific error messages
-        let errorMessage = 'Failed to load statistics';
+        let errorMessage = '통계를 불러오지 못했어요';
         if (err.code === 'permission-denied') {
-          errorMessage = 'Permission denied - check Firestore rules';
+          errorMessage = '권한이 거부됐어요 - Firestore 규칙을 확인해 주세요';
         } else if (err.code === 'unavailable') {
-          errorMessage = 'Firestore unavailable - check connection';
+          errorMessage = 'Firestore에 연결할 수 없어요 - 연결을 확인해 주세요';
         } else if (err.message) {
-          errorMessage = `Error: ${err.message}`;
+          errorMessage = `오류: ${err.message}`;
         }
 
         setError(errorMessage);
@@ -169,39 +171,18 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
-  return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }} data-oid="3k7zs5.">
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }} data-oid="jbo7lj3">
-        <h1
-          style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            color: '#111827',
-            marginBottom: '0.5rem',
-          }}
-          data-oid="7z5gd_x"
-        >
-          🐱 산냥이집냥이 관리자 페이지
-        </h1>
+  const tileValue = (value: number) => (loading ? '불러오는 중' : value);
 
-        {/* Service Configuration Status */}
-        {/* Removed service layer configuration box */}
+  return (
+    <div className="p-8 max-w-[1200px] mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">🐱 산냥이집냥이 관리자 페이지</h1>
 
         {error && (
-          <div
-            style={{
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '8px',
-              padding: '1rem',
-              marginTop: '1rem',
-              color: '#dc2626',
-            }}
-            data-oid="93q-7rm"
-          >
+          <Alert variant="error" className="mt-4">
             ⚠️ {error}
-          </div>
+          </Alert>
         )}
 
         {!error &&
@@ -211,19 +192,9 @@ export default function AdminDashboard() {
           stats.totalCats === 0 &&
           stats.totalContacts === 0 &&
           stats.totalPoints === 0 && (
-            <div
-              style={{
-                backgroundColor: '#fef3c7',
-                border: '1px solid #f59e0b',
-                borderRadius: '8px',
-                padding: '1rem',
-                marginTop: '1rem',
-                color: '#92400e',
-              }}
-              data-oid="b-d56vv"
-            >
-              📊 No data found. Please ensure your database is properly configured.
-            </div>
+            <Alert variant="warning" className="mt-4">
+              📊 데이터가 없어요. 데이터베이스 설정을 확인해 주세요.
+            </Alert>
           )}
       </div>
 
@@ -231,285 +202,85 @@ export default function AdminDashboard() {
       <YouTubeAuthPanel />
 
       {/* Quick Stats - 6 Tiles */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '1rem',
-          marginBottom: '2rem',
-        }}
-        data-oid="p5es.xv"
-      >
-        {/* 1. 고양이 관리 - Cats Tile */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="34qlh1x"
-        >
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} data-oid="_952g1o">
-            �
-          </div>
-          <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="a:g.734">
-            고양이
-          </h3>
-          <p
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              margin: 0,
-            }}
-            data-oid="-zikimc"
-          >
-            {loading ? 'Loading...' : stats.totalCats}
-          </p>
-        </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 mb-8">
+        {/* 1. 고양이 */}
+        <StatTile icon="🐱" label="고양이" value={tileValue(stats.totalCats)} />
 
-        {/* 2. 사진 - Images Tile */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="ky-c8ki"
-        >
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} data-oid="t2fw2li">
-            🖼️
-          </div>
-          <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="w_aicfh">
-            사진
-          </h3>
-          <p
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              margin: 0,
-            }}
-            data-oid="374zfaz"
-          >
-            {loading ? 'Loading...' : stats.totalImages}
-          </p>
-          {!loading && stats.totalImages > 0 && (
-            <p
-              style={{
-                fontSize: '0.75rem',
-                color: '#6b7280',
-                margin: '0.25rem 0 0 0',
-              }}
-              data-oid="7nnuis:"
-            >
-              {stats.taggedImages} tagged
-            </p>
-          )}
-        </div>
+        {/* 2. 사진 */}
+        <StatTile
+          icon="🖼️"
+          label="사진"
+          value={tileValue(stats.totalImages)}
+          subline={!loading && stats.totalImages > 0 ? `${stats.taggedImages}개 태그됨` : undefined}
+        />
 
-        {/* 3. 동영상 - Videos Tile */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="5ago4y3"
-        >
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} data-oid="ce8998b">
-            🎥
-          </div>
-          <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="k83rzh3">
-            동영상
-          </h3>
-          <p
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              margin: 0,
-            }}
-            data-oid="87ak9e-"
-          >
-            {loading ? 'Loading...' : stats.totalVideos}
-          </p>
-          {!loading && stats.totalVideos > 0 && (
-            <p
-              style={{
-                fontSize: '0.75rem',
-                color: '#6b7280',
-                margin: '0.25rem 0 0 0',
-              }}
-              data-oid="-b2z-.b"
-            >
-              {stats.taggedVideos} tagged
-            </p>
-          )}
-        </div>
+        {/* 3. 동영상 */}
+        <StatTile
+          icon="🎥"
+          label="동영상"
+          value={tileValue(stats.totalVideos)}
+          subline={!loading && stats.totalVideos > 0 ? `${stats.taggedVideos}개 태그됨` : undefined}
+        />
 
-        {/* 4. 게시물 - Posts Tile */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="f:4x5c1"
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '0.5rem',
-            }}
-            data-oid="g2cx-mx"
-          >
-            <div style={{ fontSize: '2rem' }} data-oid=".bq-c12">
-              📝
-            </div>
+        {/* 4. 게시물 */}
+        <Card>
+          <div className="flex justify-between items-start mb-2">
+            <div className="text-3xl">📝</div>
             <a
               href="/admin/app-management?tab=posts-config"
-              style={{
-                fontSize: '0.75rem',
-                padding: '0.25rem 0.5rem',
-                backgroundColor: '#f3f4f6',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                color: '#374151',
-                cursor: 'pointer',
-                textDecoration: 'none',
-              }}
-              title="Configure post collections"
-              data-oid="mjr.6p6"
+              className="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded text-gray-700 hover:bg-gray-200"
+              title="게시물 컬렉션 설정"
             >
-              ⚙️ Config
+              ⚙️ 설정
             </a>
           </div>
-          <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="x1.9aam">
-            게시물
-          </h3>
-          <div
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              margin: 0,
-            }}
-            data-oid="0l.onvm"
-          >
-            {loading ? 'Loading...' : stats.postsCollections.length}
+          <h3 className="text-base text-gray-500">게시물</h3>
+          <div className="text-2xl font-bold text-gray-900">
+            {loading ? '불러오는 중' : stats.postsCollections.length}
           </div>
           {!loading && stats.postsCollections.length > 0 && (
-            <div
-              style={{
-                fontSize: '0.75rem',
-                color: '#6b7280',
-                margin: '0.25rem 0 0 0',
-              }}
-              data-oid="pt5p2ax"
-            >
+            <div className="text-xs text-gray-500 mt-1">
               {stats.postsCollections.map((collection) => (
-                <div
-                  key={collection.name}
-                  style={{
-                    margin: '0.125rem 0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                  }}
-                  data-oid="o6qoz3w"
-                >
-                  <span data-oid="30ngnpc">{collection.name.replace('posts_', '')}</span>
-                  <span style={{ fontWeight: 'bold' }} data-oid="b.mqqdx">
-                    {collection.count}
-                  </span>
+                <div key={collection.name} className="my-0.5 flex justify-between">
+                  <span>{collection.name.replace('posts_', '')}</span>
+                  <span className="font-bold">{collection.count}</span>
                 </div>
               ))}
             </div>
           )}
           {!loading && stats.postsCollections.length === 0 && (
-            <p
-              style={{
-                fontSize: '0.75rem',
-                color: '#ef4444',
-                margin: '0.25rem 0 0 0',
-              }}
-              data-oid="592_023"
-            >
-              No collections configured
-            </p>
+            <p className="text-xs text-red-500 mt-1">설정된 컬렉션이 없어요</p>
           )}
-        </div>
+        </Card>
 
-        {/* 5. 거주지 - Points Tile */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="dxjicch"
-        >
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} data-oid="2_y7h0i">
-            📍
-          </div>
-          <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="7ee3-5p">
-            거주지
-          </h3>
-          <p
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              margin: 0,
-            }}
-            data-oid="116q03m"
-          >
-            {loading ? 'Loading...' : stats.totalPoints}
-          </p>
-        </div>
+        {/* 5. 거주지 */}
+        <StatTile icon="📍" label="거주지" value={tileValue(stats.totalPoints)} />
 
-        {/* 6. 집사 - Contacts Tile */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-          data-oid="2zm0gko"
-        >
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }} data-oid="q6nqrq2">
-            📧
-          </div>
-          <h3 style={{ fontSize: '1rem', color: '#6b7280', margin: 0 }} data-oid="3ct38kf">
-            집사
-          </h3>
-          <p
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              margin: 0,
-            }}
-            data-oid="1hvy0ga"
-          >
-            {loading ? 'Loading...' : stats.totalContacts}
-          </p>
-        </div>
+        {/* 6. 집사 */}
+        <StatTile icon="📧" label="집사" value={tileValue(stats.totalContacts)} />
       </div>
     </div>
+  );
+}
+
+// Uniform dashboard stat tile (icon + label + value, with an optional subline).
+function StatTile({
+  icon,
+  label,
+  value,
+  subline,
+}: {
+  icon: string;
+  label: string;
+  value: React.ReactNode;
+  subline?: string;
+}) {
+  return (
+    <Card>
+      <div className="text-3xl mb-2">{icon}</div>
+      <h3 className="text-base text-gray-500">{label}</h3>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      {subline && <p className="text-xs text-gray-500 mt-1">{subline}</p>}
+    </Card>
   );
 }

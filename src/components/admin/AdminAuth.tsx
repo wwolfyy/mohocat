@@ -4,6 +4,8 @@ import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
 import SocialLoginButton from '@/components/SocialLoginButton';
+import Button from '@/components/admin/ui/Button';
+import Card from '@/components/admin/ui/Card';
 import { cn } from '@/utils/cn';
 
 interface AdminAuthProps {
@@ -88,23 +90,10 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   // Auth still resolving (shared listener), or the admin check is in flight.
   if (authLoading || (user && isAdminLoading)) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          backgroundColor: '#f9fafb',
-        }}
-        data-oid="molt2-t"
-      >
-        <div style={{ textAlign: 'center' }} data-oid="ri8ukco">
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }} data-oid="o1ym79x">
-            🐱
-          </div>
-          <p style={{ color: '#6b7280' }} data-oid="m.zdt.o">
-            Loading admin interface...
-          </p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl mb-4">🐱</div>
+          <p className="text-gray-500">관리자 화면을 불러오고 있어요...</p>
         </div>
       </div>
     );
@@ -113,83 +102,21 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   // Signed in, but lacking admin privileges.
   if (user && !isAdmin) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          backgroundColor: '#f9fafb',
-        }}
-        data-oid="sh1vbqx"
-      >
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '2rem',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            maxWidth: '500px',
-          }}
-          data-oid="2lio06o"
-        >
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }} data-oid="5a024wn">
-            ⚠️
-          </div>
-          <h2
-            style={{
-              color: '#dc2626',
-              marginBottom: '1rem',
-              fontSize: '1.25rem',
-            }}
-            data-oid="vd4h5h8"
-          >
-            Access denied
-          </h2>
-          <p style={{ color: '#6b7280', marginBottom: '1.5rem' }} data-oid="ji.gyoe">
-            Access denied: Admin privileges required
-          </p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="text-center max-w-md p-8 shadow-md">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-red-600 mb-4">접근 권한이 없어요</h2>
+          <p className="text-gray-500 mb-6">관리자 권한이 필요해요.</p>
 
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-              alignItems: 'center',
-            }}
-            data-oid="91v6y5h"
-          >
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid=".956x_u"
-            >
-              Sign out
-            </button>
-
-            <a
-              href="/"
-              style={{
-                color: '#6b7280',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-              }}
-              data-oid="v5-up.c"
-            >
-              ← Back to main site
+          <div className="flex flex-col items-center gap-4">
+            <Button variant="secondary" onClick={handleLogout}>
+              로그아웃
+            </Button>
+            <a href="/" className="text-sm text-gray-500 hover:text-gray-700">
+              ← 메인 사이트로 돌아가기
             </a>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -200,14 +127,14 @@ export default function AdminAuth({ children }: AdminAuthProps) {
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-4xl mb-4">🐱</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Mountain Cats Admin</h1>
-            <p className="text-gray-600">Please sign in to continue</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">산냥이집냥이 관리자</h1>
+            <p className="text-gray-600">계속하려면 로그인해 주세요</p>
           </div>
 
           <div className="space-y-6">
             {/* Social Login Section */}
             <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-gray-700 text-center">Sign in with</h2>
+              <h2 className="text-sm font-semibold text-gray-700 text-center">다음으로 로그인</h2>
 
               <div className="space-y-3">
                 <SocialLoginButton
@@ -223,9 +150,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               {/* Success Messages */}
               {kakaoSignInSuccess && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-700 text-sm text-center">
-                    Successfully signed in with Kakaotalk!
-                  </p>
+                  <p className="text-green-700 text-sm text-center">카카오톡으로 로그인했어요!</p>
                 </div>
               )}
 
@@ -249,16 +174,14 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             {/* Divider */}
             <div className="flex items-center justify-between">
               <div className="border-t border-gray-300 flex-grow"></div>
-              <span className="px-4 text-sm text-gray-500">or</span>
+              <span className="px-4 text-sm text-gray-500">또는</span>
               <div className="border-t border-gray-300 flex-grow"></div>
             </div>
 
             {/* Email/Password Login */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">이메일 주소</label>
                 <input
                   type="email"
                   value={email}
@@ -269,13 +192,13 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                     'text-gray-900 placeholder-gray-500',
                     'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
                   )}
-                  placeholder="Enter your email"
+                  placeholder="이메일을 입력해 주세요"
                   disabled={isSigningInWithKakao}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
                 <input
                   type="password"
                   value={password}
@@ -286,7 +209,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                     'text-gray-900 placeholder-gray-500',
                     'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
                   )}
-                  placeholder="Enter your password"
+                  placeholder="비밀번호를 입력해 주세요"
                   disabled={isSigningInWithKakao}
                 />
               </div>
@@ -306,7 +229,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                   }
                 )}
               >
-                {isLoggingIn ? 'Signing in...' : 'Sign In with Email'}
+                {isLoggingIn ? '로그인 중...' : '이메일로 로그인'}
               </button>
             </form>
           </div>
@@ -323,17 +246,16 @@ export default function AdminAuth({ children }: AdminAuthProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-900">Mountain Cats Admin</h1>
-              <div className="text-sm text-gray-500">Welcome, {user.displayName || user.email}</div>
+              <h1 className="text-xl font-semibold text-gray-900">산냥이집냥이 관리자</h1>
+              <div className="text-sm text-gray-500">
+                환영해요, {user.displayName || user.email}님
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button
-                onClick={handleLogout}
-                className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Sign Out
-              </button>
+              <Button variant="danger" size="sm" onClick={handleLogout}>
+                로그아웃
+              </Button>
             </div>
           </div>
         </div>

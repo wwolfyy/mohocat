@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { authHeader } from '@/lib/auth/authHeader';
+import Button from '@/components/admin/ui/Button';
+import Card from '@/components/admin/ui/Card';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
@@ -47,7 +49,7 @@ export default function YouTubeAuthPanel() {
       console.error('Failed to check YouTube auth status:', error);
       setAuthStatus({
         status: 'error',
-        message: 'Failed to check authentication status',
+        message: '인증 상태를 확인하지 못했어요',
         tokens: [],
       });
     } finally {
@@ -66,7 +68,7 @@ export default function YouTubeAuthPanel() {
       const { authUrl, error } = await response.json();
 
       if (error) {
-        alert(`Error: ${error}`);
+        alert(`오류: ${error}`);
         return;
       }
 
@@ -102,7 +104,7 @@ export default function YouTubeAuthPanel() {
       );
     } catch (error) {
       console.error('Failed to refresh YouTube token:', error);
-      alert('Failed to start token refresh process');
+      alert('토큰 갱신을 시작하지 못했어요');
       setRefreshing(false);
     }
   };
@@ -173,52 +175,20 @@ export default function YouTubeAuthPanel() {
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '1.5rem',
-        marginBottom: '1.5rem',
-      }}
-    >
-      <h3
-        style={{
-          fontSize: '1.1rem',
-          fontWeight: '600',
-          marginBottom: '1rem',
-          color: '#374151',
-        }}
-      >
-        🎬 YouTube API 토큰 관리
-      </h3>
+    <Card className="mb-6">
+      <h3 className="text-lg font-semibold mb-4 text-gray-700">🎬 YouTube API 토큰 관리</h3>
 
       {loading ? (
-        <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>
-          🔄 인증 상태 확인 중...
-        </div>
+        <div className="p-4 text-center text-gray-500">🔄 인증 상태 확인 중...</div>
       ) : authStatus ? (
         <div>
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1rem',
-              padding: '0.75rem',
-              backgroundColor: '#f9fafb',
-              borderRadius: '6px',
-              border: `1px solid ${getStatusColor(authStatus.status)}20`,
-            }}
+            className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-md border"
+            style={{ borderColor: `${getStatusColor(authStatus.status)}33` }}
           >
-            <span style={{ fontSize: '1.2rem' }}>{getStatusEmoji(authStatus.status)}</span>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontWeight: '500',
-                  color: getStatusColor(authStatus.status),
-                }}
-              >
+            <span className="text-xl">{getStatusEmoji(authStatus.status)}</span>
+            <div className="flex-1">
+              <div className="font-medium" style={{ color: getStatusColor(authStatus.status) }}>
                 {authStatus.status === 'valid'
                   ? 'YouTube API 토큰이 유효합니다'
                   : authStatus.status === 'expired'
@@ -229,13 +199,7 @@ export default function YouTubeAuthPanel() {
               </div>
 
               {authStatus.status === 'valid' && (
-                <div
-                  style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    marginTop: '0.5rem',
-                  }}
-                >
+                <div className="text-sm text-gray-500 mt-2">
                   {authStatus.envTokenInfo?.issuedAt && (
                     <div>📅 토큰 발급: {formatDate(authStatus.envTokenInfo.issuedAt)}</div>
                   )}
@@ -244,62 +208,19 @@ export default function YouTubeAuthPanel() {
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: '0.75rem',
-              alignItems: 'center',
-            }}
-          >
-            <button
-              onClick={handleRefreshToken}
-              disabled={refreshing}
-              style={{
-                backgroundColor: refreshing ? '#9ca3af' : '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '0.5rem 1rem',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: refreshing ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
+          <div className="flex gap-3 items-center">
+            <Button size="sm" onClick={handleRefreshToken} disabled={refreshing}>
               {refreshing ? '🔄 처리 중...' : '🔄 토큰 갱신'}
-            </button>
+            </Button>
 
-            <button
-              onClick={checkAuthStatus}
-              disabled={loading}
-              style={{
-                backgroundColor: 'transparent',
-                color: '#6b7280',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                padding: '0.5rem 1rem',
-                fontSize: '0.875rem',
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-            >
+            <Button variant="secondary" size="sm" onClick={checkAuthStatus} disabled={loading}>
               {loading ? '확인 중...' : '상태 새로고침'}
-            </button>
+            </Button>
           </div>
 
-          <div
-            style={{
-              marginTop: '1rem',
-              padding: '0.75rem',
-              backgroundColor: '#f3f4f6',
-              borderRadius: '6px',
-              fontSize: '0.8rem',
-              color: '#4b5563',
-            }}
-          >
+          <div className="mt-4 p-3 bg-gray-100 rounded-md text-xs text-gray-600">
             <strong>📝 사용법:</strong>
-            <ul style={{ margin: '0.5rem 0', paddingLeft: '1rem' }}>
+            <ul className="list-disc my-2 pl-4">
               <li>토큰이 만료되면 "토큰 갱신" 버튼을 클릭하세요</li>
               <li>새 창이 열리면 Google 계정으로 로그인하세요</li>
               <li>승인 후 창이 자동으로 닫히면 완료됩니다</li>
@@ -308,10 +229,8 @@ export default function YouTubeAuthPanel() {
           </div>
         </div>
       ) : (
-        <div style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>
-          ❌ 인증 상태를 확인할 수 없습니다
-        </div>
+        <div className="p-4 text-center text-red-500">❌ 인증 상태를 확인할 수 없습니다</div>
       )}
-    </div>
+    </Card>
   );
 }
