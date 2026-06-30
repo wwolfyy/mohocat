@@ -203,9 +203,11 @@ _(Out of scope here: admin mobile — that's §6.)_
   centralized, `bg-blue/purple → <Button>`/brand, brand focus rings, `accent-brand-500`
   checkboxes; YouTube-red vendor color kept. tsc + smoke 25/25 green after each.
   **Remaining:** AdminAuth login/access-denied live-verify; the deferred public
-  hand-rolled-button sweep; then §6 admin-mobile. **Dead-code candidates surfaced** (English
-  left in unused fns/components): `tag-videos` `batchUpdateVideos`/`batchUpdatePlaylists`,
-  `RoleManagementDirect.tsx`, `PermissionManager.tsx`.
+  hand-rolled-button sweep; then §6 admin-mobile. **Dead-code candidates — DELETED
+  (2026-06-30):** the 4 grep-verified-unreachable items from handoff-18 §5 removed (767
+  lines): `RoleManagementDirect.tsx`, `PermissionManager.tsx`, and the unused
+  `batchUpdateVideos`/`batchUpdatePlaylists` fns in `tag-videos/page.tsx` (which leaves that
+  page free of user-facing English). tsc clean, smoke 25/25.
 - [x] **✅ Two auth listeners — CONSOLIDATED (commit `dc1d748`).** `AdminAuth` no longer runs
       its own `onAuthStateChanged` subscription; it now derives `user` + `loading` from the
       single app-wide `AuthProvider` via `useAuth()`, keeping only its own admin-privilege
