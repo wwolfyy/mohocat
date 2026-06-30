@@ -287,12 +287,37 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       _Secondary, latent (revisit next):_ `db` has no `ignoreUndefinedProperties`, so writes
       with unset `isNeutered`/`date_of_birth` may still throw on `undefined`; the two CMS
       "Migrate …" buttons that exercise these are likely no longer needed (owner to confirm).
-  - _**Future consideration (not a scheduled task):** migrate admin writes to **Admin SDK
-    API routes** (verify ID token + permission → server write), restoring
-    `write: if false` and **eliminating client-SDK write reliance** — the "Admin SDK is the
-    only writer" direction the 동참 work started. Effort/risk not yet assessed; truly
-    dropping the Firebase SDK from public bundles would \*also_ require `AuthProvider` to stop
-    eagerly importing `firebase/auth`. Decide later, not committed.\_
+  - _**Admin-SDK migration — analyzed & re-scoped (2026-06-30).** Full Client-vs-Admin SDK
+    inventory + analysis in
+    [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md). \*\*The old blanket
+    target — "Admin SDK is the eventual writer for \_all_ writes" — is retired.** Bundle size is
+    **not** a reason to migrate (auth + community writes keep Firebase in the browser regardless),
+    and latency/offline is **not\*\* a reason to stay (admin CMS, handful of users). The decision
+    turns on security/validation/auditability vs. migration cost, which weighs differently per
+    collection — so the Client-SDK writes split three ways:\_
+    - _**Tier 1 — `users` + `permission_logs` (role-assignment / permission services): MIGRATE
+      (strong yes, not yet scheduled).** Audit integrity is structurally impossible client-side
+      (`permission_logs` is `write:if false` → role-change audit writes are currently denied &
+      **swallowed**, so every role change loses its audit entry; a client-writable audit log
+      would be forgeable anyway). Roles are the escalation-sensitive crown jewels; `users` was
+      designed Admin-SDK-only; the `ensureUserExists` self-provision gap also resolves
+      server-side. Low effort/low volume; `get-all-user-permissions-client` already proves the
+      pattern. Plan: 1–2 routes behind `requireApiPermission` → repoint role/provision/audit
+      writes → restore the audit log → relock `users` to `write:if false`._
+    - _**Tier 2 — `cats` / `cat_images` / `cat_videos` / `about_content` / `posts_announcements`:
+      DEFER.** Authz is adequately handled by the (now-fixed) `hasPermission` rules; worst case
+      is recoverable data-quality, not privilege. The real upside is server-side payload
+      validation (the `ignoreUndefinedProperties`/string-typing + Sheets-import standardization),
+      which is "nice to have," not "must." Cost/risk is real (~5 services, many write sites incl.
+      `media-albums` batches). **Migrate a collection only when already touching it for
+      validation reasons — no purity-driven sweep.** (Gated stubs `/api/admin/cats`,
+      `/api/admin/posts-collections` already exist if/when needed.)_
+    - _**Not a migration target:** community/user-as-owner writes (`post-service`,
+      `butler-talk-service`, feeding check-ins, `auth-service`) — legitimate Client SDK.
+      Dead/superseded paths (`contact-service.addContact`, `point-service` writes) — cleanup,
+      independent of this decision._
+    - _Truly dropping the Firebase SDK from public bundles is a **separate** effort (also needs
+      `AuthProvider` to stop eagerly importing `firebase/auth`) and is **not** implied by Tier 1._
 - [x] **✅ `users` / role-assignment — FIXED & browser-verified (members page). Interim
       client-SDK approach; Admin-SDK API route still deferred.**
       Symptom: `/admin/members` showed **no users in any role group**, and assigning a role didn't
