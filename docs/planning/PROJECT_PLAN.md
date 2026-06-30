@@ -147,15 +147,21 @@ _(Out of scope here: admin mobile — that's §6.)_
       API-route writes + restore `write:if false`. _Stale importer/runbook doc refs in
       `scripts/README.md` + `docs/codebase/deployment-and-build.md` **swept 2026-06-29**
       (commit `089bfee`); handoff-13 left intact as a historical record._
-- [-] **Visual/UX consistency — DEFERRED (owner decision 2026-06-30).** Not done this
-  pass; revisit as its own focused effort. **Scope when picked up:** the admin layout
-  mixes **inline styles** (`admin/layout.tsx`, `AdminAuth.tsx`'s loading/access-denied
-  screens) **+ Tailwind** (the login card, most pages) — converge on **one convention**
-  (lean Tailwind) and a small baseline component set (buttons, tables, forms, modals).
-  **Decided target: keep a deliberately utilitarian look — do _not_ adopt the public
-  frosted/brand tokens** (admin stays a tool, not a branded surface). Best sequenced
-  **before** §6 (admin-mobile) so responsive work builds on the cleaned-up base, not
-  twice. _No brand re-skin; just inline→Tailwind consistency + shared primitives._
+- [~] **Visual/UX consistency — Core done 2026-06-30; folds into the new cross-cutting
+  design system (handoff-16 §4).** **Core pass shipped** ([handoff-16](../handoff/2026-06-30-handoff-16.md)
+  §3): built `src/components/admin/ui/` (`Button`/`Card`/`Alert`) and converged the 5
+  inline-style files (`admin/layout.tsx`, `AdminAuth.tsx`, `admin/page.tsx`,
+  `app-management/page.tsx`, `YouTubeAuthPanelNew.tsx`) → lean Tailwind + primitives; folded
+  in Korean (해요체); stripped `data-oid`; fixed the broken cat-emoji. tsc + smoke green;
+  browser-verified in a live admin session.
+  **⚠️ Direction changed (owner, 2026-06-30):** the prior "keep admin deliberately
+  utilitarian, no brand re-skin" target is **RETIRED.** The job is now **two parts** —
+  (1) a reusable **shared primitive set** + consistent styling mechanism across **public +
+  admin**, and (2) **actual branding of admin** (re-skin to the public brand). So the Core
+  primitives are a **throwaway template**: to be merged into ONE shared, token-driven set and
+  re-branded (drop the gray). Restarts as a unified **design + Korean** workstream in a new
+  session (see [handoff-16](../handoff/2026-06-30-handoff-16.md) §4). Still the foundation to
+  land **before** §6 admin-mobile.
 - [x] **✅ `AdminAuth` hardening (UX side) — DONE (2026-06-29 → 2026-06-30).**
   - [x] **Emergency-bypass buttons removed (commit `0cd9c2c`).** The "🚨 Emergency Bypass" /
         "Emergency Bypass (Dev Mode)" buttons were **removed** (not just gated to dev): they
@@ -604,8 +610,9 @@ _Risk/size: architectural, touches the services seam and several pages — hence
   mobile (§6), and finishing redesign Phase C / A4 — **to be set with the user.**
   Note the dependency: §6 (admin mobile) is best built **after** §5 (admin
   cleanup) so it's not built twice.
-- **Admin visual target** — does admin adopt the public brand, or stay
-  deliberately utilitarian? (Drives §5 and §6.)
+- **Admin visual target** — ✅ **SETTLED (owner, 2026-06-30): admin adopts the public
+  brand.** The "deliberately utilitarian" option is retired; admin re-skins to the brand as
+  part of the cross-cutting design system (handoff-16 §4).
 - **Mobile verification tooling** — real device vs un-maximized Chrome vs DevTools
   (the `resize_window` tool was flaky).
 - Whether the §7–§10 debt workstreams are scheduled now or parked until the
