@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { cn } from '@/utils/cn';
 import { useAuth } from '@/hooks/useAuth';
 import { authHeader } from '@/lib/auth/authHeader';
 import { Permission, Role as RoleType } from '@/types/permissions';
+import Button from '@/components/ui/Button';
+import { adminStrings } from '@/constants/adminStrings';
+
+const { roleMatrix: t, roleLabels, common } = adminStrings;
 
 const ALL_PERMISSIONS: Permission[] = [
   'manage-app',
@@ -52,13 +55,13 @@ export default function RolePermissionConfig() {
         headers: await authHeader(user),
       });
       if (!response.ok) {
-        throw new Error(`Failed to load config: ${response.statusText}`);
+        throw new Error(`설정을 불러오지 못했어요: ${response.statusText}`);
       }
       const data = await response.json();
       setConfig(data);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : common.unknownError);
     } finally {
       setLoading(false);
     }
@@ -107,33 +110,30 @@ export default function RolePermissionConfig() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save configuration');
+        throw new Error(t.saveFailed);
       }
 
-      setSuccessMessage('Configuration saved successfully!');
+      setSuccessMessage(t.saved);
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : t.saveFailed);
     } finally {
       setSaving(false);
     }
   };
 
   if (loading && !config) {
-    return <div className="p-8 text-center text-gray-500">Loading configuration...</div>;
+    return <div className="p-8 text-center text-gray-500">{t.loading}</div>;
   }
 
   if (error && !config) {
     return (
       <div className="p-8 text-center text-red-500">
-        <p>Error: {error}</p>
-        <button
-          onClick={fetchConfig}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Retry
-        </button>
+        <p>{common.error(error)}</p>
+        <Button onClick={fetchConfig} className="mt-4">
+          {common.retry}
+        </Button>
       </div>
     );
   }
@@ -149,8 +149,8 @@ export default function RolePermissionConfig() {
       <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 overflow-hidden">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Permission Matrix</h2>
-            <p className="text-sm text-gray-500">Configure which roles have which permissions.</p>
+            <h2 className="text-xl font-semibold text-gray-900">{t.title}</h2>
+            <p className="text-sm text-gray-500">{t.subtitle}</p>
           </div>
           <div className="flex items-center gap-4">
             {successMessage && (
@@ -159,18 +159,9 @@ export default function RolePermissionConfig() {
               </span>
             )}
             {error && <span className="text-red-600 text-sm font-medium">{error}</span>}
-            <button
-              onClick={saveConfig}
-              disabled={saving}
-              className={cn(
-                'px-4 py-2 rounded-lg font-medium text-white transition-colors',
-                saving
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 shadow-sm'
-              )}
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            <Button onClick={saveConfig} disabled={saving}>
+              {saving ? common.saving : common.saveChanges}
+            </Button>
           </div>
         </div>
 
@@ -179,18 +170,14 @@ export default function RolePermissionConfig() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="px-4 py-3 font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Permission
+                  {t.permissionHeader}
                 </th>
                 {roles.map((role) => (
                   <th
                     key={role}
-                    className="px-4 py-3 font-medium text-gray-900 text-center uppercase tracking-wider w-1/6"
+                    className="px-4 py-3 font-medium text-gray-900 text-center tracking-wider w-1/6"
                   >
-                    {role === 'butler-ground'
-                      ? 'butler-ground'
-                      : role === 'butler-internet'
-                        ? 'butler-internet'
-                        : role}
+                    {roleLabels[role] ?? role}
                   </th>
                 ))}
               </tr>
@@ -207,7 +194,7 @@ export default function RolePermissionConfig() {
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handlePermissionToggle(role, permission)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                          className="w-5 h-5 text-brand-500 border-gray-300 rounded focus:ring-brand-300 cursor-pointer"
                         />
                       </td>
                     );

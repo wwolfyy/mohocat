@@ -7,6 +7,8 @@ import PermissionDebug from '@/components/admin/PermissionDebug';
 import RolePermissionConfig from '@/components/admin/RolePermissionConfig';
 import ResourcePermissionConfig from '@/components/admin/ResourcePermissionConfig'; // Added import
 import ContactManagement from '@/components/admin/ContactManagement';
+import Card from '@/components/ui/Card';
+import { adminStrings } from '@/constants/adminStrings';
 
 const MemberManagementPage = () => {
   const [activeTab, setActiveTab] = useState<
@@ -15,7 +17,10 @@ const MemberManagementPage = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-center text-2xl font-bold mb-6">Member Management</h1>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold">{adminStrings.members.title}</h1>
+        <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-brand" />
+      </div>
 
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200 mb-6">
@@ -28,7 +33,7 @@ const MemberManagementPage = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          User Management
+          {adminStrings.members.tabs.users}
         </button>
         <button
           onClick={() => setActiveTab('roles')}
@@ -39,18 +44,18 @@ const MemberManagementPage = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          Role Management
+          {adminStrings.members.tabs.roles}
         </button>
         <button
-          onClick={() => setActiveTab('permissions')} // Changed to permissions
+          onClick={() => setActiveTab('permissions')}
           className={cn(
             'px-6 py-3 font-medium text-sm border-b-2 transition-colors',
-            activeTab === 'permissions' // Changed to permissions
+            activeTab === 'permissions'
               ? 'border-yellow-500 text-yellow-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          Permission Management {/* Updated text */}
+          {adminStrings.members.tabs.permissions}
         </button>
         <button
           onClick={() => setActiveTab('debug')}
@@ -61,7 +66,7 @@ const MemberManagementPage = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          Permission Debug
+          {adminStrings.members.tabs.debug}
         </button>
 
         <button
@@ -73,7 +78,7 @@ const MemberManagementPage = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          Contact Management
+          {adminStrings.members.tabs.contacts}
         </button>
       </div>
 
@@ -87,30 +92,12 @@ const MemberManagementPage = () => {
       {activeTab === 'contacts' && <ContactManagement />}
 
       {activeTab === 'debug' && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <h3
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            🔧 Permission Debug Tool
+        <Card>
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+            🔧 {adminStrings.members.debugToolTitle}
           </h3>
           <PermissionDebug />
-        </div>
+        </Card>
       )}
     </div>
   );

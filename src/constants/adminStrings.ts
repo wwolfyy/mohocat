@@ -32,7 +32,19 @@ export const adminStrings = {
     search: '검색',
     none: '없음',
     comingSoon: '준비 중이에요',
+    saveChanges: '변경사항 저장',
+    error: (msg: string) => `오류: ${msg}`,
+    unknownError: '알 수 없는 오류가 발생했어요.',
+    loginRequired: '로그인해 주세요.',
   },
+
+  /** Human-readable Korean labels for role keys (shared across role/permission UIs). */
+  roleLabels: {
+    admin: '관리자',
+    'butler-ground': '집사 (현장)',
+    'butler-internet': '집사 (온라인)',
+    viewer: '방문자',
+  } as Record<string, string>,
 
   /** Top admin navigation (src/app/admin/layout.tsx). */
   nav: {
@@ -154,5 +166,66 @@ export const adminStrings = {
       saveFailed: (msg: string) => `고양이를 저장하지 못했어요: ${msg}`,
       deleteFailed: (msg: string) => `고양이를 삭제하지 못했어요: ${msg}`,
     },
+  },
+
+  /** 사용자 관리 page chrome (src/app/admin/members/page.tsx). */
+  members: {
+    title: '사용자 관리',
+    tabs: {
+      users: '사용자',
+      roles: '역할',
+      permissions: '권한',
+      debug: '권한 디버그',
+      contacts: '문의',
+    },
+    debugToolTitle: '권한 디버그 도구',
+  },
+
+  /** 사용자(역할) 관리 (src/components/admin/RoleManagement.tsx). */
+  roleManagement: {
+    heading: '사용자 관리',
+    loadingUsers: '사용자를 불러오는 중...',
+    sections: {
+      admin: { desc: '모든 기능을 관리할 수 있는 최고 권한이에요.', empty: '관리자가 없어요.' },
+      ground: {
+        desc: '현장에서 고양이를 돌봐요. 고양이와 게시물을 관리할 수 있어요.',
+        empty: '현장 집사가 없어요.',
+      },
+      internet: {
+        desc: '온라인 콘텐츠를 관리해요. 게시물 관리와 통계 열람을 할 수 있어요.',
+        empty: '온라인 집사가 없어요.',
+      },
+      viewer: { desc: '공개 콘텐츠를 볼 수만 있어요.', empty: '방문자가 없어요.' },
+    },
+    copyId: '전체 ID 복사',
+    messages: {
+      loadingAll: '모든 사용자를 불러오는 중...',
+      loaded: (n: number) => `${n}명의 사용자를 불러왔어요.`,
+      loadError: (msg: string) => `사용자를 불러오지 못했어요: ${msg}`,
+      assigning: (role: string) => `${role} 역할을 지정하는 중...`,
+      assigned: (role: string) => `${role} 역할을 지정했어요!`,
+      assignFailed: '역할 지정에 실패했어요. 콘솔을 확인해 주세요.',
+    },
+  },
+
+  /** 권한 매트릭스 (src/components/admin/RolePermissionConfig.tsx). */
+  roleMatrix: {
+    title: '권한 매트릭스',
+    subtitle: '역할별로 어떤 권한을 가질지 설정해요.',
+    loading: '설정을 불러오는 중...',
+    permissionHeader: '권한',
+    saved: '설정을 저장했어요!',
+    saveFailed: '설정을 저장하지 못했어요.',
+  },
+
+  /** 리소스 접근 권한 (src/components/admin/ResourcePermissionConfig.tsx). */
+  resourceMatrix: {
+    title: '리소스 접근 권한',
+    subtitle: '각 페이지에 접근하는 데 필요한 권한을 설정해요.',
+    loading: '리소스 설정을 불러오는 중...',
+    resourceHeader: '페이지 / 리소스',
+    saved: '리소스 권한을 저장했어요!',
+    saveFailed: '설정을 저장하지 못했어요.',
+    requiresTitle: (resource: string, perm: string) => `${resource}에는 ${perm} 권한이 필요해요`,
   },
 } as const;
