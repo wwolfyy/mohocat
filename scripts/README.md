@@ -5,19 +5,10 @@ This directory contains utility scripts for various project operations, organize
 ## Subdirectories
 
 - **`migration/`** - Database and data migration scripts
-  - **Local static-data export** (writes `src/lib/*-static-data.json`; output is **not
-    read by the app at runtime** — pending the data-layer redesign, PROJECT_PLAN §7a):
-    - `export_cats_to_static.js` - Export cats data to local JSON
-    - `export_points_to_static.js` - Export points data to local JSON
-    - `export_feeding_spots_to_static.js` - Export feeding spots to local JSON
-    - `update_all_static_data.js` - Batch update all local static data
-    - _The `export_all_to_cloud_storage.js` Cloud-Storage push path was removed in the
-      Phase 3 cleanup; preserved on branch `archive/static-data-cloud-export`._
   - **Legacy Database Migrations**:
     - `add_missing_location_field.js` - Adds location field to existing records
     - `add_updated_field.js` - Adds updated timestamp field
     - `add_updated_field_admin.js` - Admin version of updated field addition
-    - `migrate-cats-to-firestore.js` - Migrates cat data to Firestore
     - `migrate-created-time.js` - Migrates created time fields
     - `import-media-to-firestore.js` - Imports media files to Firestore
     - `remove_needsTagging_field.js` - Removes needsTagging field
@@ -41,27 +32,6 @@ This directory contains utility scripts for various project operations, organize
 
 - **`deployment/`** - Deployment and build scripts (empty - for future use)
 
-## 🚀 **Key Features**
-
-### **Static Data Management**
-
-These scripts export Firestore collections to local `src/lib/*-static-data.json` files.
-**The app reads Firestore live at runtime — it does not consume these JSON files.** They
-are retained pending the data-layer "baking" redesign (PROJECT_PLAN §7a). The
-Cloud-Storage push path (and its admin "Static Data 관리" tab) was removed in the Phase 3
-cleanup; preserved on branch `archive/static-data-cloud-export`.
-
-### **Available Scripts**
-
-#### **Local Static Data Export**
-
-```bash
-npm run update:static-data    # Update all local static data
-npm run update:cats          # Update cats data only
-npm run update:points        # Update points data only
-npm run update:feeding-spots # Update feeding spots only
-```
-
 ## Usage
 
 Each script is self-contained and includes robust error handling. Scripts automatically detect and use the correct Firebase service account path for different execution contexts (terminal, Next.js API routes, etc.).
@@ -69,8 +39,8 @@ Each script is self-contained and includes robust error handling. Scripts automa
 **Example:**
 
 ```bash
-# Static data updates (recommended)
-npm run update:static-data
+# Build-time asset fetch
+npm run fetch:assets
 
 # Legacy maintenance
 node scripts/auth/generate_refresh_token.js

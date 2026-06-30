@@ -90,9 +90,6 @@ npm run vercel-build  # Same as build (what Vercel runs)
 npm run dev                # Development server
 npm run fetch:assets       # Download thumbnails/about-photos from Firebase Storage
 npm run test:smoke         # Fast structural smoke suite (gate for refactors/cleanup)
-# npm run update:cats / update:points / update:feeding-spots / update:static-data
-#   export Firestore to local src/lib/*-static-data.json. NOTE: the app does NOT read
-#   these files at runtime; they're parked pending the §7a data-layer redesign.
 ```
 
 ### Admin CMS Access

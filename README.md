@@ -132,13 +132,12 @@ The platform now includes a comprehensive CMS for managing cats:
 - **Real-time**: Changes are immediately saved to Firestore
 - **Documentation**: See [CAT_CMS_GUIDE.md](./docs/guides/CAT_CMS_GUIDE.md) for detailed usage instructions
 
-### **Static Data**
+### **Data Source**
 
-All static data is now served from Google Cloud Storage for optimal performance:
-
-- **Cats**: `/static-data/cats-static-data.json`
-- **Points**: `/static-data/points-static-data.json`
-- **Feeding Spots**: `/static-data/feeding-spots-static-data.json`
+All data is read **live from Firestore** through the service layer. Cats are read
+server-side via the Admin SDK and baked into the home + adoption Server Components (ISR,
+`revalidate=3600`, with on-demand `revalidatePath` on admin edits — see PROJECT_PLAN §7a).
+There is no static-data JSON export and no Cloud Storage data-serving path.
 
 ### **Admin Operations**
 
@@ -146,13 +145,12 @@ Use the admin interface at `/admin` to:
 
 - **Manage Cats**: Direct cat information management through the CMS
 - **View Statistics**: Comprehensive statistics dashboard
-- View comprehensive statistics
-- Refresh static data from Firestore to Cloud Storage
 - Manage posts collections
 - Monitor system health
 
 ### **Data Update Workflow**
 
-1. Update data in Firestore through admin interface
-2. Use admin panel buttons to refresh static data in Cloud Storage
-3. Data is automatically served to all users with CDN caching
+1. Update data in Firestore through the admin interface
+2. Admin cat-edits trigger on-demand `revalidatePath`, so the baked home + adoption pages
+   reflect changes immediately; a 1-hour ISR fallback backstops console/script edits
+3. All other reads come straight from Firestore live via the service layer

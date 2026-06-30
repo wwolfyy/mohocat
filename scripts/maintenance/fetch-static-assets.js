@@ -13,7 +13,6 @@ const ABOUT_PHOTOS_FOLDER = 'about-photos/'; // Folder in Firebase Storage where
 const CATS_COLLECTION = 'cats';
 const LOCAL_THUMBNAILS_DIR_RELATIVE = 'public/images/thumbnails'; // Relative to project root
 const LOCAL_ABOUT_PHOTOS_DIR_RELATIVE = 'public/images/about-photos'; // Relative to project root
-const STATIC_DATA_JSON_PATH_RELATIVE = 'src/lib/cats-static-data.json'; // Relative to project root
 const MOUNTAINS_CONFIG_PATH_RELATIVE = 'config/mountains/mountains.json'; // Relative to project root
 
 // Absolute paths resolved from project root
@@ -21,7 +20,6 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', '..'); // Assuming script is 
 const SERVICE_ACCOUNT_FULL_PATH = path.join(PROJECT_ROOT, SERVICE_ACCOUNT_KEY_PATH);
 const LOCAL_THUMBNAILS_DIR = path.join(PROJECT_ROOT, LOCAL_THUMBNAILS_DIR_RELATIVE);
 const LOCAL_ABOUT_PHOTOS_DIR = path.join(PROJECT_ROOT, LOCAL_ABOUT_PHOTOS_DIR_RELATIVE);
-const STATIC_DATA_JSON_PATH = path.join(PROJECT_ROOT, STATIC_DATA_JSON_PATH_RELATIVE);
 const MOUNTAINS_CONFIG_PATH = path.join(PROJECT_ROOT, MOUNTAINS_CONFIG_PATH_RELATIVE);
 // ---
 
@@ -413,17 +411,6 @@ async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
   return updatedMountainsConfig;
 }
 
-async function saveStaticDataJson(catsData) {
-  console.log(`Saving updated cat data to JSON: '${STATIC_DATA_JSON_PATH}'...`);
-  try {
-    const jsonData = JSON.stringify(catsData, null, 2);
-    await fsPromises.writeFile(STATIC_DATA_JSON_PATH, jsonData, 'utf-8');
-    console.log(`Successfully created static data JSON: '${STATIC_DATA_JSON_PATH}'`);
-  } catch (error) {
-    console.error(`ERROR: Could not write static data JSON to '${STATIC_DATA_JSON_PATH}':`, error);
-  }
-}
-
 async function loadMountainsConfig() {
   try {
     console.log(`Loading mountains configuration from: '${MOUNTAINS_CONFIG_PATH}'`);
@@ -521,8 +508,10 @@ async function main() {
     console.log('No thumbnails found in Firebase Storage. Images may not be available.');
   }
 
-  const updatedCatsData = await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
-  await saveStaticDataJson(updatedCatsData);
+  // Downloads thumbnails to public/images/thumbnails for the build. The returned
+  // (rewritten) cat data is intentionally discarded — the app reads cats live via the
+  // Admin SDK (src/lib/server/cat-reads.ts), not from a static JSON export.
+  await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
 
   const aboutPhotosMap = await fetchAboutPhotosFromStorage(storage);
   if (Object.keys(aboutPhotosMap).length === 0) {

@@ -43,11 +43,11 @@ These were debated and chosen before any code; do not silently revisit.
 
 ## 1. Before-measurement (quantify the win)
 
-- [~] **Qualitative win proven via the Network tab** (browser-verified, see §3): on landing
-  load the client fires **zero** `getCatsByPointId` queries, and a marker click opens the
-  gallery with **zero** new Firestore requests (previously N+1 client reads). A quantified
-  ms before/after was **not** captured — eliminating the client cat-query waterfall is the
-  win; revisit ms timing only if a number is needed.
+- [x] **Qualitative win proven via the Network tab** (browser-verified, see §3): on landing
+      load the client fires **zero** `getCatsByPointId` queries, and a marker click opens the
+      gallery with **zero** new Firestore requests (previously N+1 client reads). A quantified
+      ms before/after was **not** captured — eliminating the client cat-query waterfall is the
+      win; revisit ms timing only if a number is needed.
 
 ---
 
@@ -106,9 +106,10 @@ These were debated and chosen before any code; do not silently revisit.
       buttons (neutering / DOB — one revalidate after each batch). _Confirmed not writers:_
       `api/admin/cats/route.ts` (POST only stubs an unimplemented import; GET reads),
       `utils/cat-migration-helper.ts` (no callers — out-of-band, covered by N backstop).
-- [~] **End-to-end "edit → instant public reflect" NOT locally verifiable**: `revalidatePath`
-  is a no-op under `next dev` (no ISR cache), and `/admin` needs a login. Verify on the
-  Vercel **preview** deploy with an admin login (edit a cat → `/` reflects without redeploy).
+- [x] **End-to-end "edit → instant public reflect" — VERIFIED on preview (owner-confirmed
+      2026-06-30).** `revalidatePath` is a no-op under `next dev` (no ISR cache) and `/admin`
+      needs a login, so this was confirmed on the Vercel **preview** deploy with an admin login:
+      editing a cat reflected on `/` without a redeploy.
 
 ## 6. Static-data export seam — decision: **REMOVE (in a dedicated cleanup pass)**
 
@@ -142,6 +143,17 @@ a rider on a documentation commit. Tracked as the next §7a follow-up in the han
       `src/app/page.tsx`, never the JSON. Observed the dead-output mechanism firsthand — a
       `npm run build` rewrote `cats-static-data.json` from live Firestore and nothing consumed
       it (the churn was reverted). No new blockers; the REMOVE plan above stands as written.
+- [x] **DONE 2026-06-30 — mechanical removal executed.** Dropped `saveStaticDataJson()` (fn +
+      call + the two `STATIC_DATA_JSON_PATH*` constants) from `fetch-static-assets.js` (kept the
+      thumbnail download; its now-unused return is discarded with an explanatory comment);
+      removed the four `update:*` scripts from `package.json`; `git rm`'d
+      `export_{cats,points,feeding_spots}_to_static.js`, `update_all_static_data.js`,
+      `migrate-cats-to-firestore.js`, and both `src/lib/*-static-data.json` artifacts. Fixed
+      dangling doc refs (`AGENTS.md`/`CLAUDE.md` dev-commands, `scripts/README.md`, root
+      `README.md` stale "Static Data"/Cloud-Storage sections). **Gates green:** `node --check`
+      on the fetcher, `tsc --noEmit` clean, smoke 25/25, and **`npm run fetch:assets` ran
+      end-to-end (exit 0)** — thumbnails + about photos fetched, no JSON written, no errors;
+      `git status` shows no `mountains.json` drift. §7a is now fully closed.
 
 ## 7. Gates + docs
 
@@ -152,7 +164,7 @@ a rider on a documentation commit. Tracked as the next §7a follow-up in the han
       **survives Next's static analysis** — no literal-fallback needed. The build also
       exercised the Admin SDK server reads (`getAllCatsServer`) at build time successfully.
 - [x] `npx tsc --noEmit` clean · `npm run test:smoke` green (25/25, incl. the new route).
-- [~] After-measurement: qualitative only (see §1) — no ms figure captured.
+- [x] After-measurement: qualitative only (see §1) — no ms figure captured (by decision).
 - [x] Deployment README note (N hardcoded + the two locations) — **done this session.**
 - [x] PROJECT_PLAN §7a checkboxes + a fresh handoff (#9).
 - [x] Ask before committing — landing/§4/§5 each committed on the user's go-ahead.
