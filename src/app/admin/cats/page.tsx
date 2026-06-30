@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { triggerCatRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
 import CatGrid from '@/components/admin/cat-grid/CatGrid';
+import Button from '@/components/ui/Button';
+import { adminStrings } from '@/constants/adminStrings';
 import {
   filterCats,
   sortCats,
@@ -182,7 +184,7 @@ export default function CatsCMSPage() {
       const catsData = await catService.getAllCats();
       setCats(catsData);
     } catch (err: any) {
-      setError('Failed to load cats: ' + err.message);
+      setError(adminStrings.cats.errors.loadFailed(err.message));
     } finally {
       setLoading(false);
     }
@@ -220,7 +222,7 @@ export default function CatsCMSPage() {
       setShowForm(false);
       setEditingCat(null);
     } catch (err: any) {
-      setError('Failed to save cat: ' + err.message);
+      setError(adminStrings.cats.errors.saveFailed(err.message));
     } finally {
       setSaving(false);
     }
@@ -261,7 +263,7 @@ export default function CatsCMSPage() {
       // §7a: refresh the baked public pages so the deletion reflects immediately.
       await triggerCatRevalidate(user);
     } catch (err: any) {
-      setError('Failed to delete cat: ' + err.message);
+      setError(adminStrings.cats.errors.deleteFailed(err.message));
     }
   };
 
@@ -282,7 +284,7 @@ export default function CatsCMSPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -290,11 +292,8 @@ export default function CatsCMSPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Cat Management System</h1>
-        <p className="text-gray-600">
-          Manage cat information directly in Firestore. All changes are saved immediately to the
-          database.
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{adminStrings.cats.title}</h1>
+        <p className="text-gray-600">{adminStrings.cats.subtitle}</p>
       </div>
 
       {/* View tabs: card/form editor (existing) vs. spreadsheet grid */}
@@ -303,21 +302,21 @@ export default function CatsCMSPage() {
           onClick={() => setView('card')}
           className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
             view === 'card'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-brand-500 text-brand-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          카드 편집기
+          {adminStrings.cats.tabs.card}
         </button>
         <button
           onClick={() => setView('grid')}
           className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
             view === 'grid'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-brand-500 text-brand-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          스프레드시트
+          {adminStrings.cats.tabs.grid}
         </button>
       </div>
 
@@ -338,26 +337,24 @@ export default function CatsCMSPage() {
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search cats..."
+                  placeholder={adminStrings.cats.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                 />
               </div>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="gap-2"
               >
-                <FiFilter /> Filters
-              </button>
+                <FiFilter /> {adminStrings.cats.filtersToggle}
+              </Button>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={handleNewCat}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <FiPlus /> Add New Cat
-              </button>
+              <Button onClick={handleNewCat} className="gap-2">
+                <FiPlus /> {adminStrings.cats.addNew}
+              </Button>
             </div>
           </div>
 
@@ -367,14 +364,14 @@ export default function CatsCMSPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Status
+                    {adminStrings.cats.filters.status}
                   </label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                   >
-                    <option value="">All Statuses</option>
+                    <option value="">{adminStrings.cats.filters.allStatuses}</option>
                     {uniqueStatuses.map((status) => (
                       <option key={status} value={status}>
                         {status}
@@ -384,14 +381,14 @@ export default function CatsCMSPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Location
+                    {adminStrings.cats.filters.location}
                   </label>
                   <select
                     value={locationFilter}
                     onChange={(e) => setLocationFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                   >
-                    <option value="">All Locations</option>
+                    <option value="">{adminStrings.cats.filters.allLocations}</option>
                     {uniqueLocations.map((location) => (
                       <option key={location} value={location}>
                         {location}
@@ -401,31 +398,31 @@ export default function CatsCMSPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Gender
+                    {adminStrings.cats.filters.gender}
                   </label>
                   <select
                     value={genderFilter}
                     onChange={(e) => setGenderFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                   >
-                    <option value="">All Genders</option>
+                    <option value="">{adminStrings.cats.filters.allGenders}</option>
                     {uniqueGenders.map((gender) => (
                       <option key={gender} value={gender}>
-                        {gender === 'M' ? '남 (Male)' : gender === 'F' ? '여 (Female)' : gender}
+                        {gender === 'M' ? '남' : gender === 'F' ? '여' : gender}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Birth Year
+                    {adminStrings.cats.filters.birthYear}
                   </label>
                   <select
                     value={birthYearFilter}
                     onChange={(e) => setBirthYearFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                   >
-                    <option value="">All Years</option>
+                    <option value="">{adminStrings.cats.filters.allYears}</option>
                     {uniqueBirthYears.map((year) => (
                       <option key={year} value={year.toString()}>
                         {year}년
@@ -435,14 +432,14 @@ export default function CatsCMSPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Neutering
+                    {adminStrings.cats.filters.neutering}
                   </label>
                   <select
                     value={neuteredFilter}
                     onChange={(e) => setNeuteredFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                   >
-                    <option value="">All</option>
+                    <option value="">{adminStrings.cats.filters.all}</option>
                     {neuteredOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -452,26 +449,23 @@ export default function CatsCMSPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Adoptable
+                    {adminStrings.cats.filters.adoptable}
                   </label>
                   <select
                     value={adoptableFilter}
                     onChange={(e) => setAdoptableFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                   >
-                    <option value="">All</option>
-                    <option value="true">입양 가능 (Adoptable)</option>
-                    <option value="false">입양 대상 아님 (Not adoptable)</option>
+                    <option value="">{adminStrings.cats.filters.all}</option>
+                    <option value="true">{adminStrings.cats.filters.adoptableYes}</option>
+                    <option value="false">{adminStrings.cats.filters.adoptableNo}</option>
                   </select>
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
-                <button
-                  onClick={clearFilters}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Clear Filters
-                </button>
+                <Button variant="secondary" onClick={clearFilters}>
+                  {adminStrings.cats.filters.clear}
+                </Button>
               </div>
             </div>
           )}
@@ -480,17 +474,17 @@ export default function CatsCMSPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">{cats.length}</div>
-              <div className="text-sm text-gray-600">Total Cats</div>
+              <div className="text-sm text-gray-600">{adminStrings.cats.stats.total}</div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
                 {cats.filter((cat) => cat.status === '산냥이').length}
               </div>
-              <div className="text-sm text-gray-600">산냥이 (Mountain Cats)</div>
+              <div className="text-sm text-gray-600">{adminStrings.cats.stats.mountain}</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">{filteredCats.length}</div>
-              <div className="text-sm text-gray-600">Filtered Results</div>
+              <div className="text-sm text-gray-600">{adminStrings.cats.stats.filtered}</div>
             </div>
           </div>
 
@@ -500,7 +494,9 @@ export default function CatsCMSPage() {
               <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold">
-                    {editingCat ? 'Edit Cat' : 'Add New Cat'}
+                    {editingCat
+                      ? adminStrings.cats.form.editTitle
+                      : adminStrings.cats.form.addTitle}
                   </h2>
                   <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
                     <FiX size={24} />
@@ -510,36 +506,40 @@ export default function CatsCMSPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {adminStrings.cats.form.name} *
+                      </label>
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Alternative Name
+                        {adminStrings.cats.form.altName}
                       </label>
                       <input
                         type="text"
                         value={formData.alt_name}
                         onChange={(e) => setFormData({ ...formData, alt_name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {adminStrings.cats.form.sex}
+                      </label>
                       <select
                         value={formData.sex}
                         onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       >
-                        <option value="">Select...</option>
+                        <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
                         <option value="M">M</option>
                         <option value="F">F</option>
                         <option value="U">U</option>
@@ -547,13 +547,15 @@ export default function CatsCMSPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {adminStrings.cats.form.status}
+                      </label>
                       <select
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       >
-                        <option value="">Select...</option>
+                        <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
                         <option value="산냥이">산냥이</option>
                         <option value="집냥이">집냥이</option>
                         <option value="별냥이">별냥이</option>
@@ -563,7 +565,7 @@ export default function CatsCMSPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Birth Year
+                        {adminStrings.cats.form.birthYear}
                       </label>
                       <input
                         type="number"
@@ -575,45 +577,45 @@ export default function CatsCMSPage() {
                             date_of_birth: value ? parseInt(value, 10) : undefined,
                           });
                         }}
-                        placeholder="e.g., 2020"
+                        placeholder={adminStrings.cats.form.birthYearPlaceholder}
                         min="1990"
                         max="2030"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Birth Year Certainty
+                        {adminStrings.cats.form.birthYearCertainty}
                       </label>
                       <select
                         value={formData.dob_certainty}
                         onChange={(e) =>
                           setFormData({ ...formData, dob_certainty: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       >
-                        <option value="">Select...</option>
-                        <option value="certain">Certain</option>
-                        <option value="uncertain">Uncertain</option>
+                        <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
+                        <option value="certain">{adminStrings.cats.form.certain}</option>
+                        <option value="uncertain">{adminStrings.cats.form.uncertain}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Thumbnail URL
+                        {adminStrings.cats.form.thumbnailUrl}
                       </label>
                       <input
                         type="url"
                         value={formData.thumbnailUrl}
                         onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Current Dwelling
+                        {adminStrings.cats.form.currentDwelling}
                       </label>
                       <div className="relative" ref={dwellingRef}>
                         <input
@@ -621,8 +623,8 @@ export default function CatsCMSPage() {
                           value={formData.dwelling}
                           onChange={(e) => setFormData({ ...formData, dwelling: e.target.value })}
                           onFocus={() => setDwellingDropdownOpen(true)}
-                          placeholder="Select from list or type new dwelling..."
-                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={adminStrings.cats.form.dwellingPlaceholder}
+                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                         />
                         <button
                           type="button"
@@ -663,7 +665,7 @@ export default function CatsCMSPage() {
                             ).length === 0 &&
                               formData.dwelling && (
                                 <div className="px-3 py-2 text-gray-500 italic">
-                                  No matches found
+                                  {adminStrings.cats.form.noMatches}
                                 </div>
                               )}
                           </div>
@@ -673,7 +675,7 @@ export default function CatsCMSPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Previous Dwelling
+                        {adminStrings.cats.form.previousDwelling}
                       </label>
                       <div className="relative" ref={prevDwellingRef}>
                         <input
@@ -683,8 +685,8 @@ export default function CatsCMSPage() {
                             setFormData({ ...formData, prev_dwelling: e.target.value })
                           }
                           onFocus={() => setPrevDwellingDropdownOpen(true)}
-                          placeholder="Select from list or type new dwelling..."
-                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={adminStrings.cats.form.dwellingPlaceholder}
+                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                         />
                         <button
                           type="button"
@@ -729,7 +731,7 @@ export default function CatsCMSPage() {
                             ).length === 0 &&
                               formData.prev_dwelling && (
                                 <div className="px-3 py-2 text-gray-500 italic">
-                                  No matches found
+                                  {adminStrings.cats.form.noMatches}
                                 </div>
                               )}
                           </div>
@@ -740,69 +742,69 @@ export default function CatsCMSPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
+                      {adminStrings.cats.form.description}
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={5}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Character/Personality
+                      {adminStrings.cats.form.character}
                     </label>
                     <textarea
                       value={formData.character}
                       onChange={(e) => setFormData({ ...formData, character: e.target.value })}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Health/Sickness Notes
+                      {adminStrings.cats.form.sickness}
                     </label>
                     <textarea
                       value={formData.sickness}
                       onChange={(e) => setFormData({ ...formData, sickness: e.target.value })}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Parents/Mother
+                        {adminStrings.cats.form.parents}
                       </label>
                       <input
                         type="text"
                         value={formData.parents}
                         onChange={(e) => setFormData({ ...formData, parents: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Offspring/Children
+                        {adminStrings.cats.form.offspring}
                       </label>
                       <input
                         type="text"
                         value={formData.offspring}
                         onChange={(e) => setFormData({ ...formData, offspring: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Neutering Status
+                      {adminStrings.cats.form.neutering}
                     </label>
                     <select
                       value={
@@ -820,11 +822,11 @@ export default function CatsCMSPage() {
                             value === 'true' ? true : value === 'false' ? false : undefined,
                         });
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                     >
-                      <option value="">? (Unknown)</option>
-                      <option value="true">O (Neutered/Spayed)</option>
-                      <option value="false">X (Not Neutered)</option>
+                      <option value="">{adminStrings.cats.form.neuteringUnknown}</option>
+                      <option value="true">{adminStrings.cats.form.neuteringYes}</option>
+                      <option value="false">{adminStrings.cats.form.neuteringNo}</option>
                     </select>
                   </div>
 
@@ -834,51 +836,43 @@ export default function CatsCMSPage() {
                         type="checkbox"
                         checked={formData.adoptable}
                         onChange={(e) => setFormData({ ...formData, adoptable: e.target.checked })}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-300"
                       />
                       <span className="text-sm font-medium text-gray-700">
-                        입양 가능 (show on 입양홍보 gallery)
+                        {adminStrings.cats.form.adoptableLabel}
                       </span>
                     </label>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Special Notes
+                      {adminStrings.cats.form.note}
                     </label>
                     <textarea
                       value={formData.note}
                       onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                       rows={4}
-                      placeholder="Any special notes or remarks about this cat..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={adminStrings.cats.form.notePlaceholder}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                     />
                   </div>
 
                   <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
+                    <Button type="button" variant="secondary" onClick={handleCancel}>
+                      {adminStrings.common.cancel}
+                    </Button>
+                    <Button type="submit" disabled={saving} className="gap-2">
                       {saving ? (
                         <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Saving...
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ink"></div>
+                          {adminStrings.common.saving}
                         </>
                       ) : (
                         <>
-                          <FiSave /> Save Cat
+                          <FiSave /> {adminStrings.cats.form.saveCat}
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>
@@ -896,7 +890,7 @@ export default function CatsCMSPage() {
                         onClick={() => handleSort('name')}
                         className="flex items-center gap-1 hover:text-gray-700"
                       >
-                        Cat
+                        {adminStrings.cats.table.cat}
                         {sortBy === 'name' &&
                           (sortOrder === 'asc' ? (
                             <FiChevronUp size={14} />
@@ -910,7 +904,7 @@ export default function CatsCMSPage() {
                         onClick={() => handleSort('date_of_birth')}
                         className="flex items-center gap-1 hover:text-gray-700"
                       >
-                        Details
+                        {adminStrings.cats.table.details}
                         {sortBy === 'date_of_birth' &&
                           (sortOrder === 'asc' ? (
                             <FiChevronUp size={14} />
@@ -924,7 +918,7 @@ export default function CatsCMSPage() {
                         onClick={() => handleSort('dwelling')}
                         className="flex items-center gap-1 hover:text-gray-700"
                       >
-                        Location
+                        {adminStrings.cats.table.location}
                         {sortBy === 'dwelling' &&
                           (sortOrder === 'asc' ? (
                             <FiChevronUp size={14} />
@@ -938,7 +932,7 @@ export default function CatsCMSPage() {
                         onClick={() => handleSort('status')}
                         className="flex items-center gap-1 hover:text-gray-700"
                       >
-                        Status
+                        {adminStrings.cats.table.status}
                         {sortBy === 'status' &&
                           (sortOrder === 'asc' ? (
                             <FiChevronUp size={14} />
@@ -948,7 +942,7 @@ export default function CatsCMSPage() {
                       </button>
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {adminStrings.cats.table.actions}
                     </th>
                   </tr>
                 </thead>
@@ -991,10 +985,12 @@ export default function CatsCMSPage() {
                               {(cat.date_of_birth || cat.isNeutered !== undefined) && (
                                 <span>
                                   {' '}
-                                  ({cat.date_of_birth && `${cat.date_of_birth}년 생`}
+                                  (
+                                  {cat.date_of_birth &&
+                                    `${cat.date_of_birth}${adminStrings.cats.table.bornSuffix}`}
                                   {cat.date_of_birth && cat.isNeutered !== undefined && ', '}
                                   {cat.isNeutered !== undefined &&
-                                    `중성화 ${cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}`}
+                                    `${adminStrings.cats.table.neuteringPrefix} ${cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}`}
                                   )
                                 </span>
                               )}
@@ -1010,9 +1006,15 @@ export default function CatsCMSPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {cat.dwelling && <div>Current: {cat.dwelling}</div>}
+                          {cat.dwelling && (
+                            <div>
+                              {adminStrings.cats.table.current}: {cat.dwelling}
+                            </div>
+                          )}
                           {cat.prev_dwelling && (
-                            <div className="text-gray-500">Previous: {cat.prev_dwelling}</div>
+                            <div className="text-gray-500">
+                              {adminStrings.cats.table.previous}: {cat.prev_dwelling}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -1031,7 +1033,7 @@ export default function CatsCMSPage() {
                                       : 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {cat.status || 'Unknown'}
+                            {cat.status || adminStrings.cats.table.unknownStatus}
                           </span>
                           {cat.adoptable && (
                             <span className="inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full bg-brand-100 text-brand-800">
@@ -1044,7 +1046,7 @@ export default function CatsCMSPage() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEdit(cat)}
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-gray-500 hover:text-ink"
                           >
                             <FiEdit2 size={16} />
                           </button>
@@ -1072,8 +1074,8 @@ export default function CatsCMSPage() {
                   birthYearFilter ||
                   neuteredFilter ||
                   adoptableFilter
-                    ? 'No cats found matching your filters.'
-                    : 'No cats found.'}
+                    ? adminStrings.cats.table.emptyFiltered
+                    : adminStrings.cats.table.empty}
                 </p>
               </div>
             )}
@@ -1083,23 +1085,15 @@ export default function CatsCMSPage() {
           {deleteConfirm && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete this cat? This action cannot be undone.
-                </p>
+                <h3 className="text-lg font-semibold mb-4">{adminStrings.cats.delete.title}</h3>
+                <p className="text-gray-600 mb-6">{adminStrings.cats.delete.body}</p>
                 <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setDeleteConfirm(null)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleDelete(deleteConfirm)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
+                  <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+                    {adminStrings.common.cancel}
+                  </Button>
+                  <Button variant="danger" onClick={() => handleDelete(deleteConfirm)}>
+                    {adminStrings.cats.delete.confirm}
+                  </Button>
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cn } from '@/utils/cn';
 import AdminPostList from '@/components/AdminPostList';
+import { adminStrings } from '@/constants/adminStrings';
 
 const AdminPosts = () => {
   const [activeTab, setActiveTab] = useState<
@@ -11,7 +12,10 @@ const AdminPosts = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-center text-2xl font-bold mb-6">Post Management</h1>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold">{adminStrings.posts.title}</h1>
+        <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-brand" />
+      </div>
 
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200 mb-6">
@@ -24,7 +28,7 @@ const AdminPosts = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          급식현황
+          {adminStrings.posts.tabs.feedingStatus}
         </button>
         <button
           onClick={() => setActiveTab('butler_talk')}
@@ -35,7 +39,7 @@ const AdminPosts = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          집사톡
+          {adminStrings.posts.tabs.butlerTalk}
         </button>
         <button
           onClick={() => setActiveTab('announcements')}
@@ -46,7 +50,7 @@ const AdminPosts = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          공지사항
+          {adminStrings.posts.tabs.announcements}
         </button>
         <button
           onClick={() => setActiveTab('adoption_promotion')}
@@ -57,14 +61,14 @@ const AdminPosts = () => {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           )}
         >
-          입양홍보
+          {adminStrings.posts.tabs.adoptionPromotion}
         </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'adoption_promotion' ? (
         <div className="flex justify-center items-center py-12 text-gray-500">
-          입양홍보 탭은 준비 중입니다.
+          {adminStrings.posts.adoptionComingSoon}
         </div>
       ) : (
         <AdminPostList postType={activeTab} />
