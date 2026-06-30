@@ -8,13 +8,14 @@ interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
+// Inline status banner (form errors, empty-state notices, etc.). Status colors
+// per design.md — warning is informational yellow, distinct from the brand action.
 const VARIANT_CLASSES: Record<AlertVariant, string> = {
   error: 'bg-red-50 border-red-200 text-red-600',
   warning: 'bg-amber-50 border-amber-300 text-amber-800',
   success: 'bg-green-50 border-green-200 text-green-700',
 };
 
-// Inline status banner for admin screens (form errors, empty-state notices, etc.).
 export default function Alert({ variant, className, children, ...props }: AlertProps) {
   return (
     <div

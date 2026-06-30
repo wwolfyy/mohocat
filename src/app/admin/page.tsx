@@ -9,8 +9,8 @@ import {
   getPostService,
 } from '@/services';
 import YouTubeAuthPanel from '@/components/admin/YouTubeAuthPanelNew';
-import Card from '@/components/admin/ui/Card';
-import Alert from '@/components/admin/ui/Alert';
+import Card from '@/components/ui/Card';
+import Alert from '@/components/ui/Alert';
 
 interface AdminStats {
   // Images stats

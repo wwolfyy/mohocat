@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { cn } from '@/utils/cn';
 import AboutContentEditor from '@/components/admin/AboutContentEditor';
-import Button from '@/components/admin/ui/Button';
-import Card from '@/components/admin/ui/Card';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import { useSearchParams } from 'next/navigation';
 
 function AppManagementContent() {
@@ -149,7 +149,7 @@ function AppManagementContent() {
           <div className="flex gap-3 items-center">
             <Button
               size="sm"
-              className={cn(configSuccess && 'bg-green-600 hover:bg-green-600')}
+              className={cn(configSuccess && 'bg-none bg-green-600 text-white hover:bg-green-600')}
               onClick={async () => {
                 setConfigLoading(true);
                 setConfigSuccess(false);

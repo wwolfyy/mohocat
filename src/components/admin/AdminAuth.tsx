@@ -4,9 +4,11 @@ import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
 import SocialLoginButton from '@/components/SocialLoginButton';
-import Button from '@/components/admin/ui/Button';
-import Card from '@/components/admin/ui/Card';
-import { cn } from '@/utils/cn';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Alert from '@/components/ui/Alert';
+import Field from '@/components/ui/Field';
+import Input from '@/components/ui/Input';
 
 interface AdminAuthProps {
   children: React.ReactNode;
@@ -147,26 +149,17 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               </div>
 
               {/* Success Messages */}
-              {/* Success Messages */}
               {kakaoSignInSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-700 text-sm text-center">카카오톡으로 로그인했어요!</p>
-                </div>
+                <Alert variant="success" className="text-center">
+                  카카오톡으로 로그인했어요!
+                </Alert>
               )}
 
               {/* Error Messages */}
               {(loginError || kakaoSignInError) && (
                 <div className="space-y-2">
-                  {loginError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-red-700 text-sm">{loginError}</p>
-                    </div>
-                  )}
-                  {kakaoSignInError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-red-700 text-sm">{kakaoSignInError}</p>
-                    </div>
-                  )}
+                  {loginError && <Alert variant="error">{loginError}</Alert>}
+                  {kakaoSignInError && <Alert variant="error">{kakaoSignInError}</Alert>}
                 </div>
               )}
             </div>
@@ -180,57 +173,38 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
             {/* Email/Password Login */}
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">이메일 주소</label>
-                <input
+              <Field label="이메일 주소" htmlFor="admin-login-email">
+                <Input
+                  id="admin-login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className={cn(
-                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
-                    'text-gray-900 placeholder-gray-500',
-                    'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
-                  )}
                   placeholder="이메일을 입력해 주세요"
                   disabled={isSigningInWithKakao}
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
-                <input
+              <Field label="비밀번호" htmlFor="admin-login-password">
+                <Input
+                  id="admin-login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className={cn(
-                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
-                    'text-gray-900 placeholder-gray-500',
-                    'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
-                  )}
                   placeholder="비밀번호를 입력해 주세요"
                   disabled={isSigningInWithKakao}
                 />
-              </div>
+              </Field>
 
-              <button
+              <Button
                 type="submit"
+                size="lg"
+                className="w-full"
                 disabled={isSigningInWithKakao || isLoggingIn}
-                className={cn(
-                  'w-full py-3 rounded-lg font-bold transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-offset-2',
-                  'bg-gradient-to-r from-yellow-400 to-orange-300 text-black',
-                  'hover:shadow-lg hover:-translate-y-1',
-                  'focus:ring-yellow-500',
-                  {
-                    'opacity-50 cursor-not-allowed': isSigningInWithKakao || isLoggingIn,
-                    'cursor-pointer': !isSigningInWithKakao && !isLoggingIn,
-                  }
-                )}
               >
                 {isLoggingIn ? '로그인 중...' : '이메일로 로그인'}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { authHeader } from '@/lib/auth/authHeader';
-import Button from '@/components/admin/ui/Button';
-import Card from '@/components/admin/ui/Card';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
