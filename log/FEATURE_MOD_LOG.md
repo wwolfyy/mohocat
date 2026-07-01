@@ -15,6 +15,29 @@
 
 ---
 
+## 2026-07-02 — Change site (browser-tab) title to 산냥이집냥이
+
+**Area:** root layout (`src/app/layout.tsx`) · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+Changed `metadata.title` from the English `'Mountain Cats'` to `'산냥이집냥이'`, so
+the browser-tab / SEO `<title>` matches the Korean-first brand. The header `<h1>`
+already read 산냥이집냥이; this aligns the tab title with it. The `description`
+metadata and `<html lang>` were left untouched (out of scope). The remaining
+"Mountain Cats" strings elsewhere are YouTube channel-title / upload-description
+values, not the site title, so they were left alone.
+
+### Rationale
+
+Korean-first platform — the tab/SEO title should not be English. Owner request.
+
+### Verified
+
+- `npm run typecheck` (`tsc --noEmit`) clean.
+
+---
+
 ## 2026-07-02 — Add `tsc --noEmit` type-check to the pre-commit hook
 
 **Area:** tooling (`.husky/pre-commit`, `package.json`) · **Type:** enhancement · **Branch:** `dev`

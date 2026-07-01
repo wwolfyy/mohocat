@@ -13,7 +13,7 @@ import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Mountain Cats',
+  title: '산냥이집냥이',
   description: 'Explore cats living in the mountains',
 };
 
