@@ -102,6 +102,11 @@ those are the forward plan.
 - [ ] **Map mobile quirks** — the "minor quirks left for now" from the landing
       work; clustering aggressiveness (`maxClusterRadius`) tuning; edge-clipping;
       spiderfy ergonomics.
+- [ ] **Map re-fit on window resize — mobile** — the fit-on-resize fix
+      (2026-07-02, `LeafletMountainMap` `MapViewController`) works on **desktop**
+      but shows irregularities at mobile widths; audit/refine for the portrait
+      layout, including behaviour across the landscape↔portrait remount boundary
+      (`key={isMobile}`). See [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md).
 - [ ] **Modals on mobile** — verify the shared `ui/Modal` sizing/scroll/safe-area
       on small screens (sizes were tuned for desktop "narrow over the map").
 - [ ] **Album grids on mobile** — `grid-cols-2` density, tile caption legibility,

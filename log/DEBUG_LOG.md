@@ -11,6 +11,55 @@
 
 ---
 
+## 2026-07-02 — Map doesn't re-fit on window resize (desktop fixed · mobile pending)
+
+**Area:** landing map (`LeafletMountainMap` / `MapViewController`) · **Branch:**
+`dev` · **Severity:** low (cosmetic; recoverable via the fit button) ·
+**Status:** ✅ desktop · ⏳ mobile (tracked in PROJECT_PLAN §4)
+
+### Symptom
+
+Resizing the browser window left the map at its old dimensions: white margins
+around it when the window grew, clipped/partial map when it shrank. Clicking the
+전체 보기 (fit) control fixed it.
+
+### Root cause
+
+The container is `h-full w-full`, so the DIV resizes with the window, and
+Leaflet's built-in `trackResize` keeps the canvas size in sync
+(`invalidateSize`) — but it **preserves zoom**, so the image stays at its old
+scale relative to the new viewport. Nothing re-fit the view to the new size.
+
+### Fix
+
+In `MapViewController`, on a debounced (150ms) window `resize`, call
+`map.invalidateSize({ animate: false })` then `map.fitBounds(bounds)` — i.e. the
+same `applyFit()` the 전체 보기 control runs. `invalidateSize` first so `fitBounds`
+measures against the new size regardless of handler ordering. Listener cleaned up
+on unmount.
+
+**Files:** `src/components/LeafletMountainMap.tsx`.
+
+### Verified
+
+- `npx tsc --noEmit` clean · smoke 25/25.
+- **Desktop: confirmed by the owner** in a real browser (re-fits, no margins).
+- **Mobile: pending** — owner saw irregularities at mobile widths; deferred to the
+  mobile UI phase (PROJECT_PLAN §4, "Map re-fit on window resize — mobile"),
+  which must cover the portrait layout and the landscape↔portrait remount
+  boundary (`key={isMobile}`).
+
+### Notes / watch-outs
+
+- **The automation could not reproduce a real window resize** for this map:
+  `resize_window` didn't change the page viewport, and simulating a resize by
+  poking the container height + dispatching a synthetic `resize` event gives
+  **false negatives** — even the known-good fit button fails under that
+  simulation, because `fitBounds` relies on Leaflet's real layout-driven size
+  tracking. Verify map-resize behaviour in a real browser, not via DOM pokes.
+
+---
+
 ## 2026-07-02 — Kakao login failure messages shown in English
 
 **Area:** auth (`auth-service` / `AuthProvider`) · **Branch:** `dev` ·

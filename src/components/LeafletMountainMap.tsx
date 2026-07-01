@@ -279,8 +279,26 @@ function MapViewController({ bounds }: { bounds: LatLngBoundsExpression }) {
     };
     control.addTo(map);
 
+    // Re-fit the image to the viewport on window resize. Leaflet's trackResize
+    // keeps the canvas size in sync (invalidateSize) but preserves zoom, which
+    // leaves margins when the window grows and clips the image when it shrinks —
+    // so we additionally re-fit, exactly like the 전체 보기 control. Debounced to
+    // avoid thrashing fitBounds during a drag-resize; invalidateSize first so
+    // fitBounds measures against the new size regardless of handler ordering.
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        map.invalidateSize({ animate: false });
+        applyFit();
+      }, 150);
+    };
+    window.addEventListener('resize', onResize);
+
     return () => {
       container.removeEventListener('wheel', onWheel);
+      window.removeEventListener('resize', onResize);
+      clearTimeout(resizeTimer);
       control.remove();
     };
   }, [map, bounds]);
