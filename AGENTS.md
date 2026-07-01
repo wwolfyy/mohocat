@@ -24,10 +24,16 @@ deep detail this file deliberately keeps out:
   admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshot docs — verify against code before trusting specifics.)_
 - **`docs/design/`** — design source-of-truth + redesign plan/tasks.
-- **`log/`** — operational logs (repo root, not under `docs/`). `log/DEBUG_LOG.md`
-  is the running bug-fix log — **symptom → root cause → fix → verified**, newest
-  first; skim it before chasing a bug in case it (or a sibling) was seen before.
-  `log/doc_updates.log` records codebase-doc refresh runs.
+- **`log/`** — operational logs (repo root, not under `docs/`), newest-first:
+  - `log/DEBUG_LOG.md` — **bug** fixes whose root cause was non-obvious
+    (symptom → root cause → fix → verified); skim it before chasing a bug in case
+    it (or a sibling) was seen before.
+  - `log/FEATURE_MOD_LOG.md` — **intentional product changes** (feature
+    enhancements / small fixes / removals), i.e. changes made by choice rather
+    than bug investigations (what changed → rationale → verified).
+  - `log/doc_updates.log` — codebase-doc refresh runs.
+  - _Which log?_ "X was broken, here's why" → `DEBUG_LOG`; "we decided to
+    add/change/remove X" → `FEATURE_MOD_LOG`.
 
 ## Working Agreements
 
@@ -179,6 +185,9 @@ MOUNTAIN_ID=geyang                   # Optional, defaults to 'geyang'
 - **Debug log**: after fixing a bug whose root cause was non-obvious, add an entry to
   `log/DEBUG_LOG.md` (newest first) — symptom, root cause, fix, and how it was verified —
   so the reasoning survives without re-reading the diff.
+- **Feature mod log**: for intentional changes (feature enhancements / small fixes /
+  removals) rather than bug fixes, add an entry to `log/FEATURE_MOD_LOG.md` (newest first) —
+  what changed, rationale, how it was verified. (See the `log/` bullet above for which log.)
 
 ## Anti-Patterns to Avoid
 
