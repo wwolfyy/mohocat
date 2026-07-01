@@ -15,6 +15,35 @@
 
 ---
 
+## 2026-07-02 — Add show/hide password toggle to the login modal
+
+**Area:** `LoginForm` (`src/components/LoginForm.tsx`, `src/constants/strings.ts`) ·
+**Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+Added a show/hide toggle to the email/password field in the login modal. An eye
+icon (`EyeIcon`/`EyeSlashIcon` from `@heroicons/react/24/outline`) sits inside the
+input on the right; clicking it flips the input `type` between `password` and
+`text` via a new `showPassword` state. The button carries Korean aria-labels
+(`비밀번호 표시` / `비밀번호 숨기기`, added to `strings.login.form`) and `aria-pressed`
+for accessibility. The input got `pr-10` padding so text doesn't run under the
+icon. Scoped to the login modal only — `SignupForm` / `AdminAuth` / `mypage`
+password fields were left unchanged.
+
+### Rationale
+
+Owner request; lets users confirm what they typed before submitting. Reused the
+existing `@heroicons/react` dependency and the `strings` i18n table rather than
+hardcoding text.
+
+### Verified
+
+- `npm run typecheck` (`tsc --noEmit`) clean.
+- Browser verification of the toggle pending.
+
+---
+
 ## 2026-07-02 — Change site (browser-tab) title to 산냥이집냥이
 
 **Area:** root layout (`src/app/layout.tsx`) · **Type:** enhancement · **Branch:** `dev`
