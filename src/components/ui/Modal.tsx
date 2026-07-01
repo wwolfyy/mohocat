@@ -36,8 +36,6 @@ interface ModalProps {
   /** Optional header title; when present renders the standard title + close row. */
   title?: ReactNode;
   size?: ModalSize;
-  /** Stacking context for nested modals (e.g. 'z-[60]'). Defaults to 'z-50'. */
-  zIndexClassName?: string;
   /** Extra classes for the white card. */
   className?: string;
   /** Hide the floating close button (e.g. when content provides its own action row). */
@@ -56,7 +54,6 @@ export default function Modal({
   children,
   title,
   size = 'md',
-  zIndexClassName = 'z-50',
   className,
   hideCloseButton = false,
   ariaLabel,
@@ -67,8 +64,9 @@ export default function Modal({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // ESC closes only the topmost overlay (shared layer stack with lightboxes).
-  useModalLayer(isOpen, { onEscape: onClose });
+  // ESC closes only the topmost overlay, and the z-index is derived from this
+  // modal's depth in the shared overlay stack so nested modals stack correctly.
+  const zIndex = useModalLayer(isOpen, { onEscape: onClose });
 
   // Lock body scroll while any modal is open.
   useEffect(() => {
@@ -89,9 +87,9 @@ export default function Modal({
     <div
       className={cn(
         'fixed inset-0 flex items-start justify-center overflow-y-auto py-4',
-        'bg-black/50 backdrop-blur-sm animate-modal-backdrop motion-reduce:animate-none',
-        zIndexClassName
+        'bg-black/50 backdrop-blur-sm animate-modal-backdrop motion-reduce:animate-none'
       )}
+      style={{ zIndex }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { CatVideo } from '@/types/media';
 import { parseDate } from '@/utils/parse-date';
@@ -37,8 +38,13 @@ export default function VideoPlayer({
 }: VideoPlayerProps) {
   const [videoLoading, setVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  // Render through a portal to <body> so the player escapes the album modal's
+  // ancestor stacking context; combined with the stack-derived z-index below it
+  // then paints above the album it was opened from at any nesting depth.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  useModalLayer(true, {
+  const zIndex = useModalLayer(true, {
     onEscape: onClose,
     onArrowLeft: hasPrevious ? onPrevious : undefined,
     onArrowRight: hasNext ? onNext : undefined,
@@ -81,9 +87,12 @@ export default function VideoPlayer({
     );
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90"
+      className="fixed inset-0 flex items-center justify-center bg-black/90"
+      style={{ zIndex }}
       onClick={onClose}
     >
       {/* Close */}
@@ -158,6 +167,7 @@ export default function VideoPlayer({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

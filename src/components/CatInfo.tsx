@@ -191,7 +191,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
       />
       {/* Nested Cat Modal */}
       {selectedCat && (
-        <Modal onClose={() => setSelectedCat(null)} size="xl" zIndexClassName="z-[70]">
+        <Modal onClose={() => setSelectedCat(null)} size="xl">
           <CatInfo cat={selectedCat} />
         </Modal>
       )}

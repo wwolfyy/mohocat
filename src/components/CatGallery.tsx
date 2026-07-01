@@ -81,7 +81,7 @@ export default function CatGallery({ cats, onClose }: CatGalleryProps) {
       </div>
 
       {selectedCat && (
-        <Modal onClose={() => setSelectedCat(null)} size="xl" zIndexClassName="z-[60]">
+        <Modal onClose={() => setSelectedCat(null)} size="xl">
           <CatInfo cat={selectedCat} />
         </Modal>
       )}
