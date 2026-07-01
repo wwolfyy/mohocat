@@ -7,6 +7,7 @@
     "build": "node scripts/maintenance/fetch-static-assets.js && next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:smoke": "vitest run tests/smoke",
     "vercel-build": "node scripts/maintenance/fetch-static-assets.js && next build",

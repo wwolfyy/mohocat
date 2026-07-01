@@ -15,6 +15,34 @@
 
 ---
 
+## 2026-07-02 — Add `tsc --noEmit` type-check to the pre-commit hook
+
+**Area:** tooling (`.husky/pre-commit`, `package.json`) · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+Added a project-wide type-check to the pre-commit gate. Previously pre-commit ran
+only TruffleHog (secret scan) + `lint-staged` (ESLint `--fix` + Prettier) — no
+type checking. Added a reusable `typecheck` script (`tsc --noEmit`) to
+`package.json` and a final pre-commit step (`npm run typecheck`) after
+`lint-staged`.
+
+### Rationale
+
+Type errors were only caught by the manual `npx tsc --noEmit` gate, not enforced
+on commit. Run as its **own** hook step (not through `lint-staged`) because
+`tsc --noEmit` needs the whole project graph — a change in one file can break
+another's types, so a per-staged-file scope would give false passes. Placed
+**after** `lint-staged` so formatting fixes apply first and the type-check is the
+final gate.
+
+### Verified
+
+- `npm run typecheck` runs clean (no type errors), ~10s wall time.
+- `npx tsc --noEmit` clean · smoke 25/25.
+
+---
+
 ## 2026-07-02 — Emphasize capital letters in the About subtitle (MOHOCATS wordplay)
 
 **Area:** `about` page (`/pages/about`) · **Type:** enhancement · **Branch:** `dev`
