@@ -15,6 +15,56 @@
 
 ---
 
+## 2026-07-02 — Emphasize capital letters in the About subtitle (MOHOCATS wordplay)
+
+**Area:** `about` page (`/pages/about`) · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+The 부제 embeds a wordplay — **MO**untain **HO**use **CATS** → MOHOCATS. Added a
+render-time helper (`emphasizeCapitals`) that wraps runs of uppercase Latin
+letters in `font-semibold text-brand-600` (brand gold), leaving lowercase/Korean
+untouched, so the acronym pops. Content-agnostic: it emphasizes whatever capitals
+the admin subtitle contains.
+
+### Rationale
+
+Owner request; makes the intentional MOHOCATS wordplay legible. Purely
+presentational — splits on `[A-Z]+` runs so consecutive capitals share one span.
+
+### Verified
+
+- `npx tsc --noEmit` clean · smoke 25/25.
+- Browser (`/pages/about`): capitals render gold + semibold ("MOuntain cats,
+  HOuse CATS (MOHOCATS)"), lowercase stays muted gray.
+
+---
+
+## 2026-07-02 — Display the 부제 (subtitle) on the About/intro page
+
+**Area:** `about` page (`/pages/about`) · **Type:** fix/enhancement · **Branch:** `dev`
+
+### Change
+
+The About page rendered only `aboutData.title`; the `subtitle` (부제) — loaded into
+`aboutData` and editable in the admin About-content editor — was never displayed.
+Added a subtitle `<p>` between the title and the brand accent bar, rendered only
+when `aboutData.subtitle` is set (`text-lg text-gray-600`).
+
+### Rationale
+
+The field was already fully wired (admin editor → Firestore/JSON → `aboutData`),
+so it was owner-managed content that simply had no render site. This just surfaces
+existing content; no data/model change.
+
+### Verified
+
+- `npx tsc --noEmit` clean · smoke 25/25.
+- Browser (`/pages/about`): subtitle now renders under the title, above the accent
+  bar. (The subtitle text is admin-managed content, editable in the About editor.)
+
+---
+
 ## 2026-07-02 — Remove 문의 (contact) link from the footer
 
 **Area:** `Footer` · **Type:** removal · **Branch:** `dev`

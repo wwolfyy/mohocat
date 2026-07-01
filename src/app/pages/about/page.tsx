@@ -11,6 +11,24 @@ import CatInfo from '@/components/CatInfo';
 import Modal from '@/components/ui/Modal';
 import Image from 'next/image';
 
+/**
+ * Renders a subtitle with runs of uppercase Latin letters emphasized (brand
+ * gold + semibold), so the intended wordplay in the 부제 stands out — e.g.
+ * "MOuntain cats HOuse CATS" surfaces MO·HO·CATS. Splits on `[A-Z]+` runs so
+ * consecutive capitals share one span; lowercase/Korean text is untouched.
+ */
+function emphasizeCapitals(text: string): React.ReactNode[] {
+  return text.split(/([A-Z]+)/).map((part, i) =>
+    /^[A-Z]+$/.test(part) ? (
+      <span key={i} className="font-semibold text-brand-600">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
+
 export default function About() {
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -162,6 +180,9 @@ export default function About() {
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-3" data-oid="5f.mun5">
           {aboutData.title}
         </h1>
+        {aboutData.subtitle && (
+          <p className="mb-3 text-lg text-gray-600">{emphasizeCapitals(aboutData.subtitle)}</p>
+        )}
         <div className="mb-8 h-1 w-12 rounded-full bg-brand" />
 
         {/* Main Photo */}
