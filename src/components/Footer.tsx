@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 /**
  * Site footer. Grounds the layout (so the page doesn't feel unfinished below the
  * map) and is the conventional home for policy links.
@@ -29,12 +27,6 @@ export default function Footer() {
           <span className="cursor-not-allowed text-gray-400" title="준비 중입니다">
             이용약관
           </span>
-          <Link
-            href="/pages/contact"
-            className="text-gray-500 transition-colors hover:text-gray-800"
-          >
-            문의
-          </Link>
         </nav>
 
         <div className="text-xs text-gray-400">© {year} 산냥이집냥이</div>
