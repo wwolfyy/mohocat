@@ -24,6 +24,10 @@ deep detail this file deliberately keeps out:
   admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshot docs — verify against code before trusting specifics.)_
 - **`docs/design/`** — design source-of-truth + redesign plan/tasks.
+- **`log/`** — operational logs (repo root, not under `docs/`). `log/DEBUG_LOG.md`
+  is the running bug-fix log — **symptom → root cause → fix → verified**, newest
+  first; skim it before chasing a bug in case it (or a sibling) was seen before.
+  `log/doc_updates.log` records codebase-doc refresh runs.
 
 ## Working Agreements
 
@@ -172,6 +176,9 @@ MOUNTAIN_ID=geyang                   # Optional, defaults to 'geyang'
 - **Migration scripts**: `scripts/migration/` for one-shot data updates.
 - **Permission inspection**: `PermissionDebug.tsx` (dev-only) resolves a user's effective
   permissions.
+- **Debug log**: after fixing a bug whose root cause was non-obvious, add an entry to
+  `log/DEBUG_LOG.md` (newest first) — symptom, root cause, fix, and how it was verified —
+  so the reasoning survives without re-reading the diff.
 
 ## Anti-Patterns to Avoid
 
