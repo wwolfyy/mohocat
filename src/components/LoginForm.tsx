@@ -212,6 +212,24 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         email={email}
       />
 
+      {/* Shared login-error banner — a failure in any top-level sign-in method
+          (email or Kakao) surfaces here, not under the email form. Phone login
+          keeps its own field-adjacent inline errors. */}
+      {(error || kakaoSignInError) && (
+        <div className="space-y-2">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+          {kakaoSignInError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-700 text-sm">{kakaoSignInError}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Social Login Section */}
       <div className="space-y-3">
         <div className="text-center">
@@ -307,22 +325,6 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
             {t.forgotPassword}
           </button>
         </div>
-
-        {/* Error Messages */}
-        {(error || kakaoSignInError) && (
-          <div className="space-y-2">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-700 text-sm">{error}</p>
-              </div>
-            )}
-            {kakaoSignInError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-700 text-sm">{kakaoSignInError}</p>
-              </div>
-            )}
-          </div>
-        )}
 
         <button
           type="submit"

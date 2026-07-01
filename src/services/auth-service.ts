@@ -32,6 +32,12 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase';
 import { getKakaoOAuthConfig, isKakaoOAuthEnabled } from '@/utils/config';
+import { strings } from '@/constants/strings';
+
+// User-facing Korean copy for Kakao sign-in failures. Verbose, code-specific
+// diagnostics stay in console.error below; the thrown message is always one of
+// these so the UI shows clean Korean rather than relayed English.
+const kakaoErrors = strings.auth.kakao.errors;
 
 import { setPersistence, browserLocalPersistence } from 'firebase/auth';
 
@@ -105,7 +111,8 @@ export class FirebaseAuthService implements IAuthService {
 
   async signInWithKakao(forceFallback: boolean = false): Promise<UserCredential> {
     if (!isKakaoOAuthEnabled()) {
-      throw new Error('Kakao OAuth is not enabled');
+      console.error('Kakao OAuth is not enabled');
+      throw new Error(kakaoErrors.generic);
     }
 
     try {
@@ -300,19 +307,20 @@ export class FirebaseAuthService implements IAuthService {
             console.error('Error cleaning up anonymous user:', cleanupError);
           }
 
-          // Throw original error since fallback also failed
-          throw new Error(
-            `KakaoTalk authentication failed and fallback approach also failed. Original error: ${error.message}`
-          );
+          // Fallback also failed — keep the original detail in the console and
+          // surface friendly Korean copy to the user.
+          console.error('Kakao fallback (anonymous + link) failed. Original error:', error.message);
+          throw new Error(kakaoErrors.generic);
         }
       }
 
-      // Enhanced error handling with specific KakaoTalk issues
-      let errorMessage = 'Failed to sign in with Kakaotalk';
+      // Enhanced error handling with specific KakaoTalk issues. The switch keeps
+      // its verbose developer diagnostics in console.error; the user-facing
+      // errorMessage is always friendly Korean copy from strings.
+      let errorMessage: string = kakaoErrors.generic;
       switch (error.code) {
         case 'auth/popup-closed-by-user':
-          errorMessage =
-            'Kakaotalk sign-in was cancelled. This could mean: 1) User closed popup 2) Popup was blocked 3) Authentication completed but result not processed. Please try again.';
+          errorMessage = kakaoErrors.cancelled;
           console.error('=== POPUP CLOSED DEBUG ===');
           console.error('Possible causes:');
           console.error('1. User manually closed the popup');
@@ -322,16 +330,14 @@ export class FirebaseAuthService implements IAuthService {
           console.error('SOLUTION: Try again, disable popup blocker, or sign out and retry');
           break;
         case 'auth/cancelled-popup-request':
-          errorMessage =
-            'Kakaotalk sign-in request was cancelled. Please wait a moment and try again.';
+          errorMessage = kakaoErrors.cancelled;
           console.error('=== POPUP REQUEST CANCELLED ===');
           console.error('The popup request was cancelled before completion');
           console.error('This often happens when multiple requests are made simultaneously');
           console.error('SOLUTION: Wait a few seconds and try again');
           break;
         case 'auth/popup-blocked':
-          errorMessage =
-            'Kakaotalk sign-in was blocked by popup blocker. Please disable popup blocker and try again.';
+          errorMessage = kakaoErrors.popupBlocked;
           console.error('=== POPUP BLOCKED ===');
           console.error('Browser popup blocker prevented the authentication popup');
           console.error(
@@ -339,26 +345,22 @@ export class FirebaseAuthService implements IAuthService {
           );
           break;
         case 'auth/timeout':
-          errorMessage =
-            'Kakaotalk sign-in timed out. Please check your internet connection and try again.';
+          errorMessage = kakaoErrors.timeout;
           console.error('=== TIMEOUT ERROR ===');
           console.error('Authentication request timed out');
           console.error('SOLUTION: Check internet connection, try again, or use different browser');
           break;
         case 'auth/account-exists-with-different-credential':
-          errorMessage =
-            'An account already exists with this email address. Please sign in using the original method.';
+          errorMessage = kakaoErrors.accountExists;
           break;
         case 'auth/operation-not-allowed':
-          errorMessage =
-            'Kakaotalk sign-in is not enabled in Firebase Console. Please check the authentication providers settings.';
+          errorMessage = kakaoErrors.generic;
           console.error(
             'FIREBASE SETUP REQUIRED: Enable OpenID Connect provider "oidc.kakao" in Firebase Console > Authentication > Sign-in method'
           );
           break;
         case 'auth/internal-error':
-          errorMessage =
-            "Kakaotalk login failed. Since linking works but login doesn't, this suggests a session or flow issue rather than credentials.";
+          errorMessage = kakaoErrors.generic;
           console.error('=== KAKAOTALK LOGIN VS LINKING DEBUG ===');
           console.error('OBSERVATION: Provider linking works but login fails');
           console.error("This indicates the credentials are correct but there's a flow difference");
@@ -380,19 +382,18 @@ export class FirebaseAuthService implements IAuthService {
           console.error('This is likely a Firebase configuration or session state issue.');
           break;
         case 'auth/invalid-custom-parameter':
-          errorMessage =
-            'Invalid Kakaotalk OAuth configuration. Please check the client ID and redirect URI settings.';
+          errorMessage = kakaoErrors.generic;
           console.error(
             'CONFIGURATION ERROR: Check environment variables and Firebase provider setup'
           );
           break;
         case 'auth/unsupported-popup-redirect':
-          errorMessage =
-            'Kakaotalk OAuth provider is not properly configured in Firebase Console. Please add OpenID Connect provider with ID "oidc.kakao".';
+          errorMessage = kakaoErrors.generic;
           console.error('FIREBASE SETUP: Add OpenID Connect provider with ID "oidc.kakao"');
           break;
         default:
-          errorMessage = `Kakaotalk authentication failed: ${error.message || 'Unknown error'}`;
+          errorMessage = kakaoErrors.generic;
+          console.error('Unhandled Kakao auth error:', error.code, error.message);
           // Check for client credentials error
           if (
             error.message &&

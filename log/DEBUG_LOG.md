@@ -11,6 +11,97 @@
 
 ---
 
+## 2026-07-02 — Kakao login failure messages shown in English
+
+**Area:** auth (`auth-service` / `AuthProvider`) · **Branch:** `dev` ·
+**Severity:** low (Korean-first UI violation)
+
+### Symptom
+
+A failed Kakao login showed an **English** message (e.g. "Kakaotalk sign-in was
+cancelled…"), breaking the Korean-first UI.
+
+### Root cause
+
+Not (only) relayed from Kakao/Firebase — the English was **mostly our own
+code**. `auth-service.signInWithKakao()`'s catch block built the message from a
+`switch (error.code)` where **every case was a hardcoded English string** (and
+several were verbose developer text); the `default` relayed the raw upstream
+`error.message`. Two other throws (provider-not-enabled early return; anonymous-
+link fallback failure) and `AuthProvider`'s fallback (`'Failed to sign in with
+Kakaotalk'`) were English too.
+
+### Fix
+
+Added `strings.auth.kakao.errors` (Korean: `cancelled` / `popupBlocked` /
+`timeout` / `accountExists` / `generic`). The `switch` now sets a friendly
+Korean `errorMessage` per code while **keeping its `console.error` diagnostics**;
+config/unknown codes and the raw upstream `error.message` collapse to the generic
+Korean message (upstream detail logged to console only — owner's call). The two
+out-of-band throws and the `AuthProvider` fallback now use the Korean generic.
+Errors surface in the shared login banner (see the entry below).
+
+**Files:** `src/constants/strings.ts`, `src/services/auth-service.ts`,
+`src/components/auth/AuthProvider.tsx`.
+
+### Verified
+
+- `npx tsc --noEmit` clean (needed `let errorMessage: string` — `strings` is
+  `as const`, which otherwise narrowed it to the `generic` literal) · smoke
+  25/25.
+- Browser: drove the login flow until the real Kakao OAuth popup opened;
+  couldn't cancel it from automation (popup is outside the tab group), so the
+  final Korean string was not captured live. Change is a direct English→Korean
+  swap; banner placement was verified in the entry below.
+
+---
+
+## 2026-07-01 — Kakao (social) login errors shown under the email login block
+
+**Area:** auth UI (`LoginForm`) · **Branch:** `dev` · **Severity:** low
+(cosmetic/UX — error attributed to the wrong sign-in method)
+
+### Symptom
+
+A failed **카카오톡으로 로그인** (Kakao) attempt surfaced its error message in the
+red box **below the email/password form**, making the failure look like it
+belonged to email login.
+
+### Root cause
+
+`LoginForm` had a single "Error Messages" block rendered **inside the email
+`<form>`** that displayed _both_ the email `error` state **and** the
+`kakaoSignInError` from `useAuth`. So any Kakao failure appeared under the email
+inputs. (Phone login was unaffected — `PhoneLoginForm` shows its own inline
+errors next to the phone fields.)
+
+### Fix
+
+Chose the "shared location" approach (owner's call): moved the email + Kakao
+error display into **one shared banner at the top of the login form**, above all
+sign-in sections, and removed the block from inside the email form. Phone login
+intentionally keeps its own field-adjacent inline errors — several are
+contextual validation messages ("code format invalid") that read best next to
+the phone inputs, and they were never misattributed.
+
+**Files:** `src/components/LoginForm.tsx`.
+
+### Verified
+
+- `npx tsc --noEmit` clean · `npm run test:smoke` 25/25.
+- Browser (localhost:3000/login): triggered an email-login failure with bad
+  credentials — the error now renders in the top shared banner, not under the
+  email form. Kakao errors use the identical banner code path (same
+  `(error || kakaoSignInError)` render), so they surface in the same place.
+
+### Notes / watch-outs
+
+- The empty **green** success-message container under the Kakao button
+  (`t.kakaoSuccess`) still renders as an empty box even when there's no success
+  message — pre-existing cosmetic nit, left as-is (out of scope).
+
+---
+
 ## 2026-07-01 — Media album hidden behind the cat modal (map flow only)
 
 **Area:** public overlay stacking (`Modal` / `Lightbox` / `VideoPlayer`) ·

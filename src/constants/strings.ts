@@ -78,6 +78,15 @@ export const strings = {
       guidanceBody:
         '이메일이나 전화번호로 먼저 로그인해 주세요. 그런 다음 「내 집사 정보」의 연결된 계정에서 카카오톡 계정을 연결할 수 있어요.',
       gotIt: '알겠어요',
+      // User-facing Kakao sign-in failures. Detailed diagnostics are logged to
+      // the console; users only ever see these friendly Korean messages.
+      errors: {
+        cancelled: '카카오톡 로그인이 취소됐어요. 다시 시도해 주세요.',
+        popupBlocked: '팝업이 차단됐어요. 팝업 차단을 해제하고 다시 시도해 주세요.',
+        timeout: '연결 시간이 초과됐어요. 인터넷 연결을 확인하고 다시 시도해 주세요.',
+        accountExists: '이미 다른 방법으로 가입된 이메일이에요. 원래 방법으로 로그인해 주세요.',
+        generic: '카카오톡 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.',
+      },
     },
     nav: {
       logIn: '로그인/등록',

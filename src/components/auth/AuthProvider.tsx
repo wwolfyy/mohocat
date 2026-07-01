@@ -19,6 +19,7 @@ import {
 import { getAuthService, getPermissionService } from '@/services';
 import { auth } from '@/services/firebase'; // Direct access for persistence setting if needed, or better via service
 import type { ProviderData } from '@/services/interfaces';
+import { strings } from '@/constants/strings';
 
 // Auth State Interface
 export interface AuthState {
@@ -282,7 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setKakaoSignInSuccess(true);
         setTimeout(() => setKakaoSignInSuccess(false), 3000);
       } catch (error: any) {
-        setKakaoSignInError(error.message || 'Failed to sign in with Kakaotalk');
+        setKakaoSignInError(error.message || strings.auth.kakao.errors.generic);
       } finally {
         setIsSigningInWithKakao(false);
       }
