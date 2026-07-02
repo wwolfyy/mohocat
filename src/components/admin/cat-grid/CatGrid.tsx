@@ -12,14 +12,8 @@ import {
   type Column,
   type SimpleColumn,
 } from 'react-datasheet-grid';
-import {
-  FiSave,
-  FiRotateCcw,
-  FiSearch,
-  FiFilter,
-  FiChevronUp,
-  FiChevronDown,
-} from 'react-icons/fi';
+import { FiSave, FiRotateCcw, FiSearch, FiFilter } from 'react-icons/fi';
+import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { getCatService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
 import { triggerCatRevalidate } from '@/lib/revalidate-client';
@@ -424,11 +418,24 @@ export default function CatGrid() {
               e.stopPropagation();
               handleSort(key);
             }}
-            className="flex items-center gap-1 w-full font-medium hover:text-brand-600"
+            title={t.sortHint}
+            aria-label={`${title} — ${t.sortHint}`}
+            className="flex items-center gap-1 w-full font-medium hover:text-brand-700"
           >
-            {title}
-            {sortKey === key &&
-              (sortOrder === 'asc' ? <FiChevronUp size={12} /> : <FiChevronDown size={12} />)}
+            <span className="truncate">{title}</span>
+            {/* Persistent affordance: a faded sort glyph marks every sortable
+                column; the active column shows a solid directional arrow. */}
+            <span className="ml-auto shrink-0">
+              {sortKey === key ? (
+                sortOrder === 'asc' ? (
+                  <FaSortUp size={12} className="text-brand-600" />
+                ) : (
+                  <FaSortDown size={12} className="text-brand-600" />
+                )
+              ) : (
+                <FaSort size={12} className="text-gray-400" />
+              )}
+            </span>
           </button>
         ),
         minWidth: width,
@@ -547,6 +554,12 @@ export default function CatGrid() {
       <style jsx global>{`
         .dsg-cell-invalid {
           background-color: #fee2e2 !important;
+        }
+        /* Tint the whole header row (brand-100) so it reads as a header, with a
+           slightly stronger bottom border for a spreadsheet feel. */
+        .dsg-cell-header {
+          background-color: #fef9c3 !important;
+          border-bottom: 2px solid #fde047 !important;
         }
       `}</style>
 

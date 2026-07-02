@@ -15,6 +15,44 @@
 
 ---
 
+## 2026-07-02 — Enhance the cat-management grid header (color + sort affordance)
+
+**Area:** admin cat grid (`src/components/admin/cat-grid/CatGrid.tsx`,
+`src/constants/adminStrings.ts`) · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+Two visual improvements to the `react-datasheet-grid` spreadsheet on the cat
+management page (`/admin/cats`):
+
+- **Header row color.** Tinted the whole header row **brand-100 gold**
+  (`#fef9c3`) with a **2px brand-300 bottom border** (`#fde047`), via a
+  `.dsg-cell-header` override in the component's existing `<style jsx global>`
+  block. Reads clearly as a header (gutter included).
+- **Sort affordance.** Every sortable column header now shows a persistent sort
+  glyph (`react-icons/fa`): a faded gray `FaSort` (double arrows) when unsorted —
+  signalling the column is clickable/sortable — and a solid brand-gold
+  `FaSortUp`/`FaSortDown` on the active column showing direction. Added a
+  `클릭해서 정렬` tooltip + `aria-label` per header; the label truncates so the
+  right-aligned icon stays put. (Previously only the _active_ column showed an
+  icon, so unsorted columns gave no hint they were sortable — replaced the old
+  `FiChevronUp`/`FiChevronDown` indicator.)
+
+New string: `adminStrings.catGrid.sortHint = '클릭해서 정렬'`.
+
+### Rationale
+
+Owner request — make the header legible and make the click-to-sort affordance
+discoverable. Purely presentational; sort logic (`handleSort`/`sortCats`) is
+unchanged.
+
+### Verified
+
+- `npx tsc --noEmit` clean · smoke 25/25.
+- Browser check pending (page is admin-gated; owner to eyeball `/admin/cats`).
+
+---
+
 ## 2026-07-02 — Harden auth so a failed Firestore read no longer signs users out
 
 **Area:** auth (`permission-service.ts`, `lib/auth/admin.ts`, `LoginForm.tsx`,
@@ -40,7 +78,7 @@ unchanged.
 
 ### Rationale
 
-Surfaced while investigating a force-logout (see DEBUG_LOG — the _actual_ cause
+Surfaced while investigating a force-logout (see DEBUG*LOG — the \_actual* cause
 was cross-tab sign-out, not this). This path was **not** the cause, but it is a
 real latent fragility: a genuinely blocked/denied `users/{uid}` read on first
 login could otherwise sign a valid user out. Kept as hardening (owner's call) and

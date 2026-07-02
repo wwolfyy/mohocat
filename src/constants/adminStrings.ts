@@ -248,6 +248,7 @@ export const adminStrings = {
     all: '전체',
     selectRow: '행 선택',
     selectAll: '전체 선택',
+    sortHint: '클릭해서 정렬',
     /** Mandatory-field blank messages (red-cell validation). */
     mandatory: {
       dobBlank: '출생연도는 비워둘 수 없어요',
