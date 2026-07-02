@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import SocialLoginButton from '@/components/SocialLoginButton';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -14,11 +15,16 @@ interface AdminAuthProps {
   children: React.ReactNode;
 }
 
+// Sign an idle admin out of the CMS after this long with no interaction.
+// Admin-only, idle (not absolute) — see FEATURE_MOD_LOG (session timeout).
+const ADMIN_IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 export default function AdminAuth({ children }: AdminAuthProps) {
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   // Auth state comes from the single app-wide AuthProvider listener (via
   // useAuth) — AdminAuth no longer runs its own onAuthStateChanged subscription
@@ -35,6 +41,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setSessionExpired(false);
     setIsLoggingIn(true);
 
     try {
@@ -89,6 +96,25 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     };
   }, [user]);
 
+  // Idle session timeout — admin CMS only. Active only once an authenticated
+  // admin is in the CMS; signs them out after inactivity and flags the notice.
+  const handleIdleTimeout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      setSessionExpired(true);
+    } catch (error) {
+      // Match this file's fire-and-forget sign-out handling: log, don't rethrow
+      // (re-raising from a background timer would just be an unhandled rejection).
+      console.error('Idle timeout sign-out error:', error);
+    }
+  }, []);
+
+  useIdleTimeout({
+    timeoutMs: ADMIN_IDLE_TIMEOUT_MS,
+    onTimeout: handleIdleTimeout,
+    enabled: !!user && isAdmin,
+  });
+
   // Auth still resolving (shared listener), or the admin check is in flight.
   if (authLoading || (user && isAdminLoading)) {
     return (
@@ -132,6 +158,12 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">산냥이집냥이 관리자</h1>
             <p className="text-gray-600">계속하려면 로그인해 주세요</p>
           </div>
+
+          {sessionExpired && (
+            <Alert variant="warning" className="text-center mb-6">
+              2시간 동안 활동이 없어 자동으로 로그아웃되었어요. 다시 로그인해 주세요.
+            </Alert>
+          )}
 
           <div className="space-y-6">
             {/* Social Login Section */}
