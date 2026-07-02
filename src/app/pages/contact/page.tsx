@@ -89,7 +89,7 @@ export default function Contact() {
 
       <div data-oid="8dwt2t:">
         <h4 className="text-xl text-center mb-8" data-oid="c218kfo">
-          고양이들 돌보기 또는 입양, 중성화 등을 통한 개체 수 조절에 동참을 원하시면 먼저{' '}
+          고양이들 돌보기, 입양, 중성화를 통한 개체 수 조절 등에 동참을 원하시면 먼저{' '}
           <Link
             href="/login?tab=signup"
             className="font-bold text-brand-700 underline underline-offset-2 hover:text-brand-800"
