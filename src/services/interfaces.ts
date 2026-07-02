@@ -37,6 +37,7 @@ export interface IPostService {
   getTopLevelPosts(): Promise<any[]>;
   getPostById(id: string): Promise<any | null>;
   createPost(post: any): Promise<any>;
+  updatePost(postId: string, postData: any): Promise<any>;
 
   // Reply functionality
   getReplies(postId: string): Promise<any[]>;

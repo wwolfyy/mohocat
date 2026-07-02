@@ -245,6 +245,27 @@ export class FirebasePostService implements IPostService {
     }
   }
 
+  async updatePost(postId: string, postData: any): Promise<any> {
+    try {
+      console.log('FirebasePostService: Updating post:', postId);
+
+      const postRef = doc(db, this.COLLECTION_NAME, postId);
+      await updateDoc(postRef, {
+        ...postData,
+        updatedAt: Timestamp.now(),
+      });
+
+      return {
+        id: postId,
+        ...postData,
+        updatedAt: new Date(),
+      };
+    } catch (error) {
+      console.error('Error updating post:', error);
+      throw new Error(`Failed to update post: ${postId}`);
+    }
+  }
+
   async deletePost(postId: string): Promise<void> {
     try {
       console.log('FirebasePostService: Deleting post:', postId);

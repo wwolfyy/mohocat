@@ -52,6 +52,14 @@ service cloud.firestore {
       allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-posts');
     }
 
+    // 입양홍보 (adoption promotion) posts — admin-created, publicly readable.
+    // Mirrors posts_announcements: public read for the /pages/adoption feed;
+    // write gated on 'manage-posts' (admin/posts 입양홍보 tab via adoption-service).
+    match /posts_adoption/{x} {
+      allow read: if true;
+      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-posts');
+    }
+
     // 동참(contact) submissions — members-only create, admin-only read.
     // create: never from the client. Submissions go through POST /api/contact, which
     //   verifies the submitter's ID token and writes via the Admin SDK (bypasses rules).

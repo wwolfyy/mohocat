@@ -66,13 +66,7 @@ const AdminPosts = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'adoption_promotion' ? (
-        <div className="flex justify-center items-center py-12 text-gray-500">
-          {adminStrings.posts.adoptionComingSoon}
-        </div>
-      ) : (
-        <AdminPostList postType={activeTab} />
-      )}
+      <AdminPostList postType={activeTab} />
     </div>
   );
 };

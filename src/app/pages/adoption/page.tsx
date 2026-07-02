@@ -3,10 +3,11 @@ import type { Cat } from '@/types';
 import { getAllCatsServer } from '@/lib/server/cat-reads';
 import { REVALIDATE_SECONDS } from '@/lib/cache-config';
 import AdoptionGallery from './AdoptionGallery';
+import AdoptionPromotionClient from '@/components/AdoptionPromotionClient';
 
 // §7a: bake the adoptable-cats read at build/server time (Admin SDK) instead of
 // the client-side `getAllCats()` waterfall. ISR fallback backstop — see
-// `src/lib/cache-config.ts` and docs/deployment/README.md → "ISR revalidation".
+// `src/lib/cache-config.ts` and docs/manuals/deployment/README.md → "ISR revalidation".
 export const revalidate = REVALIDATE_SECONDS;
 
 /**
@@ -39,8 +40,14 @@ export default async function AdoptionPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">입양홍보</h1>
         <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
         <p className="mt-4 text-gray-600">
-          새 가족을 기다리는 냥이들이에요. 마음이 가는 친구가 있다면 동참 페이지에서 편하게 연락
-          주세요.
+          새 가족을 기다리는 냥이들이에요. 마음이 가는 친구가 있다면{' '}
+          <Link
+            href="/pages/contact"
+            className="font-semibold text-gray-900 underline underline-offset-2 hover:text-brand"
+          >
+            동참
+          </Link>{' '}
+          페이지에서 연락 주세요.
         </p>
       </div>
 
@@ -67,6 +74,16 @@ export default async function AdoptionPage() {
       ) : (
         <AdoptionGallery cats={adoptable} />
       )}
+
+      {/* 새로운 입양 소식 — admin-authored adoption-promotion posts (posts_adoption),
+          independent of the adoptable-cats list above. Client island, live-fetched. */}
+      <section className="mt-14">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">새로운 입양 소식</h2>
+          <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
+        </div>
+        <AdoptionPromotionClient />
+      </section>
     </div>
   );
 }
