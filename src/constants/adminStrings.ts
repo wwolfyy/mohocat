@@ -70,13 +70,18 @@ export const adminStrings = {
       announcements: '공지사항',
       adoptionPromotion: '입양홍보',
     },
-    adoptionComingSoon: '입양홍보 탭은 준비 중이에요.',
   },
 
   /** 새 공지사항 작성 (src/app/admin/announcements/new/page.tsx). */
   announcementNew: {
     title: '새 공지사항 작성',
     subtitle: '새로운 공지사항을 작성해 보세요.',
+  },
+
+  /** 새 입양홍보 작성 (src/app/admin/adoption/new/page.tsx). */
+  adoptionNew: {
+    title: '새 입양홍보 작성',
+    subtitle: '새로 입양 가능한 냥이 소식을 올려 보세요.',
   },
 
   /** 데이터 마이그레이션 (src/app/admin/migration/page.tsx). */
@@ -129,6 +134,8 @@ export const adminStrings = {
       dwellingPlaceholder: '목록에서 선택하거나 새 거주지를 입력해요...',
       noMatches: '일치하는 항목이 없어요',
       description: '설명',
+      nameOrigin: '작명 사유',
+      nameOriginPlaceholder: '이름을 어떻게 짓게 되었는지 적어요...',
       character: '성격',
       sickness: '건강/질병 메모',
       parents: '부모/어미',
@@ -138,6 +145,8 @@ export const adminStrings = {
       neuteringYes: 'O (중성화 완료)',
       neuteringNo: 'X (중성화 안 함)',
       adoptableLabel: '입양 가능 (입양홍보 갤러리에 표시)',
+      adoptionInfo: '입양정보',
+      adoptionInfoPlaceholder: '입양 조건, 성격, 건강, 연락 방법 등 입양에 필요한 정보를 적어요...',
       note: '특이사항',
       notePlaceholder: '이 고양이에 대한 특이사항이나 메모를 적어요...',
       saveCat: '저장',
@@ -675,6 +684,10 @@ export const adminStrings = {
       autoExample: ' https://example.com 같은 URL은 자동으로 링크로 바뀌어요',
       catModalLabel: '고양이 모달 링크:',
       catModalExample: ' [catmodal:아롱이]는 “아롱이” 고양이 모달을 열어요',
+      imageLabel: '이미지 링크:',
+      imageExample: ' [img:사진설명](이미지주소)는 모달에서 이미지를 열어요',
+      videoLabel: '동영상 링크:',
+      videoExample: ' [video:영상설명](유튜브주소)는 모달에서 동영상을 재생해요',
       lineBreakLabel: '줄바꿈:',
       lineBreakExample: ' Enter를 누르면 새 줄이 돼요',
     },

@@ -227,6 +227,14 @@ export default function AboutContentEditor() {
                 {t.linkHelp.catModalExample}
               </li>
               <li>
+                <strong>{t.linkHelp.imageLabel}</strong>
+                {t.linkHelp.imageExample}
+              </li>
+              <li>
+                <strong>{t.linkHelp.videoLabel}</strong>
+                {t.linkHelp.videoExample}
+              </li>
+              <li>
                 <strong>{t.linkHelp.lineBreakLabel}</strong>
                 {t.linkHelp.lineBreakExample}
               </li>

@@ -46,6 +46,8 @@ interface CatFormData {
   isNeutered: boolean | undefined;
   note: string;
   adoptable: boolean;
+  adoption_info: string;
+  name_origin: string;
 }
 
 const initialFormData: CatFormData = {
@@ -66,6 +68,8 @@ const initialFormData: CatFormData = {
   isNeutered: undefined,
   note: '',
   adoptable: false,
+  adoption_info: '',
+  name_origin: '',
 };
 
 export default function CatsCMSPage() {
@@ -249,6 +253,8 @@ export default function CatsCMSPage() {
       isNeutered: cat.isNeutered,
       note: cat.note || '',
       adoptable: cat.adoptable ?? false,
+      adoption_info: cat.adoption_info || '',
+      name_origin: cat.name_origin || '',
     });
     setShowForm(true);
   };
@@ -755,6 +761,19 @@ export default function CatsCMSPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.nameOrigin}
+                    </label>
+                    <textarea
+                      value={formData.name_origin}
+                      onChange={(e) => setFormData({ ...formData, name_origin: e.target.value })}
+                      rows={3}
+                      placeholder={adminStrings.cats.form.nameOriginPlaceholder}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       {adminStrings.cats.form.character}
                     </label>
                     <textarea
@@ -843,6 +862,19 @@ export default function CatsCMSPage() {
                         {adminStrings.cats.form.adoptableLabel}
                       </span>
                     </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.adoptionInfo}
+                    </label>
+                    <textarea
+                      value={formData.adoption_info}
+                      onChange={(e) => setFormData({ ...formData, adoption_info: e.target.value })}
+                      rows={4}
+                      placeholder={adminStrings.cats.form.adoptionInfoPlaceholder}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
                   </div>
 
                   <div>

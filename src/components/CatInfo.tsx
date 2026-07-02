@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Cat } from '@/types';
 import { processTextWithLinks } from '@/utils/text-processing';
 import { getCatService } from '@/services';
+import { useMediaLinks } from '@/hooks/useMediaLinks';
 import Modal from './ui/Modal';
 import PhotoAlbum from './PhotoAlbum';
 import VideoAlbum from './VideoAlbum';
@@ -38,7 +39,7 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
 function InfoBlock({ heading, html }: { heading?: string; html: string }) {
   return (
     <div>
-      {heading && <h4 className="mb-1.5 font-semibold text-gray-700">{heading}</h4>}
+      {heading && <h4 className="mb-1 text-sm font-semibold text-gray-500">{heading}</h4>}
       <div
         className="whitespace-pre-line text-gray-700"
         dangerouslySetInnerHTML={{ __html: html }}
@@ -75,6 +76,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
   const [catModalLoading, setCatModalLoading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { mediaOverlays } = useMediaLinks(contentRef);
 
   const catService = getCatService();
 
@@ -148,28 +150,41 @@ export default function CatInfo({ cat }: CatInfoProps) {
       </div>
 
       {/* Body */}
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-5">
+        {/* Intro description (free text, no heading) */}
         {cat.description && <InfoBlock html={processTextWithLinks(cat.description)} />}
-        {cat.date_of_birth && (
-          <InfoRow label="출생연도">
-            {cat.date_of_birth}
-            {cat.dob_certainty && (
-              <span className="ml-2 text-sm text-gray-500">
-                ({cat.dob_certainty === 'certain' ? '확실함' : '불확실'})
-              </span>
-            )}
+
+        {/* Structured facts — grouped in one aligned panel */}
+        <div className="space-y-2 rounded-xl bg-gray-50 p-4 ring-1 ring-gray-100">
+          {cat.date_of_birth && (
+            <InfoRow label="출생연도">
+              {cat.date_of_birth}
+              {cat.dob_certainty && (
+                <span className="ml-2 text-sm text-gray-500">
+                  ({cat.dob_certainty === 'certain' ? '확실함' : '불확실'})
+                </span>
+              )}
+            </InfoRow>
+          )}
+          {cat.sex && <InfoRow label="성별">{cat.sex}</InfoRow>}
+          {cat.dwelling && <InfoRow label="거주지">{cat.dwelling}</InfoRow>}
+          <InfoRow label="중성화 여부">
+            {cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}
           </InfoRow>
+          {cat.parents && <InfoRow label="엄마">{cat.parents}</InfoRow>}
+          {cat.offspring && <InfoRow label="애">{cat.offspring}</InfoRow>}
+        </div>
+
+        {/* Prose sections — consistent headed blocks */}
+        {cat.adoption_info && (
+          <InfoBlock heading="입양정보" html={processTextWithLinks(cat.adoption_info)} />
         )}
-        {cat.sex && <InfoRow label="성별">{cat.sex}</InfoRow>}
-        {cat.dwelling && <InfoRow label="거주지">{cat.dwelling}</InfoRow>}
-        {cat.character && <InfoBlock heading="성격:" html={processTextWithLinks(cat.character)} />}
-        {cat.parents && <InfoRow label="엄마">{cat.parents}</InfoRow>}
-        {cat.offspring && <InfoRow label="애">{cat.offspring}</InfoRow>}
-        <InfoBlock heading="건강상태:" html={processTextWithLinks(cat.sickness || 'Unknown')} />
-        <InfoRow label="중성화 여부">
-          {cat.isNeutered === true ? 'O' : cat.isNeutered === false ? 'X' : '?'}
-        </InfoRow>
-        {cat.note && <InfoBlock heading="특이사항:" html={processTextWithLinks(cat.note)} />}
+        {cat.name_origin && (
+          <InfoBlock heading="작명 사유" html={processTextWithLinks(cat.name_origin)} />
+        )}
+        {cat.character && <InfoBlock heading="성격" html={processTextWithLinks(cat.character)} />}
+        <InfoBlock heading="건강상태" html={processTextWithLinks(cat.sickness || 'Unknown')} />
+        {cat.note && <InfoBlock heading="특이사항" html={processTextWithLinks(cat.note)} />}
 
         {/* Album actions */}
         <div className="flex flex-wrap justify-center gap-3 pt-2">
@@ -177,6 +192,9 @@ export default function CatInfo({ cat }: CatInfoProps) {
           <AlbumButton onClick={() => setShowVideoAlbum(true)} emoji="🎬" label="동영상 보기" />
         </div>
       </div>
+
+      {/* Inline media links ([img:…] / [video:…]) → Lightbox / VideoPlayer */}
+      {mediaOverlays}
 
       {/* Photo Album Modal */}
       <PhotoAlbum

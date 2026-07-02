@@ -25,6 +25,8 @@ export interface Cat {
   isNeutered?: boolean;
   note?: string;
   adoptable?: boolean;
+  adoption_info?: string;
+  name_origin?: string;
 }
 
 // 동참(contact) form submission
