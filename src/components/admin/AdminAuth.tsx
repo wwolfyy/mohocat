@@ -18,6 +18,9 @@ interface AdminAuthProps {
 // Sign an idle admin out of the CMS after this long with no interaction.
 // Admin-only, idle (not absolute) — see FEATURE_MOD_LOG (session timeout).
 const ADMIN_IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+// Shared across admin tabs so an idle background tab doesn't sign out an active
+// one (auth state is synced cross-tab via Firebase's localStorage persistence).
+const ADMIN_IDLE_ACTIVITY_KEY = 'mohocat:admin:lastActivity';
 
 export default function AdminAuth({ children }: AdminAuthProps) {
   const [loginError, setLoginError] = useState('');
@@ -69,23 +72,34 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   // Admin check — AdminAuth's own concern, layered on the shared auth state.
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
+  // Distinguishes "the check ran and said no" (false) from "the check couldn't
+  // run" (a blocked/denied/offline Firestore read). The latter must NOT be
+  // reported as "access denied" — it's unverified, and retryable.
+  const [adminCheckFailed, setAdminCheckFailed] = useState(false);
+  const [adminCheckNonce, setAdminCheckNonce] = useState(0);
 
   useEffect(() => {
     if (!user) {
       setIsAdmin(false);
+      setAdminCheckFailed(false);
       setIsAdminLoading(false);
       return;
     }
 
     let cancelled = false;
     setIsAdminLoading(true);
+    setAdminCheckFailed(false);
     (async () => {
       try {
         const adminStatus = await checkIsAdmin(user);
         if (!cancelled) setIsAdmin(adminStatus);
       } catch (error) {
+        // Couldn't verify (not "not an admin") — surface a retry, don't deny.
         console.error('Error checking admin status:', error);
-        if (!cancelled) setIsAdmin(false);
+        if (!cancelled) {
+          setIsAdmin(false);
+          setAdminCheckFailed(true);
+        }
       } finally {
         if (!cancelled) setIsAdminLoading(false);
       }
@@ -94,7 +108,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, adminCheckNonce]);
 
   // Idle session timeout — admin CMS only. Active only once an authenticated
   // admin is in the CMS; signs them out after inactivity and flags the notice.
@@ -113,6 +127,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     timeoutMs: ADMIN_IDLE_TIMEOUT_MS,
     onTimeout: handleIdleTimeout,
     enabled: !!user && isAdmin,
+    storageKey: ADMIN_IDLE_ACTIVITY_KEY,
   });
 
   // Auth still resolving (shared listener), or the admin check is in flight.
@@ -123,6 +138,33 @@ export default function AdminAuth({ children }: AdminAuthProps) {
           <div className="text-5xl mb-4">🐱</div>
           <p className="text-gray-500">관리자 화면을 불러오고 있어요...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Signed in, but the admin check couldn't complete (e.g. Firestore read
+  // blocked by an extension / denied / offline). Not the same as "not an
+  // admin" — offer a retry rather than a misleading access-denied.
+  if (user && adminCheckFailed) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="text-center max-w-md p-8 shadow-md">
+          <div className="text-5xl mb-4">🔌</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">권한을 확인하지 못했어요</h2>
+          <p className="text-gray-500 mb-6">
+            네트워크나 브라우저 확장 프로그램이 요청을 막고 있는지 확인한 뒤 다시 시도해 주세요.
+          </p>
+
+          <div className="flex flex-col items-center gap-4">
+            <Button onClick={() => setAdminCheckNonce((n) => n + 1)}>다시 시도</Button>
+            <Button variant="secondary" onClick={handleLogout}>
+              로그아웃
+            </Button>
+            <a href="/" className="text-sm text-gray-500 hover:text-gray-700">
+              ← 메인 사이트로 돌아가기
+            </a>
+          </div>
+        </Card>
       </div>
     );
   }

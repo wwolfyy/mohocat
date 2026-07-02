@@ -23,6 +23,14 @@ interface UseIdleTimeoutOptions {
   onTimeout: () => void;
   /** When false, no listeners/timers run (e.g. before sign-in). Defaults to true. */
   enabled?: boolean;
+  /**
+   * When set, last-activity is shared across tabs via this localStorage key, so
+   * a background/idle tab won't time out while another tab of the same origin
+   * is active. Without it, each tab tracks activity independently — which, with
+   * a cross-tab-synced sign-out, lets an idle background tab log the user out of
+   * their active tab. Pass a stable, app-namespaced key.
+   */
+  storageKey?: string;
 }
 
 /**
@@ -30,11 +38,15 @@ interface UseIdleTimeoutOptions {
  * tracked via a throttled timestamp and polled on an interval (rather than
  * resetting a timer on every event), so rapid events like mousemove stay cheap.
  * `onTimeout` fires at most once per idle window; further activity re-arms it.
+ *
+ * With `storageKey`, activity is shared across tabs: any tab's activity keeps
+ * every tab alive, and `onTimeout` only fires once *all* tabs are idle.
  */
 export function useIdleTimeout({
   timeoutMs,
   onTimeout,
   enabled = true,
+  storageKey,
 }: UseIdleTimeoutOptions): void {
   const lastActivityRef = useRef<number>(Date.now());
   const onTimeoutRef = useRef(onTimeout);
@@ -48,15 +60,40 @@ export function useIdleTimeout({
   useEffect(() => {
     if (!enabled) return;
 
-    lastActivityRef.current = Date.now();
+    // Cross-tab activity, shared via localStorage. The try/catch degrades
+    // gracefully to per-tab behavior when storage is unavailable (private mode,
+    // quota, disabled) — a broken read must not break the idle timer.
+    const readSharedActivity = (): number => {
+      if (!storageKey) return 0;
+      try {
+        const raw = window.localStorage.getItem(storageKey);
+        const parsed = raw ? parseInt(raw, 10) : 0;
+        return Number.isFinite(parsed) ? parsed : 0;
+      } catch {
+        return 0;
+      }
+    };
+    const writeSharedActivity = (ts: number): void => {
+      if (!storageKey) return;
+      try {
+        window.localStorage.setItem(storageKey, String(ts));
+      } catch {
+        // Ignore: fall back to this tab's own timer.
+      }
+    };
+
+    const now = Date.now();
+    lastActivityRef.current = now;
     firedRef.current = false;
+    writeSharedActivity(now);
 
     let lastWrite = 0;
     const markActivity = () => {
-      const now = Date.now();
-      if (now - lastWrite >= ACTIVITY_THROTTLE_MS) {
-        lastWrite = now;
-        lastActivityRef.current = now;
+      const ts = Date.now();
+      if (ts - lastWrite >= ACTIVITY_THROTTLE_MS) {
+        lastWrite = ts;
+        lastActivityRef.current = ts;
+        writeSharedActivity(ts);
       }
     };
 
@@ -64,7 +101,9 @@ export function useIdleTimeout({
 
     const interval = window.setInterval(() => {
       if (firedRef.current) return;
-      if (Date.now() - lastActivityRef.current >= timeoutMs) {
+      // Idle only if THIS tab and every other tab have been idle past the window.
+      const lastActivity = Math.max(lastActivityRef.current, readSharedActivity());
+      if (Date.now() - lastActivity >= timeoutMs) {
         firedRef.current = true;
         onTimeoutRef.current();
       }
@@ -74,5 +113,5 @@ export function useIdleTimeout({
       ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, markActivity));
       window.clearInterval(interval);
     };
-  }, [enabled, timeoutMs]);
+  }, [enabled, timeoutMs, storageKey]);
 }

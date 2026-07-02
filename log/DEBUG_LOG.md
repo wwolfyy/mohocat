@@ -11,6 +11,63 @@
 
 ---
 
+## 2026-07-02 — Admin force-logout on localhost (cross-tab sign-out from idle background tabs)
+
+**Area:** admin auth (`useIdleTimeout` / `AdminAuth`) · **Branch:** `dev` ·
+**Severity:** medium (session dropped mid-use) · **Status:** ✅ fixed
+
+### Symptom
+
+On `localhost`, the admin CMS repeatedly force-logged-out right after sign-in;
+never on Vercel, never in incognito. Console showed a Firestore
+`net::ERR_BLOCKED_BY_CLIENT` and "Missing or insufficient permissions" — both red
+herrings (see below).
+
+### Root cause
+
+The stack trace of the drop was **not** an app `signOut()` call — it was Firebase
+Auth's own `_onStorageEvent → _updateCurrentUser(null) → notifyAuthListeners`.
+Firebase's `browserLocalPersistence` **syncs auth state across all same-origin
+tabs via localStorage**: when any tab clears the `firebase:authUser:*` key, every
+other tab gets a `storage` event and follows it to "signed out". The Firestore
+`ERR_BLOCKED_BY_CLIENT` was a _downstream symptom_ — Firebase closing the
+Firestore webchannel because the credential just changed. The "Missing/insufficient
+permissions" is a separate, harmless `loadConfig()` read that falls back to local
+defaults (happens on both envs).
+
+The trigger: **leftover Claude-controlled `localhost` admin tabs from an
+idle-timeout smoke test** (timeout temporarily set to **8s**). Each backgrounded
+tab has its **own** idle timer, receives no mouse/keyboard events, so it counted
+as idle, fired `signOut()`, and broadcast the logout to the active tab. Closing
+the extra tabs stopped it — confirming cross-tab propagation, not an extension.
+(This also exposed a latent flaw: even at 2h, a forgotten background admin tab
+would eventually sign the user out of their active tab.)
+
+### Fix
+
+Made `useIdleTimeout` **cross-tab aware** via an optional `storageKey`: activity
+writes a shared last-activity timestamp to localStorage, and the idle check uses
+`max(thisTab, sharedAcrossTabs)`. So any tab's activity keeps every tab alive, and
+`onTimeout` only fires once **all** tabs are idle. `AdminAuth` passes
+`ADMIN_IDLE_ACTIVITY_KEY`. (localStorage access degrades gracefully to per-tab
+behavior if unavailable.)
+
+### Verified
+
+- `tsc --noEmit` clean · smoke 25/25.
+- Owner confirmed the force-logouts stopped after closing the stale tabs; the
+  fix removes the underlying cross-tab-idle race. Multi-tab timing is logic-level
+  (not automated) — manual check: open admin in two tabs, keep one active, and the
+  other no longer times out.
+
+### Watch-out
+
+Don't leave short-timeout idle-test tabs open — with cross-tab auth sync they log
+out every other tab. Verify idle-timeout changes in a real browser, then close the
+tabs.
+
+---
+
 ## 2026-07-02 — Map doesn't re-fit on window resize (desktop fixed · mobile pending)
 
 **Area:** landing map (`LeafletMountainMap` / `MapViewController`) · **Branch:**
