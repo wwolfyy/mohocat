@@ -97,7 +97,7 @@ export default function VideoAlbumPage() {
               catCount={selectedCatNames.size}
             />
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filteredVideos.map((video, index) => {
                 const createdDate = parseDate(video.createdTime);
                 const dateLabel = createdDate
@@ -107,9 +107,10 @@ export default function VideoAlbumPage() {
                   <MediaTile
                     key={video.id}
                     aspect="video"
+                    layout="below"
+                    tags={video.tags}
                     thumbnailUrl={video.thumbnailUrl}
                     alt={video.description || 'Video thumbnail'}
-                    description={video.description}
                     meta={
                       <div className="flex items-center justify-between">
                         <span>{dateLabel}</span>
