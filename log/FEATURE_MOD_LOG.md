@@ -15,7 +15,89 @@
 
 ---
 
-## 2026-07-02 — Add '쉼터냥이' cat status (shelter / awaiting adoption)
+## 2026-07-02 — Admin post editing (all post types)
+
+**Area:** admin posts (`/admin/posts`, `AdminPostList`) · **Type:** enhancement ·
+**Branch:** `dev`
+
+### Change
+
+`AdminPostList.handleEdit` was a stub (`alert('Edit functionality coming soon!')`) —
+admins could only create + delete, so fixing a typo meant delete-and-recreate. Added a
+real edit flow shared across all four post types (급식현황 / 집사톡 / 공지사항 / 입양홍보):
+
+- `updatePost(postId, postData)` added to the `IPostService` interface and implemented in
+  the three services that lacked it (`post-service`, `butler-talk-service`,
+  `adoption-service`; `announcement-service` already had one). All use `updateDoc` +
+  `updatedAt`, so the merge **preserves** untouched fields (tags, `showInModal`, username,
+  date, replyCount, …).
+- New shared `components/EditPostForm.tsx` (loads the post via the matching service's
+  `getPostById`, edits **title / 내용 / image URLs / video URLs**, recomputes
+  `thumbnailUrl`+`mediaType` on save) + route
+  `app/admin/posts/edit/[postType]/[postId]/page.tsx` (gated by the `/admin` `AdminAuth`
+  layout). The Edit button now routes here (`serviceFor(postType)` picks the collection).
+
+### Rationale / scope
+
+Top follow-up from the adoption-promotion hand-off (§5 #1). Scope is deliberately
+**text + media links**, not new media _file_ uploads: the per-type create forms upload
+differently (signed URLs for feeding, direct Storage for announcements/adoption, YouTube
+for video), so unifying uploads in one edit form would be fragile. Adding a brand-new
+media file stays in the create flow; the edit form covers the actual pain point (typos and
+broken/removable media links) and works uniformly for every type.
+
+### Verified
+
+`npx tsc --noEmit` clean · `npm run test:smoke` 25/25. Browser verification of the live
+edit round-trip is pending (admin-gated).
+
+---
+
+## 2026-07-02 — 입양홍보 posts + per-cat 입양정보
+
+**Area:** adoption promotion (`/pages/adoption`, `/admin/posts`) + cat detail/management ·
+**Type:** enhancement · **Branch:** `dev` ·
+**Plan:** `docs/planning/adoption-promotion-and-cat-adoption-info-plan.md`
+
+### Change
+
+Two related pieces, both modeled on the existing **announcements** feature:
+
+**(A) 입양홍보 posts** — a new admin-authored / publicly-read post type (collection
+`posts_adoption`).
+
+- New `FirebaseAdoptionService` (`services/adoption-service.ts`) + `getAdoptionService()`;
+  new `posts_adoption` Firestore rule (read:true / write:`manage-posts`) — ⚠️ **owner must
+  deploy rules**.
+- Admin `/admin/posts` **입양홍보 tab is now functional** (was a "준비 중" placeholder):
+  `AdminPostList` extended with the `adoption_promotion` type (via a new `serviceFor()`
+  helper replacing 3 repeated service ternaries; no reply UI), plus a "새 입양홍보 작성"
+  button → `/admin/adoption/new` (`NewAdoptionForm`, a copy of the announcement composer
+  minus the 팝업 toggle).
+- Public: a "새로운 입양 소식" section on `/pages/adoption` (`AdoptionPromotionClient`),
+  live-fetched, no auth gate.
+
+**(B) per-cat 입양정보** — new optional `Cat.adoption_info`. Shown as an 입양정보 block in
+the `CatInfo` detail modal when non-empty (so it appears in the adoption gallery + map
+flows), and editable via a new textarea in the individual cat management form
+(`/admin/cats`), next to the 입양 가능 toggle.
+
+### Rationale
+
+Owner request — publish "new cat available for adoption" news and record adoption-specific
+info per cat. Reused the announcements pattern end-to-end. **Deviation:** the public feed
+does **not** reuse `PostList` (its detail link is hardcoded to `/pages/posts/:id`, which
+resolves only the feeding collection → would 404 for adoption posts); instead it uses
+self-contained inline cards like `AnnouncementClient`, with video thumbnails opening
+YouTube directly. (See the plan doc's "Deviation" note.)
+
+### Verified
+
+- `npx tsc --noEmit` clean · smoke 25/25.
+- Browser + write paths **pending**: writing posts needs the new Firestore rule deployed;
+  `/admin/posts` and `/admin/cats` are admin-gated. To verify: deploy the rule, then in a
+  browser create a 입양홍보 post (admin) → confirm it shows on `/pages/adoption`; set a cat's
+  입양정보 → confirm the 입양정보 block in that cat's modal.
 
 **Area:** cat status (`CatGrid.tsx`, `/admin/cats/page.tsx`, `CatInfo.tsx`) ·
 **Type:** enhancement · **Branch:** `dev`

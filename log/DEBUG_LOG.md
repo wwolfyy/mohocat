@@ -11,6 +11,81 @@
 
 ---
 
+## 2026-07-02 — `[catmodal:name]` links in posts rendered as broken `<a>` (link-converter ordering)
+
+**Area:** text processing (`utils/text-processing.ts` / `CatLinkedText`) · **Branch:**
+`dev` · **Severity:** medium (dead link instead of cat modal) · **Status:** ✅ fixed
+
+### Symptom
+
+A `[catmodal:깡패]` reference written in a post did not open the cat modal. When the
+author wrote the paren form `[catmodal:깡패](url)`, it rendered as a normal `<a>` that
+opened a new tab to a 404.
+
+### Root cause
+
+`processTextWithLinks` ran `convertMarkdownLinks` **before** `convertCatModalLinks`. The
+generic markdown regex `\[([^\]]+)\]\(([^)]+)\)` matches `[catmodal:name](url)` first,
+capturing it as a `[label](url)` link — so the specific `[catmodal:name]` converter never
+saw it, and the token became a broken anchor instead of a cat-modal span.
+
+### Fix
+
+Reordered `processTextWithLinks` to convert cat-modal links **first**, then markdown
+links, then auto-detected URLs (with a comment noting the ordering is load-bearing). The
+specific pattern now wins over the generic one. `utils/text-processing.ts`. A reusable
+`components/CatLinkedText.tsx` renders the processed text and opens the cat modal on
+cat-link click.
+
+### Watch-out
+
+`[catmodal:이름]` takes **no** parentheses (per the admin help string). Any `(…)` written
+right after the token still renders as literal text — the correct syntax is the bare
+`[catmodal:이름]`.
+
+---
+
+## 2026-07-02 — 입양홍보 admin tab showed 급식현황 posts (stale state on failed fetch)
+
+**Area:** admin posts (`AdminPostList`) · **Branch:** `dev` · **Severity:** medium
+(wrong data shown) · **Status:** ✅ fixed
+
+### Symptom
+
+In `/admin/posts`, opening the 입양홍보 tab showed the 급식현황 (butler_stream /
+`posts_feeding`) posts — data that belongs to a different tab.
+
+### Root cause
+
+Not a service mixup — `serviceFor('adoption_promotion')` correctly returns the
+adoption service. It's **stale React state**: `AdminPostList` keeps one `posts`
+state across tabs. Viewing 급식현황 first loads feeding posts into `posts`. Switching
+to 입양홍보 refetches, but the adoption read **throws** (the new `posts_adoption`
+Firestore rule isn't deployed yet → permission denied), and `fetchPosts`'s `catch`
+only logs — it never clears `posts`. So the previous tab's feeding posts stayed on
+screen. The tab-switch effect reset `currentPage` but not `posts`/`totalPages`.
+
+### Fix
+
+Clear the list on tab switch: the `[postType]` effect now also does
+`setPosts([])` + `setTotalPages(1)`. A failed or empty fetch for the new tab can no
+longer leave another tab's posts visible (adoption now correctly shows the empty
+state until its rule is deployed and a post exists). `AdminPostList.tsx`.
+
+### Note
+
+The underlying adoption read fails only because the `posts_adoption` rule is not
+yet deployed (`firebase deploy --only firestore:rules`). Once deployed, the tab
+reads real adoption posts; the stale-state fix is correct regardless.
+
+### Watch-out
+
+`AdminPostList.fetchPosts` swallows errors without clearing `posts` — any tab whose
+fetch fails would otherwise keep showing the prior tab's data. The tab-switch clear
+covers the switch case; a mid-tab refetch failure still leaves stale data (minor).
+
+---
+
 ## 2026-07-02 — Admin force-logout on localhost (cross-tab sign-out from idle background tabs)
 
 **Area:** admin auth (`useIdleTimeout` / `AdminAuth`) · **Branch:** `dev` ·

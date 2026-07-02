@@ -5,7 +5,7 @@ import { REVALIDATE_SECONDS } from '@/lib/cache-config';
 
 // §7a: bake cats at build/server time (Admin SDK) so the landing map needs zero
 // client Firestore queries for avatars. ISR fallback backstop — see
-// `src/lib/cache-config.ts` and docs/deployment/README.md → "ISR revalidation".
+// `src/lib/cache-config.ts` and docs/manuals/deployment/README.md → "ISR revalidation".
 export const revalidate = REVALIDATE_SECONDS;
 
 export default async function Home() {

@@ -24,6 +24,10 @@ deep detail this file deliberately keeps out:
   admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshot docs — verify against code before trusting specifics.)_
 - **`docs/design/`** — design source-of-truth + redesign plan/tasks.
+- **`docs/manuals/`** — **manuals**: `admin-manual/` (operator-facing how-to for the
+  `/admin` CMS — content link tokens, cat/post fields, config & ops) and `deployment/`
+  (how deploys work + new-mountain provisioning). Distinct from `docs/codebase/` (how
+  it's built) — manuals are "what do I click/type to do X."
 - **`log/`** — operational logs (repo root, not under `docs/`), newest-first:
   - `log/DEBUG_LOG.md` — **bug** fixes whose root cause was non-obvious
     (symptom → root cause → fix → verified); skim it before chasing a bug in case
@@ -145,7 +149,7 @@ npm run test:smoke         # Fast structural smoke suite (gate for refactors/cle
 
 - Next.js-optimized hosting with full SSR/SSG + image optimization.
 - **Deploy = `git push`** (Vercel Git integration): Production = `main`, Preview ("staging")
-  = `dev`. There is no deploy command. See `docs/deployment/README.md`.
+  = `dev`. There is no deploy command. See `docs/manuals/deployment/README.md`.
 - **Env vars are managed by hand in the Vercel dashboard** (Production + Preview), not by IaC.
 - _Terraform is **parked/not in use** — the config lives under `_infra/_terraform/`
   (underscore = stale) as a blueprint for a possible future (multi-tenant / DR). Do not treat

@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
  * On-demand revalidation for the §7a baked surfaces. An admin cat mutation POSTs
  * here so the public pages reflect the edit immediately, rather than waiting for
  * the time-based ISR backstop (`REVALIDATE_SECONDS`). See
- * docs/deployment/README.md → "ISR revalidation".
+ * docs/manuals/deployment/README.md → "ISR revalidation".
  *
  * Keep this list in sync with the route segments that read cats server-side
  * (`src/lib/server/cat-reads.ts` consumers).

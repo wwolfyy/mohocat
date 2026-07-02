@@ -1,6 +1,9 @@
 # Deployment
 
 > Single source of truth for **how this app is deployed today.** Start here.
+>
+> _Standing up a **new mountain** (Firebase / domain / Vercel env from scratch)? See the
+> provisioning skeleton: [`new-mountain-setup.md`](./new-mountain-setup.md) (🚧 placeholder)._
 
 ## TL;DR — the current process is just `git push`
 

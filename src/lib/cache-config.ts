@@ -13,6 +13,6 @@
  * analyzable, and an env var would still need a redeploy while hiding the value
  * from the repo. To change N: edit this literal and `git push`.
  *
- * See `docs/deployment/README.md` → "ISR revalidation".
+ * See `docs/manuals/deployment/README.md` → "ISR revalidation".
  */
 export const REVALIDATE_SECONDS = 3600; // 1 hour
