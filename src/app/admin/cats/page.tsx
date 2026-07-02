@@ -557,6 +557,7 @@ export default function CatsCMSPage() {
                       >
                         <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
                         <option value="산냥이">산냥이</option>
+                        <option value="쉼터냥이">쉼터냥이</option>
                         <option value="집냥이">집냥이</option>
                         <option value="별냥이">별냥이</option>
                         <option value="행방불명">행방불명</option>
@@ -1024,13 +1025,15 @@ export default function CatsCMSPage() {
                             className={`inline-flex px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
                               cat.status === '산냥이'
                                 ? 'bg-green-100 text-green-800'
-                                : cat.status === '집냥이'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : cat.status === '별냥이'
-                                    ? 'bg-gray-100 text-gray-800'
-                                    : cat.status === '행방불명'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-gray-100 text-gray-800'
+                                : cat.status === '쉼터냥이'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : cat.status === '집냥이'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : cat.status === '별냥이'
+                                      ? 'bg-gray-100 text-gray-800'
+                                      : cat.status === '행방불명'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-gray-100 text-gray-800'
                             }`}
                           >
                             {cat.status || adminStrings.cats.table.unknownStatus}

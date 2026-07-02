@@ -61,6 +61,7 @@ const SEX_OPTIONS: SelectOption<string>[] = [
 
 const STATUS_OPTIONS: SelectOption<string>[] = [
   { value: '산냥이', label: '산냥이' },
+  { value: '쉼터냥이', label: '쉼터냥이' },
   { value: '집냥이', label: '집냥이' },
   { value: '별냥이', label: '별냥이' },
   { value: '행방불명', label: '행방불명' },

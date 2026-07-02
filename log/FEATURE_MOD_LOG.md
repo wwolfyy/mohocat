@@ -15,6 +15,41 @@
 
 ---
 
+## 2026-07-02 — Add '쉼터냥이' cat status (shelter / awaiting adoption)
+
+**Area:** cat status (`CatGrid.tsx`, `/admin/cats/page.tsx`, `CatInfo.tsx`) ·
+**Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+Added a new cat `status` value **쉼터냥이** for cats in temporary shelter/foster
+care waiting for adoption — the transitional state between 산냥이 (mountain) and
+집냥이 (home). Name follows the existing `[state]냥이` convention (쉼터 = shelter).
+Inserted in journey order (산냥이 → **쉼터냥이** → 집냥이 → 별냥이 → 행방불명) at every
+place statuses are enumerated:
+
+- `CatGrid` `STATUS_OPTIONS` — selectable in the spreadsheet status column.
+- `/admin/cats` legacy add/edit form `<select>`.
+- `/admin/cats` status badge — **amber** chip (`bg-amber-100 text-amber-800`),
+  distinct from the other statuses and from the brand "adoptable" badge.
+- `CatInfo` status-emoji map — **🫶** (heart-hands / "adopt with love").
+
+Filters pick it up automatically (`getUniqueStatuses` derives statuses from
+data). No stats tile added (the `/admin/cats` stat row is a fixed 3-tile layout).
+
+### Rationale
+
+Owner request — a status for cats staying in shelters awaiting adoption. `status`
+is stored as the literal Korean string, so existing records are unaffected (new
+value only). The `쉼터냥이` name and 🫶 icon were the owner's choices.
+
+### Verified
+
+- `npx tsc --noEmit` clean · smoke 25/25.
+- Browser check pending (admin-gated).
+
+---
+
 ## 2026-07-02 — Redesign video-album tiles (caption footer + cat-name tags)
 
 **Area:** album tiles (`src/components/album/MediaTile.tsx`,

@@ -16,6 +16,7 @@ interface CatInfoProps {
 const getStatusEmoji = (status?: string) => {
   const statusToEmoji: Record<string, string> = {
     산냥이: 'ᨒ',
+    쉼터냥이: '🫶',
     집냥이: '🏠',
     별냥이: '🌈',
     행방불명: '❓',
