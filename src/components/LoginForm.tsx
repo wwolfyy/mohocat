@@ -94,10 +94,15 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         await signOut();
       }
     } catch (err) {
-      console.error('Error checking user existence:', err);
-      // Fallback: assume success or show error?
-      // Generous fallback: let them in. Strict: Block.
-      handleSuccess();
+      // A failed verification (blocked/denied/offline Firestore read) is NOT
+      // proof the account is missing — so we must NOT sign the user out here.
+      // The `else` branch above owns the only legitimate sign-out (a read that
+      // definitively returned "no user doc"). Keep the session and surface a
+      // retryable error instead of either logging out or silently proceeding.
+      console.error('Error verifying user during sign-in:', err);
+      setError(t.errors.verifyFailed);
+      onLoginError?.(t.errors.verifyFailed);
+      setIsEmailLoginLoading(false);
     }
   };
 

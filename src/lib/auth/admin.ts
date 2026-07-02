@@ -20,8 +20,11 @@ export async function isAdmin(user: User | null): Promise<boolean> {
 
     return permissions.some((permission) => adminPermissions.includes(permission));
   } catch (error) {
+    // Re-throw: a failed/blocked/denied permission read is "couldn't verify",
+    // not "not an admin". Swallowing to `false` made the admin gate deny access
+    // (or bounce) on a transient read failure. Callers must handle the error.
     console.error('Error checking admin status:', error);
-    return false;
+    throw error;
   }
 }
 

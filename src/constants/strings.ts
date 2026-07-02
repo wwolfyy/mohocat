@@ -159,6 +159,8 @@ export const strings = {
         userNotFound: '이 이메일로 등록된 계정을 찾을 수 없어요.',
         wrongPassword: '비밀번호가 올바르지 않아요. 다시 시도해 주세요.',
         generic: '로그인에 실패했어요. 입력하신 정보를 다시 확인해 주세요.',
+        verifyFailed:
+          '로그인 정보를 확인하지 못했어요. 네트워크나 브라우저 확장 프로그램이 요청을 막고 있는지 확인한 뒤 다시 시도해 주세요.',
       },
     },
     // SignupForm.tsx (D3a)

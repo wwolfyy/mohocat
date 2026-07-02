@@ -15,6 +15,45 @@
 
 ---
 
+## 2026-07-02 — Harden auth so a failed Firestore read no longer signs users out
+
+**Area:** auth (`permission-service.ts`, `lib/auth/admin.ts`, `LoginForm.tsx`,
+`AdminAuth.tsx`, `strings.ts`) · **Type:** enhancement (defensive) · **Branch:** `dev`
+
+### Change
+
+`checkUserExists` and `isAdmin` used to `catch` a Firestore read error and return
+`false`, making a _blocked/denied/offline_ read indistinguishable from a
+_definitively absent_ user/permission. Both now **log and re-throw**. Callers
+updated:
+
+- `LoginForm.handleCheckUser` — only signs out on a definitive `false` (read
+  succeeded, no user doc). A thrown read now keeps the session and shows a
+  retryable error (`errors.verifyFailed`) instead of the old blanket
+  "let-them-in" or a spurious sign-out.
+- `AdminAuth` — a thrown admin check renders a new "권한을 확인하지 못했어요" screen
+  with a 다시 시도 (retry) button, distinct from the "접근 권한이 없어요" access-denied
+  (which now means the check actually ran and said no).
+
+`butler_stream` / `butler_talk` already catch → `false`, so their behavior is
+unchanged.
+
+### Rationale
+
+Surfaced while investigating a force-logout (see DEBUG_LOG — the _actual_ cause
+was cross-tab sign-out, not this). This path was **not** the cause, but it is a
+real latent fragility: a genuinely blocked/denied `users/{uid}` read on first
+login could otherwise sign a valid user out. Kept as hardening (owner's call) and
+aligns with the repo's log-and-reraise convention (no silent swallow).
+
+### Verified
+
+- `tsc --noEmit` clean · smoke 25/25.
+- The blocked-read paths are environmental (extension) and not reproducible in
+  automation; the change is logic-level. Happy-path login/admin unaffected.
+
+---
+
 ## 2026-07-02 — Add idle session timeout to the admin CMS (2 hours)
 
 **Area:** admin auth (`src/components/admin/AdminAuth.tsx`, new

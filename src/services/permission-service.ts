@@ -457,8 +457,12 @@ export class PermissionService {
       const userDoc = await getDoc(userRef);
       return userDoc.exists();
     } catch (error) {
+      // Re-throw: a failed/blocked/denied read is NOT the same as "user
+      // absent". Swallowing to `false` made callers (e.g. LoginForm) treat an
+      // unreachable Firestore as a non-existent account and sign the user out.
+      // Callers must distinguish a definitive `false` from an unverifiable read.
       console.error('Error checking user existence:', error);
-      return false;
+      throw error;
     }
   }
 
