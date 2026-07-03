@@ -249,14 +249,23 @@ function MapViewController({
   const map = useMap();
 
   useEffect(() => {
-    // Fit the image to the viewport AND clamp zoom-out to that "fill" level.
-    // getBoundsZoom returns the furthest-out zoom that still shows the whole
-    // image; because the container's aspect ratio matches the image, that is
-    // exactly fill (no letterbox). Making it the min zoom stops a pinch from
-    // zooming out past fill and exposing the grey container background.
+    // Fit the image to the viewport AND clamp zoom-out to ~that "fill" level, so
+    // a pinch can't zoom out far and expose big grey margins. getBoundsZoom is the
+    // exact fill zoom (the container's aspect ratio matches the image, so no
+    // letterbox); the default view sits there. We clamp minZoom to its *floor*,
+    // not the exact (fractional) value, because leaflet.markercluster builds its
+    // cluster grids at INTEGER zoom levels down to map.getMinZoom() — a fractional
+    // minZoom leaves no grid level at the display zoom, so every marker collapses
+    // into the top cluster (no individual pins). Flooring keeps a grid level at
+    // the display zoom (pins show) at the cost of allowing a pinch ~1 level below
+    // fill (a hair of grey) — a good trade vs. the old minZoom of -3.
+    // The exact fill zoom (fractional), kept up to date by applyFit — the
+    // reference for "is the user zoomed in past fill?" (minZoom is its *floor*,
+    // so it can't serve as that reference; see below).
+    let fillZoom = map.getBoundsZoom(bounds);
     const applyFit = () => {
-      const fitZoom = map.getBoundsZoom(bounds);
-      map.setMinZoom(fitZoom);
+      fillZoom = map.getBoundsZoom(bounds);
+      map.setMinZoom(Math.floor(fillZoom));
       map.fitBounds(bounds);
     };
     applyFit();
@@ -266,11 +275,12 @@ function MapViewController({
     // sets touch-action:none), trapping the page behind the full-height map. So
     // at fill we keep dragging disabled (restoring touch-action → the page
     // scrolls) and only enable it once the user has zoomed in past fill, where
-    // there is actually room to pan. Desktop keeps its default drag + the wheel
+    // there is actually room to pan. Gate on the exact fill zoom (not minZoom,
+    // which is floored below fill). Desktop keeps its default drag + the wheel
     // pass-through below.
     const syncDrag = () => {
       if (!isMobile) return;
-      if (map.getZoom() > map.getMinZoom() + 1e-3) map.dragging.enable();
+      if (map.getZoom() > fillZoom + 1e-3) map.dragging.enable();
       else map.dragging.disable();
     };
     syncDrag();

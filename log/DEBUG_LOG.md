@@ -11,6 +11,44 @@
 
 ---
 
+## 2026-07-04 — Mobile map: cat-thumbnail pins vanished at default zoom (min-zoom clamp regression)
+
+**Area:** `LeafletMountainMap.tsx` (`MapViewController`) · **Branch:** `dev` · **Severity:**
+medium (markers missing) · **Status:** ✅ fixed · **Follow-up to** the min-zoom clamp in the
+entry below (commit `6eb1937`).
+
+### Symptom
+
+After the map fixes, the default portrait view showed **only clusters** — the individual
+cat-thumbnail pins were gone (verified: 0 `.mohocat-pin` vs the original 4 pins + 2 clusters).
+
+### Root cause
+
+The Symptom-1 fix set `map.setMinZoom(getBoundsZoom(bounds))` — the **fractional** fill zoom
+(e.g. −0.98). `leaflet.markercluster` builds its cluster grids at **integer** zoom levels from
+`map.getMaxZoom()` down to `map.getMinZoom()`. With a fractional minZoom of −0.98 the loop stops
+at level 0 (−1 < −0.98), so there is **no grid level at the display zoom** (≈−1); markercluster
+falls back to the fully-merged top clusters → every marker collapses, no individual pins.
+(Bisected by disabling `setMinZoom` → pins returned; the displayed zoom was identical either
+way, proving it was the minZoom value, not the view.)
+
+### Fix
+
+Clamp minZoom to `Math.floor(fillZoom)` (an integer at/below the display zoom) so markercluster
+has a grid level there → the original 4 pins + 2 clusters render again. Cost: a pinch can now
+reach ~1 level below exact fill (a hair of grey) vs. exactly fill — still far better than the
+pre-fix −3. The Symptom-3 drag-gate was also re-pointed from `getMinZoom()` to the exact
+`fillZoom` (a closure var updated by `applyFit`), since minZoom is now floored _below_ fill and
+would otherwise enable drag at the default view (re-trapping page scroll).
+
+### Verified
+
+`tsc --noEmit` clean + `npm run test:smoke` 25/25. Real-tab (410×776 portrait): 4 pins + 2
+clusters render with cat thumbnails, drag disabled at fill (`touch-action: pan-x pan-y`, no
+`leaflet-grab`), map fills with no grey at default.
+
+---
+
 ## 2026-07-04 — Mobile map: zoom-out grey margins, landscape wastes space, can't scroll the page
 
 **Area:** `LeafletMountainMap.tsx`, `MountainViewer.tsx`, `Compass.tsx`, new
@@ -26,9 +64,10 @@ in the map engine.
 **Root cause:** `MapContainer minZoom={-3}` allowed zooming ~3 levels below the fit-to-fill
 zoom; the image shrank inside the container and its `bg-gray-100` showed through. `maxBounds`
 constrains _panning_ but not _zoom_.
-**Fix:** `MapViewController` now clamps `minZoom` to `map.getBoundsZoom(bounds)` (the exact
-fill zoom — the container's aspect ratio matches the image, so fill has no letterbox),
-recomputed on resize. Fill is now the furthest-out zoom.
+**Fix:** `MapViewController` now clamps `minZoom` to the fill zoom (`map.getBoundsZoom(bounds)`),
+recomputed on resize, so fill is ~the furthest-out zoom. **(Amended — see the newer entry
+above:** the clamp uses `Math.floor(fillZoom)`, not the raw fractional value, so
+`leaflet.markercluster` keeps a grid level at the display zoom and individual pins still show.)
 
 ### Symptom 2 — landscape rotation crams the portrait map sideways
 
