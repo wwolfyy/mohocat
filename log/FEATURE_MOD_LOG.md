@@ -15,6 +15,33 @@
 
 ---
 
+## 2026-07-04 — Mountain selector label: 계양산 냥이들 → 계양산
+
+**Area:** `config/mountains/mountains.json` (`geyang.name`) · **Type:** small fix ·
+**Branch:** `dev`
+
+### Change
+
+Shortened the geyang mountain `name` from **계양산 냥이들** to **계양산**. This value feeds the
+`MountainSelector` only (button label via `getMountainName()` + dropdown list item via
+`getAllMountains()` — no page titles/metadata consume it), so it changes the selector chip on
+**both** desktop and mobile from one source.
+
+### Rationale
+
+On mobile the longer **계양산 냥이들** chip crowded the header row, pushing the site title
+**산냥이집냥이** and the chip onto two lines. Dropping 냥이들 keeps the header on a single line.
+(The selector's descriptive subtitle 계양산에서 살고 있는 고양이들의 이야기 still carries the
+fuller context in the open dropdown.)
+
+### Verified
+
+`tsc --noEmit` clean + `npm run test:smoke` 25/25. Browser-verified in the iframe harness at
+390: selector reads 계양산, site title 산냥이집냥이 renders on one line, whole header row no
+longer wraps.
+
+---
+
 ## 2026-07-04 — Mobile nav menu: drop category headers, separate groups with hairline rules
 
 **Area:** `components/Navigation.tsx` (mobile hamburger menu) · **Type:** enhancement ·
