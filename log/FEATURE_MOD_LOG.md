@@ -15,6 +15,36 @@
 
 ---
 
+## 2026-07-03 — 냥이들 thumbnails back to square + search/filter de-emphasis + 동영상앨범 rename
+
+**Area:** `/pages/cats` (`CatsBrowser.tsx`) + `VideoAlbum.tsx` · **Type:** enhancement /
+small fixes · **Branch:** `dev`
+
+### Change
+
+- **Desktop-table thumbnails reverted circular → square-ish.** The 냥이들 entry (below)
+  shipped `CatThumb` with a `circle` prop rendering `rounded-full` avatars. Reverted to the
+  rectangular `rounded-lg` tile (dropped the now-dead `circle` prop). See the sibling
+  `DEBUG_LOG` entry for the distortion that made the circular form look squished — the
+  revert and that fix landed together.
+- **Search bar + 필터 button de-emphasized.** Both were `text-base` / `py-2`, visually
+  out-sizing the rest of the page (table + filter panel are `text-sm`). Search input →
+  `text-sm py-1.5`; 필터 `<Button>` → `size="sm"` (`px-3 py-1.5 text-sm`).
+- **Copy:** VideoAlbum modal title `…의 동영상첩` → `…의 동영상앨범`.
+
+### Rationale
+
+Owner preferred the even, rectangular thumbnails over the squished circular avatars, and
+wanted the cats-page controls to sit quieter in the visual hierarchy. Rename is a plain
+wording preference.
+
+### Verified
+
+`tsc --noEmit` clean, `npm run test:smoke` 25/25. Browser-verified `/pages/cats`: square
+undistorted thumbnails, smaller search/filter controls.
+
+---
+
 ## 2026-07-03 — New public page: 냥이들 (browse-all-cats)
 
 **Area:** new public route `/pages/cats` + 소개 nav · **Type:** enhancement (feature) ·

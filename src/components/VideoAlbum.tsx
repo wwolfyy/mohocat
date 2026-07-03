@@ -84,7 +84,7 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title={`${catName}의 동영상첩`} size="xl">
+      <Modal isOpen={isOpen} onClose={onClose} title={`${catName}의 동영상앨범`} size="xl">
         {/* Refresh - top-left mirror of the close button */}
         <button
           onClick={loadVideos}

@@ -111,13 +111,12 @@ function FilterSelect({
 }
 
 /** Thumbnail with a brand-tinted placeholder for photo-less cats. */
-function CatThumb({ cat, size, circle }: { cat: Cat; size: number; circle?: boolean }) {
-  const shape = circle ? 'rounded-full' : 'rounded-lg';
+function CatThumb({ cat, size }: { cat: Cat; size: number }) {
   const hasPhoto = !!cat.thumbnailUrl && cat.thumbnailUrl.trim() !== '';
   if (!hasPhoto) {
     return (
       <div
-        className={`flex items-center justify-center ${shape} bg-brand-50 text-brand-300 ring-1 ring-brand-100`}
+        className="flex items-center justify-center rounded-lg bg-brand-50 text-brand-300 ring-1 ring-brand-100"
         style={{ width: size, height: size }}
         aria-hidden
       >
@@ -131,7 +130,7 @@ function CatThumb({ cat, size, circle }: { cat: Cat; size: number; circle?: bool
       alt={cat.name}
       width={size}
       height={size}
-      className={`${shape} object-cover ring-1 ring-black/5`}
+      className="max-w-none rounded-lg object-cover ring-1 ring-black/5"
       style={{ width: size, height: size }}
     />
   );
@@ -209,10 +208,15 @@ export default function CatsBrowser({
             placeholder="이름으로 검색"
             value={filters.searchTerm}
             onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            className="w-full rounded-lg border border-gray-300 py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
           />
         </div>
-        <Button variant="secondary" onClick={() => setShowFilters((s) => !s)} className="gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowFilters((s) => !s)}
+          className="gap-2"
+        >
           <FiFilter /> 필터
         </Button>
       </div>
@@ -325,7 +329,7 @@ export default function CatsBrowser({
             <table className="w-full text-left text-sm">
               <thead className="bg-brand-50 text-gray-700">
                 <tr>
-                  <th className="w-16 px-4 py-3 font-semibold">사진</th>
+                  <th className="w-20 px-4 py-3 font-semibold">사진</th>
                   {SORT_COLUMNS.map((col) => (
                     <th key={col.key as string} className="px-4 py-3 font-semibold">
                       <button
@@ -357,7 +361,7 @@ export default function CatsBrowser({
                     className="cursor-pointer bg-white transition hover:bg-brand-50/40"
                   >
                     <td className="px-4 py-2">
-                      <CatThumb cat={cat} size={44} circle />
+                      <CatThumb cat={cat} size={44} />
                     </td>
                     <td className="px-4 py-2 font-medium text-gray-900">{cat.name}</td>
                     <td className="px-4 py-2 text-gray-600">{sexShort(cat.sex)}</td>
