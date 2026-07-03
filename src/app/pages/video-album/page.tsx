@@ -7,7 +7,6 @@ import { CatVideo } from '@/types/media';
 import { formatDuration } from '@/utils/duration';
 import { parseDate } from '@/utils/parse-date';
 import { useMediaFilter } from '@/hooks/useMediaFilter';
-import AlbumHero from '@/components/album/AlbumHero';
 import AlbumFilterBar from '@/components/album/AlbumFilterBar';
 import MediaTile from '@/components/album/MediaTile';
 import { AlbumLoading, AlbumMessage, ResultCount } from '@/components/album/AlbumStates';
@@ -60,8 +59,6 @@ export default function VideoAlbumPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AlbumHero icon={<FaVideo className="h-5 w-5" />} />
-
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <AlbumFilterBar
           searchQuery={searchQuery}

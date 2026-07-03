@@ -6,7 +6,6 @@ import { getImageService } from '@/services';
 import { CatImage } from '@/types/media';
 import { parseDate } from '@/utils/parse-date';
 import { useMediaFilter } from '@/hooks/useMediaFilter';
-import AlbumHero from '@/components/album/AlbumHero';
 import AlbumFilterBar from '@/components/album/AlbumFilterBar';
 import MediaTile from '@/components/album/MediaTile';
 import { AlbumLoading, AlbumMessage, ResultCount } from '@/components/album/AlbumStates';
@@ -59,8 +58,6 @@ export default function PhotoAlbumPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AlbumHero icon={<FaCamera className="h-5 w-5" />} />
-
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <AlbumFilterBar
           searchQuery={searchQuery}
@@ -103,6 +100,7 @@ export default function PhotoAlbumPage() {
                   <MediaTile
                     key={image.id}
                     aspect="square"
+                    tags={image.tags}
                     thumbnailUrl={image.thumbnailUrl || image.imageUrl}
                     fallbackUrl={image.imageUrl}
                     alt={image.fileName}

@@ -127,6 +127,25 @@ export default function MediaTile({
     >
       {media}
 
+      {/* Top-left cat-name tags — translucent chips over the image (up to 2). */}
+      {tags && tags.length > 0 && (
+        <div className="absolute left-1 top-1 flex max-w-[calc(100%-0.5rem)] flex-wrap gap-1">
+          {tags.slice(0, 2).map((tag) => (
+            <span
+              key={tag}
+              className="truncate rounded-full bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm"
+            >
+              {tag}
+            </span>
+          ))}
+          {tags.length > 2 && (
+            <span className="rounded-full bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+              +{tags.length - 2}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Caption */}
       {(description || meta) && (
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">

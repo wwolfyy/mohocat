@@ -15,6 +15,37 @@
 
 ---
 
+## 2026-07-04 — Photo gallery: translucent cat-name tags + drop album icon heroes
+
+**Area:** `album/MediaTile.tsx` + `photo-album` / `video-album` pages · **Type:**
+enhancement · **Branch:** `dev`
+
+### Change
+
+- **Photo previews now carry cat-name tags.** The `overlay` layout (used by the photo
+  gallery) renders up to **2** translucent chips in the **top-left** of each tile
+  (`bg-black/45` + `backdrop-blur-sm`, white text); a `+N` overflow chip appears when a
+  photo has more than 2 tags. Fed by `image.tags` (passed from `photo-album/page.tsx`). The
+  video gallery's `below` layout keeps its existing footer chips — unchanged.
+- **Removed the camera/film icon "hero" from both galleries.** `AlbumHero` had already lost
+  its title/subtitle and was just a gradient icon chip on a white bar — pure wasted vertical
+  space. Dropped its usage from both album pages and deleted the now-orphaned
+  `src/components/album/AlbumHero.tsx`; the pages now open directly on the search/filter bar.
+
+### Rationale
+
+Photo previews looked sparse; the top-left tags fill them and add useful at-a-glance cat
+identity. The icon hero was decoration that only pushed the grid down.
+
+### Verified
+
+`tsc --noEmit` clean. Browser-verified `/pages/photo-album` (translucent chips over light &
+dark image areas, 1- and 2-tag cases) and both galleries after hero removal. ⏳ `+N` chip
+not exercised by live data — no current photo has >2 tags; logic mirrors the shipped video
+footer overflow pattern.
+
+---
+
 ## 2026-07-03 — 냥이들 thumbnails back to square + search/filter de-emphasis + 동영상앨범 rename
 
 **Area:** `/pages/cats` (`CatsBrowser.tsx`) + `VideoAlbum.tsx` · **Type:** enhancement /
