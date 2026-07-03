@@ -32,9 +32,9 @@ export default function AlbumFilterBar({
   const removeCat = (name: string) => onCatNamesChange(selectedCatNames.filter((n) => n !== name));
 
   return (
-    <div className="mb-8">
+    <div className="mb-5 md:mb-8">
       <div className="mx-auto max-w-4xl">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 md:gap-4">
           {/* Search input */}
           <div className="relative">
             <input
@@ -42,22 +42,22 @@ export default function AlbumFilterBar({
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-10 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              className="w-full rounded-lg border border-gray-300 px-3 py-1.5 pr-9 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 md:px-4 md:py-2 md:pr-10 md:text-base"
             />
-            <FaSearch className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <FaSearch className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400 md:h-4 md:w-4" />
           </div>
 
           {/* Cat-selector trigger */}
           <button
             type="button"
             onClick={() => setShowCatSelector(true)}
-            className="flex min-h-[42px] w-full items-center justify-between rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition-colors hover:bg-gray-100 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            className="flex min-h-[36px] w-full items-center justify-between rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs transition-colors hover:bg-gray-100 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 md:min-h-[42px] md:py-2 md:text-sm"
           >
             <span className="text-gray-600">
               {hasCats ? '클릭하여 더 많은 고양이 추가' : '클릭하여 고양이 선택'}
             </span>
             <span className="inline-flex items-center gap-1 font-medium text-brand-600">
-              <FaCat className="h-4 w-4" /> 고양이 선택
+              <FaCat className="h-3.5 w-3.5 md:h-4 md:w-4" /> 고양이 선택
             </span>
           </button>
         </div>
