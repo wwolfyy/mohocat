@@ -37,7 +37,7 @@
 | **Functional: 동참 form end-to-end**       | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                                                                                                                                                                                  |
 | **Deployment-target cleanup**              | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                                                                                                                                      |
 | **Perf: bake the data layer**              | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                 |
-| **Mobile UX optimization**                 | 🚧 placeholder    | §4 — public-facing mobile pass.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled (iframe-reflow harness); nav/modals/albums/forms/content audited at 390 (nav also 360×560) — 2 nav fixes, rest clean. **Remaining:** map quirks/re-fit + touch-target sweep are device-owed; mobile perf + sign-in-gated surfaces not started.                                                                                                                                                                                                                                                                                                                         |
 | **Admin desktop cleanup**                  | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the disabled-link feature stubs. |
 | **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                     |
@@ -88,39 +88,54 @@ those are the forward plan.
 
 ## 4. 🚧 Mobile UX optimization (public-facing)
 
-> **Goal (placeholder):** make the entire **public** experience first-class on
-> phones, not just the landing map. The map already has a mobile path
-> (clustering + portrait rotation); the rest of the user-facing app has **not**
-> been audited at mobile widths.
+> **Goal:** make the entire **public** experience first-class on phones, not just
+> the landing map. The map already has a mobile path (clustering + portrait
+> rotation); the rest of the user-facing app is now **audited at mobile widths**
+> (2026-07-04 pass — see below).
 
-**Candidate scope — _confirm with user_:**
+> **Verification tooling — SETTLED (2026-07-04).** `resize_window` is broken (resizes
+> window chrome but does **not** reflow the content viewport → stays desktop-width). The
+> working method is an **iframe sized to phone width**, which genuinely reflows (validated:
+> a 390px frame reports `innerWidth 390` + Tailwind `md:` query `false`). Prove reflow
+> before trusting the harness; it's sound for layout/CSS media queries but does **not**
+> emulate touch / orientation / device-pixel-ratio — those remain device-owed.
 
-- [ ] Mobile audit pass of every public page at common breakpoints (≈360 / 390 /
-      414 px): home/map, about, 공지/announcements, FAQ, 동참/contact, 입양홍보,
-      photo-album, video-album, butler_talk, butler_stream, login/signup, mypage.
-- [ ] **Navigation on mobile** — the frosted grouped nav + dropdowns; the ghost
-      hamburger; login-gated 집사메뉴; ensure tap targets, dropdown reachability,
-      and overlay z-index over the Leaflet map.
-- [ ] **Map mobile quirks** — the "minor quirks left for now" from the landing
-      work; clustering aggressiveness (`maxClusterRadius`) tuning; edge-clipping;
-      spiderfy ergonomics.
-- [ ] **Map re-fit on window resize — mobile** — the fit-on-resize fix
-      (2026-07-02, `LeafletMountainMap` `MapViewController`) works on **desktop**
-      but shows irregularities at mobile widths; audit/refine for the portrait
-      layout, including behaviour across the landscape↔portrait remount boundary
-      (`key={isMobile}`). See [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md).
-- [ ] **Modals on mobile** — verify the shared `ui/Modal` sizing/scroll/safe-area
-      on small screens (sizes were tuned for desktop "narrow over the map").
-- [ ] **Album grids on mobile** — `grid-cols-2` density, tile caption legibility,
-      Lightbox/VideoPlayer touch controls (swipe? — decide), filter-bar stacking.
-- [ ] **Forms on mobile** — login/signup/phone-OTP/contact: input sizing,
-      keyboard types (`inputmode`/`type=tel`), error placement, no-zoom font-size.
-- [ ] Touch-target sizing, hit areas, and hover-only affordances that don't exist
-      on touch (replace hover-reveal with always-visible or tap states).
-- [ ] Performance on mobile networks — image sizes, above-the-fold, the
-      thumbnail preloader's eagerness on cellular.
-- [ ] Tooling note: the `resize_window` browser tool was flaky last session;
-      decide how mobile is verified (real device / un-maximized Chrome / DevTools).
+**Pass 1 audit — 2026-07-04 (verified in the iframe harness at 390, nav also at 360×560):**
+
+- [x] Mobile audit pass of the public pages at ≈360 / 390 / 414 px: home/map, about,
+      공지/announcements, FAQ, 동참/contact, 입양홍보, photo-album, video-album,
+      login/signup. _(Remaining: butler_talk, butler_stream, mypage — behind sign-in.)_
+- [x] **Navigation on mobile** — frosted grouped nav + hamburger dropdown audited. **Fixed:**
+      mislabeled first section header 동참 → 소개 (+ item 소개 → 산냥이와 집냥이 to mirror
+      desktop); menu pinned in the sticky header with no height cap could clip the logout row
+      on short viewports → added `max-h-[calc(100dvh-4rem)] overflow-y-auto`. (FEATURE_MOD_LOG
+      2026-07-04.) z-index over Leaflet OK; tap targets OK.
+- [x] **Modals on mobile** — shared `ui/Modal` verified: Lightbox (full-screen, sized image,
+      clear close/next, readable caption) + 고양이 선택 cat-picker (centered, margins, 2-col
+      tappable checklist, sticky footer). No fixes needed.
+- [x] **Album grids on mobile** — `grid-cols-2` density + tile captions/chips legible;
+      filter-bar reduction (§3, previously code-only) now mobile-verified. No fixes needed.
+      _(Lightbox/VideoPlayer swipe gestures = deferred feature decision, not a fix.)_
+- [x] **Forms on mobile** — login + contact verified: all inputs computed `16px` (no iOS
+      auto-zoom), `type=tel`/`type=email` correct, single-column full-width, no overflow;
+      SignupForm matches in code. No fixes needed. _(Phone-OTP SMS send/verify still needs a
+      real device+number.)_
+- [x] **Content pages** — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good
+      typography/spacing at 390. No fixes needed.
+- [ ] **Map mobile quirks — DEVICE-OWED.** Clustering aggressiveness (`maxClusterRadius`)
+      tuning, edge-clipping, spiderfy ergonomics. Map renders fine full-bleed at 390, but
+      these need real touch/zoom on a device (the iframe harness can't emulate them).
+- [ ] **Map re-fit on window resize — mobile — DEVICE-OWED.** The fit-on-resize fix
+      (2026-07-02, `LeafletMountainMap` `MapViewController`) shows irregularities at mobile
+      widths; audit across the landscape↔portrait remount boundary (`key={isMobile}`). The
+      iframe harness reflows layout but can't fire a true orientation/resize cycle. See
+      [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md).
+- [ ] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
+      (replace hover-reveal with always-visible or tap states) — spot-checks passed in Pass 1;
+      full sweep incl. map pin hover-reveal is device-owed.
+- [ ] Performance on mobile networks — image sizes, above-the-fold, the thumbnail
+      preloader's eagerness on cellular. _(Not started.)_
+- [ ] Sign-in-gated surfaces at mobile widths: butler_talk, butler_stream, mypage.
 
 _(Out of scope here: admin mobile — that's §6.)_
 

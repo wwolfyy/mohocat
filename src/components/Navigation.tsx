@@ -190,13 +190,13 @@ export default function Navigation() {
 
         {/* Mobile navigation menu */}
         {isMobileMenuOpen && (
-          <div className="absolute right-0 top-full z-50 mt-2 w-56 animate-dropdown-enter rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+          <div className="absolute right-0 top-full z-50 mt-2 max-h-[calc(100dvh-4rem)] w-56 animate-dropdown-enter overflow-y-auto overscroll-contain rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
             <div className="py-1">
-              <MobileSection>동참</MobileSection>
+              <MobileSection>소개</MobileSection>
               <NavItem
                 href="/pages/about"
                 resourceId="about"
-                label="소개"
+                label="산냥이와 집냥이"
                 mobile
                 onClick={closeMobile}
                 {...access}
