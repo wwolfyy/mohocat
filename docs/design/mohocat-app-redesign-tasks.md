@@ -238,7 +238,7 @@ Small browser-verified chunks, one page at a time. Sequence:
       neutral card; list cards → `rounded-lg border-gray-200 hover:shadow-sm`; list
       title got a brand underline accent; detail back-button → secondary token; the
       `yellow-50/200/400/800` notice box → brand-tinted card (`bg-brand-50
-  ring-brand-100`, brand-600 icon, gray-700 text). _Browser-verified list +
+ring-brand-100`, brand-600 icon, gray-700 text). _Browser-verified list +
       detail; `tsc` clean._ ⚠️ Noted (out of scope): list vs detail show a
       different date (list uses `formatKoreaDateTime` +9h, detail prints raw
       `date time`) — pre-existing date-format drift, track under tech-debt.
@@ -249,14 +249,28 @@ Small browser-verified chunks, one page at a time. Sequence:
       removed the dead commented subtitle + dynamic-sections blocks and the now-unused
       `theme`/`getMountainTheme`. _Browser-verified (title + underline + photo +
       content); `tsc` clean._
-- [ ] **집사메뉴 / butler** (`butler_stream`, `butler_talk` + `new/`,
-      `ButlerStreamClient`, `ButlerTalkClient`, `PostList`) — `border-yellow-500`
-      selected state + form/list audit _(larger chunk)_
+- [x] **집사메뉴 / butler** (`butler_stream`, `butler_talk` + `new/`,
+      `ButlerStreamClient`, `ButlerTalkClient`, `PostList`, `NewPostForm`,
+      `NewButlerTalkForm`) — **done 2026-07-03.** `PostList` pagination
+      de-gradient-ified to match 공지 (current = solid `bg-brand`, dropped
+      `border-yellow-500`; prev/next = neutral secondary + 이전/다음) + English empty
+      state → 해요체 brand card; both clients' "새글 작성" hand-rolled gradients + both
+      forms' submit buttons → shared `<Button variant="primary">`; the two forms'
+      `bg-yellow` "login required" notices → brand-tinted cards (`bg-brand-50
+    ring-brand-100`) + 해요체; all `focus:ring-blue-500` input rings → `ring-brand-300`,
+      the `bg-blue-100` "모두 선택" chip → brand, the `text-blue-600` checkbox →
+      `accent-brand-500`; stripped stale `data-oid` across all 5 components + 4 page
+      wrappers. tsc + smoke 25/25 green. ✅ Browser-verified the logged-out login-notice
+      brand card on `/pages/butler_talk/new`. ⏳ auth-gated (owed): list/pagination,
+      authenticated form + submit, the "새글 작성" list button.
 - [x] **입양홍보 / adoption** — built the adoptable-cats gallery feature (see C0); a
       brand audit/restyle of the new page is inherently brand-clean from the start
-- [ ] **Cross-cutting** — reconcile legacy blue `.btn-primary` (`globals.css`) +
-      nav `hover:text-blue-600` with the brand direction
-      _(carried over as deferred from the landing work)_
+- [x] **Cross-cutting** — **done 2026-07-03.** The legacy `@layer components` btn block
+      (`.btn` / `.btn-primary { bg-blue-600 }` / `.btn-secondary`) in `globals.css` was
+      **dead** (grep-verified: defined, referenced by no JSX) — removed outright rather
+      than rebranded. `Navigation.tsx` had **no** blue/yellow hovers left (already brand).
+      The broader public hand-rolled-button → shared `<Button>` sweep (PROJECT_PLAN §5)
+      continues opportunistically; the butler pass above converged its buttons.
 
 ---
 

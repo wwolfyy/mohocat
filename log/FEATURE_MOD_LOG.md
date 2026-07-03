@@ -15,6 +15,93 @@
 
 ---
 
+## 2026-07-03 — Public hand-rolled-button sweep (→ shared `<Button>` primitive)
+
+**Area:** public user-facing components (replies, signup/login, mypage, video album,
+nav, mountain selector, feeding-spots) · **Type:** enhancement (design) · **Branch:** `dev`
+
+### Change
+
+Continuation of the Phase C cross-cutting item (PROJECT_PLAN §5 "deferred public
+hand-rolled-button sweep"). Converged off-brand hand-rolled buttons/links onto the shared
+`<Button>` primitive + brand tokens across the **live public** surface:
+
+- **Filled CTAs → `<Button variant="primary">`:** `ReplyForm` (댓글 작성 + 취소→secondary),
+  `SignupForm` (both `bg-yellow-500` / `bg-green-500` submits), `mypage` (5 buttons:
+  nickname save, email reauth/verify, phone SMS/verify — `bg-blue-500`/`bg-green-500`).
+- **Brand color swaps (not buttons):** `login/page.tsx` active-tab indicator
+  (`border-blue-500 text-blue-600` → brand); reply/nav/mypage text-links `text-blue-*` →
+  `text-brand-700`; `ReplyButton` blue hover → brand; `MountainSelector` selected-state +
+  chevron; `VideoAlbum` "파일" badge `bg-blue-600` → neutral `bg-gray-700` (next to the
+  YouTube-red vendor badge); spinners (`mypage`, `FeedingSpotsList`) blue/yellow → brand.
+- **Input focus rings** aligned to the canonical `focus:outline-none focus:ring-2
+focus:ring-brand-300` pattern (from `ui/Input` + the shipped 동참 form) in `SignupForm`
+  - the two butler forms — replaces the native blue focus outline with a brand ring.
+- `ReplyForm` login notice `bg-yellow-50` → brand-tinted card + 해요체.
+
+### Rationale / scope
+
+Same fix-once logic as the butler pass: shared components render on both surfaces, and
+tap-target sizing / focus rings now live in the `<Button>` primitive, so the §4 mobile
+pass inherits them centrally. **Deliberately left as-is:** admin forms (§5 admin
+workstream), `SocialLoginButton`'s Kakao `#FEE500` vendor color, semantic success/warning
+states (green "sent" boxes, `⚠️` note cards, `ui/Alert` variants), and dead/test-only
+components (`PostItem`, `auth-test`, `*Demo`, `*Debug`, `ProviderManagement`).
+
+### Verified
+
+`npx tsc --noEmit` clean; `npm run test:smoke` 25/25 (after each chunk). Browser-verified
+the public `/login?tab=signup`: brand-amber active-tab indicator (was blue), brand-gradient
+submit button (was flat yellow), and the native-blue focus outline replaced by the brand
+ring. Reply/mypage authenticated states are login-gated (owed to the standing verification
+list). _Note: Next dev HMR corrupted the `/login` route into transient 404s after rapid
+edits — cleared by a clean dev restart; not a code issue (tsc/smoke green, curl 200 on a
+fresh server)._
+
+---
+
+## 2026-07-03 — Phase C: 집사메뉴/butler brand restyle + cross-cutting button cleanup
+
+**Area:** public 집사메뉴 (`butler_talk` / `butler_stream` + `new/`), `PostList`,
+`NewPostForm`, `NewButlerTalkForm`, `globals.css` · **Type:** enhancement (design) ·
+**Branch:** `dev`
+
+### Change
+
+Closed the last two `[ ]` items of redesign **Phase C** (per the "finalize shared surface
+on desktop before the §4 mobile pass" sequencing decision — PROJECT_PLAN §12):
+
+- **Butler pages restyled** (the one un-brand-audited public surface): `PostList`
+  pagination de-gradient-ified to match the 공지 pattern (current page = solid `bg-brand`,
+  dropped `border-yellow-500`; prev/next = neutral secondary + `이전`/`다음`), English
+  "No posts yet." → 해요체 brand card. Both clients' "새글 작성" hand-rolled brand→accent
+  gradients and both forms' submit buttons → shared `<Button variant="primary" size="lg">`.
+  The two forms' `bg-yellow` "login required" notices → brand-tinted cards (`bg-brand-50
+ring-brand-100`) + 해요체. All input `focus:ring-blue-500` rings → `ring-brand-300`, the
+  `bg-blue-100` "모두 선택" chip → brand, the `text-blue-600` checkbox → `accent-brand-500`.
+  Stripped stale `data-oid` across the 5 components + 4 butler page wrappers.
+- **Cross-cutting:** removed the **dead** `@layer components` btn block (`.btn` /
+  `.btn-primary { bg-blue-600 }` / `.btn-secondary`) from `globals.css` — grep-verified
+  referenced by no JSX; deleting it eliminates the last legacy blue from the codebase.
+  `Navigation.tsx` was already brand-clean.
+
+### Rationale / scope
+
+These are shared code paths that render identically on desktop + mobile; finalizing the
+brand/copy/primitive here now means the §4 mobile pass only tunes responsive layout instead
+of re-doing the restyle. Converting buttons to the shared `<Button>` primitive means mobile
+inherits correct tap-target sizing / focus rings centrally rather than per hand-rolled button.
+
+### Verified
+
+`npx tsc --noEmit` clean; `npm run test:smoke` 25/25. Browser-verified the logged-out
+login-notice brand card on `/pages/butler_talk/new` (brand-50 card, brand-700 heading,
+해요체 body). Auth-gated states (list/pagination, authenticated form + submit, the "새글
+작성" list button) not driven — no sign-in in automation; owed to the standing auth-gated
+verification list.
+
+---
+
 ## 2026-07-02 — Admin post editing (all post types)
 
 **Area:** admin posts (`/admin/posts`, `AdminPostList`) · **Type:** enhancement ·

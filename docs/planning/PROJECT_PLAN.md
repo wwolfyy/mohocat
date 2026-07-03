@@ -209,8 +209,12 @@ _(Out of scope here: admin mobile — that's §6.)_
   (`ContactManagement`, `AboutContentEditor`) — _this session (handoff-18)_: ~600 strings
   centralized, `bg-blue/purple → <Button>`/brand, brand focus rings, `accent-brand-500`
   checkboxes; YouTube-red vendor color kept. tsc + smoke 25/25 green after each.
-  **Remaining:** AdminAuth login/access-denied live-verify; the deferred public
-  hand-rolled-button sweep; then §6 admin-mobile. **Dead-code candidates — DELETED
+  **Remaining:** AdminAuth login/access-denied live-verify; ~~the deferred public
+  hand-rolled-button sweep~~ **✅ DONE 2026-07-03** (public filled CTAs → shared `<Button>`
+  primitive; `text-blue-*` links/nav-hovers/tab-indicator/spinners → brand; input focus
+  rings aligned to the canonical `focus:ring-2 focus:ring-brand-300`; Kakao vendor +
+  semantic success/warning states preserved; admin/dead/test components out of scope — see
+  `FEATURE_MOD_LOG` 2026-07-03); then §6 admin-mobile. **Dead-code candidates — DELETED
   (2026-06-30):** the 4 grep-verified-unreachable items from handoff-18 §5 removed (767
   lines): `RoleManagementDirect.tsx`, `PermissionManager.tsx`, and the unused
   `batchUpdateVideos`/`batchUpdatePlaylists` fns in `tag-videos/page.tsx` (which leaves that
@@ -639,6 +643,26 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 ## 12. Open decisions / sequencing
 
+- **✅ SETTLED (owner, 2026-07-03): finalize the shared surface on desktop before the
+  §4 mobile pass.** Rationale: shared code paths (markup, brand tokens, shared primitives,
+  copy) render identically on both surfaces, so anything un-finalized there gets restyled by
+  the mobile pass **and** rewritten by the desktop work → double work. Pure responsive-
+  breakpoint tuning is inherently per-surface and correctly belongs to §4. **The
+  finalize-before-mobile set (do first):**
+  1. **Phase C — 집사메뉴 / butler restyle** — the one un-brand-audited public surface left
+     (`ButlerStreamClient`, `ButlerTalkClient`, `PostList` [still `border-yellow-500`],
+     `butler_talk/new/`, `NewButlerTalkForm`, `NewPostForm`). Redesign tasks **C1** last `[ ]`.
+  2. **Cross-cutting button/color convergence** (one job, three loose ends): the Phase C
+     "Cross-cutting" legacy `.btn-primary { bg-blue-600 }` in `globals.css`, the §5 deferred
+     **public hand-rolled-button sweep** → shared `<Button>` primitive, and nav blue hovers.
+     Highest-leverage fix-once — **tap-target sizing / focus rings / hit-areas live in the
+     primitive**, so mobile inherits correct buttons instead of re-touching each hand-rolled
+     one. **Do this before #1** so the butler restyle consumes the primitive directly.
+  - _Deferred to §4 (genuinely per-surface, no double-work):_ map re-fit on mobile, modal/
+    album/form mobile sizing, mobile nav drawer.
+  - _Deferred, non-UI (render-invariant):_ structured logging, request validation, RBAC
+    drift, Tier-1 Admin-SDK migration, upload-on-edit util. _Judgment calls (shared but not
+    redesign):_ branded error-states (§7), link-token rendering in 공지/급식/집사톡.
 - **Priority order** among Mobile UX (§4), Admin desktop cleanup (§5), Admin
   mobile (§6), and finishing redesign Phase C / A4 — **to be set with the user.**
   Note the dependency: §6 (admin mobile) is best built **after** §5 (admin
