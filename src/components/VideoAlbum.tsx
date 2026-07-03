@@ -190,7 +190,7 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
                     {video.videoType === 'youtube' ? (
                       <div className="bg-red-600 text-white text-xs px-2 py-1 rounded">YouTube</div>
                     ) : (
-                      <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded">파일</div>
+                      <div className="bg-gray-700 text-white text-xs px-2 py-1 rounded">파일</div>
                     )}
                   </div>
                 </div>

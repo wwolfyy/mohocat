@@ -24,7 +24,7 @@ export function NavigationBarLogin() {
         'flex items-center gap-2 px-3 py-1.5',
         'bg-white border border-gray-200 rounded-full shadow-sm',
         'text-sm font-semibold text-gray-700',
-        'transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-blue-600'
+        'transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-brand-600'
       )}
     >
       <span>{strings.auth.nav.logIn}</span>

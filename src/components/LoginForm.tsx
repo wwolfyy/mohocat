@@ -342,7 +342,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
           <button
             type="button"
             onClick={() => setIsPasswordResetModalOpen(true)}
-            className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+            className="text-sm text-brand-700 hover:text-brand-800 hover:underline focus:outline-none"
           >
             {t.forgotPassword}
           </button>

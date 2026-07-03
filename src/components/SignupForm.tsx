@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { cn } from '@/utils/cn';
+import Button from '@/components/ui/Button';
 import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import { getPermissionService } from '@/services';
@@ -239,7 +239,7 @@ function SignupFormContent() {
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
               placeholder={t.nicknamePlaceholder}
               required
               disabled={isLoading}
@@ -252,7 +252,7 @@ function SignupFormContent() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
               placeholder="name@example.com"
               required
               disabled={isLoading}
@@ -268,7 +268,7 @@ function SignupFormContent() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
                 placeholder="******"
                 minLength={6}
                 required
@@ -283,7 +283,7 @@ function SignupFormContent() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
                 placeholder="******"
                 minLength={6}
                 required
@@ -298,7 +298,7 @@ function SignupFormContent() {
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
               placeholder="+82 10-1234-5678"
               required
               disabled={isLoading}
@@ -308,17 +308,9 @@ function SignupFormContent() {
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={cn(
-              'w-full py-3 px-4 rounded-lg text-white font-medium transition-colors',
-              'bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500',
-              isLoading ? 'opacity-70 cursor-not-allowed' : ''
-            )}
-          >
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
             {isLoading ? t.sending : t.sendCode}
-          </button>
+          </Button>
         </form>
       )}
 
@@ -342,7 +334,7 @@ function SignupFormContent() {
               type="text"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 tracking-widest text-center text-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 tracking-widest text-center text-lg"
               placeholder="123456"
               maxLength={6}
               required
@@ -352,17 +344,9 @@ function SignupFormContent() {
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={cn(
-              'w-full py-3 px-4 rounded-lg text-white font-medium transition-colors',
-              'bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500',
-              isLoading ? 'opacity-70 cursor-not-allowed' : ''
-            )}
-          >
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
             {isLoading ? t.creating : t.complete}
-          </button>
+          </Button>
 
           <button
             type="button"

@@ -37,7 +37,7 @@ export function NavigationBarLogout() {
     >
       <Link
         href="/mypage"
-        className="text-sm font-semibold text-gray-700 hover:text-blue-600 truncate max-w-[150px] transition-colors"
+        className="text-sm font-semibold text-gray-700 hover:text-brand-600 truncate max-w-[150px] transition-colors"
         title={strings.auth.nav.myPage}
       >
         {displayName}

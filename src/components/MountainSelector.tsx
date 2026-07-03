@@ -71,8 +71,8 @@ export default function MountainSelector() {
       >
         <span className="transition-colors duration-300">{currentMountainName}</span>
         <ChevronDownIcon
-          className={`h-4 w-4 transition-all duration-300 group-hover:text-blue-600 ${
-            isOpen ? 'rotate-180 text-blue-600' : 'group-hover:animate-bounce-gentle'
+          className={`h-4 w-4 transition-all duration-300 group-hover:text-brand-600 ${
+            isOpen ? 'rotate-180 text-brand-600' : 'group-hover:animate-bounce-gentle'
           }`}
         />
       </button>
@@ -90,7 +90,7 @@ export default function MountainSelector() {
                 onClick={() => handleMountainSelect(mountain.id)}
                 className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-all duration-200 hover:translate-x-1 hover:shadow-sm ${
                   mountain.id === currentMountainId
-                    ? 'bg-blue-50 text-blue-700 border-l-2 border-blue-500'
+                    ? 'bg-brand-50 text-brand-700 border-l-2 border-brand-500'
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
                 style={{

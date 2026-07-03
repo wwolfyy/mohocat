@@ -139,7 +139,7 @@ const PostDetailsPage = () => {
                         href={videoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 underline"
+                        className="text-brand-700 underline"
                         data-oid="a1c-6ih"
                       >
                         Watch Video {index + 1}

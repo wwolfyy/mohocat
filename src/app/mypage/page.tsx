@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
+import Button from '@/components/ui/Button';
 import { strings } from '@/constants/strings';
 
 const t = strings.mypage;
@@ -108,7 +109,7 @@ export default function MyPage() {
   if (loading || !user) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -219,12 +220,9 @@ export default function MyPage() {
                 onChange={(e) => setNewNickname(e.target.value)}
                 className="flex-1 px-3 py-2 border rounded-lg"
               />
-              <button
-                onClick={handleUpdateNickname}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm"
-              >
+              <Button variant="primary" size="sm" onClick={handleUpdateNickname}>
                 {strings.common.save}
-              </button>
+              </Button>
               <button onClick={() => setEditingNickname(false)} className="text-gray-500 px-2">
                 {strings.common.cancel}
               </button>
@@ -234,7 +232,7 @@ export default function MyPage() {
               <span className="text-gray-900 font-medium">
                 {user.displayName || t.profile.noNickname}
               </span>
-              <button onClick={() => setEditingNickname(true)} className="text-blue-500 text-sm">
+              <button onClick={() => setEditingNickname(true)} className="text-brand-700 text-sm">
                 {t.profile.edit}
               </button>
             </div>
@@ -257,12 +255,14 @@ export default function MyPage() {
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
                       onClick={handleEmailReauth}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                     >
                       {strings.common.confirm}
-                    </button>
+                    </Button>
                     <button onClick={() => setEditingEmail(false)} className="text-gray-500 px-2">
                       {strings.common.cancel}
                     </button>
@@ -278,12 +278,14 @@ export default function MyPage() {
                     onChange={(e) => setNewEmail(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
                     onClick={handleSendEmailVerification}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                   >
                     {t.profile.sendVerification}
-                  </button>
+                  </Button>
                 </div>
               )}
               {emailStep === 'verification-sent' && (
@@ -310,7 +312,7 @@ export default function MyPage() {
                   setEditingEmail(true);
                   setEmailStep('password-reauth');
                 }}
-                className="text-blue-500 text-sm"
+                className="text-brand-700 text-sm"
               >
                 {t.profile.change}
               </button>
@@ -325,7 +327,7 @@ export default function MyPage() {
             <span className="text-gray-900">********</span>
             <button
               onClick={() => setIsResetModalOpen(true)}
-              className="text-blue-500 text-sm hover:underline"
+              className="text-brand-700 text-sm hover:underline"
             >
               {t.profile.resetPassword}
             </button>
@@ -350,12 +352,14 @@ export default function MyPage() {
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
                       onClick={handleSendPhoneCode}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                     >
                       {t.profile.sendSms}
-                    </button>
+                    </Button>
                     <button onClick={() => setEditingPhone(false)} className="text-gray-500 px-2">
                       {strings.common.cancel}
                     </button>
@@ -371,12 +375,14 @@ export default function MyPage() {
                     onChange={(e) => setPhoneVerificationCode(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-center tracking-widest"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
                     onClick={handleUpdatePhone}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                   >
                     {t.profile.verifyAndUpdate}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -388,7 +394,7 @@ export default function MyPage() {
                   setEditingPhone(true);
                   setPhoneStep('input-new');
                 }}
-                className="text-blue-500 text-sm"
+                className="text-brand-700 text-sm"
               >
                 {t.profile.change}
               </button>

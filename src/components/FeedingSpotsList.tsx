@@ -65,7 +65,7 @@ const FeedingSpotsList = () => {
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h2 className="text-lg font-semibold mb-3">급식소 현황</h2>
         <div className="text-center py-4">
-          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
           <p className="mt-2 text-gray-600">급식소 정보를 불러오고 있습니다...</p>
         </div>
       </div>
