@@ -92,6 +92,7 @@ export default function Navigation() {
       <nav className="hidden items-center gap-5 md:flex">
         <NavDropdown label="소개">
           <NavItem href="/pages/about" resourceId="about" label="산냥이와 집냥이" {...access} />
+          <NavItem href="/pages/cats" resourceId="cats" label="냥이들" {...access} />
           <NavItem href="/pages/contact" resourceId="contact" label="동참" {...access} />
           <NavItem href="/pages/adoption" resourceId="adoption" label="입양홍보" {...access} />
         </NavDropdown>
@@ -196,6 +197,14 @@ export default function Navigation() {
                 href="/pages/about"
                 resourceId="about"
                 label="소개"
+                mobile
+                onClick={closeMobile}
+                {...access}
+              />
+              <NavItem
+                href="/pages/cats"
+                resourceId="cats"
+                label="냥이들"
                 mobile
                 onClick={closeMobile}
                 {...access}
