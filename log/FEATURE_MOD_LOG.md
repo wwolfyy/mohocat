@@ -37,6 +37,10 @@ cat was to open the map and click through the thumbnail pins. New files:
   desktop via `hidden md:block`), and the shared `CatInfo` detail modal on card/row click.
   Filtering / sorting reuse `@/utils/cat-filters` verbatim, so the predicate matches the
   admin Cat Management view. Photo-less cats get a 🐾 brand-tinted placeholder tile.
+  Desktop table thumbnails are **circular avatars** (`CatThumb` `circle` prop); the mobile
+  cards keep rounded-rectangle tiles. Cat **counts are intentionally hidden** — no
+  "N마리 / 전체 N마리" line and no count on the 별냥이/행방불명 toggle (owner ask). Search
+  placeholder is "이름으로 검색".
 - **`src/components/Navigation.tsx`** — added `냥이들` (`/pages/cats`, `resourceId="cats"`)
   under the 소개 dropdown (desktop) and the 소개 mobile section. Unknown `resourceId` →
   no required permissions → public, so the link is visible to everyone.
