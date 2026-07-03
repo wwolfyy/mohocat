@@ -7,6 +7,7 @@ import IntroCard from './IntroCard';
 import Compass from './Compass';
 import CatGallery from './CatGallery';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsPortrait } from '@/hooks/useIsPortrait';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
 import { getMapConfig } from '@/utils/config';
 
@@ -36,9 +37,13 @@ interface MountainViewerProps {
 export default function MountainViewer({ points, catsByPoint }: MountainViewerProps) {
   // Which feeding point's cat gallery is open (clicked marker → modal).
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
-  // Mobile uses the 90°-CW-rotated portrait map (image + coords + compass), so
-  // the container flips to a portrait aspect ratio to match.
+  // Two orthogonal viewport flags:
+  //  • portrait (orientation) → the 90°-CW-rotated portrait map (image + coords
+  //    + compass + container aspect) so the map's long axis always aligns with
+  //    the screen's long axis — including a phone rotated to landscape.
+  //  • isMobile (width) → marker clustering, no +/− buttons, touch-drag gating.
   const isMobile = useIsMobile();
+  const portrait = useIsPortrait();
   // Per-mountain map tunables (marker-clustering radius) — config-driven so the
   // value can be changed without a code edit (config/mountains/mountains.json).
   const { maxClusterRadius } = getMapConfig();
@@ -66,15 +71,16 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
   return (
     // Always fill the viewport width; height follows the image's aspect ratio so
     // the map fills the frame at default zoom with no letterbox — landscape 2:1
-    // on desktop, rotated portrait 1:2 on mobile (so it fills a tall screen). On
-    // short windows the map can extend a little below the fold (minor scroll).
-    // `left-1/2 -translate-x-1/2` breaks out of the page's horizontal padding.
+    // in a landscape viewport, rotated portrait 1:2 in a portrait one (so it
+    // fills a tall screen). On short windows the map can extend a little below
+    // the fold (minor scroll). `left-1/2 -translate-x-1/2` breaks out of the
+    // page's horizontal padding.
     <>
       <div
         className="relative left-1/2 -translate-x-1/2"
         style={{
           width: '100vw',
-          aspectRatio: isMobile ? '808 / 1616' : '1616 / 808',
+          aspectRatio: portrait ? '808 / 1616' : '1616 / 808',
         }}
       >
         <LeafletMountainMap
@@ -82,11 +88,12 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           catsByPoint={catsByPoint}
           onPointClick={setSelectedPointId}
           isMobile={isMobile}
+          portrait={portrait}
           maxClusterRadius={maxClusterRadius}
         />
 
         {/* North indicator pinned top-right of the map (redesign §Engine). */}
-        <Compass isMobile={isMobile} />
+        <Compass portrait={portrait} />
 
         {/* Dismissible nudge floating over the map's bottom-left (redesign §1) */}
         <IntroCard />

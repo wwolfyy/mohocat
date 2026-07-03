@@ -122,14 +122,20 @@ those are the forward plan.
       real device+number.)_
 - [x] **Content pages** — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good
       typography/spacing at 390. No fixes needed.
-- [ ] **Map mobile quirks — DEVICE-OWED.** Clustering aggressiveness (`maxClusterRadius`)
-      tuning, edge-clipping, spiderfy ergonomics. Map renders fine full-bleed at 390, but
-      these need real touch/zoom on a device (the iframe harness can't emulate them).
-- [ ] **Map re-fit on window resize — mobile — DEVICE-OWED.** The fit-on-resize fix
-      (2026-07-02, `LeafletMountainMap` `MapViewController`) shows irregularities at mobile
-      widths; audit across the landscape↔portrait remount boundary (`key={isMobile}`). The
-      iframe harness reflows layout but can't fire a true orientation/resize cycle. See
-      [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md).
+- [~] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
+  S22 bugs (DEBUG_LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
+  clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
+  image now chosen by **orientation** (`useIsPortrait`) not width, so the map's long axis
+  always aligns with the screen's; (3) map ate page scroll → on mobile, one-finger swipe
+  scrolls the page (drag disabled at fill) and map-drag engages only when zoomed in.
+  Harness-verified; **device-owed:** pinch-out clamp feel, one-finger scroll, zoom-then-pan
+  on a real S22.
+- [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
+      (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
+- [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix
+      (2026-07-02, `MapViewController`) now re-fits + re-clamps min-zoom on resize; the
+      landscape↔portrait boundary remounts on `key={portrait}`. Confirm the transition feels
+      clean on a real device rotation.
 - [ ] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
       (replace hover-reveal with always-visible or tap states) — spot-checks passed in Pass 1;
       full sweep incl. map pin hover-reveal is device-owed.
