@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthService, getButlerTalkService } from '@/services';
 import PostList from '@/components/PostList';
+import Button from '@/components/ui/Button';
 import { User } from 'firebase/auth';
-import { cn } from '@/utils/cn';
 
 const ButlerTalkClient = () => {
   // Service references
@@ -98,17 +98,15 @@ const ButlerTalkClient = () => {
 
   return (
     <>
-      <div className="flex justify-end mb-4" data-oid="s64j5_s">
-        <button
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full"
           onClick={() => router.push('/pages/butler_talk/new')}
-          className={cn(
-            'w-full py-3 bg-gradient-to-r from-brand to-accent',
-            'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200'
-          )}
-          data-oid="q0:d1d3"
         >
           새글 작성
-        </button>
+        </Button>
       </div>
 
       <PostList
@@ -117,7 +115,6 @@ const ButlerTalkClient = () => {
         totalPages={totalPages}
         onPageChange={handlePageClick}
         postService={butlerTalkService}
-        data-oid="dy3hc7:"
       />
     </>
   );
