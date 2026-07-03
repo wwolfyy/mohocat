@@ -80,11 +80,9 @@ export default function Navigation() {
 
   const closeMobile = () => setIsMobileMenuOpen(false);
 
-  const MobileSection = ({ children }: { children: React.ReactNode }) => (
-    <div className="px-4 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-gray-400">
-      {children}
-    </div>
-  );
+  // Groups in the mobile menu are separated by a hairline rule instead of a
+  // labelled section header — the item labels lead, the rule just delimits.
+  const MobileDivider = () => <div className="my-1 border-t border-gray-200" aria-hidden="true" />;
 
   return (
     <>
@@ -192,7 +190,7 @@ export default function Navigation() {
         {isMobileMenuOpen && (
           <div className="absolute right-0 top-full z-50 mt-2 max-h-[calc(100dvh-4rem)] w-56 animate-dropdown-enter overflow-y-auto overscroll-contain rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
             <div className="py-1">
-              <MobileSection>소개</MobileSection>
+              {/* 소개 group */}
               <NavItem
                 href="/pages/about"
                 resourceId="about"
@@ -226,7 +224,9 @@ export default function Navigation() {
                 {...access}
               />
 
-              <MobileSection>갤러리</MobileSection>
+              <MobileDivider />
+
+              {/* 갤러리 group */}
               <NavItem
                 href="/pages/photo-album"
                 resourceId="photo_album"
@@ -244,7 +244,9 @@ export default function Navigation() {
                 {...access}
               />
 
-              <MobileSection>소식</MobileSection>
+              <MobileDivider />
+
+              {/* 소식 group */}
               <NavItem
                 href="/pages/announcements"
                 resourceId="announcements"
@@ -253,6 +255,8 @@ export default function Navigation() {
                 onClick={closeMobile}
                 {...access}
               />
+
+              <MobileDivider />
 
               <div className="px-4 py-3">
                 <Link
@@ -264,7 +268,9 @@ export default function Navigation() {
                 </Link>
               </div>
 
-              <MobileSection>집사메뉴 {!isAuthenticated && '(먼저 로그인 하세요)'}</MobileSection>
+              <MobileDivider />
+
+              {/* 집사메뉴 group — enabled only when logged in */}
               {isAuthenticated ? (
                 <>
                   <NavItem
@@ -294,11 +300,12 @@ export default function Navigation() {
                 </>
               ) : (
                 <span className="block px-4 py-2 text-sm text-gray-300">
-                  급식현황 · 집사톡 · FAQ
+                  급식현황 · 집사톡 · FAQ{' '}
+                  <span className="text-gray-400">(먼저 로그인 하세요)</span>
                 </span>
               )}
 
-              <div className="my-1 border-t border-gray-200" />
+              <MobileDivider />
               <div className="px-4 py-2">
                 <NavigationBarLogin />
               </div>
