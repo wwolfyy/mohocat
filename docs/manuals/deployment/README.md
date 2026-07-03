@@ -78,6 +78,30 @@ single-sourced in `src/lib/cache-config.ts` → `REVALIDATE_SECONDS`):
 **To change N:** edit the value (one literal) and `git push` → Vercel rebuilds. There is no
 runtime dial; a rebuild/redeploy is required either way.
 
+## Map marker-clustering radius — a per-mountain config value
+
+On the **mobile** map, nearby feeding-point markers collapse into a single cluster. The
+distance under which they collapse is **`map.maxClusterRadius`** in
+`config/mountains/mountains.json` (per mountain):
+
+```json
+"map": {
+  "maxClusterRadius": 50
+}
+```
+
+- It's a **screen-pixel** radius at the current zoom (leaflet.markercluster semantics), **not**
+  a distance in metres — points that overlap when zoomed out separate as you zoom in.
+- **Mobile only.** The desktop map is un-clustered, so this value has no effect there.
+- Larger = collapses points that are farther apart; smaller = keeps them separate longer.
+- **Omitting the `map` section is fine** — the code falls back to `DEFAULT_MAP_CONFIG`
+  (`50`) in `src/utils/config.ts`.
+
+**To change it:** edit the one number and `git push` → Vercel rebuilds. Unlike the ISR `N`
+above, this one lives in a config file rather than a source literal, but it's still baked at
+build — a redeploy is required for it to take effect (no runtime dial). Read/exposed via
+`getMapConfig()`.
+
 ## Things that deploy _outside_ Vercel
 
 - **Firestore security rules** — deployed via the Firebase CLI, not Vercel:

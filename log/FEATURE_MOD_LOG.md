@@ -15,6 +15,45 @@
 
 ---
 
+## 2026-07-04 — Mobile map marker-clustering radius is now per-mountain config
+
+**Area:** `utils/config.ts` + `mountains.json` + `LeafletMountainMap` / `MountainViewer` ·
+**Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+The mobile map's marker-clustering distance (`maxClusterRadius`, the screen-pixel radius
+under which nearby feeding-point markers collapse into one cluster) was a hardcoded literal
+`50` inside `LeafletMountainMap`'s `PointMarkersLayer`. Made it **per-mountain config** so it
+can be tuned without a code edit:
+
+- **`config.ts`** — new `MountainMapConfig` interface (`maxClusterRadius`), added
+  `map?: MountainMapConfig` to `MountainConfig`, a `getMapConfig()` getter, and a
+  `DEFAULT_MAP_CONFIG` (`50`) fallback merged in so mountains omitting the `map` section
+  still resolve.
+- **`mountains.json`** — added `"map": { "maxClusterRadius": 50 }` to `geyang`.
+- **`LeafletMountainMap`** — replaced the literal with a `maxClusterRadius` prop (threaded to
+  `PointMarkersLayer`, added to the marker-layer effect deps so a change rebuilds the layer).
+- **`MountainViewer`** (map host) — reads `getMapConfig()` and passes the value down, keeping
+  the map component a pure renderer.
+
+Unchanged semantics: screen-pixel radius (not metres) and **mobile-only** (desktop is
+un-clustered). Documented in the admin + deployment manuals.
+
+### Rationale
+
+Owner wanted to tune clustering without editing component code each time. Per-mountain config
+JSON is the idiomatic knob here (mirrors theme/features/social); editing it still needs a
+`git push` + Vercel rebuild, but no source change.
+
+### Verified
+
+`tsc --noEmit` clean, `npm run test:smoke` 25/25. Browser-verified the desktop home map
+still renders all markers (un-clustered path intact). ⏳ Mobile clustering behavior not
+driven in automation (mobile-only; `resize_window` flaky).
+
+---
+
 ## 2026-07-04 — Photo gallery: translucent cat-name tags + drop album icon heroes
 
 **Area:** `album/MediaTile.tsx` + `photo-album` / `video-album` pages · **Type:**

@@ -8,6 +8,7 @@ import Compass from './Compass';
 import CatGallery from './CatGallery';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
+import { getMapConfig } from '@/utils/config';
 
 // Leaflet touches `window`, so the map must be client-only (no SSR).
 const LeafletMountainMap = dynamic(() => import('./LeafletMountainMap'), {
@@ -38,6 +39,9 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
   // Mobile uses the 90°-CW-rotated portrait map (image + coords + compass), so
   // the container flips to a portrait aspect ratio to match.
   const isMobile = useIsMobile();
+  // Per-mountain map tunables (marker-clustering radius) — config-driven so the
+  // value can be changed without a code edit (config/mountains/mountains.json).
+  const { maxClusterRadius } = getMapConfig();
 
   // Warm the marker avatars into the browser cache. The cat data is already
   // baked (props) — this only preloads the image *files*, with no Firestore
@@ -78,6 +82,7 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           catsByPoint={catsByPoint}
           onPointClick={setSelectedPointId}
           isMobile={isMobile}
+          maxClusterRadius={maxClusterRadius}
         />
 
         {/* North indicator pinned top-right of the map (redesign §Engine). */}

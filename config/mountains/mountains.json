@@ -54,6 +54,9 @@
       "instagramHandle": "",
       "facebookPage": ""
     },
+    "map": {
+      "maxClusterRadius": 50
+    },
     "authentication": {
       "type": "centralized",
       "userServiceProject": "mountain-cats-users",

@@ -89,7 +89,10 @@ bring-up will hit gaps. Before/while writing this guide, resolve or account for
 > **TODO:**
 >
 > - Add the mountain to `config/mountains/mountains.json` (branding, theme, features,
->   social, `adminEmail`).
+>   social, `adminEmail`, optional `map`).
+> - **`map.maxClusterRadius`** (optional) — mobile map marker-clustering radius in screen
+>   pixels; omit to inherit the `DEFAULT_MAP_CONFIG` (`50`) fallback. See
+>   [`deployment/README.md` → Map marker-clustering radius](./README.md#map-marker-clustering-radius--a-per-mountain-config-value).
 > - Confirm `getMountainConfig()` / `isFeatureEnabled()` resolve it.
 > - Map image asset + its (currently hard-coded) path — see §9 gap.
 

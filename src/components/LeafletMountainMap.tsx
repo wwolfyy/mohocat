@@ -158,10 +158,12 @@ function PointMarkersLayer({
   markers,
   onSelect,
   isMobile,
+  maxClusterRadius,
 }: {
   markers: ResolvedMarker[];
   onSelect: (pointId: string) => void;
   isMobile: boolean;
+  maxClusterRadius: number;
 }) {
   const map = useMap();
 
@@ -174,7 +176,8 @@ function PointMarkersLayer({
           zoomToBoundsOnClick: false,
           spiderfyOnMaxZoom: false,
           showCoverageOnHover: false,
-          maxClusterRadius: 50, // starting value; tuned in P2-8
+          // Per-mountain (config/mountains/mountains.json → map.maxClusterRadius).
+          maxClusterRadius,
           iconCreateFunction: createClusterIcon,
         })
       : L.layerGroup();
@@ -221,7 +224,7 @@ function PointMarkersLayer({
     return () => {
       layer.remove();
     };
-  }, [map, markers, onSelect, isMobile]);
+  }, [map, markers, onSelect, isMobile, maxClusterRadius]);
 
   return null;
 }
@@ -319,6 +322,8 @@ interface LeafletMountainMapProps {
   catsByPoint: CatsByPoint;
   onPointClick: (pointId: string) => void;
   isMobile: boolean;
+  /** Mobile marker-clustering radius in px (see `MountainMapConfig`). */
+  maxClusterRadius: number;
 }
 
 export default function LeafletMountainMap({
@@ -326,6 +331,7 @@ export default function LeafletMountainMap({
   catsByPoint,
   onPointClick,
   isMobile,
+  maxClusterRadius,
 }: LeafletMountainMapProps) {
   const markers = usePointMarkers(points, catsByPoint);
   const { url, bounds } = getLayout(isMobile);
@@ -353,7 +359,12 @@ export default function LeafletMountainMap({
     >
       <ImageOverlay url={url} bounds={bounds} />
       <MapViewController bounds={bounds} />
-      <PointMarkersLayer markers={markers} onSelect={onPointClick} isMobile={isMobile} />
+      <PointMarkersLayer
+        markers={markers}
+        onSelect={onPointClick}
+        isMobile={isMobile}
+        maxClusterRadius={maxClusterRadius}
+      />
     </MapContainer>
   );
 }

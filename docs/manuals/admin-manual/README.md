@@ -218,6 +218,12 @@ Mostly one-time or infrequent setup. Details live in
   git — a fresh dev checkout needs `npm run fetch:assets` before pages with photos render.
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
+- **Map clustering distance:** on the **mobile** map, nearby markers collapse into a cluster
+  when they're within `map.maxClusterRadius` (screen pixels) in
+  `config/mountains/mountains.json` — a per-mountain tunable, **not** a `/admin` CMS setting.
+  Edit the number and `git push` to change it (larger = collapses points that are farther
+  apart). Desktop is un-clustered, so it only affects mobile. Details:
+  [`deployment/README.md`](../deployment/README.md#map-marker-clustering-radius--a-per-mountain-config-value).
 
 ---
 

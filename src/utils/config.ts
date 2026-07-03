@@ -26,6 +26,22 @@ export interface MountainSocial {
   facebookPage: string;
 }
 
+export interface MountainMapConfig {
+  /**
+   * Marker-clustering distance for the mobile map, in **screen pixels** at the
+   * current zoom: markers within this radius of each other collapse into one
+   * cluster (passed straight to leaflet.markercluster's `maxClusterRadius`).
+   * Larger = collapses points that are farther apart; smaller = keeps them
+   * separate longer. Desktop is un-clustered, so this only affects mobile.
+   */
+  maxClusterRadius: number;
+}
+
+/** Fallback used when a mountain config omits the `map` section. */
+export const DEFAULT_MAP_CONFIG: MountainMapConfig = {
+  maxClusterRadius: 50,
+};
+
 export interface OAuthProviderConfig {
   google?: {
     clientId: string;
@@ -89,6 +105,7 @@ export interface MountainConfig {
   theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
+  map?: MountainMapConfig;
   secrets?: MountainSecrets;
 }
 
@@ -220,6 +237,15 @@ export function getYouTubeApiKey(): string {
 export function getMountainTheme(): MountainTheme {
   const config = getMountainConfig();
   return config.theme;
+}
+
+/**
+ * Get map configuration for the current mountain, falling back to
+ * `DEFAULT_MAP_CONFIG` when the `map` section (or a field) is omitted.
+ */
+export function getMapConfig(): MountainMapConfig {
+  const config = getMountainConfig();
+  return { ...DEFAULT_MAP_CONFIG, ...config.map };
 }
 
 /**
