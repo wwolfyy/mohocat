@@ -86,8 +86,12 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Desktop navigation */}
-      <nav className="hidden items-center gap-5 md:flex">
+      {/* Desktop navigation. Switches at `lg` (1024px), not `md`, so a phone in
+          landscape (~780px, just over `md`) keeps the one-line hamburger instead
+          of the full nav wrapping to two lines. Small tablets / narrow windows
+          (768–1023px) get the hamburger too — consistent with the mobile-first
+          direction. */}
+      <nav className="hidden items-center gap-5 lg:flex">
         <NavDropdown label="소개">
           <NavItem href="/pages/about" resourceId="about" label="산냥이와 집냥이" {...access} />
           <NavItem href="/pages/cats" resourceId="cats" label="냥이들" {...access} />
@@ -139,8 +143,8 @@ export default function Navigation() {
         </div>
       </nav>
 
-      {/* Mobile hamburger button */}
-      <div className="md:hidden">
+      {/* Mobile hamburger button (shown below `lg` — see the desktop nav note) */}
+      <div className="lg:hidden">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(

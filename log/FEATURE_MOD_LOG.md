@@ -15,6 +15,54 @@
 
 ---
 
+## 2026-07-05 — Mobile: portrait-only map (landscape rotate-notice) + one-line nav in landscape
+
+**Area:** `Navigation.tsx`, `MountainViewer.tsx`, `LeafletMountainMap.tsx`, new
+`hooks/useIsPhoneLandscape.ts` (removed `hooks/useIsPortrait.ts`) · **Type:** enhancement +
+simplification · **Branch:** `dev`
+
+### Change
+
+Two paired changes so the mobile app presents a **portrait-first** experience (like a native
+app), instead of adapting the whole UI to a cramped landscape:
+
+1. **Nav stays one line in landscape.** The desktop-nav breakpoint moved `md` (768px) → `lg`
+   (1024px). A phone in landscape (~780px, just over `md`) previously flipped to the full
+   desktop nav, which wrapped to two lines; it now keeps the one-line hamburger. The 768–1023px
+   band (small tablets / narrow windows) gets the hamburger too — accepted, consistent with the
+   mobile-first direction.
+2. **The map is portrait-only on phones.** A phone held in landscape is no longer given a
+   sideways/ballooned map; it gets a scoped, 해요체 notice — **지도는 세로 모드에서만 볼 수
+   있어요. 기기를 세로로 돌려주세요 🙂** — via the new `useIsPhoneLandscape()` hook
+   (`(orientation: landscape) and (max-height: 540px)`). The notice is **map-page-only**; the
+   rest of the app stays usable in landscape, and album/cat lightboxes (other pages) are
+   unaffected, so wide photos/videos can still be viewed rotated.
+
+Because the map is now portrait-only on phones, device and orientation coincide, so the map's
+**orientation machinery was deleted**: `useIsPortrait` and the map's separate `portrait` prop
+are gone — a single `isMobile` flag now drives the rotated-portrait image + coords, container
+aspect, compass, clustering, +/− buttons, and drag-gate. The `key={portrait}` remount-on-rotate
+is gone (the key is now the rotation-invariant device class).
+
+### Rationale
+
+The information architecture doesn't suit a horizontal phone layout, and true orientation-lock
+isn't available to a browser tab (no PWA/fullscreen). The web-equivalent is a portrait-first
+presentation with a rotate notice where landscape genuinely breaks (the map). Scoping the notice
+to the map — rather than a general "돌려주세요" — is honest and keeps the rest of the app working
+in landscape. Bonus: it removes the exact orientation code (image swap / coord rotation / remount)
+that the recent S22 map bugs churned through.
+
+### Verified
+
+`tsc --noEmit` clean + `npm run test:smoke` 25/25. Browser-verified in the iframe harness:
+**780×360** (phone landscape, home) → one-line hamburger nav (no 2-line desktop nav) + rotate
+notice shown; **390×800** (phone portrait, home) → map renders with 4 pins + 2 clusters, no
+notice; **900** (<1024) → hamburger; **1200** (≥1024) → full desktop nav returns. _(Real-device
+rotation feel — the physical landscape⇄portrait transition on an S22/Note 9 — stays device-owed.)_
+
+---
+
 ## 2026-07-04 — Mountain selector label: 계양산 냥이들 → 계양산
 
 **Area:** `config/mountains/mountains.json` (`geyang.name`) · **Type:** small fix ·

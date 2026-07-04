@@ -10,18 +10,18 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
-// Two image layouts, chosen by viewport *orientation* (not screen size) so the
-// image's long axis always aligns with the screen's long axis. Landscape
-// viewports (desktop, or a phone rotated to landscape) use the native landscape
-// still; portrait viewports use a pre-rotated (90° CW) portrait copy so the long
-// axis fills a tall phone screen (north then points right). With CRS.Simple the
-// map plane is the image's pixel grid addressed as [y, x]; bounds run
-// [0,0] → [height, width].
+// Two image layouts, chosen by device (`isMobile`), not live orientation. The
+// map is portrait-only on phones — a phone rotated to landscape gets a "rotate to
+// portrait" notice instead of a sideways map (see MountainViewer) — so a mobile
+// viewport always uses the pre-rotated (90° CW) portrait copy (long axis fills a
+// tall phone screen; north then points right) and desktop uses the native
+// landscape still. With CRS.Simple the map plane is the image's pixel grid
+// addressed as [y, x]; bounds run [0,0] → [height, width].
 const LANDSCAPE = { url: '/images/screenshot_mt_geyang_50.png', width: 1616, height: 808 };
 const PORTRAIT = { url: '/images/screenshot_mt_geyang_50_rot90cw.png', width: 808, height: 1616 };
 
-function getLayout(portrait: boolean): { url: string; bounds: LatLngBoundsExpression } {
-  const img = portrait ? PORTRAIT : LANDSCAPE;
+function getLayout(mobile: boolean): { url: string; bounds: LatLngBoundsExpression } {
+  const img = mobile ? PORTRAIT : LANDSCAPE;
   return {
     url: img.url,
     bounds: [
@@ -33,15 +33,15 @@ function getLayout(portrait: boolean): { url: string; bounds: LatLngBoundsExpres
 
 /**
  * Converts a point's stored percentages (x from left, y from top of the
- * landscape image) to a CRS.Simple [lat, lng]. In a portrait viewport the image
- * is rotated 90° CW, so the point rotates with it: x' = 1 − y (from left),
- * y' = x (from top). Either way lat is flipped (imageOverlay's [0,0] is the
- * bottom-left). Firebase / the `Point` model are untouched — render-time only.
+ * landscape image) to a CRS.Simple [lat, lng]. On mobile the image is the
+ * 90°-CW-rotated portrait copy, so the point rotates with it: x' = 1 − y (from
+ * left), y' = x (from top). Either way lat is flipped (imageOverlay's [0,0] is
+ * the bottom-left). Firebase / the `Point` model are untouched — render-time only.
  */
-function pointToLatLng(point: { x: number; y: number }, portrait: boolean): [number, number] {
+function pointToLatLng(point: { x: number; y: number }, mobile: boolean): [number, number] {
   const xf = point.x / 100;
   const yf = point.y / 100;
-  if (portrait) {
+  if (mobile) {
     return [(1 - xf) * PORTRAIT.height, (1 - yf) * PORTRAIT.width];
   }
   return [(1 - yf) * LANDSCAPE.height, xf * LANDSCAPE.width];
@@ -161,13 +161,11 @@ function PointMarkersLayer({
   markers,
   onSelect,
   isMobile,
-  portrait,
   maxClusterRadius,
 }: {
   markers: ResolvedMarker[];
   onSelect: (pointId: string) => void;
   isMobile: boolean;
-  portrait: boolean;
   maxClusterRadius: number;
 }) {
   const map = useMap();
@@ -206,11 +204,11 @@ function PointMarkersLayer({
     const bottomBand = 1 - 52 / containerHeight;
 
     markers.forEach((marker) => {
-      const [lat, lng] = pointToLatLng(marker, portrait);
-      // Vertical position in the displayed map (0 top → 1 bottom): landscape
-      // reads `y`; a portrait viewport reads `x` because the 90°-CW rotation maps
-      // landscape-x to the portrait's vertical axis.
-      const verticalFromTop = portrait ? marker.x / 100 : marker.y / 100;
+      const [lat, lng] = pointToLatLng(marker, isMobile);
+      // Vertical position in the displayed map (0 top → 1 bottom): desktop
+      // (landscape) reads `y`; mobile (rotated portrait) reads `x` because the
+      // 90°-CW rotation maps landscape-x to the portrait's vertical axis.
+      const verticalFromTop = isMobile ? marker.x / 100 : marker.y / 100;
       const labelAbove = verticalFromTop > bottomBand;
       const icon = L.divIcon({
         // `group` makes the whole marker the hover group for `group-hover:`
@@ -240,7 +238,7 @@ function PointMarkersLayer({
     return () => {
       layer.remove();
     };
-  }, [map, markers, onSelect, isMobile, portrait, maxClusterRadius]);
+  }, [map, markers, onSelect, isMobile, maxClusterRadius]);
 
   return null;
 }
@@ -358,19 +356,21 @@ function MapViewController({
 /**
  * Client-only Leaflet map that renders the mountain satellite image as a
  * pannable / zoomable overlay on a CRS.Simple plane (no tiles, no API keys),
- * with the feeding-point markers placed on top. Two orthogonal flags: `portrait`
- * (viewport orientation) picks the rotated-portrait vs landscape image + coords;
- * `isMobile` (small screen) gates clustering, drops the +/− buttons, and gates
- * touch drag. Must be loaded via a `dynamic(..., { ssr: false })` import —
- * Leaflet touches `window`.
+ * with the feeding-point markers placed on top. A single `isMobile` flag drives
+ * everything: on mobile it picks the rotated-portrait image + coords, clusters
+ * the markers, drops the +/− buttons, and gates touch drag. (The map is
+ * portrait-only on phones — a landscape phone gets a rotate notice from
+ * MountainViewer — so device and orientation coincide and one flag suffices.)
+ * Must be loaded via a `dynamic(..., { ssr: false })` import — Leaflet touches
+ * `window`.
  */
 interface LeafletMountainMapProps {
   points: Point[];
   catsByPoint: CatsByPoint;
   onPointClick: (pointId: string) => void;
+  /** Mobile → rotated-portrait image + coords, clustering, no +/− buttons,
+   *  gated drag; desktop → landscape image, un-clustered, +/− buttons. */
   isMobile: boolean;
-  /** Portrait viewport → the 90°-CW rotated image + rotated coords. */
-  portrait: boolean;
   /** Mobile marker-clustering radius in px (see `MountainMapConfig`). */
   maxClusterRadius: number;
 }
@@ -380,18 +380,18 @@ export default function LeafletMountainMap({
   catsByPoint,
   onPointClick,
   isMobile,
-  portrait,
   maxClusterRadius,
 }: LeafletMountainMapProps) {
   const markers = usePointMarkers(points, catsByPoint);
-  const { url, bounds } = getLayout(portrait);
+  const { url, bounds } = getLayout(isMobile);
 
   return (
     <MapContainer
-      // Remount when the orientation flips: the CRS-plane bounds and the image
-      // differ between the landscape and rotated-portrait layouts, and a live
-      // Leaflet map can't swap those in place.
-      key={portrait ? 'portrait' : 'landscape'}
+      // Remount when the device class flips (width crosses the mobile
+      // breakpoint): the CRS-plane bounds and the image differ between the
+      // landscape and rotated-portrait layouts, and a live Leaflet map can't swap
+      // those in place.
+      key={isMobile ? 'mobile' : 'desktop'}
       crs={CRS.Simple}
       bounds={bounds}
       maxBounds={bounds}
@@ -422,7 +422,6 @@ export default function LeafletMountainMap({
         markers={markers}
         onSelect={onPointClick}
         isMobile={isMobile}
-        portrait={portrait}
         maxClusterRadius={maxClusterRadius}
       />
     </MapContainer>

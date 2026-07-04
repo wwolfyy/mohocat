@@ -7,7 +7,7 @@ import IntroCard from './IntroCard';
 import Compass from './Compass';
 import CatGallery from './CatGallery';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useIsPortrait } from '@/hooks/useIsPortrait';
+import { useIsPhoneLandscape } from '@/hooks/useIsPhoneLandscape';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
 import { getMapConfig } from '@/utils/config';
 
@@ -37,13 +37,13 @@ interface MountainViewerProps {
 export default function MountainViewer({ points, catsByPoint }: MountainViewerProps) {
   // Which feeding point's cat gallery is open (clicked marker → modal).
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
-  // Two orthogonal viewport flags:
-  //  • portrait (orientation) → the 90°-CW-rotated portrait map (image + coords
-  //    + compass + container aspect) so the map's long axis always aligns with
-  //    the screen's long axis — including a phone rotated to landscape.
-  //  • isMobile (width) → marker clustering, no +/− buttons, touch-drag gating.
+  // The map is portrait-only on phones. `isMobile` (width) drives the whole
+  // mobile map — the 90°-CW-rotated portrait image + coords + compass + container
+  // aspect, plus clustering, no +/− buttons, and touch-drag gating. A phone held
+  // in landscape isn't given a sideways map; it gets the rotate-to-portrait
+  // notice below (`isPhoneLandscape`).
   const isMobile = useIsMobile();
-  const portrait = useIsPortrait();
+  const isPhoneLandscape = useIsPhoneLandscape();
   // Per-mountain map tunables (marker-clustering radius) — config-driven so the
   // value can be changed without a code edit (config/mountains/mountains.json).
   const { maxClusterRadius } = getMapConfig();
@@ -68,19 +68,44 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
     }
   }, [catsByPoint]);
 
+  // A phone in landscape can't show the portrait-only map, so instead of a
+  // sideways/ballooned map we show a scoped "rotate to portrait" notice (the rest
+  // of the app stays usable in landscape — this is map-only). Album/cat lightboxes
+  // live on other pages and are unaffected.
+  if (isPhoneLandscape) {
+    return (
+      <div className="flex min-h-[80dvh] flex-col items-center justify-center px-6 text-center">
+        <svg
+          className="mb-4 h-10 w-10 text-brand"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="7" y="2" width="10" height="20" rx="2" />
+          <path d="M11 18h2" />
+        </svg>
+        <p className="text-lg font-semibold text-gray-900">지도는 세로 모드에서만 볼 수 있어요.</p>
+        <p className="mt-1 text-gray-600">기기를 세로로 돌려주세요 🙂</p>
+      </div>
+    );
+  }
+
   return (
     // Always fill the viewport width; height follows the image's aspect ratio so
     // the map fills the frame at default zoom with no letterbox — landscape 2:1
-    // in a landscape viewport, rotated portrait 1:2 in a portrait one (so it
-    // fills a tall screen). On short windows the map can extend a little below
-    // the fold (minor scroll). `left-1/2 -translate-x-1/2` breaks out of the
-    // page's horizontal padding.
+    // on desktop, rotated portrait 1:2 on mobile (so it fills a tall screen). On
+    // short windows the map can extend a little below the fold (minor scroll).
+    // `left-1/2 -translate-x-1/2` breaks out of the page's horizontal padding.
     <>
       <div
         className="relative left-1/2 -translate-x-1/2"
         style={{
           width: '100vw',
-          aspectRatio: portrait ? '808 / 1616' : '1616 / 808',
+          aspectRatio: isMobile ? '808 / 1616' : '1616 / 808',
         }}
       >
         <LeafletMountainMap
@@ -88,12 +113,11 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           catsByPoint={catsByPoint}
           onPointClick={setSelectedPointId}
           isMobile={isMobile}
-          portrait={portrait}
           maxClusterRadius={maxClusterRadius}
         />
 
         {/* North indicator pinned top-right of the map (redesign §Engine). */}
-        <Compass portrait={portrait} />
+        <Compass portrait={isMobile} />
 
         {/* Dismissible nudge floating over the map's bottom-left (redesign §1) */}
         <IntroCard />

@@ -123,19 +123,30 @@ those are the forward plan.
 - [x] **Content pages** — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good
       typography/spacing at 390. No fixes needed.
 - [~] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
-  S22 bugs (DEBUG_LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
+  S22 bugs (DEBUG*LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
   clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
-  image now chosen by **orientation** (`useIsPortrait`) not width, so the map's long axis
-  always aligns with the screen's; (3) map ate page scroll → on mobile, one-finger swipe
-  scrolls the page (drag disabled at fill) and map-drag engages only when zoomed in.
-  Harness-verified; **device-owed:** pinch-out clamp feel, one-finger scroll, zoom-then-pan
-  on a real S22.
+  *(originally: image chosen by orientation via `useIsPortrait`; **superseded** by Pass 3 —
+  the map is now portrait-only on phones, so the landscape-map path is gone entirely)\_;
+  (3) map ate page scroll → on mobile, one-finger swipe scrolls the page (drag disabled at
+  fill) and map-drag engages only when zoomed in. Harness-verified; **device-owed:** pinch-out
+  clamp feel, one-finger scroll, zoom-then-pan on a real S22.
+- [x] **Map pinch-bounce pin loss — S22 (2026-07-05, DEBUG_LOG).** ✅ S22-verified by owner.
+      `bounceAtZoomLimits={false}` hard-stops a pinch at fill instead of overshooting +
+      bouncing back; the transient sub-fill excursion (which merged the thumbnail pins into
+      clusters, with an intermittently-failing re-split on the S22) is gone.
+- [x] **Portrait-only mobile map + one-line landscape nav (2026-07-05, FEATURE_MOD_LOG).**
+      A phone in landscape gets a scoped 해요체 rotate-notice (지도는 세로 모드에서만…) instead of
+      a sideways map; the nav breakpoint moved `md`→`lg` so the header stays one line in
+      landscape. This **removed** the map's orientation machinery (`useIsPortrait`, the
+      `portrait` prop, image/coord swap, and the `key={portrait}` remount) — device and
+      orientation now coincide behind a single `isMobile` flag. Harness-verified; real-device
+      rotation _feel_ still device-owed.
 - [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
       (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
 - [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix
-      (2026-07-02, `MapViewController`) now re-fits + re-clamps min-zoom on resize; the
-      landscape↔portrait boundary remounts on `key={portrait}`. Confirm the transition feels
-      clean on a real device rotation.
+      (2026-07-02, `MapViewController`) re-fits + re-clamps min-zoom on resize. _(The old
+      landscape↔portrait `key={portrait}` remount is gone — the map is portrait-only on phones;
+      landscape shows the rotate-notice.)_ Confirm resize/re-fit feels clean on a real device.
 - [ ] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
       (replace hover-reveal with always-visible or tap states) — spot-checks passed in Pass 1;
       full sweep incl. map pin hover-reveal is device-owed.
