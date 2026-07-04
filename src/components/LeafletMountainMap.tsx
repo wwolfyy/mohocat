@@ -173,6 +173,16 @@ function PointMarkersLayer({
   const map = useMap();
 
   useEffect(() => {
+    // markercluster builds its cluster grid (in addTo below) from the map's
+    // *current* minZoom up. Because we clamp minZoom to the exact fill zoom (so a
+    // pinch can't zoom out past fill — see MapViewController), the default view
+    // lands on the grid's bottom level, where every marker merges into the top
+    // cluster and no individual pins show. Temporarily drop minZoom while the grid
+    // is built so it spans well below fill and keeps a level at the display zoom
+    // (pins render); then restore the hard fill clamp.
+    const restoreMinZoom = map.getMinZoom();
+    if (isMobile) map.setMinZoom(restoreMinZoom - 4);
+
     const layer = isMobile
       ? L.markerClusterGroup({
           // Spiderfy-first: tap a cluster to fan its members out, rather than
@@ -225,6 +235,7 @@ function PointMarkersLayer({
     }
 
     layer.addTo(map);
+    if (isMobile) map.setMinZoom(restoreMinZoom); // restore the hard fill clamp
 
     return () => {
       layer.remove();
@@ -249,34 +260,25 @@ function MapViewController({
   const map = useMap();
 
   useEffect(() => {
-    // Fit the image to the viewport AND clamp zoom-out to ~that "fill" level, so
-    // a pinch can't zoom out far and expose big grey margins. getBoundsZoom is the
-    // exact fill zoom (the container's aspect ratio matches the image, so no
-    // letterbox); the default view sits there. We clamp minZoom to its *floor*,
-    // not the exact (fractional) value, because leaflet.markercluster builds its
-    // cluster grids at INTEGER zoom levels down to map.getMinZoom() — a fractional
-    // minZoom leaves no grid level at the display zoom, so every marker collapses
-    // into the top cluster (no individual pins). Flooring keeps a grid level at
-    // the display zoom (pins show) at the cost of allowing a pinch ~1 level below
-    // fill (a hair of grey) — a good trade vs. the old minZoom of -3.
-    // The exact fill zoom (fractional), kept up to date by applyFit — the
-    // reference for "is the user zoomed in past fill?" (minZoom is its *floor*,
-    // so it can't serve as that reference; see below).
+    // Fill = the zoom that shows the whole image with no letterbox (the container
+    // aspect matches the image); the default view sits there. Clamp minZoom to it
+    // *exactly* so a pinch can't zoom out past fill and expose grey margins — a
+    // true hard stop on every device (an earlier floor()+snap-back left a lingering
+    // grey zoom-out on some, e.g. S22). markercluster's dependence on minZoom (which
+    // would otherwise collapse all pins at this bottom zoom) is handled where the
+    // cluster grid is built — see PointMarkersLayer.
     let fillZoom = map.getBoundsZoom(bounds);
     const applyFit = () => {
       fillZoom = map.getBoundsZoom(bounds);
-      map.setMinZoom(Math.floor(fillZoom));
+      map.setMinZoom(fillZoom);
       map.fitBounds(bounds);
     };
     applyFit();
 
-    // Mobile touch scroll: a one-finger swipe should scroll the PAGE, not pan
-    // the map. Leaflet's one-finger drag otherwise captures vertical swipes (and
-    // sets touch-action:none), trapping the page behind the full-height map. So
-    // at fill we keep dragging disabled (restoring touch-action → the page
-    // scrolls) and only enable it once the user has zoomed in past fill, where
-    // there is actually room to pan. Gate on the exact fill zoom (not minZoom,
-    // which is floored below fill). Desktop keeps its default drag + the wheel
+    // Mobile touch scroll: keep one-finger drag disabled at fill (so a swipe
+    // scrolls the PAGE, not pans the map — Leaflet drag otherwise captures vertical
+    // swipes and sets touch-action:none) and enable it only when zoomed in past
+    // fill, where there is room to pan. Desktop keeps its default drag + the wheel
     // pass-through below.
     const syncDrag = () => {
       if (!isMobile) return;

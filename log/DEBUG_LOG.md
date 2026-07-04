@@ -11,6 +11,49 @@
 
 ---
 
+## 2026-07-04 — Mobile map: zoom-out grey persisted on S22 (device-dependent floor clamp) + pins
+
+**Area:** `LeafletMountainMap.tsx` (`MapViewController` + `PointMarkersLayer`) · **Branch:**
+`dev` · **Severity:** medium (mobile UX) · **Status:** ✅ fixed · **Supersedes** the
+`Math.floor` clamp in the entry below.
+
+### Symptom
+
+The zoom-out restriction worked on a Galaxy Note 9 (map hard-stops at fit) but **not on an
+S22**: on the S22 a pinch-out left the map resting zoomed-out with grey margins.
+
+### Root cause
+
+The previous fix clamped `minZoom = Math.floor(fillZoom)`. The floor's distance below the
+exact (fractional) fill zoom depends on where `fillZoom` falls between integers, which depends
+on the device's viewport size. On the Note 9 `floor(fillZoom) ≈ fillZoom` (hard stop at fit);
+on the S22 the floor sat ~1 zoom level below fill, so the map could rest there showing grey.
+`Math.floor` was used because clamping to the _exact_ fractional fill made `leaflet.markercluster`
+collapse every marker into the top cluster (no individual cat pins) — a real tension: exact
+clamp = no pins, floor = device-dependent grey.
+
+### Fix
+
+Break the tension by decoupling the two needs:
+
+- **Zoom limit:** clamp `minZoom` to the **exact** `fillZoom` → a true hard stop at fit on
+  every device (no grey, no floor, no snap-back — a `zoomend` snap-back was tried and abandoned:
+  Leaflet swallows a `setZoom` issued from within a `zoomend` handler).
+- **Pins:** in `PointMarkersLayer`, **temporarily lower `minZoom` (−4) while the cluster grid
+  is built** (`layer.addTo(map)` → markercluster reads `map.getMinZoom()` for its grid range),
+  then restore the exact clamp. The grid then spans below fill and keeps a level at the display
+  zoom, so the 4 individual pins + 2 clusters render — while the map still can't zoom out past
+  fill.
+
+### Verified
+
+`tsc --noEmit` clean + `npm run test:smoke` 25/25. Real tab (410×776 portrait), via an exposed
+map handle: `setZoom(-2)` holds at fill (−0.979), image fills (no grey); default shows 4 pins +
+2 clusters; drag disabled at fill (`touch-action: pan-x pan-y`, page scrolls) and enabled when
+zoomed in (`touch-action: none`, map pans). Device-independent — no Note 9 vs S22 divergence.
+
+---
+
 ## 2026-07-04 — Mobile map: cat-thumbnail pins vanished at default zoom (min-zoom clamp regression)
 
 **Area:** `LeafletMountainMap.tsx` (`MapViewController`) · **Branch:** `dev` · **Severity:**
