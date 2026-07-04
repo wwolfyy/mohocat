@@ -89,7 +89,12 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           <path d="M11 18h2" />
         </svg>
         <p className="text-lg font-semibold text-gray-900">지도는 세로 모드에서만 볼 수 있어요.</p>
-        <p className="mt-1 text-gray-600">기기를 세로로 돌려주세요 🙂</p>
+        <p className="mt-1 text-gray-600">
+          기기를 세로로 돌려주세요{' '}
+          <span className="ml-1 inline-block animate-cat-roll text-xl" aria-hidden="true">
+            🐈
+          </span>
+        </p>
       </div>
     );
   }

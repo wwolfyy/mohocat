@@ -70,6 +70,13 @@ body {
     animation: bounce-gentle 2s ease-in-out infinite;
   }
 
+  /* Tumbling cat — rolls right then back, a playful nudge to rotate the device
+     (used in the map's portrait-only landscape notice). */
+  .animate-cat-roll {
+    animation: cat-roll 2.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+
   /* Modal entrance: frosted backdrop fades, card scales/fades in. */
   .animate-modal-backdrop {
     animation: modal-backdrop-enter 0.2s ease-out;
@@ -163,6 +170,29 @@ body {
 
   50% {
     opacity: 0.8;
+  }
+}
+
+/* Rolls right (clockwise) then back left (counter-clockwise) so it reads as a
+   cat physically tumbling side to side, not sliding. */
+@keyframes cat-roll {
+  0% {
+    transform: translateX(-0.35em) rotate(0deg);
+  }
+
+  50% {
+    transform: translateX(0.35em) rotate(360deg);
+  }
+
+  100% {
+    transform: translateX(-0.35em) rotate(0deg);
+  }
+}
+
+/* Respect reduced-motion: hold the cat still instead of looping forever. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-cat-roll {
+    animation: none;
   }
 }
 
