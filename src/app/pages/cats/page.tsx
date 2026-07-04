@@ -42,7 +42,7 @@ export default async function CatsPage() {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">냥이들</h1>
         <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
-        <p className="mt-4 text-gray-600">계양산에서 살아가는 냥이들을 한눈에 만나 보세요.</p>
+        <p className="mt-4 text-gray-600">계양산 냥이들을 한눈에 만나 보세요.</p>
       </div>
 
       {/* Body states */}
