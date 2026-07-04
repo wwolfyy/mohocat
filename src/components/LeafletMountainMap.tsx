@@ -396,6 +396,14 @@ export default function LeafletMountainMap({
       bounds={bounds}
       maxBounds={bounds}
       maxBoundsViscosity={1}
+      // Hard-stop a pinch AT the zoom limits instead of overshooting and bouncing
+      // back. Default (true) lets a pinch-out travel *below* minZoom (= the fill
+      // zoom) mid-gesture; markercluster reacts to that transient sub-fill zoom by
+      // merging the standalone thumbnail pins into clusters, and the bounce-back's
+      // re-split intermittently fails on some devices (S22 vs Note 9) — leaving the
+      // cat-thumbnail pins gone while the number clusters persist. false clamps the
+      // pinch at fill so that excursion never happens.
+      bounceAtZoomLimits={false}
       // Floor before MapViewController clamps minZoom to the exact fill zoom.
       minZoom={-3}
       maxZoom={2}
