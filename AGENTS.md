@@ -60,12 +60,19 @@ deep detail this file deliberately keeps out:
 
 - **The app reads Firestore live**, through the service layer — there is **no** static-data
   read path and **no** Cloud Storage data serving.
-- **Home page is a Server Component** (`src/app/page.tsx`): it `await`s
-  `getPointService().getAllPoints()` with no `dynamic`/`revalidate`, so Next statically
-  renders it and **point/marker positions are baked at build**.
-- **Cat data is fetched client-side, live** (e.g. `MountainViewer` / `thumbnailPreloader`
-  call `getCatsByPointId` after hydration). Reducing this client-side Firestore waterfall is
-  tracked tech-debt (PROJECT_PLAN §7a — "bake the data layer"); not yet implemented.
+- **Home page is a Server Component** (`src/app/page.tsx`): it `await`s **points and cats
+  together** server-side (`getAllPoints()` + `getAllCatsServer()`) and passes them to the
+  client map as props. It sets `export const revalidate = REVALIDATE_SECONDS` (3600s / 1h) —
+  so it's **ISR, not baked-at-build**: a Firestore point-coordinate or cat edit reflects
+  **without a redeploy** (≤1h via the time backstop; admin **cat** edits also fire on-demand
+  `revalidatePath('/')` for an immediate refresh — point edits rely on the ≤1h backstop).
+- **§7a "bake the data layer" is done for the landing map**: cat avatars are server-read and
+  baked into the render, so the map makes **zero client Firestore queries** for avatars —
+  `MountainViewer` receives `catsByPoint` as a prop and no longer calls `getCatsByPointId`
+  after hydration. (`thumbnailPreloader` remains for image preloading.)
+  - **Config knobs are a different mental model — still baked.** `mountains.json` (theme,
+    features, `map.*`) is a static import, so those change **only on redeploy**; Firestore
+    data (points/cats) is ISR-fresh per above.
 - **Build assets**: `scripts/maintenance/fetch-static-assets.js` downloads cat thumbnails /
   about-photos from Firebase Storage into `public/` at build time.
 
@@ -114,11 +121,11 @@ npm run test:smoke         # Fast structural smoke suite (gate for refactors/cle
 
 ## Critical Component Patterns
 
-- **Server-render the slow-changing reads, client-fetch the rest.** The home page
-  (`src/app/page.tsx`) is an `async` Server Component that `await`s
-  `getPointService().getAllPoints()` (no `dynamic`/`revalidate` → baked at build). Cat data
-  is fetched client-side, live, via the service layer (`getCatsByPointId` in a
-  post-hydration effect).
+- **Server-render the data, ISR-refresh it.** The home page (`src/app/page.tsx`) is an
+  `async` Server Component that `await`s **points and cats together** server-side
+  (`getAllPoints()` + `getAllCatsServer()`) and passes them to the client map as props. It
+  sets `revalidate = REVALIDATE_SECONDS` (3600s), so Firestore edits reflect within ≤1h
+  without a redeploy (admin cat edits also trigger on-demand `revalidatePath('/')`).
 - **Always go through the service factory.** Components call `getCatService()`,
   `getImageService()`, etc. from `@/services` — never `import` from `firebase/*` directly.
   (See `docs/codebase/services-layer.md` for the full pattern.)

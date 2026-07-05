@@ -150,8 +150,9 @@ those are the forward plan.
       (floor-vs-exact, temp-lower-minZoom, `bounceAtZoomLimits`) kept reopening it. Static grouping
       is computed once → no grid → device-independent by construction. Harness-verified (render,
       spiderfy, collapse-on-tap/zoom, member→gallery) + 8 unit tests; **real-S22 pinch owed.**
-  - [ ] **Cleanup: `npm uninstall leaflet.markercluster`** — now a dead dependency (import +
-        CSS removed). Left in `package.json` to keep the fix focused; drop it in a cleanup pass.
+  - [x] **Cleanup: `npm uninstall leaflet.markercluster`** (2026-07-05) — dead dependency
+        removed (`leaflet.markercluster` + `@types/leaflet.markercluster`); only explanatory
+        comments remain in source. Gates green (tsc, smoke 25/25, full 39/39).
 - [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
       (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
 - [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix
