@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import type { Point } from '@/types';
 import type { CatsByPoint } from '@/lib/server/cat-reads';
 import IntroCard from './IntroCard';
@@ -75,26 +76,20 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
   if (isPhoneLandscape) {
     return (
       <div className="flex min-h-[80dvh] flex-col items-center justify-center px-6 text-center">
-        <svg
-          className="mb-4 h-10 w-10 text-brand"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        {/* Playful rolling cat — decorative, so `unoptimized` keeps the GIF
+            animated (Next's image optimizer would otherwise flatten it to a
+            single frame). */}
+        <Image
+          src="/images/chubby-cat.gif"
+          alt=""
           aria-hidden="true"
-        >
-          <rect x="7" y="2" width="10" height="20" rx="2" />
-          <path d="M11 18h2" />
-        </svg>
+          width={69}
+          height={56}
+          unoptimized
+          className="mb-4 h-14 w-auto"
+        />
         <p className="text-lg font-semibold text-gray-900">지도는 세로 모드에서만 볼 수 있어요.</p>
-        <p className="mt-1 text-gray-600">
-          기기를 세로로 돌려주세요{' '}
-          <span className="ml-1 inline-block animate-cat-roll text-xl" aria-hidden="true">
-            🐈
-          </span>
-        </p>
+        <p className="mt-1 text-gray-600">기기를 세로로 돌려주세요</p>
       </div>
     );
   }
