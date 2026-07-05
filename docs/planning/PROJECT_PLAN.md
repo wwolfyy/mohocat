@@ -141,6 +141,17 @@ those are the forward plan.
       `portrait` prop, image/coord swap, and the `key={portrait}` remount) — device and
       orientation now coincide behind a single `isMobile` flag. Harness-verified; real-device
       rotation _feel_ still device-owed.
+- [x] **Static clustering — durable fix for the recurring pin loss (2026-07-05, DEBUG_LOG).**
+      Replaced `leaflet.markercluster` on mobile with our own **zoom-independent** proximity
+      clustering (`utils/mapClustering.ts`) + tap-to-spiderfy. Root cause of the recurring
+      S22-only breakage (pins vanishing / drawn outside the map / stuck pan): markercluster's
+      integer cluster grid fought our fractional/mutated `CRS.Simple` min-zoom clamp, and which
+      device tripped it depended on where `fillZoom` landed vs the grid — so every prior shim
+      (floor-vs-exact, temp-lower-minZoom, `bounceAtZoomLimits`) kept reopening it. Static grouping
+      is computed once → no grid → device-independent by construction. Harness-verified (render,
+      spiderfy, collapse-on-tap/zoom, member→gallery) + 8 unit tests; **real-S22 pinch owed.**
+  - [ ] **Cleanup: `npm uninstall leaflet.markercluster`** — now a dead dependency (import +
+        CSS removed). Left in `package.json` to keep the fix focused; drop it in a cleanup pass.
 - [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
       (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
 - [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix

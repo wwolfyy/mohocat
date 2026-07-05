@@ -29,10 +29,11 @@ export interface MountainSocial {
 export interface MountainMapConfig {
   /**
    * Marker-clustering distance for the mobile map, in **screen pixels** at the
-   * current zoom: markers within this radius of each other collapse into one
-   * cluster (passed straight to leaflet.markercluster's `maxClusterRadius`).
-   * Larger = collapses points that are farther apart; smaller = keeps them
-   * separate longer. Desktop is un-clustered, so this only affects mobile.
+   * fill/default view: points within this radius of each other collapse into one
+   * cluster (used by the static clusterer in `utils/mapClustering` — the grouping
+   * is computed once and never re-clustered on zoom). Larger = collapses points
+   * that are farther apart; smaller = keeps them separate longer. Desktop is
+   * un-clustered, so this only affects mobile.
    */
   maxClusterRadius: number;
 }

@@ -3,12 +3,10 @@
 import { useEffect, useMemo } from 'react';
 import { MapContainer, ImageOverlay, useMap } from 'react-leaflet';
 import L, { CRS, type LatLngBoundsExpression } from 'leaflet';
-import 'leaflet.markercluster'; // side-effect: augments L with markerClusterGroup
 import type { Point } from '@/types';
 import type { CatsByPoint } from '@/lib/server/cat-reads';
+import { greedyClusterByRadius, spiderfyRadius } from '@/utils/mapClustering';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 // Two image layouts, chosen by device (`isMobile`), not live orientation. The
 // map is portrait-only on phones — a phone rotated to landscape gets a "rotate to
@@ -140,22 +138,29 @@ function buildClusterHtml(count: number): string {
     </div>`;
 }
 
-function createClusterIcon(cluster: L.MarkerCluster): L.DivIcon {
+function createClusterIcon(count: number): L.DivIcon {
   return L.divIcon({
     className: 'mohocat-cluster',
-    html: buildClusterHtml(cluster.getChildCount()),
+    html: buildClusterHtml(count),
     iconSize: [44, 44],
     iconAnchor: [22, 22],
   });
 }
 
 /**
- * Imperatively renders the feeding-point markers. On desktop (`isMobile`
- * false) they go into a plain `L.layerGroup` (un-clustered, entrance pop on);
- * on mobile into an `L.markerClusterGroup` (clustered, pop off so cluster
- * rebuilds don't re-fire it). Each point's stored percentage coords convert to
- * CRS.Simple image-pixel LatLng via `pointToLatLng` (which also applies the
- * 90°-CW rotation on mobile). Clusters spiderfy on tap.
+ * Imperatively renders the feeding-point markers into a plain `L.layerGroup`.
+ * Each point's stored percentage coords convert to a CRS.Simple image-pixel
+ * LatLng via `pointToLatLng` (which also applies the 90°-CW rotation on mobile).
+ *
+ * On desktop every point is a stand-alone pin (entrance pop on). On mobile the
+ * points are **statically clustered** — grouped once, by pixel proximity in the
+ * fill/default view (`utils/mapClustering`), *never* re-clustered on zoom. This
+ * replaced `leaflet.markercluster`, whose zoom-keyed integer cluster grid fought
+ * our fractional/mutated `CRS.Simple` zoom and broke device-dependently (pins
+ * vanishing / drawn outside the map / stuck pan on the S22; see DEBUG_LOG). A
+ * multi-point cluster shows a count badge; tapping it fans the members out on a
+ * ring (spiderfy) so each cat is reachable — the fan collapses on a background
+ * tap or any zoom change (it is positioned in screen space at the open zoom).
  */
 function PointMarkersLayer({
   markers,
@@ -171,29 +176,7 @@ function PointMarkersLayer({
   const map = useMap();
 
   useEffect(() => {
-    // markercluster builds its cluster grid (in addTo below) from the map's
-    // *current* minZoom up. Because we clamp minZoom to the exact fill zoom (so a
-    // pinch can't zoom out past fill — see MapViewController), the default view
-    // lands on the grid's bottom level, where every marker merges into the top
-    // cluster and no individual pins show. Temporarily drop minZoom while the grid
-    // is built so it spans well below fill and keeps a level at the display zoom
-    // (pins render); then restore the hard fill clamp.
-    const restoreMinZoom = map.getMinZoom();
-    if (isMobile) map.setMinZoom(restoreMinZoom - 4);
-
-    const layer = isMobile
-      ? L.markerClusterGroup({
-          // Spiderfy-first: tap a cluster to fan its members out, rather than
-          // zooming. We trigger spiderfy manually (below) so it works at any
-          // zoom; disableClusteringAtZoom is intentionally left unset.
-          zoomToBoundsOnClick: false,
-          spiderfyOnMaxZoom: false,
-          showCoverageOnHover: false,
-          // Per-mountain (config/mountains/mountains.json → map.maxClusterRadius).
-          maxClusterRadius,
-          iconCreateFunction: createClusterIcon,
-        })
-      : L.layerGroup();
+    const layer = L.layerGroup();
 
     // A label below the avatar needs ~52px of clearance (half-avatar + gap +
     // label height). Flip it above only for pins whose displayed position is
@@ -203,39 +186,130 @@ function PointMarkersLayer({
     const containerHeight = map.getSize().y || 800;
     const bottomBand = 1 - 52 / containerHeight;
 
-    markers.forEach((marker) => {
-      const [lat, lng] = pointToLatLng(marker, isMobile);
-      // Vertical position in the displayed map (0 top → 1 bottom): desktop
-      // (landscape) reads `y`; mobile (rotated portrait) reads `x` because the
-      // 90°-CW rotation maps landscape-x to the portrait's vertical axis.
-      const verticalFromTop = isMobile ? marker.x / 100 : marker.y / 100;
-      const labelAbove = verticalFromTop > bottomBand;
+    // Displayed vertical position (0 top → 1 bottom): desktop (landscape) reads
+    // `y`; mobile (rotated portrait) reads `x` because the 90°-CW rotation maps
+    // landscape-x to the portrait's vertical axis.
+    const wantsLabelAbove = (m: ResolvedMarker) => (isMobile ? m.x / 100 : m.y / 100) > bottomBand;
+
+    // A thumbnail pin at an explicit LatLng — real position for a stand-alone
+    // point, spider-ring position for a fanned-out cluster member. Entrance pop
+    // only on desktop (layer built once); on mobile it's off so a spiderfy
+    // (which recreates the pin) doesn't re-fire it.
+    const makePin = (m: ResolvedMarker, latlng: L.LatLngExpression) => {
       const icon = L.divIcon({
         // `group` makes the whole marker the hover group for `group-hover:`
         // (the label/pointer are DOM descendants, so they trigger it too even
         // though they visually overflow the 40×40 icon box).
         className: 'mohocat-pin group',
-        // Entrance pop only on desktop: there the layer is built once. On mobile
-        // cluster/spiderfy rebuilds would re-fire it, so it's off.
-        html: buildMarkerHtml(marker, !isMobile, labelAbove),
+        html: buildMarkerHtml(m, !isMobile, wantsLabelAbove(m)),
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
-      const leafletMarker = L.marker([lat, lng], { icon, title: marker.title });
-      leafletMarker.on('click', () => onSelect(marker.id));
-      layer.addLayer(leafletMarker);
-    });
+      const leafletMarker = L.marker(latlng, { icon, title: m.title });
+      leafletMarker.on('click', () => onSelect(m.id));
+      return leafletMarker;
+    };
 
-    if (layer instanceof L.MarkerClusterGroup) {
-      layer.on('clusterclick', (event) => {
-        (event.propagatedFrom as L.MarkerCluster).spiderfy();
+    if (!isMobile) {
+      markers.forEach((m) => {
+        const [lat, lng] = pointToLatLng(m, false);
+        layer.addLayer(makePin(m, [lat, lng]));
       });
+      layer.addTo(map);
+      return () => {
+        layer.remove();
+      };
     }
 
+    // --- Mobile: static, zoom-independent clustering -----------------------
+    // Project every point to a fixed pixel space (the fill/default view) and
+    // group by pixel radius *once*. This never re-runs on zoom, so there is no
+    // cluster grid for a device to desync (the whole point of the rewrite).
+    const refZoom = map.getBoundsZoom(map.options.maxBounds as L.LatLngBounds);
+    const latlngs = markers.map((m) => {
+      const [lat, lng] = pointToLatLng(m, true);
+      return L.latLng(lat, lng);
+    });
+    const pixels = latlngs.map((ll) => {
+      const p = map.project(ll, refZoom);
+      return { x: p.x, y: p.y };
+    });
+    const clusters = greedyClusterByRadius(pixels, maxClusterRadius);
+
+    // At most one cluster is spiderfied (fanned out) at a time.
+    let expanded: { owner: L.Marker; collapse: () => void } | null = null;
+    const collapse = () => {
+      if (expanded) {
+        expanded.collapse();
+        expanded = null;
+      }
+    };
+
+    const spiderfy = (memberIdx: number[], centerLatLng: L.LatLng, badge: L.Marker) => {
+      const n = memberIdx.length;
+      const centerPt = map.latLngToLayerPoint(centerLatLng);
+      const ringR = spiderfyRadius(n);
+      const added: L.Layer[] = [];
+      memberIdx.forEach((idx, i) => {
+        const angle = (2 * Math.PI * i) / n - Math.PI / 2; // first member points up
+        const pt = L.point(
+          centerPt.x + ringR * Math.cos(angle),
+          centerPt.y + ringR * Math.sin(angle)
+        );
+        const spokeLatLng = map.layerPointToLatLng(pt);
+        const leg = L.polyline([centerLatLng, spokeLatLng], {
+          weight: 1.5,
+          color: '#6b7280',
+          opacity: 0.5,
+          interactive: false,
+        });
+        const pin = makePin(markers[idx], spokeLatLng);
+        layer.addLayer(leg);
+        layer.addLayer(pin);
+        added.push(leg, pin);
+      });
+      badge.setOpacity(0); // hide the count badge while the members are fanned out
+      expanded = {
+        owner: badge,
+        collapse: () => {
+          added.forEach((l) => layer.removeLayer(l));
+          badge.setOpacity(1);
+        },
+      };
+    };
+
+    clusters.forEach((cluster) => {
+      if (cluster.memberIndices.length === 1) {
+        const idx = cluster.memberIndices[0];
+        layer.addLayer(makePin(markers[idx], latlngs[idx]));
+        return;
+      }
+      const centerLatLng = map.unproject(L.point(cluster.cx, cluster.cy), refZoom);
+      const count = cluster.memberIndices.length;
+      const badge = L.marker(centerLatLng, {
+        icon: createClusterIcon(count),
+        title: `고양이 급식소 ${count}곳 — 펼치기`,
+      });
+      badge.on('click', () => {
+        const reopeningSame = expanded?.owner === badge;
+        collapse();
+        if (!reopeningSame) spiderfy(cluster.memberIndices, centerLatLng, badge);
+      });
+      layer.addLayer(badge);
+    });
+
+    // The spider ring is placed in screen space at the zoom it opened at, so
+    // collapse it on any zoom change; also collapse on a background tap. (Marker
+    // clicks don't propagate to the map, so tapping a badge/pin won't self-close.)
+    map.on('zoomstart', collapse);
+    map.on('click', collapse);
+
     layer.addTo(map);
-    if (isMobile) map.setMinZoom(restoreMinZoom); // restore the hard fill clamp
 
     return () => {
+      map.off('zoomstart', collapse);
+      map.off('click', collapse);
+      collapse();
       layer.remove();
     };
   }, [map, markers, onSelect, isMobile, maxClusterRadius]);
@@ -398,11 +472,10 @@ export default function LeafletMountainMap({
       maxBoundsViscosity={1}
       // Hard-stop a pinch AT the zoom limits instead of overshooting and bouncing
       // back. Default (true) lets a pinch-out travel *below* minZoom (= the fill
-      // zoom) mid-gesture; markercluster reacts to that transient sub-fill zoom by
-      // merging the standalone thumbnail pins into clusters, and the bounce-back's
-      // re-split intermittently fails on some devices (S22 vs Note 9) — leaving the
-      // cat-thumbnail pins gone while the number clusters persist. false clamps the
-      // pinch at fill so that excursion never happens.
+      // zoom) mid-gesture and briefly expose grey margins before snapping back.
+      // false clamps the pinch at fill so that excursion never happens. (The pins
+      // are now statically clustered — see PointMarkersLayer — so this no longer
+      // has to protect a zoom-coupled cluster engine, only the fill framing.)
       bounceAtZoomLimits={false}
       // Floor before MapViewController clamps minZoom to the exact fill zoom.
       minZoom={-3}

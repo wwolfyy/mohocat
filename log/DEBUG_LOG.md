@@ -11,6 +11,72 @@
 
 ---
 
+## 2026-07-05 — Mobile map pins vanishing / drawn outside the map / stuck pan — the durable fix (replaced markercluster)
+
+**Area:** `LeafletMountainMap.tsx` (`PointMarkersLayer`), new `utils/mapClustering.ts` ·
+**Branch:** `dev` · **Severity:** medium (mobile UX, recurring) · **Status:** ✅ fixed in code —
+**S22 device verification owed**. **Supersedes** the four min-zoom / `bounceAtZoomLimits` entries
+below (all were shims for the same coupling this removes).
+
+### Symptom
+
+On mobile, after some zoom in/out manipulation the individual (non-consolidated) cat-thumbnail
+pins **randomly disappear**; sometimes the pan also **gets stuck** showing only part of the map,
+with number-cluster badges or broken-out pins **rendered outside the image**. Reproduces on a
+Galaxy **S22** but **not** a Note 9 — the same device split seen across all the prior map fixes.
+
+### Root cause (structural — why it kept coming back)
+
+`leaflet.markercluster` is built for **tile maps with integer zoom** and `zoomSnap=1`. We ran it on
+a `CRS.Simple` plane with **negative, fractional** zoom (`zoomSnap=0`) and a **hard min-zoom clamp
+we mutate at runtime** (`map.setMinZoom(fillZoom)`) — outside its design envelope. Confirmed in the
+library source (`leaflet.markercluster@1.5.3`): `_generateInitialClusters` caches `this._maxZoom`
+**once** but the min-zoom floor is re-read **live** from `map.getMinZoom()` in **11** runtime
+add/remove/zoom-animation paths (`this._minZoom =` appears **0** times). So the cluster grid — built
+against our temporary `floor(fill − 4)` — and the live runtime floor `floor(fill)` **permanently
+disagree**, and every reachable rounded zoom has to thread that mismatch.
+
+Whether a device trips it depends on **where the fractional `fillZoom` lands relative to the integer
+grid**, and `fillZoom = getBoundsZoom(bounds)` is a function of the **viewport's pixel size** — so
+the Note 9 sits in a safe spot while the S22 straddles a boundary. A transient/interrupted pinch
+nudges `Math.round(zoom)` across a level whose grid state is inconsistent → markers removed and not
+re-added (**vanish**) or re-added against a stale pixel origin (**drawn outside**); the interrupted
+zoom animation also desyncs Leaflet's pixel origin so `maxBounds` + `maxBoundsViscosity:1` clamps
+panning wrong (**stuck / partial**). All three symptoms are the _same_ desync. Every earlier fix
+(floor-vs-exact clamp, temp-lower-minZoom-by-4, `bounceAtZoomLimits=false`) patched one manifestation
+of this coupling, so a new device/gesture kept reopening it.
+
+### Fix (durable — remove the coupling, not patch it)
+
+Replaced `leaflet.markercluster` on mobile with **static, zoom-independent clustering**
+(`utils/mapClustering.ts`, pure + unit-tested). Points are projected to a fixed pixel space (the
+fill/default view) and grouped **once** by pixel radius (`greedyClusterByRadius`, honoring the
+per-mountain `maxClusterRadius`); the grouping **never re-runs on zoom**, so there is no cluster grid
+and thus **no fractional-vs-integer boundary for a device to land on** — device-independent by
+construction. Multi-point clusters show a count badge; tapping fans the members out on a ring
+(`spiderfyRadius`) with leg lines, collapsing on a background tap or any zoom change (the ring is
+placed in screen space at the open zoom). Stand-alone points and desktop are unchanged (plain pins).
+Removed: the markercluster import + CSS, the temp-lower-minZoom-by-4 trick, and the `L.MarkerCluster`
+type coupling. The exact-`fillZoom` min-zoom clamp and `bounceAtZoomLimits={false}` stay — they now
+only frame the image (grey-margin hard stop), no longer propping up a zoom-coupled cluster engine.
+
+### Verified
+
+`tsc --noEmit` clean; `npm test` 33/33 (25 smoke + 8 new `mapClustering` unit tests). Phone-width
+iframe harness (390px): renders **4 pins + 2 clusters** (unchanged baseline); tapping a cluster fans
+2 members + 2 legs and hides the badge (opacity 1→0); background tap, a zoom change, and re-tapping
+the badge each collapse it (pins 6→4, legs→0, badge→1); a fanned member opens the cat gallery.
+**Device-owed:** the real S22 two-finger pinch in/out that used to trigger the desync (the harness
+can't emulate touch/pinch/DPR). Desktop map is code-equivalent (plain pins) but not harness-rendered
+(dynamic import stalls ≥768px — pre-existing).
+
+### Follow-up
+
+`leaflet.markercluster` is now unused (dead dependency) — safe to `npm uninstall` it in a cleanup
+pass; left in `package.json` for now to keep this change focused.
+
+---
+
 ## 2026-07-05 — Mountain-selector dropdown clipped on the left (계양산 → 양산)
 
 **Area:** `MountainSelector.tsx` (dropdown panel) · **Branch:** `dev` · **Severity:** low
