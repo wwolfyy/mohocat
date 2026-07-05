@@ -133,6 +133,19 @@ already-landed label unit tests).
 - [x] Browser-verify (localhost:3000) — list, add-form + click-to-place picker, delete-guard (blocked w/ cat list), no console errors. _(Actual save owner-owed — needs the rule deployed.)_
 - [x] `log/FEATURE_MOD_LOG.md` entry + admin-manual note + PROJECT_PLAN §4 update
 
+### Follow-ups after implementation (2026-07-05, same day)
+
+- [x] **Editable numeric coordinates** — the map picker's read-only x/y readout became editable
+      가로/세로 % inputs, two-way-synced with the marker, rounded to 0.1% (FEATURE_MOD_LOG).
+- [x] **Bug fix: coordinate fields editable mid-value** — a controlled-number-input caret-jump
+      meant only the last digit could be typed; `CoordInput` now uses a local draft string
+      (DEBUG*LOG). *(Committed `df61e85`.)\_
+- [x] **Docs: "three ways to declutter pins"** — the admin + setup manuals now describe all three
+      levers together and how they differ: **label position** & **coordinates** (per-pin CMS edits,
+      Firestore, no redeploy) vs **mobile clustering** (`mountains.json` config, whole-mountain,
+      redeploy). admin-manual §4 overview table + §9 cross-link; deployment/README.md "Map
+      clustering" callout; new-mountain-setup.md `map` bullet (stale anchor fixed).
+
 ## Verification
 
 1. Gates: `npx tsc --noEmit` + `npm run test:smoke` (25/25) + `npm test` (39/39).

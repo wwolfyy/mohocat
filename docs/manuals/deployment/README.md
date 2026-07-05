@@ -80,6 +80,13 @@ runtime dial; a rebuild/redeploy is required either way.
 
 ## Map clustering — per-mountain config values
 
+> **One of three ways to declutter overlapping pins.** The other two are **per-pin CMS edits**
+> (no redeploy) — moving a pin's **coordinates**, or flipping a single pin's **label side** — done
+> in 급식소 관리 (`/admin/points`); see the admin manual
+> ([§4 → Three ways to fix cluttered pins](../admin-manual/README.md#three-ways-to-fix-cluttered--overlapping-pins)).
+> **Clustering (below) is the whole-mountain lever** and, unlike those two, is a **baked config
+> value → needs a redeploy.** Reach for it when a mountain simply has many pins packed together.
+
 On the **mobile** map, nearby feeding-point markers can collapse into a single cluster badge
 (tap to fan the members out). Two per-mountain knobs live in the `map` block of
 `config/mountains/mountains.json`:

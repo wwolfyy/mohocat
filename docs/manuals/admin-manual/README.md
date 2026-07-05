@@ -140,6 +140,23 @@ The feeding-station pins on the public map. Each pin is a **point** with a title
 description, a **position** on the map, and an optional per-device **label side**. Needs the
 `manage-canteen` permission.
 
+### Three ways to fix cluttered / overlapping pins
+
+When pins (or their title labels) crowd each other on the map, there are **three** levers. Two are
+**CMS edits** — per-pin, saved to Firestore, and live on the public map within ~1h with **no
+redeploy**. The third is a **per-mountain config** — it affects the whole mountain and needs a
+**redeploy**.
+
+| Lever                    | Use it when…                                                            | Where                                          | Scope & freshness                          |
+| ------------------------ | ----------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| **1. Label position**    | the pin sits fine, but its **title** overlaps a neighbouring pin/label. | 급식소 관리 CMS → **라벨 위치** (below).       | one pin · Firestore · **no redeploy**      |
+| **2. Coordinates**       | the **pins themselves** sit on top of / too close to each other.        | 급식소 관리 CMS → **위치** (below).            | one pin · Firestore · **no redeploy**      |
+| **3. Mobile clustering** | a mountain simply has **many** pins packed together on small screens.   | `mountains.json` map config — **not** the CMS. | whole mountain · baked · **redeploy** (§9) |
+
+So: reach for **1 or 2** to fix a specific pin — you can do it live from the CMS right below. Reach
+for **3** (see [§9](#9-configuration--operations-owner--developer)) when the crowding is inherent
+to having lots of pins and you want them auto-grouped into tap-to-expand clusters on phones.
+
 ### Add / edit a pin
 
 - **새 급식소 추가** (or the ✏️ on a row) opens the form.
@@ -260,8 +277,10 @@ Mostly one-time or infrequent setup. Details live in
   git — a fresh dev checkout needs `npm run fetch:assets` before pages with photos render.
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
-- **Map clustering (mobile):** two per-mountain knobs in the `map` block of
-  `config/mountains/mountains.json` — **not** a `/admin` CMS setting.
+- **Map clustering (mobile):** the **whole-mountain** lever for cluttered pins (option 3 in
+  [§4 → Three ways to fix cluttered pins](#three-ways-to-fix-cluttered--overlapping-pins); the
+  other two — label position and coordinates — are per-pin CMS edits). Two per-mountain knobs in
+  the `map` block of `config/mountains/mountains.json` — **not** a `/admin` CMS setting.
   - `map.clustering` (`true` / `false`) — turn clustering **on/off**. `true` (default) collapses
     nearby feeding-point markers into a tap-to-expand cluster badge; `false` shows **every** point
     as its own pin (may overlap where points are close) — good for a mountain with only a few,
