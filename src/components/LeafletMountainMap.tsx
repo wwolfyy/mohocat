@@ -152,25 +152,30 @@ function createClusterIcon(count: number): L.DivIcon {
  * Each point's stored percentage coords convert to a CRS.Simple image-pixel
  * LatLng via `pointToLatLng` (which also applies the 90°-CW rotation on mobile).
  *
- * On desktop every point is a stand-alone pin (entrance pop on). On mobile the
- * points are **statically clustered** — grouped once, by pixel proximity in the
- * fill/default view (`utils/mapClustering`), *never* re-clustered on zoom. This
- * replaced `leaflet.markercluster`, whose zoom-keyed integer cluster grid fought
- * our fractional/mutated `CRS.Simple` zoom and broke device-dependently (pins
+ * Desktop is always stand-alone pins (entrance pop on). On mobile, when
+ * `clustering` is on (per-mountain config), the points are **statically
+ * clustered** — grouped once, by pixel proximity in the fill/default view
+ * (`utils/mapClustering`), *never* re-clustered on zoom. This replaced
+ * `leaflet.markercluster`, whose zoom-keyed integer cluster grid fought our
+ * fractional/mutated `CRS.Simple` zoom and broke device-dependently (pins
  * vanishing / drawn outside the map / stuck pan on the S22; see DEBUG_LOG). A
  * multi-point cluster shows a count badge; tapping it fans the members out on a
  * ring (spiderfy) so each cat is reachable — the fan collapses on a background
  * tap or any zoom change (it is positioned in screen space at the open zoom).
+ * When `clustering` is off, mobile falls through to the same stand-alone pins as
+ * desktop (points may overlap where they sit close together).
  */
 function PointMarkersLayer({
   markers,
   onSelect,
   isMobile,
+  clustering,
   maxClusterRadius,
 }: {
   markers: ResolvedMarker[];
   onSelect: (pointId: string) => void;
   isMobile: boolean;
+  clustering: boolean;
   maxClusterRadius: number;
 }) {
   const map = useMap();
@@ -210,9 +215,12 @@ function PointMarkersLayer({
       return leafletMarker;
     };
 
-    if (!isMobile) {
+    // Stand-alone pins: always on desktop, and on mobile when clustering is off
+    // (per-mountain config). `pointToLatLng(m, isMobile)` picks the rotated
+    // portrait coords on mobile, the landscape coords on desktop.
+    if (!isMobile || !clustering) {
       markers.forEach((m) => {
-        const [lat, lng] = pointToLatLng(m, false);
+        const [lat, lng] = pointToLatLng(m, isMobile);
         layer.addLayer(makePin(m, [lat, lng]));
       });
       layer.addTo(map);
@@ -312,7 +320,7 @@ function PointMarkersLayer({
       collapse();
       layer.remove();
     };
-  }, [map, markers, onSelect, isMobile, maxClusterRadius]);
+  }, [map, markers, onSelect, isMobile, clustering, maxClusterRadius]);
 
   return null;
 }
@@ -445,6 +453,9 @@ interface LeafletMountainMapProps {
   /** Mobile → rotated-portrait image + coords, clustering, no +/− buttons,
    *  gated drag; desktop → landscape image, un-clustered, +/− buttons. */
   isMobile: boolean;
+  /** Whether the mobile map clusters nearby points (per-mountain; see
+   *  `MountainMapConfig`). Off → stand-alone pins on mobile too. */
+  clustering: boolean;
   /** Mobile marker-clustering radius in px (see `MountainMapConfig`). */
   maxClusterRadius: number;
 }
@@ -454,6 +465,7 @@ export default function LeafletMountainMap({
   catsByPoint,
   onPointClick,
   isMobile,
+  clustering,
   maxClusterRadius,
 }: LeafletMountainMapProps) {
   const markers = usePointMarkers(points, catsByPoint);
@@ -495,6 +507,7 @@ export default function LeafletMountainMap({
         markers={markers}
         onSelect={onPointClick}
         isMobile={isMobile}
+        clustering={clustering}
         maxClusterRadius={maxClusterRadius}
       />
     </MapContainer>

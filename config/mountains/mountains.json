@@ -55,6 +55,7 @@
       "facebookPage": ""
     },
     "map": {
+      "clustering": true,
       "maxClusterRadius": 50
     },
     "authentication": {

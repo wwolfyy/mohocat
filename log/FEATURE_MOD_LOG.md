@@ -15,6 +15,41 @@
 
 ---
 
+## 2026-07-05 — Map: per-mountain clustering toggle (`map.clustering` in mountains.json)
+
+**Area:** `config/mountains/mountains.json`, `utils/config.ts` (`MountainMapConfig`),
+`MountainViewer.tsx`, `LeafletMountainMap.tsx` · **Type:** enhancement (config) · **Branch:** `dev`
+
+### Change
+
+Mobile marker-clustering is now switchable per mountain, alongside the existing
+`maxClusterRadius`, in the `map` block of `mountains.json`:
+
+```json
+"map": { "clustering": true, "maxClusterRadius": 50 }
+```
+
+`clustering: true` (default) keeps the static, tap-to-spiderfy clustering; `clustering: false`
+renders **every** point as its own pin on mobile (they may overlap where points sit close) — the
+same stand-alone-pin path desktop already uses. Threaded via `getMapConfig()` →
+`MountainViewer` → `LeafletMountainMap` → `PointMarkersLayer`, where the un-clustered branch now
+fires on `!isMobile || !clustering`. Desktop is unaffected (always un-clustered). An omitted flag
+defaults to `true` via `DEFAULT_MAP_CONFIG`, so existing configs keep today's behavior.
+
+### Rationale
+
+Clustering suits dense mountains but is unnecessary — and adds interaction cost (an extra tap to
+spiderfy) — for a mountain with only a few, well-separated feeding points. Operators can now pick
+per mountain without a code change.
+
+### Verified
+
+`tsc --noEmit` clean + `npm run test:smoke` 25/25. Phone-width iframe harness (390px):
+`clustering: false` → **8 pins, 0 clusters** (all points individual); `clustering: true` →
+**4 pins + 2 clusters** (unchanged baseline). Config reverted to `true` after the check.
+
+---
+
 ## 2026-07-05 — Mobile: portrait-only map (landscape rotate-notice) + one-line nav in landscape
 
 **Area:** `Navigation.tsx`, `MountainViewer.tsx`, `LeafletMountainMap.tsx`, new

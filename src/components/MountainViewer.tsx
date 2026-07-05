@@ -45,9 +45,10 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
   // notice below (`isPhoneLandscape`).
   const isMobile = useIsMobile();
   const isPhoneLandscape = useIsPhoneLandscape();
-  // Per-mountain map tunables (marker-clustering radius) — config-driven so the
-  // value can be changed without a code edit (config/mountains/mountains.json).
-  const { maxClusterRadius } = getMapConfig();
+  // Per-mountain map tunables — config-driven so they can change without a code
+  // edit (config/mountains/mountains.json): whether the mobile map clusters, and
+  // the clustering radius.
+  const { clustering, maxClusterRadius } = getMapConfig();
 
   // Warm the marker avatars into the browser cache. The cat data is already
   // baked (props) — this only preloads the image *files*, with no Firestore
@@ -113,6 +114,7 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           catsByPoint={catsByPoint}
           onPointClick={setSelectedPointId}
           isMobile={isMobile}
+          clustering={clustering}
           maxClusterRadius={maxClusterRadius}
         />
 
