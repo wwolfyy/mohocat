@@ -153,6 +153,23 @@ those are the forward plan.
   - [x] **Cleanup: `npm uninstall leaflet.markercluster`** (2026-07-05) — dead dependency
         removed (`leaflet.markercluster` + `@types/leaflet.markercluster`); only explanatory
         comments remain in source. Gates green (tsc, smoke 25/25, full 39/39).
+- [x] **Per-Point title-label side override (`labelSide`) — 2026-07-05, FEATURE_MOD_LOG.**
+      Added `Point.labelSide?: { mobile?, desktop?: 'above'|'below' }` (Firestore-authored, ISR-
+      fresh — the `points` collection has no CMS UI). An explicit value for the active layout
+      overrides the automatic bottom-edge flip so an operator can move a label that overlaps an
+      adjacent pin; an unset side keeps today's auto behavior. Decision logic extracted to a pure,
+      unit-tested helper (`utils/mapLabels.ts`, `resolveLabelAbove`, 6 tests). Harness-verified
+      no-regression (desktop map renders, no console errors); **authoring an actual override is
+      device-owed** (collision layout is width/DPI-dependent — author against a real device).
+      _(Lands together with the 급식소 admin CMS below.)_
+- [x] **급식소 관리 (feeding-station points) admin CMS — 2026-07-05, FEATURE_MOD_LOG,
+      [plan](./feeding-station-points-admin-cms-plan.md).** Built the `/admin/points` editor
+      (create/edit/delete pins incl. the `labelSide` override) behind `manage-canteen`; Leaflet-free
+      visual map picker for x/y; delete blocked while cats reference the point (lists them). Reuses
+      `PointService` CRUD + `/api/revalidate`. Gates green; browser-verified (list, picker, delete-
+      guard). Unblocks authoring the `labelSide` override above (lands with it). **⚠️ Owner-owed:**
+      `firebase deploy --only firestore:rules` (points write opened to `manage-canteen`), and an
+      actual save is only testable post-deploy.
 - [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
       (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
 - [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix

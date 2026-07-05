@@ -6,6 +6,7 @@ import L, { CRS, type LatLngBoundsExpression } from 'leaflet';
 import type { Point } from '@/types';
 import type { CatsByPoint } from '@/lib/server/cat-reads';
 import { greedyClusterByRadius, spiderfyRadius } from '@/utils/mapClustering';
+import { resolveLabelAbove } from '@/utils/mapLabels';
 import 'leaflet/dist/leaflet.css';
 
 // Two image layouts, chosen by device (`isMobile`), not live orientation. The
@@ -53,6 +54,8 @@ interface ResolvedMarker {
   x: number; // percent across the image (0–100)
   y: number; // percent down the image (0–100)
   thumbnailUrl: string | null;
+  /** Per-device title-label override carried from the Point (see `resolveLabelAbove`). */
+  labelSide?: Point['labelSide'];
 }
 
 /**
@@ -74,7 +77,14 @@ function usePointMarkers(points: Point[], catsByPoint: CatsByPoint): ResolvedMar
           withThumb.length > 0
             ? withThumb[Math.floor(Math.random() * withThumb.length)].thumbnailUrl
             : null;
-        return { id: point.id, title: point.title, x: point.x, y: point.y, thumbnailUrl };
+        return {
+          id: point.id,
+          title: point.title,
+          x: point.x,
+          y: point.y,
+          thumbnailUrl,
+          labelSide: point.labelSide,
+        };
       }),
     [points, catsByPoint]
   );
@@ -104,8 +114,9 @@ function escapeHtml(value: string): string {
  *
  * `labelAbove` flips the title label above the avatar (instead of below) for
  * pins near the bottom edge, so the label isn't clipped by the container's
- * `overflow: hidden`. Decided deterministically from the pin's position (see
- * PointMarkersLayer) — no runtime measurement.
+ * `overflow: hidden`. Decided by `resolveLabelAbove` (`@/utils/mapLabels`) from
+ * the pin's position, or overridden per-Point via `labelSide` — no runtime
+ * measurement.
  */
 function buildMarkerHtml(marker: ResolvedMarker, animate: boolean, labelAbove: boolean): string {
   const title = escapeHtml(marker.title);
@@ -184,17 +195,15 @@ function PointMarkersLayer({
     const layer = L.layerGroup();
 
     // A label below the avatar needs ~52px of clearance (half-avatar + gap +
-    // label height). Flip it above only for pins whose displayed position is
-    // within that band of the bottom edge — derived from the actual container
-    // height so it's correct for both the short desktop map and the tall
-    // portrait mobile map (and adapts if either is resized on the next render).
+    // label height). The auto-flip moves it above only for pins whose displayed
+    // position is within that band of the bottom edge — derived from the actual
+    // container height so it's correct for both the short desktop map and the
+    // tall portrait mobile map (and adapts if either is resized on the next
+    // render). A per-Point `labelSide` override wins over this (see
+    // `resolveLabelAbove` in `@/utils/mapLabels`).
     const containerHeight = map.getSize().y || 800;
     const bottomBand = 1 - 52 / containerHeight;
-
-    // Displayed vertical position (0 top → 1 bottom): desktop (landscape) reads
-    // `y`; mobile (rotated portrait) reads `x` because the 90°-CW rotation maps
-    // landscape-x to the portrait's vertical axis.
-    const wantsLabelAbove = (m: ResolvedMarker) => (isMobile ? m.x / 100 : m.y / 100) > bottomBand;
+    const wantsLabelAbove = (m: ResolvedMarker) => resolveLabelAbove(m, isMobile, bottomBand);
 
     // A thumbnail pin at an explicit LatLng — real position for a stand-alone
     // point, spider-ring position for a fanned-out cluster member. Entrance pop

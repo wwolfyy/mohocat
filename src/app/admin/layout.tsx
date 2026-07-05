@@ -53,12 +53,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <a href="/admin/cats" className={getNavItemClasses('/admin/cats')}>
                   {adminStrings.nav.cats}
                 </a>
-                <span
-                  className={getNavItemClasses('/admin/points', true)}
-                  onClick={(e) => handleDisabledClick(e, adminStrings.nav.feedingStations)}
-                >
+                <a href="/admin/points" className={getNavItemClasses('/admin/points')}>
                   {adminStrings.nav.feedingStations}
-                </span>
+                </a>
                 <span
                   className={getNavItemClasses('/admin/winter-houses', true)}
                   onClick={(e) => handleDisabledClick(e, adminStrings.nav.winterHouses)}

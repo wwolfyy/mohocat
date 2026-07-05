@@ -23,22 +23,24 @@
 - **Sign in:** email/password or **카카오톡으로 로그인** (Kakao). You must already have
   an account with an admin-capable role.
 - **Left nav sections:** 대쉬보드 (dashboard) · 앱관리 (app management) · 고양이 관리
-  (cats) · 사진 관리 (photos) · 동영상 관리 (videos) · 게시물 관리 (posts) · 사용자 관리
-  (members). 급식소 관리 / 겨울집 관리 are **disabled placeholders** (features not built).
+  (cats) · 급식소 관리 (feeding stations / map pins) · 사진 관리 (photos) · 동영상 관리
+  (videos) · 게시물 관리 (posts) · 사용자 관리 (members). 겨울집 관리 is still a **disabled
+  placeholder** (feature not built).
 
 ### Roles & permissions
 
 Access is permission-based, managed in **사용자 관리** (`/admin/members`). A user has a
 role; a role grants permissions. The permission a given action needs:
 
-| Permission     | Lets you…                                                   |
-| -------------- | ----------------------------------------------------------- |
-| `manage-cat`   | create / edit / delete cats (`/admin/cats`)                 |
-| `manage-posts` | create / edit / delete posts incl. 공지사항 & 입양홍보      |
-| `manage-photo` | manage & tag photos (`/admin/tag-images`)                   |
-| `manage-video` | manage & tag videos, YouTube auth (`/admin/tag-videos`)     |
-| `manage-app`   | edit About-page content (`/admin/app-management`)           |
-| `manage-users` | view/assign roles, view 동참 submissions (`/admin/members`) |
+| Permission       | Lets you…                                                         |
+| ---------------- | ----------------------------------------------------------------- |
+| `manage-cat`     | create / edit / delete cats (`/admin/cats`)                       |
+| `manage-canteen` | create / edit / delete feeding-station map pins (`/admin/points`) |
+| `manage-posts`   | create / edit / delete posts incl. 공지사항 & 입양홍보            |
+| `manage-photo`   | manage & tag photos (`/admin/tag-images`)                         |
+| `manage-video`   | manage & tag videos, YouTube auth (`/admin/tag-videos`)           |
+| `manage-app`     | edit About-page content (`/admin/app-management`)                 |
+| `manage-users`   | view/assign roles, view 동참 submissions (`/admin/members`)       |
 
 > The role→permission matrix itself is edited in 사용자 관리. Changing it takes effect
 > immediately (permissions are resolved from the role at runtime, not copied per user).
@@ -132,7 +134,47 @@ changes appear without a redeploy.
 
 ---
 
-## 4. Posts — 게시물 관리 (`/admin/posts`)
+## 4. Feeding stations — 급식소 관리 (`/admin/points`)
+
+The feeding-station pins on the public map. Each pin is a **point** with a title, an optional
+description, a **position** on the map, and an optional per-device **label side**. Needs the
+`manage-canteen` permission.
+
+### Add / edit a pin
+
+- **새 급식소 추가** (or the ✏️ on a row) opens the form.
+- **제목** — the pin's title (shown on the map, e.g. 정상, 헬기장). Required.
+- **설명** — optional notes.
+- **위치** — set by the **map picker**: **click** anywhere on the map to drop the pin, or
+  **drag** the yellow marker to fine-tune. The other pins show as grey dots for reference. You can
+  also **type exact coordinates** into the 가로(%) / 세로(%) fields below the map — they and the
+  marker stay in sync. Required.
+- **라벨 위치 (모바일 / 데스크탑)** — which side of the pin its title sits on, **per device**:
+  - **자동** (default) — the map flips the label above/below automatically near an edge. Leave it
+    here unless a label overlaps a neighbouring pin.
+  - **위 / 아래** — force the label above / below for that device. The mobile map is rotated, so a
+    pin can need a different side on mobile vs desktop — set only the one that's crowded.
+  - ⚠️ Label crowding is **screen-size dependent**, so check the result on a **real phone**
+    against the live site, not just the desktop preview.
+
+### Delete a pin
+
+The 🗑 button asks to confirm. **A pin that cats still live at can't be deleted** — the app lists
+those cats (their 거주지 / 이전 거주지 points here) and blocks the delete. Reassign those cats'
+거주지 in 고양이 관리 first, then delete.
+
+### Freshness
+
+Saving a pin re-bakes the public map automatically (home revalidates), so changes appear without
+a redeploy. _(Position/label are Firestore data — ISR-fresh. This is different from the map's
+per-mountain config in `mountains.json`, which needs a redeploy — see §9.)_
+
+> **Setup note (owner):** the very first time this feature is used, the Firestore rule for
+> `points` must be deployed (`firebase deploy --only firestore:rules`) — until then, saves fail.
+
+---
+
+## 5. Posts — 게시물 관리 (`/admin/posts`)
 
 Four tabs, two kinds:
 
@@ -163,7 +205,7 @@ image/YouTube URLs). Save.
 
 ---
 
-## 5. Photos & videos — 사진/동영상 관리 (`/admin/tag-images`, `/admin/tag-videos`)
+## 6. Photos & videos — 사진/동영상 관리 (`/admin/tag-images`, `/admin/tag-videos`)
 
 The media library. Photos and videos are **tagged with cat names**; those tags are what
 populate each cat's **📸 사진 보기 / 🎬 동영상 보기** albums in the detail modal, and the
@@ -177,7 +219,7 @@ _⚠️ expand: step-by-step tagging workflow, bulk-tagging, and the YouTube aut
 
 ---
 
-## 6. About page content — 앱관리 → About (`/admin/app-management`)
+## 7. About page content — 앱관리 → About (`/admin/app-management`)
 
 Edit the public **소개(About)** page sections here. The section content supports the same
 [link tokens](#2-rich-text--links-the-important-one); a **💡 링크 지원** help panel in this
@@ -185,7 +227,7 @@ editor lists them.
 
 ---
 
-## 7. 동참 (Contact) submissions
+## 8. 동참 (Contact) submissions
 
 Visitor 동참 form submissions are recorded and emailed to the admin address. **View them
 in 사용자 관리** (`/admin/members`) — the Contact Management panel lives on the members page.
@@ -196,7 +238,7 @@ in 사용자 관리** (`/admin/members`) — the Contact Management panel lives 
 
 ---
 
-## 8. Configuration & operations (owner / developer)
+## 9. Configuration & operations (owner / developer)
 
 Mostly one-time or infrequent setup. Details live in
 [`docs/manuals/deployment/README.md`](../deployment/README.md) and the root
@@ -233,7 +275,7 @@ Mostly one-time or infrequent setup. Details live in
 
 ---
 
-## 9. Quick reference (cheat sheet)
+## 10. Quick reference (cheat sheet)
 
 ```
 [catmodal:이름]            → open a cat's modal        (no parentheses!)

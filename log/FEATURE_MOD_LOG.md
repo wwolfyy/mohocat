@@ -15,6 +15,101 @@
 
 ---
 
+## 2026-07-05 — Admin: 급식소 관리 (feeding-station points) CMS
+
+**Area:** `app/admin/points/page.tsx` (new), `components/admin/PointMapPicker.tsx` (new),
+`config/firebase/firestore.rules`, `constants/adminStrings.ts`, `app/admin/layout.tsx` ·
+**Type:** enhancement · **Branch:** `dev` · **Plan:**
+[`feeding-station-points-admin-cms-plan.md`](../docs/planning/feeding-station-points-admin-cms-plan.md)
+
+### Change
+
+The 급식소 관리 admin nav item (previously a disabled `준비 중` placeholder) is now a working CMS
+at `/admin/points` for the Firestore **`points`** collection — the feeding-station pins the public
+map renders. Operators can create / edit / delete pins, each with **제목, 설명, position, and the
+per-device `labelSide` override** (자동/위/아래 for mobile + desktop).
+
+- **Position** is set with a **Leaflet-free visual picker** (`PointMapPicker`): the landscape map
+  image with all existing pins shown as context dots; click (or drag the marker) to place, deriving
+  `x`/`y` as % of the image. The coordinates are also **directly editable** as 가로/세로 number
+  inputs, two-way-synced with the marker (both rounded to 0.1% so map and fields always agree).
+- **Delete is blocked while referenced** — a point that any cat's `dwelling` / `prev_dwelling`
+  points at can't be deleted; the modal lists the resident cats and refuses until they're reassigned
+  (guards against orphaning cat→point links).
+- Writes go through the existing `PointService` client-SDK CRUD (previously defined but unused) and
+  reuse `triggerCatRevalidate` (which revalidates `/`) so map edits reflect immediately via ISR.
+- **Firestore rule:** `points` write opened from `if false` to
+  `hasPermission(request.auth.uid, 'manage-canteen')` (canteen = 급식소; admin-only), mirroring the
+  cats rule.
+
+This also unblocks authoring the `labelSide` override from the entry below — the two land together.
+
+### Rationale
+
+`points` had no admin write path (CRUD methods existed but were never called), so pin edits required
+a Firestore-console edit. Owner chose (per plan): scope = `points` only (겨울집 stays a placeholder);
+permission = `manage-canteen`; visual map picker for coordinates; block-delete-while-referenced.
+
+> ⚠️ **Owner action:** deploy the rule with `firebase deploy --only firestore:rules` — writes fail
+> against real Firestore until deployed (rules deploy is owner-run per CLAUDE.md).
+
+### Verified
+
+- `npx tsc --noEmit` clean; `npm run test:smoke` **25/25**; `npm test` **39/39**.
+- Browser (localhost:3000, admin): 급식소 관리 nav link active; `/admin/points` lists all 8 points
+  (position + 라벨); add-form opens with the picker showing context pins; **click placed a marker and
+  the x/y readout updated** (가로 49.9% · 세로 53.1%); labelSide selects render; **delete on 정상
+  (has resident cats) was blocked** with the cat list. No console errors.
+- **Owner-owed:** an actual save/create — needs the rule deployed first.
+
+## 2026-07-05 — Map: per-Point title-label side override (`labelSide`)
+
+**Area:** `src/types/index.ts` (`Point.labelSide`, `LabelSide`), `src/utils/mapLabels.ts` (new),
+`LeafletMountainMap.tsx`, `tests/unit/mapLabels.test.ts` (new) · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+Each feeding-point pin's **title-label side** (above/below the avatar) can now be overridden
+**per device**, on the Firestore Point doc:
+
+```jsonc
+// points/{id}
+"labelSide": { "mobile": "above" }   // desktop unset → automatic edge-flip
+```
+
+`labelSide?: { mobile?: 'above' | 'below', desktop?: 'above' | 'below' }`. An explicit value for
+the active layout is honored **as-is**, deliberately bypassing the deterministic bottom-edge
+auto-flip — so an operator can flip a label that overlaps an **adjacent pin's** thumbnail/label.
+An **unset** side (or no `labelSide` at all) falls back to today's automatic behavior, so every
+existing point is unchanged.
+
+The mobile map is rotated 90° CW, so a pin's displayed vertical axis differs by layout (mobile
+reads `x`, desktop reads `y`) — hence the per-device shape: a pin that crowds on mobile can be
+fixed without forcing the desktop side. The decision is a pure, framework-free helper
+(`resolveLabelAbove` in `utils/mapLabels.ts`), threaded `Point.labelSide` → `ResolvedMarker` →
+`resolveLabelAbove` → the existing `labelAbove` flag in `buildMarkerHtml` (render path unchanged).
+
+### Rationale
+
+Replaces the abandoned config-file-per-pin approach (see the 2026-07-05 off-plan handoff §4). The
+requirement is per-pin control to de-collide crowded labels; the owner chose a per-Point Firestore
+field over a config file or an in-map editor. Data lives on the Point (ISR-fresh, no redeploy),
+though the `points` collection has no CMS UI, so authoring is a Firestore-console / migration edit.
+
+> ⚠️ **Edge-pin caveat (from the abandoned attempt, still true):** the topmost pin (정상) can't be
+> fully de-collided by above/below alone — `below` overlaps 헬기장's thumbnail, `above` tucks under
+> the sticky header. `labelSide` gives per-pin control but doesn't add left/right, so that one
+> edge case remains geometrically unsolvable with this mechanism.
+
+### Verified
+
+- `npx tsc --noEmit` clean; `npm test` **39/39** (6 new `resolveLabelAbove` unit tests covering
+  auto-flip per layout, override-honored, and per-layout isolation).
+- Browser (localhost:3000, desktop): map + all 8 pins render, labels below as before, **no console
+  errors** — confirms no regression (no Firestore point has `labelSide` yet).
+- **Device-owed:** rendering an actual override — collision layout is width/DPI-dependent, so
+  overrides must be authored against a **real device**, not the iframe harness.
+
 ## 2026-07-05 — Map: per-mountain clustering toggle (`map.clustering` in mountains.json)
 
 **Area:** `config/mountains/mountains.json`, `utils/config.ts` (`MountainMapConfig`),

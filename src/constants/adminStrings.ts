@@ -177,6 +177,61 @@ export const adminStrings = {
     },
   },
 
+  /** 급식소 관리 (src/app/admin/points/page.tsx) — feeding-station pins (points collection). */
+  points: {
+    title: '급식소 관리',
+    subtitle: '지도에 표시되는 급식소 위치를 관리해요. 변경하면 곧바로 저장돼요.',
+    addNew: '새 급식소 추가',
+    picker: {
+      label: '위치',
+      hint: '지도를 눌러 위치를 정하거나 핀을 끌어서 옮겨요. 아래에 좌표(%)를 직접 입력할 수도 있어요.',
+      coords: (x: number, y: number) => `가로 ${x.toFixed(1)}% · 세로 ${y.toFixed(1)}%`,
+      xLabel: '가로(%)',
+      yLabel: '세로(%)',
+    },
+    form: {
+      editTitle: '급식소 수정',
+      addTitle: '새 급식소 추가',
+      titleLabel: '제목',
+      titlePlaceholder: '예: 정상, 헬기장…',
+      description: '설명',
+      descriptionPlaceholder: '이 급식소에 대한 메모를 적어요...',
+      labelSideHeading: '라벨 위치',
+      labelSideHint:
+        '핀 제목을 아바타 위/아래 중 어디에 표시할지 기기별로 정해요. 자동이면 화면 가장자리에서 알아서 뒤집혀요.',
+      labelSideMobile: '모바일',
+      labelSideDesktop: '데스크탑',
+      labelAuto: '자동',
+      labelAbove: '위',
+      labelBelow: '아래',
+      save: '저장',
+    },
+    table: {
+      titleCol: '제목',
+      position: '위치',
+      labelSide: '라벨',
+      actions: '관리',
+      autoBadge: '자동',
+      empty: '등록된 급식소가 없어요.',
+    },
+    delete: {
+      title: '삭제 확인',
+      body: '이 급식소를 삭제할까요? 되돌릴 수 없어요.',
+      confirm: '삭제',
+      /** Blocked because cats still reference this point (dwelling/prev_dwelling). */
+      blockedTitle: '삭제할 수 없어요',
+      blockedBody: (names: string) =>
+        `이 급식소를 거주지로 둔 고양이가 있어 삭제할 수 없어요. 먼저 아래 고양이의 거주지를 바꿔 주세요: ${names}`,
+    },
+    errors: {
+      loadFailed: (msg: string) => `급식소 목록을 불러오지 못했어요: ${msg}`,
+      saveFailed: (msg: string) => `급식소를 저장하지 못했어요: ${msg}`,
+      deleteFailed: (msg: string) => `급식소를 삭제하지 못했어요: ${msg}`,
+      noPosition: '위치를 먼저 지도에서 정해 주세요.',
+      noTitle: '제목을 입력해 주세요.',
+    },
+  },
+
   /** 사용자 관리 page chrome (src/app/admin/members/page.tsx). */
   members: {
     title: '사용자 관리',
