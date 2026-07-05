@@ -83,7 +83,7 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           src="/images/chubby-cat.gif"
           alt=""
           aria-hidden="true"
-          width={69}
+          width={60}
           height={56}
           unoptimized
           className="mb-4 h-14 w-auto"
