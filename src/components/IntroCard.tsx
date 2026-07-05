@@ -8,7 +8,7 @@ import { MdClose } from 'react-icons/md';
 const STORAGE_KEY = 'mohocat:intro-card-dismissed';
 
 /**
- * Small dismissible nudge that floats over the bottom-left of the map,
+ * Small dismissible nudge that floats over the top-left of the map,
  * inviting visitors to click a cat photo. Dismissal is remembered across
  * visits via localStorage so it nudges once, not every time (redesign §1).
  */
@@ -47,7 +47,7 @@ export default function IntroCard() {
         // z-[1100]: sit above Leaflet's panes/controls — `.leaflet-container`
         // doesn't form a stacking context so its z-indexes bubble into this
         // overlay's context, otherwise the card hides behind the map.
-        'absolute bottom-4 left-4 z-[1100] md:bottom-6 md:left-6',
+        'absolute left-4 top-4 z-[1100] md:left-6 md:top-6',
         'flex items-center gap-2.5 py-2 pl-3 pr-2',
         'rounded-full bg-white/90 shadow-lg ring-1 ring-black/5 backdrop-blur-md',
         'animate-dropdown-enter'

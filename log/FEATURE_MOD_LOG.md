@@ -15,6 +15,33 @@
 
 ---
 
+## 2026-07-06 — Map: moved the click-a-pin nudge card from bottom-left to top-left
+
+**Area:** `components/IntroCard.tsx`, `components/MountainViewer.tsx` · **Type:** fix ·
+**Branch:** `dev`
+
+### Change
+
+The dismissible `IntroCard` nudge (`지도의 고양이 사진을 클릭해보세요`) that floats over the map
+moved from the map's **bottom-left** to its **top-left** (`bottom-4 left-4 md:bottom-6 md:left-6`
+→ `left-4 top-4 md:left-6 md:top-6`).
+
+### Rationale
+
+The map fills the viewport width and can extend below the fold on short windows, so the
+bottom-left corner scrolled out of view — the nudge went invisible exactly when a first-time
+visitor most needs it. The top-left corner is always above the fold, and mirrors the Compass
+(N indicator) pinned top-right, so the two overlays balance instead of stacking one hidden
+corner.
+
+### Verified
+
+`npx tsc --noEmit` clean; browser-verified on localhost:3000 (cleared the localStorage dismissal
+flag to force the card visible) — card renders at the map's top-left, below the header, no
+overlap with the header or Compass.
+
+---
+
 ## 2026-07-06 — Cleanup: `triggerCatRevalidate` → `triggerPublicRevalidate`
 
 **Area:** `lib/revalidate-client.ts`, `app/admin/cats/page.tsx`, `app/admin/points/page.tsx`,

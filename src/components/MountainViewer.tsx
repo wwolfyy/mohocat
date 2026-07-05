@@ -121,7 +121,7 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
         {/* North indicator pinned top-right of the map (redesign §Engine). */}
         <Compass portrait={isMobile} />
 
-        {/* Dismissible nudge floating over the map's bottom-left (redesign §1) */}
+        {/* Dismissible nudge floating over the map's top-left (redesign §1) */}
         <IntroCard />
       </div>
 
