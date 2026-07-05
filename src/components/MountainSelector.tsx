@@ -79,7 +79,12 @@ export default function MountainSelector() {
 
       {isOpen && (
         <div
-          className={`absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 ${
+          // Panel opens leftward from a left-anchored button (`right-0`). At w-72
+          // the 288px panel's left edge ran off the viewport (~-31px on a phone,
+          // ~-15px even on desktop) since the button's right edge is content-driven
+          // (~257–273px) regardless of viewport width. w-60 keeps the left edge
+          // on-screen at every width.
+          className={`absolute right-0 mt-2 w-60 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 ${
             isAnimating ? 'animate-dropdown-exit' : 'animate-dropdown-enter'
           }`}
         >
