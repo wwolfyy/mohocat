@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import type { Point } from '@/types';
 import { adminStrings } from '@/constants/adminStrings';
@@ -143,7 +143,15 @@ export default function PointMapPicker({
   );
 }
 
-/** A 0–100 (%) number field for one coordinate. */
+/**
+ * A 0–100 (%) number field for one coordinate.
+ *
+ * Holds its own draft **text** so the field shows exactly what the user types.
+ * Binding the input straight to the parent's number reformats it on every
+ * keystroke, which snaps the caret to the end and makes any edit except the last
+ * character impossible — so we only re-sync from the prop when it changes from an
+ * outside source (a map click/drag), and normalize the text on blur.
+ */
 function CoordInput({
   label,
   value,
@@ -153,6 +161,17 @@ function CoordInput({
   value: number | null;
   onChange: (n: number) => void;
 }) {
+  const [text, setText] = useState(value === null ? '' : String(value));
+
+  // Re-sync when the prop changes from outside (map click/drag / loading a point
+  // to edit). Skip when the prop already equals what's typed, so committing a
+  // keystroke doesn't overwrite the in-progress text (and move the caret).
+  useEffect(() => {
+    const typed = text.trim() === '' ? null : clampRound(parseFloat(text));
+    if (value !== typed) setText(value === null ? '' : String(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
   return (
     <label className="text-sm text-gray-700">
       <span className="block text-xs font-medium text-gray-600 mb-1">{label}</span>
@@ -161,12 +180,15 @@ function CoordInput({
         min={0}
         max={100}
         step={0.1}
-        value={value === null ? '' : value}
+        value={text}
         onChange={(e) => {
+          setText(e.target.value);
+          if (e.target.value.trim() === '') return;
           const n = parseFloat(e.target.value);
           if (Number.isNaN(n)) return;
           onChange(clampRound(n));
         }}
+        onBlur={() => setText(value === null ? '' : String(value))}
         className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
       />
     </label>
