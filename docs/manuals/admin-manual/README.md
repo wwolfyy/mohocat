@@ -218,12 +218,18 @@ Mostly one-time or infrequent setup. Details live in
   git — a fresh dev checkout needs `npm run fetch:assets` before pages with photos render.
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
-- **Map clustering distance:** on the **mobile** map, nearby markers collapse into a cluster
-  when they're within `map.maxClusterRadius` (screen pixels) in
-  `config/mountains/mountains.json` — a per-mountain tunable, **not** a `/admin` CMS setting.
-  Edit the number and `git push` to change it (larger = collapses points that are farther
-  apart). Desktop is un-clustered, so it only affects mobile. Details:
-  [`deployment/README.md`](../deployment/README.md#map-marker-clustering-radius--a-per-mountain-config-value).
+- **Map clustering (mobile):** two per-mountain knobs in the `map` block of
+  `config/mountains/mountains.json` — **not** a `/admin` CMS setting.
+  - `map.clustering` (`true` / `false`) — turn clustering **on/off**. `true` (default) collapses
+    nearby feeding-point markers into a tap-to-expand cluster badge; `false` shows **every** point
+    as its own pin (may overlap where points are close) — good for a mountain with only a few,
+    well-separated points.
+  - `map.maxClusterRadius` (screen pixels) — how close points must be to group, when clustering is
+    on. Larger = collapses points that are farther apart; ignored when `clustering` is `false`.
+
+  Both are **baked at build**, so edit the file and `git push` to change them — a rebuild/redeploy
+  is required (no runtime toggle). Desktop is always un-clustered. Details:
+  [`deployment/README.md`](../deployment/README.md#map-clustering--per-mountain-config-values).
 
 ---
 

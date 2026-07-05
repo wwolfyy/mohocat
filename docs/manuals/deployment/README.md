@@ -78,28 +78,35 @@ single-sourced in `src/lib/cache-config.ts` → `REVALIDATE_SECONDS`):
 **To change N:** edit the value (one literal) and `git push` → Vercel rebuilds. There is no
 runtime dial; a rebuild/redeploy is required either way.
 
-## Map marker-clustering radius — a per-mountain config value
+## Map clustering — per-mountain config values
 
-On the **mobile** map, nearby feeding-point markers collapse into a single cluster. The
-distance under which they collapse is **`map.maxClusterRadius`** in
-`config/mountains/mountains.json` (per mountain):
+On the **mobile** map, nearby feeding-point markers can collapse into a single cluster badge
+(tap to fan the members out). Two per-mountain knobs live in the `map` block of
+`config/mountains/mountains.json`:
 
 ```json
 "map": {
+  "clustering": true,
   "maxClusterRadius": 50
 }
 ```
 
-- It's a **screen-pixel** radius at the current zoom (leaflet.markercluster semantics), **not**
-  a distance in metres — points that overlap when zoomed out separate as you zoom in.
-- **Mobile only.** The desktop map is un-clustered, so this value has no effect there.
-- Larger = collapses points that are farther apart; smaller = keeps them separate longer.
-- **Omitting the `map` section is fine** — the code falls back to `DEFAULT_MAP_CONFIG`
-  (`50`) in `src/utils/config.ts`.
+- **`clustering`** (`true` / `false`) — turn clustering **on or off** for this mountain.
+  `true` (default) clusters nearby points; `false` renders **every** point as its own pin on
+  mobile (they may overlap where points sit close together). Off is a good fit for a mountain
+  with only a few, well-separated feeding points, where the extra tap-to-expand is just friction.
+- **`maxClusterRadius`** — when clustering is on, the **screen-pixel** radius (measured at the
+  fill/default view) within which points group into one cluster. Larger = collapses points that
+  are farther apart; smaller = keeps them separate longer. Ignored when `clustering` is `false`.
+  _(The grouping is computed once by our own static clusterer — `src/utils/mapClustering.ts` —
+  and never re-clusters on zoom; it is **not** `leaflet.markercluster`.)_
+- **Mobile only.** The desktop map is always un-clustered, so neither value affects it.
+- **Omitting the `map` section (or either field) is fine** — the code falls back to
+  `DEFAULT_MAP_CONFIG` (`clustering: true`, `maxClusterRadius: 50`) in `src/utils/config.ts`.
 
-**To change it:** edit the one number and `git push` → Vercel rebuilds. Unlike the ISR `N`
-above, this one lives in a config file rather than a source literal, but it's still baked at
-build — a redeploy is required for it to take effect (no runtime dial). Read/exposed via
+**To change either:** edit `config/mountains/mountains.json` and `git push` → Vercel rebuilds.
+Both values live in a config file (not a source literal), but they're still **baked at build**,
+so a redeploy is required for a change to take effect — there is no runtime dial. Read/exposed via
 `getMapConfig()`.
 
 ## Things that deploy _outside_ Vercel
