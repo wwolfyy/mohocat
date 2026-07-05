@@ -15,6 +15,31 @@
 
 ---
 
+## 2026-07-06 — Mobile nav: close the hamburger menu on outside click
+
+**Area:** `components/Navigation.tsx` · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+The open mobile hamburger menu now dismisses when the user taps anywhere outside the top nav bar.
+A `pointerdown` document listener (active only while the menu is open) closes the menu unless the
+click lands inside the surrounding `<header>`; a ref on the hamburger+menu wrapper locates that
+header. Clicks on the menu, its items, or the toggle button are DOM descendants of the header, so
+they're left to their own `onClick` — no double-fire, and the toggle keeps working.
+
+### Rationale
+
+Previously the menu only closed via the X button or by picking an item — tapping the map/page
+left it hanging open. Outside-tap-to-dismiss is the expected mobile affordance. The top nav bar is
+kept as a safe zone (its links navigate away, resetting state anyway).
+
+### Verified
+
+Browser-verified in the 390px iframe harness: open → tap map area = closes; open → tap empty nav
+bar = stays open. `npx tsc --noEmit` clean.
+
+---
+
 ## 2026-07-06 — Map: moved the click-a-pin nudge card from bottom-left to top-left
 
 **Area:** `components/IntroCard.tsx`, `components/MountainViewer.tsx` · **Type:** fix ·

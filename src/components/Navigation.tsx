@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { NavigationBarLogout } from '@/components/auth/NavigationBarLogout';
 import { NavigationBarLogin } from '@/components/auth/NavigationBarLogin';
@@ -80,6 +80,23 @@ export default function Navigation() {
 
   const closeMobile = () => setIsMobileMenuOpen(false);
 
+  // Ref on the mobile hamburger+menu wrapper; used to find the surrounding
+  // <header> (the top nav bar) so a click anywhere outside it dismisses the
+  // open menu. Clicks inside the header — the menu, its items, or the toggle
+  // button — are handled by their own onClick and left alone here.
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const header = mobileNavRef.current?.closest('header');
+      if (header && event.target instanceof Node && header.contains(event.target)) return;
+      setIsMobileMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isMobileMenuOpen]);
+
   // Groups in the mobile menu are separated by a hairline rule instead of a
   // labelled section header — the item labels lead, the rule just delimits.
   const MobileDivider = () => <div className="my-1 border-t border-gray-200" aria-hidden="true" />;
@@ -144,7 +161,7 @@ export default function Navigation() {
       </nav>
 
       {/* Mobile hamburger button (shown below `lg` — see the desktop nav note) */}
-      <div className="lg:hidden">
+      <div ref={mobileNavRef} className="lg:hidden">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
