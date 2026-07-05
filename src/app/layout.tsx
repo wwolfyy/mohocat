@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 data-oid="rho93zh"
               >
                 <div
-                  className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2 flex justify-between items-center"
+                  className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-1 lg:py-2 flex justify-between items-center"
                   data-oid="s43864t"
                 >
                   {' '}
