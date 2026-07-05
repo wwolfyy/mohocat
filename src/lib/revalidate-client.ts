@@ -2,8 +2,8 @@ import type { User } from 'firebase/auth';
 
 /**
  * Best-effort on-demand revalidation of the §7a baked public pages, called from
- * the admin UI after a successful cat mutation. Attaches the Firebase ID token
- * (the route is members-only).
+ * the admin UI after a successful mutation (cats or feeding-station points).
+ * Attaches the Firebase ID token (the route is members-only).
  *
  * INTENTIONALLY does not throw: the mutation it follows has already committed to
  * Firestore, so a revalidation hiccup must not surface as a failed save. The
@@ -11,7 +11,7 @@ import type { User } from 'firebase/auth';
  * is the documented hybrid-freshness contract, not silent error-swallowing.
  * Failures are logged.
  */
-export async function triggerCatRevalidate(user: User | null): Promise<void> {
+export async function triggerPublicRevalidate(user: User | null): Promise<void> {
   try {
     if (!user) {
       console.error('Revalidate skipped: no authenticated user');

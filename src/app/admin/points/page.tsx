@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getPointService, getCatService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
-import { triggerCatRevalidate } from '@/lib/revalidate-client';
+import { triggerPublicRevalidate } from '@/lib/revalidate-client';
 import type { Point, Cat, LabelSide } from '@/types';
 import Button from '@/components/ui/Button';
 import PointMapPicker from '@/components/admin/PointMapPicker';
@@ -160,8 +160,8 @@ export default function PointsCMSPage() {
       }
 
       // Refresh the baked map page (`/`) so the edit reflects immediately —
-      // reused from the cat CMS; /api/revalidate revalidates `/` (see route).
-      await triggerCatRevalidate(user);
+      // /api/revalidate revalidates the public surfaces (see route).
+      await triggerPublicRevalidate(user);
 
       handleCancel();
     } catch (err: any) {
@@ -180,7 +180,7 @@ export default function PointsCMSPage() {
       await pointService.deletePoint(point.id);
       setPoints((prev) => prev.filter((p) => p.id !== point.id));
       setDeleteTarget(null);
-      await triggerCatRevalidate(user);
+      await triggerPublicRevalidate(user);
     } catch (err: any) {
       setError(S.errors.deleteFailed(err.message));
       setDeleteTarget(null);

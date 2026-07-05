@@ -16,7 +16,7 @@ import { FiSave, FiRotateCcw, FiSearch, FiFilter } from 'react-icons/fi';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { getCatService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
-import { triggerCatRevalidate } from '@/lib/revalidate-client';
+import { triggerPublicRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
 import {
   filterCats,
@@ -519,7 +519,7 @@ export default function CatGrid() {
       setSaving(true);
       await catService.batchUpdateCats(updates);
       // Refresh the baked home/adoption pages so edits show immediately.
-      await triggerCatRevalidate(user);
+      await triggerPublicRevalidate(user);
       const count = updates.length;
       await loadCats();
       setNotice(t.saved(count));

@@ -145,6 +145,10 @@ already-landed label unit tests).
       Firestore, no redeploy) vs **mobile clustering** (`mountains.json` config, whole-mountain,
       redeploy). admin-manual §4 overview table + §9 cross-link; deployment/README.md "Map
       clustering" callout; new-mountain-setup.md `map` bullet (stale anchor fixed).
+- [x] **Cleanup: renamed `triggerCatRevalidate` → `triggerPublicRevalidate`** — the helper was
+      cat-named but is now shared by the points CMS; the collection-neutral name matches what it
+      does (revalidate the public baked surfaces `/` + `/pages/adoption`, regardless of which
+      collection mutated). Call sites (cats/points pages, `CatGrid`) + doc comments updated.
 
 ## Verification
 

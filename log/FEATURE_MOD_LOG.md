@@ -15,6 +15,34 @@
 
 ---
 
+## 2026-07-06 — Cleanup: `triggerCatRevalidate` → `triggerPublicRevalidate`
+
+**Area:** `lib/revalidate-client.ts`, `app/admin/cats/page.tsx`, `app/admin/points/page.tsx`,
+`components/admin/cat-grid/CatGrid.tsx` · **Type:** cleanup (behavior-neutral rename) ·
+**Branch:** `dev`
+
+### Change
+
+Renamed the on-demand revalidation helper from `triggerCatRevalidate` to
+`triggerPublicRevalidate`. The helper was cat-named from when only the cat CMS used it, but the
+급식소 points CMS now reuses it too, and it never was cat-specific — it POSTs `/api/revalidate`,
+which revalidates the public baked surfaces (`/` + `/pages/adoption`) regardless of which
+collection mutated. Updated all four call sites and the now-stale "reused from the cat CMS"
+comment in the points page.
+
+### Rationale
+
+Recorded as optional cleanup in the off-plan #2 hand-off (§6) — the shared helper's cat name
+misrepresented its (collection-neutral) purpose. Neutral name = one less thing to second-guess
+when the next surface needs revalidation.
+
+### Verified
+
+`npx tsc --noEmit` clean; `npm run test:smoke` 25/25; no remaining `triggerCatRevalidate`
+references in source. Pure identifier rename — no behavior change.
+
+---
+
 ## 2026-07-05 — Admin: 급식소 관리 (feeding-station points) CMS
 
 **Area:** `app/admin/points/page.tsx` (new), `components/admin/PointMapPicker.tsx` (new),

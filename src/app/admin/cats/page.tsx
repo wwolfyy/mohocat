@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getCatService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
-import { triggerCatRevalidate } from '@/lib/revalidate-client';
+import { triggerPublicRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
 import CatGrid from '@/components/admin/cat-grid/CatGrid';
 import Button from '@/components/ui/Button';
@@ -219,7 +219,7 @@ export default function CatsCMSPage() {
       }
 
       // §7a: refresh the baked public pages so the edit reflects immediately.
-      await triggerCatRevalidate(user);
+      await triggerPublicRevalidate(user);
 
       // Reset form
       setFormData(initialFormData);
@@ -267,7 +267,7 @@ export default function CatsCMSPage() {
       setCats(cats.filter((cat) => cat.id !== catId));
       setDeleteConfirm(null);
       // §7a: refresh the baked public pages so the deletion reflects immediately.
-      await triggerCatRevalidate(user);
+      await triggerPublicRevalidate(user);
     } catch (err: any) {
       setError(adminStrings.cats.errors.deleteFailed(err.message));
     }
