@@ -15,6 +15,41 @@
 
 ---
 
+## 2026-07-08 — Mobile lightbox: pinch-to-zoom on images
+
+**Area:** `components/ui/Lightbox.tsx` · **Type:** enhancement · **Branch:** `dev`
+
+### Change
+
+On mobile (`useIsMobile`, <768px) the lightbox image is wrapped in
+`react-zoom-pan-pinch`'s `TransformWrapper`/`TransformComponent` (new dependency, v4.0.3):
+pinch-zoom 1–4×, drag-to-pan while zoomed, double-tap toggles zoom. Desktop rendering is
+byte-for-byte unchanged (no wrapper is mounted). Navigating prev/next resets the zoom to fit
+(`key={image.imageUrl}` remount). While un-zoomed the wrapper carries `touch-action: pan-y`
+so a single-finger drag still scrolls the overlay and only two-finger pinches reach the zoom
+handler; once zoomed it flips to `touch-action: none` and panning takes over.
+
+### Rationale
+
+Page-level pinch zoom is disabled app-wide (`viewport.maximumScale: 1` in `app/layout.tsx`)
+and should stay that way — page zoom would scale the fixed lightbox chrome and fight the
+Leaflet map's own pinch handling. So enlargement has to live inside the lightbox, and only on
+mobile per owner direction. A battle-tested gesture library was chosen over hand-rolled
+Pointer Events math deliberately — device-specific pinch edge cases are exactly where the S22
+map bugs lived.
+
+### Verified
+
+Gates green (`tsc --noEmit`, smoke 25/25). Desktop (1456px): lightbox opens with no transform
+wrapper. 390px iframe harness: wrapper mounts with `pan-y`; double-tap handler fires and
+queues the zoom animation; driving the transform to 2× applies the transform, flips
+`touch-action` to `none`, enables panning, and reverting to 1× restores everything;
+prev/next navigation resets to 1×. The animated zoom itself can't render in the harness —
+the automation tab is backgrounded so Chrome suspends `requestAnimationFrame` entirely
+(verified 0 ticks/s) — so the **pinch/double-tap feel on a real phone is device-owed**.
+
+---
+
 ## 2026-07-06 — Mobile nav: reduced the top bar height
 
 **Area:** `app/layout.tsx` · **Type:** enhancement · **Branch:** `dev`

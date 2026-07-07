@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { CatImage } from '@/types/media';
 import { parseDate } from '@/utils/parse-date';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useModalLayer } from './useModalLayer';
 
 interface LightboxProps {
@@ -32,6 +34,12 @@ export default function Lightbox({
 }: LightboxProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const isMobile = useIsMobile();
+  // Whether the mobile pinch-zoom is currently zoomed in (scale > 1). Drives
+  // touch-action: while un-zoomed the image lets single-finger drags scroll
+  // the overlay (pan-y) and only two-finger pinches reach the zoom handler;
+  // once zoomed, the image captures all touches for panning.
+  const [zoomed, setZoomed] = useState(false);
   // Render through a portal to <body> so the lightbox escapes the album modal's
   // ancestor stacking context; combined with the stack-derived z-index below it
   // then paints above the album it was opened from at any nesting depth.
@@ -48,6 +56,7 @@ export default function Lightbox({
   useEffect(() => {
     setImageLoading(true);
     setImageError(false);
+    setZoomed(false);
   }, [image.imageUrl]);
 
   if (!mounted) return null;
@@ -111,21 +120,48 @@ export default function Lightbox({
           </div>
         )}
 
-        {/* eslint-disable-next-line @next/next/no-img-element -- full-size remote
-            images from Firebase Storage; the dev image optimizer stalls on them,
-            consistent with the album grid which also uses a native <img>. */}
-        <img
-          src={image.imageUrl}
-          alt={image.fileName}
-          className={`mx-auto h-auto max-h-[80vh] w-auto rounded-xl object-contain ${
-            imageLoading ? 'hidden' : ''
-          }`}
-          onLoad={() => setImageLoading(false)}
-          onError={() => {
-            setImageLoading(false);
-            setImageError(true);
-          }}
-        />
+        {(() => {
+          /* eslint-disable-next-line @next/next/no-img-element -- full-size remote
+             images from Firebase Storage; the dev image optimizer stalls on them,
+             consistent with the album grid which also uses a native <img>. */
+          const img = (
+            <img
+              src={image.imageUrl}
+              alt={image.fileName}
+              className={`mx-auto h-auto max-h-[80vh] w-auto rounded-xl object-contain ${
+                imageLoading ? 'hidden' : ''
+              }`}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false);
+                setImageError(true);
+              }}
+            />
+          );
+
+          if (!isMobile) return img;
+
+          // Mobile-only pinch-zoom (desktop stays plain). Keyed per image so
+          // navigating resets the transform to fit.
+          return (
+            <TransformWrapper
+              key={image.imageUrl}
+              minScale={1}
+              maxScale={4}
+              doubleClick={{ mode: 'toggle' }}
+              wheel={{ disabled: true }}
+              panning={{ disabled: !zoomed }}
+              onTransform={(_, state) => setZoomed(state.scale > 1.01)}
+            >
+              <TransformComponent
+                wrapperStyle={{ width: '100%', touchAction: zoomed ? 'none' : 'pan-y' }}
+                contentStyle={{ width: '100%' }}
+              >
+                {img}
+              </TransformComponent>
+            </TransformWrapper>
+          );
+        })()}
 
         {!imageLoading && !imageError && (
           <div className="mt-4 text-center text-white">
