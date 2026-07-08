@@ -28,7 +28,7 @@ function AdoptionPostCard({ post }: { post: any }) {
         aria-expanded={open}
         className="flex w-full items-start gap-4 p-4 text-left"
       >
-        <h3 className="flex-grow text-xl font-bold text-gray-900">{post.title}</h3>
+        <h3 className="flex-grow text-sm font-semibold text-gray-900">{post.title}</h3>
         <div className="flex flex-shrink-0 items-center gap-2 whitespace-nowrap text-sm text-gray-500">
           <span>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</span>
           <svg
@@ -82,11 +82,11 @@ function AdoptionPostCard({ post }: { post: any }) {
             )}
             <CatLinkedText
               text={post.message}
-              className="flex-grow whitespace-pre-line text-gray-700"
+              className="flex-grow whitespace-pre-line text-sm text-gray-700"
             />
           </div>
         ) : (
-          <CatLinkedText text={post.message} className="line-clamp-3 text-gray-700" />
+          <CatLinkedText text={post.message} className="line-clamp-3 text-sm text-gray-700" />
         )}
       </div>
     </div>
@@ -200,7 +200,7 @@ const AdoptionPromotionClient = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="제목이나 내용으로 검색"
-            className="w-full rounded-lg border border-gray-200 py-2.5 pl-10 pr-4 text-gray-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 text-sm text-gray-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
           />
         </div>
       )}

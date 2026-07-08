@@ -88,21 +88,21 @@ export default function Contact() {
       </div> */}
 
       <div data-oid="8dwt2t:">
-        <h4 className="text-xl text-center mb-8" data-oid="c218kfo">
+        <p className="text-sm text-center text-gray-500 mb-5" data-oid="c218kfo">
           고양이들 돌보기, 입양, 중성화를 통한 개체 수 조절 등에 동참을 원하시면 먼저{' '}
           <Link
             href="/login?tab=signup"
-            className="font-bold text-brand-700 underline underline-offset-2 hover:text-brand-800"
+            className="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
           >
             집사등록
           </Link>
-          을 하신 후에 아래 서식을 작성해 주세요
-        </h4>
+          을 하신 후에 아래 서식을 작성해 주세요.
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6" data-oid="01bl:61">
+        <form onSubmit={handleSubmit} className="space-y-4" data-oid="01bl:61">
           {/* Name Input */}
           <div data-oid="llt4pcp">
-            <label className="block text-gray-700 mb-2" data-oid="t:8er9_">
+            <label className="block text-sm text-gray-600 mb-1" data-oid="t:8er9_">
               이름
             </label>
             <input
@@ -111,14 +111,14 @@ export default function Contact() {
               onChange={handleChange}
               type="text"
               required
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
+              className="w-full p-2 text-sm border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
               data-oid="lsi4982"
             />
           </div>
 
           {/* Phone Input */}
           <div data-oid="dx-6hfb">
-            <label className="block text-gray-700 mb-2" data-oid="8e3zidj">
+            <label className="block text-sm text-gray-600 mb-1" data-oid="8e3zidj">
               전화번호
             </label>
             <input
@@ -127,14 +127,14 @@ export default function Contact() {
               onChange={handleChange}
               type="tel"
               required
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
+              className="w-full p-2 text-sm border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
               data-oid="vyy-153"
             />
           </div>
 
           {/* Email Input */}
           <div data-oid=".xe0odv">
-            <label className="block text-gray-700 mb-2" data-oid="epvftmp">
+            <label className="block text-sm text-gray-600 mb-1" data-oid="epvftmp">
               이메일
             </label>
             <input
@@ -142,14 +142,14 @@ export default function Contact() {
               value={formData.email}
               onChange={handleChange}
               type="email"
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
+              className="w-full p-2 text-sm border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
               data-oid="h9l8g-a"
             />
           </div>
 
           {/* Message Input */}
           <div data-oid="qmqqqx_">
-            <label className="block text-gray-700 mb-2" data-oid="oorrh.t">
+            <label className="block text-sm text-gray-600 mb-1" data-oid="oorrh.t">
               메시지
             </label>
             <textarea
@@ -158,7 +158,7 @@ export default function Contact() {
               onChange={handleChange}
               rows={4}
               required
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
+              className="w-full p-2 text-sm border rounded-lg focus:ring-2 focus:ring-brand-300 outline-none"
               data-oid="oybfjtx"
             />
           </div>
@@ -168,8 +168,8 @@ export default function Contact() {
             type="submit"
             disabled={isSubmitting || !canSubmit}
             className={cn(
-              'w-full py-3 bg-gradient-to-r from-brand to-accent',
-              'text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200',
+              'w-full py-2 text-sm bg-gradient-to-r from-brand to-accent',
+              'text-ink rounded-lg font-semibold hover:shadow-lg transition-all duration-200',
               (isSubmitting || !canSubmit) && 'opacity-50 cursor-not-allowed'
             )}
             data-oid="p6x6eai"

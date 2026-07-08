@@ -103,11 +103,11 @@ const FAQPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8" data-oid=".cu79eq">
-      <div className="text-center mb-10" data-oid="95icw2l">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900" data-oid="r68ap9s">
+      <div className="text-center mb-6" data-oid="95icw2l">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900" data-oid="r68ap9s">
           자주 묻는 질문
         </h1>
-        <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
+        <div className="mx-auto mt-1.5 h-0.5 w-8 rounded-full bg-brand" />
       </div>
 
       <FAQAccordion items={faqItems} data-oid="h8mmdv." />

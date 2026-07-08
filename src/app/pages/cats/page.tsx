@@ -39,10 +39,10 @@ export default async function CatsPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       {/* Header */}
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">냥이들</h1>
-        <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
-        <p className="mt-4 text-gray-600">계양산 냥이들을 한눈에 만나 보세요.</p>
+      <div className="mb-5 text-center">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900">냥이들</h1>
+        <div className="mx-auto mt-1.5 mb-2 h-0.5 w-8 rounded-full bg-brand" />
+        <p className="text-sm text-gray-500">계양산 냥이들을 한눈에 만나 보세요.</p>
       </div>
 
       {/* Body states */}

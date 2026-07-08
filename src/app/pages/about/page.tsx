@@ -177,13 +177,13 @@ export default function About() {
     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8" data-oid="3kim:bs">
       <div className="prose prose-lg mx-auto" data-oid="your4.g">
         {/* Page Title */}
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-3" data-oid="5f.mun5">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900 mb-2" data-oid="5f.mun5">
           {aboutData.title}
         </h1>
         {aboutData.subtitle && (
-          <p className="mb-3 text-lg text-gray-600">{emphasizeCapitals(aboutData.subtitle)}</p>
+          <p className="mb-2 text-sm text-gray-500">{emphasizeCapitals(aboutData.subtitle)}</p>
         )}
-        <div className="mb-8 h-1 w-12 rounded-full bg-brand" />
+        <div className="mb-5 h-0.5 w-8 rounded-full bg-brand" />
 
         {/* Main Photo */}
         {aboutData.mainPhoto && (
@@ -237,7 +237,7 @@ export default function About() {
         )}
 
         {/* Main Content */}
-        <div className="text-lg mb-8 leading-relaxed" data-oid="9dy6r-_" ref={contentRef}>
+        <div className="text-base mb-6 leading-relaxed" data-oid="9dy6r-_" ref={contentRef}>
           <div
             className="whitespace-pre-line"
             dangerouslySetInnerHTML={{ __html: processTextWithLinks(aboutData.mainContent) }}

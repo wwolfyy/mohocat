@@ -36,14 +36,14 @@ export default async function AdoptionPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">입양홍보</h1>
-        <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
-        <p className="mt-4 text-gray-600">
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900">입양홍보</h1>
+        <div className="mx-auto mt-1.5 mb-2 h-0.5 w-8 rounded-full bg-brand" />
+        <p className="text-sm text-gray-500">
           새 가족을 기다리는 냥이들이에요. 마음이 가는 친구가 있다면{' '}
           <Link
             href="/pages/contact"
-            className="font-semibold text-gray-900 underline underline-offset-2 hover:text-brand"
+            className="font-medium text-gray-700 underline underline-offset-2 hover:text-brand"
           >
             동참
           </Link>{' '}
@@ -77,10 +77,10 @@ export default async function AdoptionPage() {
 
       {/* 새로운 입양 소식 — admin-authored adoption-promotion posts (posts_adoption),
           independent of the adoptable-cats list above. Client island, live-fetched. */}
-      <section className="mt-14">
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">새로운 입양 소식</h2>
-          <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand" />
+      <section className="mt-8">
+        <div className="mb-4 text-center">
+          <h2 className="text-base font-semibold tracking-tight text-gray-900">새로운 입양 소식</h2>
+          <div className="mx-auto mt-1.5 h-0.5 w-8 rounded-full bg-brand" />
         </div>
         <AdoptionPromotionClient />
       </section>
