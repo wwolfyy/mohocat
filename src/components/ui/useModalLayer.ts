@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 /**
  * Shared layer stack for all overlays (modals, lightboxes, players).
  *
- * Every open overlay registers itself here while mounted, which drives two
+ * Every open overlay registers itself here while mounted, which drives three
  * things off a single source of truth — the order in which overlays were opened:
  *
  * 1. **Keyboard** — Escape / arrow handlers only fire for the **topmost** layer,
@@ -18,9 +18,33 @@ import { useEffect, useId, useRef, useState } from 'react';
  *    without a hand-maintained ladder of magic `z-index` values. Overlays that
  *    render into a portal (so they escape any ancestor stacking context) must
  *    apply the returned value for this to hold.
+ * 3. **Back-button / swipe-back** — each layer pushes a synthetic history entry
+ *    on open so the browser/OS back gesture closes the overlay rather than
+ *    navigating away from the underlying page. The entry is popped on normal
+ *    close (X button, backdrop) so the history stack stays clean.
  */
 
 const layerStack: string[] = [];
+
+// Escape-handler map keyed by layer id, used by the global popstate handler to
+// close the topmost overlay when the user presses the browser/OS back button.
+const layerEscapeHandlers = new Map<string, () => void>();
+
+// Guards against the programmatic history.back() call (issued when a modal is
+// closed normally) triggering the popstate handler and inadvertently closing
+// the modal below it.
+let suppressNextPopState = false;
+let popStateListenerRegistered = false;
+
+function onGlobalPopState() {
+  if (suppressNextPopState) {
+    suppressNextPopState = false;
+    return;
+  }
+  if (layerStack.length === 0) return;
+  const topId = layerStack[layerStack.length - 1];
+  layerEscapeHandlers.get(topId)?.();
+}
 
 // The first overlay sits at BASE; each nested layer sits STEP above the one
 // below it. Kept in JS rather than a fixed set of Tailwind `z-*` utilities so
@@ -48,8 +72,22 @@ export function useModalLayer(isOpen: boolean, handlers: LayerHandlers): number 
 
   useEffect(() => {
     if (!isOpen) return;
+
+    // Register the global popstate listener once (client-only, lazy).
+    if (!popStateListenerRegistered) {
+      popStateListenerRegistered = true;
+      window.addEventListener('popstate', onGlobalPopState);
+    }
+
     layerStack.push(id);
     setZIndex(BASE_Z_INDEX + (layerStack.length - 1) * Z_INDEX_STEP);
+
+    // Push a synthetic history entry so the browser/OS back button closes this
+    // overlay instead of navigating away from the underlying page.
+    history.pushState({ mohocat_modal: id }, '');
+
+    // Register this layer's close callback for popstate dispatch.
+    layerEscapeHandlers.set(id, () => handlersRef.current.onEscape?.());
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (layerStack[layerStack.length - 1] !== id) return;
@@ -66,8 +104,18 @@ export function useModalLayer(isOpen: boolean, handlers: LayerHandlers): number 
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
+      layerEscapeHandlers.delete(id);
       const idx = layerStack.lastIndexOf(id);
       if (idx !== -1) layerStack.splice(idx, 1);
+
+      // If history.state still points at our entry the overlay was closed
+      // normally (X / backdrop), not by the back button — pop the synthetic
+      // entry we pushed so the history stack stays clean. Suppress the
+      // resulting popstate so it doesn't accidentally close the layer below.
+      if ((history.state as { mohocat_modal?: string } | null)?.mohocat_modal === id) {
+        suppressNextPopState = true;
+        history.back();
+      }
     };
   }, [isOpen, id]);
 
