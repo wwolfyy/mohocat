@@ -74,7 +74,7 @@ const ReplyList = forwardRef<ReplyListRef, ReplyListProps>(
       <div className="mt-3">
         <button
           onClick={handleToggleReplies}
-          className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
+          className="flex items-center space-x-1 text-sm text-brand-700 hover:text-brand-800 transition-colors duration-200"
           disabled={loading}
         >
           {showReplies ? (

@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
+import Button from '@/components/ui/Button';
+import { strings } from '@/constants/strings';
+
+const t = strings.mypage;
 
 export default function MyPage() {
   const {
@@ -105,7 +109,7 @@ export default function MyPage() {
   if (loading || !user) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -118,9 +122,9 @@ export default function MyPage() {
     try {
       await updateProfile(newNickname);
       setEditingNickname(false);
-      alert('Nickname updated!');
+      alert(t.profile.nicknameUpdated);
     } catch (e: any) {
-      alert('Failed to update nickname: ' + e.message);
+      alert(t.profile.nicknameUpdateFailed(e.message));
     }
   };
 
@@ -130,7 +134,7 @@ export default function MyPage() {
       await reauthenticateWithType('password', { password: emailPassword });
       setEmailStep('input-new');
     } catch (e: any) {
-      alert('Re-authentication failed: ' + e.message);
+      alert(t.profile.reauthFailed(e.message));
     }
   };
 
@@ -139,11 +143,9 @@ export default function MyPage() {
     try {
       await verifyBeforeUpdateEmail(newEmail);
       setEmailStep('verification-sent');
-      alert(
-        `Verification email sent to ${newEmail}. Please click the link in the email to confirm the change.`
-      );
+      alert(t.profile.emailVerificationSentAlert(newEmail));
     } catch (e: any) {
-      alert('Failed to send verification: ' + e.message);
+      alert(t.profile.emailVerificationFailed(e.message));
     }
   };
 
@@ -155,7 +157,7 @@ export default function MyPage() {
       setPhoneVerificationId(confirmation.verificationId);
       setPhoneStep('verify-new');
     } catch (e: any) {
-      alert('Failed to send code: ' + e.message);
+      alert(t.profile.phoneCodeFailed(e.message));
     }
   };
 
@@ -170,12 +172,12 @@ export default function MyPage() {
 
       await updatePhoneNumber(phoneVerificationId, phoneVerificationCode);
       setEditingPhone(false);
-      alert('Phone number updated!');
+      alert(t.profile.phoneUpdated);
     } catch (e: any) {
       if (e.code === 'auth/requires-recent-login') {
-        alert('For security, please sign out and sign in again before changing your phone number.');
+        alert(t.profile.phoneRequiresRecentLogin);
       } else {
-        alert('Failed to update phone: ' + e.message);
+        alert(t.profile.phoneUpdateFailed(e.message));
       }
     }
   };
@@ -187,7 +189,7 @@ export default function MyPage() {
   const toggleKakao = async () => {
     try {
       if (isKakaoLinked) {
-        if (confirm('Are you sure you want to disconnect KakaoTalk?')) {
+        if (confirm(t.linkedAccounts.disconnectConfirm)) {
           await unlinkProvider('oidc.kakao'); // Try oidc first
           // If failed, maybe try checking 'https://kakao.com'? But our service handles id.
         }
@@ -197,7 +199,7 @@ export default function MyPage() {
     } catch (e: any) {
       console.error(e);
       // Alert handled by hook? No hook sets error state.
-      alert('Operation failed: ' + e.message);
+      alert(t.linkedAccounts.operationFailed(e.message));
     }
   };
 
@@ -205,11 +207,11 @@ export default function MyPage() {
     <div className="space-y-8">
       {/* Profile Section */}
       <section className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">Profile</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-4">{t.profile.heading}</h2>
 
         {/* Nickname */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-500 mb-1">Nickname</label>
+          <label className="block text-sm text-gray-500 mb-1">{t.profile.nicknameLabel}</label>
           {editingNickname ? (
             <div className="flex gap-2">
               <input
@@ -218,21 +220,20 @@ export default function MyPage() {
                 onChange={(e) => setNewNickname(e.target.value)}
                 className="flex-1 px-3 py-2 border rounded-lg"
               />
-              <button
-                onClick={handleUpdateNickname}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                Save
-              </button>
+              <Button variant="primary" size="sm" onClick={handleUpdateNickname}>
+                {strings.common.save}
+              </Button>
               <button onClick={() => setEditingNickname(false)} className="text-gray-500 px-2">
-                Cancel
+                {strings.common.cancel}
               </button>
             </div>
           ) : (
             <div className="flex justify-between items-center">
-              <span className="text-gray-900 font-medium">{user.displayName || 'No nickname'}</span>
-              <button onClick={() => setEditingNickname(true)} className="text-blue-500 text-sm">
-                Edit
+              <span className="text-gray-900 font-medium">
+                {user.displayName || t.profile.noNickname}
+              </span>
+              <button onClick={() => setEditingNickname(true)} className="text-brand-700 text-sm">
+                {t.profile.edit}
               </button>
             </div>
           )}
@@ -240,28 +241,30 @@ export default function MyPage() {
 
         {/* Email */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-500 mb-1">Email</label>
+          <label className="block text-sm text-gray-500 mb-1">{t.profile.emailLabel}</label>
           {editingEmail ? (
             <div className="bg-gray-50 p-3 rounded-lg">
               {emailStep === 'password-reauth' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-600">Please enter your password to continue.</p>
+                  <p className="text-xs text-gray-600">{t.profile.passwordReauthPrompt}</p>
                   <input
                     type="password"
-                    placeholder="Current Password"
+                    placeholder={t.profile.currentPasswordPlaceholder}
                     value={emailPassword}
                     onChange={(e) => setEmailPassword(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
                       onClick={handleEmailReauth}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                     >
-                      Verify
-                    </button>
+                      {strings.common.confirm}
+                    </Button>
                     <button onClick={() => setEditingEmail(false)} className="text-gray-500 px-2">
-                      Cancel
+                      {strings.common.cancel}
                     </button>
                   </div>
                 </div>
@@ -270,34 +273,36 @@ export default function MyPage() {
                 <div className="space-y-2">
                   <input
                     type="email"
-                    placeholder="New Email Address"
+                    placeholder={t.profile.newEmailPlaceholder}
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
                     onClick={handleSendEmailVerification}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                   >
-                    Send Verification
-                  </button>
+                    {t.profile.sendVerification}
+                  </Button>
                 </div>
               )}
               {emailStep === 'verification-sent' && (
                 <div className="text-center">
-                  <p className="text-green-600 text-sm mb-2">Verification email sent!</p>
+                  <p className="text-green-600 text-sm mb-2">{t.profile.emailVerificationSent}</p>
                   <button
                     onClick={() => setEditingEmail(false)}
                     className="text-gray-500 text-sm underline"
                   >
-                    Close
+                    {strings.common.close}
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">{user.email || 'No email'}</span>
+              <span className="text-gray-900">{user.email || t.profile.noEmail}</span>
               {/* Only allow email edit if we have password provider?
                         If Kakaotalk user, they might not have password.
                         Reauth flow needs type detection.
@@ -307,9 +312,9 @@ export default function MyPage() {
                   setEditingEmail(true);
                   setEmailStep('password-reauth');
                 }}
-                className="text-blue-500 text-sm"
+                className="text-brand-700 text-sm"
               >
-                Change
+                {t.profile.change}
               </button>
             </div>
           )}
@@ -317,21 +322,21 @@ export default function MyPage() {
 
         {/* Password Change Link */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-500 mb-1">Password</label>
+          <label className="block text-sm text-gray-500 mb-1">{t.profile.passwordLabel}</label>
           <div className="flex justify-between items-center">
             <span className="text-gray-900">********</span>
             <button
               onClick={() => setIsResetModalOpen(true)}
-              className="text-blue-500 text-sm hover:underline"
+              className="text-brand-700 text-sm hover:underline"
             >
-              Reset Password
+              {t.profile.resetPassword}
             </button>
           </div>
         </div>
 
         {/* Phone */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-500 mb-1">Phone Number</label>
+          <label className="block text-sm text-gray-500 mb-1">{t.profile.phoneLabel}</label>
           {editingPhone ? (
             <div className="bg-gray-50 p-3 rounded-lg">
               {/* Dedicated empty container for Recaptcha */}
@@ -341,20 +346,22 @@ export default function MyPage() {
                 <div className="space-y-2">
                   <input
                     type="tel"
-                    placeholder="New Phone Number"
+                    placeholder={t.profile.newPhonePlaceholder}
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
                       onClick={handleSendPhoneCode}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                     >
-                      Send SMS
-                    </button>
+                      {t.profile.sendSms}
+                    </Button>
                     <button onClick={() => setEditingPhone(false)} className="text-gray-500 px-2">
-                      Cancel
+                      {strings.common.cancel}
                     </button>
                   </div>
                 </div>
@@ -363,31 +370,33 @@ export default function MyPage() {
                 <div className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Verification Code"
+                    placeholder={t.profile.codePlaceholder}
                     value={phoneVerificationCode}
                     onChange={(e) => setPhoneVerificationCode(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-center tracking-widest"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
                     onClick={handleUpdatePhone}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm w-full"
                   >
-                    Verify & Update
-                  </button>
+                    {t.profile.verifyAndUpdate}
+                  </Button>
                 </div>
               )}
             </div>
           ) : (
             <div className="flex justify-between items-center">
-              <span className="text-gray-900">{user.phoneNumber || 'No phone number'}</span>
+              <span className="text-gray-900">{user.phoneNumber || t.profile.noPhone}</span>
               <button
                 onClick={() => {
                   setEditingPhone(true);
                   setPhoneStep('input-new');
                 }}
-                className="text-blue-500 text-sm"
+                className="text-brand-700 text-sm"
               >
-                Change
+                {t.profile.change}
               </button>
             </div>
           )}
@@ -396,16 +405,17 @@ export default function MyPage() {
 
       {/* Linked Accounts */}
       <section className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">Linked Accounts</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-4">{t.linkedAccounts.heading}</h2>
         <div className="flex items-center justify-between p-3 border rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#FEE500] rounded-full flex items-center justify-center">
+              {/* Kakao vendor logo glyph — left as-is (logo, not copy) */}
               <span className="font-bold text-black text-xs">TALK</span>
             </div>
             <div>
-              <p className="font-medium">KakaoTalk</p>
+              <p className="font-medium">{t.linkedAccounts.kakaoName}</p>
               <p className="text-xs text-gray-500">
-                {isKakaoLinked ? 'Connected' : 'Not connected'}
+                {isKakaoLinked ? t.linkedAccounts.connected : t.linkedAccounts.notConnected}
               </p>
             </div>
           </div>
@@ -419,10 +429,10 @@ export default function MyPage() {
             }`}
           >
             {isLinkingKakao || isUnlinkingProvider
-              ? 'Processing...'
+              ? t.linkedAccounts.processing
               : isKakaoLinked
-                ? 'Disconnect'
-                : 'Connect'}
+                ? t.linkedAccounts.disconnect
+                : t.linkedAccounts.connect}
           </button>
         </div>
       </section>
@@ -432,7 +442,7 @@ export default function MyPage() {
         onClick={() => signOut().then(() => router.push('/'))}
         className="w-full bg-gray-100 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-200 transition-colors"
       >
-        Sign Out
+        {t.signOut}
       </button>
 
       <PasswordResetModal

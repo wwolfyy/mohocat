@@ -10,5 +10,5 @@ public/images/
 package-lock.json
 
 # Ignore config files that might conflict
-infra/terraform/
+_infra/_terraform/
 .husky/

@@ -91,7 +91,7 @@ export default function ReplyItem({
                 {reply.depth && reply.depth > 0 && (
                   <>
                     <span>•</span>
-                    <span className="text-blue-600">댓글</span>
+                    <span className="text-brand-600">댓글</span>
                   </>
                 )}
               </div>
@@ -115,7 +115,7 @@ export default function ReplyItem({
           {nestedReplyCount > 0 && (
             <button
               onClick={handleToggleNestedReplies}
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
+              className="text-sm text-brand-700 hover:text-brand-800 transition-colors duration-200"
               disabled={loadingNested}
             >
               {loadingNested

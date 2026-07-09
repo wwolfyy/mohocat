@@ -2,13 +2,23 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 export const dynamic = 'force-dynamic';
 
 // Path to the permissions config file (fallback)
 const CONFIG_PATH = path.join(process.cwd(), 'config', 'permissions.json');
 
-export async function GET() {
+// This route reads/writes role_permissions/role-config — the single source of truth the
+// Firestore rules resolve every permission check against. The Admin SDK bypasses rules, so
+// the route must enforce manage-users itself (otherwise anyone could rewrite the matrix and
+// escalate every role). See PROJECT_PLAN §7.
+
+export async function GET(request: Request) {
+  const authz = await requireApiPermission(request, 'manage-users');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const configDoc = await db.collection('role_permissions').doc('role-config').get();
 
@@ -35,6 +45,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authz = await requireApiPermission(request, 'manage-users');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const body = await request.json();
     const { roles } = body;

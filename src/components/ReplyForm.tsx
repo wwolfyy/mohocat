@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { IPostService } from '@/services';
 import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/ui/Button';
 
 interface ReplyFormProps {
   parentId: string;
@@ -28,7 +29,7 @@ export default function ReplyForm({
   // Don't render if not authenticated
   if (loading) {
     return (
-      <div className="mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400">
+      <div className="mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-brand-300">
         <div className="text-sm text-gray-600">로딩 중...</div>
       </div>
     );
@@ -36,10 +37,10 @@ export default function ReplyForm({
 
   if (!isAuthenticated) {
     return (
-      <div className="mt-3 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+      <div className="mt-3 p-4 bg-brand-50 rounded-lg border-l-4 border-brand-300">
         <div className="text-sm text-gray-600">
-          댓글을 작성하려면 로그인이 필요합니다.
-          <button onClick={onCancel} className="ml-2 text-blue-600 hover:text-blue-800 underline">
+          댓글을 작성하려면 로그인이 필요해요.
+          <button onClick={onCancel} className="ml-2 text-brand-700 hover:text-brand-800 underline">
             닫기
           </button>
         </div>
@@ -93,14 +94,14 @@ export default function ReplyForm({
 
   return (
     <div
-      className={`mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400 ${
+      className={`mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-brand-300 ${
         depth > 0 ? 'ml-4' : ''
       }`}
     >
       <div className="text-sm text-gray-600 mb-3">
         <span className="font-medium">{parentUsername}</span>
         님의 글에 댓글을 작성합니다
-        <div className="text-xs text-blue-600 mt-1">작성자: {user?.email}</div>
+        <div className="text-xs text-brand-600 mt-1">작성자: {user?.email}</div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -110,28 +111,19 @@ export default function ReplyForm({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-transparent resize-none"
             disabled={isSubmitting}
           />
         </div>
 
         <div className="flex space-x-2">
-          <button
-            type="submit"
-            disabled={isSubmitting || !message.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
+          <Button type="submit" variant="primary" disabled={isSubmitting || !message.trim()}>
             {isSubmitting ? '작성 중...' : '댓글 작성'}
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors duration-200"
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
             취소
-          </button>
+          </Button>
         </div>
       </form>
     </div>

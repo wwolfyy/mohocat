@@ -34,7 +34,7 @@ export default function ReplyButton({
       {isAuthenticated ? (
         <button
           onClick={onToggleReply}
-          className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all duration-200"
+          className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-all duration-200"
         >
           <ChatBubbleLeftIcon className="h-4 w-4" />
           <span>{showingReplyForm ? '취소' : '댓글'}</span>

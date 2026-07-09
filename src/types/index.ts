@@ -1,9 +1,20 @@
+/** Which side of the avatar a pin's title label sits on. */
+export type LabelSide = 'above' | 'below';
+
 export interface Point {
   id: string;
   x: number;
   y: number;
   title: string;
   description?: string;
+  /**
+   * Per-device override for the title label's side relative to the avatar. The
+   * mobile map is rotated 90°, so label collisions differ from desktop — set only
+   * the layout you need; an unset side falls back to the automatic edge-flip.
+   * Authored directly on the Firestore Point doc (the `points` collection has no
+   * CMS UI: edit via the Firestore console or a migration script).
+   */
+  labelSide?: { mobile?: LabelSide; desktop?: LabelSide };
 }
 
 export interface Cat {
@@ -24,6 +35,20 @@ export interface Cat {
   offspring?: string;
   isNeutered?: boolean;
   note?: string;
+  adoptable?: boolean;
+  adoption_info?: string;
+  name_origin?: string;
+}
+
+// 동참(contact) form submission
+export interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+  // Firestore Timestamp; kept loosely-typed to avoid a firebase import in the shared types module.
+  createdAt?: { seconds: number; nanoseconds: number } | Date;
 }
 
 // Post and Reply interfaces

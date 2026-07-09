@@ -2,6 +2,9 @@
 
 import React from 'react';
 import { cn } from '@/utils/cn';
+import { strings } from '@/constants/strings';
+
+const t = strings.login.social;
 
 interface SocialLoginButtonProps {
   provider: 'google' | 'kakao';
@@ -152,9 +155,9 @@ const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
 
   const getButtonText = () => {
     if (loading) {
-      return provider === 'google' ? 'Signing in with Google...' : 'Signing in with Kakaotalk...';
+      return provider === 'google' ? t.signingInGoogle : t.signingInKakao;
     }
-    return provider === 'google' ? 'Continue with Google' : 'Continue with Kakaotalk';
+    return provider === 'google' ? t.continueGoogle : t.continueKakao;
   };
 
   return (
@@ -169,9 +172,7 @@ const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
       {getIcon()}
       <span className="whitespace-nowrap">{getButtonText()}</span>
       <span id={`${provider}-button-desc`} className="sr-only">
-        {provider === 'google'
-          ? 'Sign in using your Google account'
-          : 'Sign in using your Kakaotalk account'}
+        {provider === 'google' ? t.descGoogle : t.descKakao}
       </span>
     </button>
   );

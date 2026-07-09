@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { getButlerTalkService, getImageService } from '@/services';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/utils/cn';
 import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { parseRecordingDateFromTitle, formatDateTimeForInput } from '@/utils/dateParser';
 
@@ -129,10 +129,10 @@ const NewButlerTalkForm = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-        <h2 className="text-lg font-semibold text-yellow-800 mb-2">로그인이 필요합니다</h2>
-        <p className="text-yellow-700">
-          새 글을 작성하려면 로그인이 필요합니다. 관리자에게 문의하여 계정을 요청하세요.
+      <div className="p-4 bg-brand-50 rounded-lg ring-1 ring-brand-100">
+        <h2 className="text-lg font-semibold text-brand-700 mb-2">로그인이 필요해요</h2>
+        <p className="text-gray-700">
+          새 글을 작성하려면 로그인이 필요해요. 관리자에게 문의해서 계정을 요청해 주세요.
         </p>
       </div>
     );
@@ -369,7 +369,7 @@ const NewButlerTalkForm = () => {
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
         />
       </div>
 
@@ -383,7 +383,7 @@ const NewButlerTalkForm = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
           placeholder="글 내용을 입력하세요"
         />
       </div>
@@ -424,7 +424,7 @@ const NewButlerTalkForm = () => {
               value={selectedVideoTags.join(', ')}
               onClick={() => setShowVideoTagSelector(true)}
               readOnly
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-gray-50"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 cursor-pointer bg-gray-50"
               placeholder="고양이를 선택하려면 클릭하세요"
             />
           </div>
@@ -439,7 +439,7 @@ const NewButlerTalkForm = () => {
               id="createdTime"
               value={createdTime}
               onChange={(e) => setCreatedTime(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
             />
             <p className="text-xs text-gray-500 mt-1">
               동영상이나 이미지 파일명에서 자동으로 날짜를 추출합니다. 필요시 수정 가능합니다.
@@ -503,7 +503,7 @@ const NewButlerTalkForm = () => {
             value={selectedImageTags.join(', ')}
             onClick={() => setShowImageTagSelector(true)}
             readOnly
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer bg-gray-50"
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 cursor-pointer bg-gray-50"
             placeholder="고양이를 선택하려면 클릭하세요"
           />
         </div>
@@ -511,18 +511,9 @@ const NewButlerTalkForm = () => {
 
       {/* Submit Button */}
       <div className="pt-4">
-        <button
-          type="submit"
-          disabled={uploading}
-          className={cn(
-            'w-full py-3 px-4 rounded-md font-medium text-white transition-colors',
-            uploading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-          )}
-        >
+        <Button type="submit" variant="primary" size="lg" className="w-full" disabled={uploading}>
           {uploading ? '업로드 중...' : '글 작성'}
-        </button>
+        </Button>
       </div>
 
       {/* Cat Selector Modals */}

@@ -7,6 +7,7 @@ import {
   getPostService,
   getButlerTalkService,
   getAnnouncementService,
+  getAdoptionService,
 } from '@/services';
 import { User } from 'firebase/auth';
 import { cn } from '@/utils/cn';
@@ -105,7 +106,7 @@ interface Post {
 }
 
 interface AdminPostListProps {
-  postType: 'butler_stream' | 'butler_talk' | 'announcements';
+  postType: 'butler_stream' | 'butler_talk' | 'announcements' | 'adoption_promotion';
 }
 
 const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
@@ -114,6 +115,17 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   const postService = getPostService();
   const butlerTalkService = getButlerTalkService();
   const announcementService = getAnnouncementService();
+  const adoptionService = getAdoptionService();
+
+  // The post service backing the active tab.
+  const serviceFor = (type: AdminPostListProps['postType']) =>
+    type === 'butler_stream'
+      ? postService
+      : type === 'butler_talk'
+        ? butlerTalkService
+        : type === 'announcements'
+          ? announcementService
+          : adoptionService;
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -143,12 +155,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
       console.log(`Fetching ${postType} posts...`);
 
       // Use the appropriate service based on post type
-      const service =
-        postType === 'butler_stream'
-          ? postService
-          : postType === 'butler_talk'
-            ? butlerTalkService
-            : announcementService;
+      const service = serviceFor(postType);
       const allPosts = await service.getAllPosts();
 
       console.log(`Raw ${postType} posts from service:`, allPosts);
@@ -195,8 +202,12 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   };
 
   useEffect(() => {
-    // Reset to page 1 when switching tabs
+    // Switching tabs: reset to page 1 AND clear the previous tab's posts, so a
+    // failed or empty fetch for the new tab can't leave another tab's posts on
+    // screen (the fetch catch doesn't clear state).
     setCurrentPage(1);
+    setPosts([]);
+    setTotalPages(1);
   }, [postType]);
 
   useEffect(() => {
@@ -208,9 +219,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   };
 
   const handleEdit = (postId: string) => {
-    // TODO: Implement edit functionality
-    console.log(`Edit post: ${postId}`);
-    alert('Edit functionality coming soon!');
+    router.push(`/admin/posts/edit/${postType}/${postId}`);
   };
 
   const handleDelete = async (postId: string) => {
@@ -220,12 +229,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
 
     try {
       setIsLoading(true);
-      const service =
-        postType === 'butler_stream'
-          ? postService
-          : postType === 'butler_talk'
-            ? butlerTalkService
-            : announcementService;
+      const service = serviceFor(postType);
 
       await service.deletePost(postId);
 
@@ -270,17 +274,21 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
 
   return (
     <div>
-      {/* Create Announcement Button */}
-      {postType === 'announcements' && (
+      {/* Create button — announcements & 입양홍보 are admin-authored */}
+      {(postType === 'announcements' || postType === 'adoption_promotion') && (
         <div className="mb-6 flex justify-end">
           <button
-            onClick={() => router.push('/admin/announcements/new')}
+            onClick={() =>
+              router.push(
+                postType === 'announcements' ? '/admin/announcements/new' : '/admin/adoption/new'
+              )
+            }
             className={cn(
               'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
               'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
             )}
           >
-            새 공지사항 작성
+            {postType === 'announcements' ? '새 공지사항 작성' : '새 입양홍보 작성'}
           </button>
         </div>
       )}
@@ -432,8 +440,8 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
               </div>
             </div>
 
-            {/* Admin Reply Management */}
-            {postType !== 'announcements' && (
+            {/* Admin Reply Management — announcements & adoption posts have no replies */}
+            {postType !== 'announcements' && postType !== 'adoption_promotion' && (
               <div className="mt-4 pt-3 border-t">
                 <AdminReplyList
                   postId={post.id}
@@ -443,13 +451,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                       prev.map((p) => (p.id === post.id ? { ...p, replyCount: count } : p))
                     );
                   }}
-                  postService={
-                    postType === 'butler_stream'
-                      ? postService
-                      : postType === 'butler_talk'
-                        ? butlerTalkService
-                        : announcementService
-                  }
+                  postService={serviceFor(postType)}
                 />
               </div>
             )}

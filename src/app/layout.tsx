@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import MountainSelector from '@/components/MountainSelector';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,7 +13,7 @@ import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Mountain Cats',
+  title: '산냥이집냥이',
   description: 'Explore cats living in the mountains',
 };
 
@@ -34,17 +35,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 overflow-x-hidden"
               data-oid="7-_qmcr"
             >
-              <header className="bg-white shadow-sm relative z-10" data-oid="rho93zh">
+              <header
+                className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-md"
+                data-oid="rho93zh"
+              >
                 <div
-                  className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4 pb-1 flex justify-between items-center"
+                  className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-1 lg:py-2 flex justify-between items-center"
                   data-oid="s43864t"
                 >
                   {' '}
-                  {/* Added pb-1 for a small space */}
+                  {/* Frosted-glass bar, low height — legible over the map (redesign §4) */}
                   <div className="flex items-center space-x-4" data-oid="bvc1q.c">
                     <Link
                       href="/"
-                      className="group hover:text-blue-600 transition-colors duration-300"
+                      className="group transition-colors duration-300"
                       data-oid="mry3xtu"
                     >
                       <div className="flex items-center" data-oid="htl-mls">
@@ -54,21 +58,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             // src="/images/tux_cat_favicon_2.png"
                             src="/images/black_cat_stealth_favicon.png"
                             alt="Site Logo"
-                            width={28} // Reduced from 32
-                            height={28} // Reduced from 32
-                            style={{ width: '28px', height: '28px' }} // Explicitly set size to avoid aspect ratio warnings
+                            width={36} // Larger logo presence (redesign §4)
+                            height={36}
+                            style={{ width: '36px', height: '36px' }} // Explicitly set size to avoid aspect ratio warnings
                             className="mr-2 rounded-full transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:rotate-12 group-hover:shadow-lg animate-pulse-subtle" // Adds a small margin to the right of the logo
                             data-oid="wsatj2l"
                           />
 
-                          {/* Subtle glow effect on hover */}
+                          {/* Subtle brand glow on hover */}
                           <div
-                            className="absolute inset-0 rounded-full bg-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-sm"
+                            className="absolute inset-0 rounded-full bg-brand opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-sm"
                             data-oid="wwrgxtg"
                           ></div>
                         </div>
                         <h1
-                          className="text-lg font-semibold text-gray-900 transition-all duration-300 group-hover:text-blue-600"
+                          className="text-xl font-bold text-gray-900 transition-all duration-300"
                           data-oid="z3icpyx"
                         >
                           산냥이집냥이
@@ -82,9 +86,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Navigation data-oid="3tyeu90" />
                 </div>
               </header>
-              <main className="pb-8" data-oid="7mtd9pq">
-                {children}
-              </main>
+              <main data-oid="7mtd9pq">{children}</main>
+              <Footer />
             </div>
           </AuthProvider>
         </AnnouncementModalProvider>

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthService, getPostService } from '@/services';
 import PostList from '@/components/PostList';
+import Button from '@/components/ui/Button';
 import { User } from 'firebase/auth';
-import { cn } from '@/utils/cn';
 
 const ButlerStreamClient = () => {
   // Service references
@@ -98,17 +98,15 @@ const ButlerStreamClient = () => {
 
   return (
     <>
-      <div className="flex justify-end mb-4" data-oid="s64j5_s">
-        <button
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full"
           onClick={() => router.push('/pages/butler_stream/new')}
-          className={cn(
-            'w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-            'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
-          )}
-          data-oid="q0:d1d3"
         >
           새글 작성
-        </button>
+        </Button>
       </div>
 
       <PostList
@@ -117,7 +115,6 @@ const ButlerStreamClient = () => {
         totalPages={totalPages}
         onPageChange={handlePageClick}
         postService={postService}
-        data-oid="dy3hc7:"
       />
     </>
   );

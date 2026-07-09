@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 // Admin posts collections API endpoint
 export async function GET(request: NextRequest) {
@@ -14,7 +15,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Gated ahead of implementation: this is an admin write endpoint. Require manage-posts.
 export async function POST(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-posts');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     // TODO: Implement posts collections creation
     return NextResponse.json({

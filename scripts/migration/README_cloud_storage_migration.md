@@ -1,5 +1,12 @@
 # Cloud Storage Static Data Migration
 
+> **⚠️ Removed (Phase 3 cleanup, 2026-06-27).** The Cloud-Storage push path described
+> below — `export_all_to_cloud_storage.js`, the `/api/admin/update-static-data` route,
+> and the admin "Static Data 관리" tab — was deleted because the app reads Firestore
+> live and never consumed the exported JSON. The code is preserved on branch
+> `archive/static-data-cloud-export`. The data-layer "baking" idea is being re-evaluated
+> from scratch in PROJECT_PLAN §7a. This document is retained as historical context only.
+
 ## Overview
 
 This migration moves all static data from local JSON files to Google Cloud Storage as the single source of truth. This major architectural change improves performance, reduces costs, and provides better maintainability.

@@ -26,6 +26,31 @@ export interface MountainSocial {
   facebookPage: string;
 }
 
+export interface MountainMapConfig {
+  /**
+   * Whether the mobile map clusters nearby feeding points. `true` (default) →
+   * points within `maxClusterRadius` collapse into a tap-to-expand cluster badge;
+   * `false` → every point renders as its own pin (they may overlap where points
+   * are close). Desktop is always un-clustered, so this only affects mobile.
+   */
+  clustering: boolean;
+  /**
+   * Marker-clustering distance for the mobile map, in **screen pixels** at the
+   * fill/default view: points within this radius of each other collapse into one
+   * cluster (used by the static clusterer in `utils/mapClustering` — the grouping
+   * is computed once and never re-clustered on zoom). Larger = collapses points
+   * that are farther apart; smaller = keeps them separate longer. Ignored when
+   * `clustering` is `false`.
+   */
+  maxClusterRadius: number;
+}
+
+/** Fallback used when a mountain config omits the `map` section (or a field). */
+export const DEFAULT_MAP_CONFIG: MountainMapConfig = {
+  clustering: true,
+  maxClusterRadius: 50,
+};
+
 export interface OAuthProviderConfig {
   google?: {
     clientId: string;
@@ -89,6 +114,7 @@ export interface MountainConfig {
   theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
+  map?: MountainMapConfig;
   secrets?: MountainSecrets;
 }
 
@@ -220,6 +246,15 @@ export function getYouTubeApiKey(): string {
 export function getMountainTheme(): MountainTheme {
   const config = getMountainConfig();
   return config.theme;
+}
+
+/**
+ * Get map configuration for the current mountain, falling back to
+ * `DEFAULT_MAP_CONFIG` when the `map` section (or a field) is omitted.
+ */
+export function getMapConfig(): MountainMapConfig {
+  const config = getMountainConfig();
+  return { ...DEFAULT_MAP_CONFIG, ...config.map };
 }
 
 /**

@@ -8,7 +8,7 @@ interface BasicFeedingSpot {
 
 const NewPostPage = async () => {
   // Fetch basic feeding spots at build time using the service directly
-  // This avoids HTTP calls to self during build which fails in Docker
+  // This avoids unreliable HTTP calls to self during the static build
   let feedingSpots: BasicFeedingSpot[] = [];
 
   try {
@@ -19,11 +19,9 @@ const NewPostPage = async () => {
   }
 
   return (
-    <div className="p-4" data-oid="qvvqsgw">
-      <h1 className="text-center text-2xl font-bold mb-4" data-oid="01xkqxf">
-        새글 작성
-      </h1>
-      <NewPostForm feedingSpots={feedingSpots} data-oid="i9344cf" />
+    <div className="p-4">
+      <h1 className="text-center text-2xl font-bold mb-4">새글 작성</h1>
+      <NewPostForm feedingSpots={feedingSpots} />
     </div>
   );
 };

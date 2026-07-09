@@ -1,377 +1,216 @@
-import React, { useState, useEffect } from 'react';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import React, { useState, useEffect, useCallback } from 'react';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import SocialLoginButton from '@/components/SocialLoginButton';
-import ProviderManagement from '@/components/ProviderManagement';
-import { cn } from '@/utils/cn';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Alert from '@/components/ui/Alert';
+import Field from '@/components/ui/Field';
+import Input from '@/components/ui/Input';
 
 interface AdminAuthProps {
   children: React.ReactNode;
 }
 
+// Sign an idle admin out of the CMS after this long with no interaction.
+// Admin-only, idle (not absolute) — see FEATURE_MOD_LOG (session timeout).
+const ADMIN_IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+// Shared across admin tabs so an idle background tab doesn't sign out an active
+// one (auth state is synced cross-tab via Firebase's localStorage persistence).
+const ADMIN_IDLE_ACTIVITY_KEY = 'mohocat:admin:lastActivity';
+
 export default function AdminAuth({ children }: AdminAuthProps) {
-  const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showProviderManagement, setShowProviderManagement] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
-  // Use the enhanced useAuth hook
+  // Auth state comes from the single app-wide AuthProvider listener (via
+  // useAuth) — AdminAuth no longer runs its own onAuthStateChanged subscription
+  // (and thus no longer needs the old 10s init-timeout guard).
   const {
     user,
-    isAuthenticated,
-    providerData,
-    linkedProviders,
+    loading: authLoading,
     signInWithKakao,
     isSigningInWithKakao,
     kakaoSignInError,
     kakaoSignInSuccess,
   } = useAuth();
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    try {
-      // Set a timeout to avoid infinite loading
-      timeoutId = setTimeout(() => {
-        if (loading) {
-          setAuthError('Authentication timeout - please reload the page');
-          setLoading(false);
-        }
-      }, 10000); // 10 second timeout
-
-      const unsubscribe = onAuthStateChanged(auth, async (authUser: User | null) => {
-        try {
-          clearTimeout(timeoutId);
-
-          if (authUser) {
-            const adminStatus = await checkIsAdmin(authUser);
-            if (adminStatus) {
-              setLoading(false);
-            } else {
-              setAuthError('Access denied: Admin privileges required');
-              setLoading(false);
-            }
-          } else {
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error('Error in auth state change:', error);
-          setAuthError('Authentication error occurred');
-          setLoading(false);
-        }
-      });
-
-      return () => {
-        clearTimeout(timeoutId);
-        unsubscribe();
-      };
-    } catch (error) {
-      console.error('Error setting up auth listener:', error);
-      setAuthError('Failed to initialize authentication');
-      setLoading(false);
-      clearTimeout(timeoutId!);
-    }
-  }, [loading]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    setLoading(true);
+    setSessionExpired(false);
+    setIsLoggingIn(true);
 
     try {
+      // On success, AuthProvider's listener updates `user` → this re-renders.
       await signInWithEmailAndPassword(auth, email, password);
-      // Clear any previous auth errors on successful login
-      setAuthError('');
     } catch (error: any) {
       console.error('Login error:', error);
       setLoginError(error.message || 'Login failed');
     } finally {
-      setLoading(false);
+      setIsLoggingIn(false);
     }
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // Reset all auth state
-      setAuthError('');
       setLoginError('');
       setEmail('');
       setPassword('');
-      setShowProviderManagement(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
-  const resetAuthState = () => {
-    setAuthError('');
-    setLoginError('');
-    setEmail('');
-    setPassword('');
-    setLoading(false);
-    setShowProviderManagement(false);
-  };
-
-  // Check if user is admin for rendering
+  // Admin check — AdminAuth's own concern, layered on the shared auth state.
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
+  // Distinguishes "the check ran and said no" (false) from "the check couldn't
+  // run" (a blocked/denied/offline Firestore read). The latter must NOT be
+  // reported as "access denied" — it's unverified, and retryable.
+  const [adminCheckFailed, setAdminCheckFailed] = useState(false);
+  const [adminCheckNonce, setAdminCheckNonce] = useState(0);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user) {
-        try {
-          const adminStatus = await checkIsAdmin(user);
-          setIsAdmin(adminStatus);
-        } catch (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
+    if (!user) {
+      setIsAdmin(false);
+      setAdminCheckFailed(false);
       setIsAdminLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsAdminLoading(true);
+    setAdminCheckFailed(false);
+    (async () => {
+      try {
+        const adminStatus = await checkIsAdmin(user);
+        if (!cancelled) setIsAdmin(adminStatus);
+      } catch (error) {
+        // Couldn't verify (not "not an admin") — surface a retry, don't deny.
+        console.error('Error checking admin status:', error);
+        if (!cancelled) {
+          setIsAdmin(false);
+          setAdminCheckFailed(true);
+        }
+      } finally {
+        if (!cancelled) setIsAdminLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
     };
+  }, [user, adminCheckNonce]);
 
-    checkAdminStatus();
-  }, [user]);
+  // Idle session timeout — admin CMS only. Active only once an authenticated
+  // admin is in the CMS; signs them out after inactivity and flags the notice.
+  const handleIdleTimeout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      setSessionExpired(true);
+    } catch (error) {
+      // Match this file's fire-and-forget sign-out handling: log, don't rethrow
+      // (re-raising from a background timer would just be an unhandled rejection).
+      console.error('Idle timeout sign-out error:', error);
+    }
+  }, []);
 
-  if (authError) {
+  useIdleTimeout({
+    timeoutMs: ADMIN_IDLE_TIMEOUT_MS,
+    onTimeout: handleIdleTimeout,
+    enabled: !!user && isAdmin,
+    storageKey: ADMIN_IDLE_ACTIVITY_KEY,
+  });
+
+  // Auth still resolving (shared listener), or the admin check is in flight.
+  if (authLoading || (user && isAdminLoading)) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          backgroundColor: '#f9fafb',
-        }}
-        data-oid="sh1vbqx"
-      >
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '2rem',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            maxWidth: '500px',
-          }}
-          data-oid="2lio06o"
-        >
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }} data-oid="5a024wn">
-            ⚠️
-          </div>
-          <h2
-            style={{
-              color: '#dc2626',
-              marginBottom: '1rem',
-              fontSize: '1.25rem',
-            }}
-            data-oid="vd4h5h8"
-          >
-            Authentication Error
-          </h2>
-          <p style={{ color: '#6b7280', marginBottom: '1.5rem' }} data-oid="ji.gyoe">
-            {authError}
-          </p>
-
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-              alignItems: 'center',
-            }}
-            data-oid="91v6y5h"
-          >
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid="r.juzb9"
-            >
-              🔄 Reload Page
-            </button>
-
-            <button
-              onClick={resetAuthState}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid=".956x_u"
-            >
-              🔃 Reset Auth State
-            </button>
-
-            <a
-              href="/admin/create-user"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#10b981',
-                color: 'white',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid="f:qvsjc"
-            >
-              🛠️ Create Test Admin User ↗
-            </a>
-
-            <button
-              onClick={() => {
-                setAuthError('');
-                setLoading(false);
-                setShowProviderManagement(false);
-                // This is a dev-only emergency bypass - create a mock admin state
-                console.warn(
-                  'Emergency bypass activated - this should only be used in development'
-                );
-              }}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: '500',
-              }}
-              data-oid="rf1nbb-"
-            >
-              🚨 Emergency Bypass
-            </button>
-
-            <a
-              href="/"
-              style={{
-                color: '#6b7280',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-              }}
-              data-oid="v5-up.c"
-            >
-              ← Back to main site
-            </a>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl mb-4">🐱</div>
+          <p className="text-gray-500">관리자 화면을 불러오고 있어요...</p>
         </div>
       </div>
     );
   }
 
-  if (loading) {
+  // Signed in, but the admin check couldn't complete (e.g. Firestore read
+  // blocked by an extension / denied / offline). Not the same as "not an
+  // admin" — offer a retry rather than a misleading access-denied.
+  if (user && adminCheckFailed) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          backgroundColor: '#f9fafb',
-        }}
-        data-oid="molt2-t"
-      >
-        <div style={{ textAlign: 'center' }} data-oid="ri8ukco">
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }} data-oid="o1ym79x">
-            🐱
-          </div>
-          <p style={{ color: '#6b7280', marginBottom: '1rem' }} data-oid="m.zdt.o">
-            Loading admin interface...
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="text-center max-w-md p-8 shadow-md">
+          <div className="text-5xl mb-4">🔌</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">권한을 확인하지 못했어요</h2>
+          <p className="text-gray-500 mb-6">
+            네트워크나 브라우저 확장 프로그램이 요청을 막고 있는지 확인한 뒤 다시 시도해 주세요.
           </p>
-          <div
-            style={{
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-            data-oid="kce.ca:"
-          >
-            <button
-              onClick={() => {
-                setLoading(false);
-                setAuthError('Authentication timeout - please check your Firebase configuration');
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-              }}
-              data-oid="g4xpw9g"
-            >
-              Stop Loading
-            </button>
-            <button
-              onClick={() => {
-                setLoading(false);
-                setShowProviderManagement(false);
-                // Create mock admin user for dev
-                console.warn(
-                  'Emergency bypass activated - this should only be used in development'
-                );
-              }}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-              }}
-              data-oid="zroh-z9"
-            >
-              Emergency Bypass (Dev Mode)
-            </button>
+
+          <div className="flex flex-col items-center gap-4">
+            <Button onClick={() => setAdminCheckNonce((n) => n + 1)}>다시 시도</Button>
+            <Button variant="secondary" onClick={handleLogout}>
+              로그아웃
+            </Button>
+            <a href="/" className="text-sm text-gray-500 hover:text-gray-700">
+              ← 메인 사이트로 돌아가기
+            </a>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
 
-  if (!user || !isAdmin || isAdminLoading) {
+  // Signed in, but lacking admin privileges.
+  if (user && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="text-center max-w-md p-8 shadow-md">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-red-600 mb-4">접근 권한이 없어요</h2>
+          <p className="text-gray-500 mb-6">관리자 권한이 필요해요.</p>
+
+          <div className="flex flex-col items-center gap-4">
+            <Button variant="secondary" onClick={handleLogout}>
+              로그아웃
+            </Button>
+            <a href="/" className="text-sm text-gray-500 hover:text-gray-700">
+              ← 메인 사이트로 돌아가기
+            </a>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-4xl mb-4">🐱</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Mountain Cats Admin</h1>
-            <p className="text-gray-600">Please sign in to continue</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">산냥이집냥이 관리자</h1>
+            <p className="text-gray-600">계속하려면 로그인해 주세요</p>
           </div>
+
+          {sessionExpired && (
+            <Alert variant="warning" className="text-center mb-6">
+              2시간 동안 활동이 없어 자동으로 로그아웃되었어요. 다시 로그인해 주세요.
+            </Alert>
+          )}
 
           <div className="space-y-6">
             {/* Social Login Section */}
             <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-gray-700 text-center">Sign in with</h2>
+              <h2 className="text-sm font-semibold text-gray-700 text-center">다음으로 로그인</h2>
 
               <div className="space-y-3">
                 <SocialLoginButton
@@ -384,28 +223,17 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               </div>
 
               {/* Success Messages */}
-              {/* Success Messages */}
               {kakaoSignInSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-700 text-sm text-center">
-                    Successfully signed in with Kakaotalk!
-                  </p>
-                </div>
+                <Alert variant="success" className="text-center">
+                  카카오톡으로 로그인했어요!
+                </Alert>
               )}
 
               {/* Error Messages */}
               {(loginError || kakaoSignInError) && (
                 <div className="space-y-2">
-                  {loginError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-red-700 text-sm">{loginError}</p>
-                    </div>
-                  )}
-                  {kakaoSignInError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-red-700 text-sm">{kakaoSignInError}</p>
-                    </div>
-                  )}
+                  {loginError && <Alert variant="error">{loginError}</Alert>}
+                  {kakaoSignInError && <Alert variant="error">{kakaoSignInError}</Alert>}
                 </div>
               )}
             </div>
@@ -413,83 +241,45 @@ export default function AdminAuth({ children }: AdminAuthProps) {
             {/* Divider */}
             <div className="flex items-center justify-between">
               <div className="border-t border-gray-300 flex-grow"></div>
-              <span className="px-4 text-sm text-gray-500">or</span>
+              <span className="px-4 text-sm text-gray-500">또는</span>
               <div className="border-t border-gray-300 flex-grow"></div>
             </div>
 
             {/* Email/Password Login */}
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
+              <Field label="이메일 주소" htmlFor="admin-login-email">
+                <Input
+                  id="admin-login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className={cn(
-                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
-                    'text-gray-900 placeholder-gray-500',
-                    'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
-                  )}
-                  placeholder="Enter your email"
+                  placeholder="이메일을 입력해 주세요"
                   disabled={isSigningInWithKakao}
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input
+              <Field label="비밀번호" htmlFor="admin-login-password">
+                <Input
+                  id="admin-login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className={cn(
-                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
-                    'text-gray-900 placeholder-gray-500',
-                    'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
-                  )}
-                  placeholder="Enter your password"
+                  placeholder="비밀번호를 입력해 주세요"
                   disabled={isSigningInWithKakao}
                 />
-              </div>
+              </Field>
 
-              <button
+              <Button
                 type="submit"
-                disabled={isSigningInWithKakao}
-                className={cn(
-                  'w-full py-3 rounded-lg font-bold transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-offset-2',
-                  'bg-gradient-to-r from-yellow-400 to-orange-300 text-black',
-                  'hover:shadow-lg hover:-translate-y-1',
-                  'focus:ring-yellow-500',
-                  {
-                    'opacity-50 cursor-not-allowed': isSigningInWithKakao,
-                    'cursor-pointer': !isSigningInWithKakao,
-                  }
-                )}
+                size="lg"
+                className="w-full"
+                disabled={isSigningInWithKakao || isLoggingIn}
               >
-                Sign In with Email
-              </button>
+                {isLoggingIn ? '로그인 중...' : '이메일로 로그인'}
+              </Button>
             </form>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center space-y-3">
-              <a
-                href="/admin/create-user"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
-              >
-                🛠️ Create Test Admin User ↗
-              </a>
-
-              <div className="text-xs text-gray-500">
-                Having trouble? Try emergency access or contact support.
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -504,73 +294,22 @@ export default function AdminAuth({ children }: AdminAuthProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-900">Mountain Cats Admin</h1>
-              <div className="text-sm text-gray-500">Welcome, {user.displayName || user.email}</div>
+              <h1 className="text-xl font-semibold text-gray-900">산냥이집냥이 관리자</h1>
+              <div className="text-sm text-gray-500">
+                환영해요, {user.displayName || user.email}님
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowProviderManagement(!showProviderManagement)}
-                className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                {showProviderManagement ? 'Hide' : 'Show'} Account Settings
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Sign Out
-              </button>
+              <Button variant="danger" size="sm" onClick={handleLogout}>
+                로그아웃
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-3">{children}</div>
-
-          {/* Provider Management Sidebar */}
-          <div className={`lg:col-span-1 ${showProviderManagement ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Settings</h2>
-
-                {/* User Info */}
-                <div className="mb-6">
-                  <div className="flex items-center space-x-3">
-                    {user.photoURL ? (
-                      <img
-                        src={user.photoURL}
-                        alt={user.displayName || 'User'}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 font-medium">
-                          {user.displayName?.charAt(0).toUpperCase() ||
-                            user.email?.charAt(0).toUpperCase() ||
-                            '?'}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {user.displayName || 'Admin User'}
-                      </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Provider Management */}
-                <ProviderManagement className="space-y-4" showSuccessMessages={true} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">{children}</div>
     </div>
   );
 }

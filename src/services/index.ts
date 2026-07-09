@@ -16,6 +16,7 @@ import { FirebaseVideoService } from './video-service';
 import { FirebasePostService } from './post-service';
 import { FirebaseButlerTalkService } from './butler-talk-service';
 import { FirebaseAnnouncementService } from './announcement-service';
+import { FirebaseAdoptionService } from './adoption-service';
 import { FirebaseContactService } from './contact-service';
 import { FirebaseStorageService } from './storage-service';
 import { FirebaseAuthService } from './auth-service';
@@ -31,6 +32,7 @@ let videoServiceInstance: IVideoService | null = null;
 let postServiceInstance: IPostService | null = null;
 let butlerTalkServiceInstance: IPostService | null = null;
 let announcementServiceInstance: IPostService | null = null;
+let adoptionServiceInstance: IPostService | null = null;
 let contactServiceInstance: IContactService | null = null;
 let storageServiceInstance: IStorageService | null = null;
 let authServiceInstance: IAuthService | null = null;
@@ -104,6 +106,16 @@ export function getAnnouncementService(): IPostService {
     announcementServiceInstance = new FirebaseAnnouncementService();
   }
   return announcementServiceInstance;
+}
+
+/**
+ * Get the adoption-promotion (입양홍보) service instance
+ */
+export function getAdoptionService(): IPostService {
+  if (!adoptionServiceInstance) {
+    adoptionServiceInstance = new FirebaseAdoptionService();
+  }
+  return adoptionServiceInstance;
 }
 
 /**

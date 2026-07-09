@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
 import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 interface TokenInfo {
   source: 'environment' | 'firestore';
@@ -12,7 +13,13 @@ interface TokenInfo {
   error?: string;
 }
 
-export async function GET() {
+// Gated: the response includes the YouTube OAuth refresh token (a secret), so this must
+// never be world-readable. Require manage-video.
+export async function GET(request: Request) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const oauthConfig = getYouTubeOAuthConfig();
 
@@ -69,6 +76,10 @@ export async function GET() {
     const envToken = tokens.find((t) => t.source === 'environment');
     const firestoreToken = tokens.find((t) => t.source === 'firestore');
 
+    // Never send the raw refresh token (a secret) to the client. The UI only needs each
+    // token's source/validity/expiry, not its value.
+    const safeTokens = tokens.map(({ token, ...rest }) => rest);
+
     return NextResponse.json({
       status: hasValidToken ? 'valid' : tokens.length > 0 ? 'expired' : 'not_configured',
       message: hasValidToken
@@ -76,7 +87,7 @@ export async function GET() {
         : tokens.length > 0
           ? '모든 토큰이 만료됨'
           : '토큰이 설정되지 않음',
-      tokens,
+      tokens: safeTokens,
       expiresAt: validTokens.length > 0 ? validTokens[0].expiresAt : null,
       envTokenInfo: envToken
         ? {

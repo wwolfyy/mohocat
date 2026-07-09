@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
-export async function GET() {
+// Gated: only video managers may initiate the YouTube OAuth flow.
+export async function GET(request: Request) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     const oauthConfig = getYouTubeOAuthConfig();
 

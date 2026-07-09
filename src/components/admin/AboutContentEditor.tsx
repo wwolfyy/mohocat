@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import { getAboutContentService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
 import { getMountainAbout } from '@/utils/config';
+import { adminStrings } from '@/constants/adminStrings';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Alert from '@/components/ui/Alert';
+
+const { aboutEditor: t } = adminStrings;
 
 export default function AboutContentEditor() {
   const [content, setContent] = useState<AboutContent | null>(null);
@@ -50,7 +56,7 @@ export default function AboutContentEditor() {
       }
     } catch (err) {
       console.error('Error loading about content:', err);
-      setError('Failed to load about content');
+      setError(t.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -66,11 +72,11 @@ export default function AboutContentEditor() {
 
       await aboutContentService.saveAboutContent(content, 'admin@example.com'); // TODO: Get actual user email
 
-      setSuccess('About content saved successfully!');
+      setSuccess(t.saved);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error saving about content:', err);
-      setError('Failed to save about content');
+      setError(t.saveFailed);
     } finally {
       setSaving(false);
     }
@@ -137,8 +143,9 @@ export default function AboutContentEditor() {
     return (
       <div className="p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">About Content Management</h1>
-          <p className="text-gray-600">No content found. Please try again.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.title}</h1>
+          <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-brand" />
+          <p className="text-gray-600">{t.notFound}</p>
         </div>
       </div>
     );
@@ -147,80 +154,89 @@ export default function AboutContentEditor() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">About Content Management</h1>
-        <p className="text-gray-600">Manage the content for your mountain's about page</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
+        <div className="mt-2 h-1 w-12 rounded-full bg-brand" />
+        <p className="text-gray-600 mt-2">{t.subtitle}</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-700">{error}</p>
-        </div>
+        <Alert variant="error" className="mb-4">
+          {error}
+        </Alert>
       )}
 
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-green-700">{success}</p>
-        </div>
+        <Alert variant="success" className="mb-4">
+          {success}
+        </Alert>
       )}
 
       <div className="space-y-6">
         {/* Title */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            Title
+            {t.fields.title}
           </label>
-          <input
+          <Input
             id="title"
             type="text"
             value={content.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Subtitle */}
         <div>
           <label htmlFor="subtitle" className="block text-sm font-medium text-gray-700 mb-2">
-            Subtitle
+            {t.fields.subtitle}
           </label>
-          <input
+          <Input
             id="subtitle"
             type="text"
             value={content.subtitle}
             onChange={(e) => handleInputChange('subtitle', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Main Content */}
         <div>
           <label htmlFor="mainContent" className="block text-sm font-medium text-gray-700 mb-2">
-            Main Content
+            {t.fields.mainContent}
           </label>
           <textarea
             id="mainContent"
             value={content.mainContent}
             onChange={(e) => handleInputChange('mainContent', e.target.value)}
             rows={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter the main content. Use \n for line breaks."
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-transparent"
+            placeholder={t.fields.mainContentPlaceholder}
           />
-          <div className="mt-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
-            <p className="font-medium mb-1">💡 Link Support:</p>
+          <div className="mt-2 text-sm text-gray-600 bg-amber-50 p-3 rounded-md">
+            <p className="font-medium mb-1">{t.linkHelp.heading}</p>
             <ul className="list-disc list-inside space-y-1">
               <li>
-                <strong>Markdown links:</strong> [링크텍스트](https://example.com)
+                <strong>{t.linkHelp.markdownLabel}</strong>
+                {t.linkHelp.markdownExample}
               </li>
               <li>
-                <strong>Auto-detection:</strong> URLs like https://example.com are automatically
-                converted to links
+                <strong>{t.linkHelp.autoLabel}</strong>
+                {t.linkHelp.autoExample}
               </li>
               <li>
-                <strong>Cat modal links:</strong> [catmodal:아롱이] opens a modal for the cat named
-                "아롱이"
+                <strong>{t.linkHelp.catModalLabel}</strong>
+                {t.linkHelp.catModalExample}
               </li>
               <li>
-                <strong>Line breaks:</strong> Press Enter for new lines
+                <strong>{t.linkHelp.imageLabel}</strong>
+                {t.linkHelp.imageExample}
+              </li>
+              <li>
+                <strong>{t.linkHelp.videoLabel}</strong>
+                {t.linkHelp.videoExample}
+              </li>
+              <li>
+                <strong>{t.linkHelp.lineBreakLabel}</strong>
+                {t.linkHelp.lineBreakExample}
               </li>
             </ul>
           </div>
@@ -228,46 +244,44 @@ export default function AboutContentEditor() {
 
         {/* Main Photo */}
         <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Main Photo</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">{t.fields.mainPhoto}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="filename" className="block text-sm font-medium text-gray-700 mb-2">
-                Filename
+                {t.fields.filename}
               </label>
-              <input
+              <Input
                 id="filename"
                 type="text"
                 value={content.mainPhoto.filename}
                 onChange={(e) => handleMainPhotoChange('filename', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div>
               <label htmlFor="altText" className="block text-sm font-medium text-gray-700 mb-2">
-                Alt Text
+                {t.fields.altText}
               </label>
-              <input
+              <Input
                 id="altText"
                 type="text"
                 value={content.mainPhoto.altText}
                 onChange={(e) => handleMainPhotoChange('altText', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
           <div className="mt-4">
             <label htmlFor="caption" className="block text-sm font-medium text-gray-700 mb-2">
-              Caption
+              {t.fields.caption}
             </label>
             <textarea
               id="caption"
               value={content.mainPhoto.caption}
               onChange={(e) => handleMainPhotoChange('caption', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-transparent"
             />
           </div>
         </div>
@@ -275,24 +289,23 @@ export default function AboutContentEditor() {
         {/* Sections */}
         <div className="border border-gray-200 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Sections</h3>
-            <button
-              onClick={addSection}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Add Section
-            </button>
+            <h3 className="text-lg font-medium text-gray-900">{t.fields.sections}</h3>
+            <Button onClick={addSection} size="sm">
+              {t.fields.addSection}
+            </Button>
           </div>
 
           {content.sections.map((section, index) => (
             <div key={index} className="mb-6 p-4 border border-gray-100 rounded-lg">
               <div className="flex justify-between items-center mb-3">
-                <h4 className="text-md font-medium text-gray-800">Section {index + 1}</h4>
+                <h4 className="text-md font-medium text-gray-800">
+                  {t.fields.sectionTitle(index + 1)}
+                </h4>
                 <button
                   onClick={() => removeSection(index)}
-                  className="text-red-600 hover:text-red-800 focus:outline-none"
+                  className="text-sm font-medium text-red-600 hover:text-red-800 focus:outline-none"
                 >
-                  Remove
+                  {t.fields.remove}
                 </button>
               </div>
 
@@ -302,14 +315,13 @@ export default function AboutContentEditor() {
                     htmlFor={`section-title-${index}`}
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Title
+                    {t.fields.title}
                   </label>
-                  <input
+                  <Input
                     id={`section-title-${index}`}
                     type="text"
                     value={section.title}
                     onChange={(e) => handleSectionChange(index, 'title', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -318,15 +330,15 @@ export default function AboutContentEditor() {
                     htmlFor={`section-content-${index}`}
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Content
+                    {t.fields.mainContent}
                   </label>
                   <textarea
                     id={`section-content-${index}`}
                     value={section.content}
                     onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Section content supports [links](https://example.com) and auto-detection of URLs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-transparent"
+                    placeholder={t.fields.sectionContentPlaceholder}
                   />
                 </div>
               </div>
@@ -336,13 +348,9 @@ export default function AboutContentEditor() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? adminStrings.common.saving : adminStrings.common.saveChanges}
+          </Button>
         </div>
       </div>
     </div>

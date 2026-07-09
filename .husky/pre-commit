@@ -25,3 +25,6 @@ fi
 
 echo "✨ Running Prettier & ESLint on staged files..."
 npx lint-staged
+
+echo "🧠 Type-checking the project (tsc --noEmit)..."
+npm run typecheck

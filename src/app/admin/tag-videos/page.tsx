@@ -5,6 +5,10 @@ import { getVideoService, getCatService } from '@/services';
 import { Cat } from '@/types';
 import { CatVideo } from '@/types/media';
 import { parseRecordingDateFromTitle } from '@/utils/dateParser';
+import { adminStrings } from '@/constants/adminStrings';
+import Button from '@/components/ui/Button';
+
+const { tagVideos: t } = adminStrings;
 
 // Utility function to format duration from ISO 8601 or seconds to human-friendly format
 function formatDuration(duration: number | string | undefined): string {
@@ -143,7 +147,7 @@ export default function TagVideosPage() {
       setVideos(adminVideos);
     } catch (err: any) {
       console.error('Error loading videos:', err);
-      setError('Failed to load videos: ' + err.message);
+      setError(t.alerts.loadFailed(err.message));
     } finally {
       setLoading(false);
     }
@@ -230,7 +234,7 @@ export default function TagVideosPage() {
 
     // Only handle YouTube videos for now
     if (selectedVideo.videoType !== 'youtube') {
-      alert('Only YouTube videos can be edited from this interface.');
+      alert(t.alerts.onlyYoutube);
       return;
     }
 
@@ -297,7 +301,7 @@ export default function TagVideosPage() {
 
       // If no changes were made, skip the update
       if (Object.keys(updates).length === 0) {
-        alert('No changes detected to save.');
+        alert(t.alerts.noChanges);
         return;
       }
 
@@ -406,10 +410,10 @@ export default function TagVideosPage() {
         });
       }, 500); // Small delay to ensure state has updated
 
-      alert('✅ Video metadata updated successfully!');
+      alert(t.alerts.updated);
     } catch (err: any) {
       console.error('Error updating video metadata:', err);
-      alert('❌ Failed to update video metadata: ' + err.message);
+      alert(t.alerts.updateFailed(err.message));
     } finally {
       setSaving(false);
       setUpdatingYoutube(false);
@@ -417,218 +421,6 @@ export default function TagVideosPage() {
   };
 
   // Removed deleteVideoAndMetadata functionality
-
-  const batchUpdateVideos = async () => {
-    if (selectedVideos.size === 0) return;
-
-    try {
-      setBatchSaving(true);
-      setError(null);
-
-      const videoIds = Array.from(selectedVideos);
-      let youtubeUpdateResults = [];
-
-      // Step 1: Update YouTube fields
-      console.log('Performing batch YouTube updates...');
-      console.log(`Processing ${videoIds.length} selected videos:`, videoIds);
-
-      for (const videoId of videoIds) {
-        const video = videos.find((v) => v.id === videoId);
-        if (!video) {
-          console.warn(`Video not found for ID: ${videoId}`);
-          continue;
-        }
-
-        console.log(`Processing video: ${video.title} (${videoId})`);
-
-        const youtubeUpdates: any = {};
-        let hasYoutubeChanges = false;
-
-        // Check for tag changes
-        if (batchTags.trim()) {
-          const newTags = batchTags
-            .split(',')
-            .map((tag) => tag.trim())
-            .filter(Boolean);
-          const currentTags = video.tags || [];
-
-          console.log(`Tag comparison for ${video.title}:`);
-          console.log('  New tags:', newTags);
-          console.log('  Current tags:', currentTags);
-
-          // Compare arrays properly instead of comparing strings
-          const tagsChanged =
-            newTags.length !== currentTags.length ||
-            !newTags.every((tag, index) => tag === currentTags[index]);
-
-          console.log('  Tags changed:', tagsChanged);
-
-          if (tagsChanged) {
-            youtubeUpdates.tags = newTags;
-            hasYoutubeChanges = true;
-          }
-        }
-
-        // Check for created time changes
-        if (batchYoutubeCreatedTime.trim()) {
-          // Handle datetime-local format (YYYY-MM-DDTHH:mm)
-          const newCreatedTime = new Date(batchYoutubeCreatedTime).toISOString();
-          const currentCreatedTime = video.createdTime || '';
-
-          // Compare timestamps properly (handle different ISO string formats)
-          const newTimestamp = new Date(newCreatedTime).getTime();
-          const currentTimestamp = currentCreatedTime ? new Date(currentCreatedTime).getTime() : 0;
-
-          if (newTimestamp !== currentTimestamp) {
-            youtubeUpdates.createdTime = newCreatedTime;
-            hasYoutubeChanges = true;
-            console.log(
-              `Recording date change detected for ${video.title}: ${currentCreatedTime} → ${newCreatedTime}`
-            );
-          }
-        }
-
-        // Update YouTube if there are changes
-        if (hasYoutubeChanges) {
-          console.log(`Updating YouTube for ${video.title} with:`, youtubeUpdates);
-          try {
-            const youtubeResponse = await fetch('/api/update-youtube-video', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                videoId: video.youtubeId || video.id,
-                updates: youtubeUpdates,
-              }),
-            });
-
-            if (youtubeResponse.ok) {
-              youtubeUpdateResults.push({ videoId, success: true });
-              console.log(`✅ Successfully updated ${video.title}`);
-            } else {
-              const errorData = await youtubeResponse.json();
-              youtubeUpdateResults.push({
-                videoId,
-                success: false,
-                error: errorData.error || 'Unknown error',
-              });
-              console.error(`❌ Failed to update ${video.title}:`, errorData.error);
-            }
-          } catch (err) {
-            youtubeUpdateResults.push({
-              videoId,
-              success: false,
-              error: err instanceof Error ? err.message : 'Unknown error',
-            });
-            console.error(`❌ Exception updating ${video.title}:`, err);
-          }
-        } else {
-          console.log(`No changes needed for ${video.title}`);
-        }
-      }
-
-      // Step 2: Sync Firestore with fresh YouTube metadata for successfully updated videos
-      const successfulVideoIds = youtubeUpdateResults
-        .filter((r) => r.success)
-        .map((r) => r.videoId);
-
-      if (successfulVideoIds.length > 0) {
-        console.log(
-          `Syncing Firestore for ${successfulVideoIds.length} successfully updated videos...`
-        );
-
-        // Wait for YouTube API to propagate changes
-        const waitTime = 3000; // 3 seconds for all metadata updates
-        console.log(`Waiting ${waitTime}ms for YouTube API to propagate changes...`);
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-
-        const refreshResponse = await fetch('/api/refresh-video-metadata', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            videoIds: successfulVideoIds,
-          }),
-        });
-
-        if (refreshResponse.ok) {
-          console.log('✅ Firestore synced with fresh YouTube metadata');
-        } else {
-          console.warn('⚠️ Failed to sync Firestore, but YouTube updates were successful');
-        }
-      }
-
-      // Step 3: Update playlists for all selected videos (if playlist selections were made)
-      let playlistUpdateResults = [];
-      if (selectedPlaylists.size > 0 || videoIds.length > 0) {
-        console.log('Updating playlists for selected videos...');
-        for (const videoId of videoIds) {
-          const video = videos.find((v) => v.id === videoId);
-          if (!video) continue;
-
-          try {
-            const playlistResponse = await fetch('/api/manage-playlists', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'batch_update_playlists',
-                videoId: video.youtubeId || video.id,
-                playlistIds: Array.from(selectedPlaylists),
-              }),
-            });
-
-            if (playlistResponse.ok) {
-              playlistUpdateResults.push({ videoId, success: true });
-              console.log(`✅ Successfully updated playlists for ${video.title}`);
-            } else {
-              const errorData = await playlistResponse.json();
-              playlistUpdateResults.push({
-                videoId,
-                success: false,
-                error: errorData.error || 'Unknown error',
-              });
-              console.error(`❌ Failed to update playlists for ${video.title}:`, errorData.error);
-            }
-          } catch (err) {
-            playlistUpdateResults.push({
-              videoId,
-              success: false,
-              error: err instanceof Error ? err.message : 'Unknown error',
-            });
-            console.error(`❌ Exception updating playlists for ${video.title}:`, err);
-          }
-        }
-      }
-
-      // Step 4: Update local state by reloading from Firestore (single source of truth)
-      console.log('Reloading videos from Firestore to update local state...');
-      await loadVideos();
-      console.log('✅ Local state updated from Firestore data');
-
-      // Clear selection and reset form
-      clearSelection();
-
-      // Show results
-      const youtubeSuccessful = youtubeUpdateResults.filter((r) => r.success).length;
-      const youtubeFailed = youtubeUpdateResults.filter((r) => !r.success).length;
-      const playlistSuccessful = playlistUpdateResults.filter((r) => r.success).length;
-      const playlistFailed = playlistUpdateResults.filter((r) => !r.success).length;
-
-      let message = `Batch save completed!\n\n✅ Data flow: UI → YouTube → Firestore → Local State`;
-      if (youtubeSuccessful > 0)
-        message += `\n\nYouTube updates (tags/dates): ${youtubeSuccessful} successful`;
-      if (youtubeFailed > 0) message += `\nYouTube failures: ${youtubeFailed}`;
-      if (playlistSuccessful > 0) message += `\nPlaylist updates: ${playlistSuccessful} successful`;
-      if (playlistFailed > 0) message += `\nPlaylist failures: ${playlistFailed}`;
-      message += `\nFirestore sync: ${youtubeSuccessful > 0 ? 'Completed' : 'Skipped (no successful updates)'}`;
-      message += `\nLocal state: Updated from Firestore`;
-
-      alert(message);
-    } catch (err: any) {
-      console.error('Error batch updating videos:', err);
-      setError('Failed to save batch video metadata');
-    } finally {
-      setBatchSaving(false);
-    }
-  };
 
   // Individual save functions for each field
   const batchUpdateTags = async () => {
@@ -715,15 +507,11 @@ export default function TagVideosPage() {
       const successful = youtubeUpdateResults.filter((r) => r.success).length;
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
-      let message = `Tags update completed!`;
-      if (successful > 0) message += `\n✅ Successfully updated: ${successful} videos`;
-      if (failed > 0) message += `\n❌ Failed: ${failed} videos`;
-
-      alert(message);
+      alert(t.alerts.batchTagsDone(successful, failed));
       setBatchTags(''); // Clear tags after successful update
     } catch (err: any) {
       console.error('Error updating tags:', err);
-      setError('Failed to update tags');
+      setError(t.alerts.batchTagsError);
     } finally {
       setSavingTags(false);
     }
@@ -815,101 +603,20 @@ export default function TagVideosPage() {
       const successful = youtubeUpdateResults.filter((r) => r.success).length;
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
-      let message = `Recording date update completed!`;
-      if (successful > 0) message += `\n✅ Successfully updated: ${successful} videos`;
-      if (failed > 0) message += `\n❌ Failed: ${failed} videos`;
-
-      alert(message);
+      alert(t.alerts.batchDateDone(successful, failed));
       setBatchYoutubeCreatedTime(''); // Clear date after successful update
     } catch (err: any) {
       console.error('Error updating date:', err);
-      setError('Failed to update recording date');
+      setError(t.alerts.batchDateError);
     } finally {
       setSavingDate(false);
-    }
-  };
-
-  const batchUpdatePlaylists = async () => {
-    if (selectedVideos.size === 0) return;
-
-    try {
-      setSavingPlaylists(true);
-      setError(null);
-
-      const videoIds = Array.from(selectedVideos);
-      let playlistUpdateResults = [];
-
-      console.log('Performing batch playlist update...');
-      console.log(
-        `Processing ${videoIds.length} selected videos for playlists:`,
-        Array.from(selectedPlaylists)
-      );
-
-      for (const videoId of videoIds) {
-        const video = videos.find((v) => v.id === videoId);
-        if (!video) continue;
-
-        try {
-          const playlistResponse = await fetch('/api/manage-playlists', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'batch_update_playlists',
-              videoId: video.youtubeId || video.id,
-              playlistIds: Array.from(selectedPlaylists),
-            }),
-          });
-
-          if (playlistResponse.ok) {
-            playlistUpdateResults.push({ videoId, success: true });
-            console.log(`✅ Successfully updated playlists for ${video.title}`);
-          } else {
-            const errorData = await playlistResponse.json();
-            playlistUpdateResults.push({
-              videoId,
-              success: false,
-              error: errorData.error,
-            });
-            console.error(`❌ Failed to update playlists for ${video.title}:`, errorData.error);
-          }
-        } catch (err) {
-          playlistUpdateResults.push({
-            videoId,
-            success: false,
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
-          console.error(`❌ Exception updating playlists for ${video.title}:`, err);
-        }
-      }
-
-      // Reload videos and show results
-      await loadVideos();
-      const successful = playlistUpdateResults.filter((r) => r.success).length;
-      const failed = playlistUpdateResults.filter((r) => !r.success).length;
-
-      let message = `Playlist update completed!`;
-      if (successful > 0) message += `\n✅ Successfully updated: ${successful} videos`;
-      if (failed > 0) message += `\n❌ Failed: ${failed} videos`;
-
-      alert(message);
-      setSelectedPlaylists(new Set()); // Clear playlist selection after successful update
-    } catch (err: any) {
-      console.error('Error updating playlists:', err);
-      setError('Failed to update playlists');
-    } finally {
-      setSavingPlaylists(false);
     }
   };
 
   // Removed batchDeleteVideos functionality
 
   const syncWithYouTube = async () => {
-    if (
-      !confirm(
-        "This will discover new videos from YouTube and sync metadata for all videos.\n\nThis includes:\n1. Finding new videos not yet in Firestore\n2. Updating metadata for existing videos\n3. Playlist information sync\n\nNote: This may overwrite recent changes that haven't propagated yet.\n\nContinue?"
-      )
-    )
-      return;
+    if (!confirm(t.alerts.syncConfirm)) return;
 
     try {
       setBatchSaving(true);
@@ -931,7 +638,7 @@ export default function TagVideosPage() {
         .filter(Boolean);
 
       if (youtubeVideoIds.length === 0) {
-        alert('No YouTube videos found to sync.');
+        alert(t.alerts.noYoutubeToSync);
         return;
       }
 
@@ -959,12 +666,10 @@ export default function TagVideosPage() {
       // Reload videos to get the updated data
       await loadVideos();
 
-      alert(
-        `YouTube sync completed successfully!\n\n✅ Discovered and imported any new videos from YouTube\n✅ Updated ${result.updated || youtubeVideoIds.length} videos with latest metadata and playlist information`
-      );
+      alert(t.alerts.syncDone(result.updated || youtubeVideoIds.length));
     } catch (err: any) {
       console.error('Error syncing:', err);
-      alert('Failed to sync: ' + err.message);
+      alert(t.alerts.syncFailed(err.message));
     } finally {
       setBatchSaving(false);
     }
@@ -1012,20 +717,11 @@ export default function TagVideosPage() {
     });
 
     if (videosNeedingDates.length === 0) {
-      alert(
-        '❌ No videos found that need date parsing.\n\nEither all videos already have creation dates, or no video descriptions/IDs contain parseable date patterns.'
-      );
+      alert(t.alerts.noVideosNeedParsing);
       return;
     }
 
-    const confirmed = confirm(
-      `🤖 Automatic Date Parsing\n\n` +
-        `This will parse creation dates from video descriptions/IDs and update:\n` +
-        `• Video createdTime field\n\n` +
-        `Found ${videosNeedingDates.length} video(s) that could benefit from date parsing.\n\n` +
-        `⚠️ This will make changes to the database and may take time to process.\n\n` +
-        `Continue?`
-    );
+    const confirmed = confirm(t.alerts.autoParseConfirm(videosNeedingDates.length));
 
     if (!confirmed) return;
 
@@ -1108,12 +804,12 @@ export default function TagVideosPage() {
       setVideos(updatedVideos);
 
       // Show results
-      let resultMessage = `🎉 Automatic Date Parsing Complete!\n\n`;
-      resultMessage += `✅ Successfully processed: ${successCount} videos\n`;
+      let resultMessage = `${t.alerts.doneHeader}\n\n`;
+      resultMessage += `${t.alerts.successLine(successCount)}\n`;
       if (failCount > 0) {
-        resultMessage += `❌ Failed: ${failCount} videos\n`;
+        resultMessage += `${t.alerts.failLine(failCount)}\n`;
       }
-      resultMessage += `\n📋 Detailed Results:\n`;
+      resultMessage += t.alerts.detailsHeader;
 
       results.forEach((result) => {
         if (result.success) {
@@ -1131,9 +827,7 @@ export default function TagVideosPage() {
       });
     } catch (error) {
       console.error('❌ Error during automatic date parsing:', error);
-      setError(
-        'Failed to parse dates: ' + (error instanceof Error ? error.message : 'Unknown error')
-      );
+      setError(t.alerts.parseFailed(error instanceof Error ? error.message : '알 수 없는 오류'));
     } finally {
       setParsingDates(false);
       setProcessingVideos(new Set()); // Clear processing state
@@ -1329,17 +1023,19 @@ export default function TagVideosPage() {
       setShowPlaylistSelector(false);
 
       // Create success message
-      let message = `Playlist membership updated successfully! ${result.summary?.added || 0} playlists added, ${result.summary?.removed || 0} playlists removed.`;
+      let message = t.alerts.playlistSaved(
+        result.summary?.added || 0,
+        result.summary?.removed || 0
+      );
       if (result.summary?.failed > 0) {
-        message += `\n\nNote: ${result.summary.failed} operations failed. Check console for details.`;
+        message += t.alerts.playlistSavedFailures(result.summary.failed);
       }
 
       alert(message);
     } catch (error) {
       console.error('Error saving playlist changes:', error);
       alert(
-        'Failed to save playlist changes: ' +
-          (error instanceof Error ? error.message : 'Unknown error')
+        t.alerts.playlistSaveFailed(error instanceof Error ? error.message : '알 수 없는 오류')
       );
     } finally {
       setSavingPlaylists(false);
@@ -1488,12 +1184,13 @@ export default function TagVideosPage() {
   if (loading) {
     return (
       <div className="p-6" data-oid="-qs:p70">
-        <h1 className="text-2xl font-bold mb-4" data-oid="fk5vyhz">
-          Tag Videos (Service Layer)
+        <h1 className="text-2xl font-bold" data-oid="fk5vyhz">
+          {t.title}
         </h1>
+        <div className="mt-2 mb-4 h-1 w-12 rounded-full bg-brand" />
         <div className="flex items-center justify-center min-h-64" data-oid="w:zv44s">
           <div className="text-lg text-gray-600" data-oid="qjf16xw">
-            Loading videos...
+            {t.loading}
           </div>
         </div>
       </div>
@@ -1507,9 +1204,10 @@ export default function TagVideosPage() {
 
   return (
     <div className="p-6" data-oid="6j4_s9_">
-      <h1 className="text-2xl font-bold mb-4" data-oid="qeg4aph">
-        Tag Videos (Service Layer)
+      <h1 className="text-2xl font-bold" data-oid="qeg4aph">
+        {t.title}
       </h1>
+      <div className="mt-2 mb-4 h-1 w-12 rounded-full bg-brand" />
 
       {error && (
         <div
@@ -1530,28 +1228,27 @@ export default function TagVideosPage() {
       {/* Service Configuration Status */}
       <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6" data-oid="q1x:ea2">
         <h3 className="text-sm font-semibold text-green-800 mb-2" data-oid="wnkkuf6">
-          Service Layer Configuration
+          {t.serviceBox.title}
         </h3>
         <div className="text-sm space-y-1" data-oid="5i23q-:">
           <div data-oid="u-higbo">
             <span className="text-green-700" data-oid="l7m339c">
-              Videos:
+              {t.serviceBox.videosLabel}
             </span>{' '}
             <span className="text-green-600" data-oid="skcd8m4">
-              ✅ Using Video Service Abstraction
+              {t.serviceBox.videosValue}
             </span>
           </div>
           <div data-oid="dnyhdpa">
             <span className="text-green-700" data-oid="6vzk:a9">
-              Operations:
+              {t.serviceBox.operationsLabel}
             </span>{' '}
             <span className="text-green-600" data-oid="4r9tigy">
-              ✅ CRUD operations via service layer
+              {t.serviceBox.operationsValue}
             </span>
           </div>
           <div className="text-xs text-green-600 mt-2" data-oid="8okujy5">
-            All database operations go through the service layer for better maintainability and
-            multi-tenant support.
+            {t.serviceBox.note}
           </div>
         </div>
       </div>
@@ -1562,33 +1259,28 @@ export default function TagVideosPage() {
           <button
             onClick={syncWithYouTube}
             disabled={batchSaving}
-            className={`px-3 py-2 text-white text-sm rounded ${
+            className={`inline-flex items-center justify-center rounded-lg font-medium transition-all px-3 py-1.5 text-sm text-white ${
               batchSaving
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-red-500 hover:bg-red-600 cursor-pointer'
+                : 'bg-red-600 hover:bg-red-700 cursor-pointer'
             }`}
             data-oid="n8wr8ia"
           >
-            📺 {batchSaving ? 'Syncing...' : 'Sync with YouTube'}
+            📺 {batchSaving ? t.actions.syncing : t.actions.sync}
           </button>
 
-          <button
-            onClick={() => loadVideos()}
-            disabled={loading}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 text-sm"
-            data-oid="70m9l58"
-          >
-            {loading ? 'Loading...' : '🔄 Refresh Videos'}
-          </button>
+          <Button size="sm" onClick={() => loadVideos()} disabled={loading} data-oid="70m9l58">
+            🔄 {loading ? t.actions.refreshing : t.actions.refresh}
+          </Button>
 
-          <button
+          <Button
+            size="sm"
             onClick={handleAutomaticDateParsing}
             disabled={parsingDates || loading}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-300 text-sm"
             data-oid="-f8pk-p"
           >
-            {parsingDates ? 'Parsing Dates...' : '📅 Automatic Date Parsing'}
-          </button>
+            📅 {parsingDates ? t.actions.parsing : t.actions.autoDateParse}
+          </Button>
         </div>
       </div>
 
@@ -1596,15 +1288,15 @@ export default function TagVideosPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" data-oid="8thbbky">
         <div className="bg-white p-4 rounded-lg shadow" data-oid="-7toujv">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="bqmug9g">
-            Total Videos
+            {t.stats.total}
           </h3>
-          <p className="text-3xl font-bold text-blue-600" data-oid="04c5o-_">
+          <p className="text-3xl font-bold text-ink" data-oid="04c5o-_">
             {videos.length}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="fo9t3.q">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="kn33wve">
-            Untagged Videos
+            {t.stats.untagged}
           </h3>
           <p className="text-3xl font-bold text-orange-600" data-oid="ru1yz:f">
             {untaggedVideos.length}
@@ -1612,7 +1304,7 @@ export default function TagVideosPage() {
         </div>
         <div className="bg-white p-4 rounded-lg shadow" data-oid="h7:c8xz">
           <h3 className="text-lg font-semibold text-gray-700" data-oid="kmxb2my">
-            Tagged Videos
+            {t.stats.tagged}
           </h3>
           <p className="text-3xl font-bold text-green-600" data-oid="-ryhu8r">
             {taggedVideos.length}
@@ -1629,12 +1321,12 @@ export default function TagVideosPage() {
               type="checkbox"
               checked={showTaggedVideos}
               onChange={(e) => setShowTaggedVideos(e.target.checked)}
-              className="w-4 h-4 text-green-600 rounded focus:ring-green-500 mr-2"
+              className="w-4 h-4 accent-brand-500 rounded mr-2"
               data-oid="atil9s6"
             />
 
             <span className="text-sm text-gray-700" data-oid="b-8it84">
-              Show Tagged Videos ({taggedVideos.length})
+              {t.filters.showTagged(taggedVideos.length)}
             </span>
           </label>
           <label className="flex items-center cursor-pointer" data-oid="3pm2fe7">
@@ -1642,12 +1334,12 @@ export default function TagVideosPage() {
               type="checkbox"
               checked={showUntaggedVideos}
               onChange={(e) => setShowUntaggedVideos(e.target.checked)}
-              className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 mr-2"
+              className="w-4 h-4 accent-brand-500 rounded mr-2"
               data-oid="lriy.qy"
             />
 
             <span className="text-sm text-gray-700" data-oid="stvuhib">
-              Show Untagged Videos ({untaggedVideos.length})
+              {t.filters.showUntagged(untaggedVideos.length)}
             </span>
           </label>
         </div>
@@ -1665,12 +1357,12 @@ export default function TagVideosPage() {
                   setDateFilterTo('');
                 }
               }}
-              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 mr-2"
+              className="w-4 h-4 accent-brand-500 rounded mr-2"
               data-oid="di1dw85"
             />
 
             <span className="text-sm text-gray-700" data-oid="s4e.t_c">
-              Apply date range filter
+              {t.filters.applyDateRange}
             </span>
           </label>
           <div className="flex items-center gap-2" data-oid="_qqkosm">
@@ -1678,7 +1370,7 @@ export default function TagVideosPage() {
               className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}
               data-oid="n:m.hpq"
             >
-              From:
+              {t.filters.from}
             </label>
             <input
               type="date"
@@ -1696,7 +1388,7 @@ export default function TagVideosPage() {
               className={`text-sm ${enableDateFilter ? 'text-gray-700' : 'text-gray-400'}`}
               data-oid="8n4doyk"
             >
-              To:
+              {t.filters.to}
             </label>
             <input
               type="date"
@@ -1715,10 +1407,10 @@ export default function TagVideosPage() {
                 setDateFilterFrom('');
                 setDateFilterTo('');
               }}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
+              className="text-sm text-brand-700 hover:text-brand-800 underline"
               data-oid="37f:p6y"
             >
-              Clear dates
+              {t.filters.clearDates}
             </button>
           )}
           <label className="flex items-center cursor-pointer" data-oid="gcq49-.">
@@ -1726,12 +1418,12 @@ export default function TagVideosPage() {
               type="checkbox"
               checked={showVideosWithoutTimestamp}
               onChange={(e) => setShowVideosWithoutTimestamp(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-2"
+              className="w-4 h-4 accent-brand-500 rounded mr-2"
               data-oid=":2ywq6t"
             />
 
             <span className="text-sm text-gray-700" data-oid="2akisn5">
-              Show Videos Without Timestamp ({videos.filter((v) => !v.createdTime).length})
+              {t.filters.showWithoutTimestamp(videos.filter((v) => !v.createdTime).length)}
             </span>
           </label>
         </div>
@@ -1739,25 +1431,17 @@ export default function TagVideosPage() {
         {/* Selection and Display Controls */}
         <div className="border-t border-gray-300 pt-4" data-oid=".69c.qo">
           <div className="flex flex-wrap items-center gap-4" data-oid="y_:c3tc">
-            <button
-              onClick={selectAllVideos}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm"
-              data-oid="5aptvqp"
-            >
-              Select All
-            </button>
+            <Button size="sm" onClick={selectAllVideos} data-oid="5aptvqp">
+              {t.filters.selectAll}
+            </Button>
             {selectedVideos.size > 0 && (
-              <button
-                onClick={clearSelection}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-                data-oid="lhfif.5"
-              >
-                Clear Selection ({selectedVideos.size})
-              </button>
+              <Button variant="secondary" size="sm" onClick={clearSelection} data-oid="lhfif.5">
+                {t.filters.clearSelection(selectedVideos.size)}
+              </Button>
             )}
             <div className="flex items-center gap-2" data-oid="n9rchho">
               <label className="text-sm text-gray-700" data-oid=".qlo:04">
-                Sort by:
+                {t.filters.sortBy}
               </label>
               <select
                 value={sortBy}
@@ -1766,13 +1450,13 @@ export default function TagVideosPage() {
                 data-oid="gkx4b4_"
               >
                 <option value="created" data-oid=":t0t2ln">
-                  Created
+                  {t.filters.sortCreated}
                 </option>
                 <option value="uploaded" data-oid="m2bstub">
-                  Published
+                  {t.filters.sortPublished}
                 </option>
                 <option value="updated" data-oid="kp262uc">
-                  Metadata Updated
+                  {t.filters.sortUpdated}
                 </option>
               </select>
               <select
@@ -1782,16 +1466,16 @@ export default function TagVideosPage() {
                 data-oid="i7d04:u"
               >
                 <option value="desc" data-oid="p05a:hc">
-                  Newest First
+                  {t.filters.newestFirst}
                 </option>
                 <option value="asc" data-oid="tpeov9u">
-                  Oldest First
+                  {t.filters.oldestFirst}
                 </option>
               </select>
             </div>
             <div className="flex items-center gap-2" data-oid="gxi-b_r">
               <label className="text-sm text-gray-700" data-oid="g:dce.a">
-                Videos per page:
+                {t.filters.perPage}
               </label>
               <select
                 value={videosPerPage}
@@ -1814,8 +1498,11 @@ export default function TagVideosPage() {
               </select>
             </div>
             <div className="text-sm text-gray-600" data-oid="86o:q1b">
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredVideos.length)} of{' '}
-              {filteredVideos.length} videos
+              {t.filters.showingRange(
+                startIndex + 1,
+                Math.min(endIndex, filteredVideos.length),
+                filteredVideos.length
+              )}
             </div>
           </div>
         </div>
@@ -1823,9 +1510,9 @@ export default function TagVideosPage() {
 
       {/* Batch Actions */}
       {showBatchActions && (
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4" data-oid="z.5rz9d">
+        <div className="bg-brand-50 border border-brand-200 p-3 rounded-lg mb-4" data-oid="z.5rz9d">
           <h3 className="text-lg font-semibold mb-2" data-oid="0bcedeh">
-            Batch Actions ({selectedVideos.size} videos selected)
+            {t.batch.title(selectedVideos.size)}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3" data-oid="mpmneae">
@@ -1838,7 +1525,7 @@ export default function TagVideosPage() {
                 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center"
                 data-oid="d_cwk0b"
               >
-                🏷️ Tags
+                {t.batch.tags}
               </h4>
               <div className="relative mb-2" data-oid="kv-qrab">
                 <input
@@ -1846,7 +1533,7 @@ export default function TagVideosPage() {
                   value={batchTags}
                   onChange={(e) => setBatchTags(e.target.value)}
                   onClick={handleBatchTagsInputClick}
-                  placeholder="Click to select cats..."
+                  placeholder={t.batch.clickToSelect}
                   className="border border-gray-300 rounded px-2 py-1 w-full cursor-pointer pr-12 text-sm"
                   data-oid="kh3gio3"
                 />
@@ -1854,7 +1541,7 @@ export default function TagVideosPage() {
                 <button
                   type="button"
                   onClick={handleBatchTagsInputClick}
-                  className="absolute right-1 top-1 text-blue-500 hover:text-blue-700 text-xs"
+                  className="absolute right-1 top-1 text-brand-600 hover:text-brand-700 text-xs"
                   data-oid="5:j-6dt"
                 >
                   🐱
@@ -1870,7 +1557,7 @@ export default function TagVideosPage() {
                     return (
                       <span
                         key={index}
-                        className="inline-flex items-center bg-blue-100 text-blue-800 text-xs px-1 py-0.5 rounded"
+                        className="inline-flex items-center bg-brand-100 text-ink text-xs px-1 py-0.5 rounded"
                         data-oid="8-wpc.m"
                       >
                         {trimmedTag}
@@ -1884,7 +1571,7 @@ export default function TagVideosPage() {
                               .join(', ');
                             setBatchTags(newTags);
                           }}
-                          className="ml-1 text-blue-600 hover:text-blue-800"
+                          className="ml-1 text-ink/70 hover:text-ink"
                           data-oid="owpc.-o"
                         >
                           ×
@@ -1895,16 +1582,17 @@ export default function TagVideosPage() {
                 </div>
               )}
 
-              <button
+              <Button
+                size="sm"
                 onClick={batchUpdateTags}
                 disabled={savingTags || !batchTags.trim()}
-                className="w-full px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                className="w-full"
                 data-oid="4ec.mh-"
               >
-                {savingTags ? 'Saving...' : 'Save Tags'}
-              </button>
+                {savingTags ? t.batch.saving : t.batch.saveTags}
+              </Button>
               <p className="text-xs text-yellow-700 mt-1" data-oid=":qum3s7">
-                ⚠️ Updates YouTube directly
+                {t.batch.updatesYoutube}
               </p>
             </div>
 
@@ -1917,7 +1605,7 @@ export default function TagVideosPage() {
                 className="text-sm font-semibold text-purple-800 mb-2 flex items-center"
                 data-oid="f9peut6"
               >
-                📅 Recording Date
+                {t.batch.recordingDate}
               </h4>
               <input
                 type="datetime-local"
@@ -1927,16 +1615,17 @@ export default function TagVideosPage() {
                 data-oid="5ru_tpc"
               />
 
-              <button
+              <Button
+                size="sm"
                 onClick={batchUpdateDate}
                 disabled={savingDate || !batchYoutubeCreatedTime.trim()}
-                className="w-full px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                className="w-full"
                 data-oid=":yn-305"
               >
-                {savingDate ? 'Saving...' : 'Save Date'}
-              </button>
+                {savingDate ? t.batch.saving : t.batch.saveDate}
+              </Button>
               <p className="text-xs text-purple-700 mt-1" data-oid="p_hhrgh">
-                ⚠️ Updates YouTube directly
+                {t.batch.updatesYoutube}
               </p>
             </div>
 
@@ -1946,7 +1635,7 @@ export default function TagVideosPage() {
                 className="text-sm font-semibold text-green-800 mb-2 flex items-center"
                 data-oid="rngas84"
               >
-                🎬 Playlists
+                {t.batch.playlists}
               </h4>
               <div
                 className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border mb-2 min-h-[1.5rem]"
@@ -1966,13 +1655,13 @@ export default function TagVideosPage() {
                       })}
                     {selectedPlaylists.size > 2 && (
                       <div className="text-gray-500" data-oid="jlz-g6:">
-                        +{selectedPlaylists.size - 2} more
+                        {t.batch.moreCount(selectedPlaylists.size - 2)}
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="text-gray-500 italic" data-oid="t68vltp">
-                    None selected
+                    {t.batch.noneSelected}
                   </div>
                 )}
               </div>
@@ -1983,26 +1672,22 @@ export default function TagVideosPage() {
                   setShowPlaylistSelector(true);
                 }}
                 disabled={loadingPlaylists}
-                className="w-full px-2 py-1 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 text-sm"
+                className="w-full px-2 py-1 text-brand-700 bg-brand-50 border border-brand-200 rounded hover:bg-brand-100 disabled:opacity-50 text-sm"
                 data-oid="t00lsus"
               >
-                {loadingPlaylists ? 'Loading...' : '✏️ Select Playlists'}
+                {loadingPlaylists ? t.batch.loading : t.batch.selectPlaylists}
               </button>
               <p className="text-xs text-green-700 mt-1" data-oid="jbp:qlp">
-                ✅ Save button in modal
+                {t.batch.saveInModal}
               </p>
             </div>
           </div>
 
           <div className="flex gap-2 mt-3" data-oid="ksnj-b-">
             {/* Delete Metadata button removed */}
-            <button
-              onClick={clearSelection}
-              className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-              data-oid="vyk7oc5"
-            >
-              Cancel
-            </button>
+            <Button variant="secondary" size="sm" onClick={clearSelection} data-oid="vyk7oc5">
+              {t.batch.cancel}
+            </Button>
           </div>
         </div>
       )}
@@ -2014,7 +1699,7 @@ export default function TagVideosPage() {
           {filteredVideos.length === 0 ? (
             <div className="text-center py-12" data-oid="tt1buvm">
               <p className="text-gray-600 text-lg" data-oid="9_yl05i">
-                No videos match the current filter settings.
+                {t.grid.noMatch}
               </p>
             </div>
           ) : (
@@ -2029,7 +1714,7 @@ export default function TagVideosPage() {
                     key={video.id}
                     className={`relative bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-2 ${
                       selectedVideo?.id === video.id
-                        ? 'border-blue-500'
+                        ? 'border-brand-500'
                         : processingVideos.has(video.id)
                           ? 'border-purple-500 shadow-md'
                           : video.tags && video.tags.length > 0
@@ -2048,7 +1733,7 @@ export default function TagVideosPage() {
                           className="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium"
                           data-oid="qu.jc8x"
                         >
-                          📅 Parsing Date...
+                          {t.grid.parsingDate}
                         </div>
                       </div>
                     )}
@@ -2059,7 +1744,7 @@ export default function TagVideosPage() {
                         type="checkbox"
                         checked={selectedVideos.has(video.id)}
                         onChange={() => toggleVideoSelection(video.id)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        className="w-4 h-4 accent-brand-500 rounded"
                         onClick={(e) => e.stopPropagation()}
                         data-oid="u1ekmue"
                       />
@@ -2072,14 +1757,14 @@ export default function TagVideosPage() {
                           className="bg-green-500 text-white text-xs px-2 py-1 rounded"
                           data-oid="v4vanei"
                         >
-                          Tagged
+                          {t.grid.tagged}
                         </span>
                       ) : (
                         <span
                           className="bg-orange-500 text-white text-xs px-2 py-1 rounded"
                           data-oid="yepj4_k"
                         >
-                          Untagged
+                          {t.grid.untagged}
                         </span>
                       )}
                     </div>
@@ -2092,7 +1777,7 @@ export default function TagVideosPage() {
                         }`}
                         data-oid="vazpqwp"
                       >
-                        {video.videoType === 'youtube' ? 'YouTube' : 'Storage'}
+                        {video.videoType === 'youtube' ? t.grid.youtube : t.grid.storage}
                       </span>
                     </div>
 
@@ -2118,51 +1803,53 @@ export default function TagVideosPage() {
                         </h3>
                         {video.uploadDate && (
                           <p className="text-xs text-gray-500 mb-1" data-oid="kduux3.">
-                            Published:{' '}
-                            {(() => {
-                              try {
-                                const date = new Date(video.uploadDate);
-                                if (!isNaN(date.getTime())) {
-                                  return date.toLocaleDateString();
+                            {t.grid.published(
+                              (() => {
+                                try {
+                                  const date = new Date(video.uploadDate);
+                                  if (!isNaN(date.getTime())) {
+                                    return date.toLocaleDateString();
+                                  }
+                                  return t.grid.invalidDate;
+                                } catch (e) {
+                                  return t.grid.invalidDate;
                                 }
-                                return 'Invalid date';
-                              } catch (e) {
-                                return 'Invalid date';
-                              }
-                            })()}
+                              })()
+                            )}
                           </p>
                         )}
                         <p className="text-xs text-gray-500 mb-1" data-oid="v:hhmr1">
-                          Created:{' '}
-                          {video.createdTime
-                            ? (() => {
-                                try {
-                                  let date: Date;
-                                  if (video.createdTime instanceof Date) {
-                                    date = video.createdTime;
-                                  } else if (
-                                    typeof video.createdTime === 'object' &&
-                                    video.createdTime !== null &&
-                                    'seconds' in video.createdTime
-                                  ) {
-                                    // Firebase Timestamp
-                                    date = new Date((video.createdTime as any).seconds * 1000);
-                                  } else {
-                                    // String or other format
-                                    date = new Date(video.createdTime as any);
+                          {t.grid.created(
+                            video.createdTime
+                              ? (() => {
+                                  try {
+                                    let date: Date;
+                                    if (video.createdTime instanceof Date) {
+                                      date = video.createdTime;
+                                    } else if (
+                                      typeof video.createdTime === 'object' &&
+                                      video.createdTime !== null &&
+                                      'seconds' in video.createdTime
+                                    ) {
+                                      // Firebase Timestamp
+                                      date = new Date((video.createdTime as any).seconds * 1000);
+                                    } else {
+                                      // String or other format
+                                      date = new Date(video.createdTime as any);
+                                    }
+                                    return !isNaN(date.getTime())
+                                      ? date.toLocaleDateString()
+                                      : t.grid.invalidDate;
+                                  } catch (e) {
+                                    return t.grid.invalidDate;
                                   }
-                                  return !isNaN(date.getTime())
-                                    ? date.toLocaleDateString()
-                                    : 'Invalid date';
-                                } catch (e) {
-                                  return 'Invalid date';
-                                }
-                              })()
-                            : 'null'}
+                                })()
+                              : t.grid.nullDate
+                          )}
                         </p>
                         {video.videoType === 'youtube' && (
                           <p
-                            className="text-xs text-blue-600 mb-2 font-mono break-all"
+                            className="text-xs text-gray-500 mb-2 font-mono break-all"
                             data-oid="r2tifa0"
                           >
                             youtu.be/{video.youtubeId || video.id}
@@ -2170,7 +1857,7 @@ export default function TagVideosPage() {
                         )}
                         {video.duration && (
                           <p className="text-xs text-gray-500 mb-2" data-oid="p37u_uu">
-                            Duration: {formatDuration(video.duration)}
+                            {t.grid.duration(formatDuration(video.duration))}
                           </p>
                         )}
                         {video.tags && video.tags.length > 0 && (
@@ -2178,7 +1865,7 @@ export default function TagVideosPage() {
                             {video.tags.slice(0, 3).map((tag, index) => (
                               <span
                                 key={index}
-                                className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                                className="bg-brand-100 text-ink text-xs px-2 py-1 rounded"
                                 data-oid="27qt5ds"
                               >
                                 {tag}
@@ -2186,7 +1873,7 @@ export default function TagVideosPage() {
                             ))}
                             {video.tags.length > 3 && (
                               <span className="text-xs text-gray-500" data-oid="xle0dlc">
-                                +{video.tags.length - 3} more
+                                {t.grid.moreCount(video.tags.length - 3)}
                               </span>
                             )}
                           </div>
@@ -2206,7 +1893,7 @@ export default function TagVideosPage() {
                     className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     data-oid="kuzf9d8"
                   >
-                    Previous
+                    {t.grid.previous}
                   </button>
 
                   {/* Page numbers */}
@@ -2228,7 +1915,7 @@ export default function TagVideosPage() {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-2 text-sm border rounded ${
                           currentPage === pageNum
-                            ? 'bg-blue-500 text-white border-blue-500'
+                            ? 'bg-brand text-ink border-brand font-bold'
                             : 'border-gray-300 hover:bg-gray-50'
                         }`}
                         data-oid="gnluo38"
@@ -2244,7 +1931,7 @@ export default function TagVideosPage() {
                     className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     data-oid="r4gz9bj"
                   >
-                    Next
+                    {t.grid.next}
                   </button>
                 </div>
               )}
@@ -2273,7 +1960,7 @@ export default function TagVideosPage() {
                     {selectedVideo.title || selectedVideo.id}
                   </h4>
                   <p className="text-xs text-gray-500 mb-1" data-oid="sdf.:f9">
-                    Published:{' '}
+                    {t.form.published}{' '}
                     {(() => {
                       try {
                         const date = selectedVideo.uploadDate
@@ -2281,14 +1968,14 @@ export default function TagVideosPage() {
                           : null;
                         return date && !isNaN(date.getTime())
                           ? date.toLocaleDateString()
-                          : 'Unknown';
+                          : t.form.unknown;
                       } catch (e) {
-                        return 'Unknown';
+                        return t.form.unknown;
                       }
                     })()}
                   </p>
                   <p className="text-xs text-gray-500 mb-1" data-oid="dqshn.-">
-                    Created:{' '}
+                    {t.form.created}{' '}
                     {selectedVideo.createdTime
                       ? (() => {
                           try {
@@ -2308,37 +1995,39 @@ export default function TagVideosPage() {
                             }
                             return !isNaN(date.getTime())
                               ? date.toLocaleDateString()
-                              : 'Invalid date';
+                              : t.form.invalidDate;
                           } catch (e) {
-                            return 'Invalid date';
+                            return t.form.invalidDate;
                           }
                         })()
-                      : 'null'}
+                      : t.form.nullDate}
                   </p>
                   <p className="text-xs text-gray-500 mb-1" data-oid="zhjmyo6">
-                    Metadata Updated:{' '}
+                    {t.form.metadataUpdated}{' '}
                     {selectedVideo.updated
                       ? (() => {
                           try {
                             const date = new Date(selectedVideo.updated);
-                            return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Unknown';
+                            return !isNaN(date.getTime())
+                              ? date.toLocaleDateString()
+                              : t.form.unknown;
                           } catch (e) {
-                            return 'Unknown';
+                            return t.form.unknown;
                           }
                         })()
-                      : 'Never'}
+                      : t.form.never}
                   </p>
                   {selectedVideo.videoType === 'youtube' && (
                     <>
                       <div className="text-xs mb-2" data-oid="p5vkh0c">
                         <span className="text-gray-500" data-oid="4g:ea8i">
-                          YouTube:{' '}
+                          {t.form.youtubeLabel}{' '}
                         </span>
                         <a
                           href={`https://youtu.be/${selectedVideo.youtubeId || selectedVideo.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 font-mono break-all"
+                          className="text-brand-700 hover:text-brand-800 font-mono break-all"
                           data-oid="tshsqaa"
                         >
                           youtu.be/{selectedVideo.youtubeId || selectedVideo.id}
@@ -2348,10 +2037,10 @@ export default function TagVideosPage() {
                         href={selectedVideo.videoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 text-xs"
+                        className="text-brand-600 hover:text-brand-700 text-xs"
                         data-oid="0:pl-wb"
                       >
-                        View on YouTube →
+                        {t.form.viewOnYoutube}
                       </a>
                     </>
                   )}
@@ -2365,19 +2054,19 @@ export default function TagVideosPage() {
                         className="block text-sm font-medium text-gray-700 mb-1"
                         data-oid="tmzbzvl"
                       >
-                        Title (YouTube)
+                        {t.form.titleYoutube}
                       </label>
                       <input
                         type="text"
                         value={youtubeTitle}
                         onChange={(e) => setYoutubeTitle(e.target.value)}
-                        placeholder="Video title..."
+                        placeholder={t.form.titlePlaceholder}
                         className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
                         data-oid="rcgyly8"
                       />
 
                       <div className="text-xs text-gray-500 mt-1" data-oid="4ygdjy4">
-                        ✏️ Changes will be saved to YouTube and synced to Firebase
+                        {t.form.syncNote}
                       </div>
                     </div>
                   )}
@@ -2389,7 +2078,7 @@ export default function TagVideosPage() {
                         className="block text-sm font-medium text-gray-700 mb-1"
                         data-oid="4ocq5ws"
                       >
-                        Tags (YouTube)
+                        {t.form.tagsYoutube}
                       </label>
                       <div className="relative" data-oid="u:9m1_6">
                         <input
@@ -2397,7 +2086,7 @@ export default function TagVideosPage() {
                           value={youtubeTags}
                           onChange={(e) => setYoutubeTags(e.target.value)}
                           onClick={handleYoutubeTagsInputClick}
-                          placeholder="Click to select cats or type manually..."
+                          placeholder={t.form.tagsPlaceholder}
                           className="border border-gray-300 rounded px-3 py-2 w-full text-sm cursor-pointer pr-16"
                           data-oid="fjebfr9"
                         />
@@ -2405,10 +2094,10 @@ export default function TagVideosPage() {
                         <button
                           type="button"
                           onClick={handleYoutubeTagsInputClick}
-                          className="absolute right-2 top-2 text-blue-500 hover:text-blue-700 text-sm"
+                          className="absolute right-2 top-2 text-brand-600 hover:text-brand-700 text-sm"
                           data-oid="c82ku26"
                         >
-                          🐱 Select
+                          {t.form.selectBtn}
                         </button>
                       </div>
 
@@ -2421,14 +2110,14 @@ export default function TagVideosPage() {
                             return (
                               <span
                                 key={index}
-                                className="inline-flex items-center bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                                className="inline-flex items-center bg-brand-100 text-ink text-xs px-2 py-1 rounded"
                                 data-oid="km25_kc"
                               >
                                 {trimmedTag}
                                 <button
                                   type="button"
                                   onClick={() => removeYoutubeTag(trimmedTag)}
-                                  className="ml-1 text-blue-600 hover:text-blue-800"
+                                  className="ml-1 text-ink/70 hover:text-ink"
                                   data-oid="14vrejc"
                                 >
                                   ×
@@ -2440,7 +2129,7 @@ export default function TagVideosPage() {
                       )}
 
                       <div className="text-xs text-gray-500 mt-1" data-oid="mwzpbja">
-                        ✏️ Changes will be saved to YouTube and synced to Firebase
+                        {t.form.syncNote}
                       </div>
                     </div>
                   )}
@@ -2452,19 +2141,19 @@ export default function TagVideosPage() {
                         className="block text-sm font-medium text-gray-700 mb-1"
                         data-oid="fi0hhhq"
                       >
-                        YouTube Description
+                        {t.form.descriptionYoutube}
                       </label>
                       <textarea
                         value={youtubeDescription}
                         onChange={(e) => setYoutubeDescription(e.target.value)}
-                        placeholder="YouTube video description..."
+                        placeholder={t.form.descriptionPlaceholder}
                         rows={3}
                         className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
                         data-oid="6sb0avc"
                       />
 
                       <div className="text-xs text-gray-500 mt-1" data-oid="a07bs4o">
-                        ✏️ Changes will be saved to YouTube and synced to Firebase
+                        {t.form.syncNote}
                       </div>
                     </div>
                   )}
@@ -2476,7 +2165,7 @@ export default function TagVideosPage() {
                         className="block text-sm font-medium text-gray-700 mb-1"
                         data-oid="4iy1ucf"
                       >
-                        Created Time (YouTube)
+                        {t.form.createdTimeYoutube}
                       </label>
                       <div className="space-y-2" data-oid="hjwy8u-">
                         <input
@@ -2498,76 +2187,80 @@ export default function TagVideosPage() {
                                 const utcPlus9Time = new Date(utcTime + 9 * 60 * 60 * 1000);
                                 const dateStr = utcPlus9Time.toISOString().split('T')[0];
                                 setYoutubeCreatedTime(dateStr);
-                                alert(`✅ Parsed date from title: ${dateStr}`);
+                                alert(t.alerts.parsedFromTitle(dateStr));
                               } else {
-                                alert('❌ Could not parse date from video title');
+                                alert(t.alerts.parseFromTitleFailed);
                               }
                             }
                           }}
-                          className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 text-sm"
+                          className="w-full px-3 py-2 text-brand-700 bg-brand-50 border border-brand-200 rounded hover:bg-brand-100 text-sm"
                           data-oid="zu13mws"
                         >
-                          📅 Parse Date from Title
+                          {t.form.parseFromTitle}
                         </button>
                       </div>
                       <div className="text-xs text-gray-500 mt-1" data-oid="r:w.0-c">
-                        ✏️ Changes will be saved to YouTube and synced to Firebase
+                        {t.form.syncNote}
                       </div>
                     </div>
                   )}
 
                   <div className="flex gap-2" data-oid="6nq12hf">
-                    <button
+                    <Button
                       onClick={saveVideoMetadata}
                       disabled={saving || updatingYoutube}
-                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 text-sm"
+                      className="flex-1"
                       data-oid="kbe7otr"
                     >
                       {updatingYoutube
-                        ? 'Updating YouTube...'
+                        ? t.form.savingYoutube
                         : saving
-                          ? 'Saving...'
-                          : 'Save Changes'}
-                    </button>
+                          ? t.form.saving
+                          : t.form.saveChanges}
+                    </Button>
                     {/* Delete button removed */}
                   </div>
 
                   {(saving || updatingYoutube) && (
                     <div
-                      className="text-xs text-gray-500 bg-blue-50 p-3 rounded border-l-4 border-blue-400"
+                      className="text-xs text-gray-500 bg-brand-50 p-3 rounded border-l-4 border-brand-400"
                       data-oid="v37lci7"
                     >
-                      <div className="font-medium text-blue-700 mb-1" data-oid="e8-_qs6">
-                        Save Process:
+                      <div className="font-medium text-ink mb-1" data-oid="e8-_qs6">
+                        {t.form.saveProcess}
                       </div>
                       <div className="space-y-1" data-oid="3ka4wja">
                         <div
-                          className={updatingYoutube ? 'text-blue-600' : 'text-gray-500'}
+                          className={updatingYoutube ? 'text-brand-700' : 'text-gray-500'}
                           data-oid="r318a_e"
                         >
-                          1. {updatingYoutube ? '🔄 Updating YouTube...' : '✅ YouTube updated'}
+                          1. {updatingYoutube ? t.form.step1Updating : t.form.step1Done}
                         </div>
                         <div
-                          className={saving && !updatingYoutube ? 'text-blue-600' : 'text-gray-500'}
+                          className={
+                            saving && !updatingYoutube ? 'text-brand-700' : 'text-gray-500'
+                          }
                           data-oid="bah-bca"
                         >
                           2.{' '}
                           {saving && !updatingYoutube
-                            ? '⏳ Waiting for YouTube propagation...'
+                            ? t.form.step2Waiting
                             : updatingYoutube
-                              ? '⏳ Pending'
-                              : '✅ Changes propagated'}
+                              ? t.form.step2Pending
+                              : t.form.step2Done}
                         </div>
                         <div
-                          className={saving && !updatingYoutube ? 'text-blue-600' : 'text-gray-500'}
+                          className={
+                            saving && !updatingYoutube ? 'text-brand-700' : 'text-gray-500'
+                          }
                           data-oid="4c-8nwo"
                         >
                           3.{' '}
                           {saving && !updatingYoutube
-                            ? '🔄 Syncing to Firebase...'
+                            ? t.form.step3Syncing
                             : updatingYoutube
-                              ? '⏳ Pending'
-                              : '✅ Firebase synced'}
+                              ? t.form.step3Pending
+                              : t.form.step3Done}
                         </div>
                       </div>
                     </div>
@@ -2577,7 +2270,7 @@ export default function TagVideosPage() {
                   {selectedVideo.videoType === 'youtube' && (
                     <div className="border-t border-gray-200 pt-4 mt-4" data-oid="6192ft7">
                       <h4 className="text-sm font-medium text-gray-700 mb-3" data-oid="3li:a-m">
-                        Playlist Management
+                        {t.form.playlistManagement}
                       </h4>
 
                       {/* Display current playlists */}
@@ -2586,7 +2279,7 @@ export default function TagVideosPage() {
                           className="block text-xs font-medium text-gray-600 mb-1"
                           data-oid="0:fvvt2"
                         >
-                          Current Playlists:
+                          {t.form.currentPlaylists}
                         </label>
                         {selectedVideo.allPlaylists && selectedVideo.allPlaylists.length > 0 ? (
                           <div className="flex flex-wrap gap-1" data-oid=":c-1qg4">
@@ -2602,7 +2295,7 @@ export default function TagVideosPage() {
                           </div>
                         ) : (
                           <span className="text-xs text-gray-500 italic" data-oid="ad8prf:">
-                            Not in any playlists
+                            {t.form.notInPlaylists}
                           </span>
                         )}
                       </div>
@@ -2612,19 +2305,18 @@ export default function TagVideosPage() {
                         type="button"
                         onClick={handlePlaylistSelectorClick}
                         disabled={loadingPlaylists || savingPlaylists}
-                        className="w-full px-3 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 text-sm"
+                        className="w-full px-3 py-2 text-brand-700 bg-brand-50 border border-brand-200 rounded hover:bg-brand-100 disabled:opacity-50 text-sm"
                         data-oid="wul1h1p"
                       >
                         {loadingPlaylists
-                          ? '⏳ Loading Playlists...'
+                          ? t.form.loadingPlaylists
                           : savingPlaylists
-                            ? '💾 Saving Changes...'
-                            : '📋 Manage Playlists'}
+                            ? t.form.savingChanges
+                            : t.form.managePlaylists}
                       </button>
 
                       <div className="text-xs text-gray-500 mt-2" data-oid="br5ao2s">
-                        💡 Playlist changes are saved directly to YouTube and synced to Firebase
-                        automatically
+                        {t.form.playlistNote}
                       </div>
                     </div>
                   )}
@@ -2633,7 +2325,7 @@ export default function TagVideosPage() {
             ) : (
               <div className="text-center py-12" data-oid="-nx:1_t">
                 <p className="text-gray-500" data-oid="vz8wyvh">
-                  Select a video to edit its metadata
+                  {t.form.emptyPrompt}
                 </p>
               </div>
             )}
@@ -2653,14 +2345,7 @@ export default function TagVideosPage() {
           >
             <div className="flex justify-between items-center mb-4" data-oid="34qb22l">
               <h3 className="text-lg font-semibold" data-oid="e-c73t9">
-                Select Cats{' '}
-                {catSelectorContext === 'batch'
-                  ? '(Batch Tagging)'
-                  : catSelectorContext === 'youtube-individual'
-                    ? '(YouTube Tags - Individual)'
-                    : catSelectorContext === 'youtube-batch'
-                      ? '(YouTube Tags - Batch)'
-                      : '(Individual Video)'}
+                {t.catSelector.title(catSelectorContext)}
               </h3>
               <button
                 onClick={() => setShowCatSelector(false)}
@@ -2675,7 +2360,7 @@ export default function TagVideosPage() {
             <div className="mb-4" data-oid="c7.jys6">
               <input
                 type="text"
-                placeholder="Search cats..."
+                placeholder={t.catSelector.search}
                 value={catSearchQuery}
                 onChange={(e) => setCatSearchQuery(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
@@ -2690,7 +2375,7 @@ export default function TagVideosPage() {
             >
               {filteredCats.length === 0 ? (
                 <div className="p-4 text-center text-gray-500" data-oid="kdkatss">
-                  {cats.length === 0 ? 'No cats found in database' : 'No cats match your search'}
+                  {cats.length === 0 ? t.catSelector.noneInDb : t.catSelector.noMatch}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 p-4" data-oid="7gaiylw">
@@ -2699,7 +2384,7 @@ export default function TagVideosPage() {
                       key={cat.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedCats.has(cat.id)
-                          ? 'bg-blue-50 border border-blue-200'
+                          ? 'bg-brand-50 border border-brand-200'
                           : 'border border-gray-200'
                       }`}
                       data-oid="j5u3cxf"
@@ -2751,15 +2436,11 @@ export default function TagVideosPage() {
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
                 data-oid="4u1.4tf"
               >
-                Clear All
+                {t.catSelector.clearAll}
               </button>
-              <button
-                onClick={() => setShowCatSelector(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                data-oid="o110wyj"
-              >
-                Done ({selectedCats.size} selected)
-              </button>
+              <Button size="sm" onClick={() => setShowCatSelector(false)} data-oid="o110wyj">
+                {t.catSelector.done(selectedCats.size)}
+              </Button>
             </div>
           </div>
         </div>
@@ -2777,7 +2458,7 @@ export default function TagVideosPage() {
           >
             <div className="flex justify-between items-center mb-4" data-oid="o8v5u1v">
               <h3 className="text-lg font-semibold" data-oid="ij82ao6">
-                Select Playlists {playlistSelectorContext === 'batch' ? '(Batch Action)' : ''}
+                {t.playlistSelector.title(playlistSelectorContext === 'batch')}
               </h3>
               <button
                 onClick={() => setShowPlaylistSelector(false)}
@@ -2792,16 +2473,16 @@ export default function TagVideosPage() {
             {/* Saving indicator */}
             {savingPlaylists && (
               <div
-                className="mb-4 bg-blue-50 border border-blue-200 p-3 rounded"
+                className="mb-4 bg-brand-50 border border-brand-200 p-3 rounded"
                 data-oid="sgm1ztr"
               >
                 <div className="flex items-center" data-oid="jv9i0zk">
                   <div
-                    className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"
+                    className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-500 mr-2"
                     data-oid="f:a_83z"
                   ></div>
-                  <span className="text-blue-800 text-sm" data-oid="ksnf.5q">
-                    Saving playlist changes to YouTube and syncing to Firestore...
+                  <span className="text-ink text-sm" data-oid="ksnf.5q">
+                    {t.playlistSelector.savingNote}
                   </span>
                 </div>
               </div>
@@ -2814,7 +2495,7 @@ export default function TagVideosPage() {
             >
               {allPlaylists.length === 0 ? (
                 <div className="p-4 text-center text-gray-500" data-oid="prcyn.2">
-                  No playlists found. Create a playlist first.
+                  {t.playlistSelector.noPlaylists}
                 </div>
               ) : (
                 <div className="space-y-2" data-oid="xychz.v">
@@ -2823,7 +2504,7 @@ export default function TagVideosPage() {
                       key={playlist.id}
                       className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
                         selectedPlaylists.has(playlist.id)
-                          ? 'bg-blue-50 border border-blue-200'
+                          ? 'bg-brand-50 border border-brand-200'
                           : 'border border-gray-200'
                       } ${savingPlaylists ? 'opacity-50 cursor-not-allowed' : ''}`}
                       data-oid="28aygn7"
@@ -2845,8 +2526,7 @@ export default function TagVideosPage() {
                           {playlist.description}
                         </div>
                         <div className="text-xs text-gray-400" data-oid="ba-amzt">
-                          {playlist.itemCount} video
-                          {playlist.itemCount !== 1 ? 's' : ''}
+                          {t.playlistSelector.videoCount(playlist.itemCount)}
                         </div>
                       </div>
                     </label>
@@ -2869,18 +2549,18 @@ export default function TagVideosPage() {
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm disabled:opacity-50"
                 data-oid="x.q12vs"
               >
-                Cancel
+                {t.playlistSelector.cancel}
               </button>
-              <button
+              <Button
+                size="sm"
                 onClick={savePlaylistChanges}
                 disabled={savingPlaylists}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm disabled:opacity-50"
                 data-oid="6beezti"
               >
                 {savingPlaylists
-                  ? 'Saving...'
-                  : `Save Changes (${selectedPlaylists.size} selected)`}
-              </button>
+                  ? t.playlistSelector.saving
+                  : t.playlistSelector.saveChanges(selectedPlaylists.size)}
+              </Button>
             </div>
           </div>
         </div>

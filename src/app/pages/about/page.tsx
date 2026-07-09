@@ -1,16 +1,33 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getMountainAbout, getMountainTheme } from '@/utils/config';
+import { getMountainAbout } from '@/utils/config';
 import { useAboutPhoto } from '@/hooks/useAboutPhoto';
 import { getAboutContentService, getCatService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
 import { processTextWithLinks } from '@/utils/text-processing';
 import { Cat } from '@/types';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 import CatInfo from '@/components/CatInfo';
-import { cn } from '@/utils/cn';
+import Modal from '@/components/ui/Modal';
 import Image from 'next/image';
+
+/**
+ * Renders a subtitle with runs of uppercase Latin letters emphasized (brand
+ * gold + semibold), so the intended wordplay in the 부제 stands out — e.g.
+ * "MOuntain cats HOuse CATS" surfaces MO·HO·CATS. Splits on `[A-Z]+` runs so
+ * consecutive capitals share one span; lowercase/Korean text is untouched.
+ */
+function emphasizeCapitals(text: string): React.ReactNode[] {
+  return text.split(/([A-Z]+)/).map((part, i) =>
+    /^[A-Z]+$/.test(part) ? (
+      <span key={i} className="font-semibold text-brand-600">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
 
 export default function About() {
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
@@ -22,7 +39,6 @@ export default function About() {
 
   const aboutContentService = getAboutContentService();
   const catService = getCatService();
-  const theme = getMountainTheme();
 
   // Load about content from Firestore or fallback to JSON
   useEffect(() => {
@@ -150,8 +166,8 @@ export default function About() {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">About</h1>
-          <p className="text-gray-600">Content not available</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">소개</h1>
+          <p className="text-gray-600">내용을 불러올 수 없어요.</p>
         </div>
       </div>
     );
@@ -161,23 +177,13 @@ export default function About() {
     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8" data-oid="3kim:bs">
       <div className="prose prose-lg mx-auto" data-oid="your4.g">
         {/* Page Title */}
-        <h1
-          className="text-4xl font-bold mb-4"
-          style={{ color: theme.primaryColor }}
-          data-oid="5f.mun5"
-        >
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900 mb-2" data-oid="5f.mun5">
           {aboutData.title}
         </h1>
-
-        {/* Subtitle */}
-        {/* {aboutData.subtitle && (
-          <p
-            className="text-xl mb-6"
-            style={{ color: theme.secondaryColor }}
-          >
-            {aboutData.subtitle}
-          </p>
-        )} */}
+        {aboutData.subtitle && (
+          <p className="mb-2 text-sm text-gray-500">{emphasizeCapitals(aboutData.subtitle)}</p>
+        )}
+        <div className="mb-5 h-0.5 w-8 rounded-full bg-brand" />
 
         {/* Main Photo */}
         {aboutData.mainPhoto && (
@@ -188,7 +194,7 @@ export default function About() {
                 data-oid="zf9jc29"
               >
                 <span className="text-gray-500" data-oid="2ba837f">
-                  Loading photo...
+                  사진을 불러오는 중...
                 </span>
               </div>
             )}
@@ -198,7 +204,7 @@ export default function About() {
                 data-oid="5vdi5wj"
               >
                 <span className="text-gray-400" data-oid="4b1u_oq">
-                  Photo unavailable
+                  사진을 불러올 수 없어요
                 </span>
               </div>
             )}
@@ -231,64 +237,25 @@ export default function About() {
         )}
 
         {/* Main Content */}
-        <div className="text-lg mb-8 leading-relaxed" data-oid="9dy6r-_" ref={contentRef}>
+        <div className="text-base mb-6 leading-relaxed" data-oid="9dy6r-_" ref={contentRef}>
           <div
             className="whitespace-pre-line"
             dangerouslySetInnerHTML={{ __html: processTextWithLinks(aboutData.mainContent) }}
           />
         </div>
-
-        {/* Dynamic Sections */}
-        {/* {aboutData.sections && aboutData.sections.length > 0 && (
-          <div className="space-y-8">
-            {aboutData.sections.map((section, index) => (
-              <div key={index} className="mb-8">
-                <h2
-                  className="text-2xl font-semibold mb-4"
-                  style={{ color: theme.primaryColor }}
-                >
-                  {section.title}
-                </h2>
-                <div
-                  className="text-lg leading-relaxed whitespace-pre-line"
-                  dangerouslySetInnerHTML={{ __html: processTextWithLinks(section.content) }}
-                />
-              </div>
-            ))}
-          </div>
-        )} */}
       </div>
 
       {/* Cat Modal */}
       {selectedCat && (
-        <div
-          className="fixed inset-0 bg-black/75 flex items-start justify-center z-50 overflow-y-auto py-4"
-          onClick={() => setSelectedCat(null)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 relative my-auto min-h-fit"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedCat(null)}
-              className={cn(
-                'absolute top-4 right-4 w-8 h-8 bg-red-500 hover:bg-red-600',
-                'text-white rounded font-bold hover:shadow-lg transition-all duration-200',
-                'flex items-center justify-center z-10'
-              )}
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-            <CatInfo cat={selectedCat} />
-          </div>
-        </div>
+        <Modal onClose={() => setSelectedCat(null)} size="xl">
+          <CatInfo cat={selectedCat} />
+        </Modal>
       )}
 
       {/* Cat Modal Loading */}
       {catModalLoading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-brand-400" />
         </div>
       )}
     </div>

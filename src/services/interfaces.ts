@@ -6,7 +6,7 @@
  * keeping components decoupled from specific backend implementations.
  */
 
-import type { Cat, Point } from '../types';
+import type { Cat, Contact, Point } from '../types';
 import type { UserCredential, User } from 'firebase/auth';
 
 // Cat-related service interface
@@ -17,6 +17,7 @@ export interface ICatService {
   getCatsByPointId(pointId: string): Promise<{ current: Cat[]; former: Cat[] }>;
   createCat(cat: Omit<Cat, 'id'>): Promise<Cat>;
   updateCat(id: string, updates: Partial<Cat>): Promise<Cat>;
+  batchUpdateCats(updates: Array<{ id: string; updates: Partial<Cat> }>): Promise<void>;
   deleteCat(id: string): Promise<void>;
 }
 
@@ -36,6 +37,7 @@ export interface IPostService {
   getTopLevelPosts(): Promise<any[]>;
   getPostById(id: string): Promise<any | null>;
   createPost(post: any): Promise<any>;
+  updatePost(postId: string, postData: any): Promise<any>;
 
   // Reply functionality
   getReplies(postId: string): Promise<any[]>;
@@ -51,6 +53,7 @@ export interface IPostService {
 // Contact service interface
 export interface IContactService {
   createContact(contact: any): Promise<any>;
+  getAllContacts(): Promise<Contact[]>;
 }
 
 // Image service interface

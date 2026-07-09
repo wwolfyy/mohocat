@@ -7,13 +7,13 @@ const axios = require('axios'); // For downloading images
 // --- Configuration ---
 const SERVICE_ACCOUNT_KEY_PATH = 'config/firebase/mountaincats-61543-7329e795c352.json'; // Updated to use the actual service account file
 const FIREBASE_PROJECT_ID = 'mountaincats-61543'; // Your Firebase Project ID
-const STORAGE_BUCKET = 'mountaincats-61543.firebasestorage.app'; // Your storage bucket
+const STORAGE_BUCKET =
+  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'mountaincats-61543.firebasestorage.app';
 const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
 const ABOUT_PHOTOS_FOLDER = 'about-photos/'; // Folder in Firebase Storage where about photos are stored
 const CATS_COLLECTION = 'cats';
 const LOCAL_THUMBNAILS_DIR_RELATIVE = 'public/images/thumbnails'; // Relative to project root
 const LOCAL_ABOUT_PHOTOS_DIR_RELATIVE = 'public/images/about-photos'; // Relative to project root
-const STATIC_DATA_JSON_PATH_RELATIVE = 'src/lib/cats-static-data.json'; // Relative to project root
 const MOUNTAINS_CONFIG_PATH_RELATIVE = 'config/mountains/mountains.json'; // Relative to project root
 
 // Absolute paths resolved from project root
@@ -21,7 +21,6 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', '..'); // Assuming script is 
 const SERVICE_ACCOUNT_FULL_PATH = path.join(PROJECT_ROOT, SERVICE_ACCOUNT_KEY_PATH);
 const LOCAL_THUMBNAILS_DIR = path.join(PROJECT_ROOT, LOCAL_THUMBNAILS_DIR_RELATIVE);
 const LOCAL_ABOUT_PHOTOS_DIR = path.join(PROJECT_ROOT, LOCAL_ABOUT_PHOTOS_DIR_RELATIVE);
-const STATIC_DATA_JSON_PATH = path.join(PROJECT_ROOT, STATIC_DATA_JSON_PATH_RELATIVE);
 const MOUNTAINS_CONFIG_PATH = path.join(PROJECT_ROOT, MOUNTAINS_CONFIG_PATH_RELATIVE);
 // ---
 
@@ -237,6 +236,11 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
   await fsPromises.mkdir(LOCAL_THUMBNAILS_DIR, { recursive: true });
 
   const updatedCatsList = [];
+  // Collect download failures and fail the build at the end — a thumbnail that
+  // exists in storage but can't be fetched must abort the build, not silently
+  // ship with a missing avatar. (A cat with NO thumbnail in storage stays a
+  // warning, since some cats may legitimately have no photo.)
+  const failures = [];
 
   for (const cat of catsData) {
     const catId = cat.id;
@@ -306,9 +310,17 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
     } catch (error) {
       console.error(`Failed to download thumbnail for cat '${catName}':`, error.message);
       updatedCatEntry.thumbnailUrl = '';
+      failures.push(`${catName} (${foundThumbnail}): ${error.message}`);
     }
     updatedCatsList.push(updatedCatEntry);
   }
+
+  if (failures.length > 0) {
+    throw new Error(
+      `Thumbnail(s) found in storage but could not be downloaded — failing the build:\n  - ${failures.join('\n  - ')}`
+    );
+  }
+
   return updatedCatsList;
 }
 
@@ -317,6 +329,9 @@ async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
   await fsPromises.mkdir(LOCAL_ABOUT_PHOTOS_DIR, { recursive: true });
 
   const updatedMountainsConfig = { ...mountainsConfig };
+  // Collect failures and fail the build at the end — a configured about photo
+  // that can't be fetched must abort the build, never silently ship without it.
+  const failures = [];
 
   for (const [mountainId, mountainConfig] of Object.entries(mountainsConfig)) {
     if (!mountainConfig.about || !mountainConfig.about.mainPhoto) {
@@ -344,6 +359,11 @@ async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
         path.startsWith(`${ABOUT_PHOTOS_FOLDER}${mountainId}/`)
       );
       console.log(`Available photos for ${mountainId}:`, availablePhotos);
+      // A mountain that declares a mainPhoto filename but has no matching file
+      // in storage is a real failure (not merely "no photo configured").
+      if (mainPhoto.filename) {
+        failures.push(`${mountainId}: '${expectedStoragePath}' not found in storage`);
+      }
       continue;
     }
 
@@ -379,21 +399,17 @@ async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
       }
     } catch (error) {
       console.error(`Failed to download about photo for mountain '${mountainId}':`, error.message);
+      failures.push(`${mountainId}: ${error.message}`);
     }
   }
 
-  return updatedMountainsConfig;
-}
-
-async function saveStaticDataJson(catsData) {
-  console.log(`Saving updated cat data to JSON: '${STATIC_DATA_JSON_PATH}'...`);
-  try {
-    const jsonData = JSON.stringify(catsData, null, 2);
-    await fsPromises.writeFile(STATIC_DATA_JSON_PATH, jsonData, 'utf-8');
-    console.log(`Successfully created static data JSON: '${STATIC_DATA_JSON_PATH}'`);
-  } catch (error) {
-    console.error(`ERROR: Could not write static data JSON to '${STATIC_DATA_JSON_PATH}':`, error);
+  if (failures.length > 0) {
+    throw new Error(
+      `Required about photo(s) could not be fetched — failing the build:\n  - ${failures.join('\n  - ')}`
+    );
   }
+
+  return updatedMountainsConfig;
 }
 
 async function loadMountainsConfig() {
@@ -441,6 +457,29 @@ async function saveUpdatedMountainsConfig(updatedConfig) {
   }
 }
 
+// Final gate: after fetching, confirm every mountain that declares an about
+// photo actually has the file on disk. Belt-and-suspenders so a build can never
+// pass while the config points at an asset that isn't there.
+async function verifyAboutPhotosExist(mountainsConfig) {
+  const missing = [];
+  for (const [mountainId, mountainConfig] of Object.entries(mountainsConfig)) {
+    const filename = mountainConfig?.about?.mainPhoto?.filename;
+    if (!filename) continue; // no about photo configured for this mountain
+    const expectedPath = path.join(LOCAL_ABOUT_PHOTOS_DIR, mountainId, filename);
+    try {
+      await fsPromises.access(expectedPath, fs.constants.F_OK);
+    } catch {
+      missing.push(path.relative(PROJECT_ROOT, expectedPath));
+    }
+  }
+  if (missing.length > 0) {
+    console.error('ERROR: Expected about photo file(s) missing on disk after fetch:');
+    missing.forEach((m) => console.error(`  - ${m}`));
+    process.exit(1);
+  }
+  console.log('Verified: all configured about photos are present on disk.');
+}
+
 async function main() {
   console.log('--- Starting Static Asset Fetching Process (Node.js) ---');
 
@@ -470,8 +509,10 @@ async function main() {
     console.log('No thumbnails found in Firebase Storage. Images may not be available.');
   }
 
-  const updatedCatsData = await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
-  await saveStaticDataJson(updatedCatsData);
+  // Downloads thumbnails to public/images/thumbnails for the build. The returned
+  // (rewritten) cat data is intentionally discarded — the app reads cats live via the
+  // Admin SDK (src/lib/server/cat-reads.ts), not from a static JSON export.
+  await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
 
   const aboutPhotosMap = await fetchAboutPhotosFromStorage(storage);
   if (Object.keys(aboutPhotosMap).length === 0) {
@@ -484,6 +525,7 @@ async function main() {
     mountainsConfig
   );
   await saveUpdatedMountainsConfig(updatedMountainsConfig);
+  await verifyAboutPhotosExist(mountainsConfig);
 
   console.log('--- Static Asset Fetching Process (Node.js) Completed ---');
 }

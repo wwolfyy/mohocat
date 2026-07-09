@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
-// Use the same Firebase Admin SDK approach as other working API routes
+// Gated: returns every user's email + role (PII + the full role roster). Require manage-users.
 export async function GET(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-users');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
   try {
     console.log('=== FETCHING ALL USERS FROM FIRESTORE USING ADMIN SDK ===');
 
@@ -10,9 +15,9 @@ export async function GET(request: NextRequest) {
     // db is already initialized
     console.log('Firestore instance obtained');
 
-    // Query the user_permissions collection
-    console.log('Querying user_permissions collection...');
-    const snapshot = await db.collection('user_permissions').get();
+    // Query the users collection (migrated from 'user_permissions')
+    console.log('Querying users collection...');
+    const snapshot = await db.collection('users').get();
     console.log(`Found ${snapshot.size} user documents`);
 
     // Process each document

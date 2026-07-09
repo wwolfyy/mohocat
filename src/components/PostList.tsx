@@ -146,9 +146,13 @@ const PostList: React.FC<PostListProps> = ({
   };
 
   return (
-    <div data-oid="3b9e81w">
-      <div className="space-y-4" data-oid="-9-82_z">
-        {posts.length === 0 && <div data-oid="-9.mua2">No posts yet.</div>}{' '}
+    <div>
+      <div className="space-y-4">
+        {posts.length === 0 && (
+          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-500">
+            아직 등록된 글이 없어요.
+          </div>
+        )}{' '}
         {posts.map((post) => {
           const currentReplyCount = postReplyCounts[post.id] ?? post.replyCount ?? 0;
           const showingReplyForm = showReplyForms[post.id] || false;
@@ -159,13 +163,9 @@ const PostList: React.FC<PostListProps> = ({
           }
 
           return (
-            <div
-              key={post.id}
-              className="border p-4 rounded flex flex-col space-y-4"
-              data-oid="9:9znti"
-            >
-              <div className="flex items-start space-x-4" data-oid="znsva14">
-                <div className="flex-shrink-0" data-oid="uzxozoi">
+            <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
                   {/* Show video thumbnail if video exists */}
                   {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                     (() => {
@@ -179,8 +179,8 @@ const PostList: React.FC<PostListProps> = ({
                         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                         const videoCount = post.videoUrls?.length || 1;
                         return (
-                          <Link href={`/pages/posts/${post.id}`} data-oid="-luwmz.">
-                            <div className="relative cursor-pointer" data-oid="2v1k_yo">
+                          <Link href={`/pages/posts/${post.id}`}>
+                            <div className="relative cursor-pointer">
                               <img
                                 src={thumbnailUrl}
                                 alt="Video thumbnail"
@@ -188,35 +188,24 @@ const PostList: React.FC<PostListProps> = ({
                                 onError={(e) => {
                                   e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
                                 }}
-                                data-oid="l.0mr4a"
                               />
 
                               {/* Play button overlay */}
-                              <div
-                                className="absolute inset-0 flex items-center justify-center"
-                                data-oid="w62r2df"
-                              >
-                                <div
-                                  className="bg-red-600 text-white rounded-full p-1"
-                                  data-oid="v1w.l5h"
-                                >
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="bg-red-600 text-white rounded-full p-1">
                                   <svg
                                     width="12"
                                     height="12"
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
-                                    data-oid="on.llpv"
                                   >
-                                    <path d="M8 5v14l11-7z" data-oid="mro1i4z" />
+                                    <path d="M8 5v14l11-7z" />
                                   </svg>
                                 </div>
                               </div>
                               {/* Video count indicator for multiple videos */}
                               {videoCount > 1 && (
-                                <div
-                                  className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded"
-                                  data-oid="ecjovul"
-                                >
+                                <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
                                   {videoCount}
                                 </div>
                               )}
@@ -229,48 +218,38 @@ const PostList: React.FC<PostListProps> = ({
                   {/* Show image thumbnail only if no video exists */}
                   {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                     post.thumbnailUrl && (
-                      <Link href={`/pages/posts/${post.id}`} data-oid="epramt8">
+                      <Link href={`/pages/posts/${post.id}`}>
                         <img
                           src={post.thumbnailUrl}
                           alt="Image thumbnail"
                           className="w-20 h-15 object-cover rounded cursor-pointer"
-                          data-oid="4zpq7xr"
                         />
                       </Link>
                     )}
                 </div>
-                <div className="flex-grow" data-oid="nrsxh9s">
+                <div className="flex-grow">
                   <Link
                     href={`/pages/posts/${post.id}`}
                     className="text-xl font-bold mb-2 block flex items-center space-x-2"
-                    data-oid="zhxdr_w"
                   >
                     {post.title}
                   </Link>
-                  <p className="text-gray-700 mb-2" data-oid="diph-a5">
-                    {post.message}
-                  </p>
+                  <p className="text-gray-700 mb-2">{post.message}</p>
                 </div>
-                <div
-                  className="text-right text-sm text-gray-500 flex flex-col items-end"
-                  data-oid="x9ibw25"
-                >
-                  <p data-oid="vqu:5d-">{post.username}</p>
-                  <p data-oid="_t.8j:k">
-                    {formatKoreaDateTime(post.date, post.time, post.createdAt)}
-                  </p>
+                <div className="text-right text-sm text-gray-500 flex flex-col items-end">
+                  <p>{post.username}</p>
+                  <p>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</p>
                 </div>
               </div>
 
               {/* Reply functionality */}
-              <div className="border-t pt-3" data-oid="82-kfph">
+              <div className="border-t pt-3">
                 <ReplyButton
                   postId={post.id}
                   replyCount={currentReplyCount}
                   onToggleReply={() => handleToggleReplyForm(post.id)}
                   showingReplies={false}
                   showingReplyForm={showingReplyForm}
-                  data-oid="fk96t67"
                 />
 
                 {showingReplyForm && (
@@ -280,7 +259,6 @@ const PostList: React.FC<PostListProps> = ({
                     onReplySuccess={(reply) => handleReplySuccess(post.id, reply)}
                     onCancel={() => handleToggleReplyForm(post.id)}
                     postService={postService}
-                    data-oid="gaff14q"
                   />
                 )}
 
@@ -290,14 +268,13 @@ const PostList: React.FC<PostListProps> = ({
                   replyCount={currentReplyCount}
                   onReplyCountUpdate={(count) => handleReplyCountUpdate(post.id, count)}
                   postService={postService}
-                  data-oid="84ehpq2"
                 />
               </div>
             </div>
           );
         })}
       </div>
-      <div className="flex justify-center mt-4 space-x-2" data-oid="nb7_bdt">
+      <div className="flex justify-center mt-4 space-x-2">
         {Array.from({ length: totalPages }, (_, index) => {
           const page = index + 1;
           const isSelected = page === currentPage;
@@ -305,12 +282,10 @@ const PostList: React.FC<PostListProps> = ({
             <button
               key={page}
               className={cn(
-                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
-                'border border-yellow-500',
+                'px-4 py-2 rounded-lg bg-brand text-ink font-bold shadow-sm',
                 'transition-all duration-200'
               )}
               disabled
-              data-oid="51.e9_i"
             >
               {page}
             </button>
@@ -319,43 +294,40 @@ const PostList: React.FC<PostListProps> = ({
               key={page}
               onClick={() => onPageChange(page)}
               className={cn(
-                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
+                'px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100',
                 'transition-all duration-200'
               )}
-              data-oid="fl5gnwa"
             >
               {page}
             </button>
           );
         })}
       </div>
-      <div className="flex justify-between mt-4" data-oid="xj_b5pb">
+      <div className="flex justify-between mt-4">
         {' '}
-        <div data-oid="cbu9l42">
+        <div>
           {currentPage > 1 && (
             <button
               onClick={() => onPageChange(currentPage - 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+                'px-5 py-2.5 rounded-lg bg-gray-100 text-gray-800 font-medium',
+                'hover:bg-gray-200 transition-colors duration-200'
               )}
-              data-oid="qk1:r56"
             >
-              previous
+              이전
             </button>
           )}
         </div>
-        <div data-oid="fkdwlbi">
+        <div>
           {currentPage < totalPages && (
             <button
               onClick={() => onPageChange(currentPage + 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
-                'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
+                'px-5 py-2.5 rounded-lg bg-gray-100 text-gray-800 font-medium',
+                'hover:bg-gray-200 transition-colors duration-200'
               )}
-              data-oid="g9d7zmy"
             >
-              next
+              다음
             </button>
           )}
         </div>

@@ -14,9 +14,9 @@
   },
   "geyang": {
     "id": "geyang",
-    "name": "계양산 냥이들",
+    "name": "계양산",
     "description": "계양산에서 살고 있는 고양이들의 이야기",
-    "adminEmail": "admin@geyang-cats.com",
+    "adminEmail": "jaesangpark@gmail.com",
     "about": {
       "title": "계양산에서 만나는 고양이 이야기",
       "subtitle": "계양산에서 만나는 특별한 이야기들",
@@ -53,6 +53,10 @@
       "youtubeChannelId": "UC1g-XZS4wwyUu7JHDEpB0jw",
       "instagramHandle": "",
       "facebookPage": ""
+    },
+    "map": {
+      "clustering": false,
+      "maxClusterRadius": 50
     },
     "authentication": {
       "type": "centralized",

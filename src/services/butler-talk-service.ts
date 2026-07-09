@@ -213,6 +213,27 @@ export class FirebaseButlerTalkService implements IPostService {
     }
   }
 
+  async updatePost(postId: string, postData: any): Promise<any> {
+    try {
+      console.log('FirebaseButlerTalkService: Updating post:', postId);
+
+      const postRef = doc(db, this.COLLECTION_NAME, postId);
+      await updateDoc(postRef, {
+        ...postData,
+        updatedAt: Timestamp.now(),
+      });
+
+      return {
+        id: postId,
+        ...postData,
+        updatedAt: new Date(),
+      };
+    } catch (error) {
+      console.error('Error updating butler talk post:', error);
+      throw new Error(`Failed to update butler talk post: ${postId}`);
+    }
+  }
+
   async deletePost(postId: string): Promise<void> {
     try {
       console.log('FirebaseButlerTalkService: Deleting post:', postId);

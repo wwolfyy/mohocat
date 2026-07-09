@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import FAQAccordion from '@/components/FAQ';
 
 const FAQPage = () => {
@@ -102,21 +103,29 @@ const FAQPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8" data-oid=".cu79eq">
-      <div className="text-center mb-8" data-oid="95icw2l">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4" data-oid="r68ap9s">
+      <div className="text-center mb-6" data-oid="95icw2l">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900" data-oid="r68ap9s">
           자주 묻는 질문
         </h1>
+        <div className="mx-auto mt-1.5 h-0.5 w-8 rounded-full bg-brand" />
       </div>
 
       <FAQAccordion items={faqItems} data-oid="h8mmdv." />
 
-      <div className="mt-12 p-6 bg-blue-50 rounded-lg" data-oid="so07wo1">
-        <h2 className="text-xl font-semibold text-blue-900 mb-3" data-oid=":q66i-o">
-          더 궁금한 것이 있나요?
+      <div className="mt-12 rounded-xl bg-brand-50 p-6 ring-1 ring-brand-100" data-oid="so07wo1">
+        <h2 className="text-xl font-semibold text-gray-900 mb-2" data-oid=":q66i-o">
+          더 궁금한 점이 있나요?
         </h2>
-        <p className="text-blue-800" data-oid="jtzt1c9">
-          TBD.
+        <p className="text-gray-600 mb-4" data-oid="jtzt1c9">
+          찾으시는 답이 없다면 언제든 편하게 문의해 주세요. 동참 페이지에서 메시지를 남기실 수
+          있어요.
         </p>
+        <Link
+          href="/pages/contact"
+          className="inline-block rounded-lg bg-gradient-to-r from-brand to-accent px-5 py-2.5 font-bold text-ink shadow-sm transition hover:shadow-md"
+        >
+          문의하러 가기
+        </Link>
       </div>
     </div>
   );

@@ -27,20 +27,6 @@ body {
   }
 }
 
-@layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
-  }
-
-  .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
-  }
-
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
-  }
-}
-
 @layer utilities {
   /* Line clamp utilities for text truncation */
   .line-clamp-1 {
@@ -84,8 +70,21 @@ body {
     animation: bounce-gentle 2s ease-in-out infinite;
   }
 
+  /* Modal entrance: frosted backdrop fades, card scales/fades in. */
+  .animate-modal-backdrop {
+    animation: modal-backdrop-enter 0.2s ease-out;
+  }
+
+  .animate-modal-panel {
+    animation: modal-panel-enter 0.22s ease-out backwards;
+  }
+
   .animate-bubble-pop {
-    animation: bubble-pop-dramatic 0.8s ease-out both;
+    /* `backwards` (not `both`): preserve the no-flash entrance, but don't let the
+       filled final keyframe pin `transform` and override `group-hover:scale-125`
+       on the marker avatar. The 100% keyframe equals the resting transform, so
+       there is no snap when the animation ends. */
+    animation: bubble-pop-dramatic 0.8s ease-out backwards;
     transform-origin: center center;
   }
 
@@ -188,6 +187,28 @@ body {
   to {
     opacity: 0;
     transform: translateY(-5px) scale(0.98);
+  }
+}
+
+@keyframes modal-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

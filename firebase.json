@@ -1,13 +1,5 @@
 {
-  "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "frameworksBackend": {
-      "region": "asia-northeast3"
-    }
+  "firestore": {
+    "rules": "config/firebase/firestore.rules"
   }
 }

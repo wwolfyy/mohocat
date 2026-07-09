@@ -3,6 +3,10 @@ import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
 import { db } from '@/lib/firebase-admin';
 
+// NOT gated by requireApiPermission: this is the Google OAuth redirect target, hit by the
+// browser after consent — there's no Authorization header to verify. It only acts on a
+// valid Google `code` exchanged with our client secret. (Hardening with OAuth `state`/PKCE
+// is tracked separately; see PROJECT_PLAN §7.)
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

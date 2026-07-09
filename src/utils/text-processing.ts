@@ -27,6 +27,31 @@ export function convertCatModalLinks(text: string): string {
 }
 
 /**
+ * Convert inline image links [img:label](url) to clickable spans that open the
+ * image in the in-app Lightbox (handled by `useMediaLinks`). The URL lives in a
+ * data attribute so the auto-URL linker never touches it.
+ */
+export function convertImageLinks(text: string): string {
+  const imageLinkRegex = /\[img:([^\]]+)\]\(([^)]+)\)/g;
+  return text.replace(
+    imageLinkRegex,
+    '<span class="cat-image-link text-blue-600 hover:text-blue-800 underline cursor-pointer" data-media-url="$2">$1</span>'
+  );
+}
+
+/**
+ * Convert inline video links [video:label](url) to clickable spans that open the
+ * video in the in-app VideoPlayer (YouTube or Storage, auto-detected).
+ */
+export function convertVideoLinks(text: string): string {
+  const videoLinkRegex = /\[video:([^\]]+)\]\(([^)]+)\)/g;
+  return text.replace(
+    videoLinkRegex,
+    '<span class="cat-video-link text-blue-600 hover:text-blue-800 underline cursor-pointer" data-media-url="$2">$1</span>'
+  );
+}
+
+/**
  * Auto-detect URLs and convert them to clickable links
  */
 export function autoLinkUrls(text: string): string {
@@ -45,11 +70,16 @@ export function autoLinkUrls(text: string): string {
 export function processTextWithLinks(text: string): string {
   if (!text) return text;
 
-  // First convert markdown-style links
-  let processed = convertMarkdownLinks(text);
+  // Convert the specific bracketed tokens FIRST, before the generic markdown-link
+  // converter: [catmodal:name], [img:label](url) and [video:label](url) all share
+  // the [label](url) shape, so the generic converter would otherwise capture them
+  // as broken <a> links instead of the intended interactive spans.
+  let processed = convertCatModalLinks(text);
+  processed = convertImageLinks(processed);
+  processed = convertVideoLinks(processed);
 
-  // Then convert cat modal links
-  processed = convertCatModalLinks(processed);
+  // Then convert markdown-style links
+  processed = convertMarkdownLinks(processed);
 
   // Then auto-detect remaining URLs (but avoid double-converting)
   // Split by existing HTML tags to avoid converting URLs inside href attributes
