@@ -7,7 +7,8 @@ const axios = require('axios'); // For downloading images
 // --- Configuration ---
 const SERVICE_ACCOUNT_KEY_PATH = 'config/firebase/mountaincats-61543-7329e795c352.json'; // Updated to use the actual service account file
 const FIREBASE_PROJECT_ID = 'mountaincats-61543'; // Your Firebase Project ID
-const STORAGE_BUCKET = 'mountaincats-61543.firebasestorage.app'; // Your storage bucket
+const STORAGE_BUCKET =
+  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'mountaincats-61543.firebasestorage.app';
 const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
 const ABOUT_PHOTOS_FOLDER = 'about-photos/'; // Folder in Firebase Storage where about photos are stored
 const CATS_COLLECTION = 'cats';
