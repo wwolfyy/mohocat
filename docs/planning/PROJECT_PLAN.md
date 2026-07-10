@@ -37,7 +37,8 @@
 | **Functional: 동참 form end-to-end**       | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                                                                                                                                                                                  |
 | **Deployment-target cleanup**              | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                                                                                                                                      |
 | **Perf: bake the data layer**              | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                 |
-| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled (iframe-reflow harness); nav/modals/albums/forms/content audited at 390 (nav also 360×560) — 2 nav fixes, rest clean. **Remaining:** map quirks/re-fit + touch-target sweep are device-owed; mobile perf + sign-in-gated surfaces not started.                                                                                                                                                                                                                                                                                                                         |
+| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled; nav/modals/albums/forms/content audited. **Pass 2 (2026-07-05):** S22 map bugs, portrait-only map, static clustering. **Off-plan (2026-07-08):** lightbox pinch-to-zoom, back-button/swipe-back modal fix, page-wide UI scale reduction. **Remaining:** map quirks/re-fit + touch-target sweep are device-owed; mobile perf + sign-in-gated surfaces not started.                                                                                                                                                                                                     |
+| **Firebase Storage → Seoul bucket**        | `[x]` done        | Migrated from `us-central1` to `asia-northeast3` (Seoul) to cut image latency for Korean users. New bucket `mountaincats-61543`; files transferred via gsutil; Firestore URL rewrite script run against all 6 collections; `fetch-static-assets.js` reads bucket from env var; `generate-signed-url` hardcoded fallback removed. See `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                                                                                                                                                   |
 | **Admin desktop cleanup**                  | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the disabled-link feature stubs. |
 | **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                     |
@@ -170,6 +171,21 @@ those are the forward plan.
       guard). Unblocks authoring the `labelSide` override above (lands with it). **⚠️ Owner-owed:**
       `firebase deploy --only firestore:rules` (points write opened to `manage-canteen`), and an
       actual save is only testable post-deploy.
+- [x] **Mobile lightbox pinch-to-zoom (2026-07-08, off-plan).** `react-zoom-pan-pinch` (v4.0.3)
+      wraps the lightbox image on mobile only (`useIsMobile`): pinch 1–4×, drag-to-pan while
+      zoomed, double-tap toggle, reset on image navigation. `touch-action` flips between `pan-y`
+      (un-zoomed) and `none` (zoomed) to avoid scroll/zoom conflict. Desktop unchanged. rAF
+      throttling in backgrounded tabs means zoom animation must be verified on a real device.
+- [x] **Back button / swipe-back closes modals (2026-07-08, off-plan).** `useModalLayer` now
+      pushes a `history.pushState({ mohocat_modal: id })` entry on open. A module-level `popstate`
+      listener closes the topmost overlay on back-gesture. Normal close pops the entry via
+      `history.back()` with a `suppressNextPopState` guard to avoid cascade. All three overlay
+      types (Modal, Lightbox, VideoPlayer) covered.
+- [x] **Page-wide UI scale reduction (2026-07-08–09, off-plan).** All public page headers
+      (`text-3xl font-bold` → `text-xl font-semibold`, hairline divider, muted description);
+      about page title `text-4xl` → `text-xl`, body `text-lg` → `text-base`; adoption section
+      header + post card titles + search input scaled down; contact form labels/inputs/button
+      tightened. Browser-verified across all pages.
 - [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
       (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
 - [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix
@@ -618,8 +634,10 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 - [ ] `?mountain=` switch is a no-op — `MountainSelector` sets the query but
       `getCurrentMountainId()` only reads env. Implement cookie/query/host-based
       selection or remove the selector.
-- [ ] Hard-coded service-account path + bucket fallbacks
-      (`feeding-spots-admin-service.ts`, `generate-signed-url`, fetch-assets).
+- [~] Hard-coded service-account path + bucket fallbacks. **Partially done (2026-07-10):**
+  `generate-signed-url` hardcoded fallback replaced with hard-fail; `fetch-static-assets.js`
+  reads `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` from env. **Remaining:** `feeding-spots-admin-service.ts`
+  still hardcodes the service-account path.
 - [ ] Hard-coded map image path in the map host; source it from mountain config.
 - [ ] `mountains.json` vs `permissions.json` inconsistency (`manisan` exists in
       one, not the other).
@@ -741,11 +759,10 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 ## 13. How to resume
 
 1. Read the latest hand-off
-   [`docs/handoff/2026-06-27-handoff-7.md`](../handoff/2026-06-27-handoff-7.md)
-   (then `kickoff-3` for the broader debt map). **Both functional gaps in §11
-   (입양홍보, 동참) and the deployment-target cleanup (§7) are now done.** Next
-   workstream is undecided — strongest candidates: §7a "bake the data layer" (perf 🔴)
-   or redesign Phase C (now unblocked by 입양홍보 + 동참).
+   [`docs/handoff/2026-07-08-handoff-26.md`](../handoff/2026-07-08-handoff-26.md)
+   (then `kickoff-3` for the broader debt map). **Off-plan session (handoff-26):** lightbox
+   pinch-to-zoom, back-button modal fix, page-wide UI scale reduction, Firebase Storage
+   migration to Seoul bucket. No active workstream — next pick is open.
 2. With the user, pick the next workstream from §1 and fill in its section's
    concrete specs.
 3. Spin a companion `docs/planning/<workstream>-tasks.md` (mirror the redesign
