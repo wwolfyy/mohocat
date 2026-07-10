@@ -3,17 +3,15 @@
 import { useState } from 'react';
 import { cn } from '@/utils/cn';
 import RoleManagement from '@/components/admin/RoleManagement';
-import PermissionDebug from '@/components/admin/PermissionDebug';
 import RolePermissionConfig from '@/components/admin/RolePermissionConfig';
 import ResourcePermissionConfig from '@/components/admin/ResourcePermissionConfig'; // Added import
 import ContactManagement from '@/components/admin/ContactManagement';
-import Card from '@/components/ui/Card';
 import { adminStrings } from '@/constants/adminStrings';
 
 const MemberManagementPage = () => {
-  const [activeTab, setActiveTab] = useState<
-    'users' | 'roles' | 'permissions' | 'contacts' | 'debug'
-  >('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'permissions' | 'contacts'>(
+    'users'
+  );
 
   return (
     <div className="p-4">
@@ -58,18 +56,6 @@ const MemberManagementPage = () => {
           {adminStrings.members.tabs.permissions}
         </button>
         <button
-          onClick={() => setActiveTab('debug')}
-          className={cn(
-            'px-6 py-3 font-medium text-sm border-b-2 transition-colors',
-            activeTab === 'debug'
-              ? 'border-yellow-500 text-yellow-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          )}
-        >
-          {adminStrings.members.tabs.debug}
-        </button>
-
-        <button
           onClick={() => setActiveTab('contacts')}
           className={cn(
             'px-6 py-3 font-medium text-sm border-b-2 transition-colors',
@@ -90,15 +76,6 @@ const MemberManagementPage = () => {
       {activeTab === 'permissions' && <ResourcePermissionConfig />}
 
       {activeTab === 'contacts' && <ContactManagement />}
-
-      {activeTab === 'debug' && (
-        <Card>
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-            🔧 {adminStrings.members.debugToolTitle}
-          </h3>
-          <PermissionDebug />
-        </Card>
-      )}
     </div>
   );
 };
