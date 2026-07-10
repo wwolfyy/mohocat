@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
 import { strings } from '@/constants/strings';
 
 interface EmailVerificationModalProps {
@@ -27,12 +28,9 @@ const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
         >
           {strings.auth.emailVerification.later}
         </button>
-        <button
-          onClick={onSend}
-          className="rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md"
-        >
+        <Button size="sm" onClick={onSend}>
           {strings.auth.emailVerification.send}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

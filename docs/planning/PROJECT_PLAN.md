@@ -68,9 +68,15 @@ The full narrative is in the hand-offs; the short version:
   typography, language & voice, modal, album, marker specs); values stay single-
   sourced in Tailwind config.
 
-What is **not** done: redesign Phase C, live-verification of several auth/mypage
+What is **not** done: live-verification of several auth/mypage
 states (A4), the functional gaps in §11, and every workstream in §4–§10 below —
 those are the forward plan.
+
+- **App-wide redesign Phase C shipped.** C: 집사메뉴/butler surfaces (`ButlerStreamClient`,
+  `ButlerTalkClient`, `PostList`, `NewPostForm`, `NewButlerTalkForm`) de-gradient-ified,
+  `border-yellow-500` dropped, English empty states → 해요체 brand cards, submit buttons →
+  shared `<Button variant="primary">`, login-required notices → brand-tinted cards, all
+  `focus:ring-blue-500` → `ring-brand-300`, dead `data-oid` stripped. Done 2026-07-03.
 
 ---
 
@@ -728,22 +734,20 @@ _Risk/size: architectural, touches the services seam and several pages — hence
   the mobile pass **and** rewritten by the desktop work → double work. Pure responsive-
   breakpoint tuning is inherently per-surface and correctly belongs to §4. **The
   finalize-before-mobile set (do first):**
-  1. **Phase C — 집사메뉴 / butler restyle** — the one un-brand-audited public surface left
-     (`ButlerStreamClient`, `ButlerTalkClient`, `PostList` [still `border-yellow-500`],
-     `butler_talk/new/`, `NewButlerTalkForm`, `NewPostForm`). Redesign tasks **C1** last `[ ]`.
-  2. **Cross-cutting button/color convergence** (one job, three loose ends): the Phase C
-     "Cross-cutting" legacy `.btn-primary { bg-blue-600 }` in `globals.css`, the §5 deferred
-     **public hand-rolled-button sweep** → shared `<Button>` primitive, and nav blue hovers.
-     Highest-leverage fix-once — **tap-target sizing / focus rings / hit-areas live in the
-     primitive**, so mobile inherits correct buttons instead of re-touching each hand-rolled
-     one. **Do this before #1** so the butler restyle consumes the primitive directly.
+  1. **✅ Phase C — 집사메뉴 / butler restyle** — DONE 2026-07-03. All components
+     brand-clean; cross-cutting `globals.css` dead `.btn` block removed; nav blue hovers
+     fixed. Auth-gated verifications (list/pagination, "새글 작성" button while signed in)
+     still owed and carried in §4 sign-in-gated mobile audit.
+  2. **Cross-cutting button/color convergence** — globals.css `.btn` block and nav hovers
+     done (see #1). Remaining: **§5 deferred public hand-rolled-button sweep** → shared
+     `<Button>` primitive across public-facing pages.
   - _Deferred to §4 (genuinely per-surface, no double-work):_ map re-fit on mobile, modal/
     album/form mobile sizing, mobile nav drawer.
   - _Deferred, non-UI (render-invariant):_ structured logging, request validation, RBAC
     drift, Tier-1 Admin-SDK migration, upload-on-edit util. _Judgment calls (shared but not
     redesign):_ branded error-states (§7), link-token rendering in 공지/급식/집사톡.
 - **Priority order** among Mobile UX (§4), Admin desktop cleanup (§5), Admin
-  mobile (§6), and finishing redesign Phase C / A4 — **to be set with the user.**
+  mobile (§6), cross-cutting button sweep (§12.2), and A4 — **to be set with the user.**
   Note the dependency: §6 (admin mobile) is best built **after** §5 (admin
   cleanup) so it's not built twice.
 - **Admin visual target** — ✅ **SETTLED (owner, 2026-06-30): admin adopts the public

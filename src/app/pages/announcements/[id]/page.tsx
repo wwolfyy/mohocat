@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAnnouncementService } from '@/services';
+import Button from '@/components/ui/Button';
 
 const AnnouncementDetailsPage = () => {
   // Service references
@@ -37,12 +38,9 @@ const AnnouncementDetailsPage = () => {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">공지사항을 찾을 수 없습니다</h1>
-          <button
-            onClick={() => router.push('/pages/announcements')}
-            className="px-6 py-3 bg-gradient-to-r from-brand to-accent text-ink rounded-lg font-bold hover:shadow-lg transition-all duration-200"
-          >
+          <Button onClick={() => router.push('/pages/announcements')}>
             공지사항 목록으로 돌아가기
-          </button>
+          </Button>
         </div>
       </div>
     );

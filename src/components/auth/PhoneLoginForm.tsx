@@ -5,6 +5,7 @@ import { RecaptchaVerifier } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
+import Button from '@/components/ui/Button';
 import { strings } from '@/constants/strings';
 
 const t = strings.auth.phoneLogin;
@@ -167,20 +168,14 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
 
           {error && <div className="text-red-600 text-sm">{error}</div>}
 
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
-            className={cn(
-              'w-full py-3 rounded-lg font-bold transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-offset-2',
-              'bg-gradient-to-r from-brand to-accent text-ink',
-              'hover:shadow-lg hover:-translate-y-1',
-              'focus:ring-yellow-500',
-              { 'opacity-50 cursor-not-allowed': isLoading }
-            )}
+            className="w-full hover:-translate-y-1"
           >
             {isLoading ? t.sendingCode : t.sendCode}
-          </button>
+          </Button>
         </form>
       ) : (
         <form onSubmit={handleVerifyCode} className="space-y-4">
@@ -205,20 +200,14 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
 
           {error && <div className="text-red-600 text-sm">{error}</div>}
 
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
-            className={cn(
-              'w-full py-3 rounded-lg font-bold transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-offset-2',
-              'bg-gradient-to-r from-brand to-accent text-ink',
-              'hover:shadow-lg hover:-translate-y-1',
-              'focus:ring-yellow-500',
-              { 'opacity-50 cursor-not-allowed': isLoading }
-            )}
+            className="w-full hover:-translate-y-1"
           >
             {isLoading ? t.verifying : t.verify}
-          </button>
+          </Button>
 
           <button
             type="button"

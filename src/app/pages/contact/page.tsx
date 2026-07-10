@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
+import Button from '@/components/ui/Button';
 
 export default function Contact() {
   // Submitting the form requires a logged-in 집사 (matches the intro copy).
@@ -164,18 +165,15 @@ export default function Contact() {
           </div>
 
           {/* Submit Button — members-only */}
-          <button
+          <Button
             type="submit"
+            size="sm"
             disabled={isSubmitting || !canSubmit}
-            className={cn(
-              'w-full py-2 text-sm bg-gradient-to-r from-brand to-accent',
-              'text-ink rounded-lg font-semibold hover:shadow-lg transition-all duration-200',
-              (isSubmitting || !canSubmit) && 'opacity-50 cursor-not-allowed'
-            )}
+            className="w-full"
             data-oid="p6x6eai"
           >
             {isSubmitting ? '제출 중...' : '보내기'}
-          </button>
+          </Button>
 
           {/* Login prompt when logged out (hidden while auth is still resolving) */}
           {!authLoading && !isAuthenticated && (
