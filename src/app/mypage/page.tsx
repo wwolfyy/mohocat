@@ -213,19 +213,24 @@ export default function MyPage() {
         <div className="mb-4">
           <label className="block text-sm text-gray-500 mb-1">{t.profile.nicknameLabel}</label>
           {editingNickname ? (
-            <div className="flex gap-2">
+            <div className="space-y-2">
               <input
                 type="text"
                 value={newNickname}
                 onChange={(e) => setNewNickname(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border rounded-lg"
               />
-              <Button variant="primary" size="sm" onClick={handleUpdateNickname}>
-                {strings.common.save}
-              </Button>
-              <button onClick={() => setEditingNickname(false)} className="text-gray-500 px-2">
-                {strings.common.cancel}
-              </button>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setEditingNickname(false)}
+                  className="px-3 py-1.5 text-sm text-gray-500"
+                >
+                  {strings.common.cancel}
+                </button>
+                <Button variant="primary" size="sm" onClick={handleUpdateNickname}>
+                  {strings.common.save}
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex justify-between items-center">
@@ -254,18 +259,16 @@ export default function MyPage() {
                     onChange={(e) => setEmailPassword(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full"
-                      onClick={handleEmailReauth}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditingEmail(false)}
+                      className="px-3 py-1.5 text-sm text-gray-500"
                     >
-                      {strings.common.confirm}
-                    </Button>
-                    <button onClick={() => setEditingEmail(false)} className="text-gray-500 px-2">
                       {strings.common.cancel}
                     </button>
+                    <Button variant="primary" size="sm" onClick={handleEmailReauth}>
+                      {strings.common.confirm}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -351,18 +354,16 @@ export default function MyPage() {
                     onChange={(e) => setNewPhone(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full"
-                      onClick={handleSendPhoneCode}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditingPhone(false)}
+                      className="px-3 py-1.5 text-sm text-gray-500"
                     >
-                      {t.profile.sendSms}
-                    </Button>
-                    <button onClick={() => setEditingPhone(false)} className="text-gray-500 px-2">
                       {strings.common.cancel}
                     </button>
+                    <Button variant="primary" size="sm" onClick={handleSendPhoneCode}>
+                      {t.profile.sendSms}
+                    </Button>
                   </div>
                 </div>
               )}
