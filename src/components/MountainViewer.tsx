@@ -81,7 +81,7 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
             animated (Next's image optimizer would otherwise flatten it to a
             single frame). */}
         <Image
-          src="/images/chubby-cat.gif"
+          src="/images/chubby_cat.gif"
           alt=""
           aria-hidden="true"
           width={60}
