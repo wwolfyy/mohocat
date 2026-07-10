@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { NavigationBarLogout } from '@/components/auth/NavigationBarLogout';
@@ -76,9 +77,21 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { canAccessResource, isLoading } = useResourceAccess();
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
   const access = { canAccessResource, isLoading };
 
   const closeMobile = () => setIsMobileMenuOpen(false);
+
+  // Navigation lives in the persistent root layout, so its open/closed state
+  // survives route changes and auth transitions. Reset the mobile menu on both:
+  // (1) route change — closes the menu when tapping 로그인 dismisses the dropdown
+  //     as the /login page appears; (2) auth flip — closes it after a successful
+  //     login even when the post-login redirect lands back on the current route
+  //     (the 로그인 link sets redirect=<current path>, so pathname alone wouldn't
+  //     change).
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname, isAuthenticated]);
 
   // Ref on the mobile hamburger+menu wrapper; used to find the surrounding
   // <header> (the top nav bar) so a click anywhere outside it dismisses the
