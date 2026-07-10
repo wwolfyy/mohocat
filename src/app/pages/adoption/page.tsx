@@ -39,7 +39,7 @@ export default async function AdoptionPage() {
       <div className="text-center mb-6">
         <h1 className="text-xl font-semibold tracking-tight text-gray-900">입양홍보</h1>
         <div className="mx-auto mt-1.5 mb-2 h-0.5 w-8 rounded-full bg-brand" />
-        <p className="text-sm text-gray-500">
+        <p className="text-base text-gray-500">
           새 가족을 기다리는 냥이들이에요. 마음이 가는 친구가 있다면{' '}
           <Link
             href="/pages/contact"
@@ -79,7 +79,7 @@ export default async function AdoptionPage() {
           independent of the adoptable-cats list above. Client island, live-fetched. */}
       <section className="mt-8">
         <div className="mb-4 text-center">
-          <h2 className="text-base font-semibold tracking-tight text-gray-900">새로운 입양 소식</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-gray-900">새로운 입양 소식</h2>
           <div className="mx-auto mt-1.5 h-0.5 w-8 rounded-full bg-brand" />
         </div>
         <AdoptionPromotionClient />

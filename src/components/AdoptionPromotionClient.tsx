@@ -28,7 +28,7 @@ function AdoptionPostCard({ post }: { post: any }) {
         aria-expanded={open}
         className="flex w-full items-start gap-4 p-4 text-left"
       >
-        <h3 className="flex-grow text-sm font-semibold text-gray-900">{post.title}</h3>
+        <h3 className="flex-grow text-base font-semibold text-gray-900">{post.title}</h3>
         <div className="flex flex-shrink-0 items-center gap-2 whitespace-nowrap text-sm text-gray-500">
           <span>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</span>
           <svg
@@ -82,11 +82,11 @@ function AdoptionPostCard({ post }: { post: any }) {
             )}
             <CatLinkedText
               text={post.message}
-              className="flex-grow whitespace-pre-line text-sm text-gray-700"
+              className="flex-grow whitespace-pre-line text-base text-gray-700"
             />
           </div>
         ) : (
-          <CatLinkedText text={post.message} className="line-clamp-3 text-sm text-gray-700" />
+          <CatLinkedText text={post.message} className="line-clamp-3 text-base text-gray-700" />
         )}
       </div>
     </div>
