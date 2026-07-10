@@ -15,6 +15,118 @@
 
 ---
 
+## 2026-07-10 — Compliance: 개인정보처리방침 + 이용약관 pages, footer links, consent, 국외 이전
+
+**Area:** `app/pages/privacy/page.tsx` (new), `app/pages/terms/page.tsx` (new),
+`components/Footer.tsx`, `components/SignupForm.tsx`, `constants/strings.ts`.
+
+**What changed:** stood up the two legal pages the footer had only stubbed. Both are
+static prose Server Components adapted from the KISA/PIPC standard 처리방침 structure
+and grounded in what the app actually collects (email/password/닉네임/phone, Kakao
+profile, 동참 form). The footer's greyed "준비 중" placeholders became live `<Link>`s to
+`/pages/privacy` and `/pages/terms`. Signup (email path) gained two **required** consent
+checkboxes — 이용약관 + 개인정보 수집·이용 — that gate the 인증번호 받기 submit
+(strings under `login.signup.consent`). The privacy policy discloses **국외 이전** (§6,
+PIPA Art. 28-8) for Google LLC + Vercel Inc. (US); per the 2023 amendment this rides the
+**contract-necessity + 처리방침-disclosure** basis, so overseas transfer is **not** part
+of the consent checkbox.
+
+**Rationale:** close the deferred compliance workstream (PROJECT_PLAN §8) — the operator
+is a 개인정보처리자 under PIPA once it collects member PII. Decisions (owner): CPO
+산냥이집냥이 운영자 / `rescuezoro@gmail.com`; under-14 allowed w/ guardian consent.
+
+**Verified:** `tsc` clean + smoke green; server-side render confirmed (both pages, §6/§13,
+consent strings on `?tab=signup`, footer links). ⚠️ Professional legal review before
+scaling still owed; phone/Kakao-signup consent not yet captured. See compliance-plan.md.
+
+## 2026-07-10 — Account withdrawal (탈퇴) / deletion flow
+
+**Area:** `app/api/account/delete/route.ts` (new), `app/mypage/page.tsx`,
+`constants/strings.ts`, `app/pages/privacy/page.tsx` (§3 retention).
+
+**What changed:** members can now delete their own account. A low-emphasis 회원 탈퇴 link
+on mypage opens a shared `ui/Modal` confirm → `POST /api/account/delete`, which verifies
+the caller's Firebase ID token (uid comes from the token, never the body), then Admin-SDK
+deletes the `users/{uid}` doc and the Auth account, then signs out. Works uniformly for
+email/phone/Kakao (no client reauth). Immediate **hard-delete**; privacy §3 retention
+reworded from a 30-day grace to "탈퇴 시 지체 없이 파기". Authored posts are retained
+(content, not account PII).
+
+**Rationale:** account withdrawal/deletion is a PIPA data-subject right (compliance-plan
+task 6). Server-side because client rules forbid a user deleting their own `users` doc and
+client `deleteUser()` needs recent reauth.
+
+**Verified:** `tsc` clean + smoke 26/26; unauth `POST` → 401; policy wording confirmed
+rendered. ⚠️ Live click-through with a throwaway account still owed (it irreversibly
+deletes) — extension not connected here.
+
+## 2026-07-10 — Adoption page: enlarge 소식 heading + post title/content fonts
+
+**Area:** `app/pages/adoption/page.tsx`, `components/AdoptionPromotionClient.tsx`.
+
+**What changed:** four Tailwind size swaps — "새로운 입양 소식" heading `text-base`→`text-xl`
+(matches the 입양홍보 h1); post-card title `text-sm`→`text-base`; post content (expanded
+body + collapsed 3-line preview) `text-sm`→`text-base` (matches the about-page content
+size). Weights/tracking unchanged; the per-post date stays `text-sm`.
+
+**Rationale:** owner found the adoption-post heading and body too small on desktop.
+
+**Verified:** static class swaps; `tsc` clean + smoke green.
+
+## 2026-07-10 — Mobile UI polish: mypage edit rows + login/logout menu pills
+
+**Area:** `app/mypage/page.tsx`, `components/auth/NavigationBarLogin.tsx` +
+`NavigationBarLogout.tsx`, `components/Navigation.tsx` · **Type:** fix (small) · **Branch:** `dev`
+
+### Change
+
+Two mobile presentation fixes reported by the owner:
+
+1. **Mypage inline edit rows** (`cd3c29d`) — 닉네임 / 이메일 재인증 / 전화번호 edit rows put the
+   `flex-1` input and both action buttons in **one horizontal row**, so on a narrow viewport the
+   input ate the width and 취소 was squeezed off to the far right. Reworked each to a **full-width
+   input** with a **right-aligned `취소` / primary-button row below** it (labels horizontal). The
+   single-button steps (send-verification / verify-and-update) keep their full-width CTA.
+2. **Mobile login/logout menu pills** (`3ccd414`) — in the hamburger menu the login/logout pills
+   are block-level flex containers, so they filled the row with content packed **left**, leaving
+   dead space on the right. Added a `mobile` prop to both `NavigationBar*` components that applies
+   `w-full justify-center`, so each reads as a **balanced full-width button** matching the 입양홍보
+   CTA above it. Desktop pills (content-width in the nav bar) are unchanged — only the two
+   mobile-menu instances pass `mobile`.
+
+### Verified
+
+`tsc` clean; smoke 25/25. Login pill **browser-verified centered at 390px** (iframe harness).
+Mypage rows + the logged-in logout pill share the same pure-flex mechanism but sit behind
+sign-in — live confirm is device/credential-owed.
+
+---
+
+## 2026-07-10 — Converge public/auth CTAs onto the shared `<Button>` primitive
+
+**Area:** `app/pages/announcements/[id]`, `app/pages/contact`, `components/AnnouncementModal`,
+`CatSelectorModal`, `LoginForm`, `auth/PhoneLoginForm` + 4 auth modals · **Type:** fix (refactor) ·
+**Branch:** `dev`
+
+### Change
+
+Swept the remaining hand-rolled `bg-gradient-to-r from-brand to-accent` buttons across the
+public + auth surfaces onto `<Button variant="primary">` (PROJECT_PLAN §12.2). Covered the
+announcements-detail back button, contact form submit, announcement/cat-selector modal actions,
+the email + phone login submits, and the four auth modals (email-verification, password-reset,
+kakao-guidance, user-not-found). Also normalized stray non-brand accents to brand tokens
+(`bg-yellow-100`/`bg-blue-100` icon circles → `bg-brand-100`; login spinner `border-yellow-600`
+→ `border-brand`). Navigation `<Link>` CTAs left as links (they navigate, not act). This makes
+tap-target sizing / focus rings / hit-areas live in one primitive, so the mobile pass inherits
+correct buttons instead of re-touching each hand-rolled one.
+
+### Verified
+
+`tsc` clean; smoke 25/25. Grep-confirmed no hand-rolled gradient `<button>`s remain in
+public/auth code (only the two intentional `<Link>` CTAs in faq/adoption).
+
+---
+
 ## 2026-07-08 — Back button / swipe-back closes modal instead of navigating away
 
 **Area:** `components/ui/useModalLayer.ts` · **Type:** fix · **Branch:** `dev`

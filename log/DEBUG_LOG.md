@@ -11,6 +11,59 @@
 
 ---
 
+## 2026-07-10 — Logout on /mypage strands the page on a spinner (client redirect never commits)
+
+**Symptom:** Signing out while on `/mypage` doesn't redirect anywhere — the page is
+left showing only its `!user` loading spinner.
+
+**Root cause:** the client-side redirect never committed. `/mypage` gates on auth: it
+shows a spinner while `loading || !user` and a `useEffect` calls `router.replace`/`push`
+to leave when `!user`. On logout the auth context flips `user → null` (the spinner
+proves it — `loading` only ever goes false, so a visible spinner means `user` is null),
+but the App Router transition triggered from that effect **didn't commit**, so the page
+just sat on the spinner. Client-router redirects fired off an auth-state change are a
+known-flaky pattern.
+
+**Dead end first:** initially blamed a double-`router.push` race (the sign-out button's
+`.then(push('/'))` colliding with the guard's `push('/login')`) and de-raced it to a
+single `router.replace`. Still stuck — so the race wasn't it; the `router` navigation
+itself wasn't committing.
+
+**Fix (`src/app/mypage/page.tsx`):** drive the redirect off the auth-state guard (which
+fires on `user → null` via the Firebase listener, independent of whether `signOut()`'s
+promise resolves) and do a **full-page** navigation — `window.location.replace(target)`
+— which always commits and cleanly drops signed-in client state. Destination is chosen
+by a `wasAuthedRef` (set true whenever `user` is truthy): a **logout** (was signed in)
+→ landing page `'/'`; a **direct logged-out visit** (never signed in) → `'/login'`.
+This routes every logout to home — in-page button, 탈퇴/withdrawal, AND the top-nav
+`LogoutModal` (which can't set page-local state, but does flip the shared auth state).
+`useRouter` is no longer used here and was removed.
+
+**Verified:** `tsc --noEmit` clean + smoke 26/26. Live click-through (real session)
+still owed — the browser extension isn't connected here.
+
+## 2026-07-10 — Landscape rotate-notice shows a broken image (GIF filename mismatch)
+
+**Area:** `components/MountainViewer.tsx` · **Branch:** `dev` · **Severity:** low (cosmetic) ·
+**Status:** ✅ fixed (filename match; file exists on disk).
+
+### Symptom
+
+Rotating a phone to landscape on the map view shows the "지도는 세로 모드에서만…" rotate notice, but
+the decorative cat GIF renders as a broken image.
+
+### Root cause
+
+The `<Image src>` requested `/images/chubby-cat.gif` (hyphen) while the file on disk is
+`public/images/chubby_cat.gif` (**underscore**) → 404 → broken image.
+
+### Fix
+
+Point the reference at the real filename (`/images/chubby_cat.gif`). One-char change; grep
+confirmed it's the only reference.
+
+---
+
 ## 2026-07-10 — Mobile logout does nothing: confirm modal opens but the button never logs out
 
 **Area:** `components/Navigation.tsx` (mobile outside-click handler) · **Branch:** `dev` ·
