@@ -185,8 +185,16 @@ export const strings = {
       creating: '계정 만드는 중...',
       backToDetails: '정보 입력으로 돌아가기',
       loadingForm: '집사등록 폼을 불러오는 중...',
+      consent: {
+        required: '(필수)',
+        agreeTerms: '이용약관에 동의합니다',
+        agreePrivacy: '개인정보 수집·이용에 동의합니다',
+        viewTerms: '약관 보기',
+        viewPrivacy: '전문 보기',
+      },
       errors: {
         fillAll: '모든 항목을 입력해 주세요.',
+        consentRequired: '필수 항목에 동의해 주세요.',
         passwordMismatch: '비밀번호가 일치하지 않아요.',
         passwordTooShort: '비밀번호는 6자 이상이어야 해요.',
         invalidPhone: '올바른 전화번호를 입력해 주세요.',
@@ -247,6 +255,16 @@ export const strings = {
       connect: '연결하기',
       disconnectConfirm: '카카오톡 연결을 해제할까요?',
       operationFailed: (msg: string) => `작업에 실패했어요: ${msg}`,
+    },
+    withdraw: {
+      button: '회원 탈퇴',
+      confirmTitle: '정말 탈퇴하시겠어요?',
+      confirmBody:
+        '탈퇴하면 계정 정보(이메일, 전화번호, 닉네임 등)가 지체 없이 삭제되고 되돌릴 수 없어요. 작성하신 게시물은 남을 수 있어요.',
+      confirm: '탈퇴하기',
+      cancel: '취소',
+      processing: '탈퇴 처리 중...',
+      failed: (msg: string) => `탈퇴에 실패했어요: ${msg}`,
     },
   },
 } as const;

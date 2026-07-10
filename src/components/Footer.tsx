@@ -1,11 +1,12 @@
+import Link from 'next/link';
+
 /**
  * Site footer. Grounds the layout (so the page doesn't feel unfinished below the
  * map) and is the conventional home for policy links.
  *
  * Real content is shown now (site name, non-profit note, copyright). The legal
- * links are placeholders until the corresponding pages exist — tracked in
- * `docs/compliance/compliance-plan.md`. Do NOT make them live links until the
- * 개인정보처리방침 / 이용약관 pages are written and reviewed.
+ * links point at the 개인정보처리방침 (`/pages/privacy`) and 이용약관
+ * (`/pages/terms`) pages — tracked in `docs/compliance/compliance-plan.md`.
  */
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -19,14 +20,13 @@ export default function Footer() {
           <span>비영리 커뮤니티</span>
         </div>
 
-        {/* Placeholders — pages pending the compliance workstream. */}
         <nav className="flex items-center gap-4">
-          <span className="cursor-not-allowed text-gray-400" title="준비 중입니다">
+          <Link href="/pages/privacy" className="text-gray-500 transition hover:text-gray-700">
             개인정보처리방침
-          </span>
-          <span className="cursor-not-allowed text-gray-400" title="준비 중입니다">
+          </Link>
+          <Link href="/pages/terms" className="text-gray-500 transition hover:text-gray-700">
             이용약관
-          </span>
+          </Link>
         </nav>
 
         <div className="text-xs text-gray-400">© {year} 산냥이집냥이</div>

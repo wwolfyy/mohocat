@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import { auth } from '@/services/firebase';
@@ -25,6 +26,10 @@ function SignupFormContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState(''); // Nickname
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Required consents (PIPA). Both must be checked before verification is sent.
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
 
   // Verification State
   const [verificationCode, setVerificationCode] = useState('');
@@ -78,6 +83,9 @@ function SignupFormContent() {
     }
     if (phoneNumber.length < 10) {
       return t.errors.invalidPhone;
+    }
+    if (!agreeTerms || !agreePrivacy) {
+      return t.errors.consentRequired;
     }
     return null;
   };
@@ -306,9 +314,58 @@ function SignupFormContent() {
             <p className="text-xs text-gray-500 mt-1">{t.phoneHint}</p>
           </div>
 
+          <div className="space-y-2 rounded-lg bg-gray-50 p-3">
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-brand focus:ring-brand"
+                disabled={isLoading}
+              />
+              <span>
+                <span className="font-medium text-brand-600">{t.consent.required}</span>{' '}
+                {t.consent.agreeTerms}{' '}
+                <Link
+                  href="/pages/terms"
+                  target="_blank"
+                  className="underline underline-offset-2 hover:text-brand"
+                >
+                  {t.consent.viewTerms}
+                </Link>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={agreePrivacy}
+                onChange={(e) => setAgreePrivacy(e.target.checked)}
+                className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-brand focus:ring-brand"
+                disabled={isLoading}
+              />
+              <span>
+                <span className="font-medium text-brand-600">{t.consent.required}</span>{' '}
+                {t.consent.agreePrivacy}{' '}
+                <Link
+                  href="/pages/privacy"
+                  target="_blank"
+                  className="underline underline-offset-2 hover:text-brand"
+                >
+                  {t.consent.viewPrivacy}
+                </Link>
+              </span>
+            </label>
+          </div>
+
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full"
+            disabled={isLoading || !agreeTerms || !agreePrivacy}
+          >
             {isLoading ? t.sending : t.sendCode}
           </Button>
         </form>
