@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { MdLogout } from 'react-icons/md';
 import { strings } from '@/constants/strings';
 
-export function NavigationBarLogout() {
+export function NavigationBarLogout({ mobile = false }: { mobile?: boolean } = {}) {
   const { isAuthenticated, user } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -32,7 +32,11 @@ export function NavigationBarLogout() {
       className={cn(
         'flex items-center gap-2 px-3 py-1.5',
         'bg-white border border-gray-200 rounded-full shadow-sm',
-        'transition-all duration-200 hover:shadow-md hover:border-gray-300'
+        'transition-all duration-200 hover:shadow-md hover:border-gray-300',
+        // In the mobile menu the pill fills the row; center the name + logout
+        // so it reads as a balanced button instead of leaving dead space on
+        // the right.
+        mobile && 'w-full justify-center'
       )}
     >
       <Link

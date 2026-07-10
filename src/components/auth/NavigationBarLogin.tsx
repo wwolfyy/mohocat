@@ -8,7 +8,7 @@ import { cn } from '@/utils/cn';
 import { MdLogin } from 'react-icons/md';
 import { strings } from '@/constants/strings';
 
-export function NavigationBarLogin() {
+export function NavigationBarLogin({ mobile = false }: { mobile?: boolean } = {}) {
   const { isAuthenticated, loading } = useAuth();
   const pathname = usePathname();
 
@@ -24,7 +24,11 @@ export function NavigationBarLogin() {
         'flex items-center gap-2 px-3 py-1.5',
         'bg-white border border-gray-200 rounded-full shadow-sm',
         'text-sm font-semibold text-gray-700',
-        'transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-brand-600'
+        'transition-all duration-200 hover:shadow-md hover:border-gray-300 hover:text-brand-600',
+        // In the mobile menu the pill is a block-level flex container, so it
+        // fills the row; center the label+icon instead of leaving dead space
+        // on the right (matches the full-width 입양홍보 CTA above it).
+        mobile && 'w-full justify-center'
       )}
     >
       <span>{strings.auth.nav.logIn}</span>

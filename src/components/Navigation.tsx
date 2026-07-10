@@ -348,10 +348,10 @@ export default function Navigation() {
 
               <MobileDivider />
               <div className="px-4 py-2">
-                <NavigationBarLogin />
+                <NavigationBarLogin mobile />
               </div>
               <div className="px-4 py-2">
-                <NavigationBarLogout />
+                <NavigationBarLogout mobile />
               </div>
             </div>
           </div>
