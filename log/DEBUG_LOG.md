@@ -11,6 +11,51 @@
 
 ---
 
+## 2026-07-10 — Mobile logout does nothing: confirm modal opens but the button never logs out
+
+**Area:** `components/Navigation.tsx` (mobile outside-click handler) · **Branch:** `dev` ·
+**Severity:** medium (mobile UX, auth) · **Status:** ✅ fixed; outside-click regression
+browser-verified (390px). Live logout is credential/device-owed.
+
+### Symptom
+
+On mobile: open the hamburger menu → tap 로그아웃 → the logout confirm modal appears, but
+tapping the red 로그아웃 button doesn't log the user out — the modal just disappears and the
+session stays signed in.
+
+### Root cause
+
+The mobile menu's dismiss-on-outside-click handler (added in `c632f76`) listens on
+**`pointerdown`** and closes the menu for any target not inside `<header>`. `LogoutModal` (the
+shared `Modal`) renders through a **portal to `document.body`**, i.e. _outside_ the header. So
+tapping the confirm button fires `pointerdown` first → handler runs → `setIsMobileMenuOpen(false)`
+→ the menu unmounts → `NavigationBarLogout` (a child of the menu) unmounts → `LogoutModal` unmounts
+**before the button's `click` fires**. `handleLogout`/`signOut()` never runs. `pointerdown`
+precedes `click`, so the modal was destroyed in the gap. Mobile-only because that's where the
+menu (and its outside-click handler) exists.
+
+### Fix
+
+In the outside-click handler, also treat taps inside an open overlay as "inside" — bail when the
+`pointerdown` target is within a `[role="dialog"]` (the shared `Modal` root carries that role):
+
+```tsx
+if (target instanceof Element && target.closest('[role="dialog"]')) return;
+```
+
+The menu stays mounted while the modal is up, so the confirm button's `click` lands and logout
+runs. (Composes with the sibling fix that closes the menu on `isAuthenticated` change: after
+logout completes the menu closes cleanly.)
+
+### Verified
+
+`tsc` clean; smoke 25/25. Browser (390px harness): opened the menu, tapped the map (a genuine
+outside tap) → menu still closes — the edit didn't regress the dismiss path. The logout leg
+itself needs a signed-in session (credential/device-owed, per A4); root cause + fix are
+mechanism-certain (pointerdown-before-click unmount).
+
+---
+
 ## 2026-07-10 — Mobile hamburger menu stays open across login navigation / after sign-in
 
 **Area:** `components/Navigation.tsx` · **Branch:** `dev` · **Severity:** medium (mobile UX) ·

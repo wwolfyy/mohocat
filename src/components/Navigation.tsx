@@ -102,8 +102,15 @@ export default function Navigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
       const header = mobileNavRef.current?.closest('header');
-      if (header && event.target instanceof Node && header.contains(event.target)) return;
+      if (header && target instanceof Node && header.contains(target)) return;
+      // A modal opened *from* the menu (e.g. the logout confirm) portals to
+      // <body>, outside the header. Closing the menu here on `pointerdown`
+      // would unmount that modal — which is a child of the menu — before its
+      // button's `click` even fires, so the action (logout) never runs. Treat
+      // taps inside any open overlay as "inside" and leave the menu alone.
+      if (target instanceof Element && target.closest('[role="dialog"]')) return;
       setIsMobileMenuOpen(false);
     };
     document.addEventListener('pointerdown', handlePointerDown);
