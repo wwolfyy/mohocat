@@ -5,8 +5,6 @@
  * structure and grounded in what the app actually collects (see
  * `docs/compliance/compliance-plan.md`).
  *
- * ⚠️ CONTACT_EMAIL below is a placeholder pending the operator's dedicated
- * privacy address — replace the one constant before this is considered final.
  * ⚠️ Not legal advice: have the text reviewed by a Korean privacy professional
  * before scaling membership.
  */
@@ -15,7 +13,7 @@ export const metadata = {
   title: '개인정보처리방침 | 산냥이집냥이',
 };
 
-// 개인정보 보호책임자 / 문의 창구. TODO(owner): 운영자 확정 이메일로 교체.
+// 개인정보 보호책임자 / 문의 창구.
 const CONTACT_EMAIL = 'rescuezoro@gmail.com';
 const PRIVACY_OFFICER = '산냥이집냥이 운영자';
 const EFFECTIVE_DATE = '2026년 7월 10일';

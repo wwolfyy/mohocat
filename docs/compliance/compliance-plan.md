@@ -78,8 +78,9 @@ gap to close before scaling membership.
        (제10조); footer link is live. _(2026-07-10)_
 4. [~] **Add consent capture** to signup/login flows. **Done for email signup
    (`SignupForm.tsx`, 2026-07-10):** two required checkboxes — 이용약관 +
-   개인정보 수집·이용 및 국외 이전 (each with a link to the full text); the
-   인증번호 받기 submit is gated until both are checked. **Still owed:** the
+   개인정보 수집·이용 (each with a link to the full text); the
+   인증번호 받기 submit is gated until both are checked. (국외 이전 is
+   disclosure-based per Art. 28-8, so it's **not** in the consent.) **Still owed:** the
    phone-login-as-signup path and Kakao social sign-up capture no explicit
    consent yet. (No marketing/advertising, so no optional consent needed.)
 5. [x] **Designate a privacy officer (CPO)** + public contact — 산냥이집냥이 운영자
