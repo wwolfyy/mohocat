@@ -37,7 +37,7 @@
 | **Functional: 동참 form end-to-end**       | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                                                                                                                                                                                  |
 | **Deployment-target cleanup**              | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                                                                                                                                      |
 | **Perf: bake the data layer**              | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                 |
-| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled; nav/modals/albums/forms/content audited. **Pass 2 (2026-07-05):** S22 map bugs, portrait-only map, static clustering. **Off-plan (2026-07-08):** lightbox pinch-to-zoom, back-button/swipe-back modal fix, page-wide UI scale reduction. **Remaining:** map quirks/re-fit + touch-target sweep are device-owed; mobile perf + sign-in-gated surfaces not started.                                                                                                                                                                                                     |
+| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled; nav/modals/albums/forms/content audited. **Pass 2 (2026-07-05):** S22 map bugs, portrait-only map, static clustering. **Off-plan (2026-07-08):** lightbox pinch-to-zoom, back-button/swipe-back modal fix, page-wide UI scale reduction. **Device-verified (S22, 2026-07-10):** map zoom/scroll/quirks + touch-target sweep closed. **Remaining:** map re-fit on resize (device-owed), mobile perf + sign-in-gated surfaces not started.                                                                                                                              |
 | **Firebase Storage → Seoul bucket**        | `[x]` done        | Migrated from `us-central1` to `asia-northeast3` (Seoul) to cut image latency for Korean users. New bucket `mountaincats-61543`; files transferred via gsutil; Firestore URL rewrite script run against all 6 collections; `fetch-static-assets.js` reads bucket from env var; `generate-signed-url` hardcoded fallback removed. See `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                                                                                                                                                   |
 | **Admin desktop cleanup**                  | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the disabled-link feature stubs. |
 | **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -129,14 +129,13 @@ those are the forward plan.
       real device+number.)_
 - [x] **Content pages** — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good
       typography/spacing at 390. No fixes needed.
-- [~] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
-  S22 bugs (DEBUG*LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
-  clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
-  *(originally: image chosen by orientation via `useIsPortrait`; **superseded** by Pass 3 —
-  the map is now portrait-only on phones, so the landscape-map path is gone entirely)\_;
-  (3) map ate page scroll → on mobile, one-finger swipe scrolls the page (drag disabled at
-  fill) and map-drag engages only when zoomed in. Harness-verified; **device-owed:** pinch-out
-  clamp feel, one-finger scroll, zoom-then-pan on a real S22.
+- [x] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
+      S22 bugs (DEBUG*LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
+      clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
+      *(originally: image chosen by orientation via `useIsPortrait`; **superseded** by Pass 3 —
+      the map is now portrait-only on phones, so the landscape-map path is gone entirely)\_;
+      (3) map ate page scroll → on mobile, one-finger swipe scrolls the page (drag disabled at
+      fill) and map-drag engages only when zoomed in. ✅ S22-verified by owner 2026-07-10.
 - [x] **Map pinch-bounce pin loss — S22 (2026-07-05, DEBUG_LOG).** ✅ S22-verified by owner.
       `bounceAtZoomLimits={false}` hard-stops a pinch at fill instead of overshooting +
       bouncing back; the transient sub-fill excursion (which merged the thumbnail pins into
@@ -192,15 +191,14 @@ those are the forward plan.
       about page title `text-4xl` → `text-xl`, body `text-lg` → `text-base`; adoption section
       header + post card titles + search input scaled down; contact form labels/inputs/button
       tightened. Browser-verified across all pages.
-- [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
-      (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
+- [x] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
+      (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics. ✅ S22-verified by owner 2026-07-10.
 - [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix
       (2026-07-02, `MapViewController`) re-fits + re-clamps min-zoom on resize. _(The old
       landscape↔portrait `key={portrait}` remount is gone — the map is portrait-only on phones;
       landscape shows the rotate-notice.)_ Confirm resize/re-fit feels clean on a real device.
-- [ ] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
-      (replace hover-reveal with always-visible or tap states) — spot-checks passed in Pass 1;
-      full sweep incl. map pin hover-reveal is device-owed.
+- [x] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
+      (replace hover-reveal with always-visible or tap states). ✅ S22-verified by owner 2026-07-10.
 - [ ] Performance on mobile networks — image sizes, above-the-fold, the thumbnail
       preloader's eagerness on cellular. _(Not started.)_
 - [ ] Sign-in-gated surfaces at mobile widths: butler_talk, butler_stream, mypage.
