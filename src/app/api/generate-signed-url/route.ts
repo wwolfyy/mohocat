@@ -13,8 +13,8 @@ if (!getApps().length) {
 }
 
 const firebaseConfig = getFirebaseConfig();
-// Explicitly pass the bucket name, with a fallback to the known bucket if env var is missing during build
-const storageBucket = firebaseConfig?.storageBucket || 'mountaincats-61543.firebasestorage.app';
+const storageBucket = firebaseConfig?.storageBucket;
+if (!storageBucket) throw new Error('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is not configured');
 const storage = getStorage().bucket(storageBucket);
 
 export async function POST(request: NextRequest) {
@@ -32,9 +32,7 @@ export async function POST(request: NextRequest) {
       contentType: fileType,
     });
 
-    // Use centralized config for public URL generation
-    const firebaseConfig = getFirebaseConfig();
-    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig?.storageBucket}/o/uploads%2F${encodeURIComponent(fileName)}?alt=media`;
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/uploads%2F${encodeURIComponent(fileName)}?alt=media`;
 
     return NextResponse.json({ signedUrl, publicUrl });
   } catch (error) {
