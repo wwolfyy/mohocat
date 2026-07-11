@@ -704,6 +704,17 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       regression net for the deployment cleanup
       ([`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md)).
 
+**Plans drafted (2026-07-11):**
+
+- [`playwright-ci-plan.md`](./playwright-ci-plan.md) — the Playwright E2E suite
+  (public / auth / member / admin / API-security) against the **Firebase Emulator
+  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI.
+- [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md) —
+  the enabler plan that must land first: adopts the main plan's recommendations
+  as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
+  packages (emulator wiring, asset-script compat, fixtures/seed, harness, CI).
+  **Execution starts here.**
+
 **Candidate scope — _confirm with user_:**
 
 - [ ] Decide the broader test stack (unit / integration / UI) and what to cover first
