@@ -15,6 +15,32 @@
 
 ---
 
+## 2026-07-11 — Dead-code removal (≈3,200 LOC across 19 files + 2 method-level items)
+
+**Area:** removed — `app/auth-test/`, `utils/{auth-integration-test,kakao-auth-test,oauth,dateParserTest,permission-utils}.ts`,
+`components/{ProviderManagement,SocialLoginDemo,KakaoTalkDebug,KakaoTalkFallbackDebug,FirebaseStorageTest,PostItem,ButlerStreamTabs}.tsx`,
+`services/basic-feeding-spots-service.ts`, and 5 dead API routes
+(`api/{test-youtube-auth,feeding-spots-basic,fetch-playlists,manage-playlist-membership,auth/status}/`).
+Trimmed — `FirebaseContactService.createContact` + `IContactService.createContact`
+(contact-service.ts, interfaces.ts) and `getMountainTheme()` (config.ts). Doc touch-ups —
+`docs/codebase/{api-routes,media-and-youtube}.md` route tables.
+
+**What changed:** executed the source-verified removal plan in
+`docs/planning/dead-code-removal-assessment-20260711.md` — a debug/demo auth cluster,
+standalone unreferenced files, "not yet implemented"/stub API routes, and two dead symbols.
+`createContact` was already superseded by `POST /api/contact` (Admin SDK) and blocked by the
+`contacts` Firestore rule (`create: if false`); `getMountainTheme()` had no callers (theme
+not wired through). `MountainTheme` type kept (still used by `MountainConfig.theme`).
+
+**Rationale:** mechanical dead-code cleanup — every item was grep-verified to have zero live
+callers before removal. Product-decision items (MountainSelector, 겨울집 stub, migration page)
+were intentionally left alone.
+
+**Verified:** re-ran the basename/route-path sweep to confirm zero external refs, then
+`npx tsc --noEmit` (exit 0) + `npm run test:smoke` (26/26 passed).
+
+---
+
 ## 2026-07-10 — Compliance: 개인정보처리방침 + 이용약관 pages, footer links, consent, 국외 이전
 
 **Area:** `app/pages/privacy/page.tsx` (new), `app/pages/terms/page.tsx` (new),

@@ -241,14 +241,6 @@ export function getYouTubeApiKey(): string {
 }
 
 /**
- * Get theme configuration for the current mountain
- */
-export function getMountainTheme(): MountainTheme {
-  const config = getMountainConfig();
-  return config.theme;
-}
-
-/**
  * Get map configuration for the current mountain, falling back to
  * `DEFAULT_MAP_CONFIG` when the `map` section (or a field) is omitted.
  */

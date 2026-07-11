@@ -52,7 +52,6 @@ export interface IPostService {
 
 // Contact service interface
 export interface IContactService {
-  createContact(contact: any): Promise<any>;
   getAllContacts(): Promise<Contact[]>;
 }
 

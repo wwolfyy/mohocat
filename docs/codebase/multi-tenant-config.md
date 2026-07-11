@@ -12,13 +12,13 @@ directly.
 
 ## Key Components
 
-| Component            | File(s)                               | Responsibility                                                                                                                                                |
-| -------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mountain config JSON | `config/mountains/mountains.json`     | Per-mountain public config (`geyang`) + `_meta.centralUserService`; theme/features/map/social/authentication                                                  |
-| Config utils         | `src/utils/config.ts`                 | `getCurrentMountainId`, `getMountainConfig`, `getMountainTheme`, `getMapConfig`, `isFeatureEnabled`, `getFirebaseConfig`, OAuth getters, `getAllMountains`, … |
-| Mountain selector    | `src/components/MountainSelector.tsx` | UI to view/switch mountains (`getAllMountains`, `getMountainName`)                                                                                            |
-| Firebase init        | `src/services/firebase.ts`            | Consumes `getFirebaseConfig()` to init the SDK                                                                                                                |
-| Firestore rules      | `config/firebase/firestore.rules`     | Access rules (deployed via Firebase CLI)                                                                                                                      |
+| Component            | File(s)                               | Responsibility                                                                                                                            |
+| -------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Mountain config JSON | `config/mountains/mountains.json`     | Per-mountain public config (`geyang`) + `_meta.centralUserService`; theme/features/map/social/authentication                              |
+| Config utils         | `src/utils/config.ts`                 | `getCurrentMountainId`, `getMountainConfig`, `getMapConfig`, `isFeatureEnabled`, `getFirebaseConfig`, OAuth getters, `getAllMountains`, … |
+| Mountain selector    | `src/components/MountainSelector.tsx` | UI to view/switch mountains (`getAllMountains`, `getMountainName`)                                                                        |
+| Firebase init        | `src/services/firebase.ts`            | Consumes `getFirebaseConfig()` to init the SDK                                                                                            |
+| Firestore rules      | `config/firebase/firestore.rules`     | Access rules (deployed via Firebase CLI)                                                                                                  |
 
 ## Data Flow
 
@@ -28,12 +28,10 @@ flowchart TD
     Json[mountains.json - static import] --> Cfg[getMountainConfig]
     CurId --> Cfg
     EnvSecrets[env secrets: FIREBASE_*, KAKAO_*, YOUTUBE_*, SERVICE_ACCOUNT_KEY] --> Cfg
-    Cfg --> Theme[getMountainTheme]
     Cfg --> MapCfg[getMapConfig]
     Cfg --> Features[isFeatureEnabled]
     Cfg --> FBCfg[getFirebaseConfig]
     Cfg --> OAuth[getKakao/GoogleOAuthConfig]
-    Theme --> UI[Components / Tailwind theme]
     MapCfg --> Map[MountainViewer / LeafletMountainMap]
     FBCfg --> FBInit[services/firebase.ts]
 ```

@@ -4,8 +4,27 @@
 > `docs/codebase/` + `PROJECT_PLAN.md` against actual `src/` references
 > (every item below was grep-verified to have **zero live callers**).
 >
-> **Status:** assessment only — nothing removed yet. Gates to run after any
-> deletion: `npx tsc --noEmit` + `npm run test:smoke`.
+> **Status:** ✅ **executed + post-verified 2026-07-11** — all §1/§2/§2a files removed,
+> §3 method-level items removed, doc touch-ups applied. Gates green: `npx tsc --noEmit`
+> (exit 0) + `npm run test:smoke` (26/26). Product-decision items (below) intentionally
+> left alone.
+>
+> **Post-removal verification pass (same day):** the staged diff was re-audited against
+> this plan — 19 deletions + 2 method trims, exact match; repo-wide sweep (src/tests/
+> scripts/config) found zero imports, dynamic imports, or URL-string references to any
+> removed file/route; keep-list items (§1 ⚠️, `MountainTheme` type, `getAllContacts`)
+> confirmed intact and consumed; the `kakao-auth-test.ts` `FirebaseAuthService` re-export
+> had no consumers (canonical home `services/auth-service.ts` unaffected).
+>
+> The audit found stale references in **more docs than §2a scoped** — fixed in the same
+> commit: `docs/codebase/community-pages.md` (`ButlerStreamTabs.tsx`, `PostItem.tsx`),
+> `docs/codebase/services-layer.md` (`basic-feeding-spots-service.ts`),
+> `docs/codebase/multi-tenant-config.md` (`getMountainTheme` in the utils table + mermaid
+> flow), `docs/planning/PROJECT_PLAN.md` §9 + `docs/manuals/deployment/new-mountain-setup.md`
+> (reworded the theme-not-wired bullets to `config.theme` since the accessor is gone).
+> Left as-is: `docs/archive/**` + `docs/handoff/**` (historical),
+> `docs/design/mohocat-app-redesign-tasks.md` (task log), and the two
+> `docs/planning/firebase-*-inventory.md` snapshots (dated point-in-time inventories).
 >
 > **Scope:** ≈ **3,200 LOC across 19 files** + two method-level items.
 > _(Revised up from ≈2,950/14 after a second-pass review found 5 more dead files —
@@ -35,7 +54,7 @@ the leaves dead too (each leaf's only importer is another node in the tree).
 ⚠️ **Do NOT remove** `SocialLoginButton`, `LoginForm`, `SignupForm` — they are
 used by the real login / `AdminAuth` paths, not just this cluster.
 
-- [ ] Remove the cluster above.
+- [x] Remove the cluster above.
 
 ## 2. Standalone dead files
 
@@ -48,7 +67,7 @@ used by the real login / `AdminAuth` paths, not just this cluster.
 | `src/utils/dateParserTest.ts`                 | Test scaffold, unreferenced. (Both `utils/dateParser.ts` and `utils/parse-date.ts` are live — different functions — so neither is removable here.)                                                                                                                                                                                                                                                                                               |
 | `src/utils/permission-utils.ts` (190 LOC)     | Zero importers. Every same-named symbol elsewhere is a **local** definition, not an import from here: `getUserRole` (own methods in `permission-service.ts` / `role-assignment-service.ts` / `lib/auth/admin.ts`), `canManageCats`/`canViewAnalytics` (locals in `usePermissions.ts`), `ALL_PERMISSIONS` (redeclared in `RolePermissionConfig.tsx` + `ResourcePermissionConfig.tsx`). _(Missed by the original sweep; added 2026-07-11 review.)_ |
 
-- [ ] Remove the standalone dead files above.
+- [x] Remove the standalone dead files above.
 
 ## 2a. Dead API routes (unreferenced; added 2026-07-11 review)
 
@@ -66,16 +85,16 @@ request to these paths (repo-wide grep, incl. cross-route calls in `src/app/api`
 `media-and-youtube.md` list `fetch-playlists`, `manage-playlist-membership`, and
 `test-youtube-auth` in their route tables.
 
-- [ ] Remove the dead API routes above (+ the doc touch-up).
+- [x] Remove the dead API routes above (+ the doc touch-up).
 
 ## 3. Method-level dead code (remove the method, keep the file)
 
-- [ ] **`FirebaseContactService.createContact`** + its `IContactService.createContact`
+- [x] **`FirebaseContactService.createContact`** + its `IContactService.createContact`
       interface entry (`src/services/contact-service.ts`, `src/services/interfaces.ts`).
       Superseded by `POST /api/contact` (Admin SDK); the `contacts` rule is now
       `create: if false`, so this client-SDK write would fail anyway. Keep
       `getAllContacts`.
-- [ ] **`getMountainTheme()`** (`src/utils/config.ts:246`). No callers — PROJECT_PLAN
+- [x] **`getMountainTheme()`** (`src/utils/config.ts:246`). No callers — PROJECT_PLAN
       §9 already notes "theme not wired through." Keep the `MountainTheme` type (still
       used by `MountainConfig.theme`).
 

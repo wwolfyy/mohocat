@@ -7,31 +7,11 @@
 
 import type { IContactService } from './interfaces';
 import type { Contact } from '../types';
-import { collection, addDoc, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebaseContactService implements IContactService {
   private readonly COLLECTION_NAME = 'contacts';
-
-  async createContact(contact: any): Promise<any> {
-    try {
-      const contactData = {
-        ...contact,
-        createdAt: Timestamp.now(),
-      };
-
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), contactData);
-
-      return {
-        id: docRef.id,
-        ...contact,
-        createdAt: new Date(),
-      };
-    } catch (error) {
-      console.error('Error creating contact:', error);
-      throw new Error('Failed to create contact');
-    }
-  }
 
   /**
    * Fetch all contact submissions, newest first.

@@ -683,7 +683,8 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 - [ ] Hard-coded map image path in the map host; source it from mountain config.
 - [ ] `mountains.json` vs `permissions.json` inconsistency (`manisan` exists in
       one, not the other).
-- [ ] Theme not wired through — `getMountainTheme()` returns colors nothing reads.
+- [ ] Theme not wired through — `config.theme` colors are read by nothing (the unused
+      `getMountainTheme()` accessor was removed in the 2026-07-11 dead-code cleanup).
 - [ ] Per-mountain DB isolation at the service-factory seam (the seam exists; the
       isolation doesn't).
 
