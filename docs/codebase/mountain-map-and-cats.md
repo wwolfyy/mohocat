@@ -1,140 +1,109 @@
-# mountain-map-and-cats
+# Mountain Map & Cats
 
 > Part of: [Codebase Overview](CODEBASE_OVERVIEW.md)
 
 ## Purpose
 
-The public landing experience. A satellite-image map of the mountain (currently 계양산 / Geyang)
-with clickable points; each point reveals a gallery of current and former feline residents.
-This is what the awareness-raising mission is built around — every other feature exists to
-support, manage, or extend the data shown here.
+The public landing experience: an interactive **Leaflet** map of the mountain where each
+feeding point reveals the cats that live (`dwelling`) or used to live (`prev_dwelling`) there,
+plus the `/cats` "browse all cats" page. Cat data is read **server-side** (Admin SDK) and
+baked into the ISR render, so the client map issues **zero Firestore queries** for avatars.
 
 ## Key Components
 
-| Component                    | File(s)                                                        | Responsibility                                                                                                                                                                                                      |
-| ---------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Home page (server component) | `src/app/page.tsx`                                             | Server-fetches all points via `getPointService()` and passes them to `MountainViewer`.                                                                                                                              |
-| `MountainViewer`             | `src/components/MountainViewer.tsx`                            | Renders the satellite image, overlays points, manages hover/click state, opens `CatGallery`. Handles mobile rotation + dynamic CSS-variable scaling so the 16:9 image fits portrait viewports.                      |
-| `RandomCatThumbnail`         | `src/components/RandomCatThumbnail.tsx`                        | Per-point marker. Loads current cats for a point (with module-level cache), picks a random thumbnail, swaps in a fallback white circle if none exist or the image errors.                                           |
-| `CatGallery`                 | `src/components/CatGallery.tsx`                                | Modal overlay for a selected point. Loads current + former residents via `getCatsByPointId()`, displays two grids (현재 거주 중 / 예전에 거주), opens `CatInfo` for a tapped cat.                                   |
-| `CatInfo`                    | `src/components/CatInfo.tsx`                                   | Detail card. Shows name, status emoji (`산냥이`/`집냥이`/`별냥이`/`행방불명`), description, links to other cats via inline `cat-modal-link` anchors, and entry points to `PhotoAlbum`/`VideoAlbum` filtered by cat. |
-| `thumbnailPreloader`         | `src/services/thumbnailPreloader.ts`                           | Module-level singleton. Eagerly fetches all current cats for all points on mount and primes the browser image cache. Idempotent via `loadedThumbnails` and `loadingPromises` sets.                                  |
-| Cat / Point services         | `src/services/cat-service.ts`, `src/services/point-service.ts` | Firestore reads. `getCatsByPointId()` returns `{current, former}` based on `dwelling` and `prev_dwelling`.                                                                                                          |
-| Types                        | `src/types/index.ts` (`Cat`, `Point`)                          | `Point.x` / `Point.y` are percentages used for absolute positioning over the satellite image. `Cat.dwelling` is the current point ID; `Cat.prev_dwelling` flags former residents.                                   |
-
-## Data Flow
+| Component           | File(s)                                              | Responsibility                                                                                                                   |
+| ------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Home page           | `src/app/page.tsx`                                   | `async` Server Component; `revalidate = REVALIDATE_SECONDS`; awaits points + cats, groups cats by point, passes as props         |
+| Server cat reads    | `src/lib/server/cat-reads.ts`                        | `getAllCatsServer()` (Admin SDK, log+re-raise) and `groupCatsByPoint()` → `CatsByPoint` shape                                    |
+| Map host            | `src/components/MountainViewer.tsx`                  | Client host: preloads thumbnails, owns `IntroCard`, gallery-modal state, mobile/landscape gating, config-driven clustering knobs |
+| Leaflet map         | `src/components/LeafletMountainMap.tsx`              | `CRS.Simple` image-overlay map; portrait/landscape image swap; `%`→`[lat,lng]` projection; marker clustering + label placement   |
+| Clustering          | `src/utils/mapClustering.ts`                         | Pure, zoom-independent greedy proximity clustering (replaces `leaflet.markercluster`) + spiderfy geometry                        |
+| Label placement     | `src/utils/mapLabels.ts`                             | Resolves where a marker's name label sits (e.g. above the pin)                                                                   |
+| Compass / IntroCard | `src/components/Compass.tsx`, `IntroCard.tsx`        | Static north indicator (rotates with portrait image); dismissible "click a cat" nudge (localStorage)                             |
+| Per-point gallery   | `src/components/CatGallery.tsx`, `CatCircleGrid.tsx` | Modal listing a point's current/former cats as circular avatar cards                                                             |
+| Cat detail          | `src/components/CatInfo.tsx`                         | Cat detail view (photos, fields) shown in a modal                                                                                |
+| Cat-linked text     | `src/components/CatLinkedText.tsx`                   | Renders text with `[catmodal:name]` links that open a `CatInfo` modal                                                            |
+| Cats browser page   | `src/app/pages/cats/page.tsx`, `CatsBrowser.tsx`     | 냥이들 — server-read cats + dwelling names → search/filter/sort island (card grid on mobile, table on desktop)                   |
+| Shared filters      | `src/utils/cat-filters.ts`                           | Pure `filterCats`/`sortCats`/unique-value helpers shared by the browser **and** the admin cat grid                               |
 
 <!-- ============================================================
      DIAGRAM STEP — Data Flow
+     Current tool: Mermaid
      ============================================================ -->
 
+## Data Flow
+
 ```mermaid
-sequenceDiagram
-    participant Browser
-    participant Home as page.tsx (SSR)
-    participant PointSvc as PointService
-    participant Viewer as MountainViewer
-    participant Pre as thumbnailPreloader
-    participant CatSvc as CatService
-    participant Firestore
-
-    Browser->>Home: GET /
-    Home->>PointSvc: getAllPoints()
-    PointSvc->>Firestore: getDocs(points)
-    Firestore-->>PointSvc: Point[]
-    PointSvc-->>Home: Point[]
-    Home-->>Browser: HTML + points prop
-
-    Browser->>Viewer: hydrate
-    Viewer->>Pre: preloadThumbnailsForPoints(pointIds)
-    Pre->>CatSvc: getCatsByPointId(id) for each
-    CatSvc->>Firestore: query where dwelling == id
-    Firestore-->>CatSvc: Cat[]
-    CatSvc-->>Pre: {current, former}
-    Pre->>Browser: new Image() per thumbnailUrl
-
-    Note over Browser: User clicks a point
-    Browser->>Viewer: onClick(point)
-    Viewer->>Browser: render <CatGallery pointId>
-    Browser->>CatSvc: getCatsByPointId(pointId)
-    CatSvc-->>Browser: {current, former}
-    Browser->>Browser: render grids; on cat click, open CatInfo
+flowchart TD
+    subgraph Server[Server / ISR - revalidate 3600s]
+        Page[page.tsx] -->|getAllPoints| PointSvc[PointService]
+        Page -->|getAllCatsServer| AdminSDK[(Admin SDK / Firestore)]
+        Page -->|groupCatsByPoint| ByPoint[CatsByPoint]
+    end
+    Page -->|props: points + catsByPoint| Viewer[MountainViewer - client]
+    Viewer -->|dynamic ssr:false| Leaflet[LeafletMountainMap]
+    Leaflet -->|project % -> lat,lng| Markers[Feeding-point markers]
+    Markers -->|greedyClusterByRadius| Clusters[Clusters / pins]
+    Viewer -->|click marker| Gallery[CatGallery modal]
+    Gallery -->|select cat| CatInfo[CatInfo detail]
+    Viewer -->|preload image files| Preloader[thumbnailPreloader]
 ```
-
-<!-- END DIAGRAM STEP -->
 
 ## Component Relationships
 
-<!-- ============================================================
-     DIAGRAM STEP — Component Relationships
-     ============================================================ -->
-
 ```mermaid
 graph LR
-    Page[app/page.tsx]
-    Viewer[MountainViewer]
-    Random[RandomCatThumbnail]
-    Gallery[CatGallery]
-    Info[CatInfo]
-    Photo[PhotoAlbum]
-    Video[VideoAlbum]
-    Pre[thumbnailPreloader]
-    CatSvc[(CatService)]
-    PointSvc[(PointService)]
-
-    Page -->|points| Viewer
-    Viewer -->|pointId| Random
-    Viewer -->|onClick| Gallery
-    Gallery --> Info
-    Info -->|opens| Photo
-    Info -->|opens| Video
-    Viewer -->|preload| Pre
-    Gallery -->|preload| Pre
-    Pre --> CatSvc
-    Random --> CatSvc
-    Gallery --> CatSvc
-    Page --> PointSvc
+    Page[page.tsx] -->|reads| CatReads[cat-reads.ts]
+    Page -->|reads| PointSvc[PointService]
+    Page -->|renders| Viewer[MountainViewer]
+    Viewer -->|dynamic import| Leaflet[LeafletMountainMap]
+    Viewer -->|renders| IntroCard
+    Viewer -->|renders| CatGallery
+    Leaflet -->|uses| Clustering[mapClustering.ts]
+    Leaflet -->|uses| Labels[mapLabels.ts]
+    Leaflet -->|renders| Compass
+    CatGallery -->|uses| CircleGrid[CatCircleGrid]
+    CatGallery -->|opens| CatInfo
+    CatsBrowser[CatsBrowser] -->|uses| Filters[cat-filters.ts]
+    CatsBrowser -->|opens| CatInfo
+    Viewer -->|config| Config[getMapConfig]
 ```
-
-<!-- END DIAGRAM STEP -->
 
 ## Key Patterns & Conventions
 
-- **Server-rendered points, client-rendered cats.** `app/page.tsx` is an `async` server
-  component that pre-fetches points server-side. Cat data is fetched client-side via
-  service-layer factories so per-point galleries are interactive without round-tripping.
-- **Module-level cache + singleton preloader.** `RandomCatThumbnail` uses a `Map<pointId, Cat[]>`
-  module cache; `thumbnailPreloader` is a single class instance exported at module scope.
-  This avoids hooks-based cache plumbing but is also impossible to invalidate without a hard
-  reload.
-- **CSS variables for mobile rotation.** `MountainViewer` measures the satellite image's
-  natural aspect ratio, computes `--mobile-scale-factor` and `--mobile-point-counter-scale-factor`,
-  then applies a `rotate-90` parent + counter-rotated points so the same 16:9 image fits a
-  portrait viewport without distorting marker positions.
-- **`Point.x` / `Point.y` are percentages.** Markers position via inline `left: ${x}%; top: ${y}%`
-  inside the scaled image container.
-- **Hard-coded label collision rules.** Two specific point titles (`하느재 등산로 입구 부근`,
-  `공원 관리소 부근`) get bespoke positioning to avoid label overlap. Adding new points may need
-  similar special cases.
+- **Bake the data layer (§7a)**: cats are read once server-side via the Admin SDK
+  (`getAllCatsServer`) and threaded through as props. The old per-point client waterfall
+  (`getCatsByPointId` × N after hydration) is gone; `thumbnailPreloader` only warms the image
+  _files_ into cache.
+- **Client-only map**: Leaflet touches `window`, so `LeafletMountainMap` is loaded via
+  `next/dynamic` with `ssr: false` and a Korean loading placeholder.
+- **`CRS.Simple` image map**: the mountain photo is the coordinate plane addressed as `[y, x]`;
+  stored point coords are **percentages** (x from left, y from top) projected at render time —
+  Firestore/`Point` are never mutated.
+- **Portrait/landscape by device, not orientation**: phones always get the pre-rotated (90° CW)
+  portrait image; a phone held in landscape gets a "rotate to portrait" notice, not a sideways
+  map. `useIsMobile` / `useIsPhoneLandscape` drive this.
+- **Shared filter logic**: `cat-filters.ts` is the single source of truth so the public
+  `CatsBrowser` and the admin cat grid apply identical predicates.
 
 ## External Integrations
 
-- **Firestore** — `cats` collection (queried by `dwelling` and `prev_dwelling`); `points`
-  collection (full scan via `getDocs`).
-- **Firebase Storage** — `cat.thumbnailUrl` is a Firebase Storage URL; `next.config.js`
-  whitelists `firebasestorage.googleapis.com` under `images.remotePatterns`.
-- **`/public/images/`** — Static map background (`screenshot_mt_geyang_50.png`) and compass
-  (`arrow_north.svg`).
+- **Firestore** (via Admin SDK on the server for `getAllCatsServer`; via `PointService` for
+  points) — the `cats` collection (`dwelling`, `prev_dwelling`) and points.
+- **Firebase Storage** — cat thumbnail image URLs (preloaded, then served through Next
+  `<Image>`).
 
 ## Watch-outs
 
-- The satellite image path is hard-coded in `MountainViewer.tsx` line ~45
-  (`/images/screenshot_mt_geyang_50.png`). Multi-mountain support here is incomplete — the
-  image source needs to come from `getMountainConfig()` once a second mountain ships.
-- Read-path errors return `[]` / `null` and only `console.error`. This silently degrades the UX
-  to "no cats" if Firestore is misconfigured. Consider raising a visible error state for the
-  initial server fetch.
-- `RandomCatThumbnail` re-randomizes on every page load (memoized only within a render). If
-  consistent thumbnails per session are desired, hash on `pointId` instead of using `Math.random()`.
-- The catCache in `RandomCatThumbnail` is module-scoped and never invalidated. Edits made
-  through the admin CMS require a full reload to appear on the public map.
+- **Clustering was rewritten deliberately.** `leaflet.markercluster` rebuilt its grid off the
+  map's live (fractional `CRS.Simple`) zoom and caused device-dependent breakage (pins
+  vanishing / stuck pan on some phones). `mapClustering.ts` computes groups **once** in a fixed
+  pixel space and never re-evaluates on zoom — see `log/DEBUG_LOG.md`. Keep it pure and
+  zoom-independent.
+- **The mobile projection rotates points with the image** (`x' = 1 − y`, `y' = x`). If you
+  touch `pointToLatLng`, verify both layouts.
+- **`getAllCatsServer` logs and re-raises** — a failed build read must surface, not silently
+  ship an empty map. Don't add a swallow-and-return-`[]` fallback.
+- A cat can appear in **both** a point's `current` and another point's `former` (moved
+  dwellings) — `groupCatsByPoint` buckets each independently.
+  </content>
