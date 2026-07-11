@@ -9,6 +9,14 @@
 >
 > Companion: [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §10 ·
 > latest hand-off [`2026-07-11-handoff-28.md`](../handoff/2026-07-11-handoff-28.md)
+>
+> **Cross-checked 2026-07-11** against the dead-code removal
+> ([`dead-code-removal-assessment-20260711.md`](./dead-code-removal-assessment-20260711.md),
+> commit `7a46db1`): nothing in this plan referenced the removed code. The API surface
+> shrank by 5 unreferenced routes (`auth/status`, `feeding-spots-basic`,
+> `fetch-playlists`, `manage-playlist-membership`, `test-youtube-auth`) — none were in
+> the §5.5 sweep (the §5.5 `admin/youtube-auth/status` entry is the separate, live
+> route). Smoke stays 26 tests (§1.8).
 
 **Legend:** `[ ]` todo · `[~]` in progress · `[x]` done · `[-]` deferred/out of scope
 

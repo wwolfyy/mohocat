@@ -10,6 +10,11 @@
 >
 > **Exit criterion (§7):** one trivial Playwright spec passes locally _and_ in
 > GitHub Actions against the emulator-backed, seeded, prod-mode app.
+>
+> **Cross-checked 2026-07-11** against the dead-code removal (commit `7a46db1`):
+> no impact — the F1–F12 flag citations all sit in files the cleanup didn't touch
+> (line numbers re-verified), and WP3's Admin-SDK consumer list is fully live.
+> (`cat-reads.ts` is at `src/lib/server/cat-reads.ts`.)
 
 **Legend:** `[ ]` todo · `[~]` in progress · `[x]` done · `[-]` deferred ·
 🔬 spike (verify before building on it)
@@ -107,7 +112,7 @@ pre-planned fallback so a failed spike changes the _how_, not the _whether_.
       (apiKey `demo-key`, projectId `demo-mohocat`, the bucket name, authDomain),
       `MOUNTAIN_ID=geyang`, `FIREBASE_PROJECT_ID_OVERRIDE=demo-mohocat` (WP4).
 - [ ] npm scripts: `test:e2e` (wraps `firebase emulators:exec --project
-    demo-mohocat`), `test:e2e:ui`, `seed:emulators`.
+  demo-mohocat`), `test:e2e:ui`, `seed:emulators`.
 - [ ] `tests/e2e/` skeleton dirs per the main plan §3.
 
 ### WP2 — Client SDK emulator wiring (`src/services/firebase.ts`) — F1, F2
@@ -147,7 +152,7 @@ pre-planned fallback so a failed spike changes the _how_, not the _whether_.
       emulator; else the emulator-gated `file.download()` branch.
 - [ ] F8 (script rewrites `mountains.json`): no code change — document in
       `tests/e2e/README.md` that a local e2e run dirties `config/mountains/
-    mountains.json` (same as any local `npm run build`) and it must not be
+  mountains.json` (same as any local `npm run build`) and it must not be
       committed.
 - [ ] Prove: seeded emulator → `npm run fetch:assets` exits 0, thumbnails +
       about photo land in `public/images/…`, fail-loud guards still fire when a
@@ -168,7 +173,7 @@ plan §5 needs:
       ⚠️ doc ids therefore must not contain `_` themselves (the split would
       shred them) — use hyphens.
 - [ ] **About photo:** one file at `about-photos/geyang/{exact filename from
-    mountains.json → geyang.about.mainPhoto.filename}` — F7 fails the build on
+  mountains.json → geyang.about.mainPhoto.filename}` — F7 fails the build on
       any mismatch, so the seed reads the filename **from the config**, never
       hardcodes it.
 - [ ] **Points (~4 docs):** valid x/y for the geyang map; one with a
@@ -222,7 +227,7 @@ plan §5 needs:
 ### WP8 — Local loop, CI workflow, docs
 
 - [ ] Prove the full local chain: `firebase emulators:exec --project demo-mohocat
-    "seed && npm run build && npx playwright test"` → trivial spec green.
+  "seed && npm run build && npx playwright test"` → trivial spec green.
       (Env vars from `emulators:exec` propagate through build → `webServer`
       `next start` → specs, satisfying constraint "client env baked at build".)
 - [ ] `.github/workflows/ci.yml`: - **Job `checks`:** `npm ci` → `tsc --noEmit` → `npm run lint` → `npm test`. - **Job `e2e`** (needs `checks`): cache node_modules + Playwright browsers + emulator jars → `playwright install --with-deps chromium` → the WP8
