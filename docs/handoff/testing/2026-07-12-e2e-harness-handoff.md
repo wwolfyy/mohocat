@@ -1,7 +1,8 @@
 # 산냥이집냥이 — Testing Hand-off (Playwright e2e harness + CI)
 
-**Date:** 2026-07-12 · **Branch:** `dev` · **Committed** to `dev` in 2 commits
-(harness/code/CI, then docs/logs) · **Push:** ❌ not pushed.
+**Date:** 2026-07-12 · **Branch:** `dev` · **Committed** to `dev` in 3 commits
+(harness/code/CI, then docs/logs, then the landing-marker bake fix — see the
+2026-07-12 update below) · **Push:** ❌ not pushed.
 
 > **This is a standalone testing hand-off — deliberately kept OUT of the numbered
 > `docs/handoff/handoff-NN` engineering series.** It is the single narrative for the
@@ -14,7 +15,35 @@
 [`docs/planning/playwright-ci-plan.md`](../../planning/playwright-ci-plan.md) (scope) +
 [`…-prerequisite-plan.md`](../../planning/playwright-ci-prerequisite-plan.md) (this harness, ✅ EXECUTED),
 [`log/FEATURE_MOD_LOG.md`](../../../log/FEATURE_MOD_LOG.md) (1 new: harness),
-[`log/DEBUG_LOG.md`](../../../log/DEBUG_LOG.md) (1 new: non-admin login).
+[`log/DEBUG_LOG.md`](../../../log/DEBUG_LOG.md) (2 new: non-admin login; landing-marker bake).
+
+---
+
+## Update — 2026-07-12: landing-marker bake bug found & fixed (harness green)
+
+On picking this up, the **one real spec failed reproducibly** on a fresh machine:
+`landing.smoke.spec.ts` rendered the map but **zero markers** (2× full
+`npm run test:e2e`, desktop + mobile). Not a harness defect — an **incomplete §7a
+migration** in app code: `src/app/page.tsx` baked **cats** via the Admin SDK but still
+read **points** via the **client Web SDK**, which doesn't reliably connect to the
+Firestore emulator during `next build`, so the map baked with an empty point set.
+(Production was never affected — there the client SDK hits real Firebase.)
+
+**Fixed** by adding `getAllPointsServer()` (`src/lib/server/point-reads.ts`, Admin SDK,
+mirrors `cat-reads.ts`) and switching `page.tsx` to it — commit
+`02c412a` (with owner sign-off, since it touches a prod read path; functionally
+identical). **Harness now 3/3 green, twice**, markers appearing in ~2s instead of a 25s
+timeout. Full write-up: `log/DEBUG_LOG.md` (2026-07-12, newest).
+
+**Net effect on this hand-off:** §3's "verified green" holds again; **Phase 2 (`public/`)
+and Phase 6 (`api/`) are unblocked and ready to start** (§4). The two owner actions in
+the TL;DR still stand.
+
+> **Successor note:** Java must be on PATH for the emulators
+> (`export PATH="/usr/local/opt/openjdk/bin:$PATH"` on macOS, §6) — the suite can't run
+> without it. Leftover emulator/`next start` processes from an interrupted run hold the
+> fixed ports (auth 9099 / firestore 8088 / storage 9199 / server 3100); kill them before
+> re-running.
 
 ---
 
