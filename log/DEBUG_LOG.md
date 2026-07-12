@@ -11,6 +11,39 @@
 
 ---
 
+## 2026-07-12 — Landing map bakes markerless in the e2e harness — points read via client SDK at build (incomplete §7a)
+
+**Symptom:** The e2e landing smoke spec (`tests/e2e/public/landing.smoke.spec.ts`)
+failed reproducibly (2 full `npm run test:e2e` runs, desktop + mobile): the map,
+header and tiles render but **zero `.leaflet-marker-icon`** appear — the assertion
+times out at 25s. Only the admin `storageState` setup passed.
+
+**Root cause:** `src/app/page.tsx` read **cats** server-side via the Admin SDK
+(`getAllCatsServer`, §7a) but still read **points** via the **client Web SDK**
+(`getPointService().getAllPoints()`). During `next build`, the client SDK does **not**
+reliably connect to the Firestore emulator (build log shows it reaching _real_
+Firestore: `PERMISSION_DENIED on resource project demo-mohocat`), so `getAllPoints()`
+returned `[]` and the home page **baked an empty point set** → `MountainViewer` got
+`points=[]` → `usePointMarkers` produced no markers. Confirmed by inspection: the baked
+`.next/server/app/index.html` contained the seeded **cats** (Admin read) but **no point
+coords/titles** (client read); the emulator itself held all 4 points (REST); `/api/points`
+at **runtime** returned all 4 (client SDK connects fine once the server is live); and a
+manual rebuild against a _warm_ emulator baked points correctly — i.e. a build-time
+connection race, nondeterministic. Production was never affected: there the client SDK
+hits **real** Firebase, whose rules allow public point reads. Points were simply the one
+data path §7a ("bake the data layer") never migrated off the client SDK.
+
+**Fix:** added `getAllPointsServer()` (`src/lib/server/point-reads.ts`, Admin SDK) —
+mirroring `getAllCatsServer` in `cat-reads.ts`, logs + re-raises on failure — and switched
+`src/app/page.tsx` to `Promise.all([getAllPointsServer(), getAllCatsServer()])`. Both
+map data sources now bake deterministically via the Admin SDK (which honours
+`FIRESTORE_EMULATOR_HOST`). The client `getPointService` is untouched; production reads
+the same `points` collection, so behaviour is functionally identical.
+
+**Verified:** `npx tsc --noEmit` clean; `npm run test:e2e` now **3 passed** — and the
+markers appear in ~2s instead of the prior 25s timeout (data is baked, not raced),
+confirmed across two consecutive green runs.
+
 ## 2026-07-11 — Non-admin login fails under the repo Firestore rules (emulator) — `ensureUserExists` self-write denied
 
 **Symptom:** In the e2e harness, `global.setup.ts` signs **admin** in fine but a
