@@ -366,14 +366,36 @@ shard the matrix later only if needed.
 
 ### Phase 2 — `public/` suites
 
-- [ ] Nav/footer integrity spec (desktop + mobile hamburger).
-- [ ] Home map spec (markers, avatars-baked/no-client-Firestore, cat modal).
-- [ ] Mobile map spec (clusters, spiderfy, rotate-notice).
-- [ ] Galleries + adoption spec.
-- [ ] Albums + Lightbox/VideoPlayer + back-button-closes-modal spec.
-- [ ] 공지 list/detail + link-token spec; about/FAQ/privacy/terms render spec.
-- [ ] Anonymous gating spec (butler/mypage/동참).
-- [ ] Console-error watchdog fixture wired into all of the above.
+> **Written 2026-07-12** (7 spec files, ~60 tests, desktop + mobile). **6/7 verified
+> green** against the reused emulator-seeded server; `albums.spec.ts` + the canonical
+> full-suite `npm run test:e2e` gate are the outstanding validation. Details + scoping
+> decisions in the testing hand-off (`docs/handoff/testing/2026-07-12-e2e-harness-handoff.md`,
+> "Phase 2 `public/` suites written"). Uncommitted at time of writing.
+
+- [x] Nav/footer integrity spec (`nav.spec.ts`) — desktop dropdowns + mobile hamburger +
+      footer; anonymous-clickable destinations only (permission-gated 사진첩/동영상 +
+      집사메뉴 excluded → asserted in the gating spec).
+- [x] Home map spec (`home-map.spec.ts`) — markers, **avatars-baked / no-client-Firestore**,
+      marker → CatGallery → CatInfo (작명 사유). Desktop-scoped marker flow.
+- [x] Mobile map spec (`mobile-map.spec.ts`) — portrait pins + tap → gallery; landscape
+      rotate-notice. **`[-]` clusters/spiderfy deferred** — geyang sets `map.clustering:
+  false` (baked static import, not runtime-overridable); needs a clustering-enabled
+      fixture mountain. (`utils/mapClustering` is unit-testable independently.)
+- [x] Galleries + adoption spec (`galleries-adoption.spec.ts`) — 냥이들 search + detail;
+      입양홍보 adoptable-only gallery + 소식 accordion/search empty-state. (`[-]` no-adoptables
+      empty state — needs a separate seed; covered the 소식 search empty state instead.)
+- [~] Albums + Lightbox/VideoPlayer + back-button-closes-modal spec (`albums.spec.ts`) —
+  **written, not yet run green**: depends on the spike-S3 public-served album fixtures,
+  which only serve after a fresh build (a reused server snapshots `public/` at boot).
+  Validate in the full `npm run test:e2e` gate.
+- [x] 공지 list/detail + about/FAQ/privacy/terms render spec (`announcements-static.spec.ts`)
+      — list → `[id]` detail → back; static pages render + zero mobile h-overflow. **`[-]`
+      link-token interaction** out of scope for 공지 (detail renders `post.message` as plain
+      text; token processing lives in the cat/adoption surfaces, not here).
+- [x] Anonymous gating spec (`anonymous-gating.spec.ts`) — butler 접근 제한; `/mypage` →
+      `/login`; 동참 login-required; nav permission-gating (사진첩/동영상 spans, 집사메뉴 disabled).
+- [x] Console-error watchdog fixture wired into all of the above (shared `setup/test.ts`,
+      auto). Allowlist gained `"Failed to fetch RSC payload"` (benign redirect prefetch-abort).
 
 ### Phase 3 — `auth/`
 

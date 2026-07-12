@@ -19,6 +19,72 @@
 
 ---
 
+## Update — 2026-07-12 (cont.): Phase 2 `public/` suites written
+
+The next workstream is under way: **all Phase 2 `public/` specs are written** (main
+plan §8 Phase 2). Seven new spec files under `tests/e2e/public/`, ~60 tests across
+the `chromium-desktop` + `mobile` projects:
+
+| Spec                           | Covers                                                                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `nav.spec.ts`                  | anonymous-clickable nav + footer links resolve (no 404); desktop dropdowns / mobile hamburger expose them                   |
+| `home-map.spec.ts`             | one pin per point; **§7a baked avatars ⇒ zero client Firestore calls**; marker → CatGallery → CatInfo (incl. 작명 사유)     |
+| `mobile-map.spec.ts`           | portrait pins + tap → gallery; landscape rotate-notice                                                                      |
+| `galleries-adoption.spec.ts`   | 냥이들 search + detail modal; 입양홍보 adoptable-only gallery + 소식 accordion/search empty-state                           |
+| `announcements-static.spec.ts` | 공지 list → `[id]` detail → back; about/FAQ/privacy/terms render + zero mobile h-overflow                                   |
+| `anonymous-gating.spec.ts`     | butler 접근 제한; `/mypage` → `/login`; 동참 login-required; nav permission-gating (사진첩/동영상 spans, 집사메뉴 disabled) |
+| `albums.spec.ts`               | photo Lightbox open/nav/close + **back-button-closes** (`useModalLayer`); video grid + player shell                         |
+
+**Verification state:** the first **six** are **verified green** against the running
+emulator-seeded server (run per-file with `npx playwright test <file>` reusing the
+`:3100` server). **`albums.spec.ts` is written but NOT yet run green** — it depends on
+the spike-S3 public-served album fixtures, which `next start` only serves after a
+fresh build (a reused server snapshots `public/` at boot). **The canonical full-suite
+gate (`npm run test:e2e`) has not been run yet** — it's the outstanding validation
+step (see below). `npx tsc --noEmit` is clean. **All of this is uncommitted** on `dev`.
+
+**Supporting changes (test-only — no `src/`, prod build path untouched):**
+
+- Created the missing **spike-S3 album fixtures** (`tests/e2e/fixtures/images/test-fixtures/album-0{1,2}.jpg`)
+  and a `copyPublicFixtures()` step in `scripts/test/seed-emulators.mjs` that lays them
+  into the gitignored `public/images/test-fixtures/` **before the build** (so
+  `media.json`'s `/images/test-fixtures/*` URLs resolve). `.gitignore` updated.
+- Added `"Failed to fetch RSC payload"` to the console-watchdog allowlist
+  (`tests/e2e/setup/test.ts`) — benign Next.js prefetch-abort noise from full-page
+  redirects (e.g. `/mypage` → `/login`).
+
+**Scoping decisions baked into the specs (verified against source, not the plan text):**
+
+- **Mobile clustering / spiderfy is NOT exercisable** with the geyang fixture —
+  `config/mountains/mountains.json` sets `map.clustering: false`, and that flag is a
+  static import baked at build, not runtime-overridable. Covering spiderfy e2e needs a
+  **clustering-enabled fixture mountain**; tracked as a Phase-2 gap (the clustering math
+  in `utils/mapClustering` is unit-testable independently).
+- **公지 detail renders `post.message` as plain text** — link-token processing lives in
+  the cat/adoption surfaces (`processTextWithLinks` / `CatLinkedText`), not on the
+  announcement detail. Link-token interaction is therefore **out of scope for the 공지
+  spec** (the fixture's "링크 토큰" announcement is a poor vehicle; a token test belongs
+  in a cat/adoption context and needs a token-bearing fixture).
+- **`photo_album` / `video_album` are permission-gated** (`view-photo` / `view-video`),
+  so anonymous users see them as **disabled nav spans**, not links — the nav-integrity
+  spec excludes them and the gating is asserted in `anonymous-gating.spec.ts`. (The album
+  _pages_ still render for anonymous by direct URL — only the nav entry is gated.)
+- **Adoptable empty-state** needs a no-adoptables seed (not available); the reachable
+  **소식 search** empty-state is covered instead.
+
+**Outstanding validation (do this next):** run `npm run test:e2e` (rebuild → seed lays
+down album fixtures → full suite, all projects) to (a) validate `albums.spec.ts`,
+(b) confirm the whole Phase-2 set green together, and (c) reconfirm the prod build path
+is untouched. At the time of writing this was blocked only by an interactive
+`test:e2e:ui` session holding the fixed ports (9099/8088/9199/3100) — kill it first.
+
+**After that:** **Phase 6 `api/`** is still unblocked and unwritten (good next target);
+**Phases 3–5** (`auth`/`member`/`admin`) remain blocked on the §5 non-admin-login
+decision. Then Phase 7 (flake audit + `PROJECT_PLAN`/plan-checklist updates + this
+hand-off's final state).
+
+---
+
 ## Update — 2026-07-12: landing-marker bake bug found & fixed (harness green)
 
 On picking this up, the **one real spec failed reproducibly** on a fresh machine:
@@ -49,11 +115,13 @@ the TL;DR still stand.
 
 ## TL;DR
 
-The **e2e test _harness_ and CI are built and green** — but the actual test _suites_
-are **not written yet** (that's the next workstream). Today there is exactly **one
-real spec** (a landing-page smoke test) plus an admin-login setup, proving the whole
-machine works end-to-end: **emulators → seed → real prod build → `next start` →
-Playwright**, hermetic, no secrets.
+The **e2e test _harness_ and CI are built and green**, and the **Phase 2 `public/`
+suites are now written** (see the newest update above — 6/7 verified, `albums.spec.ts`
+
+- the full-suite gate pending a clean `npm run test:e2e`). Before that the machine had
+  exactly one real spec (landing smoke) + admin-login setup, proving the whole chain
+  works end-to-end: **emulators → seed → real prod build → `next start` → Playwright**,
+  hermetic, no secrets.
 
 **Two owner actions are outstanding** (neither blocks writing more tests):
 
@@ -128,10 +196,15 @@ storage 9199, test server 3100.
 
 ## 4. What is NOT here yet (the next workstream)
 
-**No real test suites exist.** The dozens of specs in the main plan (§5) — nav
-integrity, map-marker → cat modal, galleries, adoption, albums/lightbox, auth flows,
-member flows, admin CMS, API-security — are **unwritten**. The folders
-`tests/e2e/{auth,member,admin,api}/` are empty placeholders.
+> **Superseded in part — see the "Phase 2 `public/` suites written" update at the top.**
+> The `public/` specs (nav, map-marker → cat modal, galleries, adoption, albums/lightbox,
+> 공지, static pages, anonymous gating) **now exist** (6/7 verified; albums + full-suite
+> gate pending a clean run). The rest below still stands.
+
+The remaining main-plan specs — **auth flows, member flows, admin CMS, API-security** —
+are **unwritten**. The folders `tests/e2e/{auth,member,admin,api}/` are empty
+placeholders. **Phase 6 `api/`** is unblocked (good next target); **Phases 3–5**
+(`auth`/`member`/`admin`) remain blocked on the §5 non-admin-login decision.
 
 Recommended order (main-plan Phases 2–6):
 

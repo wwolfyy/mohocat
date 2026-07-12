@@ -74,6 +74,10 @@ google_svs_account.json
 public/images/about-photos/*
 public/images/thumbnails/*
 
+# e2e album fixtures — public/-served (spike S3), copied from
+# tests/e2e/fixtures/images/test-fixtures/ by scripts/test/seed-emulators.mjs.
+public/images/test-fixtures/
+
 # Terraform — never commit real secrets or local state.
 # (Dir is parked/stale under _infra/_terraform; patterns kept current in case it's reactivated.)
 _infra/_terraform/.terraform/

@@ -15,7 +15,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getStorage } from 'firebase-admin/storage';
 import { readFile } from 'node:fs/promises';
-import { readdirSync } from 'node:fs';
+import { readdirSync, mkdirSync, copyFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -53,7 +53,11 @@ const readJson = async (name) => JSON.parse(await readFile(path.join(FIXTURES, n
 /** Delete-then-write a set of docs (each with an `id`) into a collection. */
 async function seedCollection(collection, docs) {
   for (const { id, ...data } of docs) {
-    await db.collection(collection).doc(id).delete().catch(() => {});
+    await db
+      .collection(collection)
+      .doc(id)
+      .delete()
+      .catch(() => {});
     await db.collection(collection).doc(id).set(data);
   }
   console.log(`[seed] ${collection}: ${docs.length} doc(s)`);
@@ -61,7 +65,11 @@ async function seedCollection(collection, docs) {
 
 /** Delete-then-write a single fixed-id doc. */
 async function seedDoc(collection, docId, data) {
-  await db.collection(collection).doc(docId).delete().catch(() => {});
+  await db
+    .collection(collection)
+    .doc(docId)
+    .delete()
+    .catch(() => {});
   await db.collection(collection).doc(docId).set(data);
   console.log(`[seed] ${collection}/${docId}`);
 }
@@ -109,6 +117,23 @@ async function uploadStorageFixtures() {
   console.log('[seed] storage: thumbnails + about photo uploaded');
 }
 
+/**
+ * Album media is served from `public/` (spike S3), not emulator Storage — so
+ * `next/image` needs no localhost remotePattern. Lay the committed source
+ * fixtures down where the seeded `media.json` URLs (`/images/test-fixtures/*`)
+ * expect them, before the build. The destination is gitignored.
+ */
+function copyPublicFixtures() {
+  const srcDir = path.join(FIXTURES, 'images', 'test-fixtures');
+  const destDir = path.resolve(__dirname, '..', '..', 'public', 'images', 'test-fixtures');
+  mkdirSync(destDir, { recursive: true });
+  const files = readdirSync(srcDir).filter((f) => /\.(jpe?g|png|webp|svg)$/i.test(f));
+  for (const name of files) copyFileSync(path.join(srcDir, name), path.join(destDir, name));
+  console.log(
+    `[seed] public fixtures: ${files.length} album file(s) -> public/images/test-fixtures`
+  );
+}
+
 async function main() {
   console.log(`[seed] project=${PROJECT_ID} bucket=${STORAGE_BUCKET}`);
   console.log(`[seed] firestore=${process.env.FIRESTORE_EMULATOR_HOST}`);
@@ -143,6 +168,7 @@ async function main() {
 
   await seedAuthAndUsers(users);
   await uploadStorageFixtures();
+  copyPublicFixtures();
 
   console.log('[seed] done.');
 }

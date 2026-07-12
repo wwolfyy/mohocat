@@ -16,6 +16,10 @@ const ALLOWED_ERROR_SUBSTRINGS: string[] = [
   // next/image occasionally warns about the fake 1x1 fixture images; not a real failure
   'Image with src',
   // React dev "download the React DevTools" and similar are warnings, not errors — excluded by level anyway
+  // A full-page redirect (e.g. /mypage → /login) or logout aborts Next.js's
+  // in-flight RSC link prefetches; Next logs this and falls back to a browser
+  // navigation. Benign navigation-abort noise, not an app error.
+  'Failed to fetch RSC payload',
 ];
 
 function isAllowed(text: string): boolean {
