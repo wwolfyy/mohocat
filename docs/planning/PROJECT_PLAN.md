@@ -44,7 +44,7 @@
 | Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                                                                                                                                                                                       |
 | Compliance / legal                         | `[x]` done        | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed (accepted, out of workstream):** professional legal review before scaling; phone/Kakao signup consent; security audit; Kakao scope verification.                                                                                                                                                                                        |
 | Multi-tenant hardening                     | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Testing & quality gates                    | 🚧 placeholder    | §10 — no automated coverage today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Testing & quality gates                    | 🚧 building       | §10 — Vitest (40) + **Playwright e2e harness & CI landed 2026-07-11** (emulator-backed); e2e spec suites (main-plan Phase 2+) next.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                |
 | **Admin manual / operator docs**           | `[x]` started     | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + `docs/manuals/deployment/new-mountain-setup.md` (🚧 provisioning placeholder).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
@@ -690,11 +690,11 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 ---
 
-## 10. 🚧 Testing & quality gates — **NEXT UP (2026-07-11)**
+## 10. 🚧 Testing & quality gates — **ACTIVE (2026-07-11)**
 
-> **Goal (placeholder):** coverage was **zero**; a first structural baseline now
-> exists. Build it out from there. **This is the incoming active workstream** —
-> the owner is kicking off automated testing next (scope to be planned).
+> **Goal:** coverage was **zero**; now Vitest (40 tests) + an emulator-backed
+> **Playwright e2e harness with GitHub Actions CI** are in place (harness landed
+> 2026-07-11). Next: build out the e2e spec suites (main-plan Phases 2–6).
 
 **Done:**
 
@@ -705,16 +705,32 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       regression net for the deployment cleanup
       ([`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md)).
 
+- [x] **Playwright e2e harness + CI foundation landed (2026-07-11)** — the
+      prerequisite plan is **executed**: a hermetic Firebase Emulator Suite
+      (Auth+Firestore+Storage) seeded with hand-authored fixtures drives the real
+      prod build (`next build` → `next start`) under Playwright, wired into a
+      greenfield `.github/workflows/ci.yml` (checks + emulator-backed e2e, no
+      secrets). All env-gated `src/` touches (WP2/WP3/WP4/WP7) are off in prod;
+      prod build verified untouched. Trivial spec green locally (desktop + mobile
+      landing map + admin `storageState`, ~6s). See
+      [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md)
+      §7 and the 2026-07-11 `FEATURE_MOD_LOG` entry. **Owner follow-ups:** push/PR
+      to confirm CI 3× green + branch protection; decide the non-admin
+      `users`-write rule question that blocks non-admin login (2026-07-11
+      `DEBUG_LOG`).
+
 **Plans drafted (2026-07-11):**
 
 - [`playwright-ci-plan.md`](./playwright-ci-plan.md) — the Playwright E2E suite
   (public / auth / member / admin / API-security) against the **Firebase Emulator
-  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI.
+  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phase 0+1
+  done** (harness); **Phase 2 `public/` + Phase 6 `api/` are unblocked now**;
+  Phases 3–5 (signed-in) wait on the non-admin-login decision.
 - [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md) —
   the enabler plan that must land first: adopts the main plan's recommendations
   as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
   packages (emulator wiring, asset-script compat, fixtures/seed, harness, CI).
-  **Execution starts here.**
+  ✅ **EXECUTED.**
 
 **Candidate scope — _confirm with user_:**
 
@@ -726,7 +742,8 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       component/unit tests.
 - [ ] Smoke/UI tests for the critical public paths (map loads, gallery opens,
       login renders).
-- [ ] CI wiring beyond `tsc`/lint.
+- [x] CI wiring beyond `tsc`/lint — `.github/workflows/ci.yml` (checks +
+      emulator-backed Playwright e2e) landed 2026-07-11.
 
 ---
 

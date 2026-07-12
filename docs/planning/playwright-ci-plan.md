@@ -354,7 +354,15 @@ shard the matrix later only if needed.
 > (WP1–WP8) with fallbacks. Phases 2+ below start only when its exit criteria
 > (trivial spec green locally + 3× in CI, prod build path untouched) are met.
 
-- [ ] Prerequisite plan executed to its §7 exit criteria.
+- [x] **Prerequisite plan executed (2026-07-11).** Harness green locally (3
+      specs: desktop + mobile landing, admin storageState); emulator wiring
+      (WP2/WP3/WP4), fixtures + seed (WP5/WP7), Playwright config + watchdog +
+      trivial spec (WP7), and CI workflow (WP8) all landed; prod build verified
+      untouched. **Two owner follow-ups before Phase 2 hardens:** (1) push/PR to
+      confirm CI 3× green + branch protection; (2) the non-admin `users`-write
+      rule decision that blocks member/admin (non-admin) login (prereq §3/S4).
+      Phase 2 `public/` + Phase 6 `api/` specs are unblocked now; Phases 3–5
+      (signed-in) wait on (2).
 
 ### Phase 2 — `public/` suites
 

@@ -11,6 +11,37 @@
 
 ---
 
+## 2026-07-11 — Non-admin login fails under the repo Firestore rules (emulator) — `ensureUserExists` self-write denied
+
+**Symptom:** In the e2e harness, `global.setup.ts` signs **admin** in fine but a
+**member** (role `butler-ground`) login never completes — the page stays on `/login`
+and setup times out waiting for the post-login redirect to `/`.
+
+**Root cause:** every login runs `permissionService.ensureUserExists(user)`
+(`src/services/permission-service.ts`), which unconditionally `updateDoc`s the
+signed-in user's own `users/{uid}` doc. But the repo `config/firebase/firestore.rules`
+`users/{userId}` **write** rule requires `hasPermission(uid, 'manage-users')` — it has
+**no self-write allowance** (`request.auth.uid == userId`). So a non-admin's self-update
+is **permission-denied**; `handleLogin` → `handleCheckUser` catches, sets the
+verify-failed error, and never redirects. Admins pass only because they hold
+`manage-users`. The Firestore **emulator enforces the repo rules** (prerequisite plan
+F12: repo rules are the source of truth and may be ahead of prod), which is what
+surfaced this — a latent divergence that would also block non-admin login anywhere the
+repo rules are the deployed rules.
+
+**Fix:** none applied yet — this is an **owner decision**, not a test-only bug, and
+changing production security rules or the login write-path to make a test pass would be
+wrong without that call. Two options: (a) relax the `users` write rule to allow a user
+to write **their own** doc (scoped to self-fields), or (b) make `ensureUserExists`
+tolerate a denied self-update (best-effort, don't block login on it). Until decided,
+`global.setup.ts` sets up **admin only**; the Phase-3 member/admin (non-admin actor)
+suites are gated on it.
+
+**Verified:** reproduced deterministically — admin `authenticate` setup passes, member
+setup fails at the redirect wait; root cause confirmed by reading the `users` write
+rule vs `ensureUserExists`'s `updateDoc`. Tracked in
+`docs/planning/playwright-ci-prerequisite-plan.md` §3 (S4).
+
 ## 2026-07-10 — Logout on /mypage strands the page on a spinner (client redirect never commits)
 
 **Symptom:** Signing out while on `/mypage` doesn't redirect anywhere — the page is
