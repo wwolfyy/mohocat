@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - run: npm ci
 
       # Cache the Playwright browser binaries and the Firebase emulator jars so
