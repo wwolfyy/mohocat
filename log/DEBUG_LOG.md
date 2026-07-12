@@ -11,6 +11,59 @@
 
 ---
 
+## 2026-07-12 — Home-map §7a "no client Firestore" spec: green per-file, red in the full gate
+
+**Symptom:** `home-map.spec.ts`'s "avatars are baked — no client Firestore request
+fires" test **passed** when run per-file (`npx playwright test home-map.spec.ts`
+reusing the running server) but **failed** in the full `npm run test:e2e`. The
+collected calls were three `http://127.0.0.1:8088/google.firestore.v1.Firestore/Listen/channel?…`
+requests — so the assertion `expect(firestoreCalls).toEqual([])` was non-empty.
+
+**Root cause:** two things. (1) The assertion was **too broad** — it asserted the
+_whole landing page_ fires zero client Firestore, but §7a only removed the
+**marker-click → gallery** per-point waterfall. The landing page still makes **one
+unrelated client `getDoc`** at init: there is **no `onSnapshot` anywhere in `src/`**,
+but the modern Firestore Web SDK routes even one-time `getDoc`/`getDocs` reads over the
+`…/Listen/channel` WebChannel, so a single init read shows up as "Listen" traffic. (2)
+It only surfaced in the full run because of **timing** — under the reused-server
+per-file run the assertion resolved before the init read landed; under the full clean
+build + parallel load the read arrived inside the observed window (a classic
+green-per-file / red-in-CI race).
+
+**Fix:** scoped the assertion to exactly what §7a removed — clear the request buffer,
+**then** click the marker and open the gallery, and assert _that action_ fires zero
+Firestore (`home-map.spec.ts`). Added a direct positive check that the marker avatar
+`<img>` src is baked into the server HTML (`cat_test-cat-01.jpg`), which is the real
+§7a invariant. Init-time page reads are now correctly out of scope.
+
+**Verified:** full `npm run test:e2e` green (64 passed / 0 failed), twice — once as the
+gate, once as the fast per-file reuse loop.
+
+## 2026-07-12 — Album Lightbox/VideoPlayer spec fails only in the full gate — overlay-intercepted clicks + order-dependent nav
+
+**Symptom:** `albums.spec.ts` was unverifiable per-file (its spike-S3 public fixtures
+only serve after a fresh build — a reused `next start` snapshots `public/` at boot), and
+in the first full `npm run test:e2e` **6/6 album tests failed**. Two distinct causes,
+neither visible until the clean build served the fixtures.
+
+**Root cause:** (1) **Clicks intercepted** — `MediaTile` lays a full-size decorative
+hover-overlay `<div class="absolute inset-0 …">` over the thumbnail, so Playwright's
+actionability check refuses to click the `<img>` ("subtree intercepts pointer events"),
+even though a real click would bubble to the tile's `onClick`. (2) **Order-dependent
+nav** — the Lightbox "다음/이전" test assumed `album-01.jpg` was the first image, but
+album order is service-defined; when it resolved **last**, `hasNext` was false, no
+"다음 사진" button existed, and the click timed out. A separate strict-mode violation
+also appeared: the grid tile caption duplicates the Lightbox description text.
+
+**Fix:** (1) album-tile clicks use `click({ force: true })` (bypasses the decorative
+overlay; the event still bubbles to the tile). (2) the nav test opens the **first grid
+tile by position** (`getByRole('img', { name: /album-0/ }).first()`) and keys on
+position — first image → forward-only, last → back-only — instead of filename; and all
+Lightbox assertions are scoped to the Lightbox portal
+(`div.fixed.inset-0` filtered by its 닫기 button) to dodge the duplicated caption text.
+
+**Verified:** full `npm run test:e2e` green (album tests pass on both desktop + mobile).
+
 ## 2026-07-12 — Landing map bakes markerless in the e2e harness — points read via client SDK at build (incomplete §7a)
 
 **Symptom:** The e2e landing smoke spec (`tests/e2e/public/landing.smoke.spec.ts`)
