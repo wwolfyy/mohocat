@@ -108,6 +108,10 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
           width: '100vw',
           aspectRatio: isMobile ? '808 / 1616' : '1616 / 808',
         }}
+        // Deterministic readiness signal for the e2e suite (no behavioural
+        // effect). On the map frame wrapper — react-leaflet's MapContainer does
+        // not forward arbitrary data-* attributes to its DOM node.
+        data-testid="mountain-map"
       >
         <LeafletMountainMap
           points={points}

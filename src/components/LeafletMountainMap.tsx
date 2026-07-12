@@ -128,7 +128,7 @@ function buildMarkerHtml(marker: ResolvedMarker, animate: boolean, labelAbove: b
          <img src="${escapeHtml(marker.thumbnailUrl)}" alt="${title}" class="w-full h-full object-cover" />
        </div>`
     : '';
-  return `<div class="relative cursor-pointer" style="width:40px;height:40px;">
+  return `<div class="relative cursor-pointer" style="width:40px;height:40px;" data-testid="map-marker">
       <div class="hidden group-hover:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-brand rounded-full animate-pulse pointer-events-none"></div>
       <div class="absolute left-1/2 -translate-x-1/2 h-0 w-0 border-l-[6px] border-r-[6px] border-t-[9px] border-l-transparent border-r-transparent border-t-brand transition-transform duration-200 group-hover:scale-125" style="bottom:calc(100% + 0.25rem); filter: drop-shadow(0 0 1px rgba(0,0,0,0.85)) drop-shadow(0 1px 1.5px rgba(0,0,0,0.5));"></div>
       ${avatar}

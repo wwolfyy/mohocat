@@ -1,0 +1,33 @@
+[
+  {
+    "uid": "test-admin-uid",
+    "email": "admin@test.local",
+    "password": "Passw0rd!admin",
+    "displayName": "테스트관리자",
+    "nickname": "관리자",
+    "role": "admin"
+  },
+  {
+    "uid": "test-member-uid",
+    "email": "member@test.local",
+    "password": "Passw0rd!member",
+    "displayName": "테스트회원",
+    "nickname": "집사회원",
+    "role": "butler-ground"
+  },
+  {
+    "uid": "test-viewer-uid",
+    "email": "viewer@test.local",
+    "password": "Passw0rd!viewer",
+    "displayName": "테스트뷰어",
+    "nickname": "뷰어",
+    "role": "viewer"
+  },
+  {
+    "uid": "test-phone-uid",
+    "phoneNumber": "+821012345678",
+    "displayName": "테스트전화회원",
+    "nickname": "전화회원",
+    "role": "viewer"
+  }
+]

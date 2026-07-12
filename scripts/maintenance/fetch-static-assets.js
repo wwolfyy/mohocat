@@ -5,8 +5,22 @@ const path = require('path');
 const axios = require('axios'); // For downloading images
 
 // --- Configuration ---
+// E2E test mode: `firebase emulators:exec` sets FIRESTORE_EMULATOR_HOST (and the
+// Auth/Storage equivalents), which the Admin SDK auto-honors. In this mode we init
+// credential-less (no service-account key) and download via file.download() rather
+// than signed URLs — spike S2 showed getSignedUrl fails without a real private key.
+// The flag/hosts are never set on Vercel, so the production path is unchanged.
+const USE_EMULATORS =
+  process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true' ||
+  !!process.env.FIRESTORE_EMULATOR_HOST;
+
 const SERVICE_ACCOUNT_KEY_PATH = 'config/firebase/mountaincats-61543-7329e795c352.json'; // Updated to use the actual service account file
-const FIREBASE_PROJECT_ID = 'mountaincats-61543'; // Your Firebase Project ID
+// Production project id, overridable for the emulator (demo-*) build — otherwise
+// the hardcoded prod id would read an empty namespace and ship a thumbnail-less build.
+const FIREBASE_PROJECT_ID =
+  process.env.FIREBASE_PROJECT_ID_OVERRIDE ||
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+  'mountaincats-61543'; // Your Firebase Project ID
 const STORAGE_BUCKET =
   process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'mountaincats-61543.firebasestorage.app';
 const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
@@ -27,6 +41,26 @@ const MOUNTAINS_CONFIG_PATH = path.join(PROJECT_ROOT, MOUNTAINS_CONFIG_PATH_RELA
 async function initializeFirebase() {
   console.log('Initializing Firebase Admin SDK...');
   try {
+    // E2E test mode: credential-less init against the emulators (spike S1). The
+    // cert()/local-key path is skipped entirely — CI has no service account.
+    if (USE_EMULATORS) {
+      if (admin.apps.length === 0) {
+        admin.initializeApp({
+          projectId: FIREBASE_PROJECT_ID,
+          storageBucket: STORAGE_BUCKET,
+        });
+        console.log(
+          `Firebase App initialized in EMULATOR mode for project '${FIREBASE_PROJECT_ID}'.`
+        );
+      } else {
+        console.log('Using existing Firebase App.');
+      }
+      return {
+        db: admin.firestore(),
+        storage: admin.storage().bucket(),
+      };
+    }
+
     let serviceAccountKey;
 
     // 1. Try environment variable first (Vercel deployment)
@@ -118,18 +152,24 @@ async function fetchThumbnailsFromStorage(bucket) {
       );
     }
 
-    // Create a map of filename (without path) to download URL
+    // Create a map of filename (without path) to a download source. In emulator
+    // mode the source is the Storage File object (downloaded via file.download());
+    // in production it's a 7-day signed URL (downloaded via axios). See downloadAsset().
     const thumbnailMap = {};
     for (const file of imageFiles) {
       try {
-        const [url] = await file.getSignedUrl({
-          action: 'read',
-          expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days
-        });
+        const source = USE_EMULATORS
+          ? file
+          : (
+              await file.getSignedUrl({
+                action: 'read',
+                expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days
+              })
+            )[0];
 
         // Extract just the filename without the thumbnails/ prefix
         const fileName = path.basename(file.name);
-        thumbnailMap[fileName] = url;
+        thumbnailMap[fileName] = source;
 
         // Debug: Show the parts for the first few files
         if (Object.keys(thumbnailMap).length <= 3) {
@@ -175,17 +215,22 @@ async function fetchAboutPhotosFromStorage(bucket) {
       );
     }
 
-    // Create a map of full path to download URL for about photos
+    // Create a map of full path to a download source (File in emulator mode, signed
+    // URL in production — see downloadAsset()) for about photos.
     const aboutPhotosMap = {};
     for (const file of imageFiles) {
       try {
-        const [url] = await file.getSignedUrl({
-          action: 'read',
-          expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days
-        });
+        const source = USE_EMULATORS
+          ? file
+          : (
+              await file.getSignedUrl({
+                action: 'read',
+                expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days
+              })
+            )[0];
 
         // Keep the full path structure for about photos (e.g., about-photos/geyang/about-main-geyang.jpg)
-        aboutPhotosMap[file.name] = url;
+        aboutPhotosMap[file.name] = source;
 
         // Debug: Show the paths for the first few files
         if (Object.keys(aboutPhotosMap).length <= 3) {
@@ -201,6 +246,18 @@ async function fetchAboutPhotosFromStorage(bucket) {
     console.error('Error fetching about photos from storage:', error);
     return {};
   }
+}
+
+// Download one asset to disk from either a Storage File (emulator mode) or a
+// signed URL (production). Keeps the two source types out of the callers.
+async function downloadAsset(source, localPath) {
+  if (USE_EMULATORS) {
+    // `source` is a @google-cloud/storage File — download() streams bytes to disk.
+    await source.download({ destination: localPath });
+    return;
+  }
+  // `source` is a signed URL string.
+  await downloadImage(source, localPath);
 }
 
 async function downloadImage(url, localPath) {
@@ -296,7 +353,7 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
       const localImageFilename = foundThumbnail; // Use the same filename as in storage
       const localImageFullPath = path.join(LOCAL_THUMBNAILS_DIR, localImageFilename);
 
-      await downloadImage(downloadUrl, localImageFullPath);
+      await downloadAsset(downloadUrl, localImageFullPath);
 
       // Generate web-accessible path
       const relativePath = path.relative(path.join(PROJECT_ROOT, 'public'), localImageFullPath);
@@ -373,7 +430,7 @@ async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
       await fsPromises.mkdir(mountainAboutDir, { recursive: true });
 
       const localImagePath = path.join(mountainAboutDir, mainPhoto.filename);
-      await downloadImage(downloadUrl, localImagePath);
+      await downloadAsset(downloadUrl, localImagePath);
 
       // Generate web-accessible path
       const relativePath = path.relative(path.join(PROJECT_ROOT, 'public'), localImagePath);

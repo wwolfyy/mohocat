@@ -1,0 +1,85 @@
+name: CI
+
+# Gates the push-based Vercel flow (dev → Preview, main → Production): run on PRs
+# to dev/main and on pushes to dev. No deploy steps here — Vercel owns deploys.
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev]
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast structural gate (~1–2 min): types, lint, and the Vitest suites. No server,
+  # no Firebase, no secrets.
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Unit + smoke tests
+        run: npm test
+
+  # Emulator-backed Playwright e2e. Hermetic: a demo-* Firebase project with fake
+  # keys means NO GitHub secrets are required.
+  e2e:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # Firebase emulators are JVM processes.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+
+      # Cache the Playwright browser binaries and the Firebase emulator jars so
+      # only the first run pays the download cost.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Cache Firebase emulators
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Single wrapper: emulators up → seed → prod build (Admin SDK reads + asset
+      # fetch against the emulators) → next start → Playwright. Env (fake NEXT_PUBLIC_*
+      # + emulator hosts) propagates through the whole tree via `.env.test` +
+      # `emulators:exec`. CI=true → retries:2, workers:2, no server reuse.
+      - name: Run e2e (emulators + Playwright)
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore

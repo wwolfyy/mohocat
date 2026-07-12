@@ -1,0 +1,13 @@
+{
+  "resources": {
+    "butler_stream": ["view-post-feeding"],
+    "butler_talk": ["view-post-butler"],
+    "photo_album": ["view-photo"],
+    "video_album": ["view-video"],
+    "about": [],
+    "contact": [],
+    "announcements": [],
+    "faq": [],
+    "adoption": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "계양산 고양이들",
+  "subtitle": "테스트 픽스처 소개 문구",
+  "mainContent": "이 문서는 e2e 테스트용 about 픽스처예요. 실제 데이터가 아니에요.",
+  "mainPhoto": {
+    "filename": "about-main-geyang.jpg",
+    "caption": "테스트 대표 사진 캡션",
+    "altText": "테스트 대표 사진",
+    "localPath": "/images/about-photos/geyang/about-main-geyang.jpg"
+  },
+  "sections": [
+    { "title": "우리의 이야기", "content": "테스트 섹션 1 본문이에요." },
+    { "title": "함께해요", "content": "테스트 섹션 2 본문이에요." }
+  ]
+}

@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Storage emulator rules — used ONLY by the Firebase Storage emulator during
+// e2e tests (referenced from firebase.json's "storage" block). Production
+// Storage rules are managed in the Firebase console and are NOT deployed from
+// this repo (CLAUDE.md: only `firebase deploy --only firestore:rules` runs).
+// Permissive access is acceptable here: the emulator is hermetic, seeded with
+// fixture placeholders, and torn down with the test job.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

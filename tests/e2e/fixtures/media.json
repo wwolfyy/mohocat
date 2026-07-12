@@ -1,0 +1,35 @@
+{
+  "_comment": "Album media. Per spike S3 (prerequisite plan §3), image/video URLs point at public/-served fixture files, NOT emulator Storage — so next/image needs no localhost remotePattern. Storage-served fixtures for these would only add flake.",
+  "cat_images": [
+    {
+      "id": "test-img-01",
+      "imageUrl": "/images/test-fixtures/album-01.jpg",
+      "fileName": "album-01.jpg",
+      "tags": ["test-cat-01"],
+      "uploadDate": "2026-01-02",
+      "uploadedBy": "admin",
+      "description": "픽스처 사진 1"
+    },
+    {
+      "id": "test-img-02",
+      "imageUrl": "/images/test-fixtures/album-02.jpg",
+      "fileName": "album-02.jpg",
+      "tags": ["test-cat-03"],
+      "uploadDate": "2026-01-03",
+      "uploadedBy": "admin",
+      "description": "픽스처 사진 2"
+    }
+  ],
+  "cat_videos": [
+    {
+      "id": "test-vid-01",
+      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoType": "youtube",
+      "tags": ["test-cat-01"],
+      "uploadDate": "2026-01-04",
+      "uploadedBy": "admin",
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "description": "픽스처 영상 1"
+    }
+  ]
+}
