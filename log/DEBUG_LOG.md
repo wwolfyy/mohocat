@@ -30,14 +30,21 @@ per-file run the assertion resolved before the init read landed; under the full 
 build + parallel load the read arrived inside the observed window (a classic
 green-per-file / red-in-CI race).
 
-**Fix:** scoped the assertion to exactly what §7a removed — clear the request buffer,
-**then** click the marker and open the gallery, and assert _that action_ fires zero
-Firestore (`home-map.spec.ts`). Added a direct positive check that the marker avatar
-`<img>` src is baked into the server HTML (`cat_test-cat-01.jpg`), which is the real
-§7a invariant. Init-time page reads are now correctly out of scope.
+**Fix (first attempt, insufficient):** scoping the assertion to the marker-click →
+gallery action (clear the request buffer, then click) — this passed twice but was
+**still flaky**: the unrelated init read fires at a nondeterministic time and, under the
+full gate's parallel load, straggled **into** the cleared post-click window (it bit
+again when the Phase-6 `api/` spec shifted timing). **Final fix:** **dropped the network
+assertion entirely** — it is unfixable in principle, because the map read and the
+unrelated init read are indistinguishable by URL (both are opaque `/Listen/channel`
+POSTs). §7a is now asserted structurally instead: the marker's cat avatar `<img>` src is
+**baked into the server HTML** (`cat_test-cat-01.jpg`) — proving no client fetch renders
+it — and the marker-click → gallery → CatInfo path is covered by a separate test.
 
-**Verified:** full `npm run test:e2e` green (64 passed / 0 failed), twice — once as the
-gate, once as the fast per-file reuse loop.
+**Verified:** full `npm run test:e2e` green across the whole suite incl. the new `api/`
+project. **Lesson:** don't assert "zero network calls of type X" when the page makes
+unrelated calls of the same shape at nondeterministic times — assert the structural
+invariant (here, server-baked DOM) instead.
 
 ## 2026-07-12 — Album Lightbox/VideoPlayer spec fails only in the full gate — overlay-intercepted clicks + order-dependent nav
 
@@ -96,6 +103,18 @@ the same `points` collection, so behaviour is functionally identical.
 **Verified:** `npx tsc --noEmit` clean; `npm run test:e2e` now **3 passed** — and the
 markers appear in ~2s instead of the prior 25s timeout (data is baked, not raced),
 confirmed across two consecutive green runs.
+
+**Update 2026-07-12 (still open — not fully fixed):** switching **points** to the Admin SDK
+removed the _frequent_ markerless bake but did **not** make it deterministic. With the full
+Phase-2 + Phase-6 suite, a markerless bake still recurs **~1 in 3** `npm run test:e2e` runs
+(all marker tests fail: landing.smoke, home-map, mobile-map). Root cause is the same class —
+a **build-time emulator-connection race**, now on the Admin-SDK read path: `getAllPointsServer`
+/ `getAllCatsServer` occasionally read an empty set before the emulator is fully ready during
+`next build`, and the page bakes empty (the read returns `[]` rather than throwing, so the
+build still succeeds). CI `retries: 2` does **not** help — it's a whole-build condition, not a
+per-test flake. A proper fix (await/retry emulator readiness before the Server-Component reads,
+or fail-loud on an empty bake) touches the prod read path and needs owner sign-off; tracked in
+plan §8 Phase 7. Until then the gate is only intermittently green.
 
 ## 2026-07-11 — Non-admin login fails under the repo Firestore rules (emulator) — `ensureUserExists` self-write denied
 

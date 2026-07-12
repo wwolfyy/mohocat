@@ -420,11 +420,31 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
 
 ### Phase 6 — `api/` security suite
 
-- [ ] Unauth-401 sweep; non-admin-403 sweep; open-by-design 200 assertions.
+> **Done 2026-07-12** (`tests/e2e/api/security.spec.ts`, request context, no browser).
+> Verified green in the full `npm run test:e2e` gate. The non-admin ID token is minted
+> straight from the Auth-emulator Identity-Toolkit REST (`signInWithPassword`) — the §5
+> UI-login blocker (`ensureUserExists`) does not gate token issuance, so signed-in API
+> coverage is unblocked without resolving §5.
+
+- [x] Unauth-401 sweep — 6 routes (admin `requireApiPermission` + contact/account-delete/
+      revalidate direct Bearer check).
+- [x] Non-admin-403 sweep — the 4 `manage-*` routes with a valid `butler-ground` token
+      (403-not-401 also proves the token verified → the gate is permission-based).
+- [x] Open-by-design 200 — `GET /api/admin/resource-permissions`.
+      (Destructive routes are only hit **unauthenticated** — the 401 lands before any
+      delete/send/revalidate side effect.)
 
 ### Phase 7 — hardening & docs
 
 - [ ] Flake audit (3× consecutive green CI runs); runtime < 10 min.
+  - [ ] ⚠️ **Known intermittent (pre-existing, app-side):** the landing map occasionally
+        bakes **markerless** at `next build` (all marker tests then fail: landing.smoke,
+        home-map, mobile-map). Same class as the DEBUG_LOG 2026-07-12 landing-marker entry
+        — the `getAllPointsServer`/`getAllCatsServer` Admin-SDK bake is **not 100%
+        deterministic**; a build-time emulator race still slips through (~1 in 3 gate runs
+        observed). CI `retries: 2` will NOT save it (whole-build issue, not per-test). Needs
+        an owner-signed build-path fix (e.g. retry/await emulator readiness before the
+        Server-Component reads) before the 3× exit criterion is meetable.
 - [ ] `tests/e2e/README.md` (run locally, conventions, fixtures).
 - [ ] Update PROJECT_PLAN §10 + §1 snapshot; FEATURE_MOD_LOG entry; hand-off.
 - [ ] Owner: enable branch protection requiring CI on PRs to `main`.

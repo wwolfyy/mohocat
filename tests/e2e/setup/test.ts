@@ -26,6 +26,19 @@ function isAllowed(text: string): boolean {
   return ALLOWED_ERROR_SUBSTRINGS.some((s) => text.includes(s));
 }
 
+// Emulator hosts (auth 9099 / firestore 8088 / storage 9199). The Firebase client
+// SDK talks to these over a WebChannel; during normal channel teardown/reconnect a
+// request can return a non-200 (e.g. Firestore's `…/Listen/channel` 400s on a
+// terminate). The browser logs a generic "Failed to load resource …" console error
+// whose only distinguishing detail is the resource URL (the message text has none),
+// so we allow-list those benign emulator-transport failures by host. Real app 4xx/5xx
+// (next/image, /api, page assets) are NOT on these hosts and still fail the test.
+const EMULATOR_HOSTS = [':9099', ':8088', ':9199'];
+
+function isEmulatorResourceFailure(text: string, url: string): boolean {
+  return /Failed to load resource/.test(text) && EMULATOR_HOSTS.some((h) => url.includes(h));
+}
+
 export const test = base.extend<{ consoleWatchdog: void }>({
   consoleWatchdog: [
     async ({ page }, use, testInfo) => {
@@ -35,7 +48,10 @@ export const test = base.extend<{ consoleWatchdog: void }>({
         if (msg.type() !== 'error') return;
         const text = msg.text();
         if (isAllowed(text)) return;
-        errors.push(`console.error: ${text}`);
+        // For failed subresource loads the failing URL is only in the location.
+        const url = msg.location()?.url ?? '';
+        if (isEmulatorResourceFailure(text, url)) return;
+        errors.push(`console.error: ${text}${url ? ` [${url}]` : ''}`);
       };
       const onPageError = (err: Error) => {
         if (isAllowed(err.message)) return;

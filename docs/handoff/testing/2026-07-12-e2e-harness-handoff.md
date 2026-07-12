@@ -1,8 +1,9 @@
 # 산냥이집냥이 — Testing Hand-off (Playwright e2e harness + CI)
 
-**Date:** 2026-07-12 · **Branch:** `dev` · **Committed** to `dev` in 3 commits
-(harness/code/CI, then docs/logs, then the landing-marker bake fix — see the
-2026-07-12 update below) · **Push:** ❌ not pushed.
+**Date:** 2026-07-12 · **Branch:** `dev` · **Committed** to `dev` across several commits
+this workstream — harness/CI, the landing-marker bake fix, **Phase 2 `public/`**, and
+**Phase 6 `api/` + flake hardening** (see the newest-first updates below) · **Push:** ❌
+not pushed (owner to push).
 
 > **This is a standalone testing hand-off — deliberately kept OUT of the numbered
 > `docs/handoff/handoff-NN` engineering series.** It is the single narrative for the
@@ -16,6 +17,67 @@
 [`…-prerequisite-plan.md`](../../planning/playwright-ci-prerequisite-plan.md) (this harness, ✅ EXECUTED),
 [`log/FEATURE_MOD_LOG.md`](../../../log/FEATURE_MOD_LOG.md) (1 new: harness),
 [`log/DEBUG_LOG.md`](../../../log/DEBUG_LOG.md) (2 new: non-admin login; landing-marker bake).
+
+---
+
+## Update — 2026-07-12 (cont. 2): Phase 6 `api/` security suite + two flake fixes
+
+**Phase 6 `api/` is DONE and green** — `tests/e2e/api/security.spec.ts` (Playwright
+request context, no browser; uses base `test`, not the page/watchdog fixture):
+
+- **Unauth → 401** across 6 routes: `POST admin/role-permissions`,
+  `GET admin/get-all-user-permissions-client`, `GET admin/youtube-auth/status`,
+  `POST admin/resource-permissions`, `POST contact`, `POST account/delete`,
+  `POST revalidate`. (Destructive routes are hit **only unauthenticated** — the 401
+  lands before any delete/send/revalidate.)
+- **Non-admin → 403** on the 4 `manage-*` routes with a valid `butler-ground` token
+  (403-not-401 also proves the token verified).
+- **Open 200:** `GET admin/resource-permissions`.
+- The non-admin ID token is minted from the **Auth-emulator Identity-Toolkit REST**
+  (`accounts:signInWithPassword`), so the **§5 blocker does not apply** — that blocks the
+  client login _redirect_ (`ensureUserExists` self-write), not token issuance. This means
+  Phases 3–5 could likely mint tokens the same way for API-level coverage; the §5 decision
+  still gates the _UI_ member/admin flows that need a real logged-in browser session.
+
+**Two flakes fixed along the way** (both surfaced only under the full gate's parallel load):
+
+1. **home-map §7a "no client Firestore" was fundamentally flaky.** The scoped-to-marker-
+   click version still failed: the landing page's unrelated init `getDoc` (routed over the
+   Firestore `/Listen/channel`; there is **no `onSnapshot` in `src/`**) fires at a
+   nondeterministic time and can't be told apart from a map read by URL. **Replaced the
+   network assertion with a structural one** — the marker's cat avatar `<img>` src is baked
+   into the server HTML (`cat_test-cat-01.jpg`); the click→gallery path stays covered by a
+   separate test. (DEBUG_LOG 2026-07-12 updated with the final resolution + lesson.)
+2. **Client-Firestore pages (공지 / 입양홍보 / albums) occasionally logged
+   `Failed to load resource: … 400`** — the emulator Firestore WebChannel returns a non-200
+   on channel teardown; the browser logs a generic console error the watchdog caught. The
+   watchdog (`setup/test.ts`) now allow-lists **"Failed to load resource" errors whose
+   resource URL is an emulator host** (9099/8088/9199), via `msg.location().url`, and records
+   the URL otherwise. Real app 4xx/5xx (next/image, `/api`, page assets) still fail. Stress-
+   verified: the client-Firestore specs ran `--repeat-each=5` (140/0) green.
+
+**⚠️ Pre-existing intermittent (NOT introduced here) — a real Phase-7 blocker:** the landing
+map sometimes **bakes markerless** at `next build` (~1 in 3 full-gate runs observed → all
+marker tests fail: landing.smoke, home-map, mobile-map). Same class as the landing-marker
+DEBUG_LOG entry — the Admin-SDK bake is **not 100% deterministic**, and **CI `retries: 2`
+won't save it** (whole-build issue, not per-test). Needs an **owner-signed build-path fix**
+(await/retry emulator readiness before the Server-Component reads) before the "3× green"
+exit criterion is achievable. Logged under plan §8 Phase 7.
+
+**Next (for a fresh session), in priority order:**
+
+1. **Fix the intermittent markerless bake** (above) — it's the gating issue for reliable
+   CI and the plan's "3× green" exit criterion; owner sign-off needed (prod read path).
+2. **Owner calls still open:** push / open a PR to watch CI go green; the **§5**
+   non-admin-login decision (gates the _UI_ member/admin flows — but note Phase 6 showed
+   API-level coverage can mint tokens from the Auth-emulator REST without it).
+3. **Phases 3–5** (`auth`/`member`/`admin`) — the remaining suites. API-level slices are
+   unblocked (emulator-minted tokens); full UI member/admin flows wait on §5.
+4. **Phase 7** hardening + `tests/e2e/README.md` conventions — after the bake fix.
+
+**State:** `npx tsc --noEmit` clean; full `npm run test:e2e` green (67/0) on a clean-bake
+run; api spec + both flake fixes verified. **Committed** to `dev` (not pushed). The only
+non-green condition is the pre-existing intermittent markerless bake above.
 
 ---
 
