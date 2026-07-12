@@ -50,27 +50,31 @@ test.describe('home map (desktop)', () => {
     }
   });
 
-  test('avatars are baked — no client Firestore request fires for the map', async ({ page }) => {
+  test('avatars are baked; marker-click → gallery fires no client Firestore', async ({ page }) => {
     const firestoreCalls: string[] = [];
     page.on('request', (req) => {
       if (isFirestoreRequest(req)) firestoreCalls.push(req.url());
     });
 
     await page.goto('/');
-    await expect(page.getByTestId('map-marker').filter({ hasText: '테스트 급식소 1' })).toBeVisible(
-      {
-        timeout: 25_000,
-      }
-    );
+    const marker = page.getByTestId('map-marker').filter({ hasText: '테스트 급식소 1' });
+    await expect(marker).toBeVisible({ timeout: 25_000 });
 
-    // Opening the gallery is exactly where the old per-point Firestore waterfall
-    // used to fire (§7a removed it); confirm the baked path stays query-free.
-    await page.getByTestId('map-marker').filter({ hasText: '테스트 급식소 1' }).click();
+    // §7a: the cat avatar is baked into the marker HTML server-side — the seeded
+    // cat's thumbnail is already in the DOM, no client fetch to render it.
+    await expect(marker.locator('img')).toHaveAttribute('src', /cat_test-cat-01\.jpg/);
+
+    // The removed §7a waterfall fired on marker-click → gallery open. Scope the
+    // no-Firestore assertion to exactly that action (the page also makes an
+    // unrelated client read at init — a getDoc over the Listen channel — which is
+    // not the map): clear, click, open gallery, assert zero Firestore requests.
+    firestoreCalls.length = 0;
+    await marker.click();
     await expect(page.getByText('현재 거주 중')).toBeVisible();
 
     expect(
       firestoreCalls,
-      `unexpected client Firestore calls:\n${firestoreCalls.join('\n')}`
+      `unexpected client Firestore calls on gallery open:\n${firestoreCalls.join('\n')}`
     ).toEqual([]);
   });
 

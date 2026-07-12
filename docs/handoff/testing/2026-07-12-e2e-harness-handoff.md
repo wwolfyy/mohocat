@@ -35,13 +35,17 @@ the `chromium-desktop` + `mobile` projects:
 | `anonymous-gating.spec.ts`     | butler 접근 제한; `/mypage` → `/login`; 동참 login-required; nav permission-gating (사진첩/동영상 spans, 집사메뉴 disabled) |
 | `albums.spec.ts`               | photo Lightbox open/nav/close + **back-button-closes** (`useModalLayer`); video grid + player shell                         |
 
-**Verification state:** the first **six** are **verified green** against the running
-emulator-seeded server (run per-file with `npx playwright test <file>` reusing the
-`:3100` server). **`albums.spec.ts` is written but NOT yet run green** — it depends on
-the spike-S3 public-served album fixtures, which `next start` only serves after a
-fresh build (a reused server snapshots `public/` at boot). **The canonical full-suite
-gate (`npm run test:e2e`) has not been run yet** — it's the outstanding validation
-step (see below). `npx tsc --noEmit` is clean. **All of this is uncommitted** on `dev`.
+**Verification state: GREEN.** The full canonical gate `npm run test:e2e` (rebuild →
+seed → build → all projects) passes — **64 passed / 13 skipped / 0 failed**, prod build
+succeeds. `npx tsc --noEmit` clean. The gate surfaced three real spec issues (all fixed):
+(1) MediaTile's full-size decorative hover-overlay intercepts pointer events → album
+tiles need `click({ force: true })`; (2) album image order is service-defined → the
+Lightbox nav test keys on **position** (first tile → forward-only; last → back-only),
+not filename, and scopes description assertions to the Lightbox portal (the grid caption
+duplicates the text); (3) the landing page makes an **unrelated** client `getDoc` (a
+Firestore Listen-channel read) at init, so the §7a "no client Firestore" assertion is
+**scoped to the marker-click → gallery action** (which is what §7a actually removed),
+plus a direct check that the marker avatar `<img>` is baked into the server HTML.
 
 **Supporting changes (test-only — no `src/`, prod build path untouched):**
 
@@ -72,13 +76,13 @@ step (see below). `npx tsc --noEmit` is clean. **All of this is uncommitted** on
 - **Adoptable empty-state** needs a no-adoptables seed (not available); the reachable
   **소식 search** empty-state is covered instead.
 
-**Outstanding validation (do this next):** run `npm run test:e2e` (rebuild → seed lays
-down album fixtures → full suite, all projects) to (a) validate `albums.spec.ts`,
-(b) confirm the whole Phase-2 set green together, and (c) reconfirm the prod build path
-is untouched. At the time of writing this was blocked only by an interactive
-`test:e2e:ui` session holding the fixed ports (9099/8088/9199/3100) — kill it first.
+**Full-suite gate: DONE** (`npm run test:e2e`, 64/13/0, prod build clean) — the album
+fixtures serve via the seed step's `copyPublicFixtures()`, and the whole Phase-2 set is
+green together. (Note: iterating on a spec without a rebuild is fine —
+`… emulators:exec "npm run seed:emulators && npx playwright test <file>"` reuses the
+existing `.next` and serves the already-built public fixtures.)
 
-**After that:** **Phase 6 `api/`** is still unblocked and unwritten (good next target);
+**Next:** **Phase 6 `api/`** is still unblocked and unwritten (good next target);
 **Phases 3–5** (`auth`/`member`/`admin`) remain blocked on the §5 non-admin-login
 decision. Then Phase 7 (flake audit + `PROJECT_PLAN`/plan-checklist updates + this
 hand-off's final state).
