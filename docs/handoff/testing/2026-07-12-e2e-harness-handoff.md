@@ -20,6 +20,47 @@ not pushed (owner to push).
 
 ---
 
+## Update — 2026-07-13 (cont.): current state + next steps (start here in a fresh session)
+
+**Both remaining blockers are cleared.** This supersedes the older "Next (in priority
+order)" list further down (which still lists the bake fix and §5 as open — they're done).
+
+**Done this session (committed to `dev`, not pushed):**
+
+- **Intermittent build hang / "markerless bake" — FIXED** (`26e8264`). Root cause was
+  misdiagnosed: not an Admin-SDK read race. `pages/cats/page.tsx` still read points via the
+  **client Web SDK** at build → hit real Firebase → dangling connection hung `next build`
+  at "Collecting build traces". Fix: switch to `getAllPointsServer()` (Admin SDK). Verified
+  10/10 gate-style builds green. See the next update section + DEBUG_LOG 2026-07-13.
+- **§5 non-admin-login — RESOLVED** (`65a934f`). Added a scoped `users` self-write rule
+  (create/update own doc, `currentRole` locked → no self-escalation) + a rules test lane
+  (`npm run test:rules`, 6/6). Full detail in §5 below.
+
+**Test suites status:** Phase 0+1 (harness/CI), **Phase 2 `public/`** (~60 tests), and
+**Phase 6 `api/`** are done + green. **Phases 3–5 are now unblocked.**
+
+**Next steps, in order:**
+
+1. **Wire `global.setup.ts` to capture a member `storageState`** — the seeded `butler-ground`
+   login self-write now passes the rule; the `member`/`admin` Playwright projects are already
+   configured for it. (This is the one setup prerequisite for Phases 3–5.)
+2. **Write Phases 3–5** (~10 spec files): `auth/` (~3 — signup/login/bad-password/logout,
+   phone-OTP, mypage logout-redirect), `member/` (~3 — butler_talk/stream, nickname edit,
+   동참 submit + 탈퇴 deletion), `admin/` (~4 — AdminAuth gate, cats edit, posts+points,
+   members+contact). Checklist: `docs/planning/playwright-ci-plan.md` §8.
+3. **Phase 7** — flake audit (3× consecutive green CI), `tests/e2e/README.md` conventions,
+   PROJECT_PLAN/plan-checklist finalization.
+
+**Owner actions still open (neither blocks writing tests):**
+
+- **Push / open a PR** to watch CI go green (3× for the exit criterion) + enable branch
+  protection on `main`.
+- **Deploy the rules change** for prod parity: `firebase deploy --only firestore:rules`
+  (the repo `users` rule never allowed the self-write, so deployed prod rules already
+  diverge — deploying brings prod in line, tighter and safer).
+
+---
+
 ## Update — 2026-07-13: the "intermittent markerless bake" is FIXED (it was a build hang, not an empty read)
 
 **The Phase-7 blocker below (§"⚠️ Pre-existing intermittent") is resolved.** Root cause was
@@ -101,16 +142,16 @@ won't save it** (whole-build issue, not per-test). Needs an **owner-signed build
 (await/retry emulator readiness before the Server-Component reads) before the "3× green"
 exit criterion is achievable. Logged under plan §8 Phase 7.
 
-**Next (for a fresh session), in priority order:**
+**Next (for a fresh session), in priority order:** _[SUPERSEDED 2026-07-13 — items 1 & 2
+are DONE; see the "current state + next steps" update at the top of this file.]_
 
-1. **Fix the intermittent markerless bake** (above) — it's the gating issue for reliable
-   CI and the plan's "3× green" exit criterion; owner sign-off needed (prod read path).
-2. **Owner calls still open:** push / open a PR to watch CI go green; the **§5**
-   non-admin-login decision (gates the _UI_ member/admin flows — but note Phase 6 showed
-   API-level coverage can mint tokens from the Auth-emulator REST without it).
-3. **Phases 3–5** (`auth`/`member`/`admin`) — the remaining suites. API-level slices are
-   unblocked (emulator-minted tokens); full UI member/admin flows wait on §5.
-4. **Phase 7** hardening + `tests/e2e/README.md` conventions — after the bake fix.
+1. ~~**Fix the intermittent markerless bake**~~ — **DONE** (`26e8264`); it was a build hang,
+   not a read race.
+2. **Owner calls still open:** push / open a PR to watch CI go green. (The **§5**
+   non-admin-login decision is **DONE** — `65a934f`, scoped `users` self-write rule.)
+3. **Phases 3–5** (`auth`/`member`/`admin`) — the remaining suites, **now fully unblocked**
+   (wire member `storageState` first).
+4. **Phase 7** hardening + `tests/e2e/README.md` conventions.
 
 **State:** `npx tsc --noEmit` clean; full `npm run test:e2e` green (67/0) on a clean-bake
 run; api spec + both flake fixes verified. **Committed** to `dev` (not pushed). The only
@@ -218,20 +259,21 @@ the TL;DR still stand.
 
 ## TL;DR
 
-The **e2e test _harness_ and CI are built and green**, and the **Phase 2 `public/`
-suites are now written** (see the newest update above — 6/7 verified, `albums.spec.ts`
+> **See the "current state + next steps" update at the very top for the live picture** —
+> this TL;DR is the original framing, kept for context.
 
-- the full-suite gate pending a clean `npm run test:e2e`). Before that the machine had
-  exactly one real spec (landing smoke) + admin-login setup, proving the whole chain
-  works end-to-end: **emulators → seed → real prod build → `next start` → Playwright**,
-  hermetic, no secrets.
+The **e2e harness + CI** and the **Phase 2 `public/`** (~60 tests) and **Phase 6 `api/`**
+suites are **built and green** (`npm run test:e2e`). The whole chain is proven end-to-end:
+**emulators → seed → real prod build → `next start` → Playwright**, hermetic, no secrets.
+Both former blockers are cleared this session: the intermittent build-hang ("markerless
+bake") is fixed (`26e8264`) and the §5 non-admin-login rule is resolved (`65a934f`).
 
-**Two owner actions are outstanding** (neither blocks writing more tests):
+**Remaining owner actions** (neither blocks writing more tests):
 
 1. **Push / open a PR** to watch CI go green in GitHub Actions (3× for the exit
    criterion) and enable branch protection.
-2. **Decide the non-admin-login question** (see §5) — it gates the signed-in
-   (member/admin) suites, not the public/api ones.
+2. **Deploy the rules change** for prod parity: `firebase deploy --only firestore:rules`
+   (see §5). The non-admin-login _decision_ itself is now made + implemented.
 
 ---
 
@@ -299,10 +341,11 @@ storage 9199, test server 3100.
 
 ## 4. What is NOT here yet (the next workstream)
 
-> **Superseded in part — see the "Phase 2 `public/` suites written" update at the top.**
-> The `public/` specs (nav, map-marker → cat modal, galleries, adoption, albums/lightbox,
-> 공지, static pages, anonymous gating) **now exist** (6/7 verified; albums + full-suite
-> gate pending a clean run). The rest below still stands.
+> **Mostly superseded — see the top "current state + next steps" update.** Phase 2
+> `public/` (7 specs, ~60 tests) **and** Phase 6 `api/` are now **written + green**. The
+> only remaining unwritten suites are **Phases 3–5** (`auth`/`member`/`admin`), and they
+> are now **unblocked** (§5 resolved). The `auth`/`member`/`admin` paragraph below is stale
+> on the "blocked" framing but still lists the right suites.
 
 The remaining main-plan specs — **auth flows, member flows, admin CMS, API-security** —
 are **unwritten**. The folders `tests/e2e/{auth,member,admin,api}/` are empty
