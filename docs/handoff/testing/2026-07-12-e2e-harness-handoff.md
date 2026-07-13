@@ -321,26 +321,30 @@ these; they just need the login fix + the specs.
 
 ---
 
-## 5. ⚠️ Open decision — non-admin login is blocked under the repo rules
+## 5. ✅ RESOLVED (2026-07-13) — non-admin login unblocked via a scoped `users` self-write rule
 
-**Owner call needed before the signed-in suites.** Every login runs
-`permissionService.ensureUserExists()`, which `updateDoc`s the user's own
-`users/{uid}` doc — but the repo `config/firebase/firestore.rules` `users` **write**
-rule requires `manage-users`, with no self-write allowance. So a **non-admin login is
-permission-denied** and never redirects. Admin works (it has `manage-users`). The
-emulator enforces the repo rules (the F12 divergence), which is what surfaced it —
-this would also break non-admin login anywhere the repo rules are the deployed rules.
+**Decision made — owner chose option 1 (relax the rule, scoped).** Background: every
+login runs `permissionService.ensureUserExists()`, which writes the user's own
+`users/{uid}` doc via the **client SDK** (create on signup / profile `updateDoc` on
+login) — but the repo `users` **write** rule required `manage-users`, with no self-write
+allowance, so **non-admin login was permission-denied** and never redirected. (Git shows
+the rule was never self-permissive — `if false` → `if manage-users` — so the deployed
+prod rules already diverge; there is no Admin-SDK fallback for this write.)
 
-Two options (both are the owner's to choose — I did **not** change security rules or
-the login path to make a test pass):
+**Applied:** a scoped self-write clause in `config/firebase/firestore.rules` →
+`match /users/{userId}`: a user may `create`+`update` their **own** doc but **cannot
+set/change `currentRole`** (the only field `hasPermission()` reads) — `create` forces
+`currentRole.role == 'viewer'` && `permissions == []`; `update` requires `currentRole`
+unchanged. Role assignment stays admin-only (`manage-users`). Covered by a new rules
+test — `tests/rules/users.rules.test.ts`, run with **`npm run test:rules`** (emulator-
+backed; 6/6 green): self create/update ok, self-escalation blocked (create + update),
+cross-user write blocked, admin cross-user write ok. Full write-up: `log/DEBUG_LOG.md`
+(2026-07-11 entry, "Fix applied 2026-07-13").
 
-1. **Relax the `users` write rule** to allow a user to write their **own** doc
-   (scoped to self-fields).
-2. **Make `ensureUserExists` tolerate** a denied self-update (best-effort; don't
-   block login on it).
-
-Until decided, `global.setup.ts` sets up **admin only**. Full write-up:
-`log/DEBUG_LOG.md` (2026-07-11) + prerequisite plan §3 (S4).
+**Next for Phases 3–5:** wire `global.setup.ts` to capture a **member** `storageState`
+(the rule no longer blocks the seeded `butler-ground` user's login self-write), then write
+the `auth`/`member`/`admin` specs. **⚠️ Deploy note:** this rule change must be pushed to
+Firebase (`firebase deploy --only firestore:rules`) for prod to match — owner action.
 
 ---
 

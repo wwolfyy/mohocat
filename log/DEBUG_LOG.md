@@ -185,13 +185,21 @@ F12: repo rules are the source of truth and may be ahead of prod), which is what
 surfaced this — a latent divergence that would also block non-admin login anywhere the
 repo rules are the deployed rules.
 
-**Fix:** none applied yet — this is an **owner decision**, not a test-only bug, and
-changing production security rules or the login write-path to make a test pass would be
-wrong without that call. Two options: (a) relax the `users` write rule to allow a user
-to write **their own** doc (scoped to self-fields), or (b) make `ensureUserExists`
-tolerate a denied self-update (best-effort, don't block login on it). Until decided,
-`global.setup.ts` sets up **admin only**; the Phase-3 member/admin (non-admin actor)
-suites are gated on it.
+**Fix (applied 2026-07-13, owner chose option (a)):** added a **scoped self-write clause**
+to `config/firebase/firestore.rules` → `match /users/{userId}`. A signed-in user may now
+`create` + `update` their **own** doc, but **cannot set/change `currentRole`** (the only
+field `hasPermission()` reads): `create` requires `currentRole.role == 'viewer'` &&
+`currentRole.permissions == []`; `update` requires `request.resource.data.currentRole ==
+resource.data.currentRole` (unchanged). Role assignment stays admin-only (the existing
+`manage-users` clause). This also corrects a latent gap — the repo rule had **never**
+allowed the self-write `ensureUserExists` performs (`if false` → `if manage-users`; git),
+so the deployed prod rules must already diverge; the app has no Admin-SDK fallback for this
+path. Covered by a new rules test (`tests/rules/users.rules.test.ts`, `npm run test:rules`,
+6/6) asserting: self create/update ok, self-escalation blocked (create + update),
+cross-user write blocked, admin cross-user write ok. (Options considered: (b) tolerate a
+denied self-update — rejected: only papers over returning users, leaves real signup broken,
+violates log-and-re-raise; (c) move the upsert behind an Admin-SDK route — deferred as the
+cleaner long-term shape.)
 
 **Verified:** reproduced deterministically — admin `authenticate` setup passes, member
 setup fails at the redirect wait; root cause confirmed by reading the `users` write

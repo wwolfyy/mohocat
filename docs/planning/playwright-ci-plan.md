@@ -358,11 +358,11 @@ shard the matrix later only if needed.
       specs: desktop + mobile landing, admin storageState); emulator wiring
       (WP2/WP3/WP4), fixtures + seed (WP5/WP7), Playwright config + watchdog +
       trivial spec (WP7), and CI workflow (WP8) all landed; prod build verified
-      untouched. **Two owner follow-ups before Phase 2 hardens:** (1) push/PR to
-      confirm CI 3× green + branch protection; (2) the non-admin `users`-write
-      rule decision that blocks member/admin (non-admin) login (prereq §3/S4).
-      Phase 2 `public/` + Phase 6 `api/` specs are unblocked now; Phases 3–5
-      (signed-in) wait on (2).
+      untouched. **Owner follow-up before Phase 2 hardens:** push/PR to confirm CI
+      3× green + branch protection. (The non-admin `users`-write blocker — prereq
+      §3/S4 — is **RESOLVED 2026-07-13**: a scoped `users` self-write rule + rules
+      test, `npm run test:rules`; see the testing hand-off §5.) Phase 2 `public/`,
+      Phase 6 `api/` **done**; Phases 3–5 (signed-in) are now unblocked.
 
 ### Phase 2 — `public/` suites
 
@@ -400,6 +400,10 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
       auto). Allowlist gained `"Failed to fetch RSC payload"` (benign redirect prefetch-abort).
 
 ### Phase 3 — `auth/`
+
+> **Unblocked 2026-07-13** — the §5 non-admin-login blocker is resolved (scoped `users`
+> self-write rule). First step for Phases 3–5: wire `global.setup.ts` to capture a
+> **member** `storageState` (the seeded `butler-ground` user's login self-write now passes).
 
 - [ ] Email signup (consent gating) + login + bad-password + logout specs.
 - [ ] Phone-OTP login spec (emulator code fetch helper).
