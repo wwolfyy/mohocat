@@ -437,14 +437,17 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
 ### Phase 7 — hardening & docs
 
 - [ ] Flake audit (3× consecutive green CI runs); runtime < 10 min.
-  - [ ] ⚠️ **Known intermittent (pre-existing, app-side):** the landing map occasionally
-        bakes **markerless** at `next build` (all marker tests then fail: landing.smoke,
-        home-map, mobile-map). Same class as the DEBUG_LOG 2026-07-12 landing-marker entry
-        — the `getAllPointsServer`/`getAllCatsServer` Admin-SDK bake is **not 100%
-        deterministic**; a build-time emulator race still slips through (~1 in 3 gate runs
-        observed). CI `retries: 2` will NOT save it (whole-build issue, not per-test). Needs
-        an owner-signed build-path fix (e.g. retry/await emulator readiness before the
-        Server-Component reads) before the 3× exit criterion is meetable.
+  - [x] ✅ **Intermittent "markerless bake" FIXED (2026-07-13).** Root cause was
+        **misdiagnosed** — it was **not** a non-deterministic Admin-SDK read/emulator race.
+        It was a build **hang**: `src/app/pages/cats/page.tsx` (냥이들) still read points via
+        the **client Web SDK** (`getPointService().getAllPoints()`) during `next build` — the
+        client SDK hits **real** Firebase (`PERMISSION_DENIED on demo-mohocat`) and its
+        dangling gRPC handle intermittently wedges the build at "Collecting build traces"; the
+        killed/incomplete `.next` then fails all marker tests. Fixed by switching that read to
+        `getAllPointsServer()` (Admin SDK), mirroring `02c412a`. Verified: **10/10 gate-style
+        builds** baked, 0 client real-Firebase hits, 0 hangs. Full write-up: DEBUG_LOG
+        2026-07-13 (newest) + testing hand-off 2026-07-13 update. The whole-build hang that
+        `retries: 2` couldn't save is gone → the 3× exit criterion is now meetable.
 - [ ] `tests/e2e/README.md` (run locally, conventions, fixtures).
 - [ ] Update PROJECT_PLAN §10 + §1 snapshot; FEATURE_MOD_LOG entry; hand-off.
 - [ ] Owner: enable branch protection requiring CI on PRs to `main`.

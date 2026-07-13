@@ -1,5 +1,5 @@
 import type { Cat, Point } from '@/types';
-import { getPointService } from '@/services';
+import { getAllPointsServer } from '@/lib/server/point-reads';
 import { getAllCatsServer } from '@/lib/server/cat-reads';
 import { REVALIDATE_SECONDS } from '@/lib/cache-config';
 import CatsBrowser from './CatsBrowser';
@@ -21,10 +21,7 @@ export default async function CatsPage() {
   let dwellingNames: Record<string, string> = {};
   let error = false;
   try {
-    const [allCats, points] = await Promise.all([
-      getAllCatsServer(),
-      getPointService().getAllPoints(),
-    ]);
+    const [allCats, points] = await Promise.all([getAllCatsServer(), getAllPointsServer()]);
     cats = allCats;
     dwellingNames = points.reduce<Record<string, string>>((acc, p: Point) => {
       acc[p.id] = p.title;

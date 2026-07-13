@@ -20,6 +20,43 @@ not pushed (owner to push).
 
 ---
 
+## Update — 2026-07-13: the "intermittent markerless bake" is FIXED (it was a build hang, not an empty read)
+
+**The Phase-7 blocker below (§"⚠️ Pre-existing intermittent") is resolved.** Root cause was
+**misdiagnosed** — it was neither an empty Admin-SDK read nor an emulator-readiness race.
+Reproduced + instrumented on a fresh machine:
+
+- **The Admin read path is fine.** Cold fresh-process Admin reads of points+cats hit
+  **40/40**; clean-`.next` builds baked points **6/6**. When a build _completes_, markers
+  always bake. `getAllPointsServer`/`getAllCatsServer` do **not** return `[]`.
+- **The real failure is a build _hang_.** `src/app/pages/cats/page.tsx` (냥이들) still read
+  **points via the client Web SDK** (`getPointService().getAllPoints()`) — the same
+  mixed-SDK bug the home page had (`02c412a`), **on the sibling page the fix missed**.
+  During `next build` the client SDK doesn't reach the emulator → hits **real** Firebase →
+  `PERMISSION_DENIED on … demo-mohocat` → offline-retry leaves a **dangling gRPC handle**
+  that intermittently wedges `next build` at **"Collecting build traces"** (static gen had
+  already finished 51/51). A killed/incomplete `.next` then serves a broken site → all
+  marker tests fail → _looked_ like a "markerless bake." (Dead end noted: `preferRest: true`
+  on the Admin Firestore breaks the emulator entirely — REST needs real creds. Don't.)
+
+**Fix (2 lines, `src/app/pages/cats/page.tsx`):** `getPointService().getAllPoints()` →
+`getAllPointsServer()` (Admin SDK), mirroring `02c412a`. Functionally identical in prod;
+completes the §7a migration. **⚠️ This touches a prod read path** — same class as `02c412a`
+(which was taken with owner sign-off); flagging for the owner. No other non-`'use client'`
+`page.tsx`/`layout.tsx` still reads a client service at build (scanned).
+
+**Verified:** `npx tsc --noEmit` clean · `npm run test:smoke` 26/26 · **10/10 gate-style
+builds** (one clean `.next`, then reuse — the real gate's condition; each hang-guarded):
+all baked points, **0 client real-Firebase hits, 0 hangs**, incl. build #8 (hung pre-fix).
+Full write-up: `log/DEBUG_LOG.md` (2026-07-13, newest). **Committed:** ❌ not yet — awaiting
+owner go-ahead (prod-path change).
+
+**Net:** the "3× green" exit criterion is now achievable — the whole-build hang that
+`retries: 2` couldn't save is gone. Remaining owner actions unchanged: push/PR to watch CI;
+the §5 non-admin-login decision (gates the _UI_ member/admin suites).
+
+---
+
 ## Update — 2026-07-12 (cont. 2): Phase 6 `api/` security suite + two flake fixes
 
 **Phase 6 `api/` is DONE and green** — `tests/e2e/api/security.spec.ts` (Playwright
