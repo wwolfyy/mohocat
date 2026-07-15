@@ -39,6 +39,23 @@ function isEmulatorResourceFailure(text: string, url: string): boolean {
   return /Failed to load resource/.test(text) && EMULATOR_HOSTS.some((h) => url.includes(h));
 }
 
+// Projects whose tests run with a signed-in session (storageState, or a UI login).
+// On these the server pre-renders the ANONYMOUS nav (no user), then the client
+// hydrates to the AUTHENTICATED nav — an expected, React-recoverable hydration
+// mismatch inherent to client-side Firebase auth + SSR. It surfaces
+// non-deterministically as a `pageerror` (minified React #418/#421/#423/#425, the
+// hydration family). We tolerate ONLY that family, ONLY on authed projects, so the
+// anonymous public suite still fails hard on any hydration error.
+const AUTHED_PROJECTS = ['auth', 'member', 'admin'];
+const HYDRATION_ERROR_CODES = ['#418', '#421', '#423', '#425'];
+
+function isRecoverableHydrationError(message: string): boolean {
+  return (
+    /Minified React error/.test(message) &&
+    HYDRATION_ERROR_CODES.some((code) => message.includes(code))
+  );
+}
+
 export const test = base.extend<{ consoleWatchdog: void }>({
   consoleWatchdog: [
     async ({ page }, use, testInfo) => {
@@ -53,8 +70,10 @@ export const test = base.extend<{ consoleWatchdog: void }>({
         if (isEmulatorResourceFailure(text, url)) return;
         errors.push(`console.error: ${text}${url ? ` [${url}]` : ''}`);
       };
+      const authed = AUTHED_PROJECTS.includes(testInfo.project.name);
       const onPageError = (err: Error) => {
         if (isAllowed(err.message)) return;
+        if (authed && isRecoverableHydrationError(err.message)) return;
         errors.push(`pageerror: ${err.message}`);
       };
 

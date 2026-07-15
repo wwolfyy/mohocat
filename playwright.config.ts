@@ -50,6 +50,16 @@ export default defineConfig({
       testMatch: /public\/.*\.spec\.ts/,
     },
 
+    // Auth flows (login / signup / logout / phone-OTP). These drive the real
+    // login UI themselves, so they run in a fresh ANONYMOUS context — no
+    // storageState, no setup dependency. Mobile-specific cases opt in per-describe
+    // via `test.use({ ...devices['Pixel 7'] })`.
+    {
+      name: 'auth',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
+      testMatch: /auth\/.*\.spec\.ts/,
+    },
+
     // Signed-in suites (Phase 3+ of the main plan). Wired now; specs land later.
     {
       name: 'member',

@@ -14,16 +14,18 @@ const AUTH_DIR = path.resolve(__dirname, '..', '.auth');
 
 // Must match tests/e2e/fixtures/users.json.
 //
-// NOTE — member is intentionally NOT set up yet. On every login the app calls
+// Both roles now authenticate end-to-end. On every login the app calls
 // `permissionService.ensureUserExists()`, which `updateDoc`s the user's own
-// `users/{uid}` doc. The repo `firestore.rules` (which the emulator enforces —
-// prerequisite plan F12) only allows `users/{uid}` writes with `manage-users`, so
-// a non-admin self-update is DENIED and login never completes. Admin logs in fine
-// (it has manage-users). This is a real repo-rules-vs-login divergence the owner
-// must resolve before the Phase-3 member/admin suites (options: relax the `users`
-// write rule to allow self-writes, or make ensureUserExists tolerate a denied
-// self-update). Tracked in the prerequisite plan §3 (S4) + DEBUG_LOG.
-const ROLES = [{ role: 'admin', email: 'admin@test.local', password: 'Passw0rd!admin' }] as const;
+// `users/{uid}` doc via the client SDK. The scoped `users` self-write rule
+// (config/firebase/firestore.rules — a user may create/update their own doc but
+// may not set/change `currentRole`) lets the non-admin `butler-ground` member's
+// login self-write pass, so the member `storageState` captures cleanly. Admin has
+// `manage-users` and was never blocked. See the testing hand-off §5 + DEBUG_LOG
+// (2026-07-11 "Fix applied 2026-07-13").
+const ROLES = [
+  { role: 'admin', email: 'admin@test.local', password: 'Passw0rd!admin' },
+  { role: 'member', email: 'member@test.local', password: 'Passw0rd!member' },
+] as const;
 
 setup.beforeAll(() => {
   fs.mkdirSync(AUTH_DIR, { recursive: true });
