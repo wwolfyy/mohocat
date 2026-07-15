@@ -20,7 +20,90 @@ not pushed (owner to push).
 
 ---
 
-## Update — 2026-07-13 (cont.): current state + next steps (start here in a fresh session)
+## Update — 2026-07-15: Phases 3–5 written + green (start here in a fresh session)
+
+**Phases 3, 4, and 5 are done.** With Phase 0/1 (harness/CI), Phase 2 (`public/`), and
+Phase 6 (`api/`) already green, **every main-plan suite except Phase 7 (flake audit +
+docs finalization) now exists and passes.** Committed to `dev` in four commits
+(`a06eda3` harness enablement, `13a4667` auth, `67407e8` member, `b4bc727` admin) —
+**not pushed**.
+
+**What landed (18 new spec files + helpers, ~40 new tests):**
+
+- **Harness enablement** (`a06eda3`): member `storageState` wired in `global.setup.ts`
+  (the seeded `butler-ground` login self-write passes the §5 rule); a new anonymous
+  **`auth` Playwright project** (its specs drive the real login UI — no storageState);
+  shared helpers `setup/auth-helpers.ts` (email login + `signUpNewUser`) and
+  `setup/phone-otp.ts` (fetches the SMS code from the Auth-emulator
+  `verificationCodes` REST endpoint — phone auth works because the emulator disables
+  real reCAPTCHA).
+- **Phase 3 `auth/`** (4 files): `login-logout`, `mobile-logout`, `phone-login`,
+  `signup`. Covers email login/bad-password/logout (nav modal + mypage + mobile
+  hamburger), phone-OTP login, and full 집사등록 (consent gating + happy path).
+- **Phase 4 `member/`** (5 files, butler-ground): `mypage` (nickname edit +
+  mobile), `contact-submit`, `nav-permissions`, `butler-access` (denial boundary),
+  `account-withdrawal` (throwaway user, storageState overridden to anonymous → real
+  `POST /api/account/delete`).
+- **Phase 5 `admin/`** (7 files): `admin-auth-gate` (anon/non-admin/admin),
+  `cms-nav` smoke, `cats` (card-editor rename + adoptable), `points` (list +
+  delete-guard + edit), `members` (role assignment + Contact Management), `posts`
+  (create → public list), `butler-pages` (admin sees the content member is denied).
+
+**Verified:** each project run green in isolation against a fresh seed; the admin
+project passed **3× consecutively**. In the last clean full-gate run
+(`rm -rf .next && npm run test:e2e`) the public/auth/member/api suites were green
+(99 passed) and the two then-failing admin tests are now fixed.
+
+**Three source-verified watch-outs handled along the way (test-only; no `src/`
+changed):**
+
+1. **Fixture bug fixed:** `tests/e2e/fixtures/cats.json` stored `date_of_birth` as
+   **epoch-millis**, but the app treats it as a **4-digit year**
+   (`${date_of_birth}년생` — the public site would have rendered "1577836800000년생").
+   Converted to years (2020/2021). This also unblocked the cats admin form's
+   year-range (`min=1990 max=2030`) validation.
+2. **App/data constraint (noted, not fixed):** the cats admin form's `thumbnailUrl`
+   is `type="url"`, but the app stores **relative** paths (`/images/...`), which fail
+   HTML5 URL validation and silently block save. The cats spec clears the field to
+   proceed. Worth a follow-up in the app (relative thumbnails are legitimate).
+3. **Client-auth hydration flake tamed:** on signed-in pages the server pre-renders
+   the **anonymous** nav, then the client hydrates to the **authenticated** nav — an
+   expected, React-**recoverable** hydration mismatch (#418/#423) that surfaced
+   non-deterministically as a `pageerror`. The console watchdog (`setup/test.ts`) now
+   tolerates **only** that hydration-error family and **only** on authed projects
+   (`auth`/`member`/`admin`); the anonymous public suite still fails hard on any
+   hydration error.
+
+**Two latent app issues surfaced (existing behavior; not mine to fix — flagged only):**
+
+- `butler_talk` / `butler_stream` gate on `isAdmin()`, so **butler-ground members are
+  denied** despite the pages' "allow butler roles" comment. Tests assert current
+  behavior (member denied, admin allowed). If the gate is widened, the member
+  `butler-access` spec is the intended failure signal.
+- Role assignment writes an audit log to `permission_logs` that the **repo
+  firestore.rules deny** for the client (non-fatal — the role still assigns;
+  RoleManagement logs a console.error). The members spec uses the non-watchdog `test`
+  for that case.
+
+**Next (Phase 7, the only remaining task):**
+
+1. **Flake audit** — run the full `npm run test:e2e` gate **3× clean** to confirm the
+   whole suite (all projects together) is green end-to-end, then watch CI do the same.
+2. **`tests/e2e/README.md`** — conventions (the `auth` project, storageState
+   overrides, the phone-OTP helper, the hydration-tolerance rule, fixture watch-outs).
+3. **PROJECT_PLAN / plan-checklist finalization** + a `FEATURE_MOD_LOG` entry.
+
+**Owner actions still open:** push / open a PR (watch CI go 3× green + enable branch
+protection on `main`); deploy the rules change for prod parity
+(`firebase deploy --only firestore:rules`).
+
+---
+
+## Update — 2026-07-13 (cont.): both blockers cleared (superseded by 2026-07-15 above)
+
+> **Superseded** by the 2026-07-15 update above — its "Next steps" 1 (wire member
+> `storageState`) and 2 (write Phases 3–5) are **done**. Kept for the blocker-fix
+> history (build hang + §5 rule).
 
 **Both remaining blockers are cleared.** This supersedes the older "Next (in priority
 order)" list further down (which still lists the bake fix and §5 as open — they're done).

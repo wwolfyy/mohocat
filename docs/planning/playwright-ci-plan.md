@@ -401,26 +401,71 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
 
 ### Phase 3 — `auth/`
 
-> **Unblocked 2026-07-13** — the §5 non-admin-login blocker is resolved (scoped `users`
-> self-write rule). First step for Phases 3–5: wire `global.setup.ts` to capture a
-> **member** `storageState` (the seeded `butler-ground` user's login self-write now passes).
+> **Done 2026-07-15.** Member `storageState` wired in `global.setup.ts` (seeded
+> `butler-ground` login self-write now passes, §5 rule). New anonymous `auth`
+> Playwright project (specs drive the real login UI, no storageState). Helpers:
+> `setup/auth-helpers.ts` (email login, signup), `setup/phone-otp.ts`
+> (Auth-emulator verification-code fetch). Verified green.
 
-- [ ] Email signup (consent gating) + login + bad-password + logout specs.
-- [ ] Phone-OTP login spec (emulator code fetch helper).
-- [ ] mypage logout-redirect + mobile hamburger-logout regression specs.
+- [x] Email login + bad-password + logout specs (`login-logout.spec.ts`) — email
+      login → authed nav; logout via the top-nav modal → anonymous; logout from
+      /mypage → '/'; wrong password → error banner (base test, since LoginForm
+      console.errors the failure).
+- [x] Phone-OTP login spec (`phone-login.spec.ts`) — seeded phone user via the
+      emulator OTP-code helper.
+- [x] Signup (consent gating + full happy path) spec (`signup.spec.ts`) — the
+      "계속하기" submit is gated on both PIPA consent boxes; full 집사등록 through
+      phone-OTP → success screen.
+- [x] Mobile hamburger-logout regression (`mobile-logout.spec.ts`, own file — a
+      device preset must be set at file top-level, not in a describe).
 
-### Phase 4 — `member/`
+### Phase 4 — `member/` (`storageState: member`, butler-ground)
 
-- [ ] butler_talk list/pagination/create; butler_stream render.
-- [ ] mypage nickname edit (+ mobile layout).
-- [ ] 동참 submit e2e; 탈퇴 deletion e2e (throwaway user).
+- [x] mypage nickname edit + mobile layout (`mypage.spec.ts`) — the success
+      signal is the confirmation alert (AuthProvider doesn't `setUser` after
+      `updateProfile`); persistence verified via reload.
+- [x] 동참 submit e2e (`contact-submit.spec.ts`) — a signed-in member submits the
+      form (SMTP unset → route still returns success; observable = green message).
+- [x] Butler-page access boundary (`butler-access.spec.ts`) — butler_talk /
+      butler_stream **deny** a butler-ground member. ⚠️ Both pages gate on
+      `isAdmin()` (needs a `manage-*` permission), so the "allow butler roles"
+      comment is unimplemented; the CONTENT (list/render) is exercised as **admin**
+      in `admin/butler-pages.spec.ts`, not as member.
+- [x] Nav permissions (`nav-permissions.spec.ts`) — member sees 사진첩/동영상 as
+      links and 집사메뉴 enabled (the signed-in mirror of `anonymous-gating`).
+- [x] 탈퇴 deletion e2e (`account-withdrawal.spec.ts`) — a **throwaway** signed-up
+      user completes withdrawal via `POST /api/account/delete`; storageState is
+      overridden to anonymous so it never deletes the shared seeded member.
 
-### Phase 5 — `admin/`
+### Phase 5 — `admin/` (`storageState: admin`)
 
-- [ ] AdminAuth gate (anon + non-admin) spec.
-- [ ] Cats card-edit + grid-save + validation + adoptable specs.
-- [ ] Posts create/edit specs; points CMS + delete-guard spec.
-- [ ] Members role-assignment spec; Contact Management spec.
+- [x] AdminAuth gate (`admin-auth-gate.spec.ts`) — anon → login form, non-admin
+      member → "접근 권한이 없어요", admin → CMS shell (per-describe storageState
+      overrides).
+- [x] CMS-nav smoke (`cms-nav.spec.ts`) — cats / points / posts / members /
+      app-management each render their heading for an admin.
+- [x] Cats card-editor (`cats.spec.ts`) — rename + adoptable, persisted. (The
+      grid/spreadsheet view is not exercised — a datasheet-grid is a separate,
+      brittle target; carried as a Phase-7/later gap.)
+- [x] Points CMS + delete-guard (`points.spec.ts`) — list, delete blocked while
+      resident cats reference the point, edit-save.
+- [x] Members role-assignment + Contact Management (`members.spec.ts`) — promote
+      the seeded viewer (assert the durable outcome, not the transient message;
+      base test, since the `permission_logs` audit write is denied by repo rules,
+      non-fatal); a submitted 동참 appears in the 문의 tab.
+- [x] Posts create/list (`posts.spec.ts`) — author a 공지사항 → it lands on the
+      public list; the admin posts list renders the announcements tab.
+- [x] Butler-page content as admin (`butler-pages.spec.ts`) — 집사톡 / 급식현황
+      render (the admin half of Phase-4 butler coverage).
+
+> **Watch-outs surfaced (source-verified, not fixed here — no `src/` changes):**
+> (1) `date_of_birth` was epoch-millis in the cats fixture but the app treats it as
+> a 4-digit year (`${date_of_birth}년생`) — fixed the fixture. (2) The cats admin
+> form's `thumbnailUrl` is `type="url"` but the app stores relative paths, so
+> HTML5 validation silently blocks save on seeded cats (the test clears it). (3)
+> Client-side Firebase auth SSRs the anonymous nav then hydrates to the authed nav
+> — an expected, recoverable React hydration mismatch (#418/#423) that the
+> watchdog now tolerates **only on authed projects** (`setup/test.ts`).
 
 ### Phase 6 — `api/` security suite
 
