@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Modal from './ui/Modal';
+import Button from './ui/Button';
 
 interface AnnouncementModalProps {
   announcement: any;
@@ -135,12 +136,9 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ announcement, isO
 
       {/* Footer */}
       <div className="mt-6 border-t pt-4">
-        <button
-          onClick={onClose}
-          className="w-full rounded-lg bg-gradient-to-r from-brand to-accent py-2.5 font-bold text-ink transition hover:shadow-lg"
-        >
+        <Button className="w-full" onClick={onClose}>
           확인
-        </button>
+        </Button>
       </div>
     </Modal>
   );

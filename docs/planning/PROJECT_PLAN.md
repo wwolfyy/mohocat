@@ -23,29 +23,30 @@
 
 ---
 
-## 1. Snapshot (as of 2026-06-30)
+## 1. Snapshot (as of 2026-07-10)
 
-| Workstream                                 | Status            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Landing redesign (Phases 0–2)              | `[x]` done        | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| App redesign — A (Modals)                  | `[x]` done        | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| App redesign — B (Album pages)             | `[x]` done        | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| App redesign — D (Localization)            | `[x]` done        | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| App redesign — C (other pages)             | `[ ]` not started | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴. **Prereqs now met** (입양홍보 built + 동참 activated) — unblocked, ready to pick up (see redesign tasks **C0**).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Redesign A4 (live-verification)            | `[~]` blocked     | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **Functional: 입양홍보 page missing**      | `[x]` done        | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle).                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Functional: 동참 form end-to-end**       | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                                                                                                                                                                                  |
-| **Deployment-target cleanup**              | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                                                                                                                                      |
-| **Perf: bake the data layer**              | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                 |
-| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled (iframe-reflow harness); nav/modals/albums/forms/content audited at 390 (nav also 360×560) — 2 nav fixes, rest clean. **Remaining:** map quirks/re-fit + touch-target sweep are device-owed; mobile perf + sign-in-gated surfaces not started.                                                                                                                                                                                                                                                                                                                         |
-| **Admin desktop cleanup**                  | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the disabled-link feature stubs. |
-| **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                     |
-| Compliance / legal                         | 🚧 placeholder    | §8 — privacy policy, terms.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Multi-tenant hardening                     | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Testing & quality gates                    | 🚧 placeholder    | §10 — no automated coverage today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                              |
-| **Admin manual / operator docs**           | `[x]` started     | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + `docs/manuals/deployment/new-mountain-setup.md` (🚧 provisioning placeholder).                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Workstream                                 | Status            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Landing redesign (Phases 0–2)              | `[x]` done        | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| App redesign — A (Modals)                  | `[x]` done        | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| App redesign — B (Album pages)             | `[x]` done        | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| App redesign — D (Localization)            | `[x]` done        | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| App redesign — C (other pages)             | `[x]` done        | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴 — **DONE 2026-07-03** (butler surfaces de-gradient-ified, `border-yellow-500` dropped, English empty states → 해요체, submits → shared `<Button>`, focus rings → brand). Cross-cutting public/auth button convergence closed **2026-07-10** (§12.2). Auth-gated butler list/pagination verifications still owed under §4.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Redesign A4 (live-verification)            | `[~]` blocked     | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **Functional: 입양홍보 page missing**      | `[x]` done        | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Functional: 동참 form end-to-end**       | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Deployment-target cleanup**              | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                                                                                                                                                                                                                                                                                                        |
+| **Perf: bake the data layer**              | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                                                                                                                                                                                   |
+| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled; nav/modals/albums/forms/content audited. **Pass 2 (2026-07-05):** S22 map bugs, portrait-only map, static clustering. **Off-plan (2026-07-08):** lightbox pinch-to-zoom, back-button/swipe-back modal fix, page-wide UI scale reduction. **Device-verified (S22, 2026-07-10):** map zoom/scroll/quirks + touch-target sweep closed. **Off-plan (2026-07-10):** hamburger closes on route/sign-in, mobile logout modal actually logs out, mypage edit-button layout, login/logout menu-pill centering, landscape rotate-notice GIF fix. **Device-verified (S22, 2026-07-11):** map re-fit on resize. **Remaining:** mobile perf not started; sign-in-gated surfaces partially touched (login/logout/mypage fixed) but not fully audited. |
+| **Firebase Storage → Seoul bucket**        | `[x]` done        | Migrated from `us-central1` to `asia-northeast3` (Seoul) to cut image latency for Korean users. New bucket `mountaincats-61543`; files transferred via gsutil; Firestore URL rewrite script run against all 6 collections; `fetch-static-assets.js` reads bucket from env var; `generate-signed-url` hardcoded fallback removed. See `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Admin desktop cleanup**                  | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the disabled-link feature stubs.                                                                                                                                                                   |
+| **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                                                                                                                                                                                       |
+| Compliance / legal                         | `[x]` done        | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed (accepted, out of workstream):** professional legal review before scaling; phone/Kakao signup consent; security audit; Kakao scope verification.                                                                                                                                                                                        |
+| Multi-tenant hardening                     | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Testing & quality gates                    | 🚧 building       | §10 — Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + **all main-plan suites written & green** — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Build-hang fixed + §5 non-admin-login unblocked via a scoped `users` self-write rule (`npm run test:rules`, 6/6). Remaining: Phase 7 (flake audit + docs), then owner push/PR + branch protection.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                |
+| **Admin manual / operator docs**           | `[x]` started     | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + `docs/manuals/deployment/new-mountain-setup.md` (🚧 provisioning placeholder).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ---
 
@@ -67,9 +68,15 @@ The full narrative is in the hand-offs; the short version:
   typography, language & voice, modal, album, marker specs); values stay single-
   sourced in Tailwind config.
 
-What is **not** done: redesign Phase C, live-verification of several auth/mypage
+What is **not** done: live-verification of several auth/mypage
 states (A4), the functional gaps in §11, and every workstream in §4–§10 below —
 those are the forward plan.
+
+- **App-wide redesign Phase C shipped.** C: 집사메뉴/butler surfaces (`ButlerStreamClient`,
+  `ButlerTalkClient`, `PostList`, `NewPostForm`, `NewButlerTalkForm`) de-gradient-ified,
+  `border-yellow-500` dropped, English empty states → 해요체 brand cards, submit buttons →
+  shared `<Button variant="primary">`, login-required notices → brand-tinted cards, all
+  `focus:ring-blue-500` → `ring-brand-300`, dead `data-oid` stripped. Done 2026-07-03.
 
 ---
 
@@ -122,14 +129,13 @@ those are the forward plan.
       real device+number.)_
 - [x] **Content pages** — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good
       typography/spacing at 390. No fixes needed.
-- [~] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
-  S22 bugs (DEBUG*LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
-  clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
-  *(originally: image chosen by orientation via `useIsPortrait`; **superseded** by Pass 3 —
-  the map is now portrait-only on phones, so the landscape-map path is gone entirely)\_;
-  (3) map ate page scroll → on mobile, one-finger swipe scrolls the page (drag disabled at
-  fill) and map-drag engages only when zoomed in. Harness-verified; **device-owed:** pinch-out
-  clamp feel, one-finger scroll, zoom-then-pan on a real S22.
+- [x] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
+      S22 bugs (DEBUG*LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
+      clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
+      *(originally: image chosen by orientation via `useIsPortrait`; **superseded** by Pass 3 —
+      the map is now portrait-only on phones, so the landscape-map path is gone entirely)\_;
+      (3) map ate page scroll → on mobile, one-finger swipe scrolls the page (drag disabled at
+      fill) and map-drag engages only when zoomed in. ✅ S22-verified by owner 2026-07-10.
 - [x] **Map pinch-bounce pin loss — S22 (2026-07-05, DEBUG_LOG).** ✅ S22-verified by owner.
       `bounceAtZoomLimits={false}` hard-stops a pinch at fill instead of overshooting +
       bouncing back; the transient sub-fill excursion (which merged the thumbnail pins into
@@ -170,18 +176,45 @@ those are the forward plan.
       guard). Unblocks authoring the `labelSide` override above (lands with it). **⚠️ Owner-owed:**
       `firebase deploy --only firestore:rules` (points write opened to `manage-canteen`), and an
       actual save is only testable post-deploy.
-- [ ] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
-      (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics — need real touch/zoom.
-- [ ] **Map re-fit on resize — mobile — DEVICE-OWED (remaining).** The fit-on-resize fix
-      (2026-07-02, `MapViewController`) re-fits + re-clamps min-zoom on resize. _(The old
+- [x] **Mobile lightbox pinch-to-zoom (2026-07-08, off-plan).** `react-zoom-pan-pinch` (v4.0.3)
+      wraps the lightbox image on mobile only (`useIsMobile`): pinch 1–4×, drag-to-pan while
+      zoomed, double-tap toggle, reset on image navigation. `touch-action` flips between `pan-y`
+      (un-zoomed) and `none` (zoomed) to avoid scroll/zoom conflict. Desktop unchanged. rAF
+      throttling in backgrounded tabs means zoom animation must be verified on a real device.
+- [x] **Back button / swipe-back closes modals (2026-07-08, off-plan).** `useModalLayer` now
+      pushes a `history.pushState({ mohocat_modal: id })` entry on open. A module-level `popstate`
+      listener closes the topmost overlay on back-gesture. Normal close pops the entry via
+      `history.back()` with a `suppressNextPopState` guard to avoid cascade. All three overlay
+      types (Modal, Lightbox, VideoPlayer) covered.
+- [x] **Page-wide UI scale reduction (2026-07-08–09, off-plan).** All public page headers
+      (`text-3xl font-bold` → `text-xl font-semibold`, hairline divider, muted description);
+      about page title `text-4xl` → `text-xl`, body `text-lg` → `text-base`; adoption section
+      header + post card titles + search input scaled down; contact form labels/inputs/button
+      tightened. Browser-verified across all pages.
+- [x] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
+      (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics. ✅ S22-verified by owner 2026-07-10.
+- [x] **Map re-fit on resize — mobile.** The fit-on-resize fix (2026-07-02,
+      `MapViewController`) re-fits + re-clamps min-zoom on resize. _(The old
       landscape↔portrait `key={portrait}` remount is gone — the map is portrait-only on phones;
-      landscape shows the rotate-notice.)_ Confirm resize/re-fit feels clean on a real device.
-- [ ] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
-      (replace hover-reveal with always-visible or tap states) — spot-checks passed in Pass 1;
-      full sweep incl. map pin hover-reveal is device-owed.
+      landscape shows the rotate-notice.)_ ✅ Device-verified by owner 2026-07-11.
+- [x] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
+      (replace hover-reveal with always-visible or tap states). ✅ S22-verified by owner 2026-07-10.
+- [x] **Mobile nav + auth-flow fixes (2026-07-10, off-plan — DEBUG_LOG ×2, FEATURE_MOD_LOG).**
+      (1) **Hamburger menu** now resets on `pathname`/`isAuthenticated` change — it no longer
+      lingers over the login page or after sign-in (`Navigation.tsx`). (2) **Mobile logout** now
+      works: the menu's `pointerdown` outside-click handler was closing the menu — and unmounting
+      the portaled `LogoutModal` (its child) — before the confirm button's `click` fired; it now
+      ignores taps inside `[role="dialog"]`. (3) **Mypage inline edit rows** (닉네임/이메일/전화)
+      restacked to a full-width input + right-aligned button row (no more squished 취소). (4)
+      **Login/logout menu pills** made full-width + centered (`mobile` prop) — no dead space on
+      the right. (5) **Landscape rotate-notice GIF** filename fix (`chubby-cat` → `chubby_cat`).
+      Login pill + hamburger-close browser-verified at 390px; logged-in legs (logout flow, pill,
+      mypage rows) share verified mechanisms but are credential/device-owed.
 - [ ] Performance on mobile networks — image sizes, above-the-fold, the thumbnail
       preloader's eagerness on cellular. _(Not started.)_
-- [ ] Sign-in-gated surfaces at mobile widths: butler_talk, butler_stream, mypage.
+- [~] Sign-in-gated surfaces at mobile widths: butler*talk, butler_stream, mypage. *(mypage +
+  the login/logout menu affordances fixed 2026-07-10; butler*talk/butler_stream still owed
+  a full mobile audit — carry over.)*
 
 _(Out of scope here: admin mobile — that's §6.)_
 
@@ -593,18 +626,43 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 ---
 
-## 8. 🚧 Compliance / legal
+## 8. ✅ Compliance / legal — CLOSED (2026-07-10)
 
-> **Goal (placeholder):** the deferred compliance workstream. Footer
-> `개인정보처리방침` (privacy policy) and `이용약관` (terms) are inert placeholders.
+> **Closed** as a workstream: 개인정보처리방침 + 이용약관 published and footer-linked,
+> 국외 이전 disclosed (Art. 28-8, disclosure-based), and email-signup consent capture
+> shipped. The items below under **"Deferred / owner-owed"** are consciously accepted
+> as out of this workstream — reopen if/when membership scales.
 
-**Candidate scope — _confirm with user_:**
+**Done:**
 
-- [ ] Privacy policy + terms content (Korean; PIPA considerations for a KR
-      non-profit collecting accounts/phone numbers).
-- [ ] Wire the footer legal links to real pages/routes.
-- [ ] Consent touchpoints at signup (if required).
-- [ ] (Stub `docs/compliance/` referenced by prior docs — confirm it exists / owner.)
+- [x] Privacy policy + terms content (Korean; PIPA). **Done (2026-07-10):**
+      `src/app/pages/privacy/page.tsx` + `src/app/pages/terms/page.tsx`, adapted
+      from the KISA/PIPC standard 처리방침 structure and grounded in the app's
+      actual collection (email/phone/닉네임/Kakao + 동참 form). Decisions:
+      CPO 산냥이집냥이 운영자 (`rescuezoro@gmail.com`); under-14 allowed w/ guardian
+      consent; retention = 탈퇴 시 즉시 삭제 (no grace). Includes **국외 이전** disclosure
+      (§6, PIPA Art. 28-8): Google LLC + Vercel Inc. (US) — relies on the
+      contract-necessity + 처리방침-disclosure basis, **not** consent. ⚠️ **Owner-owed:** get
+      a legal/professional review before scaling membership.
+- [x] Data-subject rights: account withdrawal/deletion (탈퇴). **Done (2026-07-10):**
+      mypage → confirm modal → `POST /api/account/delete` (verify ID token →
+      Admin SDK `auth.deleteUser` + `users/{uid}` doc delete) → sign out. Immediate
+      hard-delete; authored posts intentionally retained (content, not account PII).
+- [x] Wire the footer legal links to real pages/routes. **Done (2026-07-10):**
+      `Footer.tsx` greyed placeholders → live `<Link>`s to `/pages/privacy` and
+      `/pages/terms`.
+- [x] Consent touchpoints at signup (email path). **Done (2026-07-10):**
+      `SignupForm.tsx` gained two required checkboxes (이용약관 + 개인정보 수집·이용,
+      each linking the full text); 인증번호 받기 submit gated until both checked.
+      (국외 이전 is disclosure-based per §6, so it's not in the consent.)
+
+**Deferred / owner-owed (accepted, out of workstream):**
+
+- [ ] Professional/legal review of the policy text + consent flows before scaling.
+- [ ] Consent capture for the phone-login-as-signup and Kakao social sign-up paths.
+- [ ] Security audit vs the PIPA safety-measures standard (compliance-plan task 7).
+- [ ] Verify Kakao scopes + document received fields (compliance-plan task 8).
+- [x] Stub `docs/compliance/` exists (`compliance-plan.md`).
 
 ---
 
@@ -618,21 +676,27 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 - [ ] `?mountain=` switch is a no-op — `MountainSelector` sets the query but
       `getCurrentMountainId()` only reads env. Implement cookie/query/host-based
       selection or remove the selector.
-- [ ] Hard-coded service-account path + bucket fallbacks
-      (`feeding-spots-admin-service.ts`, `generate-signed-url`, fetch-assets).
+- [~] Hard-coded service-account path + bucket fallbacks. **Partially done (2026-07-10):**
+  `generate-signed-url` hardcoded fallback replaced with hard-fail; `fetch-static-assets.js`
+  reads `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` from env. **Remaining:** `feeding-spots-admin-service.ts`
+  still hardcodes the service-account path.
 - [ ] Hard-coded map image path in the map host; source it from mountain config.
 - [ ] `mountains.json` vs `permissions.json` inconsistency (`manisan` exists in
       one, not the other).
-- [ ] Theme not wired through — `getMountainTheme()` returns colors nothing reads.
+- [ ] Theme not wired through — `config.theme` colors are read by nothing (the unused
+      `getMountainTheme()` accessor was removed in the 2026-07-11 dead-code cleanup).
 - [ ] Per-mountain DB isolation at the service-factory seam (the seam exists; the
       isolation doesn't).
 
 ---
 
-## 10. 🚧 Testing & quality gates
+## 10. 🚧 Testing & quality gates — **ACTIVE (2026-07-11)**
 
-> **Goal (placeholder):** coverage was **zero**; a first structural baseline now
-> exists. Build it out from there.
+> **Goal:** coverage was **zero**; now Vitest (40 tests) + an emulator-backed
+> **Playwright e2e harness with GitHub Actions CI** are in place (harness landed
+> 2026-07-11), and **all main-plan e2e suites are written & green** — `public/`,
+> `auth/`, `member/`, `admin/`, `api/` (~140 tests, 2026-07-15). Remaining: Phase 7
+> (flake audit + docs finalization), then owner push/PR + branch protection.
 
 **Done:**
 
@@ -642,6 +706,49 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       deploy-config keepers survive, critical public pages exist. Added as the
       regression net for the deployment cleanup
       ([`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md)).
+
+- [x] **Playwright e2e harness + CI foundation landed (2026-07-11)** — the
+      prerequisite plan is **executed**: a hermetic Firebase Emulator Suite
+      (Auth+Firestore+Storage) seeded with hand-authored fixtures drives the real
+      prod build (`next build` → `next start`) under Playwright, wired into a
+      greenfield `.github/workflows/ci.yml` (checks + emulator-backed e2e, no
+      secrets). All env-gated `src/` touches (WP2/WP3/WP4/WP7) are off in prod;
+      prod build verified untouched. Trivial spec green locally (desktop + mobile
+      landing map + admin `storageState`, ~6s). See
+      [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md)
+      §7 and the 2026-07-11 `FEATURE_MOD_LOG` entry. **Owner follow-ups:** push/PR
+      to confirm CI 3× green + branch protection; decide the non-admin
+      `users`-write rule question that blocks non-admin login (2026-07-11
+      `DEBUG_LOG`).
+
+- [x] **All e2e spec suites written & green (2026-07-13 → 2026-07-15)** — main-plan
+      Phases 2–6: `public/` (~60 tests, anonymous surfaces + landing map),
+      `api/` (route auth: unauth→401, non-admin→403), `auth/` (email/phone login,
+      logout, full 집사등록 signup), `member/` (mypage, 동참 contact, nav
+      permissions, butler-access denial, account withdrawal), `admin/` (AdminAuth
+      gate, cats/points/members/posts CMS). ~140 tests across the
+      `public`/`auth`/`member`/`admin`/`api` Playwright projects; each project green
+      in isolation against a fresh seed. Two former blockers cleared en route: the
+      "markerless bake" build hang (`26e8264`) and non-admin login (scoped `users`
+      self-write rule, `65a934f` + `npm run test:rules`, 6/6). See the testing
+      hand-off (`docs/handoff/testing/2026-07-12-e2e-harness-handoff.md`).
+
+**Plans drafted (2026-07-11):**
+
+- [`playwright-ci-plan.md`](./playwright-ci-plan.md) — the Playwright E2E suite
+  (public / auth / member / admin / API-security) against the **Firebase Emulator
+  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phases 0–6
+  are DONE + green** — harness/CI, `public/`, `auth/`, `member/`, `admin/`, `api/`
+  (~140 tests). The intermittent "markerless bake" build hang is **fixed**
+  (2026-07-13, DEBUG_LOG), and the **§5 non-admin-login blocker is resolved** — a
+  scoped `users` self-write rule (+ `npm run test:rules`, 6/6) now lets non-admins
+  log in. **Remaining: Phase 7** (flake audit + docs finalization). ⚠️ push the rules
+  change to Firebase for prod parity.
+- [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md) —
+  the enabler plan that must land first: adopts the main plan's recommendations
+  as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
+  packages (emulator wiring, asset-script compat, fixtures/seed, harness, CI).
+  ✅ **EXECUTED.**
 
 **Candidate scope — _confirm with user_:**
 
@@ -653,7 +760,8 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       component/unit tests.
 - [ ] Smoke/UI tests for the critical public paths (map loads, gallery opens,
       login renders).
-- [ ] CI wiring beyond `tsc`/lint.
+- [x] CI wiring beyond `tsc`/lint — `.github/workflows/ci.yml` (checks +
+      emulator-backed Playwright e2e) landed 2026-07-11.
 
 ---
 
@@ -710,22 +818,23 @@ _Risk/size: architectural, touches the services seam and several pages — hence
   the mobile pass **and** rewritten by the desktop work → double work. Pure responsive-
   breakpoint tuning is inherently per-surface and correctly belongs to §4. **The
   finalize-before-mobile set (do first):**
-  1. **Phase C — 집사메뉴 / butler restyle** — the one un-brand-audited public surface left
-     (`ButlerStreamClient`, `ButlerTalkClient`, `PostList` [still `border-yellow-500`],
-     `butler_talk/new/`, `NewButlerTalkForm`, `NewPostForm`). Redesign tasks **C1** last `[ ]`.
-  2. **Cross-cutting button/color convergence** (one job, three loose ends): the Phase C
-     "Cross-cutting" legacy `.btn-primary { bg-blue-600 }` in `globals.css`, the §5 deferred
-     **public hand-rolled-button sweep** → shared `<Button>` primitive, and nav blue hovers.
-     Highest-leverage fix-once — **tap-target sizing / focus rings / hit-areas live in the
-     primitive**, so mobile inherits correct buttons instead of re-touching each hand-rolled
-     one. **Do this before #1** so the butler restyle consumes the primitive directly.
+  1. **✅ Phase C — 집사메뉴 / butler restyle** — DONE 2026-07-03. All components
+     brand-clean; cross-cutting `globals.css` dead `.btn` block removed; nav blue hovers
+     fixed. Auth-gated verifications (list/pagination, "새글 작성" button while signed in)
+     still owed and carried in §4 sign-in-gated mobile audit.
+  2. **✅ Cross-cutting button/color convergence** — DONE 2026-07-10. globals.css `.btn` block
+     and nav hovers done (see #1); the **public + auth hand-rolled-button sweep → shared
+     `<Button>` primitive** shipped (`256bc53`, FEATURE_MOD_LOG): announcements-detail, contact
+     submit, announcement/cat-selector modals, email/phone login submits, 4 auth modals; stray
+     non-brand accents normalized to brand tokens. Grep-clean of hand-rolled gradient `<button>`s
+     in public/auth code (only 2 intentional `<Link>` CTAs remain).
   - _Deferred to §4 (genuinely per-surface, no double-work):_ map re-fit on mobile, modal/
     album/form mobile sizing, mobile nav drawer.
   - _Deferred, non-UI (render-invariant):_ structured logging, request validation, RBAC
     drift, Tier-1 Admin-SDK migration, upload-on-edit util. _Judgment calls (shared but not
     redesign):_ branded error-states (§7), link-token rendering in 공지/급식/집사톡.
 - **Priority order** among Mobile UX (§4), Admin desktop cleanup (§5), Admin
-  mobile (§6), and finishing redesign Phase C / A4 — **to be set with the user.**
+  mobile (§6), cross-cutting button sweep (§12.2), and A4 — **to be set with the user.**
   Note the dependency: §6 (admin mobile) is best built **after** §5 (admin
   cleanup) so it's not built twice.
 - **Admin visual target** — ✅ **SETTLED (owner, 2026-06-30): admin adopts the public
@@ -741,11 +850,11 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 ## 13. How to resume
 
 1. Read the latest hand-off
-   [`docs/handoff/2026-06-27-handoff-7.md`](../handoff/2026-06-27-handoff-7.md)
-   (then `kickoff-3` for the broader debt map). **Both functional gaps in §11
-   (입양홍보, 동참) and the deployment-target cleanup (§7) are now done.** Next
-   workstream is undecided — strongest candidates: §7a "bake the data layer" (perf 🔴)
-   or redesign Phase C (now unblocked by 입양홍보 + 동참).
+   [`docs/handoff/2026-07-10-handoff-27.md`](../handoff/2026-07-10-handoff-27.md)
+   (then `kickoff-3` for the broader debt map). **Off-plan session (handoff-27):** public/auth
+   button convergence onto shared `<Button>`, S22 mobile items closed, and a batch of mobile
+   nav/auth-flow fixes (hamburger-close, logout modal, mypage edit layout, menu-pill centering,
+   rotate-notice GIF). All pushed to `origin/dev`. No active workstream — next pick is open.
 2. With the user, pick the next workstream from §1 and fill in its section's
    concrete specs.
 3. Spin a companion `docs/planning/<workstream>-tasks.md` (mirror the redesign

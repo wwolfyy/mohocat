@@ -1,16 +1,29 @@
 import { initializeApp, getApps, getApp, setLogLevel } from 'firebase/app';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  connectStorageEmulator,
+} from 'firebase/storage';
 import {
   initializeAuth,
   browserLocalPersistence,
   browserPopupRedirectResolver,
   indexedDBLocalPersistence,
   inMemoryPersistence,
+  connectAuthEmulator,
   Auth,
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 import { getFirebaseConfig } from '@/utils/config';
+
+// E2E test mode only: route the client SDK to the local Firebase Emulator Suite.
+// Strictly gated on an explicit `=== 'true'` flag that is NEVER set in the Vercel
+// dashboard, so production behaviour is byte-identical. Inlined at build time by
+// Next (it is a NEXT_PUBLIC_* var). See docs/planning/playwright-ci-*.
+const USE_EMULATORS = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
 
 // Get Firebase configuration from the centralized config system
 const firebaseConfig = getFirebaseConfig();
@@ -59,8 +72,21 @@ const auth: Auth = (() => {
 
 const db = getFirestore(app);
 
-// Initialize Analytics only on the client-side
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+// E2E test mode: connect every client-SDK service to the local emulators. Guarded
+// against double-connect (Next hot reload / repeated module eval re-runs this file);
+// the connect* calls throw if invoked after the instance is already in use, so the
+// flag makes them run exactly once per process.
+if (USE_EMULATORS && !(globalThis as any).__FIREBASE_EMULATORS_CONNECTED__) {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8088);
+  connectStorageEmulator(storage, '127.0.0.1', 9199);
+  (globalThis as any).__FIREBASE_EMULATORS_CONNECTED__ = true;
+}
+
+// Initialize Analytics only on the client-side. Skipped in emulator mode: the fake
+// config has no measurementId, so getAnalytics would throw. `null` is already its
+// SSR value, so no consumer needs to change.
+const analytics = typeof window !== 'undefined' && !USE_EMULATORS ? getAnalytics(app) : null;
 
 export { storage, auth, db, analytics };
 

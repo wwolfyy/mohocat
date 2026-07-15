@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/utils/cn';
 import { NavigationBarLogout } from '@/components/auth/NavigationBarLogout';
@@ -76,9 +77,21 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { canAccessResource, isLoading } = useResourceAccess();
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
   const access = { canAccessResource, isLoading };
 
   const closeMobile = () => setIsMobileMenuOpen(false);
+
+  // Navigation lives in the persistent root layout, so its open/closed state
+  // survives route changes and auth transitions. Reset the mobile menu on both:
+  // (1) route change — closes the menu when tapping 로그인 dismisses the dropdown
+  //     as the /login page appears; (2) auth flip — closes it after a successful
+  //     login even when the post-login redirect lands back on the current route
+  //     (the 로그인 link sets redirect=<current path>, so pathname alone wouldn't
+  //     change).
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname, isAuthenticated]);
 
   // Ref on the mobile hamburger+menu wrapper; used to find the surrounding
   // <header> (the top nav bar) so a click anywhere outside it dismisses the
@@ -89,8 +102,15 @@ export default function Navigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
       const header = mobileNavRef.current?.closest('header');
-      if (header && event.target instanceof Node && header.contains(event.target)) return;
+      if (header && target instanceof Node && header.contains(target)) return;
+      // A modal opened *from* the menu (e.g. the logout confirm) portals to
+      // <body>, outside the header. Closing the menu here on `pointerdown`
+      // would unmount that modal — which is a child of the menu — before its
+      // button's `click` even fires, so the action (logout) never runs. Treat
+      // taps inside any open overlay as "inside" and leave the menu alone.
+      if (target instanceof Element && target.closest('[role="dialog"]')) return;
       setIsMobileMenuOpen(false);
     };
     document.addEventListener('pointerdown', handlePointerDown);
@@ -328,10 +348,10 @@ export default function Navigation() {
 
               <MobileDivider />
               <div className="px-4 py-2">
-                <NavigationBarLogin />
+                <NavigationBarLogin mobile />
               </div>
               <div className="px-4 py-2">
-                <NavigationBarLogout />
+                <NavigationBarLogout mobile />
               </div>
             </div>
           </div>

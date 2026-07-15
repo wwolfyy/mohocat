@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/hooks/useAuth';
 import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
 import { strings } from '@/constants/strings';
 
 interface PasswordResetModalProps {
@@ -111,19 +112,11 @@ export default function PasswordResetModal({
 
               {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={cn(
-                  'mt-4 w-full rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md',
-                  'focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2',
-                  { 'cursor-not-allowed opacity-70': isLoading }
-                )}
-              >
+              <Button type="submit" size="sm" disabled={isLoading} className="mt-4 w-full">
                 {isLoading
                   ? strings.auth.passwordReset.submitting
                   : strings.auth.passwordReset.submit}
-              </button>
+              </Button>
             </form>
           </>
         ) : (

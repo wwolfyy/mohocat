@@ -119,10 +119,34 @@ so a redeploy is required for a change to take effect — there is no runtime di
 ## Things that deploy _outside_ Vercel
 
 - **Firestore security rules** — deployed via the Firebase CLI, not Vercel:
+
   ```bash
   firebase deploy --only firestore:rules
   ```
+
   (e.g. the `contacts` `create: if false` rule for 동참.)
+
+  **`firebase` not found?** The CLI (`firebase-tools`) is a **local devDependency** of
+  this repo, not a global install — so a bare `firebase …` only works if you've
+  installed it globally. From the repo root, run it through the local copy instead
+  (both forms invoke the same binary; `firebase-tools` is the npm package name,
+  `firebase` is the binary it provides):
+
+  ```bash
+  npx firebase deploy --only firestore:rules        # or: npx firebase-tools deploy --only firestore:rules
+  ```
+
+  It's not an env/venv thing — nothing to "activate." To get the bare command,
+  install globally with `npm install -g firebase-tools` (the command is still
+  `firebase`, not `firebase-tools`).
+
+  **First-time / prod-target checks** (the deploy targets the **real** project, not
+  the `demo-mohocat` emulator project the tests use):
+
+  ```bash
+  npx firebase login:list          # authenticated? otherwise: npx firebase login
+  npx firebase use                 # confirm the active project (or pass --project <id>)
+  ```
 
 ## Whitelisting a new domain with the auth / identity providers
 

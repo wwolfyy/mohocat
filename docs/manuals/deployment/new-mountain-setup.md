@@ -28,7 +28,7 @@ bring-up will hit gaps. Before/while writing this guide, resolve or account for
   `generate-signed-url`, fetch-assets).
 - Hard-coded map image path in the map host (should come from mountain config).
 - `mountains.json` vs `permissions.json` drift.
-- Theme not wired through (`getMountainTheme()` colors are unread).
+- Theme not wired through (`config.theme` colors are unread).
 - No per-mountain DB isolation at the service-factory seam.
 
 > **TODO:** decide the tenancy model first — one Firebase project with per-mountain

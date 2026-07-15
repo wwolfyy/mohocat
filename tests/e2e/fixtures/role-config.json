@@ -1,0 +1,34 @@
+{
+  "roles": {
+    "admin": {
+      "permissions": [
+        "manage-app",
+        "manage-cat",
+        "manage-canteen",
+        "manage-shelter",
+        "manage-photo",
+        "manage-video",
+        "manage-posts",
+        "manage-users",
+        "view-analytics",
+        "view-post-feeding",
+        "view-post-butler",
+        "view-photo",
+        "view-video"
+      ],
+      "description": "Full administrative access"
+    },
+    "butler-ground": {
+      "permissions": ["view-video", "view-photo", "view-post-butler", "view-post-feeding"],
+      "description": "Physical cat care management"
+    },
+    "butler-internet": {
+      "permissions": ["view-video", "view-photo", "view-post-butler"],
+      "description": "Digital content management"
+    },
+    "viewer": {
+      "permissions": ["view-video", "view-photo"],
+      "description": "Read-only access to public content"
+    }
+  }
+}

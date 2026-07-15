@@ -15,6 +15,215 @@
 
 ---
 
+## 2026-07-15 — Playwright e2e main-plan suites complete (Phases 2–6) + Phase 7 flake audit
+
+**Area:** added (test-only — no `src/` change) — `tests/e2e/{public,auth,member,admin,api}/**`
+(spec files), `tests/e2e/setup/{auth-helpers,phone-otp}.ts`, member `storageState`
+wiring in `tests/e2e/setup/global.setup.ts`, an anonymous `auth` Playwright project +
+member/admin projects in `playwright.config.ts`, the recoverable-hydration tolerance in
+`tests/e2e/setup/test.ts`. Fixture fix — `tests/e2e/fixtures/cats.json` `date_of_birth`
+(epoch-millis → 4-digit year). Docs — `tests/e2e/README.md`, `docs/planning/PROJECT_PLAN.md`
+(§1 + §10), `docs/planning/playwright-ci-plan.md` (§8 checklist).
+
+**What changed:** wrote every remaining main-plan e2e suite on top of the Phase-0+1
+harness — `public/` (~60 tests: anonymous surfaces, landing/mobile map, galleries,
+announcements, albums, nav/gating), `api/` (route auth: unauth→401, non-admin→403),
+`auth/` (email + phone-OTP login, logout, full 집사등록 signup), `member/` (mypage,
+동참 contact, nav permissions, butler-access denial, account withdrawal), `admin/`
+(AdminAuth gate, cats/points/members/posts CMS). New shared helpers drive the real
+login UI (`auth-helpers.ts`) and read the emulator's SMS code over REST
+(`phone-otp.ts`). The console watchdog now tolerates the React-recoverable hydration
+mismatch (anonymous→authed nav; #418/#421/#423/#425) **only** on authed projects.
+
+**Rationale:** completes the main plan (`playwright-ci-plan.md` Phases 2–7) — the
+harness had one trivial spec; this brings real behavioral coverage across every role
+and the API security surface, closing the "coverage was zero" gap for the browser tier.
+
+**Verified:** each Playwright project green in isolation against a fresh seed (admin
+3× consecutively). **Phase 7 flake audit:** full-gate `npm run test:e2e` (clean
+`.next` each time) run **3× consecutively — all green, 101 passed / 13 skipped / 0
+failed**, ~3.7 min/run (Playwright phase ~1.7 min), identical counts (no flake).
+`npx tsc --noEmit` clean. Three test-only watch-outs handled (fixture DOB year; the
+cats form's `type="url"` thumbnail vs. relative paths — spec clears the field;
+hydration tolerance). Two latent app behaviors pinned by tests, not fixed:
+`butler_talk`/`butler_stream` gate on `isAdmin()` (member denied), and role
+assignment's `permission_logs` audit write is denied by the repo rules (non-fatal).
+Committed to `dev` across `a06eda3`/`13a4667`/`67407e8`/`b4bc727` (suites) + this
+doc pass; **not pushed** — owner to push/PR and watch CI reproduce the 3× green.
+
+## 2026-07-11 — Playwright e2e harness + CI (emulator-backed) — prerequisite plan executed
+
+**Area:** added — `.github/workflows/ci.yml`, `playwright.config.ts`, `tests/e2e/**`
+(fixtures, seed data, `setup/{test,global.setup}.ts`, `public/landing.smoke.spec.ts`,
+`README.md`), `scripts/test/seed-emulators.mjs`, `config/firebase/storage.rules`,
+`.env.test`. Env-gated `src/` touches — `services/firebase.ts` (WP2:
+`connect*Emulator` + skip `getAnalytics`), `lib/firebase-admin.ts` (WP3:
+credential-less emulator init), `components/{MountainViewer,LeafletMountainMap}.tsx`
+(WP7: `data-testid` readiness signals). Build-script touch —
+`scripts/maintenance/fetch-static-assets.js` (WP4: emulator project-id override,
+credential-less init, `file.download()` path). Config — `firebase.json` (emulators
+block), `package.json` (`test:e2e`/`test:e2e:ui`/`seed:emulators` + devDeps
+`@playwright/test`, `firebase-tools`, `dotenv-cli`), `.gitignore`.
+
+**What changed:** built the whole Phase-0+1 harness from
+`docs/planning/playwright-ci-prerequisite-plan.md` — a hermetic Firebase Emulator
+Suite (Auth+Firestore+Storage) seeded with hand-authored, PII-free fixtures, driving
+the **real prod build** (`next build` → `next start`) under Playwright, wired into a
+greenfield GitHub Actions CI. All new-behaviour `src/` code is gated on an explicit
+`NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true'` flag that is never set in Vercel.
+
+**Rationale:** the repo had **no** `.github/` and no browser tests; this establishes
+the deterministic, secret-free e2e foundation the main plan's suites build on.
+
+**Verified:** full local loop green — `npm run test:e2e` runs emulators → seed → prod
+build (asset fetch downloads 5 fixture thumbnails via `file.download()`, honours the
+F6 no-thumbnail warning, passes the F7 about-photo gate) → 3 passing specs (desktop +
+mobile landing map, admin `storageState`) in ~6s. Gates green: `npx tsc --noEmit`,
+`npm run lint` (warnings only), `npm test` (40 vitest). **Production build path
+verified untouched** — `npm run build` against real Firebase succeeds (32 cats, no
+emulator-mode init, clean `mountains.json` diff). CI workflow authored; observing it
+3× green + branch protection is an owner follow-up. Spikes S1–S3 recorded in the
+prereq plan §3; S4 admin-path proven (non-admin login blocked — see today's
+`DEBUG_LOG.md` entry).
+
+## 2026-07-11 — Dead-code removal (≈3,200 LOC across 19 files + 2 method-level items)
+
+**Area:** removed — `app/auth-test/`, `utils/{auth-integration-test,kakao-auth-test,oauth,dateParserTest,permission-utils}.ts`,
+`components/{ProviderManagement,SocialLoginDemo,KakaoTalkDebug,KakaoTalkFallbackDebug,FirebaseStorageTest,PostItem,ButlerStreamTabs}.tsx`,
+`services/basic-feeding-spots-service.ts`, and 5 dead API routes
+(`api/{test-youtube-auth,feeding-spots-basic,fetch-playlists,manage-playlist-membership,auth/status}/`).
+Trimmed — `FirebaseContactService.createContact` + `IContactService.createContact`
+(contact-service.ts, interfaces.ts) and `getMountainTheme()` (config.ts). Doc touch-ups —
+`docs/codebase/{api-routes,media-and-youtube}.md` route tables.
+
+**What changed:** executed the source-verified removal plan in
+`docs/planning/dead-code-removal-assessment-20260711.md` — a debug/demo auth cluster,
+standalone unreferenced files, "not yet implemented"/stub API routes, and two dead symbols.
+`createContact` was already superseded by `POST /api/contact` (Admin SDK) and blocked by the
+`contacts` Firestore rule (`create: if false`); `getMountainTheme()` had no callers (theme
+not wired through). `MountainTheme` type kept (still used by `MountainConfig.theme`).
+
+**Rationale:** mechanical dead-code cleanup — every item was grep-verified to have zero live
+callers before removal. Product-decision items (MountainSelector, 겨울집 stub, migration page)
+were intentionally left alone.
+
+**Verified:** re-ran the basename/route-path sweep to confirm zero external refs, then
+`npx tsc --noEmit` (exit 0) + `npm run test:smoke` (26/26 passed).
+
+---
+
+## 2026-07-10 — Compliance: 개인정보처리방침 + 이용약관 pages, footer links, consent, 국외 이전
+
+**Area:** `app/pages/privacy/page.tsx` (new), `app/pages/terms/page.tsx` (new),
+`components/Footer.tsx`, `components/SignupForm.tsx`, `constants/strings.ts`.
+
+**What changed:** stood up the two legal pages the footer had only stubbed. Both are
+static prose Server Components adapted from the KISA/PIPC standard 처리방침 structure
+and grounded in what the app actually collects (email/password/닉네임/phone, Kakao
+profile, 동참 form). The footer's greyed "준비 중" placeholders became live `<Link>`s to
+`/pages/privacy` and `/pages/terms`. Signup (email path) gained two **required** consent
+checkboxes — 이용약관 + 개인정보 수집·이용 — that gate the 인증번호 받기 submit
+(strings under `login.signup.consent`). The privacy policy discloses **국외 이전** (§6,
+PIPA Art. 28-8) for Google LLC + Vercel Inc. (US); per the 2023 amendment this rides the
+**contract-necessity + 처리방침-disclosure** basis, so overseas transfer is **not** part
+of the consent checkbox.
+
+**Rationale:** close the deferred compliance workstream (PROJECT_PLAN §8) — the operator
+is a 개인정보처리자 under PIPA once it collects member PII. Decisions (owner): CPO
+산냥이집냥이 운영자 / `rescuezoro@gmail.com`; under-14 allowed w/ guardian consent.
+
+**Verified:** `tsc` clean + smoke green; server-side render confirmed (both pages, §6/§13,
+consent strings on `?tab=signup`, footer links). ⚠️ Professional legal review before
+scaling still owed; phone/Kakao-signup consent not yet captured. See compliance-plan.md.
+
+## 2026-07-10 — Account withdrawal (탈퇴) / deletion flow
+
+**Area:** `app/api/account/delete/route.ts` (new), `app/mypage/page.tsx`,
+`constants/strings.ts`, `app/pages/privacy/page.tsx` (§3 retention).
+
+**What changed:** members can now delete their own account. A low-emphasis 회원 탈퇴 link
+on mypage opens a shared `ui/Modal` confirm → `POST /api/account/delete`, which verifies
+the caller's Firebase ID token (uid comes from the token, never the body), then Admin-SDK
+deletes the `users/{uid}` doc and the Auth account, then signs out. Works uniformly for
+email/phone/Kakao (no client reauth). Immediate **hard-delete**; privacy §3 retention
+reworded from a 30-day grace to "탈퇴 시 지체 없이 파기". Authored posts are retained
+(content, not account PII).
+
+**Rationale:** account withdrawal/deletion is a PIPA data-subject right (compliance-plan
+task 6). Server-side because client rules forbid a user deleting their own `users` doc and
+client `deleteUser()` needs recent reauth.
+
+**Verified:** `tsc` clean + smoke 26/26; unauth `POST` → 401; policy wording confirmed
+rendered. ⚠️ Live click-through with a throwaway account still owed (it irreversibly
+deletes) — extension not connected here.
+
+## 2026-07-10 — Adoption page: enlarge 소식 heading + post title/content fonts
+
+**Area:** `app/pages/adoption/page.tsx`, `components/AdoptionPromotionClient.tsx`.
+
+**What changed:** four Tailwind size swaps — "새로운 입양 소식" heading `text-base`→`text-xl`
+(matches the 입양홍보 h1); post-card title `text-sm`→`text-base`; post content (expanded
+body + collapsed 3-line preview) `text-sm`→`text-base` (matches the about-page content
+size). Weights/tracking unchanged; the per-post date stays `text-sm`.
+
+**Rationale:** owner found the adoption-post heading and body too small on desktop.
+
+**Verified:** static class swaps; `tsc` clean + smoke green.
+
+## 2026-07-10 — Mobile UI polish: mypage edit rows + login/logout menu pills
+
+**Area:** `app/mypage/page.tsx`, `components/auth/NavigationBarLogin.tsx` +
+`NavigationBarLogout.tsx`, `components/Navigation.tsx` · **Type:** fix (small) · **Branch:** `dev`
+
+### Change
+
+Two mobile presentation fixes reported by the owner:
+
+1. **Mypage inline edit rows** (`cd3c29d`) — 닉네임 / 이메일 재인증 / 전화번호 edit rows put the
+   `flex-1` input and both action buttons in **one horizontal row**, so on a narrow viewport the
+   input ate the width and 취소 was squeezed off to the far right. Reworked each to a **full-width
+   input** with a **right-aligned `취소` / primary-button row below** it (labels horizontal). The
+   single-button steps (send-verification / verify-and-update) keep their full-width CTA.
+2. **Mobile login/logout menu pills** (`3ccd414`) — in the hamburger menu the login/logout pills
+   are block-level flex containers, so they filled the row with content packed **left**, leaving
+   dead space on the right. Added a `mobile` prop to both `NavigationBar*` components that applies
+   `w-full justify-center`, so each reads as a **balanced full-width button** matching the 입양홍보
+   CTA above it. Desktop pills (content-width in the nav bar) are unchanged — only the two
+   mobile-menu instances pass `mobile`.
+
+### Verified
+
+`tsc` clean; smoke 25/25. Login pill **browser-verified centered at 390px** (iframe harness).
+Mypage rows + the logged-in logout pill share the same pure-flex mechanism but sit behind
+sign-in — live confirm is device/credential-owed.
+
+---
+
+## 2026-07-10 — Converge public/auth CTAs onto the shared `<Button>` primitive
+
+**Area:** `app/pages/announcements/[id]`, `app/pages/contact`, `components/AnnouncementModal`,
+`CatSelectorModal`, `LoginForm`, `auth/PhoneLoginForm` + 4 auth modals · **Type:** fix (refactor) ·
+**Branch:** `dev`
+
+### Change
+
+Swept the remaining hand-rolled `bg-gradient-to-r from-brand to-accent` buttons across the
+public + auth surfaces onto `<Button variant="primary">` (PROJECT_PLAN §12.2). Covered the
+announcements-detail back button, contact form submit, announcement/cat-selector modal actions,
+the email + phone login submits, and the four auth modals (email-verification, password-reset,
+kakao-guidance, user-not-found). Also normalized stray non-brand accents to brand tokens
+(`bg-yellow-100`/`bg-blue-100` icon circles → `bg-brand-100`; login spinner `border-yellow-600`
+→ `border-brand`). Navigation `<Link>` CTAs left as links (they navigate, not act). This makes
+tap-target sizing / focus rings / hit-areas live in one primitive, so the mobile pass inherits
+correct buttons instead of re-touching each hand-rolled one.
+
+### Verified
+
+`tsc` clean; smoke 25/25. Grep-confirmed no hand-rolled gradient `<button>`s remain in
+public/auth code (only the two intentional `<Link>` CTAs in faq/adoption).
+
+---
+
 ## 2026-07-08 — Back button / swipe-back closes modal instead of navigating away
 
 **Area:** `components/ui/useModalLayer.ts` · **Type:** fix · **Branch:** `dev`

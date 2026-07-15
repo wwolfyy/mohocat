@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getCatService } from '@/services';
 import { Cat } from '@/types';
 import Modal from './ui/Modal';
+import Button from './ui/Button';
 import { cn } from '@/utils/cn';
 
 interface CatSelectorModalProps {
@@ -201,12 +202,9 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
           >
             모두 해제
           </button>
-          <button
-            onClick={handleDone}
-            className="rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md"
-          >
+          <Button size="sm" onClick={handleDone}>
             완료 ({selectedCats.size}개 선택)
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

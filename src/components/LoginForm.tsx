@@ -1,5 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import Button from '@/components/ui/Button';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { cn } from '@/utils/cn';
@@ -348,30 +349,21 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
           </button>
         </div>
 
-        <button
+        <Button
           type="submit"
+          size="lg"
           disabled={isSigningInWithKakao || isEmailLoginLoading}
-          className={cn(
-            'w-full py-3 rounded-lg font-bold transition-all duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-offset-2',
-            'bg-gradient-to-r from-brand to-accent text-ink',
-            'hover:shadow-lg hover:-translate-y-1',
-            'focus:ring-yellow-500',
-            {
-              'opacity-50 cursor-not-allowed': isSigningInWithKakao || isEmailLoginLoading,
-              'cursor-pointer': !isSigningInWithKakao && !isEmailLoginLoading,
-            }
-          )}
+          className="w-full hover:-translate-y-1"
         >
           {isEmailLoginLoading ? (
             <div className="flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+              <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin mr-2"></div>
               {t.submitting}
             </div>
           ) : (
             t.submit
           )}
-        </button>
+        </Button>
       </form>
 
       {/* Divider for Phone Login */}

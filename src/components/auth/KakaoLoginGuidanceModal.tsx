@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
 import { strings } from '@/constants/strings';
 
 interface KakaoLoginGuidanceModalProps {
@@ -60,15 +61,16 @@ export default function KakaoLoginGuidanceModal({
             <h3 className="text-lg font-medium text-gray-900">{strings.auth.kakao.checkTitle}</h3>
             <p className="text-sm text-gray-500">{strings.auth.kakao.checkBody}</p>
             <div className="flex flex-col space-y-2 mt-4">
-              <button
+              <Button
+                size="sm"
+                className="w-full"
                 onClick={() => {
                   handleClose();
                   onConfirm();
                 }}
-                className="w-full rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
               >
                 {strings.auth.kakao.yes}
-              </button>
+              </Button>
               <button
                 onClick={() => setStep('guidance')}
                 className="w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
@@ -82,7 +84,7 @@ export default function KakaoLoginGuidanceModal({
       case 'guidance':
         return (
           <div className="text-center space-y-4">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-brand-100">
               <span className="text-2xl">ℹ️</span>
             </div>
             <h3 className="text-lg font-medium text-gray-900">
@@ -90,12 +92,9 @@ export default function KakaoLoginGuidanceModal({
             </h3>
             <p className="text-sm text-gray-500">{strings.auth.kakao.guidanceBody}</p>
             <div className="mt-4">
-              <button
-                onClick={handleClose}
-                className="w-full rounded-lg bg-gradient-to-r from-brand to-accent px-4 py-2 text-sm font-semibold text-ink transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
-              >
+              <Button size="sm" className="w-full" onClick={handleClose}>
                 {strings.auth.kakao.gotIt}
-              </button>
+              </Button>
             </div>
           </div>
         );

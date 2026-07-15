@@ -1,0 +1,31 @@
+[
+  {
+    "id": "test-point-01",
+    "x": 30,
+    "y": 40,
+    "title": "테스트 급식소 1",
+    "description": "픽스처 급식소 — 현재 거주 고양이 있음"
+  },
+  {
+    "id": "test-point-02",
+    "x": 60,
+    "y": 55,
+    "title": "테스트 급식소 2",
+    "description": "픽스처 급식소 — 예전 거주 고양이 있음",
+    "labelSide": { "desktop": "above", "mobile": "above" }
+  },
+  {
+    "id": "test-point-03",
+    "x": 45,
+    "y": 70,
+    "title": "테스트 급식소 3",
+    "description": "픽스처 급식소 — 입양 대상 고양이 있음"
+  },
+  {
+    "id": "test-point-04",
+    "x": 75,
+    "y": 25,
+    "title": "빈 급식소",
+    "description": "고양이가 없는 급식소 — 삭제 가드/생성 테스트용 여유분"
+  }
+]

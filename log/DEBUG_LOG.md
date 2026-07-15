@@ -11,6 +11,345 @@
 
 ---
 
+## 2026-07-13 — Intermittent e2e build hang/"markerless bake" — a SECOND page (냥이들) read points via the client Web SDK at build
+
+**Symptom:** The e2e gate (`npm run test:e2e`) intermittently produced failing marker
+tests (landing.smoke, home-map, mobile-map) — logged in the prior entry's "Update
+2026-07-12 (still open)" as a **markerless bake ~1 in 3**, blamed on a build-time
+Admin-SDK read race that "returns `[]` before the emulator is ready."
+
+**Root cause (the prior hypothesis was wrong):** two things were conflated, and the real
+cause was neither an empty Admin read nor an emulator-readiness race. Reproduced and
+instrumented on a fresh machine:
+
+1. **The Admin-SDK read path is NOT the problem.** A cold, fresh-process Admin read of
+   points+cats against the seeded emulator succeeded **40/40**; clean-`.next` builds baked
+   points **6/6**. When a build _completes_, the home page always bakes its markers. So
+   `getAllPointsServer`/`getAllCatsServer` do **not** intermittently return `[]`.
+2. **The real failure is a build _hang_, misread as "markerless."** `src/app/pages/cats/
+page.tsx` (냥이들) — a Server Component — read cats via the Admin SDK but still read
+   **points via the client Web SDK** (`getPointService().getAllPoints()`). This is the
+   exact mixed-SDK mistake the home page had (fixed for `page.tsx` in `02c412a`) — **the
+   sibling page was missed.** During `next build`, the client Web SDK does **not** connect
+   to the emulator, so it hits **real** Firebase: `@firebase/firestore … Listen stream …
+PERMISSION_DENIED: Permission denied on resource project demo-mohocat` → it enters
+   offline-retry and leaves a **dangling gRPC handle** that intermittently wedges
+   `next build` at **"Collecting build traces"** (static generation had already finished
+   51/51). A build killed/timed-out at that step leaves an incomplete `.next`; `next start`
+   then serves a broken site and **all marker tests fail** — which looked like a
+   "markerless bake." (A confounding false lead: forcing `preferRest: true` on the Admin
+   Firestore made **every** build fail with "Could not load the default credentials" —
+   REST transport needs real creds even against the emulator, so it is incompatible with
+   the credential-less emulator init. Do **not** use `preferRest` in emulator mode.)
+
+**Fix:** switched `src/app/pages/cats/page.tsx` from `getPointService().getAllPoints()`
+(client Web SDK) to `getAllPointsServer()` (Admin SDK, `@/lib/server/point-reads`) — a
+2-line change mirroring `02c412a`. Functionally identical in production (same `points`
+collection, Admin SDK reads deterministically at build/server time); completes the §7a
+"bake the data layer" migration the home-page fix started. No page still reads a client
+service during build SSR (verified by scan).
+
+**Verified:** `npx tsc --noEmit` clean; `npm run test:smoke` 26/26. Empirically:
+10 consecutive gate-style builds (one clean `.next`, then reuse — the real gate's
+condition), each hang-guarded — **10/10 baked points, 0 client real-Firebase hits, 0
+hangs**, incl. build #8 (which hung in the pre-fix reproduction). Before the fix the
+client `PERMISSION_DENIED` appeared in **every** build log and a hang recurred ~1 in 8.
+
+**Lesson:** "intermittent markerless bake" was a build **hang**, not an empty read. When a
+Server Component reads Firestore at build time, it must use the **Admin SDK**
+(`@/lib/server/*-reads`) — the client Web SDK doesn't reach the emulator during
+`next build`, hits real Firebase, and its dangling connection can hang the build
+nondeterministically. Grep for `getPointService()`/`getCatService()` in any non-`'use
+client'` `page.tsx`/`layout.tsx` before trusting a §7a "baked" claim.
+
+## 2026-07-12 — Home-map §7a "no client Firestore" spec: green per-file, red in the full gate
+
+**Symptom:** `home-map.spec.ts`'s "avatars are baked — no client Firestore request
+fires" test **passed** when run per-file (`npx playwright test home-map.spec.ts`
+reusing the running server) but **failed** in the full `npm run test:e2e`. The
+collected calls were three `http://127.0.0.1:8088/google.firestore.v1.Firestore/Listen/channel?…`
+requests — so the assertion `expect(firestoreCalls).toEqual([])` was non-empty.
+
+**Root cause:** two things. (1) The assertion was **too broad** — it asserted the
+_whole landing page_ fires zero client Firestore, but §7a only removed the
+**marker-click → gallery** per-point waterfall. The landing page still makes **one
+unrelated client `getDoc`** at init: there is **no `onSnapshot` anywhere in `src/`**,
+but the modern Firestore Web SDK routes even one-time `getDoc`/`getDocs` reads over the
+`…/Listen/channel` WebChannel, so a single init read shows up as "Listen" traffic. (2)
+It only surfaced in the full run because of **timing** — under the reused-server
+per-file run the assertion resolved before the init read landed; under the full clean
+build + parallel load the read arrived inside the observed window (a classic
+green-per-file / red-in-CI race).
+
+**Fix (first attempt, insufficient):** scoping the assertion to the marker-click →
+gallery action (clear the request buffer, then click) — this passed twice but was
+**still flaky**: the unrelated init read fires at a nondeterministic time and, under the
+full gate's parallel load, straggled **into** the cleared post-click window (it bit
+again when the Phase-6 `api/` spec shifted timing). **Final fix:** **dropped the network
+assertion entirely** — it is unfixable in principle, because the map read and the
+unrelated init read are indistinguishable by URL (both are opaque `/Listen/channel`
+POSTs). §7a is now asserted structurally instead: the marker's cat avatar `<img>` src is
+**baked into the server HTML** (`cat_test-cat-01.jpg`) — proving no client fetch renders
+it — and the marker-click → gallery → CatInfo path is covered by a separate test.
+
+**Verified:** full `npm run test:e2e` green across the whole suite incl. the new `api/`
+project. **Lesson:** don't assert "zero network calls of type X" when the page makes
+unrelated calls of the same shape at nondeterministic times — assert the structural
+invariant (here, server-baked DOM) instead.
+
+## 2026-07-12 — Album Lightbox/VideoPlayer spec fails only in the full gate — overlay-intercepted clicks + order-dependent nav
+
+**Symptom:** `albums.spec.ts` was unverifiable per-file (its spike-S3 public fixtures
+only serve after a fresh build — a reused `next start` snapshots `public/` at boot), and
+in the first full `npm run test:e2e` **6/6 album tests failed**. Two distinct causes,
+neither visible until the clean build served the fixtures.
+
+**Root cause:** (1) **Clicks intercepted** — `MediaTile` lays a full-size decorative
+hover-overlay `<div class="absolute inset-0 …">` over the thumbnail, so Playwright's
+actionability check refuses to click the `<img>` ("subtree intercepts pointer events"),
+even though a real click would bubble to the tile's `onClick`. (2) **Order-dependent
+nav** — the Lightbox "다음/이전" test assumed `album-01.jpg` was the first image, but
+album order is service-defined; when it resolved **last**, `hasNext` was false, no
+"다음 사진" button existed, and the click timed out. A separate strict-mode violation
+also appeared: the grid tile caption duplicates the Lightbox description text.
+
+**Fix:** (1) album-tile clicks use `click({ force: true })` (bypasses the decorative
+overlay; the event still bubbles to the tile). (2) the nav test opens the **first grid
+tile by position** (`getByRole('img', { name: /album-0/ }).first()`) and keys on
+position — first image → forward-only, last → back-only — instead of filename; and all
+Lightbox assertions are scoped to the Lightbox portal
+(`div.fixed.inset-0` filtered by its 닫기 button) to dodge the duplicated caption text.
+
+**Verified:** full `npm run test:e2e` green (album tests pass on both desktop + mobile).
+
+## 2026-07-12 — Landing map bakes markerless in the e2e harness — points read via client SDK at build (incomplete §7a)
+
+**Symptom:** The e2e landing smoke spec (`tests/e2e/public/landing.smoke.spec.ts`)
+failed reproducibly (2 full `npm run test:e2e` runs, desktop + mobile): the map,
+header and tiles render but **zero `.leaflet-marker-icon`** appear — the assertion
+times out at 25s. Only the admin `storageState` setup passed.
+
+**Root cause:** `src/app/page.tsx` read **cats** server-side via the Admin SDK
+(`getAllCatsServer`, §7a) but still read **points** via the **client Web SDK**
+(`getPointService().getAllPoints()`). During `next build`, the client SDK does **not**
+reliably connect to the Firestore emulator (build log shows it reaching _real_
+Firestore: `PERMISSION_DENIED on resource project demo-mohocat`), so `getAllPoints()`
+returned `[]` and the home page **baked an empty point set** → `MountainViewer` got
+`points=[]` → `usePointMarkers` produced no markers. Confirmed by inspection: the baked
+`.next/server/app/index.html` contained the seeded **cats** (Admin read) but **no point
+coords/titles** (client read); the emulator itself held all 4 points (REST); `/api/points`
+at **runtime** returned all 4 (client SDK connects fine once the server is live); and a
+manual rebuild against a _warm_ emulator baked points correctly — i.e. a build-time
+connection race, nondeterministic. Production was never affected: there the client SDK
+hits **real** Firebase, whose rules allow public point reads. Points were simply the one
+data path §7a ("bake the data layer") never migrated off the client SDK.
+
+**Fix:** added `getAllPointsServer()` (`src/lib/server/point-reads.ts`, Admin SDK) —
+mirroring `getAllCatsServer` in `cat-reads.ts`, logs + re-raises on failure — and switched
+`src/app/page.tsx` to `Promise.all([getAllPointsServer(), getAllCatsServer()])`. Both
+map data sources now bake deterministically via the Admin SDK (which honours
+`FIRESTORE_EMULATOR_HOST`). The client `getPointService` is untouched; production reads
+the same `points` collection, so behaviour is functionally identical.
+
+**Verified:** `npx tsc --noEmit` clean; `npm run test:e2e` now **3 passed** — and the
+markers appear in ~2s instead of the prior 25s timeout (data is baked, not raced),
+confirmed across two consecutive green runs.
+
+**Update 2026-07-12 (still open — not fully fixed):** switching **points** to the Admin SDK
+removed the _frequent_ markerless bake but did **not** make it deterministic. With the full
+Phase-2 + Phase-6 suite, a markerless bake still recurs **~1 in 3** `npm run test:e2e` runs
+(all marker tests fail: landing.smoke, home-map, mobile-map). Root cause is the same class —
+a **build-time emulator-connection race**, now on the Admin-SDK read path: `getAllPointsServer`
+/ `getAllCatsServer` occasionally read an empty set before the emulator is fully ready during
+`next build`, and the page bakes empty (the read returns `[]` rather than throwing, so the
+build still succeeds). CI `retries: 2` does **not** help — it's a whole-build condition, not a
+per-test flake. A proper fix (await/retry emulator readiness before the Server-Component reads,
+or fail-loud on an empty bake) touches the prod read path and needs owner sign-off; tracked in
+plan §8 Phase 7. Until then the gate is only intermittently green.
+
+## 2026-07-11 — Non-admin login fails under the repo Firestore rules (emulator) — `ensureUserExists` self-write denied
+
+**Symptom:** In the e2e harness, `global.setup.ts` signs **admin** in fine but a
+**member** (role `butler-ground`) login never completes — the page stays on `/login`
+and setup times out waiting for the post-login redirect to `/`.
+
+**Root cause:** every login runs `permissionService.ensureUserExists(user)`
+(`src/services/permission-service.ts`), which unconditionally `updateDoc`s the
+signed-in user's own `users/{uid}` doc. But the repo `config/firebase/firestore.rules`
+`users/{userId}` **write** rule requires `hasPermission(uid, 'manage-users')` — it has
+**no self-write allowance** (`request.auth.uid == userId`). So a non-admin's self-update
+is **permission-denied**; `handleLogin` → `handleCheckUser` catches, sets the
+verify-failed error, and never redirects. Admins pass only because they hold
+`manage-users`. The Firestore **emulator enforces the repo rules** (prerequisite plan
+F12: repo rules are the source of truth and may be ahead of prod), which is what
+surfaced this — a latent divergence that would also block non-admin login anywhere the
+repo rules are the deployed rules.
+
+**Fix (applied 2026-07-13, owner chose option (a)):** added a **scoped self-write clause**
+to `config/firebase/firestore.rules` → `match /users/{userId}`. A signed-in user may now
+`create` + `update` their **own** doc, but **cannot set/change `currentRole`** (the only
+field `hasPermission()` reads): `create` requires `currentRole.role == 'viewer'` &&
+`currentRole.permissions == []`; `update` requires `request.resource.data.currentRole ==
+resource.data.currentRole` (unchanged). Role assignment stays admin-only (the existing
+`manage-users` clause). This also corrects a latent gap — the repo rule had **never**
+allowed the self-write `ensureUserExists` performs (`if false` → `if manage-users`; git),
+so the deployed prod rules must already diverge; the app has no Admin-SDK fallback for this
+path. Covered by a new rules test (`tests/rules/users.rules.test.ts`, `npm run test:rules`,
+6/6) asserting: self create/update ok, self-escalation blocked (create + update),
+cross-user write blocked, admin cross-user write ok. (Options considered: (b) tolerate a
+denied self-update — rejected: only papers over returning users, leaves real signup broken,
+violates log-and-re-raise; (c) move the upsert behind an Admin-SDK route — deferred as the
+cleaner long-term shape.)
+
+**Verified:** reproduced deterministically — admin `authenticate` setup passes, member
+setup fails at the redirect wait; root cause confirmed by reading the `users` write
+rule vs `ensureUserExists`'s `updateDoc`. Tracked in
+`docs/planning/playwright-ci-prerequisite-plan.md` §3 (S4).
+
+## 2026-07-10 — Logout on /mypage strands the page on a spinner (client redirect never commits)
+
+**Symptom:** Signing out while on `/mypage` doesn't redirect anywhere — the page is
+left showing only its `!user` loading spinner.
+
+**Root cause:** the client-side redirect never committed. `/mypage` gates on auth: it
+shows a spinner while `loading || !user` and a `useEffect` calls `router.replace`/`push`
+to leave when `!user`. On logout the auth context flips `user → null` (the spinner
+proves it — `loading` only ever goes false, so a visible spinner means `user` is null),
+but the App Router transition triggered from that effect **didn't commit**, so the page
+just sat on the spinner. Client-router redirects fired off an auth-state change are a
+known-flaky pattern.
+
+**Dead end first:** initially blamed a double-`router.push` race (the sign-out button's
+`.then(push('/'))` colliding with the guard's `push('/login')`) and de-raced it to a
+single `router.replace`. Still stuck — so the race wasn't it; the `router` navigation
+itself wasn't committing.
+
+**Fix (`src/app/mypage/page.tsx`):** drive the redirect off the auth-state guard (which
+fires on `user → null` via the Firebase listener, independent of whether `signOut()`'s
+promise resolves) and do a **full-page** navigation — `window.location.replace(target)`
+— which always commits and cleanly drops signed-in client state. Destination is chosen
+by a `wasAuthedRef` (set true whenever `user` is truthy): a **logout** (was signed in)
+→ landing page `'/'`; a **direct logged-out visit** (never signed in) → `'/login'`.
+This routes every logout to home — in-page button, 탈퇴/withdrawal, AND the top-nav
+`LogoutModal` (which can't set page-local state, but does flip the shared auth state).
+`useRouter` is no longer used here and was removed.
+
+**Verified:** `tsc --noEmit` clean + smoke 26/26. Live click-through (real session)
+still owed — the browser extension isn't connected here.
+
+## 2026-07-10 — Landscape rotate-notice shows a broken image (GIF filename mismatch)
+
+**Area:** `components/MountainViewer.tsx` · **Branch:** `dev` · **Severity:** low (cosmetic) ·
+**Status:** ✅ fixed (filename match; file exists on disk).
+
+### Symptom
+
+Rotating a phone to landscape on the map view shows the "지도는 세로 모드에서만…" rotate notice, but
+the decorative cat GIF renders as a broken image.
+
+### Root cause
+
+The `<Image src>` requested `/images/chubby-cat.gif` (hyphen) while the file on disk is
+`public/images/chubby_cat.gif` (**underscore**) → 404 → broken image.
+
+### Fix
+
+Point the reference at the real filename (`/images/chubby_cat.gif`). One-char change; grep
+confirmed it's the only reference.
+
+---
+
+## 2026-07-10 — Mobile logout does nothing: confirm modal opens but the button never logs out
+
+**Area:** `components/Navigation.tsx` (mobile outside-click handler) · **Branch:** `dev` ·
+**Severity:** medium (mobile UX, auth) · **Status:** ✅ fixed; outside-click regression
+browser-verified (390px). Live logout is credential/device-owed.
+
+### Symptom
+
+On mobile: open the hamburger menu → tap 로그아웃 → the logout confirm modal appears, but
+tapping the red 로그아웃 button doesn't log the user out — the modal just disappears and the
+session stays signed in.
+
+### Root cause
+
+The mobile menu's dismiss-on-outside-click handler (added in `c632f76`) listens on
+**`pointerdown`** and closes the menu for any target not inside `<header>`. `LogoutModal` (the
+shared `Modal`) renders through a **portal to `document.body`**, i.e. _outside_ the header. So
+tapping the confirm button fires `pointerdown` first → handler runs → `setIsMobileMenuOpen(false)`
+→ the menu unmounts → `NavigationBarLogout` (a child of the menu) unmounts → `LogoutModal` unmounts
+**before the button's `click` fires**. `handleLogout`/`signOut()` never runs. `pointerdown`
+precedes `click`, so the modal was destroyed in the gap. Mobile-only because that's where the
+menu (and its outside-click handler) exists.
+
+### Fix
+
+In the outside-click handler, also treat taps inside an open overlay as "inside" — bail when the
+`pointerdown` target is within a `[role="dialog"]` (the shared `Modal` root carries that role):
+
+```tsx
+if (target instanceof Element && target.closest('[role="dialog"]')) return;
+```
+
+The menu stays mounted while the modal is up, so the confirm button's `click` lands and logout
+runs. (Composes with the sibling fix that closes the menu on `isAuthenticated` change: after
+logout completes the menu closes cleanly.)
+
+### Verified
+
+`tsc` clean; smoke 25/25. Browser (390px harness): opened the menu, tapped the map (a genuine
+outside tap) → menu still closes — the edit didn't regress the dismiss path. The logout leg
+itself needs a signed-in session (credential/device-owed, per A4); root cause + fix are
+mechanism-certain (pointerdown-before-click unmount).
+
+---
+
+## 2026-07-10 — Mobile hamburger menu stays open across login navigation / after sign-in
+
+**Area:** `components/Navigation.tsx` · **Branch:** `dev` · **Severity:** medium (mobile UX) ·
+**Status:** ✅ fixed; bug #1 browser-verified (390px harness), bug #2 mechanism-verified
+(live sign-in is device/credential-owed, per A4).
+
+### Symptom
+
+On mobile, two related glitches during login: (1) tapping 로그인/등록 in the open hamburger
+dropdown navigated to `/login` but the dropdown **stayed open** over the login page; (2) after a
+successful sign-in the dropdown **still didn't disappear**.
+
+### Root cause
+
+`Navigation` is rendered in the **root `layout.tsx`**, so it persists across every client-side
+route transition — the `isMobileMenuOpen` state was never reset. The mobile nav's regular
+`NavItem`s each call `closeMobile` on click, but the login/logout links (`NavigationBarLogin/Logout`)
+don't, so tapping login left the menu open (bug #1). After login, `router.push(redirect)` fires;
+because the 로그인 link sets `redirect=<current path>`, the post-login route can equal the route the
+user started on, so **pathname alone may not change** — nothing reset the still-open menu (bug #2).
+
+### Fix
+
+Added one effect in `Navigation` that closes the mobile menu whenever **`pathname` or
+`isAuthenticated`** changes:
+
+```tsx
+useEffect(() => {
+  setIsMobileMenuOpen(false);
+}, [pathname, isAuthenticated]);
+```
+
+Pathname change covers navigating to /login (and any post-login redirect to a different route);
+the `isAuthenticated` dependency covers the same-route redirect case. Root-cause fix at the
+state owner rather than sprinkling `closeMobile` onto each link.
+
+### Verified
+
+`tsc` clean; smoke 25/25. Browser (390px iframe harness on a fresh dev server): opened the
+hamburger, tapped 로그인/등록 → login page rendered with the dropdown **fully closed** (bug #1).
+`<Link>` is client-side nav + the layout-level Navigation doesn't remount, so the close is the
+effect firing, not a page reload. Bug #2 shares the same effect (`isAuthenticated` dep); the live
+signed-in transition is credential/device-owed.
+
+---
+
 ## 2026-07-05 — 급식소 CMS coordinate inputs: can't edit any digit but the last (caret jumps to end)
 
 **Area:** `components/admin/PointMapPicker.tsx` (`CoordInput`) · **Branch:** `dev` ·

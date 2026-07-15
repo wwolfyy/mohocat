@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
 import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import { strings } from '@/constants/strings';
 
 const t = strings.mypage;
@@ -28,20 +28,43 @@ export default function MyPage() {
     signInWithPhoneNumber,
   } = useAuth();
 
-  const router = useRouter();
+  // Track whether this session was ever authenticated here, so the guard can tell
+  // a logout (was signed in → send to the landing page) from a direct logged-out
+  // visit (never signed in → send to the login page). Covers logout via the
+  // in-page button AND the top-nav modal, since both just flip the auth state.
+  const wasAuthedRef = useRef(false);
+  useEffect(() => {
+    if (user) wasAuthedRef.current = true;
+  }, [user]);
 
-  // Redirect if not logged in
+  // Redirect once unauthenticated. Driven off the auth state (not off awaiting
+  // signOut), so it also covers logging out from the top-nav modal. A client
+  // `router.replace` here proved unreliable — after the auth context flips to
+  // null the App Router transition didn't commit and the page stayed stuck on its
+  // `!user` spinner — so we do a full-page navigation, which always commits and
+  // cleanly drops any signed-in client state.
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      window.location.replace(wasAuthedRef.current ? '/' : '/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(); // auth listener flips user→null → the effect redirects
+    } catch (e) {
+      console.error('Sign out failed:', e);
+    }
+  };
 
   // --- State for Edit Modes ---
   const [editingNickname, setEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState('');
 
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const [editingEmail, setEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
@@ -203,6 +226,29 @@ export default function MyPage() {
     }
   };
 
+  // 5. Withdraw (탈퇴) — hard-delete via the Admin SDK route, then sign out.
+  const handleWithdraw = async () => {
+    setIsWithdrawing(true);
+    try {
+      if (!user) throw new Error('Not authenticated');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      await signOut(); // auth listener flips user→null → the effect redirects home
+    } catch (e: any) {
+      console.error('Withdrawal failed:', e);
+      alert(t.withdraw.failed(e.message));
+      setIsWithdrawing(false);
+      setIsWithdrawModalOpen(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Profile Section */}
@@ -213,19 +259,24 @@ export default function MyPage() {
         <div className="mb-4">
           <label className="block text-sm text-gray-500 mb-1">{t.profile.nicknameLabel}</label>
           {editingNickname ? (
-            <div className="flex gap-2">
+            <div className="space-y-2">
               <input
                 type="text"
                 value={newNickname}
                 onChange={(e) => setNewNickname(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border rounded-lg"
               />
-              <Button variant="primary" size="sm" onClick={handleUpdateNickname}>
-                {strings.common.save}
-              </Button>
-              <button onClick={() => setEditingNickname(false)} className="text-gray-500 px-2">
-                {strings.common.cancel}
-              </button>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setEditingNickname(false)}
+                  className="px-3 py-1.5 text-sm text-gray-500"
+                >
+                  {strings.common.cancel}
+                </button>
+                <Button variant="primary" size="sm" onClick={handleUpdateNickname}>
+                  {strings.common.save}
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex justify-between items-center">
@@ -254,18 +305,16 @@ export default function MyPage() {
                     onChange={(e) => setEmailPassword(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full"
-                      onClick={handleEmailReauth}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditingEmail(false)}
+                      className="px-3 py-1.5 text-sm text-gray-500"
                     >
-                      {strings.common.confirm}
-                    </Button>
-                    <button onClick={() => setEditingEmail(false)} className="text-gray-500 px-2">
                       {strings.common.cancel}
                     </button>
+                    <Button variant="primary" size="sm" onClick={handleEmailReauth}>
+                      {strings.common.confirm}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -351,18 +400,16 @@ export default function MyPage() {
                     onChange={(e) => setNewPhone(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full"
-                      onClick={handleSendPhoneCode}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditingPhone(false)}
+                      className="px-3 py-1.5 text-sm text-gray-500"
                     >
-                      {t.profile.sendSms}
-                    </Button>
-                    <button onClick={() => setEditingPhone(false)} className="text-gray-500 px-2">
                       {strings.common.cancel}
                     </button>
+                    <Button variant="primary" size="sm" onClick={handleSendPhoneCode}>
+                      {t.profile.sendSms}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -439,17 +486,57 @@ export default function MyPage() {
 
       {/* Sign Out */}
       <button
-        onClick={() => signOut().then(() => router.push('/'))}
+        onClick={handleSignOut}
         className="w-full bg-gray-100 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-200 transition-colors"
       >
         {t.signOut}
       </button>
+
+      {/* Withdraw (탈퇴) — quiet, low-emphasis entry point; the confirm modal
+          carries the destructive warning. */}
+      <div className="text-center">
+        <button
+          onClick={() => setIsWithdrawModalOpen(true)}
+          className="text-sm text-gray-400 underline underline-offset-2 hover:text-red-600"
+        >
+          {t.withdraw.button}
+        </button>
+      </div>
 
       <PasswordResetModal
         isOpen={isResetModalOpen}
         onClose={() => setIsResetModalOpen(false)}
         email={user?.email || ''}
       />
+
+      {isWithdrawModalOpen && (
+        <Modal
+          isOpen={isWithdrawModalOpen}
+          onClose={() => !isWithdrawing && setIsWithdrawModalOpen(false)}
+          title={t.withdraw.confirmTitle}
+          size="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-gray-600">{t.withdraw.confirmBody}</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsWithdrawModalOpen(false)}
+                disabled={isWithdrawing}
+                className="px-4 py-2 text-sm text-gray-500 disabled:opacity-50"
+              >
+                {t.withdraw.cancel}
+              </button>
+              <button
+                onClick={handleWithdraw}
+                disabled={isWithdrawing}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {isWithdrawing ? t.withdraw.processing : t.withdraw.confirm}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

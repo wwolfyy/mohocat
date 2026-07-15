@@ -239,10 +239,8 @@ export const adminStrings = {
       users: '사용자',
       roles: '역할',
       permissions: '권한',
-      debug: '권한 디버그',
       contacts: '문의',
     },
-    debugToolTitle: '권한 디버그 도구',
   },
 
   /** 사용자(역할) 관리 (src/components/admin/RoleManagement.tsx). */

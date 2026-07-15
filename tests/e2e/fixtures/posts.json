@@ -1,0 +1,59 @@
+{
+  "_comment": "Keyed by Firestore collection. Post counts (esp. butler_talk pagination) are refined when the Phase-2 post specs land; this is a representative seed so the seed script exercises every post collection.",
+  "posts_announcements": [
+    {
+      "id": "test-anno-01",
+      "title": "테스트 공지 1",
+      "message": "첫 번째 공지 본문이에요.",
+      "username": "관리자",
+      "date": "2026-01-02",
+      "time": "10:00"
+    },
+    {
+      "id": "test-anno-02",
+      "title": "테스트 공지 2 (링크 토큰)",
+      "message": "링크 토큰 검증용 공지예요. (토큰 본문은 Phase 2에서 채워요.)",
+      "username": "관리자",
+      "date": "2026-01-03",
+      "time": "11:00"
+    }
+  ],
+  "posts_adoption": [
+    {
+      "id": "test-adopt-01",
+      "title": "입양 소식 1",
+      "message": "입양 홍보 소식 본문이에요.",
+      "username": "관리자",
+      "date": "2026-01-04",
+      "time": "12:00"
+    }
+  ],
+  "posts_butler": [
+    {
+      "id": "test-butler-01",
+      "title": "집사수다 1",
+      "message": "집사 수다 게시글 1이에요.",
+      "username": "집사회원",
+      "date": "2026-01-05",
+      "time": "13:00"
+    },
+    {
+      "id": "test-butler-02",
+      "title": "집사수다 2",
+      "message": "집사 수다 게시글 2예요.",
+      "username": "집사회원",
+      "date": "2026-01-06",
+      "time": "14:00"
+    }
+  ],
+  "posts_feeding": [
+    {
+      "id": "test-feeding-01",
+      "title": "급식 스트림 1",
+      "message": "급식 스트림 게시글 1이에요.",
+      "username": "집사회원",
+      "date": "2026-01-07",
+      "time": "15:00"
+    }
+  ]
+}

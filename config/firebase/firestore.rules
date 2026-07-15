@@ -110,12 +110,27 @@ service cloud.firestore {
       allow read: if request.auth != null &&
         (request.auth.uid == userId || hasPermission(request.auth.uid, 'manage-users'));
 
-      // Role/permission writes currently go through the client SDK (the admin
-      // members page → RoleAssignmentService). Gate on `manage-users` (admin-only)
-      // so this stays a server-enforced boundary — mirroring the cats rule.
+      // Role/permission writes go through the client SDK (the admin members page →
+      // RoleAssignmentService). Gate on `manage-users` (admin-only) so role
+      // assignment stays a server-enforced boundary — mirroring the cats rule.
       // Future consideration: move these writes behind an Admin SDK API route and
       // restore `write: if false` (see PROJECT_PLAN §7 / handoff-10).
       allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-users');
+
+      // A signed-in user may create + update their OWN doc — this is the
+      // login/signup profile sync (`PermissionService.ensureUserExists`, client
+      // SDK): create seeds the default `viewer` role; update refreshes profile
+      // fields (email/displayName/photoURL/phoneNumber/emailVerified). They may
+      // NOT set or change their own role/permissions — `currentRole` is the only
+      // thing `hasPermission()` reads, so locking it blocks self-escalation; role
+      // assignment stays admin-only (the `manage-users` clause above). Without this
+      // the repo rules deny every non-admin login's self-write (see DEBUG_LOG
+      // 2026-07-11) — the client SDK has no Admin-SDK fallback for this path.
+      allow create: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.currentRole.role == 'viewer' &&
+        request.resource.data.currentRole.permissions == [];
+      allow update: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.currentRole == resource.data.currentRole;
     }
 
     // Role→permission matrix — the single source of truth for role permissions:
