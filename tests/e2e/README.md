@@ -47,12 +47,21 @@ on 3000.) These are matched by the `connect*Emulator` calls in
 ```
 tests/e2e/
   fixtures/        hand-authored seed JSON (one file per collection) + images/
-  setup/           test.ts (console-error watchdog fixture) + global.setup.ts (storageState)
-  public/          anonymous-surface specs   (chromium-desktop + mobile projects)
-  auth|member|admin|api/   role-scoped specs (land in main-plan Phases 3–6)
+  setup/           test.ts (console-error watchdog fixture), global.setup.ts (captures
+                   admin + member storageState), auth-helpers.ts (email login + signup),
+                   phone-otp.ts (reads the emulator's SMS code over REST)
+  public/          anonymous-surface specs      (chromium-desktop + mobile projects)
+  auth/            login / signup / logout / phone-OTP  (anonymous `auth` project)
+  member/          butler-ground member flows   (member storageState)
+  admin/           /admin CMS flows             (admin storageState)
+  api/             API-route security           (request context, no browser)
 scripts/test/seed-emulators.mjs   Admin SDK → Firestore/Auth/Storage (demo-* guarded)
 playwright.config.ts
 ```
+
+**Playwright projects** (`playwright.config.ts`): `setup` (captures storageState) →
+`chromium-desktop` + `mobile` (`public/`) · `auth` (anonymous, drives the login UI) ·
+`member` / `admin` (signed-in via storageState, depend on `setup`) · `api` (no browser).
 
 ## Conventions
 
@@ -64,6 +73,31 @@ playwright.config.ts
   ready when a `.leaflet-marker-icon` is visible).
 - **Console-error watchdog:** import `test` from `tests/e2e/setup/test.ts`; any
   unexpected `console.error` / `pageerror` fails the test (allowlist inside it).
+  Two cases need the **base** `@playwright/test` `test` instead of the watchdog —
+  role assignment (writes an audit log to `permission_logs` the repo rules deny for
+  the client → a benign `console.error`) and the `api/` request-context specs (no
+  page). Reach for the base `test` only for a source-verified benign error, not to
+  paper over a real one.
+- **Recoverable-hydration tolerance (authed projects only):** on a signed-in page the
+  server pre-renders the **anonymous** nav, then the client hydrates to the
+  **authenticated** nav — an expected, React-recoverable hydration mismatch
+  (minified #418/#421/#423/#425) that surfaces non-deterministically as a `pageerror`.
+  The watchdog tolerates **only** that error family and **only** on the
+  `auth`/`member`/`admin` projects; the anonymous `public` suite still fails hard on
+  any hydration error.
+- **Signed-in vs. anonymous specs:**
+  - `member`/`admin` specs run with a captured `storageState` (from `global.setup.ts`,
+    which logs each seeded role in through the real UI).
+  - `auth` specs drive the login/signup UI themselves from a **fresh anonymous**
+    context (no storageState, no `setup` dependency) — use the `emailLogin` /
+    `signUpNewUser` helpers in `setup/auth-helpers.ts`.
+  - A spec that needs to start signed-out under an otherwise-authed project overrides
+    per-file with `test.use({ storageState: { cookies: [], origins: [] } })` — e.g.
+    `member/account-withdrawal.spec.ts` signs a throwaway user in itself to exercise
+    the real `POST /api/account/delete`.
+- **Phone-OTP:** the Auth emulator disables real reCAPTCHA and exposes the SMS code
+  over REST; `getLatestPhoneCode()` in `setup/phone-otp.ts` polls it so signup/phone-
+  login complete end-to-end.
 - **Fixtures are PII-free by construction** — hand-authored, obviously-fake
   ids/emails/phone numbers; never copied from prod. A cat's thumbnail file is
   `thumbnails/cat_<docId>.jpg` in Storage (the asset script matches the doc id in
@@ -80,11 +114,25 @@ playwright.config.ts
   `config/firebase/firestore.rules` from the repo, which may be ahead of what's
   deployed. That's the source of truth we want to test, but live prod behavior can
   differ until deploys catch up.
-- **Non-admin login is currently blocked under the repo rules.** On every login
-  the app calls `ensureUserExists()`, which `updateDoc`s the user's own
-  `users/{uid}` doc — but the repo `users` write rule requires `manage-users`, so
-  a non-admin self-update is denied and login never completes. `global.setup.ts`
-  therefore sets up **admin only** for now; member/admin (non-admin actor) suites
-  are blocked until the owner decides whether to relax the `users` write rule
-  (allow self-writes) or make `ensureUserExists` tolerate a denied self-update.
-  Tracked in `log/DEBUG_LOG.md` and the prerequisite plan §3 (S4).
+- **Non-admin login (resolved 2026-07-13).** On every login the app calls
+  `ensureUserExists()`, which writes the user's own `users/{uid}` doc via the client
+  SDK. A **scoped self-write rule** in `config/firebase/firestore.rules` now lets a
+  user create/update their own doc but **not** set/change `currentRole` (no
+  self-escalation), so the seeded `butler-ground` member logs in cleanly and
+  `global.setup.ts` captures **both** admin and member `storageState`. Covered by
+  `npm run test:rules` (`tests/rules/users.rules.test.ts`). **⚠️ Deploy note:** the
+  repo rule is ahead of prod — run `firebase deploy --only firestore:rules` to match.
+- **Fixture watch-outs.**
+  - A cat's `date_of_birth` is a **4-digit year** (rendered `${date_of_birth}년생`),
+    not an epoch timestamp; the cats admin form also validates it as a year
+    (`min=1990 max=2030`).
+  - The cats admin form's `thumbnailUrl` input is `type="url"`, but the app stores
+    **relative** paths (`/images/...`) that fail HTML5 URL validation and silently
+    block save — the cats spec clears the field to proceed. (App follow-up: relative
+    thumbnails are legitimate.)
+- **Two latent app behaviors the suites pin (not test bugs).** `butler_talk` /
+  `butler_stream` gate on `isAdmin()`, so a butler-ground member is **denied** despite
+  the "allow butler roles" comment — `member/butler-access.spec.ts` asserts that; if
+  the gate is widened, that spec is the intended failure signal. Role assignment's
+  `permission_logs` audit write is denied by the repo rules (non-fatal; the role still
+  assigns).

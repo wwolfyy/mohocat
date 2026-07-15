@@ -485,7 +485,11 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
 
 ### Phase 7 — hardening & docs
 
-- [ ] Flake audit (3× consecutive green CI runs); runtime < 10 min.
+- [x] Flake audit (3× consecutive green CI runs); runtime < 10 min. ✅ 2026-07-15 —
+      local full-gate `npm run test:e2e` (clean `.next` each time) run **3×
+      consecutively, all green: 101 passed / 13 skipped / 0 failed**, ~3.7 min/run
+      (Playwright phase ~1.7 min), identical counts — no flake. Whole-suite exit
+      criterion met locally; owner still to watch CI reproduce it 3× on push/PR.
   - [x] ✅ **Intermittent "markerless bake" FIXED (2026-07-13).** Root cause was
         **misdiagnosed** — it was **not** a non-deterministic Admin-SDK read/emulator race.
         It was a build **hang**: `src/app/pages/cats/page.tsx` (냥이들) still read points via
@@ -497,8 +501,14 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
         builds** baked, 0 client real-Firebase hits, 0 hangs. Full write-up: DEBUG_LOG
         2026-07-13 (newest) + testing hand-off 2026-07-13 update. The whole-build hang that
         `retries: 2` couldn't save is gone → the 3× exit criterion is now meetable.
-- [ ] `tests/e2e/README.md` (run locally, conventions, fixtures).
-- [ ] Update PROJECT_PLAN §10 + §1 snapshot; FEATURE_MOD_LOG entry; hand-off.
+- [x] `tests/e2e/README.md` (run locally, conventions, fixtures). ✅ 2026-07-15 —
+      refreshed the Layout + Playwright-projects map (all suites written), added
+      conventions for the anonymous `auth` project, storageState overrides
+      (account-withdrawal), the phone-OTP helper, the recoverable-hydration tolerance
+      rule, and the fixture watch-outs (`date_of_birth` = year; relative `thumbnailUrl`).
+- [x] Update PROJECT_PLAN §10 + §1 snapshot; FEATURE_MOD_LOG entry; hand-off. ✅
+      2026-07-15 — §1 row + §10 goal/plan bullets updated (all suites green; Phase 7
+      remaining); FEATURE_MOD_LOG entry added; testing hand-off carries the live state.
 - [ ] Owner: enable branch protection requiring CI on PRs to `main`.
 
 ### Phase 8 — deferred (revisit later)

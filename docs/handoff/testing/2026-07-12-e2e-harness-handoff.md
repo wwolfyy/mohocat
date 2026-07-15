@@ -20,6 +20,54 @@ not pushed (owner to push).
 
 ---
 
+## Update — 2026-07-15: Phase 7 done — flake audit 3× green + docs finalized (workstream complete)
+
+**The main plan is complete.** With Phases 0–6 green, **Phase 7 (flake audit + docs
+finalization) is now done** — every main-plan task in `playwright-ci-plan.md` §8 is
+checked except the two owner actions (push/PR to watch CI + branch protection). All
+changes are **test/docs-only; no `src/` touched**; committed status below.
+
+**Flake audit — PASS.** Ran the full canonical gate `npm run test:e2e` (with a clean
+`.next` each time, so each is a true cold build → seed → build → `next start` → all
+Playwright projects) **3× consecutively — all green: 101 passed / 13 skipped / 0
+failed**, ~3.7 min per run (the Playwright phase itself ~1.7 min), **identical counts
+every run** (no flaky, no reorder sensitivity). Runtime is well under the plan's
+<10-min target. The whole-suite "3× green" exit criterion is met **locally**; the
+remaining half of that criterion — **watching CI reproduce it 3×** — is the owner's
+push/PR action.
+
+**Docs finalized this pass:**
+
+- **`tests/e2e/README.md`** — refreshed the Layout + added a Playwright-projects map
+  (all suites now written, not "land in Phases 3–6"); new **Conventions** for the
+  anonymous `auth` project, the base-`test` cases (role-assignment audit / `api/`),
+  the **recoverable-hydration tolerance** rule (authed projects only), signed-in vs.
+  anonymous specs + the `storageState`-override pattern (account-withdrawal), and the
+  **phone-OTP** helper; replaced the stale "non-admin login blocked" gotcha with the
+  resolved scoped-`users`-rule state; added the **fixture watch-outs** (`date_of_birth`
+  = year; relative `thumbnailUrl` vs. the form's `type="url"`) and the two latent
+  app behaviors the suites pin.
+- **`docs/planning/PROJECT_PLAN.md`** — §1 status row + §10 goal/plan bullets now say
+  all main-plan suites are written + green (~140 tests across projects; 101 run in the
+  gate, the rest are the per-project skips), Phase 7 remaining reduced to the owner
+  push/PR + branch protection.
+- **`docs/planning/playwright-ci-plan.md`** — §8 Phase 7 checklist: flake audit, the
+  README, and the PROJECT_PLAN/FEATURE_MOD_LOG items all checked with dated notes.
+- **`log/FEATURE_MOD_LOG.md`** — new 2026-07-15 entry (suites Phases 2–6 + the flake
+  audit).
+
+**Owner actions still open (unchanged — the only things left):**
+
+1. **Push / open a PR** → watch GitHub Actions CI go **3× green** (completes the exit
+   criterion) + enable branch protection requiring CI on PRs to `main`.
+2. **Deploy the rules change** for prod parity:
+   `firebase deploy --only firestore:rules` (the scoped `users` self-write rule).
+
+> The 2026-07-15 update below is the detailed record of the Phases 3–5 suites that
+> preceded this finalization; keep it for the per-suite breakdown.
+
+---
+
 ## Update — 2026-07-15: Phases 3–5 written + green (start here in a fresh session)
 
 **Phases 3, 4, and 5 are done.** With Phase 0/1 (harness/CI), Phase 2 (`public/`), and

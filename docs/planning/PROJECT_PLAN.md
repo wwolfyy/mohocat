@@ -44,7 +44,7 @@
 | Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                                                                                                                                                                                       |
 | Compliance / legal                         | `[x]` done        | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed (accepted, out of workstream):** professional legal review before scaling; phone/Kakao signup consent; security audit; Kakao scope verification.                                                                                                                                                                                        |
 | Multi-tenant hardening                     | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Testing & quality gates                    | 🚧 building       | §10 — Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + Phase 2 `public/` + Phase 6 `api/` **done & green**; build-hang fixed + §5 non-admin-login unblocked via a scoped `users` self-write rule (`npm run test:rules`, 6/6) — all 2026-07-13. Next: Phases 3–5 (signed-in).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Testing & quality gates                    | 🚧 building       | §10 — Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + **all main-plan suites written & green** — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Build-hang fixed + §5 non-admin-login unblocked via a scoped `users` self-write rule (`npm run test:rules`, 6/6). Remaining: Phase 7 (flake audit + docs), then owner push/PR + branch protection.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                |
 | **Admin manual / operator docs**           | `[x]` started     | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + `docs/manuals/deployment/new-mountain-setup.md` (🚧 provisioning placeholder).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
@@ -694,7 +694,9 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 > **Goal:** coverage was **zero**; now Vitest (40 tests) + an emulator-backed
 > **Playwright e2e harness with GitHub Actions CI** are in place (harness landed
-> 2026-07-11). Next: build out the e2e spec suites (main-plan Phases 2–6).
+> 2026-07-11), and **all main-plan e2e suites are written & green** — `public/`,
+> `auth/`, `member/`, `admin/`, `api/` (~140 tests, 2026-07-15). Remaining: Phase 7
+> (flake audit + docs finalization), then owner push/PR + branch protection.
 
 **Done:**
 
@@ -719,17 +721,29 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       `users`-write rule question that blocks non-admin login (2026-07-11
       `DEBUG_LOG`).
 
+- [x] **All e2e spec suites written & green (2026-07-13 → 2026-07-15)** — main-plan
+      Phases 2–6: `public/` (~60 tests, anonymous surfaces + landing map),
+      `api/` (route auth: unauth→401, non-admin→403), `auth/` (email/phone login,
+      logout, full 집사등록 signup), `member/` (mypage, 동참 contact, nav
+      permissions, butler-access denial, account withdrawal), `admin/` (AdminAuth
+      gate, cats/points/members/posts CMS). ~140 tests across the
+      `public`/`auth`/`member`/`admin`/`api` Playwright projects; each project green
+      in isolation against a fresh seed. Two former blockers cleared en route: the
+      "markerless bake" build hang (`26e8264`) and non-admin login (scoped `users`
+      self-write rule, `65a934f` + `npm run test:rules`, 6/6). See the testing
+      hand-off (`docs/handoff/testing/2026-07-12-e2e-harness-handoff.md`).
+
 **Plans drafted (2026-07-11):**
 
 - [`playwright-ci-plan.md`](./playwright-ci-plan.md) — the Playwright E2E suite
   (public / auth / member / admin / API-security) against the **Firebase Emulator
-  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phase 0+1
-  (harness), Phase 2 `public/` (~60 tests), and Phase 6 `api/` are DONE + green**;
-  the intermittent "markerless bake" build hang is **fixed** (2026-07-13, DEBUG_LOG),
-  and the **§5 non-admin-login blocker is resolved** — a scoped `users` self-write rule
-  (+ `npm run test:rules`, 6/6) now lets non-admins log in. **Remaining: Phases 3–5**
-  (`auth`/`member`/`admin`, ~10 spec files; wire member `storageState` first), then
-  Phase 7 (flake audit + docs). ⚠️ push the rules change to Firebase for prod parity.
+  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phases 0–6
+  are DONE + green** — harness/CI, `public/`, `auth/`, `member/`, `admin/`, `api/`
+  (~140 tests). The intermittent "markerless bake" build hang is **fixed**
+  (2026-07-13, DEBUG_LOG), and the **§5 non-admin-login blocker is resolved** — a
+  scoped `users` self-write rule (+ `npm run test:rules`, 6/6) now lets non-admins
+  log in. **Remaining: Phase 7** (flake audit + docs finalization). ⚠️ push the rules
+  change to Firebase for prod parity.
 - [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md) —
   the enabler plan that must land first: adopts the main plan's recommendations
   as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
