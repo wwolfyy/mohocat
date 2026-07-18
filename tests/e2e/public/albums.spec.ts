@@ -19,11 +19,15 @@ test.describe('photo album + Lightbox', () => {
   test('tile opens the Lightbox; 이전/다음 navigate; X closes', async ({ page }) => {
     await page.goto('/pages/photo-album');
 
-    // Two seeded images render as tiles (captioned with their descriptions).
+    // Four seeded images render as tiles (captioned with their descriptions).
+    // test-img-03/04 exist for the admin tag-images characterization specs; their
+    // older uploadDate sorts them after album-01/02 (uploadDate-desc).
     await expect(page.getByText('픽스처 사진 1')).toBeVisible();
     await expect(page.getByText('픽스처 사진 2')).toBeVisible();
+    await expect(page.getByText('픽스처 사진 3')).toBeVisible();
+    await expect(page.getByText('픽스처 사진 4')).toBeVisible();
 
-    // Open the FIRST grid tile (index 0 of 2 → 다음 available, 이전 not — image
+    // Open the FIRST grid tile (index 0 of 4 → 다음 available, 이전 not — image
     // order is service-defined, so key the nav on position, not filename).
     // MediaTile lays a full-size decorative hover-overlay <div> over the image, so
     // a plain click on the <img> is "intercepted"; the click still bubbles to the
@@ -42,8 +46,10 @@ test.describe('photo album + Lightbox', () => {
 
     // First image: forward available, back not.
     await expect(lightbox.getByRole('button', { name: '이전 사진' })).toHaveCount(0);
-    await lightbox.getByRole('button', { name: '다음 사진' }).click();
-    // Second (last) image: back available, forward not.
+    // Walk to the last of the 4 seeded images: back available, forward not.
+    for (let i = 0; i < 3; i++) {
+      await lightbox.getByRole('button', { name: '다음 사진' }).click();
+    }
     await expect(lightbox.getByRole('button', { name: '이전 사진' })).toBeVisible();
     await expect(lightbox.getByRole('button', { name: '다음 사진' })).toHaveCount(0);
 
@@ -69,8 +75,9 @@ test.describe('video album + VideoPlayer', () => {
   test('tile renders with YouTube badge and opens the player shell', async ({ page }) => {
     await page.goto('/pages/video-album');
 
-    // One seeded YouTube video.
-    await expect(page.getByText('YouTube')).toBeVisible();
+    // Two seeded YouTube videos (test-vid-02 exists for the admin tag-videos
+    // characterization specs), so the badge is no longer unique.
+    await expect(page.getByText('YouTube').first()).toBeVisible();
     const tile = page.getByRole('img', { name: '픽스처 영상 1' });
     await expect(tile).toBeVisible();
 

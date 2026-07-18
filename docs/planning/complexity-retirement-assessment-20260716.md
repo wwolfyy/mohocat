@@ -445,11 +445,23 @@ signed off.
 
 **Legend:** `[ ]` todo · `[x]` done · ⚠️ needs a decision/verification checkpoint
 
-### P0 — Characterization tests (added 2026-07-18 — see §7 P0)
+### P0 — Characterization tests (added 2026-07-18 — see §7 P0) — ✅ DONE 2026-07-19
 
-- [ ] P0.1 e2e create-flow specs for Family B (`NewAnnouncementForm` upgrade to include an image upload; `NewAdoptionForm` new) — green against current code
-- [ ] P0.2 e2e editor specs for `tag-images` + `tag-videos` (load, single-edit save, multi-select + batch-tag, date auto-parse, cat tagging; YouTube surfaces excluded) — green against current code
-- [ ] P0.3 Gate: new specs + full e2e suite green pre-refactor (the baseline)
+- [x] P0.1 e2e create-flow specs for Family B (`NewAnnouncementForm` upgrade to include an image upload; `NewAdoptionForm` new) — green against current code _(`tests/e2e/admin/posts.spec.ts`)_
+- [x] P0.2 e2e editor specs for `tag-images` + `tag-videos` (load, single-edit save, multi-select + batch-tag, date auto-parse, cat tagging; YouTube surfaces excluded) — green against current code _(`tests/e2e/admin/tag-images.spec.ts` + `tag-videos.spec.ts`; for the video editor "save" is YouTube orchestration, so its automated net covers load/form-population/local cat-tagging/title-parse + the Firestore-only bulk 자동 날짜 인식)_
+- [x] P0.3 Gate: new specs + full e2e suite green pre-refactor (the baseline) — **112 passed / 13 skipped / 0 failed** (2026-07-19, local full gate; tsc + smoke green)
+
+_P0 execution notes (2026-07-19): (1) fixtures extended — `media.json` gained `test-img-03/04`
+(untagged, no `createdTime`, date-pattern filenames) + `test-vid-02` (title vs description carry
+**different** date patterns so the per-item parse and the bulk parse — which reads
+`description||id`, not `title` — each pin their own source); `albums.spec.ts` updated for the
+larger seed. (2) Console watchdog got one scoped allowance: `/admin/tag-videos` mounts with a
+failing `/api/manage-playlists` (no YouTube creds in the emulator env) — the specs pin that the
+page works without playlists. (3) Two behaviors the specs pin that differ from naive expectation:
+`batchUpdateTags` does NOT clear the selection (only `batchUpdateImages` does — the panel stays
+open, only the tags input resets), and cat-selection is asserted through the 완료-commit path
+only, so the same assertions survive the accepted P4 commit-on-done change. (4) Selector tests
+use `테스트냥이이` — `cats.spec.ts` renames `테스트냥이일` mid-run in the same project._
 
 ### P1 — Shared media-upload primitive
 

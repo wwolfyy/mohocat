@@ -1,5 +1,5 @@
 {
-  "_comment": "Album media. Per spike S3 (prerequisite plan §3), image/video URLs point at public/-served fixture files, NOT emulator Storage — so next/image needs no localhost remotePattern. Storage-served fixtures for these would only add flake.",
+  "_comment": "Album media. Per spike S3 (prerequisite plan §3), image/video URLs point at public/-served fixture files, NOT emulator Storage — so next/image needs no localhost remotePattern. Storage-served fixtures for these would only add flake. test-img-03/04 + test-vid-02 exist for the P0 editor characterization specs (admin/tag-images, admin/tag-videos): untagged, no createdTime, with date-pattern filenames/description so date auto-parse has real targets; their older uploadDate keeps album-01/02 first in the public albums (uploadDate-desc sort).",
   "cat_images": [
     {
       "id": "test-img-01",
@@ -18,6 +18,24 @@
       "uploadDate": "2026-01-03",
       "uploadedBy": "admin",
       "description": "픽스처 사진 2"
+    },
+    {
+      "id": "test-img-03",
+      "imageUrl": "/images/test-fixtures/album-01.jpg",
+      "fileName": "20240315_143045.jpg",
+      "tags": [],
+      "uploadDate": "2025-12-01",
+      "uploadedBy": "admin",
+      "description": "픽스처 사진 3"
+    },
+    {
+      "id": "test-img-04",
+      "imageUrl": "/images/test-fixtures/album-02.jpg",
+      "fileName": "2024-03-16 09.30.00.jpg",
+      "tags": [],
+      "uploadDate": "2025-12-02",
+      "uploadedBy": "admin",
+      "description": "픽스처 사진 4"
     }
   ],
   "cat_videos": [
@@ -30,6 +48,17 @@
       "uploadedBy": "admin",
       "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
       "description": "픽스처 영상 1"
+    },
+    {
+      "id": "test-vid-02",
+      "videoUrl": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "videoType": "youtube",
+      "title": "픽스처 영상 2 2024-03-16",
+      "tags": [],
+      "uploadDate": "2025-12-03",
+      "uploadedBy": "admin",
+      "thumbnailUrl": "/images/test-fixtures/album-02.jpg",
+      "description": "픽스처 영상 둘 20240315"
     }
   ]
 }

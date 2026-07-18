@@ -1,6 +1,6 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-18 · **Branch:** `dev` · **`main`:** promoted through PR #7
+**Last updated:** 2026-07-19 · **Branch:** `dev` · **`main`:** promoted through PR #7
 (2026-07-16)
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
@@ -34,16 +34,17 @@ the testing hand-off
   (production / Vercel) via a **merge commit**. After PR #7, `dev` is an ancestor of
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
-- **Two resumable tracks, pick either:** (1) **multi-tenant / 2nd mountain** — PARKED
-  at a clean seam: decision framework drafted (Q1–Q8 open), its one §9-independent
-  prerequisite (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume =
-  answer Q1. (2) **complexity retirement** — owner deep-dive **DONE (2026-07-18)**,
-  decisions re-locked (toolkit shape instead of `MediaTaggingEditor<T>`,
-  `react-hook-form` dropped, commit-on-done cat-selector accepted, retired-LOC
-  revised ~2,100–2,900); **ready to execute — resume = give the explicit P0
-  go-ahead**. Each section below has its pick-up path.
-- **Tree:** clean — the doc bundle (this file + testing-closure edits + the
-  complexity assessment) was committed 2026-07-18; see _Uncommitted_ below.
+- **Active track: complexity retirement — IN EXECUTION.** P0 go-ahead given
+  2026-07-19; **P0 (characterization-test net) is DONE** — new/upgraded specs green
+  against unrefactored code, full-gate baseline **112 passed / 13 skipped / 0
+  failed**. **Next: P1** (extract `MediaUploadField` + the direct-storage image
+  strategy + the shared YouTube upload function — assessment §7 P1 / §8).
+- **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
+  decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
+  (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
+  (thinking work, parallelizable with the refactor).
+- **Tree:** P0 test bundle staged/uncommitted as of this update — see _Uncommitted_
+  below.
 
 ---
 
@@ -108,7 +109,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 📋 PLANNED — ✅ deep-dive done, awaiting P0 go-ahead
+### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0 ✅ done (2026-07-19), next P1
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -179,8 +180,21 @@ upload paths. Verdicts on the 4 queued items (full detail in the assessment):
 4. **Priority:** this track executes next; multi-tenant stays parked (Q1 is thinking
    work, parallelizable).
 
-**To pick this up:** give the explicit **P0 go-ahead** — then execution starts at the
-characterization-test net (assessment §7 P0 / §8 task list).
+**✅ P0 DONE (2026-07-19, on explicit go-ahead).** The characterization net exists and
+is green against unrefactored code: Family B create-flows now include an image upload
+(`admin/posts.spec.ts` — announcement upgraded, 입양홍보 new) and both editors have
+characterization specs (`admin/tag-images.spec.ts`, `admin/tag-videos.spec.ts` —
+YouTube-orchestrated writes excluded per P5.4; the video editor's automated net is
+load/form/local-tagging/title-parse + the Firestore-only bulk 자동 날짜 인식).
+Supporting infra: `media.json` +2 images/+1 video (auto-parse targets),
+`albums.spec.ts` adjusted, one scoped console-watchdog allowance for the
+credential-less `/api/manage-playlists` 500 on tag-videos mount. Full-gate baseline
+**112 passed / 13 skipped / 0 failed** + tsc + smoke green. Detail + pinned-behavior
+notes: assessment §8 P0 (execution notes).
+
+**To pick this up:** start **P1** (assessment §7 P1 / §8): extract `MediaUploadField`,
+lift the direct-storage image strategy out of `NewAnnouncementForm` + the shared
+YouTube video-upload function into injectable units, smoke/unit coverage, gate.
 
 ---
 
@@ -211,18 +225,33 @@ characterization-test net (assessment §7 P0 / §8 task list).
 
 ## Uncommitted (as of this update)
 
-**None** — the doc bundle (this file, the testing-closure pass on
-`docs/planning/playwright-ci-plan.md` + the testing hand-off, and the
-complexity-retirement assessment incl. the 2026-07-18 deep-dive re-lock) was
-committed 2026-07-18 on explicit go-ahead. **No uncommitted `src/` changes** — the
-complexity refactor itself hasn't started (P0 starts in a fresh session on
-explicit go-ahead).
+**The P0 test bundle** (awaiting commit go-ahead — no `src/` changes; P0 is
+test-infra only):
+
+- `tests/e2e/admin/tag-images.spec.ts` + `tag-videos.spec.ts` (new — editor
+  characterization specs)
+- `tests/e2e/admin/posts.spec.ts` (announcement create + image upload; 입양홍보
+  create new)
+- `tests/e2e/fixtures/media.json` (+`test-img-03/04`, +`test-vid-02`)
+- `tests/e2e/public/albums.spec.ts` (robust to the larger media seed)
+- `tests/e2e/setup/test.ts` (scoped watchdog allowance: `/api/manage-playlists`
+  failure on tag-videos mount)
+- `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
+  (this update)
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-18 (latest)** — **Owner deep-dive DONE** (complexity retirement): walked
+- **2026-07-19 (latest)** — **Complexity retirement P0 DONE** (on explicit
+  go-ahead): characterization net written against unrefactored code — Family B
+  create-flow specs incl. image upload, editor specs for `tag-images`/`tag-videos`
+  (YouTube surfaces excluded), fixture + watchdog infra. Full e2e baseline **112
+  passed / 13 skipped / 0 failed**; tsc + smoke green. Assessment §8 P0 checked off
+  with execution notes (pinned: `batchUpdateTags` keeps selection; commit-path-only
+  cat-selection assertions so P4's commit-on-done lands without net rewrite).
+  Next: P1.
+- **2026-07-18** — **Owner deep-dive DONE** (complexity retirement): walked
   `tag-images`/`tag-videos` side-by-side — the write paths are **not** twins (Firestore
   service calls vs YouTube API orchestration), so the generic `MediaTaggingEditor<T>`
   was **replaced by a toolkit** of shared hooks + presentational components (§1.3a);
