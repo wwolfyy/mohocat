@@ -470,14 +470,18 @@ use `테스트냥이이` — `cats.spec.ts` renames `테스트냥이일` mid-run
 - [x] P1.3 Smoke/unit coverage for the primitive + the direct-storage strategy _(`tests/unit/uploadStrategies.test.ts` 6 tests — path contract, request shape, optional fields, fail-loud propagation; vitest gained the `@` → `src` alias; smoke gained a structural check on the two new files)_
 - [x] P1.4 Gate: `tsc` + `test:smoke` green — ✅ (tsc 0, unit 6/6, smoke 29/29; **no form migrated** — nothing outside tests imports the new modules yet, so zero behavior change)
 
-### P2 — Family B (Announcement + Adoption)
+### P2 — Family B (Announcement + Adoption) — ✅ DONE 2026-07-19
 
-- [ ] P2.1 Shared submit/upload flow for the simple-content family (hand-rolled state, **no RHF** — §7)
-- [ ] P2.2 Migrate `NewAnnouncementForm` → shared flow + `MediaUploadField` (direct-storage images, shared YouTube videos)
-- [ ] P2.3 Migrate `NewAdoptionForm` → same; delete the 193 duplicated lines
-- [ ] P2.4 ⚠️ P0.1 specs still green + browser-verify both create flows (submit, upload, preview, validation)
-- [ ] P2.5 Remove `react-hook-form` from `package.json` (not adopted — §7)
-- [ ] P2.6 Gate: `tsc` + `test:smoke` green
+- [x] P2.1 Shared submit/upload flow for the simple-content family (hand-rolled state, **no RHF** — §7) _(`src/components/forms/useSimpleContentForm.ts` — state + validation alerts + upload pipeline + Korea-time stamping + postData assembly + reset/success/redirect; per-form config injects service, path prefix, YouTube defaults, messages; the announcement's 팝업 toggle rides via `extraPostData`/`onResetExtras`)_
+- [x] P2.2 Migrate `NewAnnouncementForm` → shared flow + `MediaUploadField` (direct-storage images, shared YouTube videos) — 488→153 lines
+- [x] P2.3 Migrate `NewAdoptionForm` → same; delete the 193 duplicated lines — 411→95 lines (family total 899→248; −651)
+- [x] P2.4 ⚠️ P0.1 specs still green + browser-verify both create flows (submit, upload, preview, validation) — full e2e **114 passed / 13 skipped / 0 failed**; the net also gained two whitespace-validation specs (native `required` passes whitespace, the trim alerts fire — now pinned for both forms)
+- [x] P2.5 Remove `react-hook-form` from `package.json` (not adopted — §7) — `npm uninstall`, lockfile clean
+- [x] P2.6 Gate: `tsc` + `test:smoke` green — ✅ (tsc 0, smoke 29/29, unit 20/20)
+
+_P2 note: the announcement form's `console.log('Creating announcement with data', …)` was
+dropped in the migration (log-only, not user-visible); its unused `formatKoreaTimeForInput`
+helper (dead code in that file) went with it._
 
 ### P3 — Family A (Post + ButlerTalk)
 

@@ -34,13 +34,16 @@ the testing hand-off
   (production / Vercel) via a **merge commit**. After PR #7, `dev` is an ancestor of
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
-- **Active track: complexity retirement — IN EXECUTION.** P0 go-ahead given
-  2026-07-19; **P0 (characterization net, committed `6454d80`) and P1 (shared
-  media-upload primitive) are DONE** — `MediaUploadField` + injectable upload
-  strategies exist under `src/components/forms/`, unit/smoke covered, **no form
-  migrated yet** (zero behavior change). **Next: P2** (migrate Announcement +
-  Adoption onto the primitive, drop the 193 duplicated lines, remove
-  `react-hook-form` — assessment §7 P2 / §8).
+- **Active track: complexity retirement — IN EXECUTION.** P0 (`6454d80`), P1
+  (`431c69f`), and **P2 are DONE** — Family B (공지사항 + 입양홍보) now runs on the
+  shared `useSimpleContentForm` flow + `MediaUploadField` (899→248 lines across the
+  two forms), `react-hook-form` removed; full e2e **114/13/0** with the P0 net
+  green against the migrated forms. **Next: P3** (Family A — lift the signed-URL
+  image strategy, shared rich-content flow, migrate Post + ButlerTalk). ⚠️ P3
+  scouting found `NewButlerTalkForm`'s signed-URL image upload is **latently
+  broken** (destructures `{uploadUrl, downloadUrl}` but the route returns
+  `{signedUrl, publicUrl}`) — the P3 convergence fixes it on the canonical
+  contract, to be logged in `DEBUG_LOG`.
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
@@ -111,7 +114,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0+P1 ✅ done (2026-07-19), next P2
+### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P2 ✅ done (2026-07-19), next P3
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -203,11 +206,20 @@ Unit tests (6) + smoke structural checks; vitest gained the `@`→`src` alias.
 **No form imports these yet** — zero behavior change; gates green (tsc, unit,
 smoke 29/29). Detail: assessment §8 P1.
 
-**To pick this up:** start **P2** (assessment §7 P2 / §8): shared submit/upload flow
-for the simple-content family, migrate `NewAnnouncementForm` + `NewAdoptionForm`
-onto it + `MediaUploadField`, delete the 193 duplicated lines, remove
-`react-hook-form` from `package.json`, keep the P0.1 specs green + browser-verify
-both create flows.
+**✅ P2 DONE (2026-07-19).** Family B migrated onto `useSimpleContentForm` +
+`MediaUploadField` (899→248 lines; `react-hook-form` uninstalled). Full e2e
+**114/13/0** — the P0.1 create-flow specs (incl. image upload → public surface)
+passed against the migrated forms, and the net gained whitespace-validation specs
+for both. Detail: assessment §8 P2.
+
+**To pick this up:** start **P3** (assessment §7 P3 / §8): lift the signed-URL image
+strategy out of `NewPostForm` (canonical contract `{signedUrl, publicUrl}` + PUT
+ok-check — ⚠️ fixes `NewButlerTalkForm`'s latently-broken copy, which destructures
+the wrong keys; log in `DEBUG_LOG`), shared rich-content flow (tags + playlist +
+`CatSelectorModal`), migrate `NewPostForm` (feeding-spot extras) +
+`NewButlerTalkForm`, add Family A create-flow specs to the P0 net
+(`/api/youtube-playlists` degrades to 200-empty without creds — mount is
+watchdog-clean).
 
 ---
 
@@ -238,13 +250,13 @@ both create flows.
 
 ## Uncommitted (as of this update)
 
-**The P1 bundle** (awaiting commit go-ahead; P0 was committed `6454d80`). Additive
-only — nothing outside tests imports the new modules, so no behavior change:
+**The P2 bundle** (commit authorized; P0 = `6454d80`, P1 = `431c69f`):
 
-- `src/components/forms/MediaUploadField.tsx` + `uploadStrategies.ts` (new)
-- `tests/unit/uploadStrategies.test.ts` (new, 6 tests)
-- `vitest.config.ts` (`@` → `src` alias)
-- `tests/smoke/smoke.test.ts` (structural check on the new primitives)
+- `src/components/forms/useSimpleContentForm.ts` (new — shared Family B flow)
+- `src/components/NewAnnouncementForm.tsx` + `NewAdoptionForm.tsx` (migrated;
+  899→248 lines)
+- `package.json` + `package-lock.json` (`react-hook-form` removed)
+- `tests/e2e/admin/posts.spec.ts` (+2 whitespace-validation specs)
 - `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
   (this update)
 
@@ -252,7 +264,13 @@ only — nothing outside tests imports the new modules, so no behavior change:
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P1 DONE**: `MediaUploadField` +
+- **2026-07-19 (latest)** — **Complexity retirement P2 DONE**: Family B migrated
+  onto `useSimpleContentForm` + `MediaUploadField` (공지사항 488→153, 입양홍보
+  411→95; −651 lines), `react-hook-form` uninstalled, +2 whitespace-validation
+  specs. Full e2e **114/13/0** against the migrated forms. P3 scouting: butler-talk
+  signed-URL upload latently broken (wrong destructured keys) — fix lands with the
+  P3 convergence. Next: P3.
+- **2026-07-19** — **Complexity retirement P1 DONE**: `MediaUploadField` +
   injectable upload strategies landed under `src/components/forms/` (direct-storage
   image strategy verbatim-B, shared YouTube upload with optional Family-A fields —
   failure-handling reconciliation deferred to P3), unit (6) + smoke coverage, vitest

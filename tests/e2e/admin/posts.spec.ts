@@ -100,6 +100,53 @@ test.describe('게시물 관리', () => {
     await expect(card.getByAltText('이미지')).toBeVisible();
   });
 
+  // Whitespace passes the native `required` check, so these pin the forms' own
+  // trim-validation alert path (P2.4: submit/upload/preview/validation).
+  test('공지사항 form rejects whitespace-only 제목/내용 with validation alerts', async ({
+    page,
+  }) => {
+    const dialogs: string[] = [];
+    page.on('dialog', (d) => {
+      dialogs.push(d.message());
+      void d.accept();
+    });
+
+    await page.goto('/admin/announcements/new');
+    await page.getByPlaceholder('공지사항 제목을 입력하세요').fill(' ');
+    await page.getByPlaceholder('공지사항 내용을 입력하세요').fill(' ');
+    await page.getByRole('button', { name: '공지사항 작성' }).click();
+    await expect.poll(() => dialogs).toContain('제목을 입력해주세요.');
+
+    await page.getByPlaceholder('공지사항 제목을 입력하세요').fill('유효한 제목');
+    await page.getByRole('button', { name: '공지사항 작성' }).click();
+    await expect.poll(() => dialogs).toContain('내용을 입력해주세요.');
+
+    // No redirect happened — still on the composer.
+    expect(new URL(page.url()).pathname).toBe('/admin/announcements/new');
+  });
+
+  test('입양홍보 form rejects whitespace-only 제목/내용 with validation alerts', async ({
+    page,
+  }) => {
+    const dialogs: string[] = [];
+    page.on('dialog', (d) => {
+      dialogs.push(d.message());
+      void d.accept();
+    });
+
+    await page.goto('/admin/adoption/new');
+    await page.getByPlaceholder('입양홍보 제목을 입력하세요').fill(' ');
+    await page.getByPlaceholder('입양홍보 내용을 입력하세요').fill(' ');
+    await page.getByRole('button', { name: '입양홍보 작성' }).click();
+    await expect.poll(() => dialogs).toContain('제목을 입력해주세요.');
+
+    await page.getByPlaceholder('입양홍보 제목을 입력하세요').fill('유효한 제목');
+    await page.getByRole('button', { name: '입양홍보 작성' }).click();
+    await expect.poll(() => dialogs).toContain('내용을 입력해주세요.');
+
+    expect(new URL(page.url()).pathname).toBe('/admin/adoption/new');
+  });
+
   test('the admin posts list renders the announcements tab', async ({ page }) => {
     await page.goto('/admin/posts');
     await expect(page.getByRole('heading', { name: '게시물 관리' })).toBeVisible({
