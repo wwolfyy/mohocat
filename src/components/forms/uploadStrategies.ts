@@ -11,14 +11,18 @@
  * - `uploadVideosToYouTube` — the shared YouTube strategy (all four forms upload
  *   video via POST /api/upload-youtube). Family B always sends title/description/
  *   tags; Family A additionally sends createdTime/playlistId and omits empty tags
- *   — covered via optional fields. Family A's stricter failure handling (its
- *   status-based error message and `!result.videoUrl` guard) is NOT adopted here:
- *   P1/P2 are behavior-preserving for Family B; reconcile at P3 (its point of use).
- *
- * The signed-URL image strategy (Family A) is deliberately not here yet — it is
- * lifted out of NewPostForm at P3.0, its point of use (assessment §7 P1 note).
+ *   — covered via optional fields. P3 reconciliation: NewPostForm's
+ *   `!result.videoUrl` guard IS adopted (fail-loud on a broken upload response);
+ *   its status-based error message is not (this module keeps the statusText form).
+ * - `uploadImagesWithSignedUrls` — the Family-A image strategy (lifted from
+ *   NewPostForm at P3.0): signed-URL PUT + a `cat_images` Firestore entry so the
+ *   photos surface in the album/tagging tools. Canonicalized on the route's real
+ *   response contract `{ signedUrl, publicUrl }` — NewButlerTalkForm's copy
+ *   destructured `{ uploadUrl, downloadUrl }` and could never have worked (see
+ *   log/DEBUG_LOG.md 2026-07-19) — and on NewButlerTalkForm's PUT ok-check,
+ *   which NewPostForm's copy lacked.
  */
-import { getStorageService } from '@/services';
+import { getImageService, getStorageService } from '@/services';
 
 /**
  * Upload images straight to Firebase Storage via the service layer and return
@@ -77,6 +81,11 @@ export const uploadVideoToYouTube = async (
   }
 
   const result = await response.json();
+
+  if (!result.videoUrl) {
+    throw new Error('No video URL returned from upload');
+  }
+
   return result.videoUrl;
 };
 
@@ -86,4 +95,84 @@ export const uploadVideosToYouTube = async (
   options: YouTubeUploadOptions
 ): Promise<string[]> => {
   return await Promise.all(files.map((file) => uploadVideoToYouTube(file, options)));
+};
+
+export interface SignedUrlImageContext {
+  /** Cat tags recorded on the `cat_images` entry. */
+  tags: string[];
+  /** Recording date (date or datetime-local string); empty → upload time. */
+  createdTime: string;
+  /** Uploader identity recorded on the entry (user email or 'unknown'). */
+  uploadedBy: string;
+  /** Post message, reused as the image description. */
+  description: string;
+}
+
+/**
+ * Family-A image strategy: request a signed URL, PUT the file to Storage, then
+ * record a `cat_images` Firestore entry so the photo appears in the album and
+ * tagging tools. Returns the public URLs in order.
+ */
+export const uploadImagesWithSignedUrls = async (
+  files: File[],
+  context: SignedUrlImageContext
+): Promise<string[]> => {
+  const imageService = getImageService();
+
+  return await Promise.all(
+    files.map(async (file) => {
+      const response = await fetch('/api/generate-signed-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get signed URL: ${response.statusText}`);
+      }
+
+      const { signedUrl, publicUrl } = await response.json();
+
+      const uploadResponse = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);
+      }
+
+      // Record the upload in cat_images. Deliberately non-fatal (pre-existing
+      // behavior in both Family-A forms): the image is already in Storage and
+      // the post can still reference it; the entry only feeds the album/tagging
+      // tools, so a failure here is logged and the upload proceeds.
+      try {
+        const imageData = {
+          imageUrl: publicUrl,
+          fileName: file.name,
+          storagePath: publicUrl, // For direct uploads, this is the same as imageUrl
+          tags: context.tags,
+          uploadDate: new Date(),
+          createdTime: context.createdTime ? new Date(context.createdTime) : new Date(),
+          uploadedBy: context.uploadedBy,
+          description: context.description,
+          location: '',
+          autoTagged: false,
+          fileSize: file.size,
+          dimensions: undefined,
+        };
+
+        await imageService.createImage(imageData);
+      } catch (firestoreError) {
+        console.error('Failed to create Firestore entry for image:', firestoreError);
+      }
+
+      return publicUrl;
+    })
+  );
 };

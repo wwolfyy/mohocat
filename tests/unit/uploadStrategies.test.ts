@@ -7,15 +7,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const uploadFileMock = vi.fn();
+const createImageMock = vi.fn();
 
 vi.mock('@/services', () => ({
   getStorageService: () => ({ uploadFile: uploadFileMock }),
+  getImageService: () => ({ createImage: createImageMock }),
 }));
 
 import {
   uploadImagesToStorage,
   uploadVideoToYouTube,
   uploadVideosToYouTube,
+  uploadImagesWithSignedUrls,
 } from '@/components/forms/uploadStrategies';
 
 const file = (name: string) => new File(['x'], name, { type: 'application/octet-stream' });
@@ -114,6 +117,14 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     ).rejects.toThrow('Failed to upload video: Internal Server Error - quota exceeded');
   });
 
+  it('throws when the API responds ok but without a videoUrl (P3 guard)', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+    await expect(
+      uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd' })
+    ).rejects.toThrow('No video URL returned from upload');
+  });
+
   it('uploadVideosToYouTube maps several files to their URLs in order', async () => {
     fetchMock
       .mockResolvedValueOnce(okResponse('https://youtu.be/one'))
@@ -125,5 +136,89 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     });
 
     expect(urls).toEqual(['https://youtu.be/one', 'https://youtu.be/two']);
+  });
+});
+
+describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
+  const fetchMock = vi.fn();
+
+  const context = {
+    tags: ['테스트냥이이'],
+    createdTime: '2026-02-01',
+    uploadedBy: 'admin@example.com',
+    description: '본문',
+  };
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    createImageMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const signedUrlResponse = (n: number) => ({
+    ok: true,
+    json: async () => ({ signedUrl: `https://signed/${n}`, publicUrl: `https://public/${n}` }),
+  });
+
+  it('requests a signed URL, PUTs the file, records a cat_images entry, returns public URLs', async () => {
+    fetchMock
+      .mockResolvedValueOnce(signedUrlResponse(1)) // signed-url request
+      .mockResolvedValueOnce({ ok: true }); // PUT upload
+    createImageMock.mockResolvedValue('img-id');
+
+    const urls = await uploadImagesWithSignedUrls([file('a.jpg')], context);
+
+    expect(urls).toEqual(['https://public/1']);
+    // Canonical route contract: POST /api/generate-signed-url with name+type.
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/generate-signed-url');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      fileName: 'a.jpg',
+      fileType: 'application/octet-stream',
+    });
+    // The PUT goes to the signedUrl with the file body.
+    expect(fetchMock.mock.calls[1][0]).toBe('https://signed/1');
+    expect(fetchMock.mock.calls[1][1].method).toBe('PUT');
+    // The Firestore entry carries the injected context.
+    expect(createImageMock).toHaveBeenCalledTimes(1);
+    const entry = createImageMock.mock.calls[0][0];
+    expect(entry.imageUrl).toBe('https://public/1');
+    expect(entry.tags).toEqual(['테스트냥이이']);
+    expect(entry.uploadedBy).toBe('admin@example.com');
+    expect(entry.description).toBe('본문');
+  });
+
+  it('throws when the signed-URL request fails', async () => {
+    fetchMock.mockResolvedValue({ ok: false, statusText: 'Forbidden' });
+
+    await expect(uploadImagesWithSignedUrls([file('a.jpg')], context)).rejects.toThrow(
+      'Failed to get signed URL: Forbidden'
+    );
+  });
+
+  it('throws when the PUT upload fails (adopted ok-check)', async () => {
+    fetchMock
+      .mockResolvedValueOnce(signedUrlResponse(1))
+      .mockResolvedValueOnce({ ok: false, statusText: 'Bad Gateway' });
+
+    await expect(uploadImagesWithSignedUrls([file('a.jpg')], context)).rejects.toThrow(
+      'Failed to upload file: Bad Gateway'
+    );
+    expect(createImageMock).not.toHaveBeenCalled();
+  });
+
+  it('a failed cat_images entry is non-fatal (pre-existing behavior): URL still returned', async () => {
+    fetchMock.mockResolvedValueOnce(signedUrlResponse(1)).mockResolvedValueOnce({ ok: true });
+    createImageMock.mockRejectedValue(new Error('rules denied'));
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const urls = await uploadImagesWithSignedUrls([file('a.jpg')], context);
+
+    expect(urls).toEqual(['https://public/1']);
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

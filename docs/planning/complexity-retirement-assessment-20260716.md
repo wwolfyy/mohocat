@@ -483,14 +483,14 @@ _P2 note: the announcement form's `console.log('Creating announcement with data'
 dropped in the migration (log-only, not user-visible); its unused `formatKoreaTimeForInput`
 helper (dead code in that file) went with it._
 
-### P3 — Family A (Post + ButlerTalk)
+### P3 — Family A (Post + ButlerTalk) — 🚧 code + specs done 2026-07-19; gate re-run pending
 
-- [ ] P3.0 Lift **signed-URL image** upload strategy out of `NewPostForm` into an injectable unit (moved from P1 — point of use; videos reuse the shared YouTube function from P1.2); add Family A create-flow specs to the P0 net
-- [ ] P3.1 Shared submit/upload flow for rich-content family (tags + playlist + `CatSelectorModal`; **no RHF**)
-- [ ] P3.2 Migrate `NewPostForm` (retain Post-only feeding-spot fields as extras)
-- [ ] P3.3 Migrate `NewButlerTalkForm`; delete the 250 duplicated lines
-- [ ] P3.4 ⚠️ P0-net specs still green + browser-verify both create flows (incl. YouTube upload + cat/playlist tagging — YouTube path manual)
-- [ ] P3.5 Gate: `tsc` + `test:smoke` green — **Target B complete**
+- [x] P3.0 Lift **signed-URL image** upload strategy out of `NewPostForm` into an injectable unit (moved from P1 — point of use; videos reuse the shared YouTube function from P1.2); add Family A create-flow specs to the P0 net _(`uploadImagesWithSignedUrls` canonicalized on the route's real `{signedUrl, publicUrl}` contract + the PUT ok-check — **fixes NewButlerTalkForm's latently-broken copy** which destructured `{uploadUrl, downloadUrl}`; see `log/DEBUG_LOG.md` 2026-07-19. Specs: `tests/e2e/admin/butler-create.spec.ts` — **text-only** creates by design: video = YouTube (manual), and a signed-URL upload would seed an unloadable prod-host URL into the shared emulator data; the cat-tag `CatSelectorModal` wiring IS pinned via local-only file selection. The `!result.videoUrl` guard was reconciled into the shared YouTube strategy.)_
+- [x] P3.1 Shared submit/upload flow for rich-content family (tags + playlist + `CatSelectorModal`; **no RHF**) _(`src/components/forms/useRichContentForm.ts` — accepted convergence deltas documented in its header: empty `createdTime`/`playlistId` omitted instead of sent as `''` (old ButlerTalk), single-video titles lose a trailing space (old Post), shared statusText-style upload error message)_
+- [x] P3.2 Migrate `NewPostForm` (retain Post-only feeding-spot fields as extras) — 697→363 lines
+- [x] P3.3 Migrate `NewButlerTalkForm`; delete the 250 duplicated lines — 539→248 (family 1,236→611; four forms total 2,135→859, shared `forms/` primitives 863)
+- [x] P3.4 P0-net specs still green (YouTube upload + signed-URL media paths manual-parity by design) — first full run was 115 passed / 1 failed (spec locator bug: `/완료/` matched both the modal's `완료 (n개 선택)` and the page's `작성 완료` submit; fixed to `/완료 \(/`); **re-run 2026-07-19: 116 passed / 13 skipped / 0 failed** (the earlier "expect 117" was an off-by-one — the new spec adds 2 tests to the 114 P2 baseline). ⚠️ The YouTube + signed-URL media paths still owe the scripted manual pass on Preview before the next `dev → main` promotion.
+- [x] P3.5 Gate green: tsc 0 / smoke 29/29 / unit 25/25 / full e2e 116-13-0 — **Target B complete**
 
 ### P4 — Target A prep
 

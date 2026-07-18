@@ -35,15 +35,12 @@ the testing hand-off
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
 - **Active track: complexity retirement — IN EXECUTION.** P0 (`6454d80`), P1
-  (`431c69f`), and **P2 are DONE** — Family B (공지사항 + 입양홍보) now runs on the
-  shared `useSimpleContentForm` flow + `MediaUploadField` (899→248 lines across the
-  two forms), `react-hook-form` removed; full e2e **114/13/0** with the P0 net
-  green against the migrated forms. **Next: P3** (Family A — lift the signed-URL
-  image strategy, shared rich-content flow, migrate Post + ButlerTalk). ⚠️ P3
-  scouting found `NewButlerTalkForm`'s signed-URL image upload is **latently
-  broken** (destructures `{uploadUrl, downloadUrl}` but the route returns
-  `{signedUrl, publicUrl}`) — the P3 convergence fixes it on the canonical
-  contract, to be logged in `DEBUG_LOG`.
+  (`431c69f`), P2 (`fdba4ee`) **committed & DONE**. **P3 (Family A) is DONE — all
+  gates green** (full e2e **116 passed / 13 skipped / 0 failed**; tsc / smoke 29-29 /
+  unit 25-25) — **bundle UNCOMMITTED, awaiting commit go-ahead**, then **P4**
+  (editors: `CatSelectorModal` swap + toolkit skeleton). Four content forms now
+  2,135→859 lines on shared `src/components/forms/` primitives; P3 also **fixed
+  집사톡's latently-broken image upload** (`log/DEBUG_LOG.md` 2026-07-19).
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
@@ -114,7 +111,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P2 ✅ done (2026-07-19), next P3
+### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P2 ✅ committed; P3 ✅ done (uncommitted); next P4
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -212,14 +209,27 @@ smoke 29/29). Detail: assessment §8 P1.
 passed against the migrated forms, and the net gained whitespace-validation specs
 for both. Detail: assessment §8 P2.
 
-**To pick this up:** start **P3** (assessment §7 P3 / §8): lift the signed-URL image
-strategy out of `NewPostForm` (canonical contract `{signedUrl, publicUrl}` + PUT
-ok-check — ⚠️ fixes `NewButlerTalkForm`'s latently-broken copy, which destructures
-the wrong keys; log in `DEBUG_LOG`), shared rich-content flow (tags + playlist +
-`CatSelectorModal`), migrate `NewPostForm` (feeding-spot extras) +
-`NewButlerTalkForm`, add Family A create-flow specs to the P0 net
-(`/api/youtube-playlists` degrades to 200-empty without creds — mount is
-watchdog-clean).
+**✅ P3 DONE (2026-07-19) — bundle UNCOMMITTED, awaiting commit go-ahead.** What
+exists in the working tree (detail: assessment §8 P3):
+
+- `useRichContentForm` + `uploadImagesWithSignedUrls` (canonical
+  `{signedUrl, publicUrl}` + PUT ok-check — **fixes 집사톡's broken image upload**,
+  `DEBUG_LOG` 2026-07-19) + the `!result.videoUrl` guard reconciled into the shared
+  YouTube strategy; `NewPostForm` 697→363 and `NewButlerTalkForm` 539→248 migrated;
+  +5 unit tests (25 total); `tests/e2e/admin/butler-create.spec.ts` (Family A
+  text-only creates + `CatSelectorModal` wiring — media paths are manual-parity by
+  design, see the spec header).
+- Gates all green (2026-07-19 re-run): full e2e **116 passed / 13 skipped / 0
+  failed** (first run's single failure was the new spec's `/완료/` locator matching
+  both the modal's `완료 (n개 선택)` and the page's `작성 완료` submit; fixed to
+  `/완료 \(/`; the earlier "expect 117" was an off-by-one — the new spec adds 2
+  tests to the 114 P2 baseline). tsc 0 / smoke 29-29 / unit 25-25.
+
+**Next:** commit the P3 bundle **on explicit go-ahead**, then proceed to **P4**
+(editors: `CatSelectorModal` swap — commit-on-done accepted — + toolkit skeleton;
+P4.5 interface-review checkpoint before P5). ⚠️ Before the next `dev → main`
+promotion, the Family A media paths (YouTube upload, signed-URL images) owe the
+**scripted manual pass** on Preview.
 
 ---
 
@@ -250,13 +260,18 @@ watchdog-clean).
 
 ## Uncommitted (as of this update)
 
-**The P2 bundle** (commit authorized; P0 = `6454d80`, P1 = `431c69f`):
+**The P3 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee` committed).
+Awaiting the gate re-run + commit go-ahead:
 
-- `src/components/forms/useSimpleContentForm.ts` (new — shared Family B flow)
-- `src/components/NewAnnouncementForm.tsx` + `NewAdoptionForm.tsx` (migrated;
-  899→248 lines)
-- `package.json` + `package-lock.json` (`react-hook-form` removed)
-- `tests/e2e/admin/posts.spec.ts` (+2 whitespace-validation specs)
+- `src/components/forms/useRichContentForm.ts` (new — shared Family A flow)
+- `src/components/forms/uploadStrategies.ts` (+`uploadImagesWithSignedUrls`,
+  +videoUrl guard)
+- `src/components/NewPostForm.tsx` + `NewButlerTalkForm.tsx` (migrated;
+  1,236→611 lines)
+- `tests/e2e/admin/butler-create.spec.ts` (new — Family A create specs; locator
+  fix applied post-run)
+- `tests/unit/uploadStrategies.test.ts` (+5 signed-URL/guard tests)
+- `log/DEBUG_LOG.md` (집사톡 broken-upload entry)
 - `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
   (this update)
 
@@ -264,7 +279,19 @@ watchdog-clean).
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P2 DONE**: Family B migrated
+- **2026-07-19 (latest)** — **Complexity retirement P3 DONE**: full-gate re-run
+  green — e2e **116/13/0** (locator fix held; "expect 117" was an off-by-one — the
+  Family A spec adds 2 tests to the 114 P2 baseline), tsc/smoke/unit green.
+  Assessment §8 P3.4/P3.5 flipped ✅. Bundle **uncommitted, awaiting commit
+  go-ahead**; next: P4.
+- **2026-07-19** — **Complexity retirement P3 code+specs done, gate re-run
+  pending** (session ended mid-gate): Family A migrated onto `useRichContentForm` +
+  the lifted signed-URL strategy (집사톡's broken image upload fixed — `DEBUG_LOG`);
+  Family A create specs added to the net (text-only by design). First full run
+  115/1 — the 1 failure a spec locator ambiguity, fixed in-tree. Bundle
+  **uncommitted**; resume = re-run `test:e2e`, flip P3.4/P3.5, commit on go-ahead,
+  then P4.
+- **2026-07-19** — **Complexity retirement P2 DONE**: Family B migrated
   onto `useSimpleContentForm` + `MediaUploadField` (공지사항 488→153, 입양홍보
   411→95; −651 lines), `react-hook-form` uninstalled, +2 whitespace-validation
   specs. Full e2e **114/13/0** against the migrated forms. P3 scouting: butler-talk
