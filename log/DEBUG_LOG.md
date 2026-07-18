@@ -11,6 +11,55 @@
 
 ---
 
+## 2026-07-18 — Every admin role change silently lost its audit entry (permission_logs write denied & swallowed)
+
+**Symptom:** No entries ever appeared in `permission_logs` for role assignments made
+from `/admin/members`, despite the UI reporting success and the role change itself
+persisting. Nothing surfaced in the UI or server logs — the only trace was a non-fatal
+`console.error` in the browser console ("Failed to log role change"), which the e2e
+suite had even been configured to tolerate (`members.spec.ts` used the non-watchdog
+`baseTest` specifically to ignore it).
+
+**Root cause:** two layers, each defensible alone, silently fatal together:
+
+1. `firestore.rules` locks `permission_logs` to `write: if false` — **correct** (a
+   client-writable audit log would be forgeable), on the assumption writes would come
+   from a server path.
+2. But the audit write lived in the **client** SDK
+   (`RoleAssignmentService.logRoleChange`, called after the role write in
+   `assignSpecificRole`) — and its `catch` block deliberately swallowed the failure
+   ("Don't throw error for logging failure — role assignment should still work"). So
+   the rule denied every audit write, and the swallow guaranteed nobody noticed.
+
+   The gap was **known** — recorded 2026-06-30 in
+   `docs/planning/firebase-sdk-usage-inventory.md` §D ("every role change currently
+   loses its audit entry", verdict: migrate, "strong yes") — but sat unscheduled for
+   ~3 weeks until the multi-tenant assessment resurfaced it as a governance
+   prerequisite (a second mountain owner assigning roles with no audit trail).
+
+**Fix:** Tier 1 write migration (see `log/FEATURE_MOD_LOG.md` 2026-07-18): role
+assignment moved behind `POST /api/admin/assign-role` (Admin SDK, gated
+`requireApiPermission('manage-users')`), where the `users/{uid}` role write and the
+`permission_logs` audit entry run in **one transaction** — the audit entry can no
+longer be skipped, and the Admin SDK legitimately bypasses the (kept) `write: if
+false` rule. The swallowed-catch client path was deleted, not repaired: per the repo
+error-handling convention, an audit write that fails must fail the operation, which
+only a server-side transactional write can express.
+
+**Verified:** e2e `members.spec.ts` 4/4 against the emulator suite (with the updated
+rules loaded): assigning a role through the real members page now succeeds through the
+new route. `tsc` + smoke green. Prod requires the owner-run
+`firebase deploy --only firestore:rules` (the app no longer uses the removed clause
+either way).
+
+**Lesson:** a rules-denied write plus a swallowed catch is _silent_ data loss — the
+rules layer can't warn you, and the catch made sure the app didn't either. When a
+write is moved behind `write: if false`, grep for every client writer **and their
+catch blocks** at the same time; and treat "tolerated console.error" entries in the
+e2e watchdog config as a standing list of known-swallowed failures worth auditing.
+
+---
+
 ## 2026-07-13 — Intermittent e2e build hang/"markerless bake" — a SECOND page (냥이들) read points via the client Web SDK at build
 
 **Symptom:** The e2e gate (`npm run test:e2e`) intermittently produced failing marker

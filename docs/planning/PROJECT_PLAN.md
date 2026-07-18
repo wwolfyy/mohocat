@@ -44,7 +44,7 @@
 | Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation.                                                                                                                                                                                                                                                                                       |
 | Compliance / legal                         | `[x]` done        | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed (accepted, out of workstream):** professional legal review before scaling; phone/Kakao signup consent; security audit; Kakao scope verification.                                                                                                                                                                                        |
 | Multi-tenant hardening                     | 🚧 placeholder    | §9 — make the 2nd-mountain path real.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Testing & quality gates                    | 🚧 building       | §10 — Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + **all main-plan suites written & green** — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Build-hang fixed + §5 non-admin-login unblocked via a scoped `users` self-write rule (`npm run test:rules`, 6/6). Remaining: Phase 7 (flake audit + docs), then owner push/PR + branch protection.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Testing & quality gates                    | `[x]` done        | §10 — **Main plan COMPLETE + merged to `main` (PR #7, 2026-07-16).** Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + all main-plan suites — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Phase 7 flake audit green (local 3× + CI green on PR #7 and pushes). **Branch protection enforced** — `e2e` is a required status check on `main` (protect-main ruleset + classic protection). Remaining owner action: `firebase deploy --only firestore:rules` for prod parity.                                                                                                                                                                                                                                                                                                                     |
 | **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                |
 | **Admin manual / operator docs**           | `[x]` started     | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + `docs/manuals/deployment/new-mountain-setup.md` (🚧 provisioning placeholder).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
@@ -357,6 +357,27 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm & prioritize_:**
 
+- [ ] **📋 PLANNED — complexity retirement (duplication + local-state sprawl), ≈2,800–3,400 LOC
+      across 6 files.** Full source-verified assessment **and** a 6-phase / ~27-task execution
+      plan live in
+      [`complexity-retirement-assessment-20260716.md`](./complexity-retirement-assessment-20260716.md).
+      Origin: a "Next.js/React → HTMX?" feasibility question, answered **no** — the complexity is
+      _in_ the client components, not the framework, so it's retired **in place** (no framework
+      migration, no auth rewrite, no deploy-stack change).
+  - **Target A — admin media editors** (`tag-images` 1,860 + `tag-videos` 2,570 LOC): drifted
+    **copy-renamed twins** (same-named handlers, structurally identical bodies differing only by
+    an `image`→`video` rename — a line-diff sees just 3 shared lines); 34 / 41 `useState` each.
+    Converge onto a generic `MediaTaggingEditor<T>` (injected service / date-source / extra-panels
+    slot for the video-only playlist feature).
+  - **Target B — content forms** (4 files, ~2,133 LOC): two literal-dup families — Post+ButlerTalk
+    (250 identical lines) and Announcement+Adoption (193). ⚠️ **`react-hook-form` is a declared
+    dependency used in zero files.** `SignupForm` out of scope.
+  - ⚠️ Both admin editors **hand-roll cat-selection** rather than reusing the shared
+    `CatSelectorModal` the forms already use — an independent reuse win.
+  - **Decisions locked (2026-07-16):** both targets, **B first**; adopt `react-hook-form`; admin
+    refactor **behavior-preserving** (admin `alert()/confirm()` → shared `ui/Modal` deferred to a
+    separate follow-up). Gates per phase: `tsc --noEmit` + `test:smoke` + browser verification.
+    **Not started — execution awaits explicit go-ahead.**
 - [x] **✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated.**
       `GET`/`POST /api/admin/role-permissions` read/rewrite `role_permissions/role-config` via the
       **Admin SDK** (bypasses Firestore rules). Once `firestore.rules` `hasPermission` started
@@ -416,15 +437,18 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
     and latency/offline is **not\*\* a reason to stay (admin CMS, handful of users). The decision
     turns on security/validation/auditability vs. migration cost, which weighs differently per
     collection — so the Client-SDK writes split three ways:\_
-    - _**Tier 1 — `users` + `permission_logs` (role-assignment / permission services): MIGRATE
-      (strong yes, not yet scheduled).** Audit integrity is structurally impossible client-side
-      (`permission_logs` is `write:if false` → role-change audit writes are currently denied &
-      **swallowed**, so every role change loses its audit entry; a client-writable audit log
-      would be forgeable anyway). Roles are the escalation-sensitive crown jewels; `users` was
-      designed Admin-SDK-only; the `ensureUserExists` self-provision gap also resolves
-      server-side. Low effort/low volume; `get-all-user-permissions-client` already proves the
-      pattern. Plan: 1–2 routes behind `requireApiPermission` → repoint role/provision/audit
-      writes → restore the audit log → relock `users` to `write:if false`._
+    - _**Tier 1 — `users` + `permission_logs`: ✅ DONE (2026-07-18).** Role assignment now
+      goes through `POST /api/admin/assign-role` (`requireApiPermission('manage-users')`):
+      role write + `permission_logs` audit entry in **one Admin-SDK transaction** — the
+      audit trail (previously denied & swallowed) is restored. Client-SDK role-write
+      methods removed from `role-assignment-service` + `permission-service`; the `users`
+      admin write clause removed from the rules. **Scope deviation from the original
+      plan:** the login-time self-provision writes (`ensureUserExists` /
+      `updateUserProviders`) **stay client-SDK** — the owner create/update rules clauses
+      (added 2026-07-11, after this analysis) already fixed the self-provision gap
+      escalation-safely, so "relock to `write:if false`" became "remove the admin clause;
+      keep the owner clauses." ⚠️ Rules deploy pending (owner-run). See
+      `log/FEATURE_MOD_LOG.md` 2026-07-18._
     - _**Tier 2 — `cats` / `cat_images` / `cat_videos` / `about_content` / `posts_announcements`:
       DEFER.** Authz is adequately handled by the (now-fixed) `hasPermission` rules; worst case
       is recoverable data-quality, not privilege. The real upside is server-side payload
@@ -670,6 +694,15 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 > **Goal (placeholder):** make the "add a second mountain by editing JSON" promise
 > actually true. Today several paths are single-mountain hard-coded.
+>
+> **Decision framework (2026-07-18):**
+> [`multi-tenant-architecture-decision-20260718.md`](./multi-tenant-architecture-decision-20260718.md)
+> — verified current state, the custody-vs-management gating question, the open
+> deployment/data axes, and open questions Q1–Q8. Execution of the items below should
+> follow that doc's sequencing (its §10). Its §6 prerequisite — the **Tier 1 write
+> migration** (role writes → Admin SDK, audit log restored) — is **done 2026-07-18**
+> (see §7 above + `log/FEATURE_MOD_LOG.md`), which also removed this section's
+> `role-assignment-service` `'geyang'` hard-coded defaults.
 
 **Candidate scope — _confirm with user; may be far-future_:**
 
@@ -690,13 +723,17 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 ---
 
-## 10. 🚧 Testing & quality gates — **ACTIVE (2026-07-11)**
+## 10. ✅ Testing & quality gates — **MAIN PLAN COMPLETE (merged to `main` 2026-07-16)**
 
 > **Goal:** coverage was **zero**; now Vitest (40 tests) + an emulator-backed
 > **Playwright e2e harness with GitHub Actions CI** are in place (harness landed
-> 2026-07-11), and **all main-plan e2e suites are written & green** — `public/`,
-> `auth/`, `member/`, `admin/`, `api/` (~140 tests, 2026-07-15). Remaining: Phase 7
-> (flake audit + docs finalization), then owner push/PR + branch protection.
+> 2026-07-11), and **all main-plan e2e suites are written, green, and merged to
+> `main`** — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Phase 7
+> is done: flake audit green (local 3× consecutive + CI green on PR #7 and pushes),
+> docs finalized, and **branch protection now enforces the `e2e` check on `main`**.
+> The suites merged via **PR #7** (`dev → main`, merge commit `65d2020`,
+> 2026-07-16). **Only remaining owner action:** `firebase deploy --only
+firestore:rules` for prod parity on the scoped `users` self-write rule.
 
 **Done:**
 
@@ -733,17 +770,25 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       self-write rule, `65a934f` + `npm run test:rules`, 6/6). See the testing
       hand-off (`docs/handoff/testing/2026-07-12-e2e-harness-handoff.md`).
 
+- [x] **Phase 7 done + merged to `main` (2026-07-16)** — flake audit green (local
+      full-gate 3× consecutive: 101 passed / 13 skipped / 0 failed; CI green on PR #7
+      and dev pushes), docs finalized (this file, the CI plan, `tests/e2e/README.md`,
+      `FEATURE_MOD_LOG`, testing hand-off). Promoted via **PR #7** (`dev → main`,
+      merge commit `65d2020`). **Branch protection now enforces** the `e2e` required
+      status check on `main` (protect-main ruleset + classic protection; review count
+      0). Remaining owner action: `firebase deploy --only firestore:rules`.
+
 **Plans drafted (2026-07-11):**
 
 - [`playwright-ci-plan.md`](./playwright-ci-plan.md) — the Playwright E2E suite
   (public / auth / member / admin / API-security) against the **Firebase Emulator
-  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phases 0–6
-  are DONE + green** — harness/CI, `public/`, `auth/`, `member/`, `admin/`, `api/`
-  (~140 tests). The intermittent "markerless bake" build hang is **fixed**
-  (2026-07-13, DEBUG_LOG), and the **§5 non-admin-login blocker is resolved** — a
-  scoped `users` self-write rule (+ `npm run test:rules`, 6/6) now lets non-admins
-  log in. **Remaining: Phase 7** (flake audit + docs finalization). ⚠️ push the rules
-  change to Firebase for prod parity.
+  Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phases 0–7
+  are DONE + merged to `main`** — harness/CI, `public/`, `auth/`, `member/`, `admin/`,
+  `api/` (~140 tests), flake audit, docs, branch protection. The intermittent
+  "markerless bake" build hang is **fixed** (2026-07-13, DEBUG_LOG), and the **§5
+  non-admin-login blocker is resolved** — a scoped `users` self-write rule
+  (+ `npm run test:rules`, 6/6) now lets non-admins log in. ⚠️ Still to do: deploy the
+  rules change to Firebase for prod parity (`firebase deploy --only firestore:rules`).
 - [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md) —
   the enabler plan that must land first: adopts the main plan's recommendations
   as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
@@ -762,6 +807,17 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       login renders).
 - [x] CI wiring beyond `tsc`/lint — `.github/workflows/ci.yml` (checks +
       emulator-backed Playwright e2e) landed 2026-07-11.
+
+**Deferred — e2e Phase 8 (revisit later, not required for "done"):** these are the
+main plan's explicitly-parked extensions (see `playwright-ci-plan.md` §8 Phase 8) —
+none block the completed workstream.
+
+- [-] Vercel Preview-URL read-only smoke (post-push; needs secrets).
+- [-] WebKit project (iOS Safari) alongside the Chromium/mobile projects.
+- [-] Visual-regression screenshots (masked).
+- [-] Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream
+  (§4 perf item), not this suite.
+- [-] YouTube tagging admin flows (external API).
 
 ---
 

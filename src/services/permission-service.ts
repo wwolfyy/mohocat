@@ -125,151 +125,12 @@ export class PermissionService {
     return permissions.every((permission) => userPermissions.includes(permission));
   }
 
-  /**
-   * Assign role to user
-   */
-  async assignRole(
-    userId: string,
-    role: string,
-    mountainId: string,
-    assignedBy: string
-  ): Promise<void> {
-    const config = await this.loadConfig();
-
-    if (!config.roles[role]) {
-      throw new Error(`Invalid role: ${role}`);
-    }
-
-    const newRole: UserRole = {
-      role,
-      // We don't snapshot permissions here anymore to allow dynamic updates
-      // OR we snapshot them if we want them tied to assignment time.
-      // Given the requirement to "make changes and hit save", dynamic lookup is better.
-      // But keeping permissions in UserRole is safer for history.
-      // Let's store them but `getUserPermissions` prefers dynamic config if we want instant updates?
-      // Actually, standard RBAC usually associates role, and permissions come from role definition.
-      // The current UserRole interface has `permissions: string[]`.
-      // I will populate it for historical record, but `getUserPermissions` (above) logic
-      // might need to decide whether to trust the stored list or the live config.
-      // For now, I updated `getUserPermissions` to prefer live config if permissions are empty?
-      // Actually, let's stick to RBAC best practice: Role defines permissions.
-      // So `getUserPermissions` should ideally check the LIVE config for the user's role.
-      // The code above in `getUserPermissions` does exactly that now.
-      permissions: config.roles[role].permissions,
-      mountainId,
-      assignedBy,
-      assignedAt: new Date(),
-      isActive: true,
-    };
-
-    const userRef = doc(this.db, this.usersCollection, userId);
-    const userDoc = await getDoc(userRef);
-
-    if (userDoc.exists()) {
-      const userData = userDoc.data() as UserPermissions;
-
-      // Deactivate previous role and add to history
-      if (userData.currentRole) {
-        userData.roleHistory = userData.roleHistory || [];
-        userData.roleHistory.push({
-          ...userData.currentRole,
-          isActive: false,
-        });
-      }
-
-      await updateDoc(userRef, {
-        currentRole: newRole,
-        roleHistory: userData.roleHistory || [],
-        updatedAt: new Date(),
-      });
-    } else {
-      // Create new user permissions record
-      const newUserPermissions: UserPermissions = {
-        uid: userId,
-        email: '', // Will be populated later
-        currentRole: newRole,
-        roleHistory: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      await setDoc(userRef, newUserPermissions);
-    }
-
-    // Log the role assignment
-    await this.logRoleChange(userId, role, mountainId, assignedBy);
-  }
-
-  /**
-   * Suspend user role
-   */
-  async suspendRole(userId: string, suspendedBy: string, reason?: string): Promise<void> {
-    const userRef = doc(this.db, this.usersCollection, userId);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-      throw new Error('User not found');
-    }
-
-    const userData = userDoc.data() as UserPermissions;
-
-    // Add current role to history with suspension reason
-    userData.roleHistory = userData.roleHistory || [];
-    userData.roleHistory.push({
-      ...userData.currentRole,
-      isActive: false,
-    });
-
-    // Set current role as inactive
-    const suspendedRole = {
-      ...userData.currentRole,
-      isActive: false,
-    };
-
-    await updateDoc(userRef, {
-      currentRole: suspendedRole,
-      roleHistory: userData.roleHistory,
-      updatedAt: new Date(),
-    });
-
-    // Log the suspension
-    await this.logRoleChange(userId, 'suspended', userData.currentRole.mountainId, suspendedBy, {
-      reason: reason || 'No reason provided',
-      previousRole: userData.currentRole.role,
-    });
-  }
-
-  /**
-   * Reactivate user role
-   */
-  async reactivateRole(userId: string, reactivatedBy: string): Promise<void> {
-    const userRef = doc(this.db, this.usersCollection, userId);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-      throw new Error('User not found');
-    }
-
-    const userData = userDoc.data() as UserPermissions;
-
-    if (userData.currentRole.isActive) {
-      throw new Error('User role is already active');
-    }
-
-    // Reactivate the role
-    const reactivatedRole = {
-      ...userData.currentRole,
-      isActive: true,
-    };
-
-    await updateDoc(userRef, {
-      currentRole: reactivatedRole,
-      updatedAt: new Date(),
-    });
-
-    // Log the reactivation
-    await this.logRoleChange(userId, 'reactivated', userData.currentRole.mountainId, reactivatedBy);
-  }
+  // NOTE (Tier 1 write migration, 2026-07-18): the role-mutation methods that
+  // lived here (assignRole / suspendRole / reactivateRole + their private
+  // logRoleChange) were caller-less client-SDK write paths whose audit write to
+  // `permission_logs` was rule-denied (`write: if false`). Role mutations are
+  // now Admin-SDK-only: POST /api/admin/assign-role. Do not reintroduce client
+  // writes to `users` role fields or `permission_logs` here. See PROJECT_PLAN §7.
 
   /**
    * Get user's role history
@@ -323,29 +184,6 @@ export class PermissionService {
           ...doc.data(),
         }) as any as UserPermissions
     );
-  }
-
-  /**
-   * Log role changes for audit trail
-   */
-  private async logRoleChange(
-    userId: string,
-    action: string,
-    mountainId: string,
-    changedBy: string,
-    metadata?: Record<string, any>
-  ): Promise<void> {
-    const logEntry: PermissionLog = {
-      userId,
-      action: action as any,
-      newRole: action === 'role-assigned' ? action : undefined,
-      mountainId,
-      changedBy,
-      timestamp: new Date(),
-      metadata,
-    };
-
-    await setDoc(doc(collection(this.db, 'permission_logs')), logEntry);
   }
 
   /**

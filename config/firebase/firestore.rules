@@ -104,18 +104,20 @@ service cloud.firestore {
     // helper below must reference `users` to match the live data.
     match /users/{userId} {
       // Users can read their own doc; admins (manage-users) can read any user doc.
-      // The latter is required by the client-SDK role-assignment path
-      // (RoleAssignmentService.assignSpecificRole reads the target user's doc before
-      // writing the new role).
+      // (The admin clause predates the Tier 1 write migration — the client-SDK
+      // role-assignment path that needed it is gone, and the admin members page
+      // lists users via the Admin-SDK API route. Kept for read compatibility;
+      // tightening reads is a separate decision from the write migration.)
       allow read: if request.auth != null &&
         (request.auth.uid == userId || hasPermission(request.auth.uid, 'manage-users'));
 
-      // Role/permission writes go through the client SDK (the admin members page →
-      // RoleAssignmentService). Gate on `manage-users` (admin-only) so role
-      // assignment stays a server-enforced boundary — mirroring the cats rule.
-      // Future consideration: move these writes behind an Admin SDK API route and
-      // restore `write: if false` (see PROJECT_PLAN §7 / handoff-10).
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-users');
+      // Role/permission writes are Admin-SDK-only (Tier 1 write migration,
+      // 2026-07-18): POST /api/admin/assign-role, gated by
+      // requireApiPermission('manage-users'), writes the role change and its
+      // permission_logs audit entry in one transaction. The former client-SDK
+      // path (`allow write: if hasPermission(... 'manage-users')`) is removed —
+      // no admin client write to other users' docs remains. Only the owner
+      // create/update clauses below stay.
 
       // A signed-in user may create + update their OWN doc — this is the
       // login/signup profile sync (`PermissionService.ensureUserExists`, client
@@ -150,10 +152,12 @@ service cloud.firestore {
 
     match /permission_logs/{logId} {
       // Read access for admins
-      allow read: if request.auth != null && 
+      allow read: if request.auth != null &&
         hasPermission(request.auth.uid, 'view-analytics');
-      
-      // Write access only via cloud functions
+
+      // Write access only via the Admin SDK (POST /api/admin/assign-role writes
+      // the audit entry server-side; a client-writable audit log would be
+      // forgeable). Never open this to clients.
       allow write: if false;
     }
 
