@@ -89,6 +89,18 @@ describe('smoke: deploy-config keepers (must survive the cleanup)', () => {
   });
 });
 
+describe('smoke: content-form primitives exist (complexity-retirement P1)', () => {
+  // The P2/P3 form migrations swap the hand-rolled upload sections for these;
+  // behavioral coverage lives in tests/unit/uploadStrategies.test.ts + the e2e net.
+  const primitives = [
+    'components/forms/MediaUploadField.tsx',
+    'components/forms/uploadStrategies.ts',
+  ];
+  it.each(primitives)('%s exists', (rel) => {
+    expect(existsSync(join(SRC, rel))).toBe(true);
+  });
+});
+
 describe('smoke: critical public pages exist', () => {
   const pages = [
     'page.tsx', // home

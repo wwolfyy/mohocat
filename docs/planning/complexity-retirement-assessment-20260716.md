@@ -463,12 +463,12 @@ open, only the tags input resets), and cat-selection is asserted through the 완
 only, so the same assertions survive the accepted P4 commit-on-done change. (4) Selector tests
 use `테스트냥이이` — `cats.spec.ts` renames `테스트냥이일` mid-run in the same project._
 
-### P1 — Shared media-upload primitive
+### P1 — Shared media-upload primitive — ✅ DONE 2026-07-19
 
-- [ ] P1.1 Extract `MediaUploadField` (inputs + previews + progress; presentational only)
-- [ ] P1.2 Lift **direct-storage image** upload strategy out of `NewAnnouncementForm` + the **shared YouTube video-upload** function (near-identical in all four forms) into injectable units _(signed-URL image strategy re-sequenced to P3.0 — point of use)_
-- [ ] P1.3 Smoke/unit coverage for the primitive + the direct-storage strategy
-- [ ] P1.4 Gate: `tsc` + `test:smoke` green
+- [x] P1.1 Extract `MediaUploadField` (inputs + previews + progress; presentational only) _(`src/components/forms/MediaUploadField.tsx` — `kind: 'image' | 'video'` selects the label set the forms share verbatim; parent owns files/urls, only the transient URL text input is local. **No progress UI** — none of the current forms render one and the migrations are behavior-preserving.)_
+- [x] P1.2 Lift **direct-storage image** upload strategy out of `NewAnnouncementForm` + the **shared YouTube video-upload** function (near-identical in all four forms) into injectable units _(`src/components/forms/uploadStrategies.ts`: `uploadImagesToStorage(files, pathPrefix)` verbatim-B; `uploadVideo(s)ToYouTube(files, options)` with optional `tags`/`createdTime`/`playlistId` covering Family A. Family A's stricter failure handling — status-based message, `!result.videoUrl` guard — deliberately NOT adopted; reconcile at P3, its point of use. Signed-URL image strategy re-sequenced to P3.0.)_
+- [x] P1.3 Smoke/unit coverage for the primitive + the direct-storage strategy _(`tests/unit/uploadStrategies.test.ts` 6 tests — path contract, request shape, optional fields, fail-loud propagation; vitest gained the `@` → `src` alias; smoke gained a structural check on the two new files)_
+- [x] P1.4 Gate: `tsc` + `test:smoke` green — ✅ (tsc 0, unit 6/6, smoke 29/29; **no form migrated** — nothing outside tests imports the new modules yet, so zero behavior change)
 
 ### P2 — Family B (Announcement + Adoption)
 

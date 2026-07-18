@@ -35,10 +35,12 @@ the testing hand-off
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
 - **Active track: complexity retirement — IN EXECUTION.** P0 go-ahead given
-  2026-07-19; **P0 (characterization-test net) is DONE** — new/upgraded specs green
-  against unrefactored code, full-gate baseline **112 passed / 13 skipped / 0
-  failed**. **Next: P1** (extract `MediaUploadField` + the direct-storage image
-  strategy + the shared YouTube upload function — assessment §7 P1 / §8).
+  2026-07-19; **P0 (characterization net, committed `6454d80`) and P1 (shared
+  media-upload primitive) are DONE** — `MediaUploadField` + injectable upload
+  strategies exist under `src/components/forms/`, unit/smoke covered, **no form
+  migrated yet** (zero behavior change). **Next: P2** (migrate Announcement +
+  Adoption onto the primitive, drop the 193 duplicated lines, remove
+  `react-hook-form` — assessment §7 P2 / §8).
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
@@ -109,7 +111,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0 ✅ done (2026-07-19), next P1
+### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0+P1 ✅ done (2026-07-19), next P2
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -192,9 +194,20 @@ credential-less `/api/manage-playlists` 500 on tag-videos mount. Full-gate basel
 **112 passed / 13 skipped / 0 failed** + tsc + smoke green. Detail + pinned-behavior
 notes: assessment §8 P0 (execution notes).
 
-**To pick this up:** start **P1** (assessment §7 P1 / §8): extract `MediaUploadField`,
-lift the direct-storage image strategy out of `NewAnnouncementForm` + the shared
-YouTube video-upload function into injectable units, smoke/unit coverage, gate.
+**✅ P1 DONE (2026-07-19).** `src/components/forms/` now holds `MediaUploadField`
+(presentational hybrid file+URL section; `kind` selects the shared image/video label
+set) and `uploadStrategies.ts` (`uploadImagesToStorage` verbatim from
+NewAnnouncementForm with the path prefix parameterized; `uploadVideo(s)ToYouTube`
+with optional Family-A fields — its stricter failure handling reconciles at P3).
+Unit tests (6) + smoke structural checks; vitest gained the `@`→`src` alias.
+**No form imports these yet** — zero behavior change; gates green (tsc, unit,
+smoke 29/29). Detail: assessment §8 P1.
+
+**To pick this up:** start **P2** (assessment §7 P2 / §8): shared submit/upload flow
+for the simple-content family, migrate `NewAnnouncementForm` + `NewAdoptionForm`
+onto it + `MediaUploadField`, delete the 193 duplicated lines, remove
+`react-hook-form` from `package.json`, keep the P0.1 specs green + browser-verify
+both create flows.
 
 ---
 
@@ -225,17 +238,13 @@ YouTube video-upload function into injectable units, smoke/unit coverage, gate.
 
 ## Uncommitted (as of this update)
 
-**The P0 test bundle** (awaiting commit go-ahead — no `src/` changes; P0 is
-test-infra only):
+**The P1 bundle** (awaiting commit go-ahead; P0 was committed `6454d80`). Additive
+only — nothing outside tests imports the new modules, so no behavior change:
 
-- `tests/e2e/admin/tag-images.spec.ts` + `tag-videos.spec.ts` (new — editor
-  characterization specs)
-- `tests/e2e/admin/posts.spec.ts` (announcement create + image upload; 입양홍보
-  create new)
-- `tests/e2e/fixtures/media.json` (+`test-img-03/04`, +`test-vid-02`)
-- `tests/e2e/public/albums.spec.ts` (robust to the larger media seed)
-- `tests/e2e/setup/test.ts` (scoped watchdog allowance: `/api/manage-playlists`
-  failure on tag-videos mount)
+- `src/components/forms/MediaUploadField.tsx` + `uploadStrategies.ts` (new)
+- `tests/unit/uploadStrategies.test.ts` (new, 6 tests)
+- `vitest.config.ts` (`@` → `src` alias)
+- `tests/smoke/smoke.test.ts` (structural check on the new primitives)
 - `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
   (this update)
 
@@ -243,7 +252,13 @@ test-infra only):
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P0 DONE** (on explicit
+- **2026-07-19 (latest)** — **Complexity retirement P1 DONE**: `MediaUploadField` +
+  injectable upload strategies landed under `src/components/forms/` (direct-storage
+  image strategy verbatim-B, shared YouTube upload with optional Family-A fields —
+  failure-handling reconciliation deferred to P3), unit (6) + smoke coverage, vitest
+  `@` alias. No form migrated; gates green. Next: P2 (migrate Announcement +
+  Adoption, drop `react-hook-form`).
+- **2026-07-19** — **Complexity retirement P0 DONE** (on explicit
   go-ahead): characterization net written against unrefactored code — Family B
   create-flow specs incl. image upload, editor specs for `tag-images`/`tag-videos`
   (YouTube surfaces excluded), fixture + watchdog infra. Full e2e baseline **112
