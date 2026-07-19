@@ -34,23 +34,25 @@ the testing hand-off
   (production / Vercel) via a **merge commit**. After PR #7, `dev` is an ancestor of
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
-- **Active track: complexity retirement — ✅ ALL PHASES EXECUTED (P0–P6).** P0
-  (`6454d80`), P1 (`431c69f`), P2 (`fdba4ee`), P3 (`1d13e09`), P4 (`34c5c68`), P5
-  (`ea2fab4`) committed; **the P6 bundle (alerts → shared Modal via new
-  `ui/useDialog`; docs; close-out logs) is UNCOMMITTED, awaiting go-ahead** — final
-  full e2e **116 passed / 13 skipped / 0 failed**, tsc / smoke 29-29 / unit 25-25.
-  Net effect: four content forms 2,135→859 on `src/components/forms/` primitives;
-  both admin editors 4,430→~2,650 on the `src/components/admin/media/` toolkit;
-  ~45 native `alert()/confirm()` prompts now shared-Modal dialogs; 집사톡's broken
-  image upload fixed; `react-hook-form` removed. ⚠️ **Owner-owed:** the scripted
-  manual YouTube pass (P5.4) before the next `dev → main` promotion; also see
-  `DEBUG_LOG` 2026-07-19 for the dialog-vs-router.push race the net caught.
+- **Complexity retirement — ✅ COMPLETE & COMMITTED (P0–P6, all on `dev`).**
+  Seven commits: P0 `6454d80` → P1 `431c69f` → P2 `fdba4ee` → P3 `1d13e09` →
+  P4 `34c5c68` → P5 `ea2fab4` → P6 `2584dcb`. Final gates: full e2e
+  **116 passed / 13 skipped / 0 failed**, tsc / smoke 29-29 / unit 25-25. Net:
+  four content forms 2,135→859 on `src/components/forms/` primitives; both admin
+  editors 4,430→~2,650 on the `src/components/admin/media/` toolkit; ~45 native
+  `alert()/confirm()` prompts now shared-Modal dialogs (`ui/useDialog`); 집사톡's
+  broken image upload fixed; `react-hook-form` removed. ⚠️ **The one remaining
+  track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
+  sync/playlists + form video upload, real creds, on Preview) before the next
+  `dev → main` promotion.
+- **No active code track.** Next-session options: the P5.4 manual pass above, the
+  `firestore:rules` deploy (open threads below), or resume **multi-tenant Q1**.
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
   (thinking work, parallelizable with the refactor).
-- **Tree:** P0 test bundle staged/uncommitted as of this update — see _Uncommitted_
-  below.
+- **Tree:** clean through `2584dcb` (this doc update rides in the next commit) —
+  see _Uncommitted_ below.
 
 ---
 
@@ -115,7 +117,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — ✅ EXECUTED — P0–P5 committed; P6 done (uncommitted)
+### Complexity retirement (refactor) — ✅ COMPLETE — P0–P6 all committed (`6454d80`…`2584dcb`)
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -213,7 +215,7 @@ smoke 29/29). Detail: assessment §8 P1.
 passed against the migrated forms, and the net gained whitespace-validation specs
 for both. Detail: assessment §8 P2.
 
-**✅ P6 DONE (2026-07-19) — follow-ups; bundle UNCOMMITTED.** All ~45 native
+**✅ P6 DONE (2026-07-19, committed `2584dcb`) — follow-ups.** All ~45 native
 `alert()/confirm()` prompts (both editors incl. `useYouTubeVideoMutations`, and the
 four public forms via their shared form hooks) converted to a new promise-based
 **`ui/useDialog`** primitive on the shared Modal — `await dialog.alert/confirm`
@@ -294,24 +296,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-**The P6 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee`, P3 = `1d13e09`,
-P4 = `34c5c68`, P5 = `ea2fab4` committed). Awaiting the commit go-ahead:
-
-- `src/components/ui/useDialog.tsx` (new — promise-based Modal alert/confirm)
-- Both editors + `useYouTubeVideoMutations.ts` + both shared form hooks + the
-  four forms (all native dialogs → `useDialog`; forms render the hook's element)
-- `tests/e2e/admin/{posts,butler-create,tag-images,tag-videos}.spec.ts`
-  (native-dialog handlers → Modal assertions)
-- `log/DEBUG_LOG.md` (dialog-vs-router.push race) + `log/FEATURE_MOD_LOG.md`
-  (whole-refactor entry)
-- Docs: `PROJECT_PLAN.md` §7, `admin-platform.md`, `media-and-youtube.md`,
-  assessment (status ✅ + P6 flips), `HANDOFF.md` (this update)
+Only this session-close doc pass: `docs/handoff/HANDOFF.md` +
+`docs/planning/PROJECT_PLAN.md` (status-row touch). Everything else is committed
+through `2584dcb`.
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P6 DONE — track fully
+- **2026-07-19 (latest)** — **Session close**: P6 committed (`2584dcb`) — the
+  complexity-retirement track is fully executed and on `dev` as seven commits.
+  TL;DR re-pointed for the next session (owner-owed P5.4 manual YouTube pass /
+  rules deploy / multi-tenant Q1); PROJECT_PLAN tech-debt row notes the track
+  done; e2e memory baseline updated to 116/13.
+- **2026-07-19** — **Complexity retirement P6 DONE — track fully
   executed**: ~45 native `alert()/confirm()` sites (editors + the four public
   forms via their shared hooks) converted to the new promise-based `ui/useDialog`
   Modal primitive; the four specs' dialog handlers rewritten to Modal assertions.
