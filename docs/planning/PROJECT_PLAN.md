@@ -703,8 +703,13 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
 > (phases M0–M8 — supersedes the framework's §10 checklist and this section's
 > candidate-scope list as the tracker; every item below is absorbed into a phase).
-> Execution awaits explicit owner go-ahead at M1 (M0 = the pending rules deploy,
-> owner-run). Its §6 prerequisite — the **Tier 1 write
+> **EXECUTING: M1–M3 ✅ done & committed 2026-07-19** (`8920c66` decoupling →
+> `092d226` explicit-`mountainId` config layer → `491b832` `[mountain]` segment +
+> host-rewrite middleware; M3 gate = full e2e 116/0 with zero spec rewrites; the
+> `?mountain=` no-op selector item below is closed — the selector navigates for
+> real). **Next = M4** (stamp + backfill; resume notes in the plan's M4 section).
+> M0 (the pending rules deploy) is still owner-owed and must precede M5's rules
+> changes. Its §6 prerequisite — the **Tier 1 write
 > migration** (role writes → Admin SDK, audit log restored) — is **done 2026-07-18**
 > (see §7 above + `log/FEATURE_MOD_LOG.md`), which also removed this section's
 > `role-assignment-service` `'geyang'` hard-coded defaults.

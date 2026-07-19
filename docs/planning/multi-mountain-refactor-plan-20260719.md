@@ -7,7 +7,11 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 📋 **PLANNED — execution awaits explicit owner go-ahead (start = M1).**
+> **Status:** 🚧 **EXECUTING — M1–M3 ✅ DONE & COMMITTED** (docs `5672330` → M1
+> `8920c66` → M2 `092d226` → M3 `491b832`, all on `dev`, 2026-07-19). **Next:
+> M4** (stamp + backfill) — see its section for the resume notes. Process note:
+> commits are **owner-gated again** (the brief same-day auto-commit grant was
+> revoked); the M4 prod backfill and M5 rules deploy were always owner-gated.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -356,7 +360,24 @@ The framework's §8 standalone items that reduce blast radius before the big mov
   0 failed with zero e2e-spec rewrites** — the phase's proof of behavior
   preservation · browser pass ✅.
 
-### M4 — Data tenancy 1: stamp + backfill (medium; additive, no read filtering yet)
+### M4 — ⏭️ NEXT — Data tenancy 1: stamp + backfill (medium; additive, no read filtering yet)
+
+> **Resume notes (2026-07-19 scouting, done just before the session closed):**
+> the per-tenant **service-factory parameterization happens here** (not M5) —
+> stamping needs the tenant id in the services, so M4 makes
+> `getCatService(mountainId)` etc. required-param with a per-tenant instance
+> cache, and M5 then only adds the `where()` scoping inside the services.
+> Grep-scouted surface: **64 factory call sites across ~30 files** (client
+> components pass `useMountain()`, server code passes params /
+> `getRequestMountainId`). Writing services (grep `addDoc|setDoc|writeBatch`):
+> `cat-service`, `point-service`, `media-albums`, `post-service`,
+> `butler-talk-service`, `announcement-service`, `adoption-service`,
+> `feeding-spots-service`, `about-content-service` (+ Admin-SDK routes:
+> `/api/contact`, `assign-role` → `permission_logs`, `upload-youtube` /
+> `update-youtube-video` / `refresh-video-metadata` → `cat_videos`; check
+> `admin_data`'s writer). Model types live in `src/types/index.ts` +
+> `src/types/media.ts` + service-local interfaces — add `mountainId?: string`
+> (optional until the backfill lands, M5 can tighten).
 
 - [ ] `mountainId` added to the 12 collections' types; every **write** path stamps it
       (client services from the factory's tenant id; Admin-SDK routes from

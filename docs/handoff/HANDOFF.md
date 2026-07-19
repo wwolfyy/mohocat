@@ -45,17 +45,24 @@ the testing hand-off
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
-- **Next active track: multi-tenant / multi-mountain refactor — 📋 PLANNED
-  (2026-07-19), execution awaits explicit go-ahead at M1.** Q1–Q8 all answered by
-  the owner (management-only · B1 one-Firestore-`mountainId` · A1 one-Vercel +
-  subdomains · visitor-facing selector); the execution plan is
-  [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
-  (phases M0–M8, ending with geyang reconfigured as one-of-many + a stub second
-  tenant). **M0 is owner-owed:** the pending `firestore:rules` deploy must land
-  _before_ the track's rules changes so the M5 diff deploys clean.
+- **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M3
+  ✅ committed, next = M4.** Q1–Q8 answered (management-only · B1
+  one-Firestore-`mountainId` · A1 one-Vercel + subdomains · visitor-facing
+  selector); plan + live tracker:
+  [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md).
+  Four commits on `dev` (2026-07-19): docs `5672330` → M1 decoupling `8920c66` →
+  M2 config-layer `092d226` → M3 **`[mountain]` segment + middleware** `491b832`.
+  The app now serves every page through the tenant segment (URLs unchanged via
+  host-rewrite; `/geyang/…` path access works; unknown ids 404) — M3's gate was
+  the full e2e passing **without any spec rewrites** (116/0). **Resume = plan §3
+  M4** (stamp `mountainId` + prod backfill; its resume-notes block carries the
+  session-end scouting — factory parameterization lands in M4, 64 call sites).
+  ⚠️ M4's prod backfill run and M5's rules deploy are owner-gated.
+- **M0 is still owner-owed:** the pending `firestore:rules` deploy must land
+  _before_ M5's rules changes so that diff deploys clean.
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **Tree:** clean through `2584dcb` (this doc update rides in the next commit) —
+- **Tree:** clean through `491b832` (this doc pass rides in the next commit) —
   see _Uncommitted_ below.
 
 ---
@@ -90,16 +97,50 @@ admin CMS re-skin + Korean, 급식소 CMS, adoptable-cat + 입양홍보 features
 toggle), Lightbox pinch-to-zoom, Firebase Storage → Seoul bucket. Per-change detail:
 [`FEATURE_MOD_LOG.md`](../../log/FEATURE_MOD_LOG.md) + PROJECT_PLAN.
 
-### Multi-tenant / multi-mountain refactor — 📋 PLANNED (Q1–Q8 answered; execution gated on go-ahead)
+### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M3 ✅ committed; next = M4)
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
-— the execution plan: decisions locked (§0), target architecture (§1), design specs
-(§2), phases **M0–M8** with per-phase gates (§3), risks (§5), deferred items (§6).
-The 2026-07-18 decision framework
+— the execution plan **and live tracker**: decisions locked (§0), target
+architecture (§1), design specs (§2), phases **M0–M8** with per-phase gates and
+in-place execution notes (§3), risks (§5), deferred items (§6). Resume = its §3
+**M4** section (the ⏭️ header) — its resume-notes block holds the session-end
+scouting. The 2026-07-18 decision framework
 ([`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md))
 stays as the rationale record; its §9 table now carries the answers. PROJECT_PLAN
 **§9** is the tracker entry.
+
+**Executed so far (all on `dev`, 2026-07-19; every phase gated on tsc + smoke +
+unit + full e2e + browser pass):**
+
+- **M1 `8920c66` — decoupling:** `src/lib/firebase.ts` deleted (`useAboutPhoto` →
+  existing `storage-service.getDownloadUrl`); `feeding-spots-admin-service` on the
+  shared `@/lib/firebase-admin` init; map imagery → `map.landscapeImage/portraitImage`
+  config (fail-loud).
+- **M2 `092d226` — config layer:** tenant getters take a **required
+  `mountainId`**; deployment secrets are env-only (Q5 — one Firebase project, no
+  per-tenant secrets; `MountainSecrets` gone); `getCurrentMountainId()` →
+  `getDefaultMountainId()` (fallback-only semantics); new `src/lib/tenant.ts`
+  (`resolveMountainIdOrNull`, `findMountainIdByHost`, `getMountainIdForHost`,
+  `getRequestMountainId`) + `MountainProvider`/`useMountain()`; API routes resolve
+  tenant per-request from Host; `mountains.json` gains `domains`/`storagePrefix`,
+  loses the `mountain-cats-users` scaffolding; 12 unit tests.
+- **M3 `491b832` — routing:** every non-API route under `src/app/[mountain]/`;
+  root layout = bare shell, tenant layout owns chrome + providers +
+  `generateStaticParams` + unknown-id 404; `src/middleware.ts` host→rewrite
+  (tenant-prefixed paths pass through; default-tenant fallback keeps
+  localhost/preview/e2e URLs unchanged); per-mountain `/api/revalidate`;
+  `MountainSelector` navigates for real (mapped host → target `domains[0]`,
+  else `/{id}` path); map imagery de-module-scoped (per-tenant in-component).
+  **Gate: full e2e 116/0 with zero e2e-spec rewrites** (only the smoke suite's
+  structural paths moved). Dev matrix verified: `/`→200, `/geyang`→200,
+  `/everest`→404, `/api/*` untouched.
+
+⚠️ **Known dev-only caveat (accepted, plan M3 notes):** browsing a _non-default_
+tenant via path prefix, in-app relative links escape back to the default tenant;
+host-mapped production subdomains are unaffected. ⚠️ **Local e2e ops note:**
+`npm run test:e2e` re-fetches `public/` images from the storage emulator —
+run `npm run fetch:assets` before eyeballing media surfaces in dev afterwards.
 
 **Decisions (owner, 2026-07-19):** management-only (no custody) · **B1** one
 Firestore + `mountainId` on the 12 content collections · **A1** one Vercel project,
@@ -319,20 +360,28 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-Two bundles awaiting the phase-commit go-ahead: (1) the multi-mountain planning
-doc pass (new `docs/planning/multi-mountain-refactor-plan-20260719.md`,
-decision-framework §9 answers, PROJECT_PLAN §9 re-point, this hand-off); (2) the
-**M1 decoupling code** (`src/lib/firebase.ts` deleted, `useAboutPhoto` →
-`getStorageService().getDownloadUrl`, `feeding-spots-admin-service` → shared
-`@/lib/firebase-admin` init, map imagery → `map.landscapeImage/portraitImage`
-config). M1 gates all green (tsc / smoke 29 / unit 54 / full e2e clean re-run /
-browser pass). Everything else is committed through `2584dcb`.
+Only this session-close doc pass: `docs/handoff/HANDOFF.md`,
+`docs/planning/multi-mountain-refactor-plan-20260719.md` (status → EXECUTING,
+M4 resume notes), `docs/planning/PROJECT_PLAN.md` (§9 status touch). All code is
+committed through `491b832` (M3).
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Multi-mountain refactor PLANNED**: owner answered
+- **2026-07-19 (latest)** — **Multi-mountain M1–M3 EXECUTED & COMMITTED**
+  (`8920c66`, `092d226`, `491b832` after docs `5672330`): decoupling → config
+  layer to explicit `mountainId` + tenant helpers → the `[mountain]` route
+  segment + host-rewrite middleware. M3's gate: **full e2e 116/0 with zero
+  e2e-spec rewrites**. Session closed at the M4 boundary (tree clean); M4
+  resume-notes (factory parameterization lands there; 64 call sites scouted)
+  recorded in the plan doc. Process: the same-day auto-commit grant was
+  **revoked** — every commit is owner-gated again. Incidental finds this
+  session, logged in the plan: the contact-submit spec has a pre-existing
+  hydration-race flake; local `test:e2e` clobbers `public/` images with
+  emulator fixtures (re-run `fetch:assets`); Java for the emulators lives at
+  `/usr/local/opt/openjdk/bin` (PATH-prefix it).
+- **2026-07-19** — **Multi-mountain refactor PLANNED**: owner answered
   Q1–Q8 (management-only · B1 · A1+subdomains · visitor selector); wrote the
   execution plan `multi-mountain-refactor-plan-20260719.md` (M0–M8: decoupling →
   request-time config → `[mountain]` segment + middleware → stamp/backfill →
