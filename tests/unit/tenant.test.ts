@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
+  findMountainIdByHost,
   getMountainIdForHost,
   getRequestMountainId,
   resolveMountainIdOrNull,
@@ -52,6 +53,17 @@ describe('getMountainIdForHost — Host header mapping', () => {
   it('honors the MOUNTAIN_ID env as the fallback tenant', () => {
     vi.stubEnv('MOUNTAIN_ID', 'stub-mountain');
     expect(getMountainIdForHost('unmapped.example.org')).toBe('stub-mountain');
+  });
+});
+
+describe('findMountainIdByHost — strict mapping (no fallback)', () => {
+  it('returns the mountain for a mapped host', () => {
+    expect(findMountainIdByHost(GEYANG_HOST)).toBe('geyang');
+  });
+
+  it('returns null for unmapped or missing hosts (selector uses this to pick path links)', () => {
+    expect(findMountainIdByHost('localhost:3000')).toBeNull();
+    expect(findMountainIdByHost(null)).toBeNull();
   });
 });
 

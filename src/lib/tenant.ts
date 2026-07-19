@@ -28,20 +28,31 @@ export function resolveMountainIdOrNull(candidate: string | null | undefined): s
 }
 
 /**
- * Resolve a request Host header to a mountain ID via the per-mountain
- * `domains` config. Comparison ignores port and case. Unmapped or missing
- * hosts resolve to the default tenant — by design, so localhost, Vercel
- * preview hosts, and the e2e harness keep serving the default mountain.
+ * Strict Host→mountain lookup via the per-mountain `domains` config —
+ * `null` when no mountain claims the host. Comparison ignores port and case.
+ * Distinguishes "on a mapped production subdomain" from "on an unmapped host"
+ * (localhost/preview), which the selector uses to pick cross-domain links vs
+ * path links.
  */
-export function getMountainIdForHost(host: string | null | undefined): string {
+export function findMountainIdByHost(host: string | null | undefined): string | null {
   if (!host) {
-    return getDefaultMountainId();
+    return null;
   }
   const hostname = host.split(':')[0].toLowerCase();
   const match = getAllMountains().find((mountain) =>
     getMountainConfig(mountain.id).domains.some((domain) => domain.toLowerCase() === hostname)
   );
-  return match ? match.id : getDefaultMountainId();
+  return match ? match.id : null;
+}
+
+/**
+ * Resolve a request Host header to a mountain ID via the per-mountain
+ * `domains` config. Unmapped or missing hosts resolve to the default tenant —
+ * by design, so localhost, Vercel preview hosts, and the e2e harness keep
+ * serving the default mountain.
+ */
+export function getMountainIdForHost(host: string | null | undefined): string {
+  return findMountainIdByHost(host) ?? getDefaultMountainId();
 }
 
 /**

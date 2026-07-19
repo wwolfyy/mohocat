@@ -237,7 +237,7 @@ dirty but described; phase boundaries leave it clean (committed).
 ### M0 — Prerequisite sync (🔑 owner, before any code)
 
 - [ ] 🔑 **Deploy the already-pending `firestore.rules`** (`firebase deploy --only
-  firestore:rules`) and run its post-deploy check (assign role → `permission_logs`
+firestore:rules`) and run its post-deploy check (assign role → `permission_logs`
       doc appears). Rationale: prod rules must match the repo **before** this track
       starts changing them, so the M5 rules diff deploys clean and any regression is
       attributable.
@@ -312,26 +312,49 @@ The framework's §8 standalone items that reduce blast radius before the big mov
   selector dropdown lists mountains via `getAllMountains` /
   `getMountainName(id)`).
 
-### M3 — Routing: `[mountain]` segment + middleware (large — the riskiest phase)
+### M3 — ✅ Routing: `[mountain]` segment + middleware — DONE 2026-07-19
 
-- [ ] Move all non-API routes under `src/app/[mountain]/`; split root vs tenant
-      layout; `generateStaticParams`; 404 unknown ids via `resolveTenant`.
-- [ ] `src/middleware.ts` host→rewrite per §2.1 (skip api/\_next/static; pass through
-      already-prefixed paths).
-- [ ] Tenant-aware `revalidatePath` (`/api/revalidate` + admin cat-edit on-demand
-      revalidation).
-- [ ] Link/redirect/OAuth-callback audit per §2.5 (incl. `tenantHref` helper where
-      needed).
-- [ ] `MountainSelector` becomes real: production → other mountain's first `domains`
-      entry; dev/preview → path link. (Its no-op `?mountain=` query write dies here —
-      closes the PROJECT_PLAN §9 selector item.)
-- [ ] e2e harness: confirm the suite passes unchanged via the default-tenant fallback
-      (expectation: URLs unchanged, so no spec churn); add a middleware/host unit or
-      integration check.
-- [ ] Browser pass: full click-through of public + admin surfaces on `localhost`
-      (default tenant at `/`, same pages at `/geyang/…`).
-- Gates: full e2e green **without spec rewrites** (this is the phase's proof of
-  behavior preservation).
+- [x] All non-API routes moved (git mv) under `src/app/[mountain]/` (home,
+      `pages/*`, `login`, `mypage`, `admin/*`). Root layout is now the bare HTML
+      shell (font, globals.css, metadata); the new `[mountain]/layout.tsx` owns
+      the tenant chrome (header/nav/footer, Announcement + Auth providers,
+      AnalyticsTracker) wrapped in `MountainProvider`, with
+      `generateStaticParams` over configured mountains and `notFound()` for
+      unknown segments.
+- [x] `src/middleware.ts`: pass through already-tenant-prefixed paths; otherwise
+      Host→mountain (default-tenant fallback) and **rewrite** onto the segment.
+      Matcher excludes `api`, `_next`, and dotted files (public assets).
+- [x] `/api/revalidate` revalidates the baked subpaths (`''`,
+      `/pages/adoption`) **per configured mountain**.
+- [x] Link/redirect/OAuth audit: only server `redirect()` is the Kakao callback →
+      Firebase auth handler (env `NEXT_PUBLIC_BASE_URL`, tenant-independent under
+      Q5 — multi-subdomain implications land in the M8 provisioning guide, incl.
+      per-subdomain Firebase authorized domains + Kakao redirect URIs). All
+      `Link`/`router.push` targets are relative → middleware re-rewrites per
+      host; no `tenantHref` helper needed. Dev-only caveat (accepted): browsing
+      a **non-default** tenant by path prefix, in-app links jump back to the
+      default tenant — host mode is unaffected.
+- [x] `MountainSelector` is real: current mountain via `useMountain()`; selection
+      navigates to the target's `domains[0]` when on a mapped production host,
+      else to `/{mountainId}` (dev/preview). The no-op `?mountain=` query write
+      is gone (closes the PROJECT_PLAN §9 selector item). New
+      `findMountainIdByHost` (strict, null on unmapped) backs the mode pick;
+      +3 unit tests.
+- [x] `LeafletMountainMap` de-module-scoped: imagery resolved per-tenant inside
+      the component (`useMountain` + `getMapConfig`), layout/coord helpers take
+      the images as params, `PointMarkersLayer` receives them as a prop.
+      `MountainViewer`, about page, `AboutContentEditor`, `useAboutPhoto` now
+      read the tenant via `useMountain()`.
+- [x] Smoke suite structural paths updated to the `[mountain]` segment (+
+      layout/middleware existence check) — the only test-side change; **e2e specs
+      untouched by design**.
+- [x] Dev routing matrix verified: `/`→200 (rewrite), `/geyang`→200,
+      `/pages/about`→200, `/geyang/pages/about`→200, `/everest`→**404**,
+      `/api/points`→200. Browser pass: landing + `/geyang/pages/faq` render the
+      full tenant chrome, console clean.
+- Gates (2026-07-19): tsc ✅ · unit+smoke 69/69 ✅ · **full e2e 116 passed /
+  0 failed with zero e2e-spec rewrites** — the phase's proof of behavior
+  preservation · browser pass ✅.
 
 ### M4 — Data tenancy 1: stamp + backfill (medium; additive, no read filtering yet)
 

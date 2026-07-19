@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getMountainAbout, getDefaultMountainId } from '@/utils/config';
+import { getMountainAbout } from '@/utils/config';
 import { getStorageService } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 
 interface UseAboutPhotoResult {
   photoUrl: string | null;
@@ -11,6 +12,7 @@ interface UseAboutPhotoResult {
 }
 
 export function useAboutPhoto(filename: string): UseAboutPhotoResult {
+  const mountainId = useMountain();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function useAboutPhoto(filename: string): UseAboutPhotoResult {
         setLoading(true);
         setError(null);
 
-        const aboutConfig = getMountainAbout(getDefaultMountainId());
+        const aboutConfig = getMountainAbout(mountainId);
 
         // Check if we have a local static path from build-time fetching
         if (aboutConfig.mainPhoto?.localPath) {
@@ -37,7 +39,6 @@ export function useAboutPhoto(filename: string): UseAboutPhotoResult {
 
         // Fallback to Firebase Storage if local path not available
         console.log('Local path not available, falling back to Firebase Storage');
-        const mountainId = getDefaultMountainId();
         const storagePath = `about-photos/${mountainId}/${filename}`;
         const url = await getStorageService().getDownloadUrl(storagePath);
         setPhotoUrl(url);
@@ -50,7 +51,7 @@ export function useAboutPhoto(filename: string): UseAboutPhotoResult {
     };
 
     loadPhoto();
-  }, [filename]);
+  }, [filename, mountainId]);
 
   return { photoUrl, loading, error };
 }

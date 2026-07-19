@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { getDefaultMountainId, getAllMountains, getMountainName } from '@/utils/config';
+import { getAllMountains, getMountainConfig, getMountainName } from '@/utils/config';
+import { findMountainIdByHost } from '@/lib/tenant';
+import { useMountain } from '@/components/MountainProvider';
 
 interface MountainOption {
   id: string;
@@ -13,7 +15,7 @@ interface MountainOption {
 export default function MountainSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentMountainId] = useState(getDefaultMountainId());
+  const currentMountainId = useMountain();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get available mountains from config helper
@@ -52,11 +54,15 @@ export default function MountainSelector() {
 
   const handleMountainSelect = (mountainId: string) => {
     if (mountainId !== currentMountainId) {
-      // For now, we'll just reload the page with a query parameter
-      // In the future, this could be enhanced with proper routing
-      const url = new URL(window.location.href);
-      url.searchParams.set('mountain', mountainId);
-      window.location.href = url.toString();
+      // On a mapped production subdomain, the other mountain is another origin —
+      // link to its primary domain. On unmapped hosts (dev, Vercel preview) use
+      // direct path access to the [mountain] segment instead (see middleware).
+      const onMappedHost = findMountainIdByHost(window.location.host) !== null;
+      const targetDomain = getMountainConfig(mountainId).domains[0];
+      window.location.href =
+        onMappedHost && targetDomain
+          ? `${window.location.protocol}//${targetDomain}`
+          : `/${mountainId}`;
     }
     handleClose();
   };

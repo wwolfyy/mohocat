@@ -7,7 +7,8 @@ import type { Point } from '@/types';
 import type { CatsByPoint } from '@/lib/server/cat-reads';
 import { greedyClusterByRadius, spiderfyRadius } from '@/utils/mapClustering';
 import { resolveLabelAbove } from '@/utils/mapLabels';
-import { getMapConfig, getDefaultMountainId, type MapImageConfig } from '@/utils/config';
+import { getMapConfig, type MapImageConfig } from '@/utils/config';
+import { useMountain } from '@/components/MountainProvider';
 import 'leaflet/dist/leaflet.css';
 
 // Two image layouts, chosen by device (`isMobile`), not live orientation. The
@@ -17,8 +18,14 @@ import 'leaflet/dist/leaflet.css';
 // tall phone screen; north then points right) and desktop uses the native
 // landscape still. With CRS.Simple the map plane is the image's pixel grid
 // addressed as [y, x]; bounds run [0,0] → [height, width].
-// Imagery is per-mountain config (map.landscapeImage / map.portraitImage) — a
-// mountain that renders the map without declaring both is a misconfiguration.
+// Imagery is per-mountain config (map.landscapeImage / map.portraitImage),
+// resolved per-tenant inside the component (useMountain) — a mountain that
+// renders the map without declaring both is a misconfiguration.
+interface MapImages {
+  landscape: MapImageConfig;
+  portrait: MapImageConfig;
+}
+
 function requireMapImage(image: MapImageConfig | undefined, key: string): MapImageConfig {
   if (!image) {
     throw new Error(`Map image not configured for the current mountain: map.${key}`);
@@ -26,12 +33,11 @@ function requireMapImage(image: MapImageConfig | undefined, key: string): MapIma
   return image;
 }
 
-const mapConfig = getMapConfig(getDefaultMountainId());
-const LANDSCAPE = requireMapImage(mapConfig.landscapeImage, 'landscapeImage');
-const PORTRAIT = requireMapImage(mapConfig.portraitImage, 'portraitImage');
-
-function getLayout(mobile: boolean): { url: string; bounds: LatLngBoundsExpression } {
-  const img = mobile ? PORTRAIT : LANDSCAPE;
+function getLayout(
+  mobile: boolean,
+  images: MapImages
+): { url: string; bounds: LatLngBoundsExpression } {
+  const img = mobile ? images.portrait : images.landscape;
   return {
     url: img.url,
     bounds: [
@@ -48,13 +54,17 @@ function getLayout(mobile: boolean): { url: string; bounds: LatLngBoundsExpressi
  * left), y' = x (from top). Either way lat is flipped (imageOverlay's [0,0] is
  * the bottom-left). Firebase / the `Point` model are untouched — render-time only.
  */
-function pointToLatLng(point: { x: number; y: number }, mobile: boolean): [number, number] {
+function pointToLatLng(
+  point: { x: number; y: number },
+  mobile: boolean,
+  images: MapImages
+): [number, number] {
   const xf = point.x / 100;
   const yf = point.y / 100;
   if (mobile) {
-    return [(1 - xf) * PORTRAIT.height, (1 - yf) * PORTRAIT.width];
+    return [(1 - xf) * images.portrait.height, (1 - yf) * images.portrait.width];
   }
-  return [(1 - yf) * LANDSCAPE.height, xf * LANDSCAPE.width];
+  return [(1 - yf) * images.landscape.height, xf * images.landscape.width];
 }
 
 /** A feeding point resolved for rendering: its stored %-coords plus a chosen
@@ -193,12 +203,14 @@ function PointMarkersLayer({
   isMobile,
   clustering,
   maxClusterRadius,
+  images,
 }: {
   markers: ResolvedMarker[];
   onSelect: (pointId: string) => void;
   isMobile: boolean;
   clustering: boolean;
   maxClusterRadius: number;
+  images: MapImages;
 }) {
   const map = useMap();
 
@@ -240,7 +252,7 @@ function PointMarkersLayer({
     // portrait coords on mobile, the landscape coords on desktop.
     if (!isMobile || !clustering) {
       markers.forEach((m) => {
-        const [lat, lng] = pointToLatLng(m, isMobile);
+        const [lat, lng] = pointToLatLng(m, isMobile, images);
         layer.addLayer(makePin(m, [lat, lng]));
       });
       layer.addTo(map);
@@ -255,7 +267,7 @@ function PointMarkersLayer({
     // cluster grid for a device to desync (the whole point of the rewrite).
     const refZoom = map.getBoundsZoom(map.options.maxBounds as L.LatLngBounds);
     const latlngs = markers.map((m) => {
-      const [lat, lng] = pointToLatLng(m, true);
+      const [lat, lng] = pointToLatLng(m, true, images);
       return L.latLng(lat, lng);
     });
     const pixels = latlngs.map((ll) => {
@@ -340,7 +352,7 @@ function PointMarkersLayer({
       collapse();
       layer.remove();
     };
-  }, [map, markers, onSelect, isMobile, clustering, maxClusterRadius]);
+  }, [map, markers, onSelect, isMobile, clustering, maxClusterRadius, images]);
 
   return null;
 }
@@ -489,7 +501,15 @@ export default function LeafletMountainMap({
   maxClusterRadius,
 }: LeafletMountainMapProps) {
   const markers = usePointMarkers(points, catsByPoint);
-  const { url, bounds } = getLayout(isMobile);
+  const mountainId = useMountain();
+  const images = useMemo((): MapImages => {
+    const mapConfig = getMapConfig(mountainId);
+    return {
+      landscape: requireMapImage(mapConfig.landscapeImage, 'landscapeImage'),
+      portrait: requireMapImage(mapConfig.portraitImage, 'portraitImage'),
+    };
+  }, [mountainId]);
+  const { url, bounds } = getLayout(isMobile, images);
 
   return (
     <MapContainer
@@ -529,6 +549,7 @@ export default function LeafletMountainMap({
         isMobile={isMobile}
         clustering={clustering}
         maxClusterRadius={maxClusterRadius}
+        images={images}
       />
     </MapContainer>
   );

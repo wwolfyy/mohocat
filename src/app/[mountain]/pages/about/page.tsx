@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getMountainAbout, getDefaultMountainId } from '@/utils/config';
+import { getMountainAbout } from '@/utils/config';
+import { useMountain } from '@/components/MountainProvider';
 import { useAboutPhoto } from '@/hooks/useAboutPhoto';
 import { getAboutContentService, getCatService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
@@ -30,6 +31,7 @@ function emphasizeCapitals(text: string): React.ReactNode[] {
 }
 
 export default function About() {
+  const mountainId = useMountain();
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function About() {
           setAboutData(firestoreContent);
         } else {
           // Fallback to JSON config
-          const jsonConfig = getMountainAbout(getDefaultMountainId());
+          const jsonConfig = getMountainAbout(mountainId);
           const fallbackContent: AboutContent = {
             title: jsonConfig.title,
             subtitle: jsonConfig.subtitle,
@@ -77,7 +79,7 @@ export default function About() {
         setError('Failed to load about content');
 
         // Fallback to JSON config on error
-        const jsonConfig = getMountainAbout(getDefaultMountainId());
+        const jsonConfig = getMountainAbout(mountainId);
         const fallbackContent: AboutContent = {
           title: jsonConfig.title,
           subtitle: jsonConfig.subtitle,
