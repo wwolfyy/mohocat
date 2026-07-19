@@ -1,11 +1,11 @@
-import { getYouTubeApiKey, getMountainConfig } from '@/utils/config';
+import { getYouTubeApiKey, getYouTubeChannelId, getDefaultMountainId } from '@/utils/config';
 
 // Get YouTube configuration from the centralized config system
 const getYouTubeConfig = () => {
-  const config = getMountainConfig();
   return {
     apiKey: getYouTubeApiKey(),
-    channelId: config.social.youtubeChannelId || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID,
+    channelId:
+      getYouTubeChannelId(getDefaultMountainId()) || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID,
   };
 };
 

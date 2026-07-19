@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getMountainAbout } from '@/utils/config';
+import { getMountainAbout, getDefaultMountainId } from '@/utils/config';
 import { useAboutPhoto } from '@/hooks/useAboutPhoto';
 import { getAboutContentService, getCatService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
@@ -53,7 +53,7 @@ export default function About() {
           setAboutData(firestoreContent);
         } else {
           // Fallback to JSON config
-          const jsonConfig = getMountainAbout();
+          const jsonConfig = getMountainAbout(getDefaultMountainId());
           const fallbackContent: AboutContent = {
             title: jsonConfig.title,
             subtitle: jsonConfig.subtitle,
@@ -77,7 +77,7 @@ export default function About() {
         setError('Failed to load about content');
 
         // Fallback to JSON config on error
-        const jsonConfig = getMountainAbout();
+        const jsonConfig = getMountainAbout(getDefaultMountainId());
         const fallbackContent: AboutContent = {
           title: jsonConfig.title,
           subtitle: jsonConfig.subtitle,

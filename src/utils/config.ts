@@ -1,8 +1,18 @@
 /**
  * Mountain Configuration Management
  *
- * This module provides a unified way to access mountain-specific configuration
- * while maintaining backward compatibility with the current single-mountain setup.
+ * Two concerns, deliberately separated (multi-mountain plan M2):
+ *
+ * 1. **Tenant config** — per-mountain public settings from
+ *    `config/mountains/mountains.json` (branding, about, theme, features, map,
+ *    social, domains, storagePrefix). Every accessor takes an **explicit
+ *    `mountainId`** — there is no ambient "current mountain" on the server.
+ * 2. **Deployment secrets** — env-sourced credentials (Firebase, service
+ *    account, YouTube, OAuth). One Firebase project serves every mountain
+ *    (plan §0 Q5), so these are deployment-global and take no mountainId.
+ *
+ * `getDefaultMountainId()` is only the *fallback* tenant (unmapped hosts, build
+ * scripts, dev); request-scoped tenant resolution lives in `src/lib/tenant.ts`.
  */
 
 import mountainsConfig from '../../config/mountains/mountains.json';
@@ -78,25 +88,11 @@ export interface OAuthProviderConfig {
   };
 }
 
-export interface MountainSecrets {
-  firebase: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-    measurementId?: string;
-  };
-  youtubeApiKey: string;
-  youtubeOAuth?: {
-    clientId: string;
-    clientSecret: string;
-    refreshToken: string;
-    redirectUri?: string;
-  };
-  oauthProviders?: OAuthProviderConfig;
-  serviceAccount?: any;
+export interface YouTubeOAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+  redirectUri?: string;
 }
 
 export interface AboutSection {
@@ -124,69 +120,192 @@ export interface MountainConfig {
   name: string;
   description: string;
   adminEmail: string;
+  /**
+   * Hosts that resolve to this mountain (no scheme/port), e.g.
+   * `geyangsan.mohocats.org`. Consumed by `src/lib/tenant.ts` host mapping.
+   */
+  domains: string[];
+  /**
+   * Firebase Storage path prefix for this mountain's uploads. `''` for geyang
+   * (legacy flat layout — objects stay where they are); `mountains/{id}/` for
+   * every new mountain (plan §0 sub-decision 3).
+   */
+  storagePrefix: string;
   about: MountainAbout;
   theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
   map?: MountainMapConfig;
-  secrets?: MountainSecrets;
 }
 
+// ---------------------------------------------------------------------------
+// Tenant config (per-mountain; explicit mountainId)
+// ---------------------------------------------------------------------------
+
 /**
- * Get the current mountain ID
+ * The fallback mountain ID, from env. This is NOT "the current mountain" —
+ * it is the tenant used when no request-scoped resolution applies: unmapped
+ * hosts (localhost, Vercel previews), build scripts, and the e2e harness.
  */
-export function getCurrentMountainId(): string {
+export function getDefaultMountainId(): string {
   return process.env.MOUNTAIN_ID || process.env.NEXT_PUBLIC_MOUNTAIN_ID || 'geyang';
 }
 
 /**
- * Get the current mountain configuration
- *
- * In single-mountain mode (current): Returns geyang config with current env variables
- * In multi-mountain mode (future): Returns config based on MOUNTAIN_ID env variable
+ * Get a mountain's public configuration by explicit ID.
  */
-export function getMountainConfig(): MountainConfig {
-  // Get mountain ID from environment variable, fallback to 'geyang' for backward compatibility
-  const mountainId = process.env.MOUNTAIN_ID || process.env.NEXT_PUBLIC_MOUNTAIN_ID || 'geyang';
-
-  // Load public configuration
+export function getMountainConfig(mountainId: string): MountainConfig {
   const publicConfig = mountainsConfig[mountainId as keyof typeof mountainsConfig];
-  if (!publicConfig || typeof publicConfig !== 'object' || 'centralUserService' in publicConfig) {
+  if (mountainId.startsWith('_') || !publicConfig || typeof publicConfig !== 'object') {
     throw new Error(`Configuration not found for mountain: ${mountainId}`);
   }
+  return publicConfig as unknown as MountainConfig;
+}
 
-  // Load secret configuration from environment variables
-  // This maintains backward compatibility with existing environment variables
-  const secretConfig: MountainSecrets = {
-    firebase: {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
-      ...(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID && {
-        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-      }),
-    },
-    youtubeApiKey: process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
+/**
+ * Get map configuration for a mountain, falling back to `DEFAULT_MAP_CONFIG`
+ * when the `map` section (or a field) is omitted.
+ */
+export function getMapConfig(mountainId: string): MountainMapConfig {
+  const config = getMountainConfig(mountainId);
+  return { ...DEFAULT_MAP_CONFIG, ...config.map };
+}
+
+/**
+ * Check if a feature is enabled for a mountain
+ */
+export function isFeatureEnabled(feature: keyof MountainFeatures, mountainId: string): boolean {
+  const config = getMountainConfig(mountainId);
+  return config.features[feature];
+}
+
+/**
+ * Get mountain name for display
+ */
+export function getMountainName(mountainId: string): string {
+  const config = getMountainConfig(mountainId);
+  return config.name;
+}
+
+/**
+ * Get mountain description
+ */
+export function getMountainDescription(mountainId: string): string {
+  const config = getMountainConfig(mountainId);
+  return config.description;
+}
+
+/**
+ * Get YouTube channel ID for a mountain
+ */
+export function getYouTubeChannelId(mountainId: string): string {
+  const config = getMountainConfig(mountainId);
+  return config.social.youtubeChannelId;
+}
+
+/**
+ * Get about page configuration for a mountain
+ */
+export function getMountainAbout(mountainId: string): MountainAbout {
+  const config = getMountainConfig(mountainId);
+  return config.about;
+}
+
+/**
+ * Get all available mountains (excluding meta entries)
+ */
+export function getAllMountains(): Array<{ id: string; name: string; description: string }> {
+  return Object.entries(mountainsConfig)
+    .filter(([key]) => !key.startsWith('_'))
+    .map(([id, config]) => ({
+      id,
+      name: (config as any).name,
+      description: (config as any).description,
+    }));
+}
+
+// ---------------------------------------------------------------------------
+// Deployment secrets (env-sourced; shared by every mountain — no mountainId)
+// ---------------------------------------------------------------------------
+
+/**
+ * Firebase web-app configuration for the single shared Firebase project.
+ */
+export function getFirebaseConfig() {
+  const firebase = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+    ...(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID && {
+      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+    }),
   };
 
-  // Add YouTube OAuth credentials if available
+  if (process.env.FIREBASE_CONFIG) {
+    try {
+      return { ...firebase, ...JSON.parse(process.env.FIREBASE_CONFIG) };
+    } catch (error) {
+      console.warn('Failed to parse FIREBASE_CONFIG environment variable:', error);
+    }
+  }
+
+  return firebase;
+}
+
+/**
+ * Get YouTube API key
+ */
+export function getYouTubeApiKey(): string {
+  return process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
+}
+
+/**
+ * Get YouTube OAuth configuration
+ */
+export function getYouTubeOAuthConfig(): YouTubeOAuthConfig | undefined {
   if (
     process.env.YOUTUBE_CLIENT_ID &&
     process.env.YOUTUBE_CLIENT_SECRET &&
     process.env.YOUTUBE_REFRESH_TOKEN
   ) {
-    secretConfig.youtubeOAuth = {
+    return {
       clientId: process.env.YOUTUBE_CLIENT_ID,
       clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
       refreshToken: process.env.YOUTUBE_REFRESH_TOKEN,
       redirectUri: process.env.YOUTUBE_REDIRECT_URI,
     };
   }
+  return undefined;
+}
 
-  // Add OAuth provider credentials if available
+/**
+ * Get Firebase Admin Service Account configuration for admin operations
+ * Uses Firebase Admin SDK service account with elevated privileges
+ * Note: This function should only be called in server-side contexts (API routes, etc.)
+ * This function is intentionally not available in client-side code
+ */
+export function getFirebaseAdminServiceAccount() {
+  try {
+    if (process.env.SERVICE_ACCOUNT_KEY) {
+      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
+      rawStr = rawStr.replace(/'/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+      return JSON.parse(rawStr);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Failed to parse Firebase Admin service account:', error);
+    return null;
+  }
+}
+
+/**
+ * Get OAuth provider configuration
+ */
+export function getOAuthProvidersConfig(): OAuthProviderConfig | undefined {
   const oauthProviders: OAuthProviderConfig = {};
 
   // Google OAuth
@@ -207,145 +326,7 @@ export function getMountainConfig(): MountainConfig {
     };
   }
 
-  if (Object.keys(oauthProviders).length > 0) {
-    secretConfig.oauthProviders = oauthProviders;
-  }
-
-  // In the future, when we have multi-mountain setup, we can also parse:
-  // FIREBASE_CONFIG and SERVICE_ACCOUNT_KEY environment variables
-  if (process.env.FIREBASE_CONFIG) {
-    try {
-      const firebaseFromEnv = JSON.parse(process.env.FIREBASE_CONFIG);
-      secretConfig.firebase = { ...secretConfig.firebase, ...firebaseFromEnv };
-    } catch (error) {
-      console.warn('Failed to parse FIREBASE_CONFIG environment variable:', error);
-    }
-  }
-
-  if (process.env.SERVICE_ACCOUNT_KEY) {
-    try {
-      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
-      rawStr = rawStr.replace(/'/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-      secretConfig.serviceAccount = JSON.parse(rawStr);
-    } catch (error) {
-      console.warn('Failed to parse SERVICE_ACCOUNT_KEY environment variable:', error);
-    }
-  }
-
-  return {
-    ...(publicConfig as any),
-    secrets: secretConfig,
-  };
-}
-
-/**
- * Get Firebase configuration for the current mountain
- */
-export function getFirebaseConfig() {
-  const config = getMountainConfig();
-  return config.secrets?.firebase;
-}
-
-/**
- * Get YouTube API key for the current mountain
- */
-export function getYouTubeApiKey(): string {
-  const config = getMountainConfig();
-  return config.secrets?.youtubeApiKey || '';
-}
-
-/**
- * Get map configuration for the current mountain, falling back to
- * `DEFAULT_MAP_CONFIG` when the `map` section (or a field) is omitted.
- */
-export function getMapConfig(): MountainMapConfig {
-  const config = getMountainConfig();
-  return { ...DEFAULT_MAP_CONFIG, ...config.map };
-}
-
-/**
- * Check if a feature is enabled for the current mountain
- */
-export function isFeatureEnabled(feature: keyof MountainFeatures): boolean {
-  const config = getMountainConfig();
-  return config.features[feature];
-}
-
-/**
- * Get mountain name for display
- */
-export function getMountainName(): string {
-  const config = getMountainConfig();
-  return config.name;
-}
-
-/**
- * Get YouTube OAuth configuration for the current mountain
- */
-export function getYouTubeOAuthConfig() {
-  const config = getMountainConfig();
-  return config.secrets?.youtubeOAuth;
-}
-
-/**
- * Get Firebase Admin Service Account configuration for admin operations
- * Uses Firebase Admin SDK service account with elevated privileges
- * Note: This function should only be called in server-side contexts (API routes, etc.)
- * This function is intentionally not available in client-side code
- */
-export function getFirebaseAdminServiceAccount() {
-  try {
-    const config = getMountainConfig();
-    const serviceAccount = config.secrets?.serviceAccount;
-
-    if (serviceAccount) {
-      return serviceAccount;
-    }
-
-    // Fallback to environment variable
-    if (process.env.SERVICE_ACCOUNT_KEY) {
-      let rawStr = process.env.SERVICE_ACCOUNT_KEY;
-      rawStr = rawStr.replace(/'/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-      return JSON.parse(rawStr);
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Failed to parse Firebase Admin service account:', error);
-    return null;
-  }
-}
-
-/**
- * Get mountain description
- */
-export function getMountainDescription(): string {
-  const config = getMountainConfig();
-  return config.description;
-}
-
-/**
- * Get YouTube channel ID for the current mountain
- */
-export function getYouTubeChannelId(): string {
-  const config = getMountainConfig();
-  return config.social.youtubeChannelId;
-}
-
-/**
- * Get about page configuration for the current mountain
- */
-export function getMountainAbout(): MountainAbout {
-  const config = getMountainConfig();
-  return config.about;
-}
-
-/**
- * Get OAuth provider configuration for the current mountain
- */
-export function getOAuthProvidersConfig() {
-  const config = getMountainConfig();
-  return config.secrets?.oauthProviders;
+  return Object.keys(oauthProviders).length > 0 ? oauthProviders : undefined;
 }
 
 /**
@@ -378,17 +359,4 @@ export function isGoogleOAuthEnabled(): boolean {
 export function isKakaoOAuthEnabled(): boolean {
   const config = getKakaoOAuthConfig();
   return config?.enabled === true;
-}
-
-/**
- * Get all available mountains (excluding meta entries)
- */
-export function getAllMountains(): Array<{ id: string; name: string; description: string }> {
-  return Object.entries(mountainsConfig)
-    .filter(([key]) => !key.startsWith('_'))
-    .map(([id, config]) => ({
-      id,
-      name: (config as any).name,
-      description: (config as any).description,
-    }));
 }

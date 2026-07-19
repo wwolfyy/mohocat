@@ -7,7 +7,7 @@ import type { Point } from '@/types';
 import type { CatsByPoint } from '@/lib/server/cat-reads';
 import { greedyClusterByRadius, spiderfyRadius } from '@/utils/mapClustering';
 import { resolveLabelAbove } from '@/utils/mapLabels';
-import { getMapConfig, type MapImageConfig } from '@/utils/config';
+import { getMapConfig, getDefaultMountainId, type MapImageConfig } from '@/utils/config';
 import 'leaflet/dist/leaflet.css';
 
 // Two image layouts, chosen by device (`isMobile`), not live orientation. The
@@ -26,7 +26,7 @@ function requireMapImage(image: MapImageConfig | undefined, key: string): MapIma
   return image;
 }
 
-const mapConfig = getMapConfig();
+const mapConfig = getMapConfig(getDefaultMountainId());
 const LANDSCAPE = requireMapImage(mapConfig.landscapeImage, 'landscapeImage');
 const PORTRAIT = requireMapImage(mapConfig.portraitImage, 'portraitImage');
 

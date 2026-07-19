@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getAboutContentService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
-import { getMountainAbout } from '@/utils/config';
+import { getMountainAbout, getDefaultMountainId } from '@/utils/config';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -35,7 +35,7 @@ export default function AboutContentEditor() {
         setContent(firestoreContent);
       } else {
         // Initialize with current JSON config if no Firestore data exists
-        const jsonConfig = getMountainAbout();
+        const jsonConfig = getMountainAbout(getDefaultMountainId());
         const initialContent: AboutContent = {
           title: jsonConfig.title,
           subtitle: jsonConfig.subtitle,

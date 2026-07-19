@@ -237,14 +237,14 @@ dirty but described; phase boundaries leave it clean (committed).
 ### M0 — Prerequisite sync (🔑 owner, before any code)
 
 - [ ] 🔑 **Deploy the already-pending `firestore.rules`** (`firebase deploy --only
-    firestore:rules`) and run its post-deploy check (assign role → `permission_logs`
+  firestore:rules`) and run its post-deploy check (assign role → `permission_logs`
       doc appears). Rationale: prod rules must match the repo **before** this track
       starts changing them, so the M5 rules diff deploys clean and any regression is
       attributable.
 - [x] Record the §0 decisions in the decision framework (§9 table + status) and
       PROJECT*PLAN §9. *(Done alongside this plan's creation, 2026-07-19.)\_
 
-### M1 — 🚧 Decoupling prerequisites (small; behavior-preserving)
+### M1 — ✅ Decoupling prerequisites — DONE 2026-07-19, committed `8920c66` (plan docs: `5672330`)
 
 The framework's §8 standalone items that reduce blast radius before the big moves:
 
@@ -276,19 +276,41 @@ The framework's §8 standalone items that reduce blast radius before the big mov
   assets **from the storage emulator**, clobbering real images under `public/` —
   run `npm run fetch:assets` afterwards before eyeballing media surfaces in dev.
 
-### M2 — Config layer request-time (medium)
+### M2 — 🚧 Config layer request-time (medium)
 
-- [ ] Parameterize every `utils/config.ts` getter with explicit `mountainId`;
-      `getCurrentMountainId()` → `getDefaultMountainId()`; update all call sites
-      (passing the default for now — behavior identical).
-- [ ] `mountains.json`: add `domains` + `storagePrefix` to geyang; delete
-      `_meta.centralUserService` + `authentication.userServiceProject` (Q5);
-      tighten the config type (`MountainConfig` gains the new fields).
-- [ ] Add `src/lib/tenant.ts` (`resolveTenant`, `getRequestMountainId`) +
-      `MountainProvider`/`useMountain()` — landed but seeded with the default tenant
-      until M3 wires real resolution.
-- [ ] Unit tests for the mapping helpers (host→id incl. fallback + unknown-host).
-- Gates: full suite green; geyang behavior unchanged.
+- [x] `utils/config.ts` split into **tenant config** (explicit required
+      `mountainId` on `getMountainConfig` / `getMapConfig` / `isFeatureEnabled` /
+      `getMountainName` / `getMountainDescription` / `getYouTubeChannelId` /
+      `getMountainAbout`) and **deployment secrets** (env-only, no `mountainId` —
+      Firebase, service account, YouTube key/OAuth, OAuth providers — per Q5 one
+      project serves all tenants; `MountainSecrets` and the `config.secrets`
+      merge are gone; no consumer outside `config.ts` read `.secrets`).
+      `getCurrentMountainId()` → `getDefaultMountainId()`. All 11 call sites
+      threaded: API routes resolve via **`getRequestMountainId(request)`**
+      (host-based, default-tenant fallback → behavior-identical today:
+      `contact` — `sendNotification` takes `mountainId`; `assign-role`;
+      `manage-playlists`; `refresh-video-metadata` — now uses
+      `getYouTubeChannelId`); client components/services pass
+      `getDefaultMountainId()` until M3 seeds real context.
+- [x] `mountains.json`: geyang gains `domains: ["geyangsan.mohocats.org"]` +
+      `storagePrefix: ""`; `_meta.centralUserService` and
+      `authentication.userServiceProject` deleted (Q5); `MountainConfig` typed
+      with the new fields (meta version → 3.0).
+- [x] `src/lib/tenant.ts` landed: `resolveMountainIdOrNull` (segment validation,
+      null → caller 404s), `getMountainIdForHost` (port/case-insensitive domain
+      match, default-tenant fallback), `getRequestMountainId`. Pure functions, no
+      Next imports — middleware/route/unit-test usable.
+- [x] `MountainProvider`/`useMountain()` client context landed
+      (`src/components/MountainProvider.tsx`), seeded by prop; outside a provider
+      it falls back to the default tenant until M3 wires the `[mountain]` layout.
+- [x] Unit tests `tests/unit/tenant.test.ts` (12): segment validation, host
+      mapping incl. port/case/fallback/env-override, Request resolution, config
+      explicit-id contract.
+- Gates (2026-07-19): tsc ✅ · unit+smoke 66/66 ✅ (12 new tenant tests) ·
+  **full e2e ✅ clean** (`.last-run.json` status passed, zero failures) · browser
+  pass ✅ (landing map + avatars identical through the parameterized config;
+  selector dropdown lists mountains via `getAllMountains` /
+  `getMountainName(id)`).
 
 ### M3 — Routing: `[mountain]` segment + middleware (large — the riskiest phase)
 

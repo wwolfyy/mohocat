@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
-import { getCurrentMountainId } from '@/utils/config';
+import { getRequestMountainId } from '@/lib/tenant';
 import type { UserPermissions, UserRole } from '@/types/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Invalid role: ${role}` }, { status: 400 });
     }
 
-    const mountainId = getCurrentMountainId();
+    const mountainId = getRequestMountainId(request);
     const now = new Date();
 
     const newRole: UserRole = {

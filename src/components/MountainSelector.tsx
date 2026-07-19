@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { getCurrentMountainId, getAllMountains, getMountainName } from '@/utils/config';
+import { getDefaultMountainId, getAllMountains, getMountainName } from '@/utils/config';
 
 interface MountainOption {
   id: string;
@@ -13,12 +13,12 @@ interface MountainOption {
 export default function MountainSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentMountainId] = useState(getCurrentMountainId());
+  const [currentMountainId] = useState(getDefaultMountainId());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get available mountains from config helper
   const mountains: MountainOption[] = getAllMountains();
-  const currentMountainName = getMountainName();
+  const currentMountainName = getMountainName(currentMountainId);
 
   // Close dropdown when clicking outside
   useEffect(() => {

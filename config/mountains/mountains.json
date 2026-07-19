@@ -1,22 +1,17 @@
 {
   "_meta": {
-    "centralUserService": {
-      "projectId": "mountain-cats-users",
-      "description": "Centralized authentication and user management for all mountains",
-      "handles": [
-        "authentication",
-        "user-management",
-        "cross-mountain-access"
-      ]
-    },
-    "version": "2.0",
-    "lastUpdated": "2025-06-29"
+    "version": "3.0",
+    "lastUpdated": "2026-07-19"
   },
   "geyang": {
     "id": "geyang",
     "name": "계양산",
     "description": "계양산에서 살고 있는 고양이들의 이야기",
     "adminEmail": "jaesangpark@gmail.com",
+    "domains": [
+      "geyangsan.mohocats.org"
+    ],
+    "storagePrefix": "",
     "about": {
       "title": "계양산에서 만나는 고양이 이야기",
       "subtitle": "계양산에서 만나는 특별한 이야기들",
@@ -70,7 +65,6 @@
     },
     "authentication": {
       "type": "centralized",
-      "userServiceProject": "mountain-cats-users",
       "roles": [
         "admin",
         "butler-ground",

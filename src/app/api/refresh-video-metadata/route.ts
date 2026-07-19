@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
-import { getYouTubeApiKey, getMountainConfig } from '@/utils/config';
+import { getYouTubeApiKey, getYouTubeChannelId } from '@/utils/config';
+import { getRequestMountainId } from '@/lib/tenant';
 import { NextURL } from 'next/dist/server/web/next-url';
 
 const YOUTUBE_API_KEY = getYouTubeApiKey();
@@ -94,8 +95,7 @@ export async function POST(request: NextRequest) {
     console.log('Fetching playlist information for videos...');
 
     // First, get all playlists from the channel
-    const config = getMountainConfig();
-    const channelId = config.social?.youtubeChannelId;
+    const channelId = getYouTubeChannelId(getRequestMountainId(request));
 
     // Proper Map initialization
     const playlistMap = new Map<string, any[]>();
