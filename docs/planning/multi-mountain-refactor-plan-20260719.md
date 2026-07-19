@@ -1,0 +1,440 @@
+# Multi-Mountain Refactor — Execution Plan — 20260719
+
+> Execution plan for refactoring the codebase into a true multi-mountain platform and
+> reconfiguring **geyang as one of many mountains**. This plan operationalizes the
+> decisions locked on 2026-07-19 against the decision framework
+> [`multi-tenant-architecture-decision-20260718.md`](./multi-tenant-architecture-decision-20260718.md)
+> (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
+> 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
+>
+> **Status:** 📋 **PLANNED — execution awaits explicit owner go-ahead (start = M1).**
+>
+> **Companion docs:** the decision framework (verified current state + why each axis was
+> chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
+> [`firebase-read-access-inventory.md`](./firebase-read-access-inventory.md) (the
+> per-collection work-item list for M4/M5) · PROJECT_PLAN §9 (tracker entry).
+
+**Legend:** `[ ]` todo · `[x]` done · ⚠️ watch-out · 🔑 owner-owed (only the owner can do it)
+
+---
+
+## 0. Decisions locked (2026-07-19, owner-answered)
+
+| #   | Question                  | **Answer**                                                                                                                                                                                                                                                                                                                    |
+| --- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Custody vs management     | **Management only.** Shared Firebase project; mountain #2's owner manages content through the admin CMS, scoped by RBAC + `mountainId`. You remain PIPA controller and bill payer.                                                                                                                                            |
+| Q2  | Subdomains acceptable?    | **Yes.** `geyangsan.mohocats.org` / `manisan.mohocats.org` — subdomains are distinct hosts and that is accepted (resolves the framework's §2 tension).                                                                                                                                                                        |
+| Q3  | Deployment topology       | **A1 — one Vercel project**, host-based mountain selection via middleware. One build serves all mountains.                                                                                                                                                                                                                    |
+| Q4  | Data topology             | **B1 — one Firestore**, `mountainId` field on the 12 content collections, scoped queries, mountain-aware rules, one-shot backfill.                                                                                                                                                                                            |
+| Q5  | Central auth project      | **Moot under Q1+Q4.** One Firebase project (the existing `mountaincats-61543`) serves auth, data, and storage for _all_ mountains — auth is central by construction. No two-backend split, no named-app discipline needed. The unconsumed `mountain-cats-users` / `_meta.centralUserService` scaffolding is **removed** (M2). |
+| Q6  | Analytics access model    | **Single shared GA4 property + `mountain_id` custom dimension** for v1 (you are the only analytics consumer today). Dual-tag per-mountain properties deferred — `gtag.js` (M7) makes adding a second measurement ID a config change later.                                                                                    |
+| Q7  | Selector audience         | **Visitors too.** The public mountain drop-down becomes real — cross-subdomain links in production, path links in dev/preview.                                                                                                                                                                                                |
+| Q8  | Second mountain imminent? | **Preparatory.** No real mountain #2 is being provisioned. Multi-tenancy is proven by a **stub tenant** in config + emulator-seeded two-tenant e2e isolation tests, and by geyang running as "one of many."                                                                                                                   |
+
+**Sub-decisions taken by this plan** (defaults chosen; overridable before go-ahead):
+
+1. **Cross-subdomain session: accepted limitation for v1.** `browserLocalPersistence`
+   is per-origin, so a logged-in user moving `geyangsan.` → `manisan.` must log in
+   again (same account — auth is central; only the _session_ is per-origin). A
+   cookie-session on `.mohocats.org` is deferred (recorded in §6 Deferred).
+2. **Authed community reads stay auth-gated, not mountain-read-restricted.**
+   `posts_feeding` / `posts_butler` / `feeding_spots` reads remain `auth != null`;
+   isolation for these comes from query scoping. Rules-level _read_ scoping is reserved
+   for the sensitive set (`contacts`, `permission_logs`, `admin_data`, `users`-others)
+   where a leak is a PII/audit problem, not a curiosity. Public collections stay
+   `read: if true` — public data is public on every mountain.
+3. **Storage: per-mountain path prefix, no object migration.** `storagePrefix` joins
+   mountain config: `''` for geyang (its objects stay where they are — no risky
+   migration), `mountains/{id}/` for every new mountain. The framework §8
+   "paths-not-URLs" item stays deferred (§6).
+4. **`MOUNTAIN_ID` env is demoted, not removed.** It becomes the **default tenant**
+   for hosts the middleware can't map (localhost, `*.vercel.app` previews, e2e) and
+   for build scripts. Its meaning changes from "the mountain" to "the fallback."
+5. **Dead `analytics` Firestore scaffolding is deleted** (rules block + nothing else —
+   the `view-analytics` _permission_ survives; `permission_logs` reads use it). 🔑
+   Owner may veto at M7.
+
+---
+
+## 1. Target architecture (end state)
+
+```mermaid
+flowchart TD
+    DNS[geyangsan.mohocats.org / manisan.mohocats.org / preview host] --> MW[middleware.ts<br/>Host → mountainId via config domains<br/>fallback: MOUNTAIN_ID env]
+    MW -->|rewrite /path → /mountainId/path| Seg["src/app/[mountain]/…<br/>(all pages, layouts, admin)"]
+    Seg -->|params.mountain| SrvCfg[getMountainConfig mountainId<br/>request-time, per-tenant ISR]
+    Seg -->|layout seeds| Ctx[MountainProvider<br/>client tenant context]
+    Ctx --> Services[service factory<br/>tenant-scoped queries + write stamps]
+    API["/api/* (unmoved)"] -->|Host header helper| Guard[requireApiPermission<br/>permission + role.mountainId match]
+    Services & Guard --> FS[(One Firestore<br/>mountainId on 12 collections)]
+    FS -. enforced by .-> Rules[firestore.rules<br/>mountain-aware hasPermission]
+    Seg --> GA[gtag.js<br/>mountain_id dimension]
+```
+
+- **One repo, one Vercel project, one Firebase project.** A mountain = a block in
+  `mountains.json` (+ its `permissions.json` twin), a `domains` entry, storage prefix,
+  and Firestore documents carrying its `mountainId`.
+- **URL model:** visitors see clean paths (`geyangsan.mohocats.org/pages/cats`); the
+  app tree internally lives under `/[mountain]/…` via middleware rewrite. In dev and
+  on Vercel previews (single host), tenants are reachable directly by path
+  (`localhost:3000/manisan/pages/cats`); the default tenant also answers at the root
+  via the fallback rewrite.
+- **ISR preserved per tenant:** `generateStaticParams()` over mountain ids gives each
+  tenant its own cached pages; `revalidate = REVALIDATE_SECONDS` unchanged; on-demand
+  revalidation becomes per-tenant (`revalidatePath('/' + mountainId)`).
+- **Isolation is a correctness property** (framework §5 B1 warning) — enforced three
+  times: query scoping in services, `firestore.rules` for client paths, route-code
+  checks for the ~7 Admin-SDK paths. The two-tenant e2e suite (M5.7) is the net that
+  proves it and keeps proving it.
+
+---
+
+## 2. Key design specs
+
+### 2.1 Tenant resolution
+
+- **`src/middleware.ts` (new):**
+  1. If the pathname already starts with a known mountain id (dev/preview path access)
+     → pass through.
+  2. Else map `Host` → mountainId via each mountain's new `domains: string[]` config;
+     unmapped hosts → `MOUNTAIN_ID` env → `'geyang'`.
+  3. Rewrite to `/{mountainId}{pathname}`. Skip `/api`, `/_next`, static files.
+- **Server pages/layouts:** read `params.mountain`; a thin
+  `src/lib/tenant.ts` exposes `resolveTenant(params)` (validates the id against
+  config, 404s unknown ids so `/[mountain]` doesn't wildcard-match garbage).
+- **API routes:** `getRequestMountainId(req)` (same Host mapping + explicit
+  `x-mountain-id`/body override where a route legitimately acts cross-context) — API
+  routes are dynamic, so reading headers is free.
+- **Client:** `MountainProvider` context, seeded by the `[mountain]/layout.tsx` from
+  its param. `useMountain()` replaces every client-side `getCurrentMountainId()` /
+  baked `NEXT_PUBLIC_MOUNTAIN_ID` assumption. Client _services_ receive the id
+  explicitly (see 2.3).
+
+### 2.2 Config layer (`src/utils/config.ts`)
+
+- Every getter gains an **explicit `mountainId` parameter**:
+  `getMountainConfig(mountainId)`, `getMapConfig(mountainId)`,
+  `isFeatureEnabled(feature, mountainId)`, etc. No ambient tenant on the server.
+  (`mountains.json` stays a static import — the _set_ of mountains changes on
+  redeploy, which is fine; what becomes request-time is _which_ mountain is active.)
+- `getCurrentMountainId()` → renamed `getDefaultMountainId()` (env fallback only:
+  middleware default, scripts, e2e). Grep-verified consumers today: `MountainSelector`
+  (rewritten in M3), `useAboutPhoto` (moves to `useMountain()`),
+  `api/admin/assign-role` (moves to `getRequestMountainId(req)`).
+- **`mountains.json` schema additions** per mountain: `domains: string[]`,
+  `storagePrefix: string`, and (M7) `gaMeasurementId` stays env-level, not per-mountain
+  (single property, Q6). `_meta.centralUserService` + `authentication.userServiceProject`
+  removed (Q5). Secrets stay env-merged exactly as today — one Firebase project means
+  the existing env vars serve all tenants unchanged.
+
+### 2.3 Service layer tenancy
+
+- `mountainId: string` added to the model types of the **12 content collections**
+  (framework §1.8): `about_content`, `admin_data`, `cat_images`, `cat_videos`, `cats`,
+  `contacts`, `feeding_spots`, `points`, `posts_adoption`, `posts_announcements`,
+  `posts_butler`, `posts_feeding`.
+- **Factory seam:** `getCatService(mountainId)` etc. — the getters take the tenant id
+  and cache **per-tenant instances** (`Map<mountainId, instance>`); each service
+  stamps `mountainId` on every create and adds `where('mountainId','==',id)` to every
+  list/query read. Get-by-id reads verify the loaded doc's `mountainId` and treat a
+  mismatch as not-found. Call sites get the id from `useMountain()` (client) or
+  `resolveTenant`/`getRequestMountainId` (server).
+- **Server read paths** (`src/lib/server/cat-reads.ts`, `point-reads.ts`,
+  `feeding-spots-admin-service.ts`, `basic-feeding-spots-service.ts`) take the same
+  explicit parameter.
+- ⚠️ **Composite indexes:** adding `where('mountainId'…)` to queries that also
+  `orderBy`/`where` on other fields will demand new Firestore composite indexes.
+  Collect them from emulator/dev errors during M5 and add to `firestore.indexes.json`
+  (create the file; wire into `firebase.json`) so they deploy declaratively.
+
+### 2.4 Rules + API-guard enforcement (the two mechanisms, both mountain-aware)
+
+- `hasPermission(userId, permission)` → **`hasPermissionFor(userId, permission,
+mountainId)`**: existing role→permission resolution **plus**
+  `get(user).data.currentRole.mountainId == mountainId`.
+- **Content writes (client SDK):** permission check + `request.resource.data.mountainId`
+  must equal the actor's `currentRole.mountainId`; updates must not change
+  `mountainId` (`request.resource.data.mountainId == resource.data.mountainId`).
+- **Sensitive reads:** `contacts`, `permission_logs`, `admin_data` reads add
+  `resource.data.mountainId == currentRole.mountainId` — this closes the concrete
+  PII leak the framework flags (§5 B1: a `manage-users` holder on mountain #2
+  reading geyang's 동참 submissions). `users`-others admin reads: keep permission-gated
+  (user docs are identity-domain, not per-mountain content) — noted as accepted.
+- **`permission_logs` + `contacts` docs need `mountainId` too** — `/api/contact` and
+  `/api/admin/assign-role` stamp it; both join the M4 backfill. (Role-change history
+  already records `mountainId` per framework §1.3.)
+- **`requireApiPermission(req, permission)`** additionally resolves the request tenant
+  and enforces `role.mountainId === requestMountainId` (returning the tenant to the
+  route so it can scope its own reads/writes). All ~7 Admin-SDK write routes + the
+  admin read routes go through it; each route's Firestore access is audited against
+  the SDK/read inventories during M5.
+- **Identity-domain collections** (`users`, `role_permissions`, `permission_logs`) stay
+  structurally central — they are _about_ the shared user base; only the audit rows
+  carry a `mountainId` tag.
+- ⚠️ The `hasPermission` incident (rules silently denying everyone) is the cautionary
+  precedent — M5 adds **emulator rules tests** for the mountain dimension before the
+  rules deploy, and the deploy is staged (see M0 note on the _pending_ deploy).
+
+### 2.5 Routing move (`src/app/[mountain]/`)
+
+- **Everything except `/api` moves** under the segment: the home page, `pages/*`,
+  `login`, `mypage`, `admin/*`, plus `layout.tsx` composition (root layout keeps the
+  `<html>` shell + analytics; the `[mountain]` layout owns nav/footer/tenant context).
+- `generateStaticParams()` on the `[mountain]` layout returns all mountain ids →
+  per-tenant ISR for the static/ISR pages; `revalidate` exports unchanged.
+- `revalidatePath` call sites (`src/lib/revalidate-client.ts` →
+  `/api/revalidate/route.ts`, `src/lib/cache-config.ts`) become tenant-aware.
+- ⚠️ **Link audit:** internal `href="/pages/…"` links keep working in production
+  (middleware re-rewrites per host) but would escape the tenant under dev path
+  access. Add a `useTenantHref()`/`tenantHref(mountainId, path)` helper and sweep
+  `Link`/`router.push`/`redirect` call sites; the e2e suite running against the
+  default tenant plus the two-tenant spec running against `/manisan/...` paths is
+  the regression net for misses.
+- ⚠️ **Auth redirects & OAuth callbacks:** `login` flows, Kakao callback
+  (`/api/auth/kakao/callback`), and `router.push` targets must round-trip the tenant.
+  Audit during M3.
+
+### 2.6 Assets & storage
+
+- `scripts/maintenance/fetch-static-assets.js`: loop **all** mountains; thumbnails
+  land in `public/images/thumbnails/{mountainId}/…` (about-photos are already
+  per-mountain foldered). Audit + update every consumer of the baked paths
+  (`thumbnailPreloader`, avatar rendering, about page) as part of M6 — geyang's
+  existing flat paths change here, so this is a consumer-sweep, not just a script
+  edit.
+- Upload paths (signed-URL routes `generate-signed-url` /
+  `generate-youtube-signed-url`, `storage-service.ts`, form upload strategies in
+  `src/components/forms/uploadStrategies.ts`) prepend the tenant's `storagePrefix`.
+  Geyang's prefix is `''` → zero behavior change for existing data.
+
+### 2.7 Analytics (GA4 via gtag.js)
+
+- Replace `firebase/analytics` (`services/firebase.ts` export + `AnalyticsTracker`)
+  with a `gtag.js` snippet in the root layout driven by
+  `NEXT_PUBLIC_GA_MEASUREMENT_ID`; `AnalyticsTracker` sends `page_view` with
+  `mountain_id` (from `useMountain()`) on route change.
+- 🔑 GA4 console: create/confirm the property, register `mountain_id` as a
+  **custom dimension** — ⚠️ **before any second-tenant traffic exists** (GA4 does not
+  backfill dimensions; framework §7).
+
+---
+
+## 3. Phase plan
+
+Every phase gates on: `npx tsc --noEmit` · `npm run test:smoke` · **full e2e**
+(baseline **116 passed / 13 skipped / 0 failed**, growing as specs are added) ·
+browser verification of touched surfaces · owner go-ahead before each commit
+(one commit per phase, complexity-retirement style).
+
+**Execution tracking (stop/resume protocol — same as the complexity-retirement
+track):** this section is the live tracker. As work proceeds, tasks flip `[ ]`→`[x]`
+in place and each phase header gains a status marker (📋 → 🚧 → ✅ with date +
+commit hash + execution notes). On any stop — including mid-phase — the state is
+recorded here plus a HANDOFF.md status/changelog touch, so resuming = read HANDOFF →
+this section → continue at the first unchecked box. Mid-phase stops leave the tree
+dirty but described; phase boundaries leave it clean (committed).
+
+### M0 — Prerequisite sync (🔑 owner, before any code)
+
+- [ ] 🔑 **Deploy the already-pending `firestore.rules`** (`firebase deploy --only
+    firestore:rules`) and run its post-deploy check (assign role → `permission_logs`
+      doc appears). Rationale: prod rules must match the repo **before** this track
+      starts changing them, so the M5 rules diff deploys clean and any regression is
+      attributable.
+- [x] Record the §0 decisions in the decision framework (§9 table + status) and
+      PROJECT*PLAN §9. *(Done alongside this plan's creation, 2026-07-19.)\_
+
+### M1 — 🚧 Decoupling prerequisites (small; behavior-preserving)
+
+The framework's §8 standalone items that reduce blast radius before the big moves:
+
+- [x] **Retire `src/lib/firebase.ts`** — deleted. No new code needed:
+      `storage-service.getDownloadUrl` already had `getStorageUrl`'s exact
+      semantics, so `useAboutPhoto` now calls `getStorageService().getDownloadUrl`
+      (static import, matching app convention). The dead `getPoints` /
+      `getCatsByPointId` went with the file. One client init module remains
+      (`services/firebase.ts`).
+- [x] `feeding-spots-admin-service.ts` — its entire top-level hard-coded-SA-path
+      init deleted; it now imports `db` from `@/lib/firebase-admin` (env-based SA
+      resolution + the emulator branch, which the old init lacked).
+      _(`basic-feeding-spots-service.ts` from the inventories no longer exists —
+      stale snapshot row.)_
+- [x] Hard-coded map image paths → mountain config: `map.landscapeImage` /
+      `map.portraitImage` (`MapImageConfig`) in `mountains.json` + config types;
+      `LeafletMountainMap` resolves them via `getMapConfig()` and **fails loud**
+      (`requireMapImage`) if a mountain renders the map without declaring both.
+- [x] Sweep: zero direct `MOUNTAIN_ID` / `NEXT_PUBLIC_MOUNTAIN_ID` reads outside
+      `utils/config.ts`; zero `@/lib/firebase` imports remain (src/tests/scripts).
+- Gates (2026-07-19): tsc ✅ · smoke 29/29 ✅ · unit 54/54 ✅ · **full e2e ✅**
+  (first run 115/1/13 — the 1 fail was `member/contact-submit.spec.ts`, proven a
+  pre-existing hydration-race flake: green ×3 in isolation, then a full re-run
+  passed clean with zero failures) · browser pass ✅ (landing map renders from
+  config imagery with avatars; butler_stream 200 via the refactored admin init;
+  about page's blank main photo A/B-tested against stashed pre-M1 code —
+  **identical**, i.e. the documented dev-mode `next/image` optimizer stall, not a
+  regression). ⚠️ Ops note for local runs: `npm run test:e2e` re-fetches build
+  assets **from the storage emulator**, clobbering real images under `public/` —
+  run `npm run fetch:assets` afterwards before eyeballing media surfaces in dev.
+
+### M2 — Config layer request-time (medium)
+
+- [ ] Parameterize every `utils/config.ts` getter with explicit `mountainId`;
+      `getCurrentMountainId()` → `getDefaultMountainId()`; update all call sites
+      (passing the default for now — behavior identical).
+- [ ] `mountains.json`: add `domains` + `storagePrefix` to geyang; delete
+      `_meta.centralUserService` + `authentication.userServiceProject` (Q5);
+      tighten the config type (`MountainConfig` gains the new fields).
+- [ ] Add `src/lib/tenant.ts` (`resolveTenant`, `getRequestMountainId`) +
+      `MountainProvider`/`useMountain()` — landed but seeded with the default tenant
+      until M3 wires real resolution.
+- [ ] Unit tests for the mapping helpers (host→id incl. fallback + unknown-host).
+- Gates: full suite green; geyang behavior unchanged.
+
+### M3 — Routing: `[mountain]` segment + middleware (large — the riskiest phase)
+
+- [ ] Move all non-API routes under `src/app/[mountain]/`; split root vs tenant
+      layout; `generateStaticParams`; 404 unknown ids via `resolveTenant`.
+- [ ] `src/middleware.ts` host→rewrite per §2.1 (skip api/\_next/static; pass through
+      already-prefixed paths).
+- [ ] Tenant-aware `revalidatePath` (`/api/revalidate` + admin cat-edit on-demand
+      revalidation).
+- [ ] Link/redirect/OAuth-callback audit per §2.5 (incl. `tenantHref` helper where
+      needed).
+- [ ] `MountainSelector` becomes real: production → other mountain's first `domains`
+      entry; dev/preview → path link. (Its no-op `?mountain=` query write dies here —
+      closes the PROJECT_PLAN §9 selector item.)
+- [ ] e2e harness: confirm the suite passes unchanged via the default-tenant fallback
+      (expectation: URLs unchanged, so no spec churn); add a middleware/host unit or
+      integration check.
+- [ ] Browser pass: full click-through of public + admin surfaces on `localhost`
+      (default tenant at `/`, same pages at `/geyang/…`).
+- Gates: full e2e green **without spec rewrites** (this is the phase's proof of
+  behavior preservation).
+
+### M4 — Data tenancy 1: stamp + backfill (medium; additive, no read filtering yet)
+
+- [ ] `mountainId` added to the 12 collections' types; every **write** path stamps it
+      (client services from the factory's tenant id; Admin-SDK routes from
+      `requireApiPermission`'s resolved tenant; `/api/contact` + `assign-role` stamp
+      `contacts` / `permission_logs`).
+- [ ] **Backfill migration** `scripts/migration/backfill-mountain-id.js`: stamp
+      `mountainId='geyang'` across the 12 collections + `contacts` +
+      `permission_logs`; dry-run mode printing per-collection counts; ⚠️ `set` with
+      `merge:true` only (the Sheets-pipeline wipe incident is the precedent —
+      `cat-data-sheets-pipeline` memory).
+- [ ] 🔑 Run backfill against prod (dry-run → owner eyeball → run → count
+      verification). Emulator seed data (`tests/` fixtures incl. `media.json`) gains
+      `mountainId` in the same phase.
+- Gates: full suite green; reads still unscoped so behavior is unchanged even
+  mid-backfill.
+
+### M5 — Data tenancy 2: scoped reads + enforcement (large)
+
+- [ ] Per-tenant service factory (§2.3): scoped queries in all content services +
+      the 4 server read paths; composite indexes collected into
+      `firestore.indexes.json`.
+- [ ] `firestore.rules` rework per §2.4 (`hasPermissionFor` + write stamps +
+      sensitive-read scoping); **emulator rules tests** for the mountain dimension
+      (deny cross-tenant write, deny cross-tenant contacts read, allow same-tenant).
+- [ ] `requireApiPermission` mountain enforcement + audit of every Admin-SDK route's
+      Firestore access against the two inventories.
+- [ ] **Two-tenant e2e isolation spec**: seed a second tenant (`manisan`) in the
+      emulator; assert (a) its content is invisible on geyang surfaces & vice versa
+      (public feeds, map, albums, admin lists), (b) a manisan-role admin gets denied
+      on geyang API routes + cannot read geyang `contacts`, (c) creates land with the
+      right `mountainId`.
+- [ ] 🔑 `firebase deploy --only firestore:rules` (+ indexes) after the emulator net
+      is green; staged post-deploy click-through of geyang admin CMS.
+- Gates: full e2e (old suite + isolation spec) green; this phase is **the** isolation
+  proof.
+
+### M6 — Assets & storage namespacing (medium)
+
+- [ ] `fetch-static-assets.js` loops all mountains → per-mountain `public/` paths;
+      consumer sweep (thumbnail preloader, avatars, about page) — geyang's baked
+      thumbnail paths change here.
+- [ ] `storagePrefix` wired through `storage-service.ts`, both signed-URL routes, and
+      the form upload strategies (geyang `''` → no-op).
+- [ ] Browser pass on media surfaces (map avatars, albums, upload flows) + e2e green.
+
+### M7 — Analytics decoupling (small)
+
+- [ ] `firebase/analytics` → `gtag.js` + `mountain_id` event param (§2.7); remove the
+      `analytics` export from `services/firebase.ts`.
+- [ ] Delete the dead `analytics` collection scaffolding (rules block; leave the
+      `view-analytics` permission — `permission_logs` uses it). 🔑 Owner confirm.
+- [ ] 🔑 GA4: property + `mountain_id` custom dimension registered (before any
+      tenant-2 traffic, ever).
+
+### M8 — Geyang as one-of-many + provisioning proof (medium)
+
+- [ ] Add the **stub tenant** (`manisan`) to `mountains.json` **and**
+      `permissions.json` coherently (resolves the drift item), with its own theme
+      knobs, `domains`, `storagePrefix`, feature flags.
+- [ ] Verify in browser: `localhost:3000/manisan/…` renders the stub tenant (own
+      name/branding, empty content states, admin denied for geyang-role users);
+      geyang unchanged at `/`.
+- [ ] **Theme wiring** (PROJECT_PLAN §9 item): render `config.theme` into CSS
+      variables in the `[mountain]` layout so per-tenant theming is real (geyang's
+      values = today's tokens → zero visual change for geyang; stub tenant proves
+      differentiation).
+- [ ] Rewrite `docs/manuals/deployment/new-mountain-setup.md` for real: config block,
+      permissions block, DNS/Vercel domain attach, Firebase Auth authorized domains,
+      Kakao redirect URIs, GA nothing (shared property), backfill-not-needed note,
+      verification checklist (the guide's §8).
+- [ ] 🔑 Vercel/DNS (when a real mountain #2 arrives — not now): subdomain DNS +
+      domain attach; Firebase **authorized domains** + Kakao console **redirect URIs**
+      per new subdomain. Recorded in the guide, not executed for the stub.
+- [ ] Docs close-out: `docs/codebase/multi-tenant-config.md` (config is now
+      request-time — its "BAKED" watch-out changes), `services-layer.md`,
+      `deployment-and-build.md`, CLAUDE.md architecture bullets ("multi-tenant ready"
+      → actually true; ISR notes gain the tenant dimension), FEATURE_MOD_LOG entry,
+      HANDOFF + PROJECT_PLAN §9 close, decision framework status → ✅ EXECUTED.
+
+---
+
+## 4. Sizing & sequencing summary
+
+| Phase | Size   | Risk                                          | Depends on   |
+| ----- | ------ | --------------------------------------------- | ------------ |
+| M0    | 🔑 ops | low                                           | —            |
+| M1    | S      | low                                           | —            |
+| M2    | M      | low                                           | M1           |
+| M3    | **L**  | **high** (routing/ISR/links)                  | M2           |
+| M4    | M      | med (prod backfill)                           | M2 (not M3)  |
+| M5    | **L**  | **high** (rules regression, leak-by-omission) | M3 + M4      |
+| M6    | M      | med (baked-path consumers)                    | M3           |
+| M7    | S      | low                                           | M3           |
+| M8    | M      | low                                           | M5 + M6 + M7 |
+
+M4 can start while M3 is in review (independent surfaces); everything else is
+sequential. Rough total: ~6–8 working sessions at the complexity-retirement cadence.
+
+## 5. Risks & mitigations
+
+- **Rules regression** (precedent: the `hasPermission` silent-deny incident) →
+  emulator rules tests land _before_ the deploy; M0 syncs prod first so the M5 diff
+  is clean; staged post-deploy click-through.
+- **Leak-by-omission under B1** (a missed `where`) → three-layer enforcement +
+  the two-tenant isolation spec as a permanent net; the SDK/read inventories are the
+  checklist so no path is audited from memory.
+- **Routing/ISR subtleties in M3** (cache keyed per path; middleware/e2e interplay;
+  link escapes) → default-tenant fallback keeps every existing URL — and therefore
+  the whole e2e suite — unchanged; that suite passing without spec rewrites is the
+  phase gate.
+- **Prod backfill** → dry-run + counts + `merge:true` only (Sheets-wipe precedent).
+- **Baked-asset consumers** (M6 changes geyang's thumbnail paths) → consumer sweep +
+  browser pass on every media surface.
+- **Per-origin sessions surprising users** → accepted + documented (§0.1); revisit
+  with a cookie session if real cross-mountain traffic materializes.
+
+## 6. Deferred / out of scope (recorded, not lost)
+
+- Cross-subdomain SSO cookie session on `.mohocats.org`.
+- Storage **paths-not-URLs** persistence + geyang object re-prefixing.
+- `next/image` prod re-test on media surfaces (framework §8 — independent).
+- Dual-tag per-mountain GA4 properties (config add once needed).
+- Multi-role users (one user holding roles on several mountains) — `currentRole` stays
+  single; a real mountain #2 with shared humans would reopen this.
+- Admin read-route hardening for `contacts`/`users` (read inventory R3 note).
+- Real mountain #2 provisioning (Q8: preparatory only).

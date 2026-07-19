@@ -45,12 +45,16 @@ the testing hand-off
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
-- **No active code track.** Next-session options: the P5.4 manual pass above, the
-  `firestore:rules` deploy (open threads below), or resume **multi-tenant Q1**.
-- **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
-  decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
-  (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
-  (thinking work, parallelizable with the refactor).
+- **Next active track: multi-tenant / multi-mountain refactor — 📋 PLANNED
+  (2026-07-19), execution awaits explicit go-ahead at M1.** Q1–Q8 all answered by
+  the owner (management-only · B1 one-Firestore-`mountainId` · A1 one-Vercel +
+  subdomains · visitor-facing selector); the execution plan is
+  [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
+  (phases M0–M8, ending with geyang reconfigured as one-of-many + a stub second
+  tenant). **M0 is owner-owed:** the pending `firestore:rules` deploy must land
+  _before_ the track's rules changes so the M5 diff deploys clean.
+- Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
+  YouTube pass (see the complexity-retirement section).
 - **Tree:** clean through `2584dcb` (this doc update rides in the next commit) —
   see _Uncommitted_ below.
 
@@ -86,13 +90,32 @@ admin CMS re-skin + Korean, 급식소 CMS, adoptable-cat + 입양홍보 features
 toggle), Lightbox pinch-to-zoom, Firebase Storage → Seoul bucket. Per-change detail:
 [`FEATURE_MOD_LOG.md`](../../log/FEATURE_MOD_LOG.md) + PROJECT_PLAN.
 
-### Multi-tenant / second mountain — ⏸️ PARKED (framework drafted, Tier 1 done)
+### Multi-tenant / multi-mountain refactor — 📋 PLANNED (Q1–Q8 answered; execution gated on go-ahead)
 
 **Read-first to resume:**
-[`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md)
-— the full decision framework (verified current state → custody-vs-management gating
-question → deployment/data axes → open questions **Q1–Q8** → blocked task sequencing).
-PROJECT_PLAN **§9** links it and is the tracker entry.
+[`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
+— the execution plan: decisions locked (§0), target architecture (§1), design specs
+(§2), phases **M0–M8** with per-phase gates (§3), risks (§5), deferred items (§6).
+The 2026-07-18 decision framework
+([`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md))
+stays as the rationale record; its §9 table now carries the answers. PROJECT_PLAN
+**§9** is the tracker entry.
+
+**Decisions (owner, 2026-07-19):** management-only (no custody) · **B1** one
+Firestore + `mountainId` on the 12 content collections · **A1** one Vercel project,
+host-based selection, subdomains confirmed · selector is visitor-facing · Q5 moot
+(one Firebase project serves all mountains; `mountain-cats-users` scaffolding to be
+removed) · shared GA4 property + `mountain_id` dimension · preparatory only (stub
+tenant + two-tenant e2e prove it; no real mountain #2 provisioned).
+
+**Shape of the work:** M1 decoupling (retire `src/lib/firebase.ts`, path/config
+hard-codings) → M2 config layer to explicit-`mountainId` getters + tenant helpers →
+M3 **`[mountain]` route segment + host-rewrite middleware** (riskiest; e2e must pass
+unchanged via the default-tenant fallback) → M4 stamp writes + prod backfill
+(merge-only) → M5 scoped reads + mountain-aware rules/`requireApiPermission` +
+two-tenant isolation e2e + rules deploy → M6 per-mountain assets/storage prefix →
+M7 analytics → gtag.js with `mountain_id` → M8 stub tenant + theme wiring + real
+provisioning guide + docs close-out.
 
 **How this got here (2026-07-18 session):** started as "replace Firebase with Supabase
 to escape vendor lock-in?" → **set aside** (framework §0: zero `onSnapshot` listeners
@@ -296,15 +319,29 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-Only this session-close doc pass: `docs/handoff/HANDOFF.md` +
-`docs/planning/PROJECT_PLAN.md` (status-row touch). Everything else is committed
-through `2584dcb`.
+Two bundles awaiting the phase-commit go-ahead: (1) the multi-mountain planning
+doc pass (new `docs/planning/multi-mountain-refactor-plan-20260719.md`,
+decision-framework §9 answers, PROJECT_PLAN §9 re-point, this hand-off); (2) the
+**M1 decoupling code** (`src/lib/firebase.ts` deleted, `useAboutPhoto` →
+`getStorageService().getDownloadUrl`, `feeding-spots-admin-service` → shared
+`@/lib/firebase-admin` init, map imagery → `map.landscapeImage/portraitImage`
+config). M1 gates all green (tsc / smoke 29 / unit 54 / full e2e clean re-run /
+browser pass). Everything else is committed through `2584dcb`.
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Session close**: P6 committed (`2584dcb`) — the
+- **2026-07-19 (latest)** — **Multi-mountain refactor PLANNED**: owner answered
+  Q1–Q8 (management-only · B1 · A1+subdomains · visitor selector); wrote the
+  execution plan `multi-mountain-refactor-plan-20260719.md` (M0–M8: decoupling →
+  request-time config → `[mountain]` segment + middleware → stamp/backfill →
+  scoped reads + mountain-aware rules + isolation e2e → assets/storage → gtag.js
+  analytics → stub tenant + provisioning guide); recorded answers in the decision
+  framework + PROJECT_PLAN §9. No code changed. Execution gated on explicit
+  go-ahead at M1; M0 = the pending rules deploy (owner-run, must precede the
+  track's rules changes).
+- **2026-07-19** — **Session close**: P6 committed (`2584dcb`) — the
   complexity-retirement track is fully executed and on `dev` as seven commits.
   TL;DR re-pointed for the next session (owner-owed P5.4 manual YouTube pass /
   rules deploy / multi-tenant Q1); PROJECT_PLAN tech-debt row notes the track

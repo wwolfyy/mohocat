@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getMountainAbout, getCurrentMountainId } from '@/utils/config';
+import { getStorageService } from '@/services';
 
 interface UseAboutPhotoResult {
   photoUrl: string | null;
@@ -36,10 +37,9 @@ export function useAboutPhoto(filename: string): UseAboutPhotoResult {
 
         // Fallback to Firebase Storage if local path not available
         console.log('Local path not available, falling back to Firebase Storage');
-        const { getStorageUrl } = await import('@/lib/firebase');
         const mountainId = getCurrentMountainId();
         const storagePath = `about-photos/${mountainId}/${filename}`;
-        const url = await getStorageUrl(storagePath);
+        const url = await getStorageService().getDownloadUrl(storagePath);
         setPhotoUrl(url);
       } catch (err) {
         console.error('Error loading about photo:', err);

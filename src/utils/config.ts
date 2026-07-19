@@ -26,6 +26,13 @@ export interface MountainSocial {
   facebookPage: string;
 }
 
+export interface MapImageConfig {
+  /** Public path to the map image (served from `public/`). */
+  url: string;
+  width: number;
+  height: number;
+}
+
 export interface MountainMapConfig {
   /**
    * Whether the mobile map clusters nearby feeding points. `true` (default) →
@@ -43,6 +50,13 @@ export interface MountainMapConfig {
    * `clustering` is `false`.
    */
   maxClusterRadius: number;
+  /**
+   * Per-mountain map imagery for the Leaflet host (desktop/landscape and the
+   * 90°-CW-rotated portrait variant). No default — a mountain that renders the
+   * map must declare both; the map host fails loud if they are missing.
+   */
+  landscapeImage?: MapImageConfig;
+  portraitImage?: MapImageConfig;
 }
 
 /** Fallback used when a mountain config omits the `map` section (or a field). */

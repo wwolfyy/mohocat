@@ -12,10 +12,11 @@
 > path + its rules coverage). Under option B1 (§5) these are effectively the pre-built
 > work-item list for tenant-scoping enforcement.
 >
-> **Status:** 📋 **decision framework — no code changed, nothing recommended as final.**
-> §1–§2 establish facts and requirements; §3 is the gating question; §4–§7 lay out the
-> open axes; §8 lists work required under every option; §9 collects the questions to
-> resolve. §10 is a task checklist that stays blocked until §9 is answered.
+> **Status:** ✅ **decisions LOCKED (2026-07-19, owner-answered)** — see the §9 table's
+> Answer column. Execution is planned and sequenced in
+> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md),
+> which supersedes this doc's §10 checklist as the task tracker. This doc remains the
+> rationale record (§1–§8).
 >
 > **Origin:** Started as "should we replace Firebase with Supabase to escape vendor
 > lock-in?" That question was **set aside** (see §0) once it became clear the blocker is
@@ -383,16 +384,19 @@ that would bite under several options):
 
 ## 9. ❓ Open questions — resolve before execution
 
-| #   | Question                                                                                                            | Blocks                          |
-| --- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| Q1  | **Custody or management only?** (§3)                                                                                | Everything                      |
-| Q2  | Subdomains — confirmed acceptable? They are distinct hosts, which conflicts with "no separate hosts" as stated (§2) | Axis A, analytics segmentation  |
-| Q3  | One Vercel project (A1) or one per mountain (A2)?                                                                   | §8 provisioning, deploy story   |
-| Q4  | One Firestore with `mountainId` (B1) or project-per-mountain (B2)?                                                  | 12 collections, rules, backfill |
-| Q5  | Is `mountain-cats-users` the central auth project, or is the existing project promoted?                             | §6                              |
-| Q6  | Analytics access model — shared property, or dual-tag with per-mountain properties?                                 | §7                              |
-| Q7  | Does the mountain drop-down need to work for **visitors**, or only as an owner/admin convenience?                   | Axis A weighting                |
-| Q8  | Is a second mountain actually imminent, or is this preparatory?                                                     | Whether §8 is urgent            |
+All eight answered by the owner 2026-07-19; detail + sub-decisions in
+[`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md) §0.
+
+| #   | Question                                                                                                            | Blocks                          | **Answer (2026-07-19)**                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| Q1  | **Custody or management only?** (§3)                                                                                | Everything                      | **Management only**                                                                           |
+| Q2  | Subdomains — confirmed acceptable? They are distinct hosts, which conflicts with "no separate hosts" as stated (§2) | Axis A, analytics segmentation  | **Yes — subdomains confirmed** (distinct-hosts implication accepted)                          |
+| Q3  | One Vercel project (A1) or one per mountain (A2)?                                                                   | §8 provisioning, deploy story   | **A1** — one Vercel project, host-based selection via middleware                              |
+| Q4  | One Firestore with `mountainId` (B1) or project-per-mountain (B2)?                                                  | 12 collections, rules, backfill | **B1** — one Firestore, `mountainId` scoping + backfill                                       |
+| Q5  | Is `mountain-cats-users` the central auth project, or is the existing project promoted?                             | §6                              | **Moot** under Q1+Q4 — the existing project serves all mountains; `_meta` scaffolding removed |
+| Q6  | Analytics access model — shared property, or dual-tag with per-mountain properties?                                 | §7                              | **Shared property + `mountain_id` custom dimension**; dual-tag deferred                       |
+| Q7  | Does the mountain drop-down need to work for **visitors**, or only as an owner/admin convenience?                   | Axis A weighting                | **Visitors too** — selector becomes real cross-tenant links                                   |
+| Q8  | Is a second mountain actually imminent, or is this preparatory?                                                     | Whether §8 is urgent            | **Preparatory** — stub tenant + two-tenant e2e prove it; no real provisioning yet             |
 
 ---
 

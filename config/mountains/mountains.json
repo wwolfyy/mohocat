@@ -56,7 +56,17 @@
     },
     "map": {
       "clustering": false,
-      "maxClusterRadius": 50
+      "maxClusterRadius": 50,
+      "landscapeImage": {
+        "url": "/images/screenshot_mt_geyang_50.png",
+        "width": 1616,
+        "height": 808
+      },
+      "portraitImage": {
+        "url": "/images/screenshot_mt_geyang_50_rot90cw.png",
+        "width": 808,
+        "height": 1616
+      }
     },
     "authentication": {
       "type": "centralized",

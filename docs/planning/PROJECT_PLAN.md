@@ -697,8 +697,14 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > **Decision framework (2026-07-18):**
 > [`multi-tenant-architecture-decision-20260718.md`](./multi-tenant-architecture-decision-20260718.md)
 > — verified current state, the custody-vs-management gating question, the open
-> deployment/data axes, and open questions Q1–Q8. Execution of the items below should
-> follow that doc's sequencing (its §10). Its §6 prerequisite — the **Tier 1 write
+> deployment/data axes, and open questions Q1–Q8. **Q1–Q8 ANSWERED 2026-07-19**
+> (management-only · B1 one-Firestore-`mountainId` · A1 one-Vercel + subdomains ·
+> visitor-facing selector); the execution plan is
+> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
+> (phases M0–M8 — supersedes the framework's §10 checklist and this section's
+> candidate-scope list as the tracker; every item below is absorbed into a phase).
+> Execution awaits explicit owner go-ahead at M1 (M0 = the pending rules deploy,
+> owner-run). Its §6 prerequisite — the **Tier 1 write
 > migration** (role writes → Admin SDK, audit log restored) — is **done 2026-07-18**
 > (see §7 above + `log/FEATURE_MOD_LOG.md`), which also removed this section's
 > `role-assignment-service` `'geyang'` hard-coded defaults.

@@ -7,6 +7,7 @@ import type { Point } from '@/types';
 import type { CatsByPoint } from '@/lib/server/cat-reads';
 import { greedyClusterByRadius, spiderfyRadius } from '@/utils/mapClustering';
 import { resolveLabelAbove } from '@/utils/mapLabels';
+import { getMapConfig, type MapImageConfig } from '@/utils/config';
 import 'leaflet/dist/leaflet.css';
 
 // Two image layouts, chosen by device (`isMobile`), not live orientation. The
@@ -16,8 +17,18 @@ import 'leaflet/dist/leaflet.css';
 // tall phone screen; north then points right) and desktop uses the native
 // landscape still. With CRS.Simple the map plane is the image's pixel grid
 // addressed as [y, x]; bounds run [0,0] → [height, width].
-const LANDSCAPE = { url: '/images/screenshot_mt_geyang_50.png', width: 1616, height: 808 };
-const PORTRAIT = { url: '/images/screenshot_mt_geyang_50_rot90cw.png', width: 808, height: 1616 };
+// Imagery is per-mountain config (map.landscapeImage / map.portraitImage) — a
+// mountain that renders the map without declaring both is a misconfiguration.
+function requireMapImage(image: MapImageConfig | undefined, key: string): MapImageConfig {
+  if (!image) {
+    throw new Error(`Map image not configured for the current mountain: map.${key}`);
+  }
+  return image;
+}
+
+const mapConfig = getMapConfig();
+const LANDSCAPE = requireMapImage(mapConfig.landscapeImage, 'landscapeImage');
+const PORTRAIT = requireMapImage(mapConfig.portraitImage, 'portraitImage');
 
 function getLayout(mobile: boolean): { url: string; bounds: LatLngBoundsExpression } {
   const img = mobile ? PORTRAIT : LANDSCAPE;
