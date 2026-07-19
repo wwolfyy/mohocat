@@ -502,11 +502,11 @@ helper (dead code in that file) went with it._
 
 ### P5 — Target A migration
 
-- [ ] P5.1 Recompose `tag-images` on the toolkit (filename date-source); swap hand-rolled Lightbox → `ui/Lightbox`
-- [ ] P5.2 Recompose `tag-videos` on the toolkit (title date-source); extract YouTube write orchestration → page-owned `useYouTubeVideoMutations`; playlist panel/modal stay page-owned
-- [ ] P5.3 Delete twinned read-side/JSX duplicate bodies from both files
-- [ ] P5.4 ⚠️ Operator parity verification: **P0.2 editor specs green** + scripted manual pass over the YouTube surfaces (sync + playlists, real creds) + operator sign-off (§5 Q4)
-- [ ] P5.5 Gate: `tsc` + `test:smoke` green — **Target A complete**
+- [x] P5.1 Recompose `tag-images` on the toolkit (filename date-source); swap hand-rolled Lightbox → `ui/Lightbox` _(2026-07-19: 1,715→821 lines; controller + `useDateAutoParse` + full presentational set incl. `MediaFilterBar`; the shared `ui/Lightbox` replaces the hand-rolled overlay — single-image mode, no prev/next; dead `batchUpdateImages` page fn deleted (no caller since the delete-metadata button was removed))_
+- [x] P5.2 Recompose `tag-videos` on the toolkit (title date-source); extract YouTube write orchestration → page-owned `useYouTubeVideoMutations`; playlist panel/modal stay page-owned _(2026-07-19: 2,450→1,261 + a 570-line colocated `useYouTubeVideoMutations.ts` owning the edit-form/batch-input state and the verbatim YouTube flows. Drift absorbed as toolkit knobs: `dateFilterExcludesUndated` (videos exclude undated items when the range filter is on), stats-card/batch-panel column maps, `PaginationBar windowSize` (videos 5, images 7), page-reset-on-sort. **The videos filter panel keeps page-owned markup** bound to controller state — its layout drifted (no section headers, clear-dates shortcut, 3-way sort) and forcing `MediaFilterBar` would have meant either visible layout changes or a knob explosion; unifying the two layouts is a product decision, queueable alongside P6)_
+- [x] P5.3 Delete twinned read-side/JSX duplicate bodies from both files _(the twinned filter/sort/pagination/selection/auto-parse machinery and stats/batch/grid/pagination JSX now exist once in `src/components/admin/media/`; both pages' Firebase-Timestamp unwrapping blobs replaced by shared `parseDate`)_
+- [x] P5.4 ⚠️ Operator parity verification — automated half done: **P0.2 editor specs green** (full e2e **116/13/0** against the recomposed pages) + full-page screenshot pass over both editors (grid/stats/filters/batch panel/edit panel all render as before). **⚠️ Still owed: the scripted manual pass over the YouTube surfaces (sync + playlists, real creds) + operator sign-off — before the next `dev → main` promotion** (§5 Q4)
+- [x] P5.5 Gate green: tsc 0 / smoke 29-29 / unit 25-25 / full e2e 116-13-0 — **Target A complete** _(pages 4,430 → 2,652 lines: tag-images 821, tag-videos 1,261 + 570-line page-owned YouTube hook; the shared toolkit itself is ~900 reusable lines)_
 
 ### P6 — Follow-ups
 

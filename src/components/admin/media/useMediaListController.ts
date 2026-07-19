@@ -29,6 +29,12 @@ export interface UseMediaListControllerOptions<T extends MediaListItem, SortKey 
   sortDate: (item: T, sortBy: SortKey) => Date | null;
   defaultSortBy: SortKey;
   initialPerPage?: number;
+  /**
+   * With the date-range filter enabled, exclude items whose creation date is
+   * missing or unparseable (tag-videos semantics). When false, such items fall
+   * back to the without-timestamp toggle (tag-images semantics).
+   */
+  dateFilterExcludesUndated?: boolean;
 }
 
 export function useMediaListController<T extends MediaListItem, SortKey extends string>({
@@ -37,6 +43,7 @@ export function useMediaListController<T extends MediaListItem, SortKey extends 
   sortDate,
   defaultSortBy,
   initialPerPage = 25,
+  dateFilterExcludesUndated = false,
 }: UseMediaListControllerOptions<T, SortKey>) {
   // List state
   const [items, setItems] = useState<T[]>([]);
@@ -93,19 +100,17 @@ export function useMediaListController<T extends MediaListItem, SortKey extends 
         if (!hasTags && !showUntagged) return false;
         if (hasTags && !showTagged) return false;
 
+        if (!item.createdTime && !showWithoutTimestamp) return false;
+
         if (enableDateFilter) {
-          if (!item.createdTime) {
-            if (!showWithoutTimestamp) return false;
-          } else {
-            const created = parseDate(item.createdTime);
-            const createdDay = created ? created.toISOString().split('T')[0] : null;
-            if (createdDay) {
-              if (dateFilterFrom && createdDay < dateFilterFrom) return false;
-              if (dateFilterTo && createdDay > dateFilterTo) return false;
-            }
+          const created = item.createdTime ? parseDate(item.createdTime) : null;
+          const createdDay = created ? created.toISOString().split('T')[0] : null;
+          if (createdDay) {
+            if (dateFilterFrom && createdDay < dateFilterFrom) return false;
+            if (dateFilterTo && createdDay > dateFilterTo) return false;
+          } else if (dateFilterExcludesUndated) {
+            return false;
           }
-        } else {
-          if (!item.createdTime && !showWithoutTimestamp) return false;
         }
 
         return true;
@@ -136,6 +141,7 @@ export function useMediaListController<T extends MediaListItem, SortKey extends 
     sortBy,
     sortOrder,
     sortDate,
+    dateFilterExcludesUndated,
   ]);
 
   // Pagination derived values
@@ -147,7 +153,7 @@ export function useMediaListController<T extends MediaListItem, SortKey extends 
     [filteredItems, startIndex, endIndex]
   );
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or sorting change
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -157,6 +163,8 @@ export function useMediaListController<T extends MediaListItem, SortKey extends 
     enableDateFilter,
     dateFilterFrom,
     dateFilterTo,
+    sortBy,
+    sortOrder,
   ]);
 
   const setPerPage = useCallback((value: number) => {

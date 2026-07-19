@@ -13,6 +13,8 @@ interface PaginationBarProps {
   onPageChange: (page: number) => void;
   previousLabel: string;
   nextLabel: string;
+  /** Odd number of page buttons shown (tag-images: 7, tag-videos: 5). */
+  windowSize?: number;
 }
 
 const PaginationBar: React.FC<PaginationBarProps> = ({
@@ -21,8 +23,11 @@ const PaginationBar: React.FC<PaginationBarProps> = ({
   onPageChange,
   previousLabel,
   nextLabel,
+  windowSize = 7,
 }) => {
   if (totalPages <= 1) return null;
+
+  const half = Math.floor(windowSize / 2);
 
   return (
     <div className="flex justify-center items-center mt-6 gap-2">
@@ -34,16 +39,16 @@ const PaginationBar: React.FC<PaginationBarProps> = ({
         {previousLabel}
       </button>
 
-      {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+      {Array.from({ length: Math.min(windowSize, totalPages) }, (_, i) => {
         let pageNum;
-        if (totalPages <= 7) {
+        if (totalPages <= windowSize) {
           pageNum = i + 1;
-        } else if (currentPage <= 4) {
+        } else if (currentPage <= half + 1) {
           pageNum = i + 1;
-        } else if (currentPage >= totalPages - 3) {
-          pageNum = totalPages - 6 + i;
+        } else if (currentPage >= totalPages - half) {
+          pageNum = totalPages - (windowSize - 1) + i;
         } else {
-          pageNum = currentPage - 3 + i;
+          pageNum = currentPage - half + i;
         }
 
         return (

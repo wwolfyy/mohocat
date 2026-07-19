@@ -21,8 +21,14 @@ interface MediaStatsCardsProps {
   cards: MediaStatCard[];
 }
 
+// Tailwind needs literal class names, so map the card count to its grid class.
+const GRID_COLS: Record<number, string> = {
+  3: 'md:grid-cols-3',
+  4: 'md:grid-cols-4',
+};
+
 const MediaStatsCards: React.FC<MediaStatsCardsProps> = ({ cards }) => (
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div className={`grid grid-cols-1 ${GRID_COLS[cards.length] ?? 'md:grid-cols-4'} gap-4 mb-6`}>
     {cards.map((card) => (
       <div key={card.label} className="bg-white p-4 rounded-lg shadow">
         <h3 className="text-lg font-semibold text-gray-700">{card.label}</h3>

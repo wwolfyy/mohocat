@@ -35,16 +35,18 @@ the testing hand-off
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
 - **Active track: complexity retirement — IN EXECUTION.** P0 (`6454d80`), P1
-  (`431c69f`), P2 (`fdba4ee`), P3 (`1d13e09`) **committed & DONE**. **P4.1–P4.4
-  DONE — all gates green** (full e2e **116 passed / 13 skipped / 0 failed** against
-  the swapped editors; tsc / smoke 29-29 / unit 25-25; screenshot browser-pass over
-  all four selector contexts): both editors now use the shared `CatSelectorModal`
-  (commit-on-done, the accepted §7 change) and the **toolkit skeleton** sits unused
-  under `src/components/admin/media/`. **Bundle UNCOMMITTED — next: the P4.5
-  interface-review checkpoint, then commit on go-ahead, then P5** (recompose the
-  editors on the toolkit). Four content forms are 2,135→859 on shared
-  `src/components/forms/` primitives; P3 fixed 집사톡's latently-broken image
-  upload (`log/DEBUG_LOG.md` 2026-07-19).
+  (`431c69f`), P2 (`fdba4ee`), P3 (`1d13e09`), P4 (`34c5c68`) **committed & DONE**
+  (P4.5 toolkit interfaces owner-approved). **P5 (Target A recomposition) code
+  DONE — gates green** (full e2e **116 passed / 13 skipped / 0 failed** against the
+  recomposed editors; tsc / smoke 29-29 / unit 25-25): both editors rebuilt on the
+  `src/components/admin/media/` toolkit — `tag-images` 1,715→821 (+ shared
+  `ui/Lightbox`), `tag-videos` 2,450→1,261 + a page-owned 570-line
+  `useYouTubeVideoMutations` hook (YouTube flows verbatim, NOT genericized).
+  **Bundle UNCOMMITTED — awaiting commit go-ahead, then P6 follow-ups.** ⚠️ The
+  scripted manual YouTube pass (P5.4) stays owner-owed before the next `dev → main`
+  promotion. Four content forms are 2,135→859 on shared `src/components/forms/`
+  primitives; P3 fixed 집사톡's latently-broken image upload
+  (`log/DEBUG_LOG.md` 2026-07-19).
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
@@ -115,7 +117,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P3 ✅ committed; P4.1–P4.4 ✅ done (uncommitted); next P4.5 → P5
+### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P4 ✅ committed; P5 ✅ done (uncommitted); next P6
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -213,18 +215,27 @@ smoke 29/29). Detail: assessment §8 P1.
 passed against the migrated forms, and the net gained whitespace-validation specs
 for both. Detail: assessment §8 P2.
 
-**✅ P4.1–P4.4 DONE (2026-07-19) — bundle UNCOMMITTED.** Both editors' hand-rolled
-cat selectors replaced by the shared `CatSelectorModal` (commit-on-done; the dead
-`'youtube-batch'` context dropped; per-page `cats`/`loadCats`/search/toggle
-machinery deleted). Toolkit skeleton landed unused under
-`src/components/admin/media/` (hooks `useMediaListController<T>` /
-`useDateAutoParse<T>` + `MediaStatsCards`/`MediaFilterBar`/`BatchActionsPanel`/
-`MediaGrid`/`PaginationBar`/`CatTagField`; the `toDate()` role reuses the existing
-`parseDate`). `parseCreatedDateFromFilename` moved to `@/utils/dateParser`,
-converged with `parseRecordingDateFromTitle`. Verified: full e2e **116/13/0**, tsc,
-smoke 29/29, unit 25/25, plus a screenshot browser-pass over all four selector
-contexts (emulator-backed, no saves). **Next: P4.5 interface review → commit on
-go-ahead → P5** (recompose the editors on the toolkit). Detail: assessment §8 P4.
+**✅ P5 DONE (2026-07-19) — Target A recomposed; bundle UNCOMMITTED.** Both editors
+rebuilt on the `src/components/admin/media/` toolkit: `tag-images` 1,715→821 lines
+(controller + auto-parse hooks + full presentational set; hand-rolled Lightbox →
+shared `ui/Lightbox`; dead `batchUpdateImages` deleted), `tag-videos` 2,450→1,261
+lines + a colocated 570-line `useYouTubeVideoMutations` (YouTube orchestration
+verbatim, page-owned, NOT genericized; playlist panel/modal page-owned). Drift
+between the "twins" absorbed as toolkit knobs (`dateFilterExcludesUndated`,
+stats/batch column counts, pagination `windowSize`); the videos **filter panel
+keeps page-owned markup** (its layout drifted — unifying it is a product decision,
+queueable with P6). Verified: full e2e **116/13/0** against the recomposed pages,
+tsc, smoke 29/29, unit 25/25, plus full-page screenshot passes of both editors.
+**Next: commit on go-ahead → P6 follow-ups** (P6.1 alert()→Modal, P6.2 docs
+refresh, P6.3 FEATURE_MOD_LOG + close-out). ⚠️ P5.4's **scripted manual YouTube
+pass** (sync + playlists, real creds) stays owner-owed before the next
+`dev → main` promotion.
+
+**✅ P4 DONE (2026-07-19, committed `34c5c68`).** Shared-`CatSelectorModal` swap in
+both editors (commit-on-done; dead `'youtube-batch'` context dropped) + the
+toolkit skeleton + `parseCreatedDateFromFilename` → `@/utils/dateParser`
+(converged with the title parser). Verified: full e2e 116/13/0 + screenshot pass
+over all four selector contexts; toolkit interfaces owner-approved at P4.5. Detail: assessment §8 P4.
 
 **✅ P3 DONE (2026-07-19, committed `1d13e09`).** What it contains (detail:
 assessment §8 P3):
@@ -274,14 +285,15 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-**The P4.1–P4.4 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee`,
-P3 = `1d13e09` committed). Awaiting the P4.5 interface review + commit go-ahead:
+**The P5 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee`, P3 = `1d13e09`,
+P4 = `34c5c68` committed). Awaiting the commit go-ahead:
 
-- `src/app/admin/tag-images/page.tsx` + `tag-videos/page.tsx` (shared
-  `CatSelectorModal` swap; per-page selector machinery deleted)
-- `src/components/admin/media/` (new — toolkit skeleton, unused until P5)
-- `src/utils/dateParser.ts` (+`parseCreatedDateFromFilename`; both parsers
-  converged behind one internal helper)
+- `src/app/admin/tag-images/page.tsx` (recomposed on the toolkit; 821 lines)
+- `src/app/admin/tag-videos/page.tsx` (recomposed; 1,261 lines) +
+  `src/app/admin/tag-videos/useYouTubeVideoMutations.ts` (new — page-owned
+  YouTube orchestration, 570 lines)
+- `src/components/admin/media/` (drift knobs: `dateFilterExcludesUndated`,
+  column maps, pagination `windowSize`, page-reset-on-sort)
 - `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
   (this update)
 
@@ -289,14 +301,21 @@ P3 = `1d13e09` committed). Awaiting the P4.5 interface review + commit go-ahead:
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P4.1–P4.4 DONE** (P3 committed
-  `1d13e09` on go-ahead earlier the same session): both editors swapped onto the
-  shared `CatSelectorModal` (commit-on-done; dead `'youtube-batch'` context
-  dropped), toolkit skeleton landed unused under `src/components/admin/media/`,
-  filename date parser moved into `@/utils/dateParser` (converged with the title
-  parser). Full e2e **116/13/0** against the swap + screenshot browser-pass over
-  all four selector contexts. Bundle **uncommitted**; next: P4.5 interface
-  review → commit → P5.
+- **2026-07-19 (latest)** — **Complexity retirement P5 DONE (Target A complete)**:
+  both editors recomposed on the toolkit (tag-images 1,715→821 + shared
+  `ui/Lightbox`; tag-videos 2,450→1,261 + page-owned 570-line
+  `useYouTubeVideoMutations`), twin drift absorbed as toolkit knobs, videos filter
+  panel kept page-owned (drifted layout). Full e2e **116/13/0** + tsc/smoke/unit +
+  full-page screenshot passes. Bundle **uncommitted**; next: commit → P6.
+  ⚠️ Manual YouTube pass still owed before promotion.
+- **2026-07-19** — **Complexity retirement P4 DONE** (committed `34c5c68`; P3
+  committed `1d13e09` on go-ahead earlier the same session): both editors swapped
+  onto the shared `CatSelectorModal` (commit-on-done; dead `'youtube-batch'`
+  context dropped), toolkit skeleton landed unused under
+  `src/components/admin/media/`, filename date parser moved into
+  `@/utils/dateParser` (converged with the title parser). Full e2e **116/13/0**
+  against the swap + screenshot browser-pass over all four selector contexts;
+  P4.5 toolkit interfaces owner-approved.
 - **2026-07-19** — **Complexity retirement P3 DONE**: full-gate re-run
   green — e2e **116/13/0** (locator fix held; "expect 117" was an off-by-one — the
   Family A spec adds 2 tests to the 114 P2 baseline), tsc/smoke/unit green.
