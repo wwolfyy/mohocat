@@ -11,6 +11,33 @@
 
 ---
 
+## 2026-07-19 — Modal dialog conversion silently canceled the post-submit redirect (App-Router transition vs. modal-unmount re-render)
+
+**Symptom:** After the P6.1 `alert()` → shared `ui/Modal` conversion, all four
+content-form create flows stopped redirecting: the success dialog appeared, 확인
+dismissed it, the post WAS created — but the page stayed on the composer. Caught by
+the P0 characterization net (4 e2e failures: `posts.spec` + `butler-create.spec`
+redirect polls timing out).
+
+**Root cause:** the converted flow is `await dialog.alert(msg); router.push(path)`.
+`useDialog`'s 확인 handler resolved the promise and then queued the modal-unmount
+`setState(null)` — so `router.push` ran while that unmount re-render was still
+pending, and the re-render canceled the in-flight App-Router transition. The Playwright
+trace's network log proved the push actually started (`/pages/butler_talk?_rsc=…`
+navigation fetch fired) but the URL never committed. The native `alert()` never had
+this problem because it blocks the main thread: by the time `push` ran, no other
+update was pending.
+
+**Fix:** `useDialog.close()` now clears the dialog state first and resolves the
+promise in a `setTimeout(…, 0)` — continuations run only after React has committed
+the modal unmount, restoring the native-alert timing shape
+(`src/components/ui/useDialog.tsx`).
+
+**Verified:** the four failing specs green after the fix (plus the full e2e suite);
+the redirect assertions now pass against the Modal dialogs.
+
+---
+
 ## 2026-07-19 — 집사톡 image upload could never have worked (signed-URL response keys drifted in the copy)
 
 **Symptom:** Latent — found by source inspection during the complexity-retirement P3

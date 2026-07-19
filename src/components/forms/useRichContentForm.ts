@@ -9,6 +9,7 @@ import {
   formatDateTimeForInput,
 } from '@/utils/dateParser';
 import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
+import { useDialog } from '@/components/ui/useDialog';
 
 interface Playlist {
   id: string;
@@ -76,6 +77,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const [showImageTagSelector, setShowImageTagSelector] = useState(false);
 
   const router = useRouter();
+  const dialog = useDialog();
   const { user, isAuthenticated, loading } = useAuth();
 
   const formatParsedDate =
@@ -181,7 +183,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
           );
           mediaType = 'video';
         } catch (videoError) {
-          alert(
+          await dialog.alert(
             'Video upload failed: ' +
               (videoError instanceof Error ? videoError.message : 'Unknown error')
           );
@@ -201,7 +203,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
             videoThumb = imageUrls[0];
           }
         } catch (imageError) {
-          alert(
+          await dialog.alert(
             'Image upload failed: ' +
               (imageError instanceof Error ? imageError.message : 'Unknown error')
           );
@@ -244,11 +246,13 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       }
       config.onResetExtras?.();
 
-      alert(config.successMessage);
+      await dialog.alert(config.successMessage);
 
       router.push(config.redirectPath);
     } catch (error) {
-      alert(config.errorMessagePrefix + (error instanceof Error ? error.message : 'Unknown error'));
+      await dialog.alert(
+        config.errorMessagePrefix + (error instanceof Error ? error.message : 'Unknown error')
+      );
     } finally {
       setUploading(false);
     }
@@ -281,5 +285,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     showImageTagSelector,
     setShowImageTagSelector,
     handleSubmit,
+    /** Render once inside the owning form (replaces native alert dialogs). */
+    dialog: dialog.element,
   };
 };

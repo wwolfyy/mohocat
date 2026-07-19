@@ -241,6 +241,7 @@ const NewButlerTalkForm = () => {
         onTagsChange={form.setSelectedImageTags}
         title="이미지에 등장하는 고양이 선택"
       />
+      {form.dialog}
     </form>
   );
 };

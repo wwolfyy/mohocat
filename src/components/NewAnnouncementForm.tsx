@@ -146,6 +146,7 @@ const NewAnnouncementForm = () => {
           취소
         </button>
       </div>
+      {form.dialog}
     </form>
   );
 };

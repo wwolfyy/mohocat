@@ -5,9 +5,12 @@
 > structural claim below was grep-/read-verified against the actual files on branch
 > `dev` (not inferred from docs).
 >
-> **Status:** 📋 **planned — no code changed.** §1–§6 are the assessment; §7–§8 add a
-> sequenced, gated execution plan + task list (decisions locked 2026-07-16, §7).
-> Execution starts only on explicit go-ahead.
+> **Status:** ✅ **EXECUTED (2026-07-19).** All phases P0–P6 done — per-phase
+> execution notes live in §8. Every phase gated on the P0 characterization e2e net +
+> tsc/smoke/unit + browser verification. Remaining (owner-owed): the P5.4 scripted
+> manual pass over the YouTube surfaces before the next `dev → main` promotion.
+> _(Original status: planned — §1–§6 assessment, §7–§8 sequenced gated plan,
+> decisions locked 2026-07-16 and re-locked at the 2026-07-18 owner deep-dive.)_
 >
 > **✅ Owner deep-dive DONE (2026-07-18, later session) — the pre-execution gate is
 > satisfied.** Outcomes (decisions re-locked in §7): (1) **worth it, do it now** —
@@ -510,13 +513,21 @@ helper (dead code in that file) went with it._
 
 ### P6 — Follow-ups
 
-- [ ] P6.1 (separate) Convert `alert()/confirm()` → shared `ui/Modal`. ⚠️ Scope note
-      (2026-07-18): not just the admin editors — **all four content forms fire
-      `alert()` too** (4–7 call sites each; `posts.spec.ts` installs a dialog handler
-      to get past the success alert). Converting the forms changes public-facing
-      behavior and must update the P0 specs' dialog handling in the same change.
-- [ ] P6.2 Docs: refresh `docs/codebase/admin-platform.md` + `PROJECT_PLAN.md`
-- [ ] P6.3 `FEATURE_MOD_LOG.md` entry (intentional refactor); flip this doc's status to ✅ executed
+- [x] P6.1 (separate) Convert `alert()/confirm()` → shared `ui/Modal` _(2026-07-19: new
+      promise-based `ui/useDialog` primitive — `await dialog.alert()` /
+      `await dialog.confirm()` over Modal, so the old blocking sequencing is preserved.
+      All ~45 sites converted: both editors (incl. the injected dialog in
+      `useYouTubeVideoMutations`) and — per the scope note — the four public forms via
+      their shared `useSimpleContentForm`/`useRichContentForm` hooks, which own every
+      form alert and now return a `dialog` element the forms render. The four specs'
+      native-dialog handlers replaced with role=dialog Modal assertions in the same
+      change, as required.)_ ⚠️ Original scope note (2026-07-18): not just the admin
+      editors — all four content forms fire `alert()` too.
+- [x] P6.2 Docs: refresh `docs/codebase/admin-platform.md` + `PROJECT_PLAN.md` _(2026-07-19:
+      §7 PROJECT_PLAN entry flipped to executed; admin-platform media-tagging row +
+      media-and-youtube watch-out describe the toolkit/page-owned split and the dialog
+      conversion)_
+- [x] P6.3 `FEATURE_MOD_LOG.md` entry (intentional refactor); flip this doc's status to ✅ executed _(2026-07-19: both done)_
 
 ---
 

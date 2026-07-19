@@ -15,6 +15,49 @@
 
 ---
 
+## 2026-07-19 — Complexity retirement executed (P0–P6): forms + admin editors on shared primitives; alerts → Modal dialogs
+
+**Area:** changed — `src/components/NewPostForm.tsx` / `NewButlerTalkForm.tsx` /
+`NewAnnouncementForm.tsx` / `NewAdoptionForm.tsx`,
+`src/app/admin/tag-images/page.tsx`, `src/app/admin/tag-videos/page.tsx`.
+Added — `src/components/forms/` (`MediaUploadField`, `uploadStrategies`,
+`useSimpleContentForm`, `useRichContentForm`), `src/components/admin/media/`
+(media toolkit), `src/app/admin/tag-videos/useYouTubeVideoMutations.ts`,
+`src/components/ui/useDialog.tsx`; `parseCreatedDateFromFilename` →
+`@/utils/dateParser`. Removed — `react-hook-form` (unused declared dep).
+Tests — P0 characterization e2e net (`admin/posts.spec`, `butler-create.spec`,
+`tag-images.spec`, `tag-videos.spec`) + `tests/unit/uploadStrategies.test.ts`.
+
+**What changed:** executed the full complexity-retirement plan
+(`docs/planning/complexity-retirement-assessment-20260716.md`; commits
+`6454d80`, `431c69f`, `fdba4ee`, `1d13e09`, `34c5c68`, + the P5/P6 commits).
+The four content forms (2,135→859 lines) now share one submit/upload flow per
+family with injectable image-upload strategies and a single YouTube upload
+function. The two admin media editors (4,430→~2,650 lines incl. the colocated
+YouTube hook) recompose a shared read-side toolkit — list controller, 자동 날짜
+인식 loop, stats/filter/batch/grid/pagination components — on the shared
+`parseDate` normalizer; write paths stay page-owned. Both editors use the
+shared `CatSelectorModal` with **commit-on-done** semantics (accepted
+intentional change from the old live-toggle). All ~45 native
+`alert()/confirm()` prompts across the editors and forms were replaced by the
+new promise-based `useDialog` primitive on `ui/Modal` (P6.1) — user prompts
+now match the site's modal system.
+
+**Rationale:** the 2026-07-16 assessment measured ≈2,100–2,900 retirable LOC of
+copy-paste duplication and local-state sprawl; retiring it in place (no
+framework change) kills the double-maintenance and gives forms/editors shared,
+tested primitives. 집사톡's latently-broken signed-URL image upload was fixed
+en route (`DEBUG_LOG.md` 2026-07-19).
+
+**Verified:** every phase gated on the P0 characterization net — final full
+e2e run green against the finished code (see assessment §8 per-phase notes for
+counts), plus tsc / smoke 29 / unit 25 and screenshot browser-passes of both
+editors and the selector/dialog modals. ⚠️ Still owed: the scripted manual
+pass over the YouTube surfaces (sync + playlists, real creds) before the next
+`dev → main` promotion.
+
+---
+
 ## 2026-07-18 — Tier 1 write migration: role assignment → Admin-SDK route, audit log restored
 
 **Area:** added — `src/app/api/admin/assign-role/route.ts`. Changed —

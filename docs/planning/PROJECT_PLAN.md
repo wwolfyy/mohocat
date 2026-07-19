@@ -357,27 +357,26 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm & prioritize_:**
 
-- [ ] **📋 PLANNED — complexity retirement (duplication + local-state sprawl), ≈2,800–3,400 LOC
-      across 6 files.** Full source-verified assessment **and** a 6-phase / ~27-task execution
-      plan live in
-      [`complexity-retirement-assessment-20260716.md`](./complexity-retirement-assessment-20260716.md).
-      Origin: a "Next.js/React → HTMX?" feasibility question, answered **no** — the complexity is
-      _in_ the client components, not the framework, so it's retired **in place** (no framework
-      migration, no auth rewrite, no deploy-stack change).
-  - **Target A — admin media editors** (`tag-images` 1,860 + `tag-videos` 2,570 LOC): drifted
-    **copy-renamed twins** (same-named handlers, structurally identical bodies differing only by
-    an `image`→`video` rename — a line-diff sees just 3 shared lines); 34 / 41 `useState` each.
-    Converge onto a generic `MediaTaggingEditor<T>` (injected service / date-source / extra-panels
-    slot for the video-only playlist feature).
-  - **Target B — content forms** (4 files, ~2,133 LOC): two literal-dup families — Post+ButlerTalk
-    (250 identical lines) and Announcement+Adoption (193). ⚠️ **`react-hook-form` is a declared
-    dependency used in zero files.** `SignupForm` out of scope.
-  - ⚠️ Both admin editors **hand-roll cat-selection** rather than reusing the shared
-    `CatSelectorModal` the forms already use — an independent reuse win.
-  - **Decisions locked (2026-07-16):** both targets, **B first**; adopt `react-hook-form`; admin
-    refactor **behavior-preserving** (admin `alert()/confirm()` → shared `ui/Modal` deferred to a
-    separate follow-up). Gates per phase: `tsc --noEmit` + `test:smoke` + browser verification.
-    **Not started — execution awaits explicit go-ahead.**
+- [x] **✅ EXECUTED (2026-07-19) — complexity retirement (duplication + local-state sprawl).**
+      Assessment + phase log:
+      [`complexity-retirement-assessment-20260716.md`](./complexity-retirement-assessment-20260716.md)
+      (§8 holds per-phase execution notes). Origin: a "Next.js/React → HTMX?" feasibility
+      question, answered **no** — the complexity was _in_ the client components, so it was
+      retired **in place** over phases P0–P6 (commits `6454d80`→ onward), each gated on the
+      P0 characterization e2e net + tsc/smoke/unit + browser verification.
+  - **Target B — content forms**: four forms 2,135→859 lines on shared
+    `src/components/forms/` primitives (`MediaUploadField`, injectable upload strategies,
+    `useSimpleContentForm`/`useRichContentForm`); `react-hook-form` dropped (was a declared
+    dep used in zero files); 집사톡's latently-broken signed-URL image upload fixed en route.
+  - **Target A — admin media editors**: recomposed on the `src/components/admin/media/`
+    **toolkit** (generic `MediaTaggingEditor<T>` was rejected at the owner deep-dive — write
+    paths aren't twins): `tag-images` 1,860→~820, `tag-videos` 2,570→~1,260 + a page-owned
+    `useYouTubeVideoMutations` (YouTube orchestration verbatim). Both editors now use the
+    shared `CatSelectorModal` (commit-on-done — the one accepted intentional behavior change).
+  - **P6 follow-up**: all `alert()/confirm()` (editors + the four public forms) converted to
+    the shared `ui/Modal` system via the new `useDialog` primitive.
+  - ⚠️ Owner-owed before the next `dev → main` promotion: the scripted **manual pass over the
+    YouTube surfaces** (P5.4 — sync, playlists, real creds).
 - [x] **✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated.**
       `GET`/`POST /api/admin/role-permissions` read/rewrite `role_permissions/role-config` via the
       **Admin SDK** (bypasses Firestore rules). Once `firestore.rules` `hasPermission` started

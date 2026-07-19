@@ -39,13 +39,14 @@ const editPanel = (page: Page) => page.locator('div.sticky');
 const catSelector = (page: Page) =>
   page.locator('div.fixed').filter({ has: page.getByRole('heading', { name: /고양이 선택/ }) });
 
-function captureDialogs(page: Page): string[] {
-  const messages: string[] = [];
-  page.on('dialog', (d) => {
-    messages.push(d.message());
-    void d.accept();
-  });
-  return messages;
+// The shared useDialog modal (P6.1): alert mode titles itself 알림, confirm 확인.
+const appDialog = (page: Page) => page.getByRole('dialog', { name: /^(알림|확인)$/ });
+
+// Wait for an alert dialog containing `text`, then dismiss it with 확인.
+async function acceptAlert(page: Page, text: string | RegExp, timeout = 15_000) {
+  await expect(appDialog(page).getByText(text)).toBeVisible({ timeout });
+  await appDialog(page).getByRole('button', { name: '확인' }).click();
+  await expect(appDialog(page)).toHaveCount(0);
 }
 
 test.describe('사진 태깅 — characterization', () => {
@@ -79,7 +80,6 @@ test.describe('사진 태깅 — characterization', () => {
   test('single edit: cat tag via the selector + 촬영일, saved through the service', async ({
     page,
   }) => {
-    const dialogs = captureDialogs(page);
     await page.goto('/admin/tag-images');
 
     // Click the image (not the checkbox) to open it in the edit panel.
@@ -99,7 +99,7 @@ test.describe('사진 태깅 — characterization', () => {
     // Set the 촬영일 and save.
     await editPanel(page).locator('input[type="date"]').fill('2026-02-01');
     await editPanel(page).getByRole('button', { name: '변경사항 저장' }).click();
-    await expect.poll(() => dialogs.join('\n')).toContain('사진 정보를 저장했어요!');
+    await acceptAlert(page, '사진 정보를 저장했어요!');
 
     // The grid card reflects the saved tag and now carries a 촬영: line.
     await expect(card(page, 'album-01.jpg').getByText('테스트냥이이')).toBeVisible();
@@ -107,7 +107,6 @@ test.describe('사진 태깅 — characterization', () => {
   });
 
   test('multi-select + batch-tag adds a cat tag to every selected image', async ({ page }) => {
-    const dialogs = captureDialogs(page);
     await page.goto('/admin/tag-images');
 
     await card(page, '20240315_143045.jpg').getByRole('checkbox').check();
@@ -122,7 +121,7 @@ test.describe('사진 태깅 — characterization', () => {
     await expect(page.getByPlaceholder('클릭해서 고양이 선택...')).toHaveValue('입양이삼');
 
     await page.getByRole('button', { name: '태그 저장' }).click();
-    await expect.poll(() => dialogs.join('\n')).toContain('2개 사진의 태그를 업데이트했어요!');
+    await acceptAlert(page, '2개 사진의 태그를 업데이트했어요!');
 
     // Batch tags ADD to existing tags; both cards now show the tag + 태그됨 badge.
     for (const fileName of ['20240315_143045.jpg', '2024-03-16 09.30.00.jpg']) {
@@ -136,7 +135,6 @@ test.describe('사진 태깅 — characterization', () => {
   });
 
   test('per-image 파일명에서 날짜 인식 fills the date field without saving', async ({ page }) => {
-    const dialogs = captureDialogs(page);
     await page.goto('/admin/tag-images');
 
     await card(page, '20240315_143045.jpg').getByRole('img').click();
@@ -145,7 +143,7 @@ test.describe('사진 태깅 — characterization', () => {
       .click();
 
     // 14:30 local (KST locally / UTC in CI) stays on the same calendar day.
-    await expect.poll(() => dialogs.join('\n')).toContain('날짜를 인식했어요: 2024-03-15');
+    await acceptAlert(page, /날짜를 인식했어요: 2024-03-15/);
     await expect(editPanel(page).locator('input[type="date"]')).toHaveValue('2024-03-15');
     // Local-only: nothing is saved here (the save path is covered above).
   });
@@ -153,17 +151,23 @@ test.describe('사진 태깅 — characterization', () => {
   test('자동 날짜 인식 parses filename dates into 촬영일 for the images that need it', async ({
     page,
   }) => {
-    const dialogs = captureDialogs(page);
     await page.goto('/admin/tag-images');
     await expect(card(page, '20240315_143045.jpg')).toBeVisible();
 
     await page.getByRole('button', { name: /자동 날짜 인식/ }).click();
 
-    // First run: confirm → per-image service updates → result alert. On a serial
-    // retry the images already carry dates → the "nothing to parse" alert.
-    await expect
-      .poll(() => dialogs.join('\n'), { timeout: 30_000 })
-      .toMatch(/자동 날짜 인식 완료|날짜 인식이 필요한 사진이 없어요/);
+    // First run: confirm dialog → per-image service updates → result report. On a
+    // serial retry the images already carry dates → the "nothing to parse" alert.
+    await expect(appDialog(page)).toBeVisible({ timeout: 15_000 });
+    if (await appDialog(page).getByText('날짜 인식이 필요한 사진이 없어요').isVisible()) {
+      await appDialog(page).getByRole('button', { name: '확인' }).click();
+    } else {
+      await appDialog(page).getByRole('button', { name: '확인' }).click(); // confirm the run
+      await expect(appDialog(page).getByText(/자동 날짜 인식 완료/)).toBeVisible({
+        timeout: 30_000,
+      });
+      await appDialog(page).getByRole('button', { name: '확인' }).click();
+    }
 
     // Both date-named images end up with a 촬영: line either way.
     await expect(card(page, '20240315_143045.jpg').getByText(/촬영:/)).toBeVisible();

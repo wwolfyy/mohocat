@@ -7,6 +7,7 @@ import { parseDate } from '@/utils/parse-date';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
+import { useDialog } from '@/components/ui/useDialog';
 import {
   useMediaListController,
   useDateAutoParse,
@@ -74,6 +75,9 @@ export default function TagVideosPage() {
   // Service references
   const videoService = getVideoService();
 
+  // Shared Modal-based alert/confirm (replaces the native dialogs — P6.1)
+  const dialog = useDialog();
+
   // Read side: shared media-list controller (load/selection/filter/sort/pagination)
   const load = useCallback(async () => {
     const allVideos = await videoService.getAllVideos();
@@ -95,6 +99,7 @@ export default function TagVideosPage() {
     reloadVideos: c.reload,
     setError: c.setError,
     videoService,
+    dialog,
   });
 
   // Cat selector states (selection itself lives inside the shared CatSelectorModal;
@@ -162,11 +167,11 @@ export default function TagVideosPage() {
   // Automatic date parsing: page-owned confirm/report copy around the shared loop
   const handleAutomaticDateParsing = async () => {
     if (autoParse.candidates.length === 0) {
-      alert(t.alerts.noVideosNeedParsing);
+      await dialog.alert(t.alerts.noVideosNeedParsing);
       return;
     }
 
-    if (!confirm(t.alerts.autoParseConfirm(autoParse.candidates.length))) return;
+    if (!(await dialog.confirm(t.alerts.autoParseConfirm(autoParse.candidates.length)))) return;
 
     try {
       c.setError(null);
@@ -183,7 +188,7 @@ export default function TagVideosPage() {
           ? `✅ ${result.label} → ${result.date}\n`
           : `❌ ${result.label} → ${result.error}\n`;
       });
-      alert(resultMessage);
+      await dialog.alert(resultMessage);
     } catch (error) {
       console.error('❌ Error during automatic date parsing:', error);
       c.setError(t.alerts.parseFailed(error instanceof Error ? error.message : '알 수 없는 오류'));
@@ -349,10 +354,10 @@ export default function TagVideosPage() {
         message += t.alerts.playlistSavedFailures(result.summary.failed);
       }
 
-      alert(message);
+      await dialog.alert(message);
     } catch (error) {
       console.error('Error saving playlist changes:', error);
-      alert(
+      await dialog.alert(
         t.alerts.playlistSaveFailed(error instanceof Error ? error.message : '알 수 없는 오류')
       );
     } finally {
@@ -1039,9 +1044,9 @@ export default function TagVideosPage() {
                                 const utcPlus9Time = new Date(utcTime + 9 * 60 * 60 * 1000);
                                 const dateStr = utcPlus9Time.toISOString().split('T')[0];
                                 ytm.setYoutubeCreatedTime(dateStr);
-                                alert(t.alerts.parsedFromTitle(dateStr));
+                                void dialog.alert(t.alerts.parsedFromTitle(dateStr));
                               } else {
-                                alert(t.alerts.parseFromTitleFailed);
+                                void dialog.alert(t.alerts.parseFromTitleFailed);
                               }
                             }
                           }}
@@ -1161,6 +1166,8 @@ export default function TagVideosPage() {
           </div>
         </div>
       </div>
+
+      {dialog.element}
 
       {/* Cat Selector Modal (shared; commits the selection on 완료) */}
       <CatSelectorModal

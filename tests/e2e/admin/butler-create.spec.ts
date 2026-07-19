@@ -16,6 +16,10 @@
  */
 import { test, expect } from '../setup/test';
 import path from 'path';
+import type { Page } from '@playwright/test';
+
+// The shared useDialog modal (alert mode titles itself 알림; P6.1).
+const alertDialog = (page: Page) => page.getByRole('dialog', { name: '알림' });
 
 const IMAGE_FIXTURE = path.join(
   __dirname,
@@ -31,11 +35,6 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
     page,
   }) => {
     const title = `E2E 급식글 ${Date.now() % 100000}`;
-    const dialogs: string[] = [];
-    page.on('dialog', (d) => {
-      dialogs.push(d.message());
-      void d.accept();
-    });
 
     await page.goto('/pages/butler_stream/new');
     await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
@@ -65,9 +64,11 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
 
     await page.getByRole('button', { name: '작성 완료' }).click();
 
-    await expect
-      .poll(() => dialogs.join('\n'), { timeout: 20_000 })
-      .toContain('Post created successfully!');
+    // Success dialog (shared ui/Modal since P6.1); redirect happens after 확인.
+    await expect(alertDialog(page).getByText('Post created successfully!')).toBeVisible({
+      timeout: 20_000,
+    });
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
     await expect
       .poll(() => new URL(page.url()).pathname, { timeout: 20_000 })
       .toBe('/pages/butler_stream');
@@ -76,11 +77,6 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
 
   test('집사톡: a text post publishes to the 집사톡 list', async ({ page }) => {
     const title = `E2E 집사톡 ${Date.now() % 100000}`;
-    const dialogs: string[] = [];
-    page.on('dialog', (d) => {
-      dialogs.push(d.message());
-      void d.accept();
-    });
 
     await page.goto('/pages/butler_talk/new');
     await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
@@ -93,9 +89,10 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
       .fill('E2E 테스트로 작성한 집사톡 글입니다.');
     await page.getByRole('button', { name: '글 작성' }).click();
 
-    await expect
-      .poll(() => dialogs.join('\n'), { timeout: 20_000 })
-      .toContain('글이 성공적으로 작성되었습니다!');
+    await expect(alertDialog(page).getByText('글이 성공적으로 작성되었습니다!')).toBeVisible({
+      timeout: 20_000,
+    });
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
     await expect
       .poll(() => new URL(page.url()).pathname, { timeout: 20_000 })
       .toBe('/pages/butler_talk');

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { uploadImagesToStorage, uploadVideosToYouTube } from './uploadStrategies';
+import { useDialog } from '@/components/ui/useDialog';
 
 /**
  * Shared submit/upload flow for the simple-content family (공지사항 + 입양홍보;
@@ -11,7 +12,7 @@ import { uploadImagesToStorage, uploadVideosToYouTube } from './uploadStrategies
  * previously duplicated line-for-line: title/message + media state, validation
  * alerts, image upload via the direct-storage strategy, video upload via the
  * shared YouTube strategy, Korea-time stamping, postData assembly, reset,
- * success alert, and redirect. Per-form differences are injected via config;
+ * success dialog (shared ui/Modal via useDialog), and redirect. Per-form differences are injected via config;
  * form-specific extra fields (e.g. the announcement's 팝업 toggle) ride along
  * through `extraPostData`/`onResetExtras`.
  *
@@ -47,6 +48,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
 
   const router = useRouter();
   const { user } = useAuth();
+  const dialog = useDialog();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,17 +56,17 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
 
     try {
       if (!title.trim()) {
-        alert('제목을 입력해주세요.');
+        await dialog.alert('제목을 입력해주세요.');
         return;
       }
 
       if (!message.trim()) {
-        alert('내용을 입력해주세요.');
+        await dialog.alert('내용을 입력해주세요.');
         return;
       }
 
       if (!user?.email) {
-        alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
+        await dialog.alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
         return;
       }
 
@@ -77,7 +79,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
           const uploadedImageUrls = await uploadImagesToStorage(imageFiles, config.imagePathPrefix);
           allImageUrls = [...allImageUrls, ...uploadedImageUrls];
         } catch (error) {
-          alert(
+          await dialog.alert(
             '이미지 업로드 실패: ' + (error instanceof Error ? error.message : 'Unknown error')
           );
           return;
@@ -93,7 +95,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
           });
           allVideoUrls = [...allVideoUrls, ...uploadedVideoUrls];
         } catch (error) {
-          alert(
+          await dialog.alert(
             '동영상 업로드 실패: ' + (error instanceof Error ? error.message : 'Unknown error')
           );
           return;
@@ -133,11 +135,13 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
       setVideoUrls([]);
       config.onResetExtras?.();
 
-      alert(config.successMessage);
+      await dialog.alert(config.successMessage);
 
       router.push(config.redirectPath);
     } catch (error) {
-      alert(config.errorMessagePrefix + (error instanceof Error ? error.message : 'Unknown error'));
+      await dialog.alert(
+        config.errorMessagePrefix + (error instanceof Error ? error.message : 'Unknown error')
+      );
     } finally {
       setUploading(false);
     }
@@ -162,5 +166,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
     uploading,
     handleSubmit,
     cancel,
+    /** Render once inside the owning form (replaces native alert dialogs). */
+    dialog: dialog.element,
   };
 };

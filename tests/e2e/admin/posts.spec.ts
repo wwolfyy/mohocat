@@ -4,11 +4,11 @@
  *
  * P0 characterization upgrade (complexity-retirement assessment §7 P0): the two
  * Family-B create flows (공지사항 NewAnnouncementForm, 입양홍보 NewAdoptionForm)
- * are pinned end-to-end INCLUDING one image upload each — success alert(),
+ * are pinned end-to-end INCLUDING one image upload each — success dialog,
  * redirect, and the created content (with its image thumbnail) visible on the
  * public surface. These specs are the parity net the P1–P3 form refactor must
- * keep green; the forms fire `alert()` on success, so keep the dialog handlers
- * (P6.1 converts alerts to ui/Modal and updates these specs in the same change).
+ * keep green. Since P6.1 the forms fire a shared ui/Modal dialog instead of
+ * native alert(), so the specs assert the modal and click 확인.
  *
  *   - create 공지사항: title + body + image → /pages/announcements list shows the
  *     post with an image thumbnail;
@@ -19,6 +19,10 @@
  */
 import path from 'path';
 import { test, expect } from '../setup/test';
+import type { Page } from '@playwright/test';
+
+// The shared useDialog modal (alert mode titles itself 알림).
+const alertDialog = (page: Page) => page.getByRole('dialog', { name: '알림' });
 
 // Uploaded through the form; served back from the Storage emulator.
 const IMAGE_FIXTURE = path.join(
@@ -36,9 +40,6 @@ test.describe('게시물 관리', () => {
   }) => {
     const title = `E2E 공지 ${Date.now() % 100000}`;
 
-    // Accept the "작성되었습니다" success alert the form fires before redirecting.
-    page.on('dialog', (d) => void d.accept());
-
     await page.goto('/admin/announcements/new');
     await page.getByPlaceholder('공지사항 제목을 입력하세요').fill(title);
     await page
@@ -50,6 +51,11 @@ test.describe('게시물 관리', () => {
     await expect(page.getByText('album-01.jpg')).toBeVisible();
 
     await page.getByRole('button', { name: '공지사항 작성' }).click();
+
+    // Confirm the success dialog (shared ui/Modal since P6.1); the redirect
+    // happens after 확인.
+    await expect(alertDialog(page)).toBeVisible({ timeout: 20_000 });
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
 
     // The form redirects to the public announcements page on success.
     await expect
@@ -70,8 +76,6 @@ test.describe('게시물 관리', () => {
   }) => {
     const title = `E2E 입양홍보 ${Date.now() % 100000}`;
 
-    page.on('dialog', (d) => void d.accept());
-
     await page.goto('/admin/adoption/new');
     await page.getByPlaceholder('입양홍보 제목을 입력하세요').fill(title);
     await page
@@ -82,6 +86,9 @@ test.describe('게시물 관리', () => {
     await expect(page.getByText('album-01.jpg')).toBeVisible();
 
     await page.getByRole('button', { name: '입양홍보 작성' }).click();
+
+    await expect(alertDialog(page)).toBeVisible({ timeout: 20_000 });
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
 
     await expect
       .poll(() => new URL(page.url()).pathname, { timeout: 20_000 })
@@ -101,25 +108,21 @@ test.describe('게시물 관리', () => {
   });
 
   // Whitespace passes the native `required` check, so these pin the forms' own
-  // trim-validation alert path (P2.4: submit/upload/preview/validation).
+  // trim-validation dialog path (P2.4: submit/upload/preview/validation).
   test('공지사항 form rejects whitespace-only 제목/내용 with validation alerts', async ({
     page,
   }) => {
-    const dialogs: string[] = [];
-    page.on('dialog', (d) => {
-      dialogs.push(d.message());
-      void d.accept();
-    });
-
     await page.goto('/admin/announcements/new');
     await page.getByPlaceholder('공지사항 제목을 입력하세요').fill(' ');
     await page.getByPlaceholder('공지사항 내용을 입력하세요').fill(' ');
     await page.getByRole('button', { name: '공지사항 작성' }).click();
-    await expect.poll(() => dialogs).toContain('제목을 입력해주세요.');
+    await expect(alertDialog(page).getByText('제목을 입력해주세요.')).toBeVisible();
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
 
     await page.getByPlaceholder('공지사항 제목을 입력하세요').fill('유효한 제목');
     await page.getByRole('button', { name: '공지사항 작성' }).click();
-    await expect.poll(() => dialogs).toContain('내용을 입력해주세요.');
+    await expect(alertDialog(page).getByText('내용을 입력해주세요.')).toBeVisible();
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
 
     // No redirect happened — still on the composer.
     expect(new URL(page.url()).pathname).toBe('/admin/announcements/new');
@@ -128,21 +131,17 @@ test.describe('게시물 관리', () => {
   test('입양홍보 form rejects whitespace-only 제목/내용 with validation alerts', async ({
     page,
   }) => {
-    const dialogs: string[] = [];
-    page.on('dialog', (d) => {
-      dialogs.push(d.message());
-      void d.accept();
-    });
-
     await page.goto('/admin/adoption/new');
     await page.getByPlaceholder('입양홍보 제목을 입력하세요').fill(' ');
     await page.getByPlaceholder('입양홍보 내용을 입력하세요').fill(' ');
     await page.getByRole('button', { name: '입양홍보 작성' }).click();
-    await expect.poll(() => dialogs).toContain('제목을 입력해주세요.');
+    await expect(alertDialog(page).getByText('제목을 입력해주세요.')).toBeVisible();
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
 
     await page.getByPlaceholder('입양홍보 제목을 입력하세요').fill('유효한 제목');
     await page.getByRole('button', { name: '입양홍보 작성' }).click();
-    await expect.poll(() => dialogs).toContain('내용을 입력해주세요.');
+    await expect(alertDialog(page).getByText('내용을 입력해주세요.')).toBeVisible();
+    await alertDialog(page).getByRole('button', { name: '확인' }).click();
 
     expect(new URL(page.url()).pathname).toBe('/admin/adoption/new');
   });

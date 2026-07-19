@@ -8,6 +8,7 @@ import { parseDate } from '@/utils/parse-date';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import Lightbox from '@/components/ui/Lightbox';
+import { useDialog } from '@/components/ui/useDialog';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import {
   useMediaListController,
@@ -39,6 +40,9 @@ const sortDate = (image: AdminImage, sortBy: ImageSortKey): Date | null => {
 export default function TagImagesPage() {
   // Service references
   const imageService = getImageService();
+
+  // Shared Modal-based alert/confirm (replaces the native dialogs — P6.1)
+  const dialog = useDialog();
 
   // Read side: shared media-list controller (load/selection/filter/sort/pagination)
   const load = useCallback(async () => {
@@ -139,10 +143,10 @@ export default function TagImagesPage() {
       c.setItems(c.items.map((img) => (img.id === selectedImage.id ? updatedImage : img)));
       setSelectedImage(updatedImage);
 
-      alert(t.alerts.saved);
+      await dialog.alert(t.alerts.saved);
     } catch (err: any) {
       console.error('Error saving metadata:', err);
-      alert(t.alerts.saveFailed(err.message));
+      await dialog.alert(t.alerts.saveFailed(err.message));
     } finally {
       setSaving(false);
     }
@@ -151,7 +155,7 @@ export default function TagImagesPage() {
   const deleteImageAndMetadata = async () => {
     if (!selectedImage) return;
 
-    if (!confirm(t.alerts.deleteConfirm)) return;
+    if (!(await dialog.confirm(t.alerts.deleteConfirm))) return;
 
     try {
       setSaving(true);
@@ -163,10 +167,10 @@ export default function TagImagesPage() {
       c.setItems(c.items.filter((img) => img.id !== selectedImage.id));
       setSelectedImage(null);
 
-      alert(t.alerts.deleted);
+      await dialog.alert(t.alerts.deleted);
     } catch (err: any) {
       console.error('Error deleting image:', err);
-      alert(t.alerts.deleteFailed(err.message));
+      await dialog.alert(t.alerts.deleteFailed(err.message));
     } finally {
       setSaving(false);
     }
@@ -201,11 +205,11 @@ export default function TagImagesPage() {
       // Refresh images after batch update
       await c.reload();
 
-      alert(t.alerts.tagsUpdated(selectedImagesList.length));
+      await dialog.alert(t.alerts.tagsUpdated(selectedImagesList.length));
       setBatchTags(''); // Clear tags after successful update
     } catch (err: any) {
       console.error('Error batch updating tags:', err);
-      alert(t.alerts.tagsUpdateFailed(err.message));
+      await dialog.alert(t.alerts.tagsUpdateFailed(err.message));
     } finally {
       setSavingTags(false);
     }
@@ -235,18 +239,18 @@ export default function TagImagesPage() {
       // Refresh images after batch update
       await c.reload();
 
-      alert(t.alerts.dateUpdated(selectedImagesList.length));
+      await dialog.alert(t.alerts.dateUpdated(selectedImagesList.length));
       setBatchCreatedTime(''); // Clear date after successful update
     } catch (err: any) {
       console.error('Error batch updating date:', err);
-      alert(t.alerts.dateUpdateFailed(err.message));
+      await dialog.alert(t.alerts.dateUpdateFailed(err.message));
     } finally {
       setSavingDate(false);
     }
   };
 
   const syncWithStorage = async () => {
-    if (!confirm(t.alerts.syncConfirm)) return;
+    if (!(await dialog.confirm(t.alerts.syncConfirm))) return;
 
     try {
       setBatchSaving(true);
@@ -261,10 +265,10 @@ export default function TagImagesPage() {
       }));
 
       c.setItems(adminImages);
-      alert(t.alerts.synced);
+      await dialog.alert(t.alerts.synced);
     } catch (err: any) {
       console.error('Error syncing:', err);
-      alert(t.alerts.syncFailed(err.message));
+      await dialog.alert(t.alerts.syncFailed(err.message));
     } finally {
       setBatchSaving(false);
     }
@@ -273,11 +277,11 @@ export default function TagImagesPage() {
   // Automatic date parsing: page-owned confirm/report copy around the shared loop
   const handleAutomaticDateParsing = async () => {
     if (autoParse.candidates.length === 0) {
-      alert(t.alerts.noImagesNeedParsing);
+      await dialog.alert(t.alerts.noImagesNeedParsing);
       return;
     }
 
-    if (!confirm(t.alerts.autoParseConfirm(autoParse.candidates.length))) return;
+    if (!(await dialog.confirm(t.alerts.autoParseConfirm(autoParse.candidates.length)))) return;
 
     try {
       c.setError(null);
@@ -294,7 +298,7 @@ export default function TagImagesPage() {
           ? `✅ ${result.label} → ${result.date}\n`
           : `❌ ${result.label} → ${result.error}\n`;
       });
-      alert(resultMessage);
+      await dialog.alert(resultMessage);
     } catch (error) {
       console.error('❌ Error during automatic date parsing:', error);
       c.setError(t.alerts.parseFailed(error instanceof Error ? error.message : '알 수 없는 오류'));
@@ -736,11 +740,11 @@ export default function TagImagesPage() {
                           const parsedDate = parseCreatedDateFromFilename(selectedImage.fileName);
                           if (parsedDate) {
                             setCreatedTime(parsedDate.toISOString().split('T')[0]);
-                            alert(
+                            void dialog.alert(
                               t.alerts.parsedFromFilename(parsedDate.toISOString().split('T')[0])
                             );
                           } else {
-                            alert(t.alerts.parseFromFilenameFailed);
+                            void dialog.alert(t.alerts.parseFromFilenameFailed);
                           }
                         }
                       }}
@@ -805,6 +809,7 @@ export default function TagImagesPage() {
         onTagsChange={handleCatSelectorTagsChange}
         title={t.catSelector.title(catSelectorContext === 'batch')}
       />
+      {dialog.element}
       {/* Lightbox (shared viewer; single image, no prev/next) */}
       {showLightbox && selectedImage && (
         <Lightbox

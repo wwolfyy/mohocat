@@ -41,13 +41,14 @@ const editPanel = (page: Page) => page.locator('div.sticky');
 const catSelector = (page: Page) =>
   page.locator('div.fixed').filter({ has: page.getByRole('heading', { name: /고양이 선택/ }) });
 
-function captureDialogs(page: Page): string[] {
-  const messages: string[] = [];
-  page.on('dialog', (d) => {
-    messages.push(d.message());
-    void d.accept();
-  });
-  return messages;
+// The shared useDialog modal (P6.1): alert mode titles itself 알림, confirm 확인.
+const appDialog = (page: Page) => page.getByRole('dialog', { name: /^(알림|확인)$/ });
+
+// Wait for an alert dialog containing `text`, then dismiss it with 확인.
+async function acceptAlert(page: Page, text: string | RegExp, timeout = 15_000) {
+  await expect(appDialog(page).getByText(text)).toBeVisible({ timeout });
+  await appDialog(page).getByRole('button', { name: '확인' }).click();
+  await expect(appDialog(page)).toHaveCount(0);
 }
 
 test.describe('동영상 태깅 — characterization', () => {
@@ -118,7 +119,6 @@ test.describe('동영상 태깅 — characterization', () => {
   test('제목에서 날짜 인식 fills the date field from the video title (no save)', async ({
     page,
   }) => {
-    const dialogs = captureDialogs(page);
     await page.goto('/admin/tag-videos');
     await card(page, VID2_TITLE).getByRole('img').click();
 
@@ -126,23 +126,31 @@ test.describe('동영상 태깅 — characterization', () => {
       .getByRole('button', { name: /제목에서 날짜 인식/ })
       .click();
 
-    await expect.poll(() => dialogs.join('\n')).toContain('제목에서 날짜를 인식했어요: 2024-03-16');
+    await acceptAlert(page, /제목에서 날짜를 인식했어요: 2024-03-16/);
     await expect(editPanel(page).locator('input[type="date"]')).toHaveValue('2024-03-16');
   });
 
   test('자동 날짜 인식 writes parsed 촬영일 to Firestore via the service layer', async ({
     page,
   }) => {
-    const dialogs = captureDialogs(page);
     await page.goto('/admin/tag-videos');
     await expect(card(page, VID2_TITLE)).toBeVisible();
 
     // Bulk parse reads description||id: only test-vid-02 ('… 20240315') matches.
     await page.getByRole('button', { name: /자동 날짜 인식/ }).click();
 
-    await expect
-      .poll(() => dialogs.join('\n'), { timeout: 30_000 })
-      .toMatch(/자동 날짜 인식 완료|날짜 인식이 필요한 동영상이 없어요/);
+    // First run: confirm dialog → service updates → result report. On a serial
+    // retry the video already carries a date → the "nothing to parse" alert.
+    await expect(appDialog(page)).toBeVisible({ timeout: 15_000 });
+    if (await appDialog(page).getByText('날짜 인식이 필요한 동영상이 없어요').isVisible()) {
+      await appDialog(page).getByRole('button', { name: '확인' }).click();
+    } else {
+      await appDialog(page).getByRole('button', { name: '확인' }).click(); // confirm the run
+      await expect(appDialog(page).getByText(/자동 날짜 인식 완료/)).toBeVisible({
+        timeout: 30_000,
+      });
+      await appDialog(page).getByRole('button', { name: '확인' }).click();
+    }
 
     // test-vid-02 now carries a real 촬영: date; test-vid-01 stays 촬영: 없음.
     await expect(card(page, VID2_TITLE).getByText('촬영: 없음')).toHaveCount(0);

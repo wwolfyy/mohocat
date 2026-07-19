@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { CatVideo } from '@/types/media';
 import { adminStrings } from '@/constants/adminStrings';
+import type { DialogApi } from '@/components/ui/useDialog';
 
 const { tagVideos: t } = adminStrings;
 
@@ -23,6 +24,8 @@ interface UseYouTubeVideoMutationsOptions {
   reloadVideos: () => Promise<void>;
   setError: (message: string | null) => void;
   videoService: VideoServiceLike;
+  /** Page-owned Modal dialog (one host per page — replaces native alert/confirm). */
+  dialog: Pick<DialogApi, 'alert' | 'confirm'>;
 }
 
 /**
@@ -38,6 +41,7 @@ export function useYouTubeVideoMutations({
   reloadVideos,
   setError,
   videoService,
+  dialog,
 }: UseYouTubeVideoMutationsOptions) {
   // Selected video + YouTube-specific form states
   const [selectedVideo, setSelectedVideo] = useState<AdminVideo | null>(null);
@@ -101,7 +105,7 @@ export function useYouTubeVideoMutations({
 
     // Only handle YouTube videos for now
     if (selectedVideo.videoType !== 'youtube') {
-      alert(t.alerts.onlyYoutube);
+      await dialog.alert(t.alerts.onlyYoutube);
       return;
     }
 
@@ -168,7 +172,7 @@ export function useYouTubeVideoMutations({
 
       // If no changes were made, skip the update
       if (Object.keys(updates).length === 0) {
-        alert(t.alerts.noChanges);
+        await dialog.alert(t.alerts.noChanges);
         return;
       }
 
@@ -277,10 +281,10 @@ export function useYouTubeVideoMutations({
         });
       }, 500); // Small delay to ensure state has updated
 
-      alert(t.alerts.updated);
+      await dialog.alert(t.alerts.updated);
     } catch (err: any) {
       console.error('Error updating video metadata:', err);
-      alert(t.alerts.updateFailed(err.message));
+      await dialog.alert(t.alerts.updateFailed(err.message));
     } finally {
       setSaving(false);
       setUpdatingYoutube(false);
@@ -371,7 +375,7 @@ export function useYouTubeVideoMutations({
       const successful = youtubeUpdateResults.filter((r) => r.success).length;
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
-      alert(t.alerts.batchTagsDone(successful, failed));
+      await dialog.alert(t.alerts.batchTagsDone(successful, failed));
       setBatchTags(''); // Clear tags after successful update
     } catch (err: any) {
       console.error('Error updating tags:', err);
@@ -469,7 +473,7 @@ export function useYouTubeVideoMutations({
       const successful = youtubeUpdateResults.filter((r) => r.success).length;
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
-      alert(t.alerts.batchDateDone(successful, failed));
+      await dialog.alert(t.alerts.batchDateDone(successful, failed));
       setBatchYoutubeCreatedTime(''); // Clear date after successful update
     } catch (err: any) {
       console.error('Error updating date:', err);
@@ -480,7 +484,7 @@ export function useYouTubeVideoMutations({
   };
 
   const syncWithYouTube = async () => {
-    if (!confirm(t.alerts.syncConfirm)) return;
+    if (!(await dialog.confirm(t.alerts.syncConfirm))) return;
 
     try {
       setBatchSaving(true);
@@ -502,7 +506,7 @@ export function useYouTubeVideoMutations({
         .filter(Boolean);
 
       if (youtubeVideoIds.length === 0) {
-        alert(t.alerts.noYoutubeToSync);
+        await dialog.alert(t.alerts.noYoutubeToSync);
         return;
       }
 
@@ -530,10 +534,10 @@ export function useYouTubeVideoMutations({
       // Reload videos to get the updated data
       await reloadVideos();
 
-      alert(t.alerts.syncDone(result.updated || youtubeVideoIds.length));
+      await dialog.alert(t.alerts.syncDone(result.updated || youtubeVideoIds.length));
     } catch (err: any) {
       console.error('Error syncing:', err);
-      alert(t.alerts.syncFailed(err.message));
+      await dialog.alert(t.alerts.syncFailed(err.message));
     } finally {
       setBatchSaving(false);
     }

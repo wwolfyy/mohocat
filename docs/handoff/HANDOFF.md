@@ -34,19 +34,17 @@ the testing hand-off
   (production / Vercel) via a **merge commit**. After PR #7, `dev` is an ancestor of
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
-- **Active track: complexity retirement — IN EXECUTION.** P0 (`6454d80`), P1
-  (`431c69f`), P2 (`fdba4ee`), P3 (`1d13e09`), P4 (`34c5c68`) **committed & DONE**
-  (P4.5 toolkit interfaces owner-approved). **P5 (Target A recomposition) code
-  DONE — gates green** (full e2e **116 passed / 13 skipped / 0 failed** against the
-  recomposed editors; tsc / smoke 29-29 / unit 25-25): both editors rebuilt on the
-  `src/components/admin/media/` toolkit — `tag-images` 1,715→821 (+ shared
-  `ui/Lightbox`), `tag-videos` 2,450→1,261 + a page-owned 570-line
-  `useYouTubeVideoMutations` hook (YouTube flows verbatim, NOT genericized).
-  **Bundle UNCOMMITTED — awaiting commit go-ahead, then P6 follow-ups.** ⚠️ The
-  scripted manual YouTube pass (P5.4) stays owner-owed before the next `dev → main`
-  promotion. Four content forms are 2,135→859 on shared `src/components/forms/`
-  primitives; P3 fixed 집사톡's latently-broken image upload
-  (`log/DEBUG_LOG.md` 2026-07-19).
+- **Active track: complexity retirement — ✅ ALL PHASES EXECUTED (P0–P6).** P0
+  (`6454d80`), P1 (`431c69f`), P2 (`fdba4ee`), P3 (`1d13e09`), P4 (`34c5c68`), P5
+  (`ea2fab4`) committed; **the P6 bundle (alerts → shared Modal via new
+  `ui/useDialog`; docs; close-out logs) is UNCOMMITTED, awaiting go-ahead** — final
+  full e2e **116 passed / 13 skipped / 0 failed**, tsc / smoke 29-29 / unit 25-25.
+  Net effect: four content forms 2,135→859 on `src/components/forms/` primitives;
+  both admin editors 4,430→~2,650 on the `src/components/admin/media/` toolkit;
+  ~45 native `alert()/confirm()` prompts now shared-Modal dialogs; 집사톡's broken
+  image upload fixed; `react-hook-form` removed. ⚠️ **Owner-owed:** the scripted
+  manual YouTube pass (P5.4) before the next `dev → main` promotion; also see
+  `DEBUG_LOG` 2026-07-19 for the dialog-vs-router.push race the net caught.
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
@@ -117,7 +115,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P4 ✅ committed; P5 ✅ done (uncommitted); next P6
+### Complexity retirement (refactor) — ✅ EXECUTED — P0–P5 committed; P6 done (uncommitted)
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -215,7 +213,20 @@ smoke 29/29). Detail: assessment §8 P1.
 passed against the migrated forms, and the net gained whitespace-validation specs
 for both. Detail: assessment §8 P2.
 
-**✅ P5 DONE (2026-07-19) — Target A recomposed; bundle UNCOMMITTED.** Both editors
+**✅ P6 DONE (2026-07-19) — follow-ups; bundle UNCOMMITTED.** All ~45 native
+`alert()/confirm()` prompts (both editors incl. `useYouTubeVideoMutations`, and the
+four public forms via their shared form hooks) converted to a new promise-based
+**`ui/useDialog`** primitive on the shared Modal — `await dialog.alert/confirm`
+preserves the old blocking sequencing. The four e2e specs' native-dialog handlers
+were replaced with role=dialog Modal assertions in the same change (as the P0 net
+required). One non-obvious bug caught and fixed by the net: the dialog's unmount
+re-render canceled the post-submit `router.push` transition — resolution is now
+deferred until after the unmount commits (`DEBUG_LOG` 2026-07-19). Docs refreshed
+(P6.2: PROJECT_PLAN §7 → executed, admin-platform + media-and-youtube toolkit
+notes) and the close-out logged (P6.3: FEATURE_MOD_LOG entry; assessment status →
+✅ EXECUTED). Final gates: full e2e **116/13/0**, tsc, smoke 29/29, unit 25/25.
+
+**✅ P5 DONE (2026-07-19, committed `ea2fab4`) — Target A recomposed.** Both editors
 rebuilt on the `src/components/admin/media/` toolkit: `tag-images` 1,715→821 lines
 (controller + auto-parse hooks + full presentational set; hand-rolled Lightbox →
 shared `ui/Lightbox`; dead `batchUpdateImages` deleted), `tag-videos` 2,450→1,261
@@ -226,10 +237,8 @@ stats/batch column counts, pagination `windowSize`); the videos **filter panel
 keeps page-owned markup** (its layout drifted — unifying it is a product decision,
 queueable with P6). Verified: full e2e **116/13/0** against the recomposed pages,
 tsc, smoke 29/29, unit 25/25, plus full-page screenshot passes of both editors.
-**Next: commit on go-ahead → P6 follow-ups** (P6.1 alert()→Modal, P6.2 docs
-refresh, P6.3 FEATURE_MOD_LOG + close-out). ⚠️ P5.4's **scripted manual YouTube
-pass** (sync + playlists, real creds) stays owner-owed before the next
-`dev → main` promotion.
+⚠️ P5.4's **scripted manual YouTube pass** (sync + playlists, real creds) stays
+owner-owed before the next `dev → main` promotion.
 
 **✅ P4 DONE (2026-07-19, committed `34c5c68`).** Shared-`CatSelectorModal` swap in
 both editors (commit-on-done; dead `'youtube-batch'` context dropped) + the
@@ -285,23 +294,33 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-**The P5 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee`, P3 = `1d13e09`,
-P4 = `34c5c68` committed). Awaiting the commit go-ahead:
+**The P6 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee`, P3 = `1d13e09`,
+P4 = `34c5c68`, P5 = `ea2fab4` committed). Awaiting the commit go-ahead:
 
-- `src/app/admin/tag-images/page.tsx` (recomposed on the toolkit; 821 lines)
-- `src/app/admin/tag-videos/page.tsx` (recomposed; 1,261 lines) +
-  `src/app/admin/tag-videos/useYouTubeVideoMutations.ts` (new — page-owned
-  YouTube orchestration, 570 lines)
-- `src/components/admin/media/` (drift knobs: `dateFilterExcludesUndated`,
-  column maps, pagination `windowSize`, page-reset-on-sort)
-- `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
-  (this update)
+- `src/components/ui/useDialog.tsx` (new — promise-based Modal alert/confirm)
+- Both editors + `useYouTubeVideoMutations.ts` + both shared form hooks + the
+  four forms (all native dialogs → `useDialog`; forms render the hook's element)
+- `tests/e2e/admin/{posts,butler-create,tag-images,tag-videos}.spec.ts`
+  (native-dialog handlers → Modal assertions)
+- `log/DEBUG_LOG.md` (dialog-vs-router.push race) + `log/FEATURE_MOD_LOG.md`
+  (whole-refactor entry)
+- Docs: `PROJECT_PLAN.md` §7, `admin-platform.md`, `media-and-youtube.md`,
+  assessment (status ✅ + P6 flips), `HANDOFF.md` (this update)
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P5 DONE (Target A complete)**:
+- **2026-07-19 (latest)** — **Complexity retirement P6 DONE — track fully
+  executed**: ~45 native `alert()/confirm()` sites (editors + the four public
+  forms via their shared hooks) converted to the new promise-based `ui/useDialog`
+  Modal primitive; the four specs' dialog handlers rewritten to Modal assertions.
+  The P0 net caught a real regression en route — the dialog unmount re-render
+  canceled the post-submit `router.push`; fixed by deferring promise resolution
+  past the unmount commit (`DEBUG_LOG`). Docs + logs closed out (PROJECT_PLAN §7,
+  assessment → ✅ EXECUTED, FEATURE_MOD_LOG). Final full e2e **116/13/0**. Bundle
+  **uncommitted**. Owner-owed: P5.4 manual YouTube pass before promotion.
+- **2026-07-19** — **Complexity retirement P5 DONE (Target A complete)**:
   both editors recomposed on the toolkit (tag-images 1,715→821 + shared
   `ui/Lightbox`; tag-videos 2,450→1,261 + page-owned 570-line
   `useYouTubeVideoMutations`), twin drift absorbed as toolkit knobs, videos filter
