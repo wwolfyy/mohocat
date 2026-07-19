@@ -494,10 +494,10 @@ helper (dead code in that file) went with it._
 
 ### P4 — Target A prep
 
-- [ ] P4.1 Swap `tag-images` hand-rolled cat-selection → shared `CatSelectorModal`
-- [ ] P4.2 Swap `tag-videos` hand-rolled cat-selection → shared `CatSelectorModal`
-- [ ] P4.3 ⚠️ Browser-verify cat-tagging parity (individual + batch) in both editors — asserting the accepted **commit-on-done** semantics (§7)
-- [ ] P4.4 Land the toolkit skeleton (§1.3a): `useMediaListController<T>` + `useDateAutoParse<T>` + presentational set + shared `toDate()`; move `parseCreatedDateFromFilename` → `@/utils/dateParser`
+- [x] P4.1 Swap `tag-images` hand-rolled cat-selection → shared `CatSelectorModal` _(both contexts route through one `catSelectorTags`/`handleCatSelectorTagsChange` pair; page-owned `cats`/`loadCats`/search/toggle machinery deleted — the shared modal loads its own cats)_
+- [x] P4.2 Swap `tag-videos` hand-rolled cat-selection → shared `CatSelectorModal` _(same shape; the dead `'youtube-batch'` context — no trigger ever set it — dropped from the union type)_
+- [x] P4.3 ⚠️ Browser-verify cat-tagging parity (individual + batch) in both editors — asserting the accepted **commit-on-done** semantics (§7) _(2026-07-19: full e2e **116/13/0** — the P0 editor specs' commit-path cat-selection assertions passed unchanged against the swap; plus a screenshot pass via a one-off emulator-backed Playwright spec (deleted after use) over all four contexts — images individual/batch, videos youtube-individual/batch: modal renders with the right context title, selection commits on 완료 into the right input, chips render. Parity note: with pre-existing free-text (non-cat-name) tags, committing drops them — same as the old live-toggle selector, whose first toggle also rewrote the whole string to selected cat names only.)_
+- [x] P4.4 Land the toolkit skeleton (§1.3a): `useMediaListController<T>` + `useDateAutoParse<T>` + presentational set + shared `toDate()`; move `parseCreatedDateFromFilename` → `@/utils/dateParser` _(2026-07-19: `src/components/admin/media/` — hooks + `MediaStatsCards`/`MediaFilterBar`/`BatchActionsPanel`/`MediaGrid`/`PaginationBar`/`CatTagField` + barrel; the "shared `toDate()`" role is filled by the **existing** `parseDate` (`@/utils/parse-date`) — reused, not duplicated. `parseCreatedDateFromFilename` now exported from `@/utils/dateParser`, converged with `parseRecordingDateFromTitle` behind one internal `parseDateFromText` (bodies were byte-identical; per-caller warn labels kept). Skeleton compiles unused — pages migrate in P5 after the P4.5 review.)_
 - [ ] P4.5 ⚠️ Review the toolkit's concrete interfaces before migrating (checkpoint — §5 Q5, direction resolved: toolkit)
 
 ### P5 — Target A migration

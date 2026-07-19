@@ -35,12 +35,16 @@ the testing hand-off
   `main` and `main` is **+1 merge commit ahead**; fast-forward `dev` to `main`
   (`git checkout dev && git merge --ff-only main && git push`) to fully sync.
 - **Active track: complexity retirement — IN EXECUTION.** P0 (`6454d80`), P1
-  (`431c69f`), P2 (`fdba4ee`) **committed & DONE**. **P3 (Family A) is DONE — all
-  gates green** (full e2e **116 passed / 13 skipped / 0 failed**; tsc / smoke 29-29 /
-  unit 25-25) — **bundle UNCOMMITTED, awaiting commit go-ahead**, then **P4**
-  (editors: `CatSelectorModal` swap + toolkit skeleton). Four content forms now
-  2,135→859 lines on shared `src/components/forms/` primitives; P3 also **fixed
-  집사톡's latently-broken image upload** (`log/DEBUG_LOG.md` 2026-07-19).
+  (`431c69f`), P2 (`fdba4ee`), P3 (`1d13e09`) **committed & DONE**. **P4.1–P4.4
+  DONE — all gates green** (full e2e **116 passed / 13 skipped / 0 failed** against
+  the swapped editors; tsc / smoke 29-29 / unit 25-25; screenshot browser-pass over
+  all four selector contexts): both editors now use the shared `CatSelectorModal`
+  (commit-on-done, the accepted §7 change) and the **toolkit skeleton** sits unused
+  under `src/components/admin/media/`. **Bundle UNCOMMITTED — next: the P4.5
+  interface-review checkpoint, then commit on go-ahead, then P5** (recompose the
+  editors on the toolkit). Four content forms are 2,135→859 on shared
+  `src/components/forms/` primitives; P3 fixed 집사톡's latently-broken image
+  upload (`log/DEBUG_LOG.md` 2026-07-19).
 - **Parked track:** **multi-tenant / 2nd mountain** — PARKED at a clean seam:
   decision framework drafted (Q1–Q8 open), its one §9-independent prerequisite
   (**Tier 1 write migration**) **done & committed** (`6f288d7`); resume = answer Q1
@@ -111,7 +115,7 @@ gates everything**; then Q2–Q4 pick the deployment/data axes. Everything else 
 §8 (storage _paths_ not URLs; retire `src/lib/firebase.ts`; `next/image` prod re-test
 on the media surfaces; the §9 PROJECT_PLAN gaps).
 
-### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P2 ✅ committed; P3 ✅ done (uncommitted); next P4
+### Complexity retirement (refactor) — 🚧 IN EXECUTION — P0–P3 ✅ committed; P4.1–P4.4 ✅ done (uncommitted); next P4.5 → P5
 
 Source-verified deep dive + execution plan:
 [`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
@@ -209,8 +213,21 @@ smoke 29/29). Detail: assessment §8 P1.
 passed against the migrated forms, and the net gained whitespace-validation specs
 for both. Detail: assessment §8 P2.
 
-**✅ P3 DONE (2026-07-19) — bundle UNCOMMITTED, awaiting commit go-ahead.** What
-exists in the working tree (detail: assessment §8 P3):
+**✅ P4.1–P4.4 DONE (2026-07-19) — bundle UNCOMMITTED.** Both editors' hand-rolled
+cat selectors replaced by the shared `CatSelectorModal` (commit-on-done; the dead
+`'youtube-batch'` context dropped; per-page `cats`/`loadCats`/search/toggle
+machinery deleted). Toolkit skeleton landed unused under
+`src/components/admin/media/` (hooks `useMediaListController<T>` /
+`useDateAutoParse<T>` + `MediaStatsCards`/`MediaFilterBar`/`BatchActionsPanel`/
+`MediaGrid`/`PaginationBar`/`CatTagField`; the `toDate()` role reuses the existing
+`parseDate`). `parseCreatedDateFromFilename` moved to `@/utils/dateParser`,
+converged with `parseRecordingDateFromTitle`. Verified: full e2e **116/13/0**, tsc,
+smoke 29/29, unit 25/25, plus a screenshot browser-pass over all four selector
+contexts (emulator-backed, no saves). **Next: P4.5 interface review → commit on
+go-ahead → P5** (recompose the editors on the toolkit). Detail: assessment §8 P4.
+
+**✅ P3 DONE (2026-07-19, committed `1d13e09`).** What it contains (detail:
+assessment §8 P3):
 
 - `useRichContentForm` + `uploadImagesWithSignedUrls` (canonical
   `{signedUrl, publicUrl}` + PUT ok-check — **fixes 집사톡's broken image upload**,
@@ -225,11 +242,8 @@ exists in the working tree (detail: assessment §8 P3):
   `/완료 \(/`; the earlier "expect 117" was an off-by-one — the new spec adds 2
   tests to the 114 P2 baseline). tsc 0 / smoke 29-29 / unit 25-25.
 
-**Next:** commit the P3 bundle **on explicit go-ahead**, then proceed to **P4**
-(editors: `CatSelectorModal` swap — commit-on-done accepted — + toolkit skeleton;
-P4.5 interface-review checkpoint before P5). ⚠️ Before the next `dev → main`
-promotion, the Family A media paths (YouTube upload, signed-URL images) owe the
-**scripted manual pass** on Preview.
+⚠️ Before the next `dev → main` promotion, the Family A media paths (YouTube
+upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ---
 
@@ -260,18 +274,14 @@ promotion, the Family A media paths (YouTube upload, signed-URL images) owe the
 
 ## Uncommitted (as of this update)
 
-**The P3 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee` committed).
-Awaiting the gate re-run + commit go-ahead:
+**The P4.1–P4.4 bundle** (P0 = `6454d80`, P1 = `431c69f`, P2 = `fdba4ee`,
+P3 = `1d13e09` committed). Awaiting the P4.5 interface review + commit go-ahead:
 
-- `src/components/forms/useRichContentForm.ts` (new — shared Family A flow)
-- `src/components/forms/uploadStrategies.ts` (+`uploadImagesWithSignedUrls`,
-  +videoUrl guard)
-- `src/components/NewPostForm.tsx` + `NewButlerTalkForm.tsx` (migrated;
-  1,236→611 lines)
-- `tests/e2e/admin/butler-create.spec.ts` (new — Family A create specs; locator
-  fix applied post-run)
-- `tests/unit/uploadStrategies.test.ts` (+5 signed-URL/guard tests)
-- `log/DEBUG_LOG.md` (집사톡 broken-upload entry)
+- `src/app/admin/tag-images/page.tsx` + `tag-videos/page.tsx` (shared
+  `CatSelectorModal` swap; per-page selector machinery deleted)
+- `src/components/admin/media/` (new — toolkit skeleton, unused until P5)
+- `src/utils/dateParser.ts` (+`parseCreatedDateFromFilename`; both parsers
+  converged behind one internal helper)
 - `docs/handoff/HANDOFF.md` + `docs/planning/complexity-retirement-assessment-20260716.md`
   (this update)
 
@@ -279,11 +289,18 @@ Awaiting the gate re-run + commit go-ahead:
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Complexity retirement P3 DONE**: full-gate re-run
+- **2026-07-19 (latest)** — **Complexity retirement P4.1–P4.4 DONE** (P3 committed
+  `1d13e09` on go-ahead earlier the same session): both editors swapped onto the
+  shared `CatSelectorModal` (commit-on-done; dead `'youtube-batch'` context
+  dropped), toolkit skeleton landed unused under `src/components/admin/media/`,
+  filename date parser moved into `@/utils/dateParser` (converged with the title
+  parser). Full e2e **116/13/0** against the swap + screenshot browser-pass over
+  all four selector contexts. Bundle **uncommitted**; next: P4.5 interface
+  review → commit → P5.
+- **2026-07-19** — **Complexity retirement P3 DONE**: full-gate re-run
   green — e2e **116/13/0** (locator fix held; "expect 117" was an off-by-one — the
   Family A spec adds 2 tests to the 114 P2 baseline), tsc/smoke/unit green.
-  Assessment §8 P3.4/P3.5 flipped ✅. Bundle **uncommitted, awaiting commit
-  go-ahead**; next: P4.
+  Assessment §8 P3.4/P3.5 flipped ✅.
 - **2026-07-19** — **Complexity retirement P3 code+specs done, gate re-run
   pending** (session ended mid-gate): Family A migrated onto `useRichContentForm` +
   the lifted signed-URL strategy (집사톡's broken image upload fixed — `DEBUG_LOG`);

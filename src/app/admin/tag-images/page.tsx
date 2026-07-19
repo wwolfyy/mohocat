@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getImageService, getCatService } from '@/services';
-import { Cat } from '@/types';
+import { getImageService } from '@/services';
 import { CatImage } from '@/types/media';
+import { parseCreatedDateFromFilename } from '@/utils/dateParser';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
+import CatSelectorModal from '@/components/CatSelectorModal';
 
 const { tagImages: t } = adminStrings;
 
@@ -41,11 +42,8 @@ export default function TagImagesPage() {
   const [savingTags, setSavingTags] = useState(false);
   const [savingDate, setSavingDate] = useState(false);
 
-  // Cat selector states
-  const [cats, setCats] = useState<Cat[]>([]);
+  // Cat selector states (selection itself lives inside the shared CatSelectorModal)
   const [showCatSelector, setShowCatSelector] = useState(false);
-  const [catSearchQuery, setCatSearchQuery] = useState('');
-  const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   const [catSelectorContext, setCatSelectorContext] = useState<'individual' | 'batch'>(
     'individual'
   );
@@ -76,7 +74,6 @@ export default function TagImagesPage() {
   // Load data
   useEffect(() => {
     loadImages();
-    loadCats();
   }, []);
 
   const loadImages = async () => {
@@ -99,17 +96,6 @@ export default function TagImagesPage() {
       setError(t.alerts.loadFailed(err.message));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadCats = async () => {
-    try {
-      // Use service layer to get all cats
-      const catService = getCatService();
-      const catsData = await catService.getAllCats();
-      setCats(catsData);
-    } catch (error) {
-      console.error('Error loading cats:', error);
     }
   };
 
@@ -490,73 +476,29 @@ export default function TagImagesPage() {
     setBatchCreatedTime('');
   };
 
-  // Cat selector functions
-  const handleCatToggle = (catId: string, catName: string) => {
-    const newSelectedCats = new Set(selectedCats);
-    if (newSelectedCats.has(catId)) {
-      newSelectedCats.delete(catId);
-    } else {
-      newSelectedCats.add(catId);
-    }
-    setSelectedCats(newSelectedCats);
-
-    // Update tags input with selected cat names
-    const selectedCatNames = Array.from(newSelectedCats)
-      .map((id) => cats.find((cat) => cat.id === id))
-      .filter((cat) => cat)
-      .map((cat) => cat!.name);
-    setTags(selectedCatNames.join(', '));
-  };
-
-  const handleCatToggleBatch = (catId: string, catName: string) => {
-    const newSelectedCats = new Set(selectedCats);
-    if (newSelectedCats.has(catId)) {
-      newSelectedCats.delete(catId);
-    } else {
-      newSelectedCats.add(catId);
-    }
-    setSelectedCats(newSelectedCats);
-
-    // Update batch tags input with selected cat names
-    const selectedCatNames = Array.from(newSelectedCats)
-      .map((id) => cats.find((cat) => cat.id === id))
-      .filter((cat) => cat)
-      .map((cat) => cat!.name);
-    setBatchTags(selectedCatNames.join(', '));
-  };
-
+  // Cat selector functions — CatSelectorModal pre-selects from the current tags
+  // string and commits the new selection on 완료 (commit-on-done)
   const handleTagsInputClick = () => {
     setCatSelectorContext('individual');
     setShowCatSelector(true);
-    // Parse existing tags to pre-select cats
-    const existingTags = tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-    const preSelectedCats = new Set<string>();
-    cats.forEach((cat) => {
-      if (existingTags.includes(cat.name)) {
-        preSelectedCats.add(cat.id);
-      }
-    });
-    setSelectedCats(preSelectedCats);
   };
 
   const handleBatchTagsInputClick = () => {
     setCatSelectorContext('batch');
     setShowCatSelector(true);
-    // Parse existing batch tags to pre-select cats
-    const existingTags = batchTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-    const preSelectedCats = new Set<string>();
-    cats.forEach((cat) => {
-      if (existingTags.includes(cat.name)) {
-        preSelectedCats.add(cat.id);
-      }
-    });
-    setSelectedCats(preSelectedCats);
+  };
+
+  const catSelectorTags = (catSelectorContext === 'batch' ? batchTags : tags)
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  const handleCatSelectorTagsChange = (selectedCatNames: string[]) => {
+    if (catSelectorContext === 'batch') {
+      setBatchTags(selectedCatNames.join(', '));
+    } else {
+      setTags(selectedCatNames.join(', '));
+    }
   };
 
   const removeTag = (tagToRemove: string) => {
@@ -648,13 +590,6 @@ export default function TagImagesPage() {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-  // Filtered cats for search
-  const filteredCats = cats.filter(
-    (cat) =>
-      cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
-      (cat.alt_name && cat.alt_name.toLowerCase().includes(catSearchQuery.toLowerCase()))
-  );
-
   // Pagination
   const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
   const startIndex = (currentPage - 1) * imagesPerPage;
@@ -678,80 +613,6 @@ export default function TagImagesPage() {
   // Statistics
   const untaggedImages = images.filter((img) => !img.tags || img.tags.length === 0);
   const taggedImages = images.filter((img) => img.tags && img.tags.length > 0);
-
-  // Helper function to parse creation date from filename
-  const parseCreatedDateFromFilename = (filename: string): Date | null => {
-    try {
-      // Pattern 1: yyyy-mm-dd hh.MM.ss (with spaces or special chars around)
-      const pattern1 = /(\d{4}-\d{2}-\d{2}\s+\d{2}\.\d{2}\.\d{2})/;
-      const match1 = filename.match(pattern1);
-
-      if (match1) {
-        const dateTimeStr = match1[1];
-        // Convert format: "2024-03-15 14.30.45" -> "2024-03-15T14:30:45"
-        const isoFormat = dateTimeStr.replace(/\s+/, 'T').replace(/\./g, ':');
-        const date = new Date(isoFormat);
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
-      }
-
-      // Pattern 2: yyyymmdd_hhMMss (with spaces or special chars around)
-      const pattern2 = /(\d{8}_\d{6})/;
-      const match2 = filename.match(pattern2);
-
-      if (match2) {
-        const dateTimeStr = match2[1];
-        // Convert format: "20240315_143045" -> "2024-03-15T14:30:45"
-        const year = dateTimeStr.substring(0, 4);
-        const month = dateTimeStr.substring(4, 6);
-        const day = dateTimeStr.substring(6, 8);
-        const hour = dateTimeStr.substring(9, 11);
-        const minute = dateTimeStr.substring(11, 13);
-        const second = dateTimeStr.substring(13, 15);
-
-        const isoFormat = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-        const date = new Date(isoFormat);
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
-      }
-
-      // Additional pattern: yyyy-mm-dd (date only, no time)
-      const pattern3 = /(\d{4}-\d{2}-\d{2})/;
-      const match3 = filename.match(pattern3);
-
-      if (match3) {
-        const dateStr = match3[1];
-        const date = new Date(dateStr + 'T00:00:00');
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
-      }
-
-      // Additional pattern: yyyymmdd (date only, no time)
-      const pattern4 = /(\d{8})/;
-      const match4 = filename.match(pattern4);
-
-      if (match4) {
-        const dateStr = match4[1];
-        const year = dateStr.substring(0, 4);
-        const month = dateStr.substring(4, 6);
-        const day = dateStr.substring(6, 8);
-
-        const isoFormat = `${year}-${month}-${day}T00:00:00`;
-        const date = new Date(isoFormat);
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.warn(`Error parsing date from filename "${filename}":`, error);
-      return null;
-    }
-  };
 
   if (loading) {
     return (
@@ -1668,113 +1529,14 @@ export default function TagImagesPage() {
           </div>
         </div>
       </div>
-      {/* Cat Selector Modal */}
-      {showCatSelector && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          data-oid="-am-g._"
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
-            data-oid="k6yxj4y"
-          >
-            <div className="flex justify-between items-center mb-4" data-oid="g83qdjf">
-              <h3 className="text-lg font-semibold" data-oid="7669hnk">
-                {t.catSelector.title(catSelectorContext === 'batch')}
-              </h3>
-              <button
-                onClick={() => setShowCatSelector(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-                data-oid="ox3clul"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Search input */}
-            <div className="mb-4" data-oid="9accuaa">
-              <input
-                type="text"
-                placeholder={t.catSelector.search}
-                value={catSearchQuery}
-                onChange={(e) => setCatSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                data-oid=":lrykme"
-              />
-            </div>
-
-            {/* Cat list */}
-            <div
-              className="flex-1 overflow-y-auto border border-gray-200 rounded"
-              data-oid="5l_dk8."
-            >
-              {filteredCats.length === 0 ? (
-                <div className="p-4 text-center text-gray-500" data-oid="w99sk7p">
-                  {cats.length === 0 ? t.catSelector.noneInDb : t.catSelector.noMatch}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 p-4" data-oid="up_m:w7">
-                  {filteredCats.map((cat) => (
-                    <label
-                      key={cat.id}
-                      className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
-                        selectedCats.has(cat.id)
-                          ? 'bg-brand-50 border border-brand-200'
-                          : 'border border-gray-200'
-                      }`}
-                      data-oid="oah0mjd"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedCats.has(cat.id)}
-                        onChange={() =>
-                          catSelectorContext === 'batch'
-                            ? handleCatToggleBatch(cat.id, cat.name)
-                            : handleCatToggle(cat.id, cat.name)
-                        }
-                        className="mr-2"
-                        data-oid="miafy8o"
-                      />
-
-                      <div className="flex-1" data-oid="z4rk2b.">
-                        <div className="font-medium text-sm" data-oid="rq4r98n">
-                          {cat.name}
-                        </div>
-                        {cat.alt_name && (
-                          <div className="text-xs text-gray-500" data-oid="vvl:sz1">
-                            ({cat.alt_name})
-                          </div>
-                        )}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex justify-end gap-2 mt-4" data-oid="tiqab_6">
-              <button
-                onClick={() => {
-                  setSelectedCats(new Set());
-                  if (catSelectorContext === 'batch') {
-                    setBatchTags('');
-                  } else {
-                    setTags('');
-                  }
-                }}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
-                data-oid="cl4hmn3"
-              >
-                {t.catSelector.clearAll}
-              </button>
-              <Button size="sm" onClick={() => setShowCatSelector(false)} data-oid="e7-z0qy">
-                {t.catSelector.done(selectedCats.size)}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cat Selector Modal (shared; commits the selection on 완료) */}
+      <CatSelectorModal
+        isOpen={showCatSelector}
+        onClose={() => setShowCatSelector(false)}
+        selectedTags={catSelectorTags}
+        onTagsChange={handleCatSelectorTagsChange}
+        title={t.catSelector.title(catSelectorContext === 'batch')}
+      />
       {/* Lightbox Modal */}
       {showLightbox && selectedImage && (
         <div

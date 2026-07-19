@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getVideoService, getCatService } from '@/services';
-import { Cat } from '@/types';
+import { getVideoService } from '@/services';
 import { CatVideo } from '@/types/media';
 import { parseRecordingDateFromTitle } from '@/utils/dateParser';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
+import CatSelectorModal from '@/components/CatSelectorModal';
 
 const { tagVideos: t } = adminStrings;
 
@@ -82,14 +82,12 @@ export default function TagVideosPage() {
   const [savingTags, setSavingTags] = useState(false);
   const [savingDate, setSavingDate] = useState(false);
 
-  // Cat selector states
-  const [cats, setCats] = useState<Cat[]>([]);
+  // Cat selector states (selection itself lives inside the shared CatSelectorModal;
+  // the dead 'youtube-batch' context — never set by any trigger — was dropped)
   const [showCatSelector, setShowCatSelector] = useState(false);
-  const [catSearchQuery, setCatSearchQuery] = useState('');
-  const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
-  const [catSelectorContext, setCatSelectorContext] = useState<
-    'batch' | 'youtube-individual' | 'youtube-batch'
-  >('batch');
+  const [catSelectorContext, setCatSelectorContext] = useState<'batch' | 'youtube-individual'>(
+    'batch'
+  );
 
   // Playlist selector states
   const [allPlaylists, setAllPlaylists] = useState<
@@ -126,7 +124,6 @@ export default function TagVideosPage() {
   // Load data
   useEffect(() => {
     loadVideos();
-    loadCats();
     loadPlaylists();
   }, []);
 
@@ -150,16 +147,6 @@ export default function TagVideosPage() {
       setError(t.alerts.loadFailed(err.message));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadCats = async () => {
-    try {
-      const catService = getCatService();
-      const catsData = await catService.getAllCats();
-      setCats(catsData);
-    } catch (error) {
-      console.error('Error loading cats:', error);
     }
   };
 
@@ -834,39 +821,11 @@ export default function TagVideosPage() {
     }
   };
 
-  // Cat selector functions
-  const handleCatToggleBatch = (catId: string, catName: string) => {
-    const newSelectedCats = new Set(selectedCats);
-    if (newSelectedCats.has(catId)) {
-      newSelectedCats.delete(catId);
-    } else {
-      newSelectedCats.add(catId);
-    }
-    setSelectedCats(newSelectedCats);
-
-    // Update batch tags input with selected cat names
-    const selectedCatNames = Array.from(newSelectedCats)
-      .map((id) => cats.find((cat) => cat.id === id))
-      .filter((cat) => cat)
-      .map((cat) => cat!.name);
-    setBatchTags(selectedCatNames.join(', '));
-  };
-
+  // Cat selector functions — CatSelectorModal pre-selects from the current tags
+  // string and commits the new selection on 완료 (commit-on-done)
   const handleBatchTagsInputClick = () => {
     setCatSelectorContext('batch');
     setShowCatSelector(true);
-    // Parse existing batch tags to pre-select cats
-    const existingTags = batchTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-    const preSelectedCats = new Set<string>();
-    cats.forEach((cat) => {
-      if (existingTags.includes(cat.name)) {
-        preSelectedCats.add(cat.id);
-      }
-    });
-    setSelectedCats(preSelectedCats);
   };
 
   // YouTube tag management functions
@@ -883,35 +842,19 @@ export default function TagVideosPage() {
   const handleYoutubeTagsInputClick = () => {
     setCatSelectorContext('youtube-individual');
     setShowCatSelector(true);
-    // Parse existing YouTube tags to pre-select cats
-    const existingTags = youtubeTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-    const preSelectedCats = new Set<string>();
-    cats.forEach((cat) => {
-      if (existingTags.includes(cat.name)) {
-        preSelectedCats.add(cat.id);
-      }
-    });
-    setSelectedCats(preSelectedCats);
   };
 
-  const handleCatToggleYoutubeIndividual = (catId: string, catName: string) => {
-    const newSelectedCats = new Set(selectedCats);
-    if (newSelectedCats.has(catId)) {
-      newSelectedCats.delete(catId);
-    } else {
-      newSelectedCats.add(catId);
-    }
-    setSelectedCats(newSelectedCats);
+  const catSelectorTags = (catSelectorContext === 'batch' ? batchTags : youtubeTags)
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
 
-    // Update YouTube tags input with selected cat names
-    const selectedCatNames = Array.from(newSelectedCats)
-      .map((id) => cats.find((cat) => cat.id === id))
-      .filter((cat) => cat)
-      .map((cat) => cat!.name);
-    setYoutubeTags(selectedCatNames.join(', '));
+  const handleCatSelectorTagsChange = (selectedCatNames: string[]) => {
+    if (catSelectorContext === 'batch') {
+      setBatchTags(selectedCatNames.join(', '));
+    } else {
+      setYoutubeTags(selectedCatNames.join(', '));
+    }
   };
 
   // Playlist selector handler
@@ -1149,13 +1092,6 @@ export default function TagVideosPage() {
       const comparison = aValue.getTime() - bValue.getTime();
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-
-  // Filtered cats for search
-  const filteredCats = cats.filter(
-    (cat) =>
-      cat.name.toLowerCase().includes(catSearchQuery.toLowerCase()) ||
-      (cat.alt_name && cat.alt_name.toLowerCase().includes(catSearchQuery.toLowerCase()))
-  );
 
   // Pagination
   const totalPages = Math.ceil(filteredVideos.length / videosPerPage);
@@ -2333,118 +2269,14 @@ export default function TagVideosPage() {
         </div>
       </div>
 
-      {/* Cat Selector Modal */}
-      {showCatSelector && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          data-oid=".aegs.1"
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col"
-            data-oid="tys76iv"
-          >
-            <div className="flex justify-between items-center mb-4" data-oid="34qb22l">
-              <h3 className="text-lg font-semibold" data-oid="e-c73t9">
-                {t.catSelector.title(catSelectorContext)}
-              </h3>
-              <button
-                onClick={() => setShowCatSelector(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-                data-oid="-4eahex"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Search input */}
-            <div className="mb-4" data-oid="c7.jys6">
-              <input
-                type="text"
-                placeholder={t.catSelector.search}
-                value={catSearchQuery}
-                onChange={(e) => setCatSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                data-oid="2yx6cip"
-              />
-            </div>
-
-            {/* Cat list */}
-            <div
-              className="flex-1 overflow-y-auto border border-gray-200 rounded"
-              data-oid="_gr-lpj"
-            >
-              {filteredCats.length === 0 ? (
-                <div className="p-4 text-center text-gray-500" data-oid="kdkatss">
-                  {cats.length === 0 ? t.catSelector.noneInDb : t.catSelector.noMatch}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 p-4" data-oid="7gaiylw">
-                  {filteredCats.map((cat) => (
-                    <label
-                      key={cat.id}
-                      className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
-                        selectedCats.has(cat.id)
-                          ? 'bg-brand-50 border border-brand-200'
-                          : 'border border-gray-200'
-                      }`}
-                      data-oid="j5u3cxf"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedCats.has(cat.id)}
-                        onChange={() => {
-                          if (catSelectorContext === 'batch') {
-                            handleCatToggleBatch(cat.id, cat.name);
-                          } else if (catSelectorContext === 'youtube-individual') {
-                            handleCatToggleYoutubeIndividual(cat.id, cat.name);
-                          }
-                          // Note: individual local tags context has been removed
-                        }}
-                        className="mr-2"
-                        data-oid="riqdvnm"
-                      />
-
-                      <div className="flex-1" data-oid="_ymx58t">
-                        <div className="font-medium text-sm" data-oid="pzu-ur0">
-                          {cat.name}
-                        </div>
-                        {cat.alt_name && (
-                          <div className="text-xs text-gray-500" data-oid="0uv9mk7">
-                            ({cat.alt_name})
-                          </div>
-                        )}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex justify-end gap-2 mt-4" data-oid="_khk6bc">
-              <button
-                onClick={() => {
-                  setSelectedCats(new Set());
-                  if (catSelectorContext === 'batch') {
-                    setBatchTags('');
-                  } else if (catSelectorContext === 'youtube-individual') {
-                    setYoutubeTags('');
-                  } else if (catSelectorContext === 'youtube-batch') {
-                    // Clear YouTube batch tags if implemented
-                  }
-                }}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm"
-                data-oid="4u1.4tf"
-              >
-                {t.catSelector.clearAll}
-              </button>
-              <Button size="sm" onClick={() => setShowCatSelector(false)} data-oid="o110wyj">
-                {t.catSelector.done(selectedCats.size)}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cat Selector Modal (shared; commits the selection on 완료) */}
+      <CatSelectorModal
+        isOpen={showCatSelector}
+        onClose={() => setShowCatSelector(false)}
+        selectedTags={catSelectorTags}
+        onTagsChange={handleCatSelectorTagsChange}
+        title={t.catSelector.title(catSelectorContext)}
+      />
 
       {/* Playlist Selector Modal */}
       {showPlaylistSelector && (
