@@ -442,7 +442,24 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
   Worth hardening if it recurs — the durable fix would be awaiting the unmount
   commit rather than deferring a macrotask.
 
-### M5 — Data tenancy 2: scoped reads + enforcement (large)
+### M5 — ⏭️ NEXT — Data tenancy 2: scoped reads + enforcement (large)
+
+> **Read first — two things learned after this phase was written:**
+>
+> 1. 🔑 **M0's `firestore:rules` deploy must land before touching rules here**, so
+>    the M5 diff deploys clean and any regression is attributable.
+> 2. ⚠️ **This Firestore is shared with a second application.** `image_uploader`
+>    (13 docs) belongs to the owner's separate uploader tool — invisible to this
+>    codebase (found via `listCollections()`, not code), **no `firestore.rules`
+>    entry** (so it must use the Admin SDK, which bypasses rules — confirm with the
+>    owner before deploying), and **no `mountainId`**. If it ever writes into
+>    `cat_images`, those writes need a stamp or the images vanish once reads are
+>    scoped. Corollary: the SDK/read inventories built from this repo are **not** a
+>    complete picture of the database.
+>
+> **Snapshot first:** `npm run backup:firestore` before anything in this phase
+> writes to prod ([`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner)).
+> PITR (7-day) + weekly backups are now in place as of 2026-07-20.
 
 - [ ] Per-tenant service factory (§2.3): scoped queries in all content services +
       the 4 server read paths; composite indexes collected into

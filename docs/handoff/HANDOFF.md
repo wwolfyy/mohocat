@@ -1,6 +1,6 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-19 · **Branch:** `dev` · **`main`:** promoted through PR #7
+**Last updated:** 2026-07-21 · **Branch:** `dev` · **`main`:** promoted through PR #7
 (2026-07-16)
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
@@ -69,11 +69,32 @@ the testing hand-off
   **Resume = M5** (scoped reads + mountain-aware rules + two-tenant isolation e2e),
   now unblocked. ⚠️ M0's pending rules deploy must precede M5's rules changes;
   M5's own rules deploy is owner-gated.
+- **NEW — data protection now exists (2026-07-20).** Prompted by M4's backfill
+  running against prod with **no backup and no PITR** (safe only because it was
+  additive and exactly reversible). Now in place: **PITR enabled** (7-day window)
+  - a **weekly** Firebase backup schedule + `npm run backup:firestore` /
+    `import-firestore.js` for local, off-Google dumps (**round-trip verified
+    lossless** — prod → emulator → re-export, 16/16 files byte-identical).
+    **Standing rule: snapshot before any script writes to prod data** — wired into
+    the plan's M6 as a precondition. Runbook:
+    [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
+    ⚠️ Dumps carry a live OAuth refresh token + `contacts`/`users` PII — local only,
+    `/backups/` is git-ignored. A GCS export bucket was **considered and rejected**
+    (a second PII store to secure and disclose, for protection PITR already gives).
+- ⚠️ **NEW — this Firestore is shared with a second app.** `image_uploader`
+  (13 docs) belongs to the **owner's separate image-uploader tool** and appears
+  nowhere in this codebase — found via `listCollections()`, not code. It has **no
+  `firestore.rules` entry** (client SDK denied by default; it must use the Admin
+  SDK) and **no `mountainId`** (excluded from the backfill by design). **M5 must
+  account for it:** rules changes land on a database another app writes to, and if
+  that tool ever promotes records into `cat_images` those writes need a
+  `mountainId` stamp or they'll vanish once reads are scoped.
 - **M0 is still owner-owed:** the pending `firestore:rules` deploy must land
   _before_ M5's rules changes so that diff deploys clean.
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **Tree:** clean through `b83a112` (M4) — this doc pass rides in the next commit.
+- **Tree:** clean through `c8829e2` — this session-close doc pass rides in the
+  next commit. Nine commits on `dev`, **none pushed**.
 
 ---
 
@@ -107,15 +128,54 @@ admin CMS re-skin + Korean, 급식소 CMS, adoptable-cat + 입양홍보 features
 toggle), Lightbox pinch-to-zoom, Firebase Storage → Seoul bucket. Per-change detail:
 [`FEATURE_MOD_LOG.md`](../../log/FEATURE_MOD_LOG.md) + PROJECT_PLAN.
 
-### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M3 ✅ committed; next = M4)
+### Data protection / backups — ✅ IN PLACE (2026-07-20)
+
+Did not exist before 2026-07-20. Prompted by M4's prod backfill running with no
+snapshot and no PITR — see the M4 note below for why that was survivable.
+
+**Three layers, each covering what the others don't:**
+
+| Layer                          | Covers                                  | Restores by                   |
+| ------------------------------ | --------------------------------------- | ----------------------------- |
+| **PITR** (enabled 2026-07-20)  | Bad write / delete noticed **≤ 7 days** | Any moment in the window      |
+| **Weekly backup schedule**     | Same, noticed later                     | ⚠️ Creates a **new database** |
+| **`npm run backup:firestore`** | Project loss + pre-migration insurance  | `import-firestore.js`         |
+
+- **Weekly, not daily, is deliberate** — it meshes with PITR's 7-day window, so
+  every moment is covered by either PITR or a ≤7-day-old snapshot. No gap; dailies
+  would add cost, not coverage.
+- **GCS export bucket considered and rejected** — a second PII store to secure and
+  disclose under PIPA, for protection PITR already provides. Recorded so it isn't
+  silently re-proposed.
+- **Scripts** (`scripts/maintenance/`): `export-firestore.js` discovers collections
+  via `listCollections()` (never a hard-coded list — that's how `image_uploader`
+  was found), tags Firestore-native types with `__type` so they round-trip, and
+  throws rather than writing a lossy dump. `import-firestore.js` is the inverse:
+  **dry-run by default** (inverted vs the backfill script — this one overwrites),
+  applying needs `APPLY=true` **and** `CONFIRM_PROJECT` matching the target, and
+  the banner names `EMULATOR` vs `⚠️ LIVE`. Writes are full `set()` (restore
+  semantics); documents absent from the dump are **not** pruned.
+- **Verified by round-trip, not inspection:** prod → emulator → re-export → diff,
+  16/16 files byte-identical. That test caught two real things: timestamps must
+  rebuild from `seconds`+`nanoseconds` (ISO is ms-precision and would silently
+  round), and **a dry run opens no connection** — a wrong emulator port survived a
+  clean-looking preview.
+- ⚠️ **Dumps are credentials**: live OAuth refresh token (`admin_config`) +
+  `contacts`/`users` PII. `0600` in a `0700` dir, `/backups/` git-ignored, keep
+  local, delete when done.
+- Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
+
+### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 ✅ committed; next = M5)
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
 — the execution plan **and live tracker**: decisions locked (§0), target
 architecture (§1), design specs (§2), phases **M0–M8** with per-phase gates and
-in-place execution notes (§3), risks (§5), deferred items (§6). Resume = its §3
-**M4** section (the ⏭️ header) — its resume-notes block holds the session-end
-scouting. The 2026-07-18 decision framework
+in-place execution notes (§3), risks (§5), deferred items (§6). **Resume = its §3
+`M5`** (scoped reads + mountain-aware rules + two-tenant isolation e2e) — the
+largest and highest-risk phase of the track (leak-by-omission), and the one
+gated on M0's rules deploy landing first. Read M4's execution notes above it for
+what the service layer now looks like. The 2026-07-18 decision framework
 ([`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md))
 stays as the rationale record; its §9 table now carries the answers. PROJECT_PLAN
 **§9** is the tracker entry.
@@ -370,17 +430,46 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-Only this doc pass — `docs/handoff/HANDOFF.md` +
-`docs/planning/multi-mountain-refactor-plan-20260719.md` (M4 → committed,
-`b83a112`). All code is committed through `b83a112` (M4, 57 files including the
-new `scripts/migration/backfill-mountain-id.js`). PROJECT_PLAN §9 not yet
-touched — worth a status pass next session.
+Only this session-close doc pass (`docs/handoff/HANDOFF.md`, and PROJECT_PLAN if
+it moved). **All code and all other docs are committed through `c8829e2`** —
+nine commits on `dev`, **none pushed**:
+
+| Commit    | What                                                      |
+| --------- | --------------------------------------------------------- |
+| `b83a112` | M4 — per-tenant service factory + write stamps (57 files) |
+| `836297a` | M4 status → committed                                     |
+| `da19e1f` | prod backfill run & verified (99 docs)                    |
+| `79b3fae` | PROJECT_PLAN §9 — "production data was modified" callout  |
+| `a8d842f` | `export-firestore.js` + `/backups/` git-ignored           |
+| `d04c0cd` | admin-manual §10 — backups & recovery runbook             |
+| `c8829e2` | `import-firestore.js`, round-trip verified lossless       |
+
+⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
+— a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
+longer wanted.
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-20 (latest)** — **Multi-mountain M4 EXECUTED & COMMITTED
+- **2026-07-20 (latest)** — **Data protection built, after M4's backfill exposed
+  that there was none.** The prod backfill ran with **no snapshot and no PITR**;
+  it was survivable only because the change was additive and exactly reversible
+  (one known field, one known value), not because anything protected it. A
+  transforming migration would not have been. Now in place: **PITR enabled**
+  (7-day window) + a **weekly** backup schedule + `export-firestore.js` /
+  `import-firestore.js` (`a8d842f`, `c8829e2`) for local off-Google dumps, with
+  the runbook as **admin-manual §10** (`d04c0cd`) and a snapshot-first
+  precondition wired into the plan's M6. The restore is **round-trip verified**
+  (prod → emulator → re-export → diff, 16/16 byte-identical) — which caught that
+  timestamps must rebuild from `seconds`+`nanoseconds` rather than the
+  ms-precision ISO string, and that **a dry run opens no connection** (a wrong
+  emulator port survived a clean preview). Weekly-not-daily and
+  no-GCS-export-bucket are both recorded with their reasoning so they aren't
+  re-litigated. **Incidental find:** `image_uploader` (13 docs) is the **owner's
+  separate uploader tool** sharing this Firestore — invisible to this codebase,
+  no rules entry, no `mountainId`; flagged for M5 (see TL;DR).
+- **2026-07-20** — **Multi-mountain M4 EXECUTED & COMMITTED
   (`b83a112`)**: data-tenancy stamping. The service factory became **per-tenant**
   (`getCatService(mountainId)` etc. via a shared `perTenant()` instance cache;
   storage/auth/permissions stay tenant-free), every create path stamps
