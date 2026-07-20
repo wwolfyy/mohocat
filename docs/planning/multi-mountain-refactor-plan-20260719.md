@@ -7,13 +7,12 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M3 ✅ COMMITTED** (docs `5672330` → M1 `8920c66`
-> → M2 `092d226` → M3 `491b832`, all on `dev`, 2026-07-19); **M4 code ✅ DONE
-> 2026-07-20, uncommitted** — gates green (full e2e 116/13/0), awaiting the
-> owner's commit go-ahead. **Next: the 🔑 owner-run prod backfill** (M4's last
-> box), then M5. Process note: commits are **owner-gated** (the brief same-day
-> auto-commit grant was revoked); the M4 prod backfill and M5 rules deploy were
-> always owner-gated.
+> **Status:** 🚧 **EXECUTING — M1–M4 ✅ COMMITTED** (docs `5672330` → M1 `8920c66`
+> → M2 `092d226` → M3 `491b832`, 2026-07-19; **M4 `b83a112`, 2026-07-20** — gates
+> green, full e2e 116/13/0). **Next: the 🔑 owner-run prod backfill** (M4's last
+> open box: dry-run → eyeball counts → run), then M5. Process note: commits are
+> **owner-gated** (the brief same-day auto-commit grant was revoked); the M4 prod
+> backfill and M5 rules deploy were always owner-gated.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -362,7 +361,7 @@ The framework's §8 standalone items that reduce blast radius before the big mov
   0 failed with zero e2e-spec rewrites** — the phase's proof of behavior
   preservation · browser pass ✅.
 
-### M4 — 🚧 Data tenancy 1: stamp + backfill (code DONE 2026-07-20; prod backfill 🔑 owner-owed)
+### M4 — 🚧 Data tenancy 1: stamp + backfill — code ✅ DONE 2026-07-20, committed `b83a112`; prod backfill 🔑 owner-owed
 
 - [x] `mountainId` added to the 12 collections' types; every **write** path stamps it
       (client services from the factory's tenant id; Admin-SDK routes from
