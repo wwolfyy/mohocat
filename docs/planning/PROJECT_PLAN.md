@@ -703,33 +703,67 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
 > (phases M0–M8 — supersedes the framework's §10 checklist and this section's
 > candidate-scope list as the tracker; every item below is absorbed into a phase).
-> **EXECUTING: M1–M3 ✅ done & committed 2026-07-19** (`8920c66` decoupling →
-> `092d226` explicit-`mountainId` config layer → `491b832` `[mountain]` segment +
-> host-rewrite middleware; M3 gate = full e2e 116/0 with zero spec rewrites; the
-> `?mountain=` no-op selector item below is closed — the selector navigates for
-> real). **Next = M4** (stamp + backfill; resume notes in the plan's M4 section).
+> **EXECUTING: M1–M4 ✅ done & committed** — `8920c66` decoupling → `092d226`
+> explicit-`mountainId` config layer → `491b832` `[mountain]` segment +
+> host-rewrite middleware (all 2026-07-19) → **`b83a112` M4 per-tenant service
+> factory + write stamps** (2026-07-20). M3 gate = full e2e 116/0 with zero spec
+> rewrites; M4 gate = full e2e 116/13/0 + browser pass. The `?mountain=` no-op
+> selector item below is closed (M3 — the selector navigates for real).
+> **Next = M5** (scoped reads + mountain-aware rules + two-tenant isolation e2e).
 > M0 (the pending rules deploy) is still owner-owed and must precede M5's rules
 > changes. Its §6 prerequisite — the **Tier 1 write
 > migration** (role writes → Admin SDK, audit log restored) — is **done 2026-07-18**
 > (see §7 above + `log/FEATURE_MOD_LOG.md`), which also removed this section's
 > `role-assignment-service` `'geyang'` hard-coded defaults.
 
+### ⚠️ Production data was modified — 2026-07-20 (`mountainId` backfill)
+
+**This change is NOT in any commit** — it is a one-shot mutation of **production
+Firestore**, so it cannot be found by reading a diff. Recorded here because the
+git history alone will not reveal it.
+
+|                 |                                                                                                                                                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **What**        | Added `mountainId: "geyang"` to every pre-existing document                                                                                                                                                                                                                                                  |
+| **When**        | 2026-07-20, owner-authorized (dry-run → owner review → run)                                                                                                                                                                                                                                                  |
+| **Scope**       | **99 documents** across 13 collections: `about_content` 1 · `cat_images` 10 · `cat_videos` 12 · `cats` 32 · `contacts` 3 · `feeding_spots` 10 · `points` 8 · `posts_adoption` 1 · `posts_announcements` 1 · `posts_butler` 5 · `posts_feeding` 16 · (`admin_data` empty · `permission_logs` already stamped) |
+| **Script**      | `scripts/migration/backfill-mountain-id.js` — added in **`b83a112`**                                                                                                                                                                                                                                         |
+| **Record**      | **`da19e1f`** (this write-up + plan/hand-off status)                                                                                                                                                                                                                                                         |
+| **Method**      | `set(..., { merge: true })` only — additive; no document replaced or deleted                                                                                                                                                                                                                                 |
+| **Re-runnable** | Yes — skips docs that already carry `mountainId` (idempotent)                                                                                                                                                                                                                                                |
+
+**Verified three ways:** (a) dry-run re-run inverted completely (`Would stamp 0
+document(s)`); (b) per-collection totals identical before/after; (c) Admin-SDK
+field spot-check — `개똥이` 19 fields incl. `adoptable:false`, `깡패` 21 incl.
+`adoptable:true`/`adoption_info`/`name_origin` — i.e. the Sheets-importer
+overwrite failure mode did **not** recur. Browser pass against the stamped data
+rendered unchanged (map 8 points + avatars, photo album 10).
+
+Full detail: [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md) §3 M4.
+
 **Candidate scope — _confirm with user; may be far-future_:**
 
-- [ ] `?mountain=` switch is a no-op — `MountainSelector` sets the query but
-      `getCurrentMountainId()` only reads env. Implement cookie/query/host-based
-      selection or remove the selector.
-- [~] Hard-coded service-account path + bucket fallbacks. **Partially done (2026-07-10):**
-  `generate-signed-url` hardcoded fallback replaced with hard-fail; `fetch-static-assets.js`
-  reads `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` from env. **Remaining:** `feeding-spots-admin-service.ts`
-  still hardcodes the service-account path.
-- [ ] Hard-coded map image path in the map host; source it from mountain config.
+- [x] `?mountain=` switch is a no-op — `MountainSelector` sets the query but
+      `getCurrentMountainId()` only reads env. **Closed by M3 (`491b832`)** —
+      host-based selection via middleware; the selector now navigates for real
+      (mapped host → the target's `domains[0]`, else the `/{mountainId}` path)
+      and the no-op query write is gone.
+- [x] Hard-coded service-account path + bucket fallbacks. **Partially done (2026-07-10):**
+      `generate-signed-url` hardcoded fallback replaced with hard-fail; `fetch-static-assets.js`
+      reads `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` from env. **Closed by M1 (`8920c66`):**
+      `feeding-spots-admin-service.ts`'s hard-coded SA-path init deleted — it now imports
+      `db` from the shared `@/lib/firebase-admin`.
+- [x] Hard-coded map image path in the map host; source it from mountain config.
+      **Closed by M1 (`8920c66`)** — `map.landscapeImage`/`portraitImage` in
+      `mountains.json`, resolved via `getMapConfig()` with a fail-loud guard.
 - [ ] `mountains.json` vs `permissions.json` inconsistency (`manisan` exists in
       one, not the other).
 - [ ] Theme not wired through — `config.theme` colors are read by nothing (the unused
       `getMountainTheme()` accessor was removed in the 2026-07-11 dead-code cleanup).
-- [ ] Per-mountain DB isolation at the service-factory seam (the seam exists; the
-      isolation doesn't).
+- [~] Per-mountain DB isolation at the service-factory seam. **Seam parameterized
+  by M4 (`b83a112`)** — the getters take a required `mountainId` and cache
+  per-tenant instances, and every write stamps it. **Isolation itself is M5**
+  (scoped reads + mountain-aware rules + the two-tenant e2e that proves it).
 
 ---
 
