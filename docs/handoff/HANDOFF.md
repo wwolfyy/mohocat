@@ -71,16 +71,16 @@ the testing hand-off
   M5's own rules deploy is owner-gated.
 - **NEW — data protection now exists (2026-07-20).** Prompted by M4's backfill
   running against prod with **no backup and no PITR** (safe only because it was
-  additive and exactly reversible). Now in place: **PITR enabled** (7-day window)
-  - a **weekly** Firebase backup schedule + `npm run backup:firestore` /
-    `import-firestore.js` for local, off-Google dumps (**round-trip verified
-    lossless** — prod → emulator → re-export, 16/16 files byte-identical).
-    **Standing rule: snapshot before any script writes to prod data** — wired into
-    the plan's M6 as a precondition. Runbook:
-    [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
-    ⚠️ Dumps carry a live OAuth refresh token + `contacts`/`users` PII — local only,
-    `/backups/` is git-ignored. A GCS export bucket was **considered and rejected**
-    (a second PII store to secure and disclose, for protection PITR already gives).
+  additive and exactly reversible). Now in place: **PITR enabled** (7-day
+  window), a **weekly** Firebase backup schedule, and `npm run backup:firestore` /
+  `import-firestore.js` for local, off-Google dumps (**round-trip verified
+  lossless** — prod → emulator → re-export, 16/16 files byte-identical).
+  **Standing rule: snapshot before any script writes to prod data** — wired into
+  the plan's M6 as a precondition. Runbook:
+  [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
+  ⚠️ Dumps carry a live OAuth refresh token + `contacts`/`users` PII — local only,
+  `/backups/` is git-ignored. A GCS export bucket was **considered and rejected**
+  (a second PII store to secure and disclose, for protection PITR already gives).
 - ⚠️ **NEW — this Firestore is shared with a second app.** `image_uploader`
   (13 docs) belongs to the **owner's separate image-uploader tool** and appears
   nowhere in this codebase — found via `listCollections()`, not code. It has **no
