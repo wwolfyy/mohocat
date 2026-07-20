@@ -2,6 +2,9 @@
 
 export interface CatImage {
   id: string;
+  /** Owning mountain (multi-mountain plan §2.3). Optional until the M4 backfill
+   *  stamps every existing doc; M5 tightens reads/rules around it. */
+  mountainId?: string;
   imageUrl: string; // Firebase Storage URL (public URL)
   fileName: string; // Original file name in storage
   storagePath: string; // Full path in Firebase Storage (e.g., "images/photo.jpg")
@@ -24,6 +27,8 @@ export interface CatImage {
 
 export interface CatVideo {
   id: string;
+  /** Owning mountain — see `CatImage.mountainId`. */
+  mountainId?: string;
   title?: string; // Video title (from YouTube or user-defined)
   videoUrl: string; // Firebase Storage URL or YouTube URL
   storagePath: string; // Full path in Firebase Storage

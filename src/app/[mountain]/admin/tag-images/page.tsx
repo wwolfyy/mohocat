@@ -9,6 +9,7 @@ import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import Lightbox from '@/components/ui/Lightbox';
 import { useDialog } from '@/components/ui/useDialog';
+import { useMountain } from '@/components/MountainProvider';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import {
   useMediaListController,
@@ -38,8 +39,10 @@ const sortDate = (image: AdminImage, sortBy: ImageSortKey): Date | null => {
 };
 
 export default function TagImagesPage() {
+  const mountainId = useMountain();
+
   // Service references
-  const imageService = getImageService();
+  const imageService = getImageService(mountainId);
 
   // Shared Modal-based alert/confirm (replaces the native dialogs — P6.1)
   const dialog = useDialog();

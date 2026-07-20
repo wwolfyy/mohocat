@@ -98,6 +98,8 @@ export const uploadVideosToYouTube = async (
 };
 
 export interface SignedUrlImageContext {
+  /** Owning mountain — stamped onto the `cat_images` entry via the service. */
+  mountainId: string;
   /** Cat tags recorded on the `cat_images` entry. */
   tags: string[];
   /** Recording date (date or datetime-local string); empty → upload time. */
@@ -117,7 +119,7 @@ export const uploadImagesWithSignedUrls = async (
   files: File[],
   context: SignedUrlImageContext
 ): Promise<string[]> => {
-  const imageService = getImageService();
+  const imageService = getImageService(context.mountainId);
 
   return await Promise.all(
     files.map(async (file) => {

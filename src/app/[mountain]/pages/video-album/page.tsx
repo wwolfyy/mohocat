@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FaVideo, FaSearch, FaPlay } from 'react-icons/fa';
 import { getVideoService } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 import { CatVideo } from '@/types/media';
 import { formatDuration } from '@/utils/duration';
 import { parseDate } from '@/utils/parse-date';
@@ -13,6 +14,7 @@ import { AlbumLoading, AlbumMessage, ResultCount } from '@/components/album/Albu
 import VideoPlayer from '@/components/ui/VideoPlayer';
 
 export default function VideoAlbumPage() {
+  const mountainId = useMountain();
   const [videos, setVideos] = useState<CatVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function VideoAlbumPage() {
     try {
       setLoading(true);
       setError(null);
-      const videoService = getVideoService();
+      const videoService = getVideoService(mountainId);
       const allVideos = await videoService.getAllVideos({ limit: 100 }); // Get first 100 videos
       setVideos(allVideos);
     } catch (err) {

@@ -50,6 +50,35 @@ const bucket = getStorage(app).bucket();
 
 const readJson = async (name) => JSON.parse(await readFile(path.join(FIXTURES, name), 'utf-8'));
 
+/**
+ * Tenant the seeded content belongs to (multi-mountain M4). The app's default
+ * tenant answers every unmapped host — localhost and the e2e harness included —
+ * so seeding this id is what keeps the existing specs seeing their data once M5
+ * scopes reads by mountain. Stamped here rather than in each fixture file so the
+ * value can't drift between them.
+ */
+const SEED_MOUNTAIN_ID = process.env.MOUNTAIN_ID || 'geyang';
+
+/** Collections that carry `mountainId`; identity/config collections do not. */
+const TENANT_SCOPED = new Set([
+  'about_content',
+  'admin_data',
+  'cat_images',
+  'cat_videos',
+  'cats',
+  'contacts',
+  'feeding_spots',
+  'points',
+  'posts_adoption',
+  'posts_announcements',
+  'posts_butler',
+  'posts_feeding',
+  'permission_logs',
+]);
+
+const withTenant = (collection, data) =>
+  TENANT_SCOPED.has(collection) ? { ...data, mountainId: SEED_MOUNTAIN_ID } : data;
+
 /** Delete-then-write a set of docs (each with an `id`) into a collection. */
 async function seedCollection(collection, docs) {
   for (const { id, ...data } of docs) {
@@ -58,7 +87,7 @@ async function seedCollection(collection, docs) {
       .doc(id)
       .delete()
       .catch(() => {});
-    await db.collection(collection).doc(id).set(data);
+    await db.collection(collection).doc(id).set(withTenant(collection, data));
   }
   console.log(`[seed] ${collection}: ${docs.length} doc(s)`);
 }
@@ -70,7 +99,7 @@ async function seedDoc(collection, docId, data) {
     .doc(docId)
     .delete()
     .catch(() => {});
-  await db.collection(collection).doc(docId).set(data);
+  await db.collection(collection).doc(docId).set(withTenant(collection, data));
   console.log(`[seed] ${collection}/${docId}`);
 }
 
@@ -137,6 +166,7 @@ function copyPublicFixtures() {
 async function main() {
   console.log(`[seed] project=${PROJECT_ID} bucket=${STORAGE_BUCKET}`);
   console.log(`[seed] firestore=${process.env.FIRESTORE_EMULATOR_HOST}`);
+  console.log(`[seed] mountainId=${SEED_MOUNTAIN_ID}`);
 
   const [points, cats, posts, media, aboutContent, roleConfig, resourceConfig, users] =
     await Promise.all([

@@ -22,6 +22,8 @@ import { db } from './firebase';
 export class FirebaseAdoptionService implements IPostService {
   private readonly COLLECTION_NAME = 'posts_adoption';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPosts(): Promise<any[]> {
     try {
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
@@ -86,6 +88,7 @@ export class FirebaseAdoptionService implements IPostService {
     try {
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
         ...postData,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         replyCount: 0, // Adoption posts don't have replies
       });

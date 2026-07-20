@@ -25,6 +25,8 @@ import { db } from './firebase';
 export class FirebaseAnnouncementService implements IPostService {
   private readonly COLLECTION_NAME = 'posts_announcements';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPosts(): Promise<any[]> {
     try {
       console.log(
@@ -108,6 +110,7 @@ export class FirebaseAnnouncementService implements IPostService {
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
         ...postData,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         replyCount: 0, // Announcements don't have replies
       });

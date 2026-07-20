@@ -3,6 +3,9 @@ export type LabelSide = 'above' | 'below';
 
 export interface Point {
   id: string;
+  /** Owning mountain (multi-mountain plan §2.3). Optional until the M4 backfill
+   *  stamps every existing doc; M5 tightens reads/rules around it. */
+  mountainId?: string;
   x: number;
   y: number;
   title: string;
@@ -19,6 +22,8 @@ export interface Point {
 
 export interface Cat {
   id: string;
+  /** Owning mountain — see `Point.mountainId`. */
+  mountainId?: string;
   name: string;
   alt_name?: string;
   description?: string;
@@ -43,6 +48,8 @@ export interface Cat {
 // 동참(contact) form submission
 export interface Contact {
   id: string;
+  /** Owning mountain — see `Point.mountainId`. */
+  mountainId?: string;
   name: string;
   phone: string;
   email?: string;
@@ -54,6 +61,8 @@ export interface Contact {
 // Post and Reply interfaces
 export interface Post {
   id: string;
+  /** Owning mountain — see `Point.mountainId`. */
+  mountainId?: string;
   title: string;
   message: string;
   thumbnailUrl?: string;

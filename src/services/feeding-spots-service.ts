@@ -26,6 +26,12 @@ export interface IFeedingSpotsService {
 
 export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
   private readonly COLLECTION_NAME = 'feeding_spots';
+
+  // Feeding spots have no create path in the app (docs are seeded by
+  // migration scripts); updates patch existing docs, so there is nothing to
+  // stamp in M4 — the tenant id is held for M5's scoped reads.
+  constructor(private readonly mountainId: string) {}
+
   private formatTimestamp(timestamp: any): string {
     if (!timestamp) return '';
 

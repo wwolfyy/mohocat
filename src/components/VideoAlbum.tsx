@@ -7,6 +7,7 @@ import { formatDuration } from '@/utils/duration';
 import { parseDate } from '@/utils/parse-date';
 import Modal from './ui/Modal';
 import VideoPlayer from './ui/VideoPlayer';
+import { useMountain } from '@/components/MountainProvider';
 
 interface VideoAlbumProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface VideoAlbumProps {
 
 // Video Player component (similar to Lightbox for images)
 export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps) {
+  const mountainId = useMountain();
   const [videos, setVideos] = useState<CatVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
       setError(null);
       console.log(`Loading videos for cat: ${catName}`);
 
-      const videoService = getVideoService();
+      const videoService = getVideoService(mountainId);
       const catVideos = await videoService.getCatVideos(catName);
       console.log(`Found ${catVideos.length} videos for ${catName}`);
 

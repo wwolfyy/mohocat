@@ -20,6 +20,8 @@ import {
 } from './media-albums';
 
 export class FirebaseVideoService implements IVideoService {
+  constructor(private readonly mountainId: string) {}
+
   async getAllVideos(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
@@ -53,7 +55,7 @@ export class FirebaseVideoService implements IVideoService {
   async addVideoRecord(videoData: any): Promise<string | null> {
     try {
       // Delegate to existing media-albums service
-      return await addVideoRecordFromMediaAlbums(videoData);
+      return await addVideoRecordFromMediaAlbums(videoData, this.mountainId);
     } catch (error) {
       console.error('Error adding video record:', error);
       throw new Error('Failed to add video record');
@@ -74,7 +76,7 @@ export class FirebaseVideoService implements IVideoService {
   async createVideo(videoData: any): Promise<string> {
     try {
       // Create is the same as add for videos
-      const result = await addVideoRecordFromMediaAlbums(videoData);
+      const result = await addVideoRecordFromMediaAlbums(videoData, this.mountainId);
       if (!result) {
         throw new Error('Failed to create video - no ID returned');
       }
@@ -149,7 +151,7 @@ export class FirebaseVideoService implements IVideoService {
 
   async syncWithYouTube(): Promise<any[]> {
     try {
-      await syncVideosFromMediaAlbums();
+      await syncVideosFromMediaAlbums(this.mountainId);
       // Return all videos after sync
       return await this.getAllVideos();
     } catch (error) {

@@ -5,6 +5,7 @@ import { getButlerTalkService } from '@/services';
 import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useRichContentForm } from '@/components/forms/useRichContentForm';
+import { useMountain } from '@/components/MountainProvider';
 
 /**
  * 집사톡(butler_talk) post composer. Submit/upload flow comes from the shared
@@ -30,7 +31,8 @@ const NewButlerTalkForm = () => {
     return `${DEFAULT_TITLE} (${formattedDate})`;
   };
 
-  const butlerTalkService = getButlerTalkService();
+  const mountainId = useMountain();
+  const butlerTalkService = getButlerTalkService(mountainId);
 
   const form = useRichContentForm({
     buildDefaultTitle: generateDynamicTitle,

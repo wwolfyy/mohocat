@@ -21,112 +21,110 @@ import { FirebaseContactService } from './contact-service';
 import { FirebaseStorageService } from './storage-service';
 import { FirebaseAuthService } from './auth-service';
 import { FirebaseFeedingSpotsService, IFeedingSpotsService } from './feeding-spots-service';
-import { aboutContentService } from './about-content-service';
+import { AboutContentService } from './about-content-service';
 import { PermissionService } from './permission-service';
 
-// Service instances - lazy initialized
-let catServiceInstance: ICatService | null = null;
-let pointServiceInstance: IPointService | null = null;
-let imageServiceInstance: IImageService | null = null;
-let videoServiceInstance: IVideoService | null = null;
-let postServiceInstance: IPostService | null = null;
-let butlerTalkServiceInstance: IPostService | null = null;
-let announcementServiceInstance: IPostService | null = null;
-let adoptionServiceInstance: IPostService | null = null;
-let contactServiceInstance: IContactService | null = null;
+/**
+ * Per-tenant lazy singleton cache (multi-mountain plan §2.3).
+ *
+ * Content services are tenant-scoped: every getter takes the active mountain ID
+ * (client components read it from `useMountain()`, server code from
+ * `params.mountain` / `getRequestMountainId`) and caches one instance per
+ * tenant. The instance stamps `mountainId` on its creates; M5 adds the scoped
+ * reads. Identity/infra services (auth, storage, permissions) stay tenant-free.
+ */
+function perTenant<T>(create: (mountainId: string) => T): (mountainId: string) => T {
+  const instances = new Map<string, T>();
+  return (mountainId: string): T => {
+    let instance = instances.get(mountainId);
+    if (!instance) {
+      instance = create(mountainId);
+      instances.set(mountainId, instance);
+    }
+    return instance;
+  };
+}
+
+// Tenant-free service instances - lazy initialized
 let storageServiceInstance: IStorageService | null = null;
 let authServiceInstance: IAuthService | null = null;
-let feedingSpotsServiceInstance: IFeedingSpotsService | null = null;
 
 /**
- * Get the cat service instance
+ * Get the cat service instance for a mountain
  */
-export function getCatService(): ICatService {
-  if (!catServiceInstance) {
-    catServiceInstance = new FirebaseCatService();
-  }
-  return catServiceInstance;
-}
+export const getCatService: (mountainId: string) => ICatService = perTenant(
+  (mountainId) => new FirebaseCatService(mountainId)
+);
 
 /**
- * Get the point service instance
+ * Get the point service instance for a mountain
  */
-export function getPointService(): IPointService {
-  if (!pointServiceInstance) {
-    pointServiceInstance = new FirebasePointService();
-  }
-  return pointServiceInstance;
-}
+export const getPointService: (mountainId: string) => IPointService = perTenant(
+  (mountainId) => new FirebasePointService(mountainId)
+);
 
 /**
- * Get the image service instance
+ * Get the image service instance for a mountain
  */
-export function getImageService(): IImageService {
-  if (!imageServiceInstance) {
-    imageServiceInstance = new FirebaseImageService();
-  }
-  return imageServiceInstance;
-}
+export const getImageService: (mountainId: string) => IImageService = perTenant(
+  (mountainId) => new FirebaseImageService(mountainId)
+);
 
 /**
- * Get the video service instance
+ * Get the video service instance for a mountain
  */
-export function getVideoService(): IVideoService {
-  if (!videoServiceInstance) {
-    videoServiceInstance = new FirebaseVideoService();
-  }
-  return videoServiceInstance;
-}
+export const getVideoService: (mountainId: string) => IVideoService = perTenant(
+  (mountainId) => new FirebaseVideoService(mountainId)
+);
 
 /**
- * Get the post service instance
+ * Get the post service instance for a mountain
  */
-export function getPostService(): IPostService {
-  if (!postServiceInstance) {
-    postServiceInstance = new FirebasePostService();
-  }
-  return postServiceInstance;
-}
+export const getPostService: (mountainId: string) => IPostService = perTenant(
+  (mountainId) => new FirebasePostService(mountainId)
+);
 
 /**
- * Get the butler talk service instance
+ * Get the butler talk service instance for a mountain
  */
-export function getButlerTalkService(): IPostService {
-  if (!butlerTalkServiceInstance) {
-    butlerTalkServiceInstance = new FirebaseButlerTalkService();
-  }
-  return butlerTalkServiceInstance;
-}
+export const getButlerTalkService: (mountainId: string) => IPostService = perTenant(
+  (mountainId) => new FirebaseButlerTalkService(mountainId)
+);
 
 /**
- * Get the announcement service instance
+ * Get the announcement service instance for a mountain
  */
-export function getAnnouncementService(): IPostService {
-  if (!announcementServiceInstance) {
-    announcementServiceInstance = new FirebaseAnnouncementService();
-  }
-  return announcementServiceInstance;
-}
+export const getAnnouncementService: (mountainId: string) => IPostService = perTenant(
+  (mountainId) => new FirebaseAnnouncementService(mountainId)
+);
 
 /**
- * Get the adoption-promotion (입양홍보) service instance
+ * Get the adoption-promotion (입양홍보) service instance for a mountain
  */
-export function getAdoptionService(): IPostService {
-  if (!adoptionServiceInstance) {
-    adoptionServiceInstance = new FirebaseAdoptionService();
-  }
-  return adoptionServiceInstance;
-}
+export const getAdoptionService: (mountainId: string) => IPostService = perTenant(
+  (mountainId) => new FirebaseAdoptionService(mountainId)
+);
 
 /**
- * Get the contact service instance
+ * Get the contact service instance for a mountain
  */
-export function getContactService(): IContactService {
-  if (!contactServiceInstance) {
-    contactServiceInstance = new FirebaseContactService();
-  }
-  return contactServiceInstance;
-}
+export const getContactService: (mountainId: string) => IContactService = perTenant(
+  (mountainId) => new FirebaseContactService(mountainId)
+);
+
+/**
+ * Get the feeding spots service instance for a mountain
+ */
+export const getFeedingSpotsService: (mountainId: string) => IFeedingSpotsService = perTenant(
+  (mountainId) => new FirebaseFeedingSpotsService(mountainId)
+);
+
+/**
+ * Get the about content service instance for a mountain
+ */
+export const getAboutContentService: (mountainId: string) => AboutContentService = perTenant(
+  (mountainId) => new AboutContentService(mountainId)
+);
 
 /**
  * Get the storage service instance
@@ -146,23 +144,6 @@ export function getAuthService(): IAuthService {
     authServiceInstance = new FirebaseAuthService();
   }
   return authServiceInstance;
-}
-
-/**
- * Get the feeding spots service instance
- */
-export function getFeedingSpotsService(): IFeedingSpotsService {
-  if (!feedingSpotsServiceInstance) {
-    feedingSpotsServiceInstance = new FirebaseFeedingSpotsService();
-  }
-  return feedingSpotsServiceInstance;
-}
-
-/**
- * Get the about content service instance
- */
-export function getAboutContentService() {
-  return aboutContentService;
 }
 
 // Export permission service getter

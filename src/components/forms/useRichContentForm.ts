@@ -10,6 +10,7 @@ import {
 } from '@/utils/dateParser';
 import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
+import { useMountain } from '@/components/MountainProvider';
 
 interface Playlist {
   id: string;
@@ -62,6 +63,7 @@ export interface RichContentFormConfig {
 }
 
 export const useRichContentForm = (config: RichContentFormConfig) => {
+  const mountainId = useMountain();
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [title, setTitle] = useState('');
@@ -194,6 +196,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       if (imageFiles.length > 0) {
         try {
           imageUrls = await uploadImagesWithSignedUrls(imageFiles, {
+            mountainId,
             tags: selectedImageTags,
             createdTime,
             uploadedBy: user?.email || 'unknown',

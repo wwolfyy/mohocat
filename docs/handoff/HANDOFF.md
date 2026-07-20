@@ -46,24 +46,30 @@ the testing hand-off
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
 - **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M3
-  ✅ committed, next = M4.** Q1–Q8 answered (management-only · B1
-  one-Firestore-`mountainId` · A1 one-Vercel + subdomains · visitor-facing
+  ✅ committed; M4 code ✅ done & UNCOMMITTED.** Q1–Q8 answered (management-only ·
+  B1 one-Firestore-`mountainId` · A1 one-Vercel + subdomains · visitor-facing
   selector); plan + live tracker:
   [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md).
   Four commits on `dev` (2026-07-19): docs `5672330` → M1 decoupling `8920c66` →
   M2 config-layer `092d226` → M3 **`[mountain]` segment + middleware** `491b832`.
   The app now serves every page through the tenant segment (URLs unchanged via
   host-rewrite; `/geyang/…` path access works; unknown ids 404) — M3's gate was
-  the full e2e passing **without any spec rewrites** (116/0). **Resume = plan §3
-  M4** (stamp `mountainId` + prod backfill; its resume-notes block carries the
-  session-end scouting — factory parameterization lands in M4, 64 call sites).
+  the full e2e passing **without any spec rewrites** (116/0).
+  **M4 (2026-07-20, in the working tree):** the service factory is now
+  per-tenant (`getCatService(mountainId)` … , `perTenant()` instance cache), every
+  create path stamps `mountainId`, ~49 call sites threaded (`useMountain()` on the
+  client, `getRequestMountainId(request)` in API routes), model types carry
+  `mountainId?`, and `scripts/migration/backfill-mountain-id.js` + tenant-stamped
+  emulator seeding landed. Gates green: tsc, smoke 30/30, unit 39/39, **full e2e
+  116/13/0**, browser pass. **Resume = commit it on go-ahead, then the 🔑 owner-run
+  prod backfill (dry-run first), then M5.**
   ⚠️ M4's prod backfill run and M5's rules deploy are owner-gated.
 - **M0 is still owner-owed:** the pending `firestore:rules` deploy must land
   _before_ M5's rules changes so that diff deploys clean.
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **Tree:** clean through `491b832` (this doc pass rides in the next commit) —
-  see _Uncommitted_ below.
+- **Tree:** dirty — the **M4 bundle is uncommitted** (55 files + the new backfill
+  script); see _Uncommitted_ below.
 
 ---
 
@@ -360,16 +366,47 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-Only this session-close doc pass: `docs/handoff/HANDOFF.md`,
-`docs/planning/multi-mountain-refactor-plan-20260719.md` (status → EXECUTING,
-M4 resume notes), `docs/planning/PROJECT_PLAN.md` (§9 status touch). All code is
-committed through `491b832` (M3).
+**The whole M4 bundle** — 55 modified files + one new file, all code committed
+through `491b832` (M3) before it:
+
+- **Service layer:** `src/services/index.ts` (per-tenant factory), the 11 content
+  services + `media-albums.ts` (constructor `mountainId` + write stamps),
+  `thumbnailPreloader.ts`.
+- **Call sites:** 10 pages under `src/app/[mountain]/`, 4 API routes
+  (`points`, `admin/cats`, `contact`, `upload-youtube`), 16 components/contexts,
+  `forms/uploadStrategies.ts` + `useRichContentForm.ts`.
+- **Types:** `src/types/index.ts`, `src/types/media.ts` (+ `AboutContent`).
+- **New:** `scripts/migration/backfill-mountain-id.js` (dry-run first — 🔑 owner).
+- **Test infra:** `scripts/test/seed-emulators.mjs` (tenant stamping),
+  `tests/unit/uploadStrategies.test.ts` (context fixture).
+- **Docs:** this file + `docs/planning/multi-mountain-refactor-plan-20260719.md`
+  (M4 → done, execution notes, gate results). PROJECT_PLAN §9 not yet touched.
 
 ---
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-19 (latest)** — **Multi-mountain M1–M3 EXECUTED & COMMITTED**
+- **2026-07-20 (latest)** — **Multi-mountain M4 code DONE (uncommitted)**:
+  data-tenancy stamping. The service factory became **per-tenant**
+  (`getCatService(mountainId)` etc. via a shared `perTenant()` instance cache;
+  storage/auth/permissions stay tenant-free), every create path stamps
+  `mountainId`, and ~49 call sites were threaded — `useMountain()` on the client,
+  `getRequestMountainId(request)` in API routes (`/api/points` and
+  `/api/admin/cats` GET gained a `request` param). `media-albums`' module
+  functions take an explicit `mountainId`; `syncVideos` now resolves the channel
+  per-tenant. The `aboutContentService` module singleton was retired in favor of
+  the factory (⚠️ its `about_content/about` **doc id stays shared** — a per-tenant
+  id is an M5 decision). Backfill script
+  `scripts/migration/backfill-mountain-id.js` written (dry-run mode, `merge:true`
+  only per the Sheets-wipe precedent); emulator seeding stamps the tenant in
+  `seed-emulators.mjs` rather than in each fixture file. Gates: tsc, smoke 30/30,
+  unit 39/39, **full e2e 116/13/0**, browser pass (map, both albums, about,
+  공지사항; console clean). ⚠️ One flake en route — `admin/posts.spec.ts`
+  announcement-create hit the **known P6 dialog→`router.push` race**
+  (`DEBUG_LOG` 2026-07-19; its `setTimeout(…,0)` fix is load-sensitive); cleared
+  by 17/17 isolated re-runs + a clean full re-run. **Owner-owed next: commit
+  go-ahead, then the 🔑 prod backfill (dry-run → eyeball → run).**
+- **2026-07-19** — **Multi-mountain M1–M3 EXECUTED & COMMITTED**
   (`8920c66`, `092d226`, `491b832` after docs `5672330`): decoupling → config
   layer to explicit `mountainId` + tenant helpers → the `[mountain]` route
   segment + host-rewrite middleware. M3's gate: **full e2e 116/0 with zero

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
 import CatLinkedText from '@/components/CatLinkedText';
+import { useMountain } from '@/components/MountainProvider';
 
 const youtubeId = (url?: string) =>
   url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1] || null;
@@ -134,7 +135,8 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
  * feeding collection, so it isn't reused here.
  */
 const AdoptionPromotionClient = () => {
-  const adoptionService = getAdoptionService();
+  const mountainId = useMountain();
+  const adoptionService = getAdoptionService(mountainId);
 
   const [allPosts, setAllPosts] = useState<any[]>([]);
   const [query, setQuery] = useState('');

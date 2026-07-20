@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAnnouncementService } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 import Button from '@/components/ui/Button';
 
 const AnnouncementDetailsPage = () => {
   // Service references
-  const announcementService = getAnnouncementService();
+  const mountainId = useMountain();
+  const announcementService = getAnnouncementService(mountainId);
   const [post, setPost] = useState<any | null>(null);
   const router = useRouter();
 

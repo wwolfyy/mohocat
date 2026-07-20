@@ -20,7 +20,7 @@ export default function AboutContentEditor() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const aboutContentService = getAboutContentService();
+  const aboutContentService = getAboutContentService(mountainId);
 
   useEffect(() => {
     loadAboutContent();

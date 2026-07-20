@@ -11,6 +11,7 @@ import {
 import YouTubeAuthPanel from '@/components/admin/YouTubeAuthPanelNew';
 import Card from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
+import { useMountain } from '@/components/MountainProvider';
 
 interface AdminStats {
   // Images stats
@@ -31,12 +32,14 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
+  const mountainId = useMountain();
+
   // Service references
-  const imageService = getImageService();
-  const videoService = getVideoService();
-  const catService = getCatService();
-  const contactService = getContactService();
-  const postService = getPostService();
+  const imageService = getImageService(mountainId);
+  const videoService = getVideoService(mountainId);
+  const catService = getCatService(mountainId);
+  const contactService = getContactService(mountainId);
+  const postService = getPostService(mountainId);
 
   const [stats, setStats] = useState<AdminStats>({
     totalImages: 0,

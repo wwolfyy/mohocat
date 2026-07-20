@@ -6,11 +6,13 @@ import { getAuthService, getPostService } from '@/services';
 import PostList from '@/components/PostList';
 import Button from '@/components/ui/Button';
 import { User } from 'firebase/auth';
+import { useMountain } from '@/components/MountainProvider';
 
 const ButlerStreamClient = () => {
   // Service references
+  const mountainId = useMountain();
   const authService = getAuthService();
-  const postService = getPostService();
+  const postService = getPostService(mountainId);
 
   const [posts, setPosts] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);

@@ -7,11 +7,13 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M3 ✅ DONE & COMMITTED** (docs `5672330` → M1
-> `8920c66` → M2 `092d226` → M3 `491b832`, all on `dev`, 2026-07-19). **Next:
-> M4** (stamp + backfill) — see its section for the resume notes. Process note:
-> commits are **owner-gated again** (the brief same-day auto-commit grant was
-> revoked); the M4 prod backfill and M5 rules deploy were always owner-gated.
+> **Status:** 🚧 **EXECUTING — M1–M3 ✅ COMMITTED** (docs `5672330` → M1 `8920c66`
+> → M2 `092d226` → M3 `491b832`, all on `dev`, 2026-07-19); **M4 code ✅ DONE
+> 2026-07-20, uncommitted** — gates green (full e2e 116/13/0), awaiting the
+> owner's commit go-ahead. **Next: the 🔑 owner-run prod backfill** (M4's last
+> box), then M5. Process note: commits are **owner-gated** (the brief same-day
+> auto-commit grant was revoked); the M4 prod backfill and M5 rules deploy were
+> always owner-gated.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -360,39 +362,68 @@ The framework's §8 standalone items that reduce blast radius before the big mov
   0 failed with zero e2e-spec rewrites** — the phase's proof of behavior
   preservation · browser pass ✅.
 
-### M4 — ⏭️ NEXT — Data tenancy 1: stamp + backfill (medium; additive, no read filtering yet)
+### M4 — 🚧 Data tenancy 1: stamp + backfill (code DONE 2026-07-20; prod backfill 🔑 owner-owed)
 
-> **Resume notes (2026-07-19 scouting, done just before the session closed):**
-> the per-tenant **service-factory parameterization happens here** (not M5) —
-> stamping needs the tenant id in the services, so M4 makes
-> `getCatService(mountainId)` etc. required-param with a per-tenant instance
-> cache, and M5 then only adds the `where()` scoping inside the services.
-> Grep-scouted surface: **64 factory call sites across ~30 files** (client
-> components pass `useMountain()`, server code passes params /
-> `getRequestMountainId`). Writing services (grep `addDoc|setDoc|writeBatch`):
-> `cat-service`, `point-service`, `media-albums`, `post-service`,
-> `butler-talk-service`, `announcement-service`, `adoption-service`,
-> `feeding-spots-service`, `about-content-service` (+ Admin-SDK routes:
-> `/api/contact`, `assign-role` → `permission_logs`, `upload-youtube` /
-> `update-youtube-video` / `refresh-video-metadata` → `cat_videos`; check
-> `admin_data`'s writer). Model types live in `src/types/index.ts` +
-> `src/types/media.ts` + service-local interfaces — add `mountainId?: string`
-> (optional until the backfill lands, M5 can tighten).
-
-- [ ] `mountainId` added to the 12 collections' types; every **write** path stamps it
+- [x] `mountainId` added to the 12 collections' types; every **write** path stamps it
       (client services from the factory's tenant id; Admin-SDK routes from
       `requireApiPermission`'s resolved tenant; `/api/contact` + `assign-role` stamp
       `contacts` / `permission_logs`).
-- [ ] **Backfill migration** `scripts/migration/backfill-mountain-id.js`: stamp
+- [x] **Backfill migration** `scripts/migration/backfill-mountain-id.js`: stamp
       `mountainId='geyang'` across the 12 collections + `contacts` +
       `permission_logs`; dry-run mode printing per-collection counts; ⚠️ `set` with
       `merge:true` only (the Sheets-pipeline wipe incident is the precedent —
       `cat-data-sheets-pipeline` memory).
 - [ ] 🔑 Run backfill against prod (dry-run → owner eyeball → run → count
-      verification). Emulator seed data (`tests/` fixtures incl. `media.json`) gains
-      `mountainId` in the same phase.
+      verification).
+- [x] Emulator seed data gains `mountainId` — stamped in
+      `scripts/test/seed-emulators.mjs` (a `TENANT_SCOPED` set + `withTenant`
+      helper applied in `seedCollection`/`seedDoc`) rather than hand-edited into
+      each fixture JSON, so the id cannot drift between fixture files.
 - Gates: full suite green; reads still unscoped so behavior is unchanged even
   mid-backfill.
+
+**Execution notes (2026-07-20):**
+
+- **Service-factory parameterization landed here** (as scouted): `src/services/index.ts`
+  getters are now `getCatService(mountainId)` etc., backed by a shared `perTenant()`
+  helper that caches one instance per tenant id (`Map<mountainId, instance>`).
+  Tenant-free services (`getStorageService`, `getAuthService`, `getPermissionService`)
+  keep their old zero-arg shape. Each content service takes `mountainId` via
+  constructor and stamps it on its create paths.
+- **Call sites threaded: 49 tsc errors → 0**, across ~30 files. Client components
+  read `useMountain()`; API routes resolve `getRequestMountainId(request)`
+  (`/api/points` and `/api/admin/cats` GET gained a `request` parameter for this).
+  `useRichContentForm` seeds the tenant into `SignedUrlImageContext`, which gained a
+  required `mountainId` field — the one public-signature change outside the factory.
+- **`media-albums` module functions** (`addImageRecord`, `addVideoRecord`,
+  `syncImages`, `syncVideos`) gained an explicit `mountainId` parameter, since they
+  are plain functions rather than class methods. `syncVideos` now resolves the
+  channel via `getYouTubeChannelId(mountainId)` instead of the default tenant.
+- **`aboutContentService` singleton retired** — it was a module-level `new
+AboutContentService()`; it is now created per-tenant through the factory. ⚠️ The
+  `about_content/about` **document id is still shared across tenants** — per-tenant
+  doc ids are an M5 scoped-reads decision, noted in the service.
+- **Nothing to stamp in `assign-role`** (M2 already stamps `permission_logs`) or in
+  `refresh-video-metadata` / `update-youtube-video` (both only `.update()` existing
+  `cat_videos` docs — no creates). `admin_data` has **no writer anywhere in `src`**,
+  so it is backfill-only. `feeding_spots` likewise has no create path in the app
+  (migration-seeded), so its service holds the tenant id for M5 only.
+- Model types took `mountainId?: string` (optional) — M5 tightens once the prod
+  backfill has run.
+- **Gates (2026-07-20):** tsc ✅ · smoke 30/30 ✅ · unit 39/39 ✅ · **full e2e 116
+  passed / 13 skipped / 0 failed** ✅ (the M3 baseline, unchanged) · browser pass ✅
+  (landing map + avatars, photo album 10, video album 12, about content, 공지사항
+  list — all through the tenant-parameterized services; console clean; routing
+  matrix re-verified `/`→200, `/geyang`→200, `/everest`→404, `/api/points`→200).
+- ⚠️ **Flake seen once, not a regression:** the first full-suite run failed
+  `admin/posts.spec.ts` "creating an announcement with an image" — the create
+  succeeded and the success dialog was confirmed, but the post-submit
+  `router.push` never committed (URL stuck on `/admin/announcements/new`). That is
+  the **known P6 dialog/redirect race** (`DEBUG_LOG` 2026-07-19), whose fix is a
+  `setTimeout(…, 0)` and so stays timing-sensitive under parallel load. Re-ran the
+  spec 3×3 in isolation (17/17 green) and the full suite again (116/0 clean).
+  Worth hardening if it recurs — the durable fix would be awaiting the unmount
+  commit rather than deferring a macrotask.
 
 ### M5 — Data tenancy 2: scoped reads + enforcement (large)
 

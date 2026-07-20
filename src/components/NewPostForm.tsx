@@ -5,6 +5,7 @@ import { getPostService, getFeedingSpotsService } from '@/services';
 import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useRichContentForm } from '@/components/forms/useRichContentForm';
+import { useMountain } from '@/components/MountainProvider';
 
 interface BasicFeedingSpot {
   id: number;
@@ -55,8 +56,9 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
     return `${DEFAULT_TITLE} (${formattedDate})`;
   };
 
-  const postService = getPostService();
-  const feedingSpotsService = getFeedingSpotsService();
+  const mountainId = useMountain();
+  const postService = getPostService(mountainId);
+  const feedingSpotsService = getFeedingSpotsService(mountainId);
 
   // Feeding spots states (Post-only extras)
   const [checkedSpots, setCheckedSpots] = useState<Set<number>>(new Set());

@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
     // 3. Write via the Admin SDK (bypasses client rules).
     await db.collection(COLLECTION_NAME).add({
       ...contact,
+      mountainId: getRequestMountainId(request),
       createdAt: FieldValue.serverTimestamp(),
     });
 

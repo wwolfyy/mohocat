@@ -24,6 +24,8 @@ import { db } from './firebase';
 export class FirebaseCatService implements ICatService {
   private readonly COLLECTION_NAME = 'cats';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllCats(): Promise<Cat[]> {
     try {
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
@@ -109,10 +111,11 @@ export class FirebaseCatService implements ICatService {
 
   async createCat(cat: Omit<Cat, 'id'>): Promise<Cat> {
     try {
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), cat);
+      const catData = { ...cat, mountainId: this.mountainId };
+      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), catData);
       return {
         id: docRef.id,
-        ...cat,
+        ...catData,
       };
     } catch (error) {
       console.error('Error creating cat:', error);

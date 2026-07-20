@@ -5,6 +5,7 @@ import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
 import MediaUploadField from '@/components/forms/MediaUploadField';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
+import { useMountain } from '@/components/MountainProvider';
 
 /**
  * 입양홍보 (adoption promotion) post composer — admin-authored, publicly shown on
@@ -12,7 +13,8 @@ import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
  * simple-content primitives (complexity-retirement P2); no 팝업(모달) toggle.
  */
 const NewAdoptionForm = () => {
-  const adoptionService = getAdoptionService();
+  const mountainId = useMountain();
+  const adoptionService = getAdoptionService(mountainId);
 
   const form = useSimpleContentForm({
     imagePathPrefix: 'adoption/images',

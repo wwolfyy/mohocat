@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPostService } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 import { Post } from '@/types';
 import ReplyButton from '@/components/ReplyButton';
 import ReplyForm from '@/components/ReplyForm';
@@ -10,7 +11,8 @@ import ReplyList from '@/components/ReplyList';
 
 const PostDetailsPage = () => {
   // Service references
-  const postService = getPostService();
+  const mountainId = useMountain();
+  const postService = getPostService(mountainId);
   const [post, setPost] = useState<any | null>(null);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyCount, setReplyCount] = useState(0);

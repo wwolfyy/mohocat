@@ -7,6 +7,7 @@ import { processTextWithLinks } from '@/utils/text-processing';
 import { useMediaLinks } from '@/hooks/useMediaLinks';
 import Modal from './ui/Modal';
 import CatInfo from './CatInfo';
+import { useMountain } from '@/components/MountainProvider';
 
 interface CatLinkedTextProps {
   /** Raw text, possibly containing `[catmodal:name]` and markdown/URL links. */
@@ -25,7 +26,8 @@ export default function CatLinkedText({ text, className }: CatLinkedTextProps) {
   const { mediaOverlays } = useMediaLinks(ref);
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
   const [loading, setLoading] = useState(false);
-  const catService = getCatService();
+  const mountainId = useMountain();
+  const catService = getCatService(mountainId);
 
   useEffect(() => {
     const handleClick = async (event: MouseEvent) => {

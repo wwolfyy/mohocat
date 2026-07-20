@@ -8,6 +8,7 @@ import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useDialog } from '@/components/ui/useDialog';
+import { useMountain } from '@/components/MountainProvider';
 import {
   useMediaListController,
   useDateAutoParse,
@@ -72,8 +73,10 @@ const sortDate = (video: AdminVideo, sortBy: VideoSortKey): Date | null => {
 };
 
 export default function TagVideosPage() {
+  const mountainId = useMountain();
+
   // Service references
-  const videoService = getVideoService();
+  const videoService = getVideoService(mountainId);
 
   // Shared Modal-based alert/confirm (replaces the native dialogs — P6.1)
   const dialog = useDialog();

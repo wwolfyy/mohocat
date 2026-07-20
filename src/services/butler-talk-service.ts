@@ -25,6 +25,8 @@ import { db } from './firebase';
 export class FirebaseButlerTalkService implements IPostService {
   private readonly COLLECTION_NAME = 'posts_butler';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPosts(): Promise<any[]> {
     try {
       console.log(
@@ -111,6 +113,7 @@ export class FirebaseButlerTalkService implements IPostService {
 
       const postData = {
         ...post,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         isReply: false,
         replyCount: 0,
@@ -135,6 +138,7 @@ export class FirebaseButlerTalkService implements IPostService {
 
       const replyData = {
         ...reply,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         isReply: true,
         depth: (parentPost.depth || 0) + 1,

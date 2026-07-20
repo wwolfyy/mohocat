@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FaCamera, FaSearch, FaSearchPlus } from 'react-icons/fa';
 import { getImageService } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 import { CatImage } from '@/types/media';
 import { parseDate } from '@/utils/parse-date';
 import { useMediaFilter } from '@/hooks/useMediaFilter';
@@ -12,6 +13,7 @@ import { AlbumLoading, AlbumMessage, ResultCount } from '@/components/album/Albu
 import Lightbox from '@/components/ui/Lightbox';
 
 export default function PhotoAlbumPage() {
+  const mountainId = useMountain();
   const [images, setImages] = useState<CatImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export default function PhotoAlbumPage() {
     try {
       setLoading(true);
       setError(null);
-      const imageService = getImageService();
+      const imageService = getImageService(mountainId);
       const allImages = await imageService.getAllImages({ limit: 100 }); // Get first 100 images
       setImages(allImages);
     } catch (err) {

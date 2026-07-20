@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCatService } from '@/services';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getRequestMountainId } from '@/lib/tenant';
 
 // Gated: admin cat mutation endpoint. Require manage-cat.
 // (GET below returns public cat data — no caller, not gated.)
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
   }
   try {
     const body = await request.json();
-    const catService = getCatService();
+    const catService = getCatService(getRequestMountainId(request));
 
     // Handle different types of POST requests
     if (body.action === 'import') {
@@ -35,9 +36,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const catService = getCatService();
+    const catService = getCatService(getRequestMountainId(request));
     const cats = await catService.getAllCats();
 
     return NextResponse.json({

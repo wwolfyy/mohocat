@@ -9,8 +9,8 @@ class ThumbnailPreloader {
   /**
    * Preload all thumbnails for current cats at all given points
    */
-  async preloadThumbnailsForPoints(pointIds: string[]): Promise<void> {
-    const catService = getCatService();
+  async preloadThumbnailsForPoints(pointIds: string[], mountainId: string): Promise<void> {
+    const catService = getCatService(mountainId);
 
     // Get all current cats for all points
     const allCatsPromises = pointIds.map(async (pointId) => {

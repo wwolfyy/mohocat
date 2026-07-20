@@ -264,12 +264,16 @@ export const updateVideoTags = async (videoId: string, tags: string[]): Promise<
 };
 
 // Add new image record to Firestore
-export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<string | null> => {
+export const addImageRecord = async (
+  imageData: Omit<CatImage, 'id'>,
+  mountainId: string
+): Promise<string | null> => {
   try {
     // Filter out undefined values to avoid Firestore errors
     const cleanedData = Object.fromEntries(
       Object.entries({
         ...imageData,
+        mountainId,
         uploadDate: new Date(),
       }).filter(([_, value]) => value !== undefined)
     );
@@ -283,12 +287,16 @@ export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<s
 };
 
 // Add new video record to Firestore
-export const addVideoRecord = async (videoData: Omit<CatVideo, 'id'>): Promise<string | null> => {
+export const addVideoRecord = async (
+  videoData: Omit<CatVideo, 'id'>,
+  mountainId: string
+): Promise<string | null> => {
   try {
     // Filter out undefined values to avoid Firestore errors
     const cleanedData = Object.fromEntries(
       Object.entries({
         ...videoData,
+        mountainId,
         uploadDate: new Date(),
       }).filter(([_, value]) => value !== undefined)
     );
@@ -410,7 +418,7 @@ export const batchDeleteImages = async (imageIds: string[]): Promise<boolean> =>
   }
 };
 
-export const syncImages = async (): Promise<boolean> => {
+export const syncImages = async (mountainId: string): Promise<boolean> => {
   try {
     console.log('Starting image sync with Firebase Storage...');
 
@@ -481,6 +489,7 @@ export const syncImages = async (): Promise<boolean> => {
               imageUrl,
               fileName: fileRef.name,
               storagePath,
+              mountainId,
               tags: [], // Empty initially - needs manual tagging
               uploadDate: new Date(), // Use current date since we can't get original upload date easily
               uploadedBy: 'system_sync',
@@ -609,16 +618,17 @@ export const batchDeleteVideos = async (videoIds: string[]): Promise<boolean> =>
   }
 };
 
-export const syncVideos = async (): Promise<boolean> => {
+export const syncVideos = async (mountainId: string): Promise<boolean> => {
   try {
     console.log('Starting YouTube video discovery and sync...');
 
     // Import the fetchChannelVideos function
     const { fetchChannelVideos } = await import('./youtube');
+    const { getYouTubeChannelId } = await import('@/utils/config');
 
-    // Fetch all videos from YouTube channel
+    // Fetch all videos from the tenant's YouTube channel
     console.log('Fetching videos from YouTube channel...');
-    const youtubeVideos = await fetchChannelVideos();
+    const youtubeVideos = await fetchChannelVideos(getYouTubeChannelId(mountainId));
     console.log(`Found ${youtubeVideos.length} videos on YouTube channel`);
 
     // Get existing videos from Firestore
@@ -644,6 +654,7 @@ export const syncVideos = async (): Promise<boolean> => {
     for (const video of newVideos) {
       try {
         const videoData = {
+          mountainId,
           youtubeId: video.id,
           videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
           title: video.title,

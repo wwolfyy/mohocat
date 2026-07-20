@@ -39,8 +39,8 @@ export default function About() {
   const [catModalLoading, setCatModalLoading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const aboutContentService = getAboutContentService();
-  const catService = getCatService();
+  const aboutContentService = getAboutContentService(mountainId);
+  const catService = getCatService(mountainId);
 
   // Load about content from Firestore or fallback to JSON
   useEffect(() => {

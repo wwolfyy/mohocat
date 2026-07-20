@@ -2,6 +2,9 @@ import { db } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 export interface AboutContent {
+  /** Owning mountain (multi-mountain plan §2.3). Optional until the M4 backfill
+   *  stamps every existing doc; M5 tightens reads/rules around it. */
+  mountainId?: string;
   title: string;
   subtitle: string;
   mainContent: string;
@@ -22,6 +25,8 @@ export interface AboutContent {
 export class AboutContentService {
   private collectionName = 'about_content';
   private documentId = 'about';
+
+  constructor(private readonly mountainId: string) {}
 
   async getAboutContent(): Promise<AboutContent | null> {
     try {
@@ -44,6 +49,7 @@ export class AboutContentService {
       const docRef = doc(db, this.collectionName, this.documentId);
       const updateData = {
         ...content,
+        mountainId: this.mountainId,
         lastUpdated: serverTimestamp(),
         lastUpdatedBy: userEmail || 'unknown',
       };
@@ -60,6 +66,7 @@ export class AboutContentService {
       const docRef = doc(db, this.collectionName, this.documentId);
       const createData = {
         ...content,
+        mountainId: this.mountainId,
         lastUpdated: serverTimestamp(),
         lastUpdatedBy: userEmail || 'unknown',
       };
@@ -86,5 +93,6 @@ export class AboutContentService {
   }
 }
 
-// Export a singleton instance
-export const aboutContentService = new AboutContentService();
+// ⚠️ The `about_content/about` doc ID is still shared across tenants — per-tenant
+// document IDs are an M5 scoped-reads decision. M4 only stamps the writer's
+// mountainId (multi-mountain plan §3 M4).

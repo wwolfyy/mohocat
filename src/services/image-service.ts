@@ -20,6 +20,8 @@ import {
 } from './media-albums';
 
 export class FirebaseImageService implements IImageService {
+  constructor(private readonly mountainId: string) {}
+
   async getAllImages(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
@@ -53,7 +55,7 @@ export class FirebaseImageService implements IImageService {
   async addImageRecord(imageData: any): Promise<string | null> {
     try {
       // Delegate to existing media-albums service
-      return await addImageRecordFromMediaAlbums(imageData);
+      return await addImageRecordFromMediaAlbums(imageData, this.mountainId);
     } catch (error) {
       console.error('Error adding image record:', error);
       throw new Error('Failed to add image record');
@@ -74,7 +76,7 @@ export class FirebaseImageService implements IImageService {
   async createImage(imageData: any): Promise<string> {
     try {
       // Create is the same as add for images
-      const result = await addImageRecordFromMediaAlbums(imageData);
+      const result = await addImageRecordFromMediaAlbums(imageData, this.mountainId);
       if (!result) {
         throw new Error('Failed to create image - no ID returned');
       }
@@ -149,7 +151,7 @@ export class FirebaseImageService implements IImageService {
 
   async syncWithStorage(): Promise<any[]> {
     try {
-      await syncImagesFromMediaAlbums();
+      await syncImagesFromMediaAlbums(this.mountainId);
       // Return all images after sync
       return await this.getAllImages();
     } catch (error) {

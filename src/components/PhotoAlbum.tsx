@@ -7,6 +7,7 @@ import { CatImage } from '@/types/media';
 import { parseDate } from '@/utils/parse-date';
 import Modal from './ui/Modal';
 import Lightbox from './ui/Lightbox';
+import { useMountain } from '@/components/MountainProvider';
 
 interface PhotoAlbumProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface PhotoAlbumProps {
 }
 
 export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps) {
+  const mountainId = useMountain();
   const [images, setImages] = useState<CatImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export default function PhotoAlbum({ isOpen, onClose, catName }: PhotoAlbumProps
       console.log(`Loading images for cat: ${catName}`);
 
       // Try to get cat-specific images first
-      const imageService = getImageService();
+      const imageService = getImageService(mountainId);
       const catImages = await imageService.getCatImages(catName);
       console.log(`Found ${catImages.length} images for ${catName}`);
 

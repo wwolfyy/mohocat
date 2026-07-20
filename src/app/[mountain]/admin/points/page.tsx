@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import PointMapPicker from '@/components/admin/PointMapPicker';
 import { adminStrings } from '@/constants/adminStrings';
 import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
+import { useMountain } from '@/components/MountainProvider';
 
 // 'auto' is the form-only sentinel for "no override" (stored as an absent key).
 type SideChoice = 'auto' | LabelSide;
@@ -54,8 +55,9 @@ function buildLabelSide(mobile: SideChoice, desktop: SideChoice): Point['labelSi
 }
 
 export default function PointsCMSPage() {
-  const pointService = getPointService();
-  const catService = getCatService();
+  const mountainId = useMountain();
+  const pointService = getPointService(mountainId);
+  const catService = getCatService(mountainId);
   const { user } = useAuth();
 
   const [points, setPoints] = useState<Point[]>([]);

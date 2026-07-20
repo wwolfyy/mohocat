@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Readable } from 'stream';
 import { getVideoService } from '@/services';
 import { getYouTubeOAuthConfig } from '@/utils/config';
+import { getRequestMountainId } from '@/lib/tenant';
 import { db } from '@/lib/firebase-admin';
 
 async function getYouTubeRefreshToken() {
@@ -202,7 +203,7 @@ export async function POST(request: NextRequest) {
 
       console.log('Creating Firestore entry for uploaded video:', videoData);
 
-      const videoService = getVideoService();
+      const videoService = getVideoService(getRequestMountainId(request));
       const firestoreVideoId = await videoService.createVideo(videoData);
       console.log('Created cat_videos entry with ID:', firestoreVideoId);
     } catch (firestoreError) {

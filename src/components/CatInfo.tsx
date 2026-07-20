@@ -9,6 +9,7 @@ import { useMediaLinks } from '@/hooks/useMediaLinks';
 import Modal from './ui/Modal';
 import PhotoAlbum from './PhotoAlbum';
 import VideoAlbum from './VideoAlbum';
+import { useMountain } from '@/components/MountainProvider';
 
 interface CatInfoProps {
   cat: Cat;
@@ -78,7 +79,8 @@ export default function CatInfo({ cat }: CatInfoProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const { mediaOverlays } = useMediaLinks(contentRef);
 
-  const catService = getCatService();
+  const mountainId = useMountain();
+  const catService = getCatService(mountainId);
 
   // Handle cat modal link clicks
   useEffect(() => {

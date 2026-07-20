@@ -13,6 +13,11 @@ import { db } from './firebase';
 export class FirebaseContactService implements IContactService {
   private readonly COLLECTION_NAME = 'contacts';
 
+  // Contact creation happens server-side (`/api/contact`, Admin SDK), which
+  // stamps `mountainId`; this client service is read-only, so the tenant id is
+  // held for M5's scoped reads.
+  constructor(private readonly mountainId: string) {}
+
   /**
    * Fetch all contact submissions, newest first.
    * Admin-only read (enforced by Firestore rules: requires `manage-users`).

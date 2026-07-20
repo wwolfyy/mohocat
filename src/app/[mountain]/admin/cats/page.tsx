@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { getCatService } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { triggerPublicRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
@@ -73,7 +74,8 @@ const initialFormData: CatFormData = {
 };
 
 export default function CatsCMSPage() {
-  const catService = getCatService();
+  const mountainId = useMountain();
+  const catService = getCatService(mountainId);
   const { user } = useAuth();
 
   const [view, setView] = useState<'card' | 'grid'>('card');

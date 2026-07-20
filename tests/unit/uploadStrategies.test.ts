@@ -143,6 +143,7 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
   const fetchMock = vi.fn();
 
   const context = {
+    mountainId: 'geyang',
     tags: ['테스트냥이이'],
     createdTime: '2026-02-01',
     uploadedBy: 'admin@example.com',

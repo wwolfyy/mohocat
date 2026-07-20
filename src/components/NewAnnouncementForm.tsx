@@ -5,6 +5,7 @@ import { getAnnouncementService } from '@/services';
 import { cn } from '@/utils/cn';
 import MediaUploadField from '@/components/forms/MediaUploadField';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
+import { useMountain } from '@/components/MountainProvider';
 
 /**
  * 공지사항 composer — admin-authored, publicly listed on /pages/announcements.
@@ -13,8 +14,9 @@ import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
  * extra field and rides along via extraPostData.
  */
 const NewAnnouncementForm = () => {
+  const mountainId = useMountain();
   const [showInModal, setShowInModal] = useState(false);
-  const announcementService = getAnnouncementService();
+  const announcementService = getAnnouncementService(mountainId);
 
   const form = useSimpleContentForm({
     imagePathPrefix: 'announcements/images',

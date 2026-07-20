@@ -13,6 +13,8 @@ import { db } from './firebase';
 export class FirebasePointService implements IPointService {
   private readonly COLLECTION_NAME = 'points';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPoints(): Promise<Point[]> {
     try {
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
@@ -47,10 +49,11 @@ export class FirebasePointService implements IPointService {
 
   async createPoint(point: Omit<Point, 'id'>): Promise<Point> {
     try {
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), point);
+      const pointData = { ...point, mountainId: this.mountainId };
+      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), pointData);
       return {
         id: docRef.id,
-        ...point,
+        ...pointData,
       };
     } catch (error) {
       console.error('Error creating point:', error);
