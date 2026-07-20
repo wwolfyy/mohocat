@@ -308,7 +308,7 @@ Three layers, each covering a failure the others don't:
 | ------------------------------ | -------------------------------------------------- | -------------------------- | ------------------------------------------- |
 | **PITR** (point-in-time)       | Bad write / accidental delete noticed **≤ 7 days** | Google, rolling window     | Read or restore to any moment in the window |
 | **Weekly backup schedule**     | Same, noticed **later** than 7 days                | Google, periodic snapshots | ⚠️ Creates a **new database**               |
-| **`npm run backup:firestore`** | Project loss, and pre-migration insurance          | Your disk (git-ignored)    | ⚠️ No import script yet — see below         |
+| **`npm run backup:firestore`** | Project loss, and pre-migration insurance          | Your disk (git-ignored)    | `import-firestore.js` (verified lossless)   |
 
 **Weekly is enough** because it meshes with PITR's 7-day window: any moment is covered
 either by PITR, or by a snapshot at most 7 days old. There is no gap, so daily backups
@@ -334,8 +334,9 @@ node scripts/migration/<script>.js                # then apply
 
 The snapshot lands in `backups/firestore/<UTC-timestamp>/` — one JSON file per
 collection plus a `manifest.json` with counts. Collections are **discovered**, not
-hard-coded, so a collection nobody remembers (there is one: `image_uploader`) is still
-captured.
+hard-coded, so anything the app itself doesn't know about is still captured — this
+database is shared with the separate **image-uploader** tool, whose `image_uploader`
+collection appears nowhere in this codebase and would be missed by a fixed list.
 
 _Why this habit exists:_ the 2026-07-20 `mountainId` backfill ran with no snapshot and
 no PITR. It was safe only because the change was additive and exactly reversible. A
@@ -366,11 +367,39 @@ An export contains **a live OAuth refresh token** (`admin_config/youtube_auth`) 
    database and copy back," a procedure with downtime, not a button.
 4. **Project gone entirely?** The local dumps are the fallback.
 
-**Known gap — no restore script.** `npm run backup:firestore` exports; nothing imports
-yet. Restoring from a dump means walking each file and writing documents back by id,
-rebuilding the `__type`-tagged values (`timestamp`, `geopoint`, `reference`, `bytes`)
-into real Firestore types first. The format is documented in each dump's
-`manifest.json`. Worth building before it is needed in anger.
+### Restoring from a local dump
+
+```bash
+# 1. Preview — the DEFAULT. Reads the dump, writes nothing.
+node scripts/maintenance/import-firestore.js backups/firestore/<stamp>
+
+# 2. Apply. Both variables are required; CONFIRM_PROJECT must match the target.
+APPLY=true CONFIRM_PROJECT=mountaincats-61543 \
+  node scripts/maintenance/import-firestore.js backups/firestore/<stamp>
+
+# Restore just one collection
+ONLY=cats node scripts/maintenance/import-firestore.js backups/firestore/<stamp>
+```
+
+The banner states its target — `EMULATOR at …` or `⚠️ LIVE project …` — so a preview
+against production is never mistaken for one against a sandbox.
+
+⚠️ **Two things to understand before applying:**
+
+- **Every write is a full overwrite** (`set()` without merge). That is what restore
+  means: the document ends up exactly as the dump has it, and **any field added since
+  the dump is lost**. Dry-run is the default precisely because this is the same
+  operation shape that once wiped app-only fields via the Sheets importer.
+- **It does not delete.** Documents that exist now but aren't in the dump are left
+  alone. A restore puts back what it has; removing extras stays a manual decision.
+
+_Verified lossless_ (2026-07-20): the prod dump was imported into the emulator,
+re-exported, and all 16 collection files came back **byte-identical** — timestamps
+included, to nanosecond precision.
+
+> A dry run does **not** open a connection, so it cannot tell you the target is
+> reachable — it validates the dump, not connectivity. (This is how a wrong emulator
+> port survived a clean-looking preview during testing.)
 
 ---
 
