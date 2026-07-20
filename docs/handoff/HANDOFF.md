@@ -46,7 +46,7 @@ the testing hand-off
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
 - **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4
-  ✅ committed; next = the 🔑 prod backfill, then M5.** Q1–Q8 answered (management-only ·
+  ✅ COMPLETE (incl. the prod backfill); next = M5.** Q1–Q8 answered (management-only ·
   B1 one-Firestore-`mountainId` · A1 one-Vercel + subdomains · visitor-facing
   selector); plan + live tracker:
   [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md).
@@ -61,9 +61,14 @@ the testing hand-off
   client, `getRequestMountainId(request)` in API routes), model types carry
   `mountainId?`, and `scripts/migration/backfill-mountain-id.js` + tenant-stamped
   emulator seeding landed. Gates green: tsc, smoke 30/30, unit 39/39, **full e2e
-  116/13/0**, browser pass. **Resume = the 🔑 owner-run prod backfill (dry-run →
-  eyeball counts → run), then M5.**
-  ⚠️ M4's prod backfill run and M5's rules deploy are owner-gated.
+  116/13/0**, browser pass. **The prod backfill RAN 2026-07-20** (owner-authorized):
+  **99 docs stamped `mountainId='geyang'`** across 13 collections; verified by an
+  inverted dry-run re-run, identical per-collection totals, and an Admin-SDK field
+  spot-check proving `merge:true` preserved everything (incl. `adoptable`).
+  `admin_data` was empty; `permission_logs`' one doc was already stamped.
+  **Resume = M5** (scoped reads + mountain-aware rules + two-tenant isolation e2e),
+  now unblocked. ⚠️ M0's pending rules deploy must precede M5's rules changes;
+  M5's own rules deploy is owner-gated.
 - **M0 is still owner-owed:** the pending `firestore:rules` deploy must land
   _before_ M5's rules changes so that diff deploys clean.
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
@@ -393,8 +398,9 @@ touched — worth a status pass next session.
   공지사항; console clean). ⚠️ One flake en route — `admin/posts.spec.ts`
   announcement-create hit the **known P6 dialog→`router.push` race**
   (`DEBUG_LOG` 2026-07-19; its `setTimeout(…,0)` fix is load-sensitive); cleared
-  by 17/17 isolated re-runs + a clean full re-run. **Owner-owed next: the 🔑 prod
-  backfill (dry-run → eyeball counts → run)** — M5 depends on it having landed.
+  by 17/17 isolated re-runs + a clean full re-run. **The 🔑 prod backfill then ran
+  the same day** — 99 docs stamped, triple-verified (see the workstream section).
+  **Next: M5.**
 - **2026-07-19** — **Multi-mountain M1–M3 EXECUTED & COMMITTED**
   (`8920c66`, `092d226`, `491b832` after docs `5672330`): decoupling → config
   layer to explicit `mountainId` + tenant helpers → the `[mountain]` route

@@ -7,12 +7,14 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M4 ✅ COMMITTED** (docs `5672330` → M1 `8920c66`
+> **Status:** 🚧 **EXECUTING — M1–M4 ✅ COMPLETE** (docs `5672330` → M1 `8920c66`
 > → M2 `092d226` → M3 `491b832`, 2026-07-19; **M4 `b83a112`, 2026-07-20** — gates
-> green, full e2e 116/13/0). **Next: the 🔑 owner-run prod backfill** (M4's last
-> open box: dry-run → eyeball counts → run), then M5. Process note: commits are
-> **owner-gated** (the brief same-day auto-commit grant was revoked); the M4 prod
-> backfill and M5 rules deploy were always owner-gated.
+> green, full e2e 116/13/0, **prod backfill run & verified: 99 docs stamped**).
+> **Next: M5** (scoped reads + mountain-aware rules + isolation e2e) — now
+> unblocked, since every prod doc carries `mountainId`. ⚠️ **M0's pending
+> `firestore:rules` deploy must still land before M5's rules changes** so that
+> diff deploys clean. Process note: commits are **owner-gated** (the brief
+> same-day auto-commit grant was revoked); the M5 rules deploy is owner-gated.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -361,7 +363,7 @@ The framework's §8 standalone items that reduce blast radius before the big mov
   0 failed with zero e2e-spec rewrites** — the phase's proof of behavior
   preservation · browser pass ✅.
 
-### M4 — 🚧 Data tenancy 1: stamp + backfill — code ✅ DONE 2026-07-20, committed `b83a112`; prod backfill 🔑 owner-owed
+### M4 — ✅ DONE 2026-07-20 — Data tenancy 1: stamp + backfill (code `b83a112`; prod backfill run & verified)
 
 - [x] `mountainId` added to the 12 collections' types; every **write** path stamps it
       (client services from the factory's tenant id; Admin-SDK routes from
@@ -372,8 +374,24 @@ The framework's §8 standalone items that reduce blast radius before the big mov
       `permission_logs`; dry-run mode printing per-collection counts; ⚠️ `set` with
       `merge:true` only (the Sheets-pipeline wipe incident is the precedent —
       `cat-data-sheets-pipeline` memory).
-- [ ] 🔑 Run backfill against prod (dry-run → owner eyeball → run → count
-      verification).
+- [x] 🔑 **Prod backfill RUN 2026-07-20** (owner-authorized; dry-run → owner
+      eyeball → run → verification). **99 documents stamped
+      `mountainId='geyang'`** across 13 collections: `about_content` 1,
+      `cat_images` 10, `cat_videos` 12, `cats` 32, `contacts` 3,
+      `feeding_spots` 10, `points` 8, `posts_adoption` 1,
+      `posts_announcements` 1, `posts_butler` 5, `posts_feeding` 16.
+      `admin_data` was **empty (total=0)** — confirms the "no writer in `src`"
+      finding; `permission_logs`' single doc was **already stamped** (written
+      after the Tier-1 migration restored the audit trail, so `assign-role`
+      had already stamped it) → 0 needed.
+      **Verified three ways:** (a) re-run dry-run inverted completely —
+      every row `would stamp=0`, `Would stamp 0 document(s)`; (b) per-collection
+      `total` identical before/after — nothing replaced or deleted; (c) field
+      spot-check via Admin SDK — `개똥이` 19 fields incl. `adoptable:false`,
+      `깡패` 21 incl. `adoptable:true`/`adoption_info`/`name_origin`, image and
+      point docs intact, i.e. `merge:true` held and the Sheets-wipe failure mode
+      did **not** occur. Browser pass against prod data afterwards: landing map
+      (8 points + avatars) and photo album (10) render unchanged.
 - [x] Emulator seed data gains `mountainId` — stamped in
       `scripts/test/seed-emulators.mjs` (a `TENANT_SCOPED` set + `withTenant`
       helper applied in `seedCollection`/`seedDoc`) rather than hand-edited into
