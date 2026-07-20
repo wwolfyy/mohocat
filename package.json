@@ -12,6 +12,7 @@
     "test:smoke": "vitest run tests/smoke",
     "vercel-build": "node scripts/maintenance/fetch-static-assets.js && next build",
     "fetch:assets": "node scripts/maintenance/fetch-static-assets.js",
+    "backup:firestore": "node scripts/maintenance/export-firestore.js",
     "seed:emulators": "node scripts/test/seed-emulators.mjs",
     "test:rules": "dotenv -e .env.test -- firebase emulators:exec --project demo-mohocat --only firestore \"vitest run --config vitest.rules.config.ts\"",
     "test:e2e": "dotenv -e .env.test -- firebase emulators:exec --project demo-mohocat --only auth,firestore,storage \"npm run seed:emulators && npm run build && playwright test\"",
