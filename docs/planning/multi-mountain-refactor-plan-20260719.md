@@ -464,6 +464,13 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
 
 ### M6 — Assets & storage namespacing (medium)
 
+> 🔑 **Precondition — snapshot first:** run `npm run backup:firestore` before any
+> script in this phase writes to production. Added after M4's backfill ran with no
+> snapshot and no PITR (safe only because it was additive and exactly reversible).
+> PITR is now enabled (7-day window) + a weekly backup schedule; the local dump is
+> the pre-migration insurance on top. Runbook:
+> [`docs/manuals/admin-manual/README.md`](../manuals/admin-manual/README.md#10-backups--recovery-owner) §10.
+
 - [ ] `fetch-static-assets.js` loops all mountains → per-mountain `public/` paths;
       consumer sweep (thumbnail preloader, avatars, about page) — geyang's baked
       thumbnail paths change here.

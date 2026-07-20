@@ -294,7 +294,87 @@ Mostly one-time or infrequent setup. Details live in
 
 ---
 
-## 10. Quick reference (cheat sheet)
+## 10. Backups & recovery (owner)
+
+> **The one habit that matters:** run `npm run backup:firestore` **before any script
+> that writes to production data.** Everything else on this page is automatic; this
+> is the part that needs a human to remember it.
+
+### What protects the data today
+
+Three layers, each covering a failure the others don't:
+
+| Layer                          | Covers                                             | Where it lives             | Restores by                                 |
+| ------------------------------ | -------------------------------------------------- | -------------------------- | ------------------------------------------- |
+| **PITR** (point-in-time)       | Bad write / accidental delete noticed **≤ 7 days** | Google, rolling window     | Read or restore to any moment in the window |
+| **Weekly backup schedule**     | Same, noticed **later** than 7 days                | Google, periodic snapshots | ⚠️ Creates a **new database**               |
+| **`npm run backup:firestore`** | Project loss, and pre-migration insurance          | Your disk (git-ignored)    | ⚠️ No import script yet — see below         |
+
+**Weekly is enough** because it meshes with PITR's 7-day window: any moment is covered
+either by PITR, or by a snapshot at most 7 days old. There is no gap, so daily backups
+would add cost without adding coverage. _(Enabled 2026-07-20.)_
+
+### Checking / changing the Google-side settings
+
+**Firebase Console → Firestore Database → Backups tab.** PITR is the toggle at the top;
+the weekly schedule sits below it. Both are database-admin settings, so **the app's
+service account cannot read or change them** — you must use the console (or `gcloud`)
+signed in as yourself. An agent asking you to check this is not being lazy; it gets a
+`403 PERMISSION_DENIED`, which is the correct scoping.
+
+### Before any data migration — do this first
+
+Any time a script under `scripts/migration/` is about to run against production:
+
+```bash
+npm run backup:firestore     # snapshot first
+DRY_RUN=true node scripts/migration/<script>.js   # then dry-run
+node scripts/migration/<script>.js                # then apply
+```
+
+The snapshot lands in `backups/firestore/<UTC-timestamp>/` — one JSON file per
+collection plus a `manifest.json` with counts. Collections are **discovered**, not
+hard-coded, so a collection nobody remembers (there is one: `image_uploader`) is still
+captured.
+
+_Why this habit exists:_ the 2026-07-20 `mountainId` backfill ran with no snapshot and
+no PITR. It was safe only because the change was additive and exactly reversible. A
+migration that transforms existing values would not have been. See
+[`docs/planning/multi-mountain-refactor-plan-20260719.md`](../../planning/multi-mountain-refactor-plan-20260719.md) §3 M4.
+
+### ⚠️ Treat the dumps like passwords
+
+An export contains **a live OAuth refresh token** (`admin_config/youtube_auth`) and
+**personal data** — 동참 submissions (name / phone / email) and member records.
+
+- Written `0600` inside a `0700` directory; `/backups/` is git-ignored. Do not commit it.
+- Copying a dump to Dropbox / email / a USB stick creates both a credential-leak path
+  and a **PIPA-relevant store of personal data outside the disclosed processing**.
+  Keep dumps local, and delete ones you no longer need.
+- This is also why we did **not** set up a Google Cloud Storage export bucket: it would
+  create a second PII store to secure and disclose, for protection PITR already gives.
+
+### If something goes wrong
+
+1. **Stop writing.** Don't "fix it forward" with another script — that can bury the
+   original state past PITR's window.
+2. **Was it within 7 days?** Almost always yes. Then PITR is the tool: read the
+   pre-incident version of the affected documents and correct just those fields.
+   For a bad write this beats a full restore, which is disruptive by comparison.
+3. **Older than 7 days?** Restore the weekly backup — but note it creates a **new**
+   database rather than overwriting `(default)`. Recovery is "stand up a parallel
+   database and copy back," a procedure with downtime, not a button.
+4. **Project gone entirely?** The local dumps are the fallback.
+
+**Known gap — no restore script.** `npm run backup:firestore` exports; nothing imports
+yet. Restoring from a dump means walking each file and writing documents back by id,
+rebuilding the `__type`-tagged values (`timestamp`, `geopoint`, `reference`, `bytes`)
+into real Firestore types first. The format is documented in each dump's
+`manifest.json`. Worth building before it is needed in anger.
+
+---
+
+## 11. Quick reference (cheat sheet)
 
 ```
 [catmodal:이름]            → open a cat's modal        (no parentheses!)
@@ -311,3 +391,4 @@ Enter                     → line break
   `firebase deploy --only firestore:rules`.
 - Publish changes → `git push` (`main` = production, `dev` = preview).
 - "입양 가능" checkbox on a cat (with a photo) → shows in the 입양홍보 gallery.
+- **Before any production data migration → `npm run backup:firestore`** ([§10](#10-backups--recovery-owner)).
