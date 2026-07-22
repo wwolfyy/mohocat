@@ -43,7 +43,7 @@
 | **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). **Complexity retirement: EXECUTED 2026-07-19** (P0–P6 — forms + admin editors on shared primitives, alerts → Modal; §7 entry below). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation; owner-owed P5.4 manual YouTube pass.                                                                                                             |
 | Compliance / legal                         | `[x]` done        | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed (accepted, out of workstream):** professional legal review before scaling; phone/Kakao signup consent; security audit; Kakao scope verification.                                                                                                                                                                                        |
-| Multi-tenant hardening                     | `[~]` in progress | §9 — make the 2nd-mountain path real. **M1–M4 done & committed** (`8920c66` → `092d226` → `491b832` → `b83a112`, 2026-07-19/20): decoupling → request-time config → `[mountain]` segment + host middleware → per-tenant service factory + write stamps, with the **prod `mountainId` backfill run & verified** (99 docs — see the §9 data-modification callout). **Next = M5** (scoped reads + mountain-aware rules + two-tenant isolation e2e), gated on M0's `firestore:rules` deploy landing first.                                                                                                                                                                                                                                                                                                                         |
+| Multi-tenant hardening                     | `[~]` in progress | §9 — make the 2nd-mountain path real. **M1–M4 + M5.1 + M5.2 done & committed.** M1–M4 (`…`→`b83a112`, incl. the verified 99-doc prod backfill) → **M5.1 `d4a0bb2`** scoped reads + composite indexes → **M5.2 `47d0f3d`** per-mountain role model (map keyed by `mountainId`) + mountain-aware rules (`test:rules` 11/11; e2e 116/13/0). 🔑 **Owner-gated prod cutover is ORDER-CRITICAL:** run `migrate-m5-role-and-about.js`, THEN `firebase deploy --only firestore:rules`. ⚠️ CI not yet updated for `test:rules` (owner-flagged, fresh session). **Next = M5.3 route audit + M5.4 two-tenant isolation e2e.**                                                                                                                                                                                                             |
 | **Data protection / backups**              | `[x]` done        | **Not a numbered §** — did not exist before 2026-07-20; built after M4's backfill ran against prod with no snapshot and no PITR. **PITR enabled** (7-day) + **weekly** backup schedule + `npm run backup:firestore` / `import-firestore.js` for local off-Google dumps (**round-trip verified lossless**). Weekly-not-daily (meshes with PITR's window) and no-GCS-bucket (second PII store) are deliberate, reasoning recorded. Standing rule: **snapshot before any script writes to prod**, wired into the refactor plan's M6. Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).                                                                                                                                                                                                 |
 | Testing & quality gates                    | `[x]` done        | §10 — **Main plan COMPLETE + merged to `main` (PR #7, 2026-07-16).** Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + all main-plan suites — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Phase 7 flake audit green (local 3× + CI green on PR #7 and pushes). **Branch protection enforced** — `e2e` is a required status check on `main` (protect-main ruleset + classic protection). Remaining owner action: `firebase deploy --only firestore:rules` for prod parity.                                                                                                                                                                                                                                                                                                                     |
 | **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                |
@@ -704,18 +704,20 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
 > (phases M0–M8 — supersedes the framework's §10 checklist and this section's
 > candidate-scope list as the tracker; every item below is absorbed into a phase).
-> **EXECUTING: M1–M4 ✅ done & committed** — `8920c66` decoupling → `092d226`
-> explicit-`mountainId` config layer → `491b832` `[mountain]` segment +
-> host-rewrite middleware (all 2026-07-19) → **`b83a112` M4 per-tenant service
-> factory + write stamps** (2026-07-20). M3 gate = full e2e 116/0 with zero spec
-> rewrites; M4 gate = full e2e 116/13/0 + browser pass. The `?mountain=` no-op
-> selector item below is closed (M3 — the selector navigates for real).
-> **Next = M5** (scoped reads + mountain-aware rules + two-tenant isolation e2e).
-> M0 (the pending rules deploy) is still owner-owed and must precede M5's rules
-> changes. Its §6 prerequisite — the **Tier 1 write
-> migration** (role writes → Admin SDK, audit log restored) — is **done 2026-07-18**
-> (see §7 above + `log/FEATURE_MOD_LOG.md`), which also removed this section's
-> `role-assignment-service` `'geyang'` hard-coded defaults.
+> **EXECUTING: M1–M4 + M5.1 + M5.2 ✅ done & committed.** M1–M3 (`8920c66`/`092d226`/
+> `491b832`, 2026-07-19) → **M4** `b83a112` per-tenant service factory + write stamps
+> (2026-07-20, incl. the prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite
+> indexes → **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) +
+> mountain-aware `firestore.rules` (both 2026-07-22). M5.2a (role model) and M5.2b
+> (rules) were **inseparable at the emulator gate**. Gates: tsc, smoke 30/30, unit
+> 39/39, **rules 11/11** (new mountain dimension), **full e2e 116/13/0**.
+> **M0 rules deploy — DONE 2026-07-22 (owner).** ⚠️ **A NEW rules deploy is owed for
+> M5.2b, and it must be preceded by `migrate-m5-role-and-about.js`** (ORDER-CRITICAL:
+> a not-yet-migrated user is fail-closed → locked out). ⚠️ **CI is not yet updated**
+> for the new `test:rules` suite / coming M5.4 isolation e2e (owner-flagged, fresh
+> session). **Next = M5.3 route audit + M5.4 two-tenant isolation e2e.** Its §6
+> prerequisite — the **Tier 1 write migration** — is **done 2026-07-18** (see §7 +
+> `log/FEATURE_MOD_LOG.md`).
 
 ### ⚠️ Production data was modified — 2026-07-20 (`mountainId` backfill)
 
@@ -744,17 +746,18 @@ Full detail: [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refac
 
 ### ⚠️ This Firestore is shared with a second application — M5 constraint
 
-`image_uploader` (13 docs) belongs to the **owner's separate image-uploader tool**,
-not to this codebase. Found via `listCollections()` during the 2026-07-20 backup
-work — it is referenced **nowhere** in `src`, scripts, or config, so no amount of
-code reading would surface it.
+`image_uploader` (13 docs) is the **owner's own image-upload script** (confirmed
+2026-07-22 — a one-off 2020-photo triage queue), not part of this codebase. Found via
+`listCollections()` during the 2026-07-20 backup work — referenced **nowhere** in
+`src`, scripts, or config. Also shares Storage (`images_thumbnail/` under the same
+bucket).
 
-What M5 has to account for:
+What M5 accounts for (verified benign):
 
-- **Rules changes land on a database another app writes to.** It has **no entry in
-  `config/firebase/firestore.rules`**, so client-SDK access is denied by default —
-  it must be using the Admin SDK, which bypasses rules and is therefore unaffected
-  by M5's rework. Confirm that assumption with the owner before the rules deploy.
+- **The M5.2b rules landed on this shared DB but don't touch `image_uploader`** — it
+  has **no entry in `config/firebase/firestore.rules`**, so it falls under
+  default-deny and must be using the Admin SDK (which bypasses rules). Unaffected by
+  the rework. ✅ Owner-confirmed it's the Admin-SDK uploader script.
 - **Its documents carry no `mountainId`** (excluded from the backfill by design).
   If that tool ever promotes records into `cat_images`, those writes must stamp
   `mountainId` or the images will disappear once M5 scopes reads.

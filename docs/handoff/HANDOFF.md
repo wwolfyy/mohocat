@@ -1,6 +1,6 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-21 · **Branch:** `dev` · **`main`:** promoted through PR #7
+**Last updated:** 2026-07-23 · **Branch:** `dev` · **`main`:** promoted through PR #7
 (2026-07-16)
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
@@ -45,30 +45,40 @@ the testing hand-off
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
-- **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4
-  ✅ COMPLETE (incl. the prod backfill); next = M5.** Q1–Q8 answered (management-only ·
-  B1 one-Firestore-`mountainId` · A1 one-Vercel + subdomains · visitor-facing
-  selector); plan + live tracker:
+- **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4 +
+  M5.1 + M5.2 ✅ COMPLETE (incl. the prod backfill); next = M5.3 route audit + M5.4
+  two-tenant isolation e2e.** Q1–Q8 answered (management-only · B1 one-Firestore-
+  `mountainId` · A1 one-Vercel + subdomains · visitor-facing selector); plan + live
+  tracker:
   [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md).
-  Four commits on `dev` (2026-07-19): docs `5672330` → M1 decoupling `8920c66` →
-  M2 config-layer `092d226` → M3 **`[mountain]` segment + middleware** `491b832`.
-  The app now serves every page through the tenant segment (URLs unchanged via
-  host-rewrite; `/geyang/…` path access works; unknown ids 404) — M3's gate was
-  the full e2e passing **without any spec rewrites** (116/0).
-  **M4 (`b83a112`, 2026-07-20):** the service factory is now
-  per-tenant (`getCatService(mountainId)` … , `perTenant()` instance cache), every
-  create path stamps `mountainId`, ~49 call sites threaded (`useMountain()` on the
-  client, `getRequestMountainId(request)` in API routes), model types carry
-  `mountainId?`, and `scripts/migration/backfill-mountain-id.js` + tenant-stamped
-  emulator seeding landed. Gates green: tsc, smoke 30/30, unit 39/39, **full e2e
-  116/13/0**, browser pass. **The prod backfill RAN 2026-07-20** (owner-authorized):
-  **99 docs stamped `mountainId='geyang'`** across 13 collections; verified by an
-  inverted dry-run re-run, identical per-collection totals, and an Admin-SDK field
-  spot-check proving `merge:true` preserved everything (incl. `adoptable`).
-  `admin_data` was empty; `permission_logs`' one doc was already stamped.
-  **Resume = M5** (scoped reads + mountain-aware rules + two-tenant isolation e2e),
-  now unblocked. ⚠️ M0's pending rules deploy must precede M5's rules changes;
-  M5's own rules deploy is owner-gated.
+  M1–M3 (`8920c66`/`092d226`/`491b832`, 2026-07-19) + **M4 (`b83a112`, 2026-07-20)**
+  landed the `[mountain]` segment + host-rewrite middleware, the per-tenant service
+  factory, write stamps, and the **prod backfill (99 docs stamped `mountainId=
+'geyang'`, triple-verified)**. See the workstream section for M1–M4 detail.
+  **M5.1 (`d4a0bb2`, 2026-07-22):** every content read scoped by `mountainId`
+  (collection queries + doc-by-id tenant guards + the 2 Admin-SDK server reads);
+  new `firestore.indexes.json` (6 composite indexes, **hand-derived — the emulator
+  auto-creates indexes and won't flag a missing one**). **M5.2 (`47d0f3d`,
+  2026-07-22):** the **role model is now a map keyed by `mountainId`** —
+  `users.currentRole` → `roles: Record<mountainId, UserRole>`, so one account can
+  admin several mountains and the host picks which applies (§0 sub-decision 6, owner
+  2026-07-22). `hasPermissionFor(uid, perm, mountainId)` everywhere; `firestore.rules`
+  rewritten mountain-aware (`canWrite` gates on the doc's own `mountainId` + blocks
+  cross-mountain moves; sensitive reads scoped; `users` read self-only; dead
+  `analytics` block removed); `requireApiPermission` folds in **M5.3's core**.
+  **M5.2a and M5.2b were inseparable at the emulator gate** (rules + seed both key on
+  the role shape). Gates: tsc, smoke 30/30, unit 39/39, **rules 11/11** (new mountain
+  dimension), **full e2e 116/13/0**. 🔑 **Two owner-gated prod actions remain, and
+  THE ORDER IS CRITICAL** (see Open threads): (1) run
+  `scripts/migration/migrate-m5-role-and-about.js` (`currentRole`→`roles`, normalizing
+  the legacy `'default'`→`geyang` so the admin account isn't stranded; + about-doc
+  copy), THEN (2) `firebase deploy --only firestore:rules`. A not-yet-migrated user
+  resolves to no permissions under the new rules (fail-closed). **Resume = M5.3 route
+  audit + M5.4 two-tenant isolation e2e.**
+- ⚠️ **NEXT-SESSION THREAD (owner-flagged): CI must be updated for M5.** The new
+  `npm run test:rules` suite (mountain-aware rules, 11 tests) is **not yet in CI**, so
+  the rules aren't CI-gated; the coming M5.4 two-tenant isolation e2e will also need
+  wiring. The owner wants this discussed fresh. See Open threads.
 - **NEW — data protection now exists (2026-07-20).** Prompted by M4's backfill
   running against prod with **no backup and no PITR** (safe only because it was
   additive and exactly reversible). Now in place: **PITR enabled** (7-day
@@ -81,20 +91,22 @@ the testing hand-off
   ⚠️ Dumps carry a live OAuth refresh token + `contacts`/`users` PII — local only,
   `/backups/` is git-ignored. A GCS export bucket was **considered and rejected**
   (a second PII store to secure and disclose, for protection PITR already gives).
-- ⚠️ **NEW — this Firestore is shared with a second app.** `image_uploader`
-  (13 docs) belongs to the **owner's separate image-uploader tool** and appears
-  nowhere in this codebase — found via `listCollections()`, not code. It has **no
-  `firestore.rules` entry** (client SDK denied by default; it must use the Admin
-  SDK) and **no `mountainId`** (excluded from the backfill by design). **M5 must
-  account for it:** rules changes land on a database another app writes to, and if
-  that tool ever promotes records into `cat_images` those writes need a
-  `mountainId` stamp or they'll vanish once reads are scoped.
-- **M0 is still owner-owed:** the pending `firestore:rules` deploy must land
-  _before_ M5's rules changes so that diff deploys clean.
+- **This Firestore is shared with a second app (owner-confirmed, benign).**
+  `image_uploader` (13 docs) is the **owner's own image-upload script** (confirmed
+  2026-07-22) — a one-off 2020-photo triage queue, invisible to this codebase, no
+  `firestore.rules` entry (Admin-SDK only), no `mountainId`. It also shares Storage
+  (`images_thumbnail/` under the same bucket). The M5.2b rules land on this shared DB
+  but don't touch `image_uploader` (default-deny, untouched). No action needed unless
+  that script ever promotes records into `cat_images` (then they'd need a `mountainId`
+  stamp).
+- ✅ **M0 rules deploy DONE (owner, 2026-07-22).** The pending pre-M5 `firestore:rules`
+  (급식소 CMS + scoped `users` self-write + Tier 1 admin-write-clause removal) were
+  deployed. ⚠️ **A NEW rules deploy is now owed** for M5.2b's mountain-aware rules —
+  and it must be preceded by the migration (see Open threads for the exact order).
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **Tree:** clean through `c8829e2` — this session-close doc pass rides in the
-  next commit. Nine commits on `dev`, **none pushed**.
+- **Tree:** clean through `47d0f3d`. Multi-tenant M5 rides in two commits on `dev` —
+  **M5.1 `d4a0bb2`, M5.2 `47d0f3d`** — plus the earlier bundle; **none pushed**.
 
 ---
 
@@ -165,20 +177,58 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 ✅ committed; next = M5)
+### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5.1 + M5.2 ✅ committed; next = M5.3 + M5.4)
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
 — the execution plan **and live tracker**: decisions locked (§0), target
 architecture (§1), design specs (§2), phases **M0–M8** with per-phase gates and
 in-place execution notes (§3), risks (§5), deferred items (§6). **Resume = its §3
-`M5`** (scoped reads + mountain-aware rules + two-tenant isolation e2e) — the
-largest and highest-risk phase of the track (leak-by-omission), and the one
-gated on M0's rules deploy landing first. Read M4's execution notes above it for
-what the service layer now looks like. The 2026-07-18 decision framework
+`M5`**, where M5.1/M5.2/M5.3-core are now checked off with execution notes and the
+remaining items are **M5.3 route audit + M5.4 two-tenant isolation e2e**. The
+2026-07-18 decision framework
 ([`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md))
-stays as the rationale record; its §9 table now carries the answers. PROJECT_PLAN
+stays as the rationale record; its §9 table carries the answers. PROJECT_PLAN
 **§9** is the tracker entry.
+
+**M5.1 (`d4a0bb2`, 2026-07-22) — scoped reads + indexes.** Every content read
+carries `where('mountainId','==',…)`; doc-by-id reads got a post-read tenant guard
+(a known cross-tenant id reads as "not found"). `media-albums` reads take an explicit
+`mountainId` (threaded from the `image-service`/`video-service` wrappers); the two
+Admin-SDK server reads (`getAllCatsServer`/`getAllPointsServer`) take it too, threaded
+through the pages via the layout's `resolveMountainIdOrNull`. New
+`config/firebase/firestore.indexes.json` (6 composite indexes) wired into
+`firebase.json` — ⚠️ **hand-derived, because the Firestore emulator auto-creates
+indexes and won't surface a missing one** (and these services swallow query errors to
+`[]`, so a prod-only gap would silently empty an album).
+
+**M5.2 (`47d0f3d`, 2026-07-22) — per-mountain role model + mountain-aware rules.**
+The role model is a **map keyed by `mountainId`** (§0 sub-decision 6): `roles:
+Record<mountainId, UserRole>`, one account can hold roles on several mountains, the
+host picks which applies. `hasPermissionFor(uid, perm, mountainId)` threaded through
+permission-service / `admin.ts` / the client hooks (via `useMountain()`) / butler
+pages / AdminAuth; `assign-role` deep-merges `roles[mountainId]`; the members roster
+route shows each user's role on the request mountain; **new signups get `roles: {}`**
+(no permissions until assigned — which also makes the self-write rule bulletproof).
+`firestore.rules` rewritten mountain-aware (`hasPermissionFor` + `canWrite` gating on
+the doc's own `mountainId` and blocking cross-mountain moves + sensitive-read scoping
+
+- self-only `users` read + dead `analytics` block removed); `requireApiPermission`
+  folds in **M5.3's core** (reads `roles[requestMountainId]`, returns the tenant).
+  ⚠️ **M5.2a and M5.2b are inseparable at the emulator gate** — rules + seed both key
+  on the role shape. Emulator **rules tests rewritten (`test:rules`, 11/11)** cover the
+  mountain dimension. `scripts/migration/migrate-m5-role-and-about.js` written (dry-run
+  default): Phase 1 `currentRole`→`roles[mountainId]` (⚠️ **normalizes legacy
+  `'default'`→`geyang`** so the prod admin isn't stranded), Phase 2 copies
+  `about_content/about`→`about_content/{mountainId}`. Gates: tsc, smoke 30/30, unit
+  39/39, rules 11/11, full e2e 116/13/0. **One benign new log** — a single self-healing
+  client-SDK `Listen` connection error during a member test (zero `onSnapshot` in the
+  code, no test impact); noted in case it recurs.
+
+⚠️ **Owner-gated, ORDER-CRITICAL, before M5.2 reaches prod:** (1) snapshot
+(`npm run backup:firestore`), (2) dry-run then `APPLY=true` the migration, (3) **only
+then** `firebase deploy --only firestore:rules`. A not-yet-migrated user resolves to
+no permissions under the new rules (fail-closed → locked out).
 
 **Executed so far (all on `dev`, 2026-07-19; every phase gated on tsc + smoke +
 unit + full e2e + browser pass):**
@@ -405,14 +455,30 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
-- ⚠️ **`firebase deploy --only firestore:rules`** — the one recurring pending **prod**
-  action. The repo `config/firebase/firestore.rules` is **ahead of deployed prod** by
-  accumulated changes (the 급식소 CMS rules from handoff-25/26, the testing
-  workstream's scoped `users` self-write rule, **and the Tier 1 `users`
-  admin-write-clause removal, 2026-07-18**). **One deploy syncs all of them.** Until
-  then prod rules lag the repo (harmless for Tier 1 — the app no longer uses the
-  removed clause). Post-deploy check: assign a role on `/admin/members` → confirm a
-  `permission_logs` doc appears.
+- 🔑 **M5.2 prod cutover — ORDER-CRITICAL (owner-run, Firebase creds).** Before M5.2
+  reaches production, in this exact order:
+  1. **Snapshot:** `npm run backup:firestore`.
+  2. **Dry-run the migration:** `node scripts/migration/migrate-m5-role-and-about.js`
+     — read the output (it prints the `currentRole`→`roles` plan + the `'default'`→
+     `geyang` normalization for the admin account; no writes).
+  3. **Apply:** `APPLY=true node scripts/migration/migrate-m5-role-and-about.js`.
+  4. **Only then deploy rules:** `firebase deploy --only firestore:rules`
+     (+ `firestore:indexes`). ⚠️ **If you deploy the rules before the migration, every
+     not-yet-migrated user resolves to no permissions (fail-closed) → locked out,
+     including the admin.** Post-deploy check: assign a role on `/admin/members` →
+     confirm a `permission_logs` doc appears; load `/pages/about` (reads
+     `about_content/{mountainId}`). The old `currentRole` + `about_content/about` are
+     left in place (reversible); delete once verified.
+  - _(M0 — the earlier pending rules bundle — was already deployed 2026-07-22, so the
+    M5.2b rules diff is the only thing ahead of prod now.)_
+- ⚠️ **NEXT-SESSION THREAD (owner-flagged): update CI for the M5 test surface.** The
+  new `npm run test:rules` (mountain-aware Firestore rules, 11 tests, emulator-backed)
+  is **not wired into GitHub Actions**, so the rules are not CI-gated — a rules
+  regression would pass CI today. The coming **M5.4 two-tenant isolation e2e** will
+  also need CI wiring, and the e2e seed/gate now assumes the `roles`-map shape. The
+  owner wants to design the CI changes in a **fresh session**. (CI lives in
+  `.github/workflows/`; `test:rules` needs the Firestore emulator step, like the e2e
+  job.)
 - **탈퇴 flow live click-through** with a **throwaway** account — it irreversibly
   deletes, so it hasn't been end-to-end clicked in prod yet.
 - **Compliance carry-overs** (deferred, accepted — reopen before scaling membership):
@@ -430,19 +496,17 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-Only this session-close doc pass (`docs/handoff/HANDOFF.md`, and PROJECT_PLAN if
-it moved). **All code and all other docs are committed through `c8829e2`** —
-nine commits on `dev`, **none pushed**:
+Only this doc pass (`docs/handoff/HANDOFF.md` + the two planning docs). **All code
+is committed; nothing is pushed.** Latest multi-tenant commits on `dev`:
 
-| Commit    | What                                                      |
-| --------- | --------------------------------------------------------- |
-| `b83a112` | M4 — per-tenant service factory + write stamps (57 files) |
-| `836297a` | M4 status → committed                                     |
-| `da19e1f` | prod backfill run & verified (99 docs)                    |
-| `79b3fae` | PROJECT_PLAN §9 — "production data was modified" callout  |
-| `a8d842f` | `export-firestore.js` + `/backups/` git-ignored           |
-| `d04c0cd` | admin-manual §10 — backups & recovery runbook             |
-| `c8829e2` | `import-firestore.js`, round-trip verified lossless       |
+| Commit    | What                                                                       |
+| --------- | -------------------------------------------------------------------------- |
+| `47d0f3d` | **M5.2** — per-mountain role model (map) + mountain-aware rules (17 files) |
+| `d4a0bb2` | **M5.1** — scope all content reads by `mountainId` + composite indexes     |
+| `6ba2b9d` | docs — TL;DR fix                                                           |
+| `69fcb00` | session close — M4 + data protection recorded                              |
+| `c8829e2` | `import-firestore.js`, round-trip verified lossless                        |
+| `b83a112` | M4 — per-tenant service factory + write stamps                             |
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -452,7 +516,28 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-20 (latest)** — **Data protection built, after M4's backfill exposed
+- **2026-07-22 (latest)** — **Multi-mountain M5.1 + M5.2 EXECUTED & COMMITTED.**
+  **M5.1 (`d4a0bb2`)**: every content read scoped by `mountainId` (collection
+  `where` + doc-by-id tenant guards + the 2 Admin-SDK server reads); new
+  `firestore.indexes.json` (6 composite indexes, hand-derived — the emulator won't
+  flag a missing one, and these services swallow query errors to `[]`). **M5.2
+  (`47d0f3d`)**: role model → **map keyed by `mountainId`** (§0 sub-decision 6, owner
+  2026-07-22 — one account can admin several mountains, host picks which);
+  `hasPermissionFor(uid, perm, mountainId)` everywhere; `firestore.rules` rewritten
+  mountain-aware (`canWrite` on the doc's own mountain + cross-mountain-move block +
+  sensitive-read scoping + self-only `users` read + dead `analytics` block removed);
+  `requireApiPermission` folds in M5.3's core; new signups get `roles: {}`. **M5.2a
+  and M5.2b proved inseparable at the emulator gate** (rules + seed both key on the
+  role shape). Migration `migrate-m5-role-and-about.js` written (dry-run default;
+  normalizes legacy `'default'`→`geyang` so the prod admin isn't stranded; + about-doc
+  copy). Rules tests rewritten (`test:rules` 11/11, mountain dimension). Gates: tsc,
+  smoke 30/30, unit 39/39, rules 11/11, full e2e 116/13/0. 🔑 **Two owner-gated prod
+  actions remain, ORDER-CRITICAL:** run the migration, THEN deploy the rules (a
+  not-yet-migrated user is fail-closed → locked out). **Owner deployed the M0 rules
+  bundle 2026-07-22.** Owner flagged **CI needs updating** for the new `test:rules`
+  suite (+ the coming M5.4 isolation e2e) — to be designed in a fresh session.
+  **Next: M5.3 route audit + M5.4 two-tenant isolation e2e.**
+- **2026-07-20** — **Data protection built, after M4's backfill exposed
   that there was none.** The prod backfill ran with **no snapshot and no PITR**;
   it was survivable only because the change was additive and exactly reversible
   (one known field, one known value), not because anything protected it. A
