@@ -461,9 +461,35 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
 > writes to prod ([`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner)).
 > PITR (7-day) + weekly backups are now in place as of 2026-07-20.
 
-- [ ] Per-tenant service factory (§2.3): scoped queries in all content services +
-      the 4 server read paths; composite indexes collected into
-      `firestore.indexes.json`.
+- [x] **M5.1 DONE (uncommitted) — scoped reads + server paths + indexes.** Every
+      content read now carries `where('mountainId','==', …)`; doc-by-id reads
+      (`getCatById`, `getPointById`, the post/announcement/adoption `getById`,
+      `getImageById`, `getVideoById`) gained a **post-read tenant guard** (a known
+      cross-tenant id reads as "not found" — `where` can't scope a doc-id read).
+      `media-albums` module reads took a `mountainId` param, threaded from the
+      tenant-constructed `image-service`/`video-service` wrappers. The two Admin-SDK
+      server reads (`getAllCatsServer`/`getAllPointsServer`) now take `mountainId`,
+      threaded through all 5 call sites via the layout's `resolveMountainIdOrNull` + `notFound()` pattern (`/api/points` already resolved the tenant → no change).
+      `firestore.indexes.json` created (6 composite indexes) + wired into
+      `firebase.json`. ⚠️ **Indexes were derived by hand, not by the emulator** — the
+      Firestore emulator auto-creates indexes and will not surface a missing one, so a
+      prod-only gap would throw → be swallowed by these services' catch-and-return-`[]`
+      → silently empty an album. The 6 cover the only index-requiring combos:
+      `cat_images`/`cat_videos` (mountainId + `tags` array-contains),
+      `posts_butler`/`posts_feeding`/`contacts` (mountainId + `createdAt` DESC),
+      `feeding_spots` (mountainId + `id` ASC). Two-equality queries (e.g. mountainId +
+      `showInModal`/`parentId`/`dwelling`) need **no** composite index — Firestore
+      merge-joins single-field indexes. Gates: tsc, smoke 30/30, unit 39/39, **full
+      e2e 116/13/0** (single-tenant emulator → scoping is a no-op since seeding stamps
+      `mountainId='geyang'`; the read audit is the real proof, not the e2e).
+      **Two deferred decisions surfaced, both left untouched (owner-owed):**
+      (a) `about_content/about` is a **single shared doc** — field-scoping can't
+      separate tenants; needs a per-tenant doc id + prod migration (already flagged in
+      M4 as "an M5 decision"). (b) `admin_config/youtube_auth` is one OAuth-credential
+      doc while each mountain has its own channel — a per-tenant YouTube-auth question,
+      out of M5.1's read scope. `permission_logs`/`admin_data` sensitive-read scoping
+      is intentionally **not** app-layer (dead read methods; `PermissionService` stays
+      central) — it lands in the rules rework below.
 - [ ] `firestore.rules` rework per §2.4 (`hasPermissionFor` + write stamps +
       sensitive-read scoping); **emulator rules tests** for the mountain dimension
       (deny cross-tenant write, deny cross-tenant contacts read, allow same-tenant).

@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import type { Cat } from '@/types';
 import { getAllCatsServer } from '@/lib/server/cat-reads';
 import { REVALIDATE_SECONDS } from '@/lib/cache-config';
+import { resolveMountainIdOrNull } from '@/lib/tenant';
 import AdoptionGallery from './AdoptionGallery';
 import AdoptionPromotionClient from '@/components/AdoptionPromotionClient';
 
@@ -17,11 +19,16 @@ export const revalidate = REVALIDATE_SECONDS;
  * Always renders (friendly empty state when none) so the nav links / CTA never
  * 404.
  */
-export default async function AdoptionPage() {
+export default async function AdoptionPage({ params }: { params: { mountain: string } }) {
+  const mountainId = resolveMountainIdOrNull(params.mountain);
+  if (!mountainId) {
+    notFound();
+  }
+
   let adoptable: Cat[] = [];
   let error = false;
   try {
-    const all = await getAllCatsServer();
+    const all = await getAllCatsServer(mountainId);
     // Only show adoptable cats that have a photo — a photo-less card would break
     // next/image and isn't useful on a showcase gallery anyway.
     adoptable = all.filter(

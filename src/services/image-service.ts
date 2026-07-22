@@ -25,7 +25,7 @@ export class FirebaseImageService implements IImageService {
   async getAllImages(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
-      return await getImagesFromMediaAlbums(options);
+      return await getImagesFromMediaAlbums(this.mountainId, options);
     } catch (error) {
       console.error('Error fetching images:', error);
       throw new Error('Failed to fetch images');
@@ -35,7 +35,7 @@ export class FirebaseImageService implements IImageService {
   async getCatImages(catName: string): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
-      return await getCatImagesFromMediaAlbums(catName);
+      return await getCatImagesFromMediaAlbums(catName, this.mountainId);
     } catch (error) {
       console.error('Error fetching cat images:', error);
       throw new Error('Failed to fetch cat images');
@@ -66,7 +66,7 @@ export class FirebaseImageService implements IImageService {
 
   async getImageById(imageId: string): Promise<any | null> {
     try {
-      return await getImageByIdFromMediaAlbums(imageId);
+      return await getImageByIdFromMediaAlbums(imageId, this.mountainId);
     } catch (error) {
       console.error('Error fetching image by ID:', error);
       throw new Error('Failed to fetch image by ID');

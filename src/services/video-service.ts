@@ -25,7 +25,7 @@ export class FirebaseVideoService implements IVideoService {
   async getAllVideos(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
-      return await getVideosFromMediaAlbums(options);
+      return await getVideosFromMediaAlbums(this.mountainId, options);
     } catch (error) {
       console.error('Error fetching videos:', error);
       throw new Error('Failed to fetch videos');
@@ -35,7 +35,7 @@ export class FirebaseVideoService implements IVideoService {
   async getCatVideos(catName: string): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
-      return await getCatVideosFromMediaAlbums(catName);
+      return await getCatVideosFromMediaAlbums(catName, this.mountainId);
     } catch (error) {
       console.error('Error fetching cat videos:', error);
       throw new Error('Failed to fetch cat videos');
@@ -66,7 +66,7 @@ export class FirebaseVideoService implements IVideoService {
 
   async getVideoById(videoId: string): Promise<any | null> {
     try {
-      return await getVideoByIdFromMediaAlbums(videoId);
+      return await getVideoByIdFromMediaAlbums(videoId, this.mountainId);
     } catch (error) {
       console.error('Error fetching video by ID:', error);
       throw new Error('Failed to fetch video by ID');

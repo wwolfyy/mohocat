@@ -34,7 +34,9 @@ export class FirebaseButlerTalkService implements IPostService {
         this.COLLECTION_NAME
       );
 
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
       console.log('FirebaseButlerTalkService: Query snapshot size:', querySnapshot.size);
 
       const allPosts = querySnapshot.docs.map((doc) => {
@@ -68,7 +70,11 @@ export class FirebaseButlerTalkService implements IPostService {
   async getAllPostsIncludingReplies(): Promise<any[]> {
     try {
       const querySnapshot = await getDocs(
-        query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'))
+        query(
+          collection(db, this.COLLECTION_NAME),
+          where('mountainId', '==', this.mountainId),
+          orderBy('createdAt', 'desc')
+        )
       );
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -91,7 +97,7 @@ export class FirebaseButlerTalkService implements IPostService {
       const docRef = doc(db, this.COLLECTION_NAME, postId);
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
+      if (docSnap.exists() && docSnap.data().mountainId === this.mountainId) {
         const data = docSnap.data();
         return {
           id: docSnap.id,
@@ -168,7 +174,11 @@ export class FirebaseButlerTalkService implements IPostService {
 
   async getReplies(postId: string): Promise<any[]> {
     try {
-      const q = query(collection(db, this.COLLECTION_NAME), where('parentId', '==', postId));
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
+        where('parentId', '==', postId)
+      );
 
       const querySnapshot = await getDocs(q);
       const replies = querySnapshot.docs.map((doc) => {

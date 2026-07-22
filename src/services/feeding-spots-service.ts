@@ -111,7 +111,11 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
   async getAllFeedingSpots(): Promise<FeedingSpot[]> {
     try {
       const feedingSpotsRef = collection(db, this.COLLECTION_NAME);
-      const q = query(feedingSpotsRef, orderBy('id', 'asc'));
+      const q = query(
+        feedingSpotsRef,
+        where('mountainId', '==', this.mountainId),
+        orderBy('id', 'asc')
+      );
       const querySnapshot = await getDocs(q);
 
       return querySnapshot.docs.map((doc) => {
@@ -148,7 +152,11 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
       const updatePromises = spotIds.map(async (spotId) => {
         // Find the document by id field
         const feedingSpotsRef = collection(db, this.COLLECTION_NAME);
-        const q = query(feedingSpotsRef, where('id', '==', spotId));
+        const q = query(
+          feedingSpotsRef,
+          where('mountainId', '==', this.mountainId),
+          where('id', '==', spotId)
+        );
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {

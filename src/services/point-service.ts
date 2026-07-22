@@ -7,7 +7,17 @@
 
 import type { IPointService } from './interfaces';
 import type { Point } from '../types';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebasePointService implements IPointService {
@@ -17,7 +27,9 @@ export class FirebasePointService implements IPointService {
 
   async getAllPoints(): Promise<Point[]> {
     try {
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -33,7 +45,7 @@ export class FirebasePointService implements IPointService {
       const docRef = doc(db, this.COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
+      if (docSnap.exists() && docSnap.data().mountainId === this.mountainId) {
         return {
           id: docSnap.id,
           ...docSnap.data(),

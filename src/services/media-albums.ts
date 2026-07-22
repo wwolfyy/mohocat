@@ -61,11 +61,11 @@ export const COLLECTIONS = {
 } as const;
 
 // Get images for a specific cat
-export const getCatImages = async (catName: string): Promise<CatImage[]> => {
+export const getCatImages = async (catName: string, mountainId: string): Promise<CatImage[]> => {
   try {
-    // Use a simpler query to avoid index requirement
     const q = query(
       collection(db, COLLECTIONS.CAT_IMAGES),
+      where('mountainId', '==', mountainId),
       where('tags', 'array-contains', catName)
     );
 
@@ -92,11 +92,11 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
 };
 
 // Get videos for a specific cat
-export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
+export const getCatVideos = async (catName: string, mountainId: string): Promise<CatVideo[]> => {
   try {
-    // Use a simpler query to avoid index requirement
     const q = query(
       collection(db, COLLECTIONS.CAT_VIDEOS),
+      where('mountainId', '==', mountainId),
       where('tags', 'array-contains', catName)
     );
 
@@ -123,10 +123,13 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
 };
 
 // Get all images (with optional filtering)
-export const getAllImages = async (options: MediaQueryOptions = {}): Promise<CatImage[]> => {
+export const getAllImages = async (
+  mountainId: string,
+  options: MediaQueryOptions = {}
+): Promise<CatImage[]> => {
   try {
     let q = collection(db, COLLECTIONS.CAT_IMAGES);
-    const constraints = [];
+    const constraints = [where('mountainId', '==', mountainId)];
 
     // Apply tag filtering if specified
     if (options.tags && options.tags.length > 0) {
@@ -134,7 +137,7 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
     }
 
     // Create query without orderBy to avoid index issues
-    const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
+    const queryRef = query(q, ...constraints);
     const querySnapshot = await getDocs(queryRef);
 
     let results = querySnapshot.docs.map((doc) => {
@@ -177,10 +180,13 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
 };
 
 // Get all videos (with optional filtering)
-export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<CatVideo[]> => {
+export const getAllVideos = async (
+  mountainId: string,
+  options: MediaQueryOptions = {}
+): Promise<CatVideo[]> => {
   try {
     let q = collection(db, COLLECTIONS.CAT_VIDEOS);
-    const constraints = [];
+    const constraints = [where('mountainId', '==', mountainId)];
 
     // Apply tag filtering if specified
     if (options.tags && options.tags.length > 0) {
@@ -188,7 +194,7 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
     }
 
     // Create query without orderBy to avoid index issues
-    const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
+    const queryRef = query(q, ...constraints);
     const querySnapshot = await getDocs(queryRef);
 
     let results = querySnapshot.docs.map((doc) => {
@@ -323,12 +329,17 @@ export const getStorageFileUrl = async (storagePath: string): Promise<string | n
 
 // Additional CRUD operations for images
 
-export const getImageById = async (imageId: string): Promise<CatImage | null> => {
+export const getImageById = async (
+  imageId: string,
+  mountainId: string
+): Promise<CatImage | null> => {
   try {
     const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
     const imageDoc = await getDoc(imageRef);
 
-    if (!imageDoc.exists()) {
+    // Doc-id reads can't be scoped by `where` — check the tenant after the read
+    // so a known id from another mountain reads as "not found".
+    if (!imageDoc.exists() || imageDoc.data().mountainId !== mountainId) {
       return null;
     }
 
@@ -470,6 +481,7 @@ export const syncImages = async (mountainId: string): Promise<boolean> => {
             // Check if already exists in Firestore
             const q = query(
               collection(db, COLLECTIONS.CAT_IMAGES),
+              where('mountainId', '==', mountainId),
               where('storagePath', '==', storagePath)
             );
             const existingDocs = await getDocs(q);
@@ -522,12 +534,17 @@ export const syncImages = async (mountainId: string): Promise<boolean> => {
 
 // Additional CRUD operations for videos
 
-export const getVideoById = async (videoId: string): Promise<CatVideo | null> => {
+export const getVideoById = async (
+  videoId: string,
+  mountainId: string
+): Promise<CatVideo | null> => {
   try {
     const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
     const videoDoc = await getDoc(videoRef);
 
-    if (!videoDoc.exists()) {
+    // Doc-id reads can't be scoped by `where` — check the tenant after the read
+    // so a known id from another mountain reads as "not found".
+    if (!videoDoc.exists() || videoDoc.data().mountainId !== mountainId) {
       return null;
     }
 
@@ -632,7 +649,10 @@ export const syncVideos = async (mountainId: string): Promise<boolean> => {
     console.log(`Found ${youtubeVideos.length} videos on YouTube channel`);
 
     // Get existing videos from Firestore
-    const existingVideosQuery = query(collection(db, COLLECTIONS.CAT_VIDEOS));
+    const existingVideosQuery = query(
+      collection(db, COLLECTIONS.CAT_VIDEOS),
+      where('mountainId', '==', mountainId)
+    );
     const existingVideosSnapshot = await getDocs(existingVideosQuery);
     const existingYouTubeIds = new Set();
 

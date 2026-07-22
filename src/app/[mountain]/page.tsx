@@ -1,7 +1,9 @@
+import { notFound } from 'next/navigation';
 import MountainViewer from '@/components/MountainViewer';
 import { getAllPointsServer } from '@/lib/server/point-reads';
 import { getAllCatsServer, groupCatsByPoint } from '@/lib/server/cat-reads';
 import { REVALIDATE_SECONDS } from '@/lib/cache-config';
+import { resolveMountainIdOrNull } from '@/lib/tenant';
 
 // §7a: bake points + cats at build/server time (Admin SDK) so the landing map
 // needs zero client Firestore queries for positions or avatars. ISR fallback
@@ -9,10 +11,18 @@ import { REVALIDATE_SECONDS } from '@/lib/cache-config';
 // docs/manuals/deployment/README.md → "ISR revalidation".
 export const revalidate = REVALIDATE_SECONDS;
 
-export default async function Home() {
+export default async function Home({ params }: { params: { mountain: string } }) {
+  const mountainId = resolveMountainIdOrNull(params.mountain);
+  if (!mountainId) {
+    notFound();
+  }
+
   // Points (positions) and cats (avatars) are both read server-side via the
   // Admin SDK and baked into the render — the client map receives them as props.
-  const [points, cats] = await Promise.all([getAllPointsServer(), getAllCatsServer()]);
+  const [points, cats] = await Promise.all([
+    getAllPointsServer(mountainId),
+    getAllCatsServer(mountainId),
+  ]);
   const catsByPoint = groupCatsByPoint(cats);
 
   return (

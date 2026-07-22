@@ -19,11 +19,15 @@ import type { Point } from '@/types';
 
 const POINTS_COLLECTION = 'points';
 
-/** Reads every feeding point once via the Admin SDK. Logs + re-raises on failure
- *  (a build read that fails must surface, not silently ship an empty map). */
-export async function getAllPointsServer(): Promise<Point[]> {
+/** Reads a tenant's feeding points once via the Admin SDK. Logs + re-raises on
+ *  failure (a build read that fails must surface, not silently ship an empty
+ *  map). */
+export async function getAllPointsServer(mountainId: string): Promise<Point[]> {
   try {
-    const snapshot = await db.collection(POINTS_COLLECTION).get();
+    const snapshot = await db
+      .collection(POINTS_COLLECTION)
+      .where('mountainId', '==', mountainId)
+      .get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Point[];
   } catch (error) {
     console.error('[point-reads] Failed to read points via Admin SDK:', error);

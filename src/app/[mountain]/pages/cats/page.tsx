@@ -1,7 +1,9 @@
+import { notFound } from 'next/navigation';
 import type { Cat, Point } from '@/types';
 import { getAllPointsServer } from '@/lib/server/point-reads';
 import { getAllCatsServer } from '@/lib/server/cat-reads';
 import { REVALIDATE_SECONDS } from '@/lib/cache-config';
+import { resolveMountainIdOrNull } from '@/lib/tenant';
 import CatsBrowser from './CatsBrowser';
 
 // §7a: bake the cat + point reads at build/server time (Admin SDK / server read)
@@ -16,12 +18,20 @@ export const revalidate = REVALIDATE_SECONDS;
  * cat's `dwelling` id into a human-readable point title. Always renders (friendly
  * empty / error states) so the nav link never 404s.
  */
-export default async function CatsPage() {
+export default async function CatsPage({ params }: { params: { mountain: string } }) {
+  const mountainId = resolveMountainIdOrNull(params.mountain);
+  if (!mountainId) {
+    notFound();
+  }
+
   let cats: Cat[] = [];
   let dwellingNames: Record<string, string> = {};
   let error = false;
   try {
-    const [allCats, points] = await Promise.all([getAllCatsServer(), getAllPointsServer()]);
+    const [allCats, points] = await Promise.all([
+      getAllCatsServer(mountainId),
+      getAllPointsServer(mountainId),
+    ]);
     cats = allCats;
     dwellingNames = points.reduce<Record<string, string>>((acc, p: Point) => {
       acc[p.id] = p.title;

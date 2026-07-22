@@ -7,7 +7,7 @@
 
 import type { IContactService } from './interfaces';
 import type { Contact } from '../types';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebaseContactService implements IContactService {
@@ -24,7 +24,11 @@ export class FirebaseContactService implements IContactService {
    */
   async getAllContacts(): Promise<Contact[]> {
     try {
-      const q = query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'));
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
+        orderBy('createdAt', 'desc')
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => ({
         id: doc.id,

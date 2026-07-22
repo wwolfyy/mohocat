@@ -28,7 +28,9 @@ export class FirebaseCatService implements ICatService {
 
   async getAllCats(): Promise<Cat[]> {
     try {
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -44,7 +46,9 @@ export class FirebaseCatService implements ICatService {
       const docRef = doc(db, this.COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
+      // Doc-id reads can't be scoped by `where` — check the tenant after the
+      // read so a known id from another mountain reads as "not found".
+      if (docSnap.exists() && docSnap.data().mountainId === this.mountainId) {
         return {
           id: docSnap.id,
           ...docSnap.data(),
@@ -60,7 +64,11 @@ export class FirebaseCatService implements ICatService {
 
   async getCatByName(name: string): Promise<Cat | null> {
     try {
-      const q = query(collection(db, this.COLLECTION_NAME), where('name', '==', name));
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
+        where('name', '==', name)
+      );
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -83,6 +91,7 @@ export class FirebaseCatService implements ICatService {
       // Get current cats - those with dwelling matching pointId
       const currentQuery = query(
         collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
         where('dwelling', '==', pointId)
       );
       const currentSnapshot = await getDocs(currentQuery);
@@ -94,6 +103,7 @@ export class FirebaseCatService implements ICatService {
       // Get former cats - those with prev_dwelling matching pointId
       const formerQuery = query(
         collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
         where('prev_dwelling', '==', pointId)
       );
       const formerSnapshot = await getDocs(formerQuery);
