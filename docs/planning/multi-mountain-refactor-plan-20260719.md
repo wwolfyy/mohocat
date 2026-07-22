@@ -7,14 +7,18 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M4 ✅ COMPLETE** (docs `5672330` → M1 `8920c66`
-> → M2 `092d226` → M3 `491b832`, 2026-07-19; **M4 `b83a112`, 2026-07-20** — gates
-> green, full e2e 116/13/0, **prod backfill run & verified: 99 docs stamped**).
-> **Next: M5** (scoped reads + mountain-aware rules + isolation e2e) — now
-> unblocked, since every prod doc carries `mountainId`. ⚠️ **M0's pending
-> `firestore:rules` deploy must still land before M5's rules changes** so that
-> diff deploys clean. Process note: commits are **owner-gated** (the brief
-> same-day auto-commit grant was revoked); the M5 rules deploy is owner-gated.
+> **Status:** 🚧 **EXECUTING — M1–M4 + M5.1 + M5.2 ✅ COMPLETE.** M1–M3 (`8920c66`/
+> `092d226`/`491b832`, 2026-07-19) → **M4** `b83a112` (2026-07-20, incl. the verified
+> 99-doc prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite indexes →
+> **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) +
+> mountain-aware rules (both 2026-07-22). M5.2a/M5.2b were **inseparable at the
+> emulator gate**. Gates: tsc, smoke 30/30, unit 39/39, **rules 11/11**, full e2e
+> 116/13/0. **M0 rules deploy DONE (owner, 2026-07-22).** ⚠️ **A NEW rules deploy is
+> owed for M5.2b — ORDER-CRITICAL: run `migrate-m5-role-and-about.js` FIRST, then
+> deploy** (a not-yet-migrated user is fail-closed → locked out). **Next: M5.3 route
+> audit + M5.4 two-tenant isolation e2e** (needs a `manisan` stub in config + seed —
+> see M5.4). ⚠️ CI not yet updated for `test:rules` / the isolation e2e (owner-flagged,
+> fresh session). Process note: commits are **owner-gated**.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -502,8 +506,8 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
       central) — it lands in the rules rework below.
 - [x] **M5.2a — role model → map keyed by `mountainId`** (§0 sub-decision 6). DONE
       (uncommitted). `UserPermissions.currentRole` → `roles: Record<mountainId,
-  UserRole>`; permission resolution is `hasPermissionFor(userId, permission,
-  mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
+UserRole>`; permission resolution is `hasPermissionFor(userId, permission,
+mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
       `usePermissions`/`usePermissionCheck` via `useMountain()` + butler pages +
       AdminAuth all threaded); `assign-role` writes `roles[mountainId]` via deep-merge
       (other mountains' roles preserved) and retires only that mountain's prior role
