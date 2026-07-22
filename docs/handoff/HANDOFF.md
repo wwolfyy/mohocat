@@ -46,8 +46,15 @@ the testing hand-off
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
 - **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4 +
-  M5.1 + M5.2 ✅ COMPLETE (incl. the prod backfill); next = M5.3 route audit + M5.4
-  two-tenant isolation e2e.** Q1–Q8 answered (management-only · B1 one-Firestore-
+  M5.1 + M5.2 + M5.3 ✅ COMPLETE (incl. the prod backfill); next = M5.4 two-tenant
+  isolation e2e.** **M5.3 route audit DONE (2026-07-23):** walked all 21 `src/app/api/**`
+  routes — every Firestore access path is either correctly tenant-scoped (cats/points/
+  contact/assign-role/upload-youtube video record) or correctly central-by-design
+  (users, `role_permissions/*` matrix). **No leak-by-omission.** The only residual
+  cross-tenant surface is the **shared YouTube channel** (non-Firestore; already deferred
+  = M5.1 note b — `getYouTubeChannelId` is per-tenant config but the OAuth credential /
+  `admin_config/youtube_auth` is shared). Out-of-scope find logged as an open thread: 7
+  ungated write/credential routes (pre-existing, orthogonal to tenancy). Q1–Q8 answered (management-only · B1 one-Firestore-
   `mountainId` · A1 one-Vercel + subdomains · visitor-facing selector); plan + live
   tracker:
   [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md).
@@ -68,13 +75,14 @@ the testing hand-off
   `analytics` block removed); `requireApiPermission` folds in **M5.3's core**.
   **M5.2a and M5.2b were inseparable at the emulator gate** (rules + seed both key on
   the role shape). Gates: tsc, smoke 30/30, unit 39/39, **rules 11/11** (new mountain
-  dimension), **full e2e 116/13/0**. 🔑 **Two owner-gated prod actions remain, and
-  THE ORDER IS CRITICAL** (see Open threads): (1) run
-  `scripts/migration/migrate-m5-role-and-about.js` (`currentRole`→`roles`, normalizing
-  the legacy `'default'`→`geyang` so the admin account isn't stranded; + about-doc
-  copy), THEN (2) `firebase deploy --only firestore:rules`. A not-yet-migrated user
-  resolves to no permissions under the new rules (fail-closed). **Resume = M5.3 route
-  audit + M5.4 two-tenant isolation e2e.**
+  dimension), **full e2e 116/13/0**. 🔑 **The owner-gated prod cutover is
+  ORDER-CRITICAL** and the order was **corrected 2026-07-23**: it is _not_ just
+  "migrate → deploy rules" — the M5.2b rules deny any `mountainId`-less write and the
+  stamping code (M4) is only on `dev`, so the `dev → main` promotion must land **between**
+  the migration and the rules deploy (and indexes must build before the app goes live).
+  Full 6-step sequence + rollbacks in the Open threads and the
+  [`m5-prod-cutover-runbook`](../manuals/deployment/m5-prod-cutover-runbook.md). **Resume =
+  M5.4 two-tenant isolation e2e** (M5.3 route audit done 2026-07-23).
 - ⚠️ **NEXT-SESSION THREAD (owner-flagged): CI must be updated for M5.** The new
   `npm run test:rules` suite (mountain-aware rules, 11 tests) is **not yet in CI**, so
   the rules aren't CI-gated; the coming M5.4 two-tenant isolation e2e will also need
@@ -177,15 +185,15 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5.1 + M5.2 ✅ committed; next = M5.3 + M5.4)
+### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5.1 + M5.2 committed, M5.3 audit ✅; next = M5.4)
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
 — the execution plan **and live tracker**: decisions locked (§0), target
 architecture (§1), design specs (§2), phases **M0–M8** with per-phase gates and
 in-place execution notes (§3), risks (§5), deferred items (§6). **Resume = its §3
-`M5`**, where M5.1/M5.2/M5.3-core are now checked off with execution notes and the
-remaining items are **M5.3 route audit + M5.4 two-tenant isolation e2e**. The
+`M5`**, where M5.1/M5.2/M5.3 are now checked off with execution notes and the
+remaining item is **M5.4 two-tenant isolation e2e**. The
 2026-07-18 decision framework
 ([`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md))
 stays as the rationale record; its §9 table carries the answers. PROJECT_PLAN
@@ -225,10 +233,15 @@ the doc's own `mountainId` and blocking cross-mountain moves + sensitive-read sc
   client-SDK `Listen` connection error during a member test (zero `onSnapshot` in the
   code, no test impact); noted in case it recurs.
 
-⚠️ **Owner-gated, ORDER-CRITICAL, before M5.2 reaches prod:** (1) snapshot
-(`npm run backup:firestore`), (2) dry-run then `APPLY=true` the migration, (3) **only
-then** `firebase deploy --only firestore:rules`. A not-yet-migrated user resolves to
-no permissions under the new rules (fail-closed → locked out).
+⚠️ **Owner-gated, ORDER-CRITICAL, before M5.2 reaches prod (order CORRECTED 2026-07-23):**
+(1) snapshot (`npm run backup:firestore`), (2) dry-run then `APPLY=true` the migration,
+(3) deploy **indexes** and wait for the build, (4) promote `dev → main` so the app that
+stamps `mountainId` (M4) is live on prod, (5) **only then**
+`firebase deploy --only firestore:rules`. The promotion must sit **between** the migration
+and the rules deploy — the rules deny any `mountainId`-less write and the stamping code is
+only on `dev`. A not-yet-migrated user resolves to no permissions (fail-closed → locked
+out). Full runbook:
+[`m5-prod-cutover-runbook`](../manuals/deployment/m5-prod-cutover-runbook.md).
 
 **Executed so far (all on `dev`, 2026-07-19; every phase gated on tsc + smoke +
 unit + full e2e + browser pass):**
@@ -455,22 +468,39 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
-- 🔑 **M5.2 prod cutover — ORDER-CRITICAL (owner-run, Firebase creds).** Before M5.2
-  reaches production, in this exact order:
+- 🔑 **M5 prod cutover — ORDER-CRITICAL (owner-run, Firebase creds + Vercel promotion).**
+  ⚠️ **Corrected 2026-07-23 (runbook prep):** the earlier "migrate → deploy rules" order
+  was **incomplete** and would black out the CMS. The M5.2b rules enforce writes via
+  `canWrite()` → `writeMountainId()`; a write with **no `mountainId`** field resolves
+  `null` → **denied**. All content writes are **client-SDK**, and the code that stamps
+  `mountainId` (**M4 `b83a112`**) is **only on `dev`, not on prod `main`**. So the
+  `dev → main` promotion (app code) must land **between** the migration and the rules
+  deploy — and the **indexes must build before the app goes live** (M5.1 scoped queries
+  need them; failures get swallowed to `[]` → empty albums). **Safe sequence:**
   1. **Snapshot:** `npm run backup:firestore`.
-  2. **Dry-run the migration:** `node scripts/migration/migrate-m5-role-and-about.js`
-     — read the output (it prints the `currentRole`→`roles` plan + the `'default'`→
-     `geyang` normalization for the admin account; no writes).
-  3. **Apply:** `APPLY=true node scripts/migration/migrate-m5-role-and-about.js`.
-  4. **Only then deploy rules:** `firebase deploy --only firestore:rules`
-     (+ `firestore:indexes`). ⚠️ **If you deploy the rules before the migration, every
-     not-yet-migrated user resolves to no permissions (fail-closed) → locked out,
-     including the admin.** Post-deploy check: assign a role on `/admin/members` →
-     confirm a `permission_logs` doc appears; load `/pages/about` (reads
-     `about_content/{mountainId}`). The old `currentRole` + `about_content/about` are
-     left in place (reversible); delete once verified.
+  2. **Migrate:** dry-run `node scripts/migration/migrate-m5-role-and-about.js` (read the
+     `currentRole`→`roles` plan + the `'default'`→`geyang` admin normalization), then
+     `APPLY=true …`, then re-dry-run (expect `would migrate=0`). Purely additive →
+     prod's old app keeps working.
+  3. **Deploy indexes:** `firebase deploy --only firestore:indexes --project
+mountaincats-61543` → **wait until all 6 show `Enabled`** in the console.
+  4. **Promote `dev → main`** (PR, `e2e` green, **merge commit**) → Vercel deploys prod.
+     Verify geyang public (map/albums/공지 not empty) + `/admin` loads **before** step 5.
+     Old rules still permit the now-stamped writes.
+  5. **Deploy rules (LAST):** `firebase deploy --only firestore:rules --project
+mountaincats-61543`. Verify immediately: a CMS cat edit saves; a role-assign on
+     `/admin/members` writes a `permission_logs` doc; `/pages/about` renders. Rollback =
+     redeploy `git show 47d0f3d^:config/firebase/firestore.rules`.
+  6. **Cleanup** after a day: delete legacy `currentRole` + `about_content/about` (both
+     left in place, reversible) + the local dump (secrets/PII).
+  - **Full step-by-step with per-step rollback:**
+    [`docs/manuals/deployment/m5-prod-cutover-runbook.md`](../manuals/deployment/m5-prod-cutover-runbook.md).
   - _(M0 — the earlier pending rules bundle — was already deployed 2026-07-22, so the
-    M5.2b rules diff is the only thing ahead of prod now.)_
+    M5.2b rules diff is the only rules change ahead of prod.)_
+  - ⚠️ **Also gates the promotion:** P5.4 manual YouTube pass (owner-owed before any
+    `dev → main`), and note this ships M1–M5.3 while **M5.4 isolation e2e isn't written
+    yet** — geyang single-tenant behavior is preserved throughout, so shipping-first is
+    safe, but the isolation _proof_ then lands after prod.
 - ⚠️ **NEXT-SESSION THREAD (owner-flagged): update CI for the M5 test surface.** The
   owner wants to design the CI changes in a **fresh session**. Three coupled pieces:
   1. **Wire `npm run test:rules` into CI.** The mountain-aware Firestore rules (11
@@ -489,6 +519,15 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
      pulled forward because M5.4/CI depend on it.
   3. **The e2e seed/gate now assumes the `roles`-map shape** (M5.2) — any CI change
      must keep that in sync.
+- ⚠️ **7 ungated write/credential API routes (pre-existing auth gap, surfaced by the
+  M5.3 route audit 2026-07-23).** These have **no auth gate at all** — any unauthenticated
+  caller can hit them: `manage-playlists`, `refresh-video-metadata`, `update-youtube-video`,
+  `upload-youtube` (writes a Firestore video record via the Admin SDK), `youtube-playlists`,
+  `generate-signed-url` (mints storage upload URLs), `generate-youtube-signed-url`. This is
+  **orthogonal to multi-tenancy** (not an M5 regression — the routes predate the refactor),
+  so it was logged rather than fixed inside M5.3. Fix = add `requireApiPermission`
+  (`manage-video` for the YouTube routes; an appropriate perm for the signed-url routes),
+  as its own small hardening pass. Owner chose "log as a thread" 2026-07-23.
 - **탈퇴 flow live click-through** with a **throwaway** account — it irreversibly
   deletes, so it hasn't been end-to-end clicked in prod yet.
 - **Compliance carry-overs** (deferred, accepted — reopen before scaling membership):
@@ -526,7 +565,25 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-22 (latest)** — **Multi-mountain M5.1 + M5.2 EXECUTED & COMMITTED.**
+- **2026-07-23 (latest)** — **Multi-mountain M5.3 route audit DONE (docs-only; no code
+  change).** Walked all 21 `src/app/api/**` routes, checking every Firestore access path
+  against the tenant model. **Verdict: no leak-by-omission** — content routes are
+  tenant-scoped (cats/points/contact/assign-role/upload-youtube video record) and the
+  identity/central-config routes (`users`, `role_permissions/*` matrix) are global by
+  design. Only residual cross-tenant surface = the **shared YouTube channel**
+  (non-Firestore; already deferred = M5.1 note b: per-tenant `getYouTubeChannelId` config
+  but a single shared OAuth credential / `admin_config/youtube_auth` doc). Surfaced a
+  **pre-existing, tenancy-orthogonal** gap — **7 ungated write/credential routes** — and
+  logged it as an owner-owed open thread (owner chose log-not-fix). Plan §3 M5.3 checked
+  off with the full per-route verdict; M5.4 two-tenant isolation e2e is the only M5
+  remainder. **Next: M5.4** (blocked on the `manisan` stub in config + seed — the
+  owner-flagged fresh-session CI thread). **Also prepped the M5 prod-cutover runbook and
+  CORRECTED the cutover order:** the prior "migrate → deploy rules" thread was incomplete
+  — the M5.2b rules deny any `mountainId`-less write, and the stamping code (M4) is only
+  on `dev`, so the `dev → main` promotion must land **between** migrate and rules, and
+  indexes must build before the app goes live. Open thread rewritten to the safe 6-step
+  sequence with rollbacks.
+- **2026-07-22** — **Multi-mountain M5.1 + M5.2 EXECUTED & COMMITTED.**
   **M5.1 (`d4a0bb2`)**: every content read scoped by `mountainId` (collection
   `where` + doc-by-id tenant guards + the 2 Admin-SDK server reads); new
   `firestore.indexes.json` (6 composite indexes, hand-derived — the emulator won't

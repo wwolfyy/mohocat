@@ -7,7 +7,7 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M4 + M5.1 + M5.2 ✅ COMPLETE.** M1–M3 (`8920c66`/
+> **Status:** 🚧 **EXECUTING — M1–M4 + M5.1 + M5.2 + M5.3 ✅ COMPLETE.** M1–M3 (`8920c66`/
 > `092d226`/`491b832`, 2026-07-19) → **M4** `b83a112` (2026-07-20, incl. the verified
 > 99-doc prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite indexes →
 > **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) +
@@ -15,9 +15,10 @@
 > emulator gate**. Gates: tsc, smoke 30/30, unit 39/39, **rules 11/11**, full e2e
 > 116/13/0. **M0 rules deploy DONE (owner, 2026-07-22).** ⚠️ **A NEW rules deploy is
 > owed for M5.2b — ORDER-CRITICAL: run `migrate-m5-role-and-about.js` FIRST, then
-> deploy** (a not-yet-migrated user is fail-closed → locked out). **Next: M5.3 route
-> audit + M5.4 two-tenant isolation e2e** (needs a `manisan` stub in config + seed —
-> see M5.4). ⚠️ CI not yet updated for `test:rules` / the isolation e2e (owner-flagged,
+> deploy** (a not-yet-migrated user is fail-closed → locked out). **M5.3 route audit DONE
+> (2026-07-23 — no leak-by-omission; only residual cross-tenant surface is the shared
+> YouTube channel, non-Firestore/deferred). Next: M5.4 two-tenant isolation e2e** (needs
+> a `manisan` stub in config + seed — see M5.4). ⚠️ CI not yet updated for `test:rules` / the isolation e2e (owner-flagged,
 > fresh session). Process note: commits are **owner-gated**.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
@@ -456,7 +457,7 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
   Worth hardening if it recurs — the durable fix would be awaiting the unmount
   commit rather than deferring a macrotask.
 
-### M5 — ⏭️ NEXT — Data tenancy 2: scoped reads + enforcement (large)
+### M5 — 🚧 IN PROGRESS (M5.1/M5.2/M5.3 ✅; M5.4 next) — Data tenancy 2: scoped reads + enforcement (large)
 
 > **Read first — two things learned after this phase was written:**
 >
@@ -539,9 +540,33 @@ mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
 - [x] **M5.3 core — `requireApiPermission` mountain enforcement** DONE (uncommitted;
       folded in with the model change since it reads the same shape): resolves the
       request tenant by Host, reads `roles[requestMountainId]`, and returns the
-      `mountainId` to the route. A role on another mountain grants nothing. ⏳ Remaining
-      M5.3: the systematic audit of every Admin-SDK route's Firestore access against the
-      SDK/read inventories.
+      `mountainId` to the route. A role on another mountain grants nothing.
+- [x] **M5.3 route audit — DONE (2026-07-23).** Walked all 21 `src/app/api/**` routes
+      and checked every Firestore access path against the tenant model. **Verdict: no
+      leak-by-omission — every Firestore path is either correctly tenant-scoped or
+      correctly central-by-design.** - **Content routes tenant-scoped ✅:** `/api/admin/cats` (GET+POST) via
+      `getCatService(mountainId)`, `/api/points` via `getPointService(mountainId)`,
+      `/api/contact` stamps `contacts.mountainId`, `/api/admin/assign-role` writes
+      `users.roles[mountainId]` + a `mountainId`-stamped `permission_logs` entry
+      (cross-mountain roles preserved via deep-merge), `/api/upload-youtube` writes the
+      video record via `getVideoService(mountainId)`. - **Identity / central-config routes global _by design_ ✅:** `/api/account/delete`
+      deletes the whole `users/{uid}` (탈퇴 = leaving the platform, uid from token);
+      `/api/admin/get-all-user-permissions-client` reads the central `users` roster but
+      **projects each user's `roles[mountainId]`**; `/api/admin/role-permissions` +
+      `/api/admin/resource-permissions` read/write the platform-wide `role_permissions/*`
+      matrix (only role _assignment_ is per-tenant). - **No-Firestore / stub:** `/api/admin/posts-collections` (unimplemented),
+      `/api/revalidate` (iterates **all** mountains' baked paths — correct),
+      `/api/auth/kakao/callback`, `youtube-playlists`. - **Only residual cross-tenant surface = the shared YouTube channel (non-Firestore,
+      already deferred = M5.1 note b):** `getYouTubeChannelId(mountainId)` is per-tenant
+      (config), but `getYouTubeOAuthConfig()` + `admin_config/youtube_auth` are a single
+      shared credential/doc, so `upload-youtube` / `update-youtube-video` target one
+      shared channel regardless of tenant. Video _records_ are stamped, so no Firestore
+      leak; the underlying channel isn't isolated. - **Out-of-scope find (pre-existing, NOT a multi-tenant regression) — logged as an
+      owner-owed thread in HANDOFF:** 7 write/credential-capable routes have **no auth
+      gate at all** (`manage-playlists`, `refresh-video-metadata`, `update-youtube-video`,
+      `upload-youtube`, `youtube-playlists`, `generate-signed-url`,
+      `generate-youtube-signed-url`). Orthogonal to tenancy; surfaced by the systematic
+      walk.
 - [ ] **M5.4 — two-tenant e2e isolation spec.** 🔑 **Config prerequisite (the config
       half of M8's stub tenant, pulled forward):** the platform is currently configured
       with **only `geyang`** and the seed uses a single `SEED_MOUNTAIN_ID`. First add a
