@@ -60,6 +60,16 @@
 5. **Dead `analytics` Firestore scaffolding is deleted** (rules block + nothing else —
    the `view-analytics` _permission_ survives; `permission_logs` reads use it). 🔑
    Owner may veto at M7.
+6. **Roles are a map keyed by `mountainId`** (owner, 2026-07-22), NOT a singular
+   `currentRole` and NOT an array — one account can hold an active role on **several**
+   mountains at once, and the host/URL picks which one applies:
+   `users/{uid}.roles = { geyang: {role,permissions,isActive,…}, manisan: {…} }`.
+   A **map** (not array) is mandatory so rules do an O(1) key lookup
+   (`get(user).data.roles[mountainId].permissions.hasAny([...])`) instead of iterating.
+   **No owner bypass** — the controller is simply a user with an admin role on every
+   mountain (fully audited). This reshapes M5.2/M5.3 (see M5) and adds a small additive
+   `users` migration (`currentRole` → `roles[mountainId]`). Supersedes the earlier
+   single-role + owner-bypass sketch.
 
 ---
 
@@ -490,16 +500,50 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
       out of M5.1's read scope. `permission_logs`/`admin_data` sensitive-read scoping
       is intentionally **not** app-layer (dead read methods; `PermissionService` stays
       central) — it lands in the rules rework below.
-- [ ] `firestore.rules` rework per §2.4 (`hasPermissionFor` + write stamps +
-      sensitive-read scoping); **emulator rules tests** for the mountain dimension
-      (deny cross-tenant write, deny cross-tenant contacts read, allow same-tenant).
-- [ ] `requireApiPermission` mountain enforcement + audit of every Admin-SDK route's
-      Firestore access against the two inventories.
+- [x] **M5.2a — role model → map keyed by `mountainId`** (§0 sub-decision 6). DONE
+      (uncommitted). `UserPermissions.currentRole` → `roles: Record<mountainId,
+    UserRole>`; permission resolution is `hasPermissionFor(userId, permission,
+    mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
+      `usePermissions`/`usePermissionCheck` via `useMountain()` + butler pages +
+      AdminAuth all threaded); `assign-role` writes `roles[mountainId]` via deep-merge
+      (other mountains' roles preserved) and retires only that mountain's prior role
+      into `roleHistory`; the members roster route (`get-all-user-permissions-client`)
+      shows each user's role _on the request mountain_. **New signups get `roles: {}`**
+      (no default role) — a fresh account has no permissions until an admin assigns one;
+      this also makes the self-write rule a bulletproof "roles empty on create /
+      unchanged on update". **`users` migration**
+      (`scripts/migration/migrate-m5-role-and-about.js`, dry-run default, additive):
+      `currentRole` → `roles[mountainId]`, ⚠️ **normalizing the legacy `'default'`
+      placeholder → `geyang`** (the prod admin account carries `'default'` — keying it
+      under `roles.default` would strand it on a non-existent mountain and lock the
+      admin out). The old `currentRole` is left in place (reversible).
+- [x] **M5.2b — `firestore.rules` rework** per §2.4. DONE (uncommitted). ⚠️ **Coupled
+      to M5.2a — not separable at the emulator gate**: the rules' `hasPermission()` and
+      the seed both key on the role shape, so moving the app to `roles` forces the rules
+      to `roles` too (else seeded admins resolve no permissions and e2e fails). New:
+      `hasPermissionFor(uid, perm, mountainId)` reads `roles[mountainId]`; `canWrite()`
+      authorizes a content write only when the actor holds the permission **on the
+      doc's own `mountainId`** and the write doesn't move the doc between mountains;
+      sensitive reads (`contacts`, `permission_logs`, `admin_data`) scoped to the doc's
+      mountain; `users` read is **self-only** (the admin roster is Admin-SDK-only, so no
+      client cross-user read is needed); dead `analytics` block removed (§0
+      sub-decision 5). **Emulator rules tests rewritten — 11/11 green**: self-write
+      escalation blocked, self-only read, cross-tenant cat write denied, mountainId
+      move denied, multi-role admin allowed on each mountain, cross-tenant contacts
+      read denied. ⚠️ **Deploy order: run the migration BEFORE deploying these rules**
+      (a not-yet-migrated user resolves to no permissions, fail-closed).
+- [x] **M5.3 core — `requireApiPermission` mountain enforcement** DONE (uncommitted;
+      folded in with the model change since it reads the same shape): resolves the
+      request tenant by Host, reads `roles[requestMountainId]`, and returns the
+      `mountainId` to the route. A role on another mountain grants nothing. ⏳ Remaining
+      M5.3: the systematic audit of every Admin-SDK route's Firestore access against the
+      SDK/read inventories.
 - [ ] **Two-tenant e2e isolation spec**: seed a second tenant (`manisan`) in the
       emulator; assert (a) its content is invisible on geyang surfaces & vice versa
-      (public feeds, map, albums, admin lists), (b) a manisan-role admin gets denied
-      on geyang API routes + cannot read geyang `contacts`, (c) creates land with the
-      right `mountainId`.
+      (public feeds, map, albums, admin lists), (b) a **single-mountain** (manisan-only)
+      admin gets denied on geyang API routes + cannot read geyang `contacts`, (c) a
+      **multi-role** admin (roles on both) is allowed on each of their mountains, (d)
+      creates land with the right `mountainId`.
 - [ ] 🔑 `firebase deploy --only firestore:rules` (+ indexes) after the emulator net
       is green; staged post-deploy click-through of geyang admin CMS.
 - Gates: full e2e (old suite + isolation spec) green; this phase is **the** isolation

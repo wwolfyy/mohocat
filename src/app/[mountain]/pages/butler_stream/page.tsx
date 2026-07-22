@@ -5,10 +5,12 @@ import { getAdminFeedingSpotsService } from '@/services/feeding-spots-admin-serv
 import FeedingSpotsList from '@/components/FeedingSpotsList';
 import ButlerStreamClient from '@/components/ButlerStreamClient';
 import { useAuth } from '@/hooks/useAuth';
+import { useMountain } from '@/components/MountainProvider';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 
 const ButlerStreamContent = () => {
   const { user } = useAuth();
+  const mountainId = useMountain();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ const ButlerStreamContent = () => {
 
       try {
         // Use the same permission checking logic as the admin page
-        const isAdmin = await checkIsAdmin(user);
+        const isAdmin = await checkIsAdmin(user, mountainId);
         // For butler stream, we allow both admin and butler roles
         // You can customize this logic based on your permission requirements
         setHasPermission(isAdmin);
@@ -31,7 +33,7 @@ const ButlerStreamContent = () => {
     };
 
     checkPermission();
-  }, [user]);
+  }, [user, mountainId]);
 
   if (hasPermission === null) {
     return (

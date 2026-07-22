@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { useMountain } from '@/components/MountainProvider';
 import { PermissionService } from '@/services/permission-service';
 
 export function usePermissions() {
   const { user } = useAuth();
+  const mountainId = useMountain();
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function usePermissions() {
       setError(null);
 
       try {
-        const userPermissions = await permissionService.getUserPermissions(user.uid);
+        const userPermissions = await permissionService.getUserPermissions(user.uid, mountainId);
         setPermissions(userPermissions);
       } catch (error: any) {
         console.error('Failed to load permissions:', error);
@@ -34,7 +36,7 @@ export function usePermissions() {
     };
 
     loadPermissions();
-  }, [user?.uid]);
+  }, [user?.uid, mountainId]);
 
   // Permission checking functions
   const hasPermission = useCallback(
@@ -125,7 +127,7 @@ export function usePermissions() {
     refreshPermissions: async () => {
       if (user) {
         try {
-          const userPermissions = await permissionService.getUserPermissions(user.uid);
+          const userPermissions = await permissionService.getUserPermissions(user.uid, mountainId);
           setPermissions(userPermissions);
           setError(null);
         } catch (error: any) {
@@ -143,6 +145,7 @@ export function usePermissions() {
  */
 export function usePermissionCheck() {
   const { user } = useAuth();
+  const mountainId = useMountain();
   const [permissionService] = useState(() => new PermissionService());
 
   const checkPermission = useCallback(
@@ -150,13 +153,13 @@ export function usePermissionCheck() {
       if (!user) return false;
 
       try {
-        return await permissionService.checkPermission(user.uid, permission);
+        return await permissionService.checkPermission(user.uid, permission, mountainId);
       } catch (error) {
         console.error('Permission check failed:', error);
         return false;
       }
     },
-    [user?.uid, permissionService]
+    [user?.uid, mountainId, permissionService]
   );
 
   const checkAnyPermission = useCallback(
@@ -164,13 +167,13 @@ export function usePermissionCheck() {
       if (!user) return false;
 
       try {
-        return await permissionService.hasAnyPermission(user.uid, permissions);
+        return await permissionService.hasAnyPermission(user.uid, permissions, mountainId);
       } catch (error) {
         console.error('Permission check failed:', error);
         return false;
       }
     },
-    [user?.uid, permissionService]
+    [user?.uid, mountainId, permissionService]
   );
 
   const checkAllPermissions = useCallback(
@@ -178,13 +181,13 @@ export function usePermissionCheck() {
       if (!user) return false;
 
       try {
-        return await permissionService.hasAllPermissions(user.uid, permissions);
+        return await permissionService.hasAllPermissions(user.uid, permissions, mountainId);
       } catch (error) {
         console.error('Permission check failed:', error);
         return false;
       }
     },
-    [user?.uid, permissionService]
+    [user?.uid, mountainId, permissionService]
   );
 
   return {

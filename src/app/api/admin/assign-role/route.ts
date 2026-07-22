@@ -69,15 +69,23 @@ export async function POST(request: Request) {
       if (userSnap.exists) {
         const userData = userSnap.data() as UserPermissions;
         const roleHistory = userData.roleHistory || [];
-        if (userData.currentRole) {
-          roleHistory.push({ ...userData.currentRole, isActive: false });
+        // Retire only the prior role *on this mountain* — roles on other
+        // mountains are untouched. merge:true deep-merges the `roles` map, so
+        // setting roles[mountainId] preserves the other keys.
+        const priorRole = userData.roles?.[mountainId];
+        if (priorRole) {
+          roleHistory.push({ ...priorRole, isActive: false });
         }
-        tx.set(userRef, { currentRole: newRole, roleHistory, updatedAt: now }, { merge: true });
+        tx.set(
+          userRef,
+          { roles: { [mountainId]: newRole }, roleHistory, updatedAt: now },
+          { merge: true }
+        );
       } else {
         const newUserPermissions: UserPermissions = {
           uid: userId,
           email: '', // Populated by the login-time profile sync (ensureUserExists)
-          currentRole: newRole,
+          roles: { [mountainId]: newRole },
           roleHistory: [],
           createdAt: now,
           updatedAt: now,

@@ -6,10 +6,13 @@ export interface UserPermissions {
   phoneNumber?: string;
   emailVerified?: boolean; // Synced from Firebase Auth
 
-  // Current mountain role
-  currentRole: UserRole;
+  // Active roles, keyed by mountainId — a user can hold a role on several
+  // mountains at once, and the host/URL picks which one applies (multi-mountain
+  // plan §0 sub-decision 6). A map (not an array) so Firestore rules can do an
+  // O(1) key lookup: get(user).data.roles[mountainId].permissions.hasAny([...]).
+  roles: Record<string, UserRole>;
 
-  // Historical roles for audit purposes
+  // Historical roles for audit purposes (each carries its own mountainId).
   roleHistory: UserRole[];
 
   createdAt: Date;

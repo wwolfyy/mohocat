@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import ButlerTalkClient from '@/components/ButlerTalkClient';
 import { useAuth } from '@/hooks/useAuth';
+import { useMountain } from '@/components/MountainProvider';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 
 const ButlerTalkContent = () => {
   const { user } = useAuth();
+  const mountainId = useMountain();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ const ButlerTalkContent = () => {
 
       try {
         // Use the same permission checking logic as the admin page
-        const isAdmin = await checkIsAdmin(user);
+        const isAdmin = await checkIsAdmin(user, mountainId);
         // For butler talk, we allow both admin and butler roles
         // You can customize this logic based on your permission requirements
         setHasPermission(isAdmin);
@@ -29,7 +31,7 @@ const ButlerTalkContent = () => {
     };
 
     checkPermission();
-  }, [user]);
+  }, [user, mountainId]);
 
   if (hasPermission === null) {
     return (

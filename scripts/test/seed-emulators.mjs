@@ -115,15 +115,22 @@ async function seedAuthAndUsers(users) {
     if (u.phoneNumber) createReq.phoneNumber = u.phoneNumber;
     await auth.createUser(createReq);
 
-    // users/{uid} doc — currentRole drives both firestore.rules hasPermission()
-    // and requireApiPermission(). permissions[] is intentionally empty; the role
-    // resolves to permissions via role_permissions/role-config.
+    // users/{uid} doc — roles[mountainId] drives both firestore.rules
+    // hasPermission() and requireApiPermission(). permissions[] is intentionally
+    // empty; the role resolves to permissions via role_permissions/role-config.
     await seedDoc('users', u.uid, {
       email: u.email ?? null,
       phoneNumber: u.phoneNumber ?? null,
       displayName: u.displayName,
       nickname: u.nickname,
-      currentRole: { role: u.role, isActive: true, permissions: [] },
+      roles: {
+        [SEED_MOUNTAIN_ID]: {
+          role: u.role,
+          mountainId: SEED_MOUNTAIN_ID,
+          isActive: true,
+          permissions: [],
+        },
+      },
       createdAt: new Date().toISOString(),
     });
   }
@@ -192,7 +199,7 @@ async function main() {
     await seedCollection(collection, docs);
   }
 
-  await seedDoc('about_content', 'about', aboutContent);
+  await seedDoc('about_content', SEED_MOUNTAIN_ID, aboutContent);
   await seedDoc('role_permissions', 'role-config', roleConfig);
   await seedDoc('role_permissions', 'resource-config', resourceConfig);
 

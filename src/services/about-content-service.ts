@@ -24,13 +24,14 @@ export interface AboutContent {
 
 export class AboutContentService {
   private collectionName = 'about_content';
-  private documentId = 'about';
-
+  // Per-tenant doc id: each mountain owns `about_content/{mountainId}` (M5.2a).
+  // Previously a single shared `about_content/about` doc both tenants collided
+  // on; the migration copies the legacy doc to its per-mountain id.
   constructor(private readonly mountainId: string) {}
 
   async getAboutContent(): Promise<AboutContent | null> {
     try {
-      const docRef = doc(db, this.collectionName, this.documentId);
+      const docRef = doc(db, this.collectionName, this.mountainId);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -46,7 +47,7 @@ export class AboutContentService {
 
   async updateAboutContent(content: AboutContent, userEmail?: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, this.documentId);
+      const docRef = doc(db, this.collectionName, this.mountainId);
       const updateData = {
         ...content,
         mountainId: this.mountainId,
@@ -63,7 +64,7 @@ export class AboutContentService {
 
   async createAboutContent(content: AboutContent, userEmail?: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, this.documentId);
+      const docRef = doc(db, this.collectionName, this.mountainId);
       const createData = {
         ...content,
         mountainId: this.mountainId,
@@ -92,7 +93,3 @@ export class AboutContentService {
     }
   }
 }
-
-// ⚠️ The `about_content/about` doc ID is still shared across tenants — per-tenant
-// document IDs are an M5 scoped-reads decision. M4 only stamps the writer's
-// mountainId (multi-mountain plan §3 M4).

@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { useAuth } from '@/hooks/useAuth';
+import { useMountain } from '@/components/MountainProvider';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import SocialLoginButton from '@/components/SocialLoginButton';
 import Button from '@/components/ui/Button';
@@ -40,6 +41,8 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     kakaoSignInError,
     kakaoSignInSuccess,
   } = useAuth();
+
+  const mountainId = useMountain();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +94,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     setAdminCheckFailed(false);
     (async () => {
       try {
-        const adminStatus = await checkIsAdmin(user);
+        const adminStatus = await checkIsAdmin(user, mountainId);
         if (!cancelled) setIsAdmin(adminStatus);
       } catch (error) {
         // Couldn't verify (not "not an admin") — surface a retry, don't deny.
@@ -108,7 +111,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     return () => {
       cancelled = true;
     };
-  }, [user, adminCheckNonce]);
+  }, [user, mountainId, adminCheckNonce]);
 
   // Idle session timeout — admin CMS only. Active only once an authenticated
   // admin is in the CMS; signs them out after inactivity and flags the notice.

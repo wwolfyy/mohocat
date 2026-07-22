@@ -41,9 +41,9 @@ export class RoleAssignmentService {
   }
 
   /**
-   * Get user's current role
+   * Get user's role on a given mountain (its `roles[mountainId]`).
    */
-  async getUserRole(userId: string): Promise<string | null> {
+  async getUserRole(userId: string, mountainId: string): Promise<string | null> {
     try {
       const userRef = doc(this.db, 'users', userId);
       const userDoc = await getDoc(userRef);
@@ -53,7 +53,7 @@ export class RoleAssignmentService {
       }
 
       const userData = userDoc.data() as UserPermissions;
-      return userData.currentRole?.role || null;
+      return userData.roles?.[mountainId]?.role || null;
     } catch (error) {
       console.error('Error getting user role:', error);
       return null;
