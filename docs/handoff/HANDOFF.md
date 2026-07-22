@@ -472,13 +472,23 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - _(M0 — the earlier pending rules bundle — was already deployed 2026-07-22, so the
     M5.2b rules diff is the only thing ahead of prod now.)_
 - ⚠️ **NEXT-SESSION THREAD (owner-flagged): update CI for the M5 test surface.** The
-  new `npm run test:rules` (mountain-aware Firestore rules, 11 tests, emulator-backed)
-  is **not wired into GitHub Actions**, so the rules are not CI-gated — a rules
-  regression would pass CI today. The coming **M5.4 two-tenant isolation e2e** will
-  also need CI wiring, and the e2e seed/gate now assumes the `roles`-map shape. The
-  owner wants to design the CI changes in a **fresh session**. (CI lives in
-  `.github/workflows/`; `test:rules` needs the Firestore emulator step, like the e2e
-  job.)
+  owner wants to design the CI changes in a **fresh session**. Three coupled pieces:
+  1. **Wire `npm run test:rules` into CI.** The mountain-aware Firestore rules (11
+     tests, emulator-backed) are **not in GitHub Actions today**, so a rules
+     regression would pass CI. It needs the Firestore emulator step, like the e2e job
+     (CI lives in `.github/workflows/`).
+  2. 🔑 **Add a second stub mountain to the test config — prerequisite for M5.4.** The
+     platform is currently configured with **only `geyang`**
+     (`config/mountains/mountains.json`), and the emulator seed uses a single
+     `SEED_MOUNTAIN_ID`. The M5.4 two-tenant isolation e2e can't exist until a second
+     tenant (e.g. `manisan`) is **(a)** added to `mountains.json` (so
+     `generateStaticParams` / `resolveMountainIdOrNull` / the selector treat `/manisan`
+     as real, not a 404) and **(b)** seeded in `seed-emulators.mjs` alongside geyang
+     (its own content + a manisan-role admin), so the spec can assert cross-tenant
+     invisibility + denial. This is the config half of plan **M8's "stub tenant"**,
+     pulled forward because M5.4/CI depend on it.
+  3. **The e2e seed/gate now assumes the `roles`-map shape** (M5.2) — any CI change
+     must keep that in sync.
 - **탈퇴 flow live click-through** with a **throwaway** account — it irreversibly
   deletes, so it hasn't been end-to-end clicked in prod yet.
 - **Compliance carry-overs** (deferred, accepted — reopen before scaling membership):

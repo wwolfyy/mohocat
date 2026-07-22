@@ -502,8 +502,8 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
       central) — it lands in the rules rework below.
 - [x] **M5.2a — role model → map keyed by `mountainId`** (§0 sub-decision 6). DONE
       (uncommitted). `UserPermissions.currentRole` → `roles: Record<mountainId,
-    UserRole>`; permission resolution is `hasPermissionFor(userId, permission,
-    mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
+  UserRole>`; permission resolution is `hasPermissionFor(userId, permission,
+  mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
       `usePermissions`/`usePermissionCheck` via `useMountain()` + butler pages +
       AdminAuth all threaded); `assign-role` writes `roles[mountainId]` via deep-merge
       (other mountains' roles preserved) and retires only that mountain's prior role
@@ -538,12 +538,19 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
       `mountainId` to the route. A role on another mountain grants nothing. ⏳ Remaining
       M5.3: the systematic audit of every Admin-SDK route's Firestore access against the
       SDK/read inventories.
-- [ ] **Two-tenant e2e isolation spec**: seed a second tenant (`manisan`) in the
-      emulator; assert (a) its content is invisible on geyang surfaces & vice versa
-      (public feeds, map, albums, admin lists), (b) a **single-mountain** (manisan-only)
-      admin gets denied on geyang API routes + cannot read geyang `contacts`, (c) a
-      **multi-role** admin (roles on both) is allowed on each of their mountains, (d)
-      creates land with the right `mountainId`.
+- [ ] **M5.4 — two-tenant e2e isolation spec.** 🔑 **Config prerequisite (the config
+      half of M8's stub tenant, pulled forward):** the platform is currently configured
+      with **only `geyang`** and the seed uses a single `SEED_MOUNTAIN_ID`. First add a
+      second stub mountain (`manisan`) to `config/mountains/mountains.json` (so
+      `generateStaticParams` / `resolveMountainIdOrNull` / the selector treat it as
+      real, not a 404) and seed it in `seed-emulators.mjs` alongside geyang (its own
+      content + a manisan-role admin). Then the spec asserts (a) its content is
+      invisible on geyang surfaces & vice versa (public feeds, map, albums, admin
+      lists), (b) a **single-mountain** (manisan-only) admin gets denied on geyang API
+      routes + cannot read geyang `contacts`, (c) a **multi-role** admin (roles on both)
+      is allowed on each of their mountains, (d) creates land with the right
+      `mountainId`. ⚠️ **CI must run this multi-mountain config** (owner-flagged CI
+      thread — also wire `npm run test:rules` into GitHub Actions).
 - [ ] 🔑 `firebase deploy --only firestore:rules` (+ indexes) after the emulator net
       is green; staged post-deploy click-through of geyang admin CMS.
 - Gates: full e2e (old suite + isolation spec) green; this phase is **the** isolation
