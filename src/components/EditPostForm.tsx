@@ -9,6 +9,7 @@ import {
   getAdoptionService,
 } from '@/services';
 import { cn } from '@/utils/cn';
+import { useMountain } from '@/components/MountainProvider';
 
 export type EditablePostType =
   | 'butler_stream'
@@ -33,16 +34,17 @@ interface EditPostFormProps {
  */
 const EditPostForm: React.FC<EditPostFormProps> = ({ postType, postId }) => {
   const router = useRouter();
+  const mountainId = useMountain();
 
   // The service backing this post type (mirrors AdminPostList.serviceFor).
   const serviceFor = (type: EditablePostType) =>
     type === 'butler_stream'
-      ? getPostService()
+      ? getPostService(mountainId)
       : type === 'butler_talk'
-        ? getButlerTalkService()
+        ? getButlerTalkService(mountainId)
         : type === 'announcements'
-          ? getAnnouncementService()
-          : getAdoptionService();
+          ? getAnnouncementService(mountainId)
+          : getAdoptionService(mountainId);
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

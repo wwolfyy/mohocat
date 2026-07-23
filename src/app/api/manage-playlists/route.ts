@@ -1,11 +1,13 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig, getYouTubeChannelId } from '@/utils/config';
+import { getRequestMountainId } from '@/lib/tenant';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const channelId = searchParams.get('channelId') || getYouTubeChannelId();
+    const channelId =
+      searchParams.get('channelId') || getYouTubeChannelId(getRequestMountainId(request));
 
     if (!channelId) {
       return NextResponse.json({ error: 'Channel ID is required' }, { status: 400 });

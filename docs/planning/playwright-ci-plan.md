@@ -485,11 +485,12 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
 
 ### Phase 7 — hardening & docs
 
-- [x] Flake audit (3× consecutive green CI runs); runtime < 10 min. ✅ 2026-07-15 —
+- [x] Flake audit (3× consecutive green CI runs); runtime < 10 min. ✅ 2026-07-15/16 —
       local full-gate `npm run test:e2e` (clean `.next` each time) run **3×
       consecutively, all green: 101 passed / 13 skipped / 0 failed**, ~3.7 min/run
-      (Playwright phase ~1.7 min), identical counts — no flake. Whole-suite exit
-      criterion met locally; owner still to watch CI reproduce it 3× on push/PR.
+      (Playwright phase ~1.7 min), identical counts — no flake. **CI side confirmed
+      (2026-07-16):** the `e2e` job ran green on PR #7 (`pull_request`) and on multiple
+      `dev` pushes — no flaky runs. Both halves of the exit criterion met.
   - [x] ✅ **Intermittent "markerless bake" FIXED (2026-07-13).** Root cause was
         **misdiagnosed** — it was **not** a non-deterministic Admin-SDK read/emulator race.
         It was a build **hang**: `src/app/pages/cats/page.tsx` (냥이들) still read points via
@@ -507,9 +508,22 @@ false` (baked static import, not runtime-overridable); needs a clustering-enable
       (account-withdrawal), the phone-OTP helper, the recoverable-hydration tolerance
       rule, and the fixture watch-outs (`date_of_birth` = year; relative `thumbnailUrl`).
 - [x] Update PROJECT_PLAN §10 + §1 snapshot; FEATURE_MOD_LOG entry; hand-off. ✅
-      2026-07-15 — §1 row + §10 goal/plan bullets updated (all suites green; Phase 7
-      remaining); FEATURE_MOD_LOG entry added; testing hand-off carries the live state.
-- [ ] Owner: enable branch protection requiring CI on PRs to `main`.
+      2026-07-15/16 — §1 row + §10 header/goal/bullets updated (main plan complete,
+      merged to `main`); FEATURE_MOD_LOG entry added; testing hand-off carries the live
+      state incl. the PR #7 promotion.
+- [x] Owner: enable branch protection requiring CI on PRs to `main`. ✅ 2026-07-16 —
+      `e2e` is a **required status check** on `main` (classic protection +
+      the `protect-main` ruleset: `deletion`, `non_fast_forward`, `pull_request`;
+      review count 0). Linear-history requirement removed so `dev → main` can use a
+      merge commit (keeps `dev` an ancestor of `main` — no squash-artifact drift).
+- [x] **Suites merged to `main` (PR #7, 2026-07-16).** `dev → main` promotion merged
+      via a **merge commit** (`65d2020`). Note: PR #6 had been **squash**-merged to
+      `main`, which made `dev`/`main` diverge on a textual (not real) basis — `dev`
+      already contained that work; resolved by `git merge -s ours origin/main` on `dev`
+      (records `main` as an ancestor, keeps `dev`'s tree verbatim), then a merge-commit
+      PR. `dev` is now an ancestor of `main` (`main` +1 merge commit ahead; FF `dev`
+      up to `main` to fully sync). **Lesson:** promote a long-lived `dev` with a merge
+      commit, not squash/rebase, to avoid recurring divergence.
 
 ### Phase 8 — deferred (revisit later)
 

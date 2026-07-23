@@ -50,31 +50,69 @@ const bucket = getStorage(app).bucket();
 
 const readJson = async (name) => JSON.parse(await readFile(path.join(FIXTURES, name), 'utf-8'));
 
-/** Delete-then-write a set of docs (each with an `id`) into a collection. */
-async function seedCollection(collection, docs) {
+/**
+ * Tenant the seeded content belongs to (multi-mountain M4). The app's default
+ * tenant answers every unmapped host — localhost and the e2e harness included —
+ * so seeding this id is what keeps the existing specs seeing their data once M5
+ * scopes reads by mountain. Stamped here rather than in each fixture file so the
+ * value can't drift between them.
+ */
+const SEED_MOUNTAIN_ID = process.env.MOUNTAIN_ID || 'geyang';
+
+/** Collections that carry `mountainId`; identity/config collections do not. */
+const TENANT_SCOPED = new Set([
+  'about_content',
+  'admin_data',
+  'cat_images',
+  'cat_videos',
+  'cats',
+  'contacts',
+  'feeding_spots',
+  'points',
+  'posts_adoption',
+  'posts_announcements',
+  'posts_butler',
+  'posts_feeding',
+  'permission_logs',
+]);
+
+const withTenant = (collection, data, mountainId) =>
+  TENANT_SCOPED.has(collection) ? { ...data, mountainId } : data;
+
+/** Delete-then-write a set of docs (each with an `id`) into a collection, stamped `mountainId`. */
+async function seedCollection(collection, docs, mountainId) {
   for (const { id, ...data } of docs) {
     await db
       .collection(collection)
       .doc(id)
       .delete()
       .catch(() => {});
-    await db.collection(collection).doc(id).set(data);
+    await db.collection(collection).doc(id).set(withTenant(collection, data, mountainId));
   }
-  console.log(`[seed] ${collection}: ${docs.length} doc(s)`);
+  console.log(`[seed] ${collection}: ${docs.length} doc(s) [${mountainId}]`);
 }
 
-/** Delete-then-write a single fixed-id doc. */
-async function seedDoc(collection, docId, data) {
+/** Delete-then-write a single fixed-id doc (stamped `mountainId` if the collection is tenant-scoped). */
+async function seedDoc(collection, docId, data, mountainId) {
   await db
     .collection(collection)
     .doc(docId)
     .delete()
     .catch(() => {});
-  await db.collection(collection).doc(docId).set(data);
+  await db.collection(collection).doc(docId).set(withTenant(collection, data, mountainId));
   console.log(`[seed] ${collection}/${docId}`);
 }
 
-async function seedAuthAndUsers(users) {
+/**
+ * Seed Auth accounts + their `users/{uid}` docs. Two fixture shapes are
+ * supported: a single `role` (keyed under `defaultMountainId` — the geyang
+ * fixtures) or an explicit `roles: [{ mountainId, role }]` list (the manisan
+ * fixtures, including a dual-mountain admin). `roles[mountainId]` drives both
+ * firestore.rules `hasPermissionFor()` and `requireApiPermission`; `permissions[]`
+ * is intentionally empty — the role resolves to permissions via
+ * `role_permissions/role-config`.
+ */
+async function seedAuthAndUsers(users, defaultMountainId) {
   for (const u of users) {
     await auth.deleteUser(u.uid).catch(() => {});
     const createReq = { uid: u.uid, displayName: u.displayName };
@@ -86,19 +124,45 @@ async function seedAuthAndUsers(users) {
     if (u.phoneNumber) createReq.phoneNumber = u.phoneNumber;
     await auth.createUser(createReq);
 
-    // users/{uid} doc — currentRole drives both firestore.rules hasPermission()
-    // and requireApiPermission(). permissions[] is intentionally empty; the role
-    // resolves to permissions via role_permissions/role-config.
-    await seedDoc('users', u.uid, {
-      email: u.email ?? null,
-      phoneNumber: u.phoneNumber ?? null,
-      displayName: u.displayName,
-      nickname: u.nickname,
-      currentRole: { role: u.role, isActive: true, permissions: [] },
-      createdAt: new Date().toISOString(),
-    });
+    const roleSpecs = u.roles ?? [{ mountainId: defaultMountainId, role: u.role }];
+    const roles = {};
+    for (const { mountainId, role } of roleSpecs) {
+      roles[mountainId] = { role, mountainId, isActive: true, permissions: [] };
+    }
+
+    await seedDoc(
+      'users',
+      u.uid,
+      {
+        email: u.email ?? null,
+        phoneNumber: u.phoneNumber ?? null,
+        displayName: u.displayName,
+        nickname: u.nickname,
+        roles,
+        createdAt: new Date().toISOString(),
+      },
+      defaultMountainId
+    );
   }
   console.log(`[seed] auth users: ${users.length}`);
+}
+
+/**
+ * Seed the second (manisan) tenant for the M5.4 two-tenant isolation e2e —
+ * distinct docs stamped `mountainId='manisan'` + a manisan-only admin and a
+ * dual-mountain admin (tests/e2e/fixtures/manisan.json). Kept minimal: only the
+ * surfaces the isolation spec asserts on (map points/cats, photo album,
+ * announcements, admin contacts PII, about).
+ */
+async function seedManisanTenant() {
+  const MANISAN = 'manisan';
+  const fx = await readJson('manisan.json');
+  for (const collection of ['points', 'cats', 'cat_images', 'posts_announcements', 'contacts']) {
+    if (fx[collection]?.length) await seedCollection(collection, fx[collection], MANISAN);
+  }
+  await seedDoc('about_content', MANISAN, fx.about_content, MANISAN);
+  await seedAuthAndUsers(fx.users, MANISAN);
+  console.log('[seed] manisan tenant seeded');
 }
 
 async function uploadStorageFixtures() {
@@ -137,6 +201,7 @@ function copyPublicFixtures() {
 async function main() {
   console.log(`[seed] project=${PROJECT_ID} bucket=${STORAGE_BUCKET}`);
   console.log(`[seed] firestore=${process.env.FIRESTORE_EMULATOR_HOST}`);
+  console.log(`[seed] mountainId=${SEED_MOUNTAIN_ID}`);
 
   const [points, cats, posts, media, aboutContent, roleConfig, resourceConfig, users] =
     await Promise.all([
@@ -150,23 +215,29 @@ async function main() {
       readJson('users.json'),
     ]);
 
-  await seedCollection('points', points);
-  await seedCollection('cats', cats);
+  // --- Default tenant (geyang) pass ---
+  await seedCollection('points', points, SEED_MOUNTAIN_ID);
+  await seedCollection('cats', cats, SEED_MOUNTAIN_ID);
 
   for (const [collection, docs] of Object.entries(posts)) {
     if (collection.startsWith('_')) continue; // skip _comment
-    await seedCollection(collection, docs);
+    await seedCollection(collection, docs, SEED_MOUNTAIN_ID);
   }
   for (const [collection, docs] of Object.entries(media)) {
     if (collection.startsWith('_')) continue;
-    await seedCollection(collection, docs);
+    await seedCollection(collection, docs, SEED_MOUNTAIN_ID);
   }
 
-  await seedDoc('about_content', 'about', aboutContent);
-  await seedDoc('role_permissions', 'role-config', roleConfig);
-  await seedDoc('role_permissions', 'resource-config', resourceConfig);
+  await seedDoc('about_content', SEED_MOUNTAIN_ID, aboutContent, SEED_MOUNTAIN_ID);
+  // role_permissions is central (not tenant-scoped) — mountainId arg is ignored.
+  await seedDoc('role_permissions', 'role-config', roleConfig, SEED_MOUNTAIN_ID);
+  await seedDoc('role_permissions', 'resource-config', resourceConfig, SEED_MOUNTAIN_ID);
 
-  await seedAuthAndUsers(users);
+  await seedAuthAndUsers(users, SEED_MOUNTAIN_ID);
+
+  // --- Second tenant (manisan) pass — for the M5.4 isolation e2e ---
+  await seedManisanTenant();
+
   await uploadStorageFixtures();
   copyPublicFixtures();
 

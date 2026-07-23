@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getAnnouncementService } from '@/services';
 import { cn } from '@/utils/cn';
 import Link from 'next/link';
+import { useMountain } from '@/components/MountainProvider';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -81,7 +82,8 @@ const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
 
 const AnnouncementClient = () => {
   // Service references
-  const announcementService = getAnnouncementService();
+  const mountainId = useMountain();
+  const announcementService = getAnnouncementService(mountainId);
 
   const [posts, setPosts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);

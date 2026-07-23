@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/firebase-admin';
+import { getAllMountains } from '@/utils/config';
 
 // Admin SDK token verification needs the Node runtime (not edge).
 export const runtime = 'nodejs';
@@ -12,9 +13,17 @@ export const runtime = 'nodejs';
  * docs/manuals/deployment/README.md → "ISR revalidation".
  *
  * Keep this list in sync with the route segments that read cats server-side
- * (`src/lib/server/cat-reads.ts` consumers).
+ * (`src/lib/server/cat-reads.ts` consumers). Since M3 the baked pages live
+ * under the `[mountain]` segment, cached per tenant — revalidate them for
+ * every configured mountain (cat data is shared until the M5 scoping; after
+ * M5 an admin edit still only concerns its own tenant, and revalidating the
+ * others is merely a no-op refresh — a handful of paths either way).
  */
-const BAKED_PATHS = ['/', '/pages/adoption'];
+const BAKED_SUBPATHS = ['', '/pages/adoption'];
+const bakedPaths = () =>
+  getAllMountains().flatMap((mountain) =>
+    BAKED_SUBPATHS.map((subpath) => `/${mountain.id}${subpath}`)
+  );
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,11 +45,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
     }
 
-    for (const path of BAKED_PATHS) {
+    const paths = bakedPaths();
+    for (const path of paths) {
       revalidatePath(path);
     }
 
-    return NextResponse.json({ success: true, revalidated: BAKED_PATHS });
+    return NextResponse.json({ success: true, revalidated: paths });
   } catch (error) {
     console.error('Revalidate: failed to revalidate paths:', error);
     return NextResponse.json({ success: false, error: 'Failed to revalidate' }, { status: 500 });

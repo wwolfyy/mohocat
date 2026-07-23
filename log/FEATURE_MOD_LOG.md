@@ -15,6 +15,209 @@
 
 ---
 
+## 2026-07-23 — Multi-mountain M5.4b: two-tenant isolation e2e (M5 code-complete)
+
+**Area:** added — `tests/e2e/api/tenant-isolation.spec.ts`,
+`tests/e2e/public/tenant-isolation.spec.ts`.
+
+**What changed:** the two-tenant (geyang / manisan) isolation e2e — the enforcement
+proof that closes M5. Split by layer. The **api** spec (pure Playwright request, no
+browser) targets a tenant by overriding the request **Host** header (`/api/*` is
+excluded from the host-rewrite middleware, so `getRequestMountainId` reads Host) and
+asserts: (a/d) `GET /api/admin/cats` + `/api/points` return **only** the Host
+mountain's seeded docs; (b) a **single-mountain** admin gets **403** on the other
+mountain's gated route and **200** on its own (asserted both ways — a manisan-only and
+a geyang-only admin); (c) the **dual** admin is **200** on both. Tokens are minted
+from the Auth-emulator REST endpoint (the `api/security.spec` pattern). The **public**
+spec asserts rendered-content isolation — the photo album and 공지사항 show only the
+active tenant's content, geyang at `/pages/…` and manisan at `/manisan/pages/…` (the
+path prefix passes through the middleware) — on desktop + mobile, using each tenant's
+_exclusive_ text markers so the absence checks can't false-pass on a substring.
+
+**Rationale:** M5's central risk is leak-by-omission (a missed tenant scope). The M5.3
+route audit proved it by inspection; this spec proves it by execution and — unlike the
+audit — is a **permanent regression net**. The `contacts` PII read-isolation is a
+client-SDK + firestore.rules concern already covered by `tests/rules/users.rules.test.ts`,
+so it is referenced rather than duplicated.
+
+**Verified:** tsc clean; **full e2e 125 passed / 13 skipped / 0 failed** (was 116 → +9:
+5 api + 4 public across the desktop and mobile projects). Confirmed en route that
+Playwright's request context honors an overridden `Host` header (the mechanism the api
+spec depends on). Remaining on M5 (both owner-gated, not code): the ORDER-CRITICAL
+rules/index prod deploy (see `docs/manuals/deployment/m5-prod-cutover-runbook.md`) and
+wiring `npm run test:rules` into CI.
+
+---
+
+## 2026-07-23 — Multi-mountain M5.4a: second stub tenant (`manisan`) + `hidden` config flag
+
+**Area:** changed — `src/utils/config.ts` (added `MountainConfig.hidden` +
+`getPublicMountains()`), `src/components/MountainSelector.tsx` (uses
+`getPublicMountains()`), `config/mountains/mountains.json` (added `manisan`),
+`scripts/test/seed-emulators.mjs` (two-tenant seed). Added —
+`tests/e2e/fixtures/manisan.json`.
+
+**What changed:** added `manisan` as a second, **preparatory stub tenant**. It is a
+real routable tenant (`/manisan` resolves, `generateStaticParams` prerenders it) but
+carries a new **`hidden: true`** config flag that keeps it out of the visitor-facing
+`MountainSelector` — routing/`generateStaticParams`/`resolveMountainIdOrNull` keep
+using `getAllMountains()`, while the selector switched to the new
+`getPublicMountains()` (which filters `hidden`). The stub has distinct branding
+(마니산, blue/teal theme), `storagePrefix: 'mountains/manisan/'`, and reuses geyang's
+map imagery. The emulator seed was refactored so `withTenant`/`seedCollection`/
+`seedDoc` take an explicit `mountainId` (the geyang pass is unchanged) plus a new
+`seedManisanTenant()` pass from `manisan.json` (distinct content + a manisan-only
+admin and a dual-mountain admin); `seedAuthAndUsers` now builds per-user `roles` maps
+from either a single `role` or an explicit `roles[]` list.
+
+**Rationale:** the M5.4 two-tenant isolation e2e (and the eventual M8 "geyang as one
+of many") need a second tenant to exist in config + seed before the spec can assert
+cross-tenant invisibility and per-mountain admin scoping. Adding it as `hidden`
+avoids exposing an empty stub to real visitors in the production mountain selector
+while still making it fully testable. Also resolves a pre-existing drift — `manisan`
+was already listed in `config/permissions.json` but not in `mountains.json`.
+
+**Verified:** tsc / smoke 30 / unit 39 green; **full e2e 116 passed / 13 skipped / 0
+failed** — the geyang suite is unperturbed by the second seeded tenant, and the build
+prerenders both `/geyang` and `/manisan` route trees. The isolation **spec** that
+consumes this stub (M5.4b) and wiring `test:rules` into CI are separate follow-ups.
+
+---
+
+## 2026-07-23 — Multi-mountain M5.3 route audit: Admin-SDK routes verified tenant-safe; prod-cutover order corrected
+
+**Area:** docs / verification only — no code change. Reviewed all 21
+`src/app/api/**` routes. Docs — `docs/planning/multi-mountain-refactor-plan-20260719.md`
+(M5.3 checked off with the per-route verdict), `docs/handoff/HANDOFF.md`,
+`docs/planning/PROJECT_PLAN.md`. Added —
+`docs/manuals/deployment/m5-prod-cutover-runbook.md` (+ a pointer in the deployment
+README). Commit `ceda81c`.
+
+**What changed:** completed M5.3's remaining item — the systematic audit of every
+Admin-SDK API route's Firestore access against the tenant model. **Verdict: no
+leak-by-omission.** Content routes are tenant-scoped (`/api/admin/cats`,
+`/api/points`, `/api/contact`, `/api/admin/assign-role`, `/api/upload-youtube`'s
+video record — all via the per-tenant service factory or an explicit `mountainId`
+stamp); identity / central-config routes (`users`, the `role_permissions/*` matrix)
+are global **by design** (only role _assignment_ is per-tenant, via
+`roles[mountainId]`). The only residual cross-tenant surface is the **shared YouTube
+channel** — non-Firestore, already deferred (M5.1 note b: `getYouTubeChannelId` is
+per-tenant config but the OAuth credential / `admin_config/youtube_auth` is shared).
+The audit also **surfaced two things**: (1) a pre-existing, tenancy-orthogonal
+auth gap — 7 write/credential routes with no `requireApiPermission` gate
+(`manage-playlists`, `refresh-video-metadata`, `update-youtube-video`,
+`upload-youtube`, `youtube-playlists`, `generate-signed-url`,
+`generate-youtube-signed-url`) — logged as an owner-owed thread, not fixed here;
+(2) a **correction to the prod-cutover order** — the prior "migrate → deploy rules"
+sequence would black out the CMS, because the M5.2b rules deny any `mountainId`-less
+write and the stamping code (M4) is only on `dev`, so the `dev → main` promotion must
+land **between** the migration and the rules deploy (and indexes must build before the
+app goes live). Captured as a 6-step runbook with per-step rollback.
+
+**Rationale:** M5's whole risk is "leak-by-omission" (a missed tenant scope). A
+route-by-route audit is the enforcement-side proof that complements the coming M5.4
+two-tenant isolation e2e; recording the verdict means a future reader doesn't
+re-derive it. The cutover-order fix prevents a real prod outage.
+
+**Verified:** manual source review of each route handler against
+`firebase-read-access-inventory.md` + the mountain-aware `firestore.rules`
+(`canWrite`/`hasPermissionFor`). No test run (docs/verification only); the commit
+passed the repo gates (TruffleHog, prettier, `tsc --noEmit`). Owner-owed follow-ups
+recorded in HANDOFF: the ungated-routes hardening pass, and the order-corrected prod
+cutover.
+
+---
+
+## 2026-07-19 — Complexity retirement executed (P0–P6): forms + admin editors on shared primitives; alerts → Modal dialogs
+
+**Area:** changed — `src/components/NewPostForm.tsx` / `NewButlerTalkForm.tsx` /
+`NewAnnouncementForm.tsx` / `NewAdoptionForm.tsx`,
+`src/app/admin/tag-images/page.tsx`, `src/app/admin/tag-videos/page.tsx`.
+Added — `src/components/forms/` (`MediaUploadField`, `uploadStrategies`,
+`useSimpleContentForm`, `useRichContentForm`), `src/components/admin/media/`
+(media toolkit), `src/app/admin/tag-videos/useYouTubeVideoMutations.ts`,
+`src/components/ui/useDialog.tsx`; `parseCreatedDateFromFilename` →
+`@/utils/dateParser`. Removed — `react-hook-form` (unused declared dep).
+Tests — P0 characterization e2e net (`admin/posts.spec`, `butler-create.spec`,
+`tag-images.spec`, `tag-videos.spec`) + `tests/unit/uploadStrategies.test.ts`.
+
+**What changed:** executed the full complexity-retirement plan
+(`docs/planning/complexity-retirement-assessment-20260716.md`; commits
+`6454d80`, `431c69f`, `fdba4ee`, `1d13e09`, `34c5c68`, + the P5/P6 commits).
+The four content forms (2,135→859 lines) now share one submit/upload flow per
+family with injectable image-upload strategies and a single YouTube upload
+function. The two admin media editors (4,430→~2,650 lines incl. the colocated
+YouTube hook) recompose a shared read-side toolkit — list controller, 자동 날짜
+인식 loop, stats/filter/batch/grid/pagination components — on the shared
+`parseDate` normalizer; write paths stay page-owned. Both editors use the
+shared `CatSelectorModal` with **commit-on-done** semantics (accepted
+intentional change from the old live-toggle). All ~45 native
+`alert()/confirm()` prompts across the editors and forms were replaced by the
+new promise-based `useDialog` primitive on `ui/Modal` (P6.1) — user prompts
+now match the site's modal system.
+
+**Rationale:** the 2026-07-16 assessment measured ≈2,100–2,900 retirable LOC of
+copy-paste duplication and local-state sprawl; retiring it in place (no
+framework change) kills the double-maintenance and gives forms/editors shared,
+tested primitives. 집사톡's latently-broken signed-URL image upload was fixed
+en route (`DEBUG_LOG.md` 2026-07-19).
+
+**Verified:** every phase gated on the P0 characterization net — final full
+e2e run green against the finished code (see assessment §8 per-phase notes for
+counts), plus tsc / smoke 29 / unit 25 and screenshot browser-passes of both
+editors and the selector/dialog modals. ⚠️ Still owed: the scripted manual
+pass over the YouTube surfaces (sync + playlists, real creds) before the next
+`dev → main` promotion.
+
+---
+
+## 2026-07-18 — Tier 1 write migration: role assignment → Admin-SDK route, audit log restored
+
+**Area:** added — `src/app/api/admin/assign-role/route.ts`. Changed —
+`src/components/admin/RoleManagement.tsx` (assign via the route),
+`src/services/role-assignment-service.ts` + `src/services/permission-service.ts`
+(client-SDK role-write methods removed), `config/firebase/firestore.rules`
+(`users` admin write clause removed; comments updated). Docs —
+`docs/planning/PROJECT_PLAN.md` §7,
+`docs/planning/multi-tenant-architecture-decision-20260718.md` §6.
+
+**What changed:** executed the Tier 1 migration decided 2026-06-30
+(`firebase-sdk-usage-inventory.md` §D). New `POST /api/admin/assign-role`
+(gated `requireApiPermission('manage-users')`) validates the role against the
+live `role_permissions/role-config` matrix, then writes the `users/{userId}`
+role change (history push, create-if-absent) **and** the `permission_logs`
+audit entry in **one Admin-SDK transaction** — no role change without an audit
+record. `assignedBy` comes from the verified ID token, never the body;
+`mountainId` from `getCurrentMountainId()` (removes RoleManagement's hard-coded
+`'geyang'` — one §9 item). The admin members page now calls the route (same
+fetch+`authHeader` pattern as its user-list load). Removed the superseded
+client write paths: `assignUserRole`/`assignSpecificRole`/`logRoleChange`
+(role-assignment-service) and the caller-less
+`assignRole`/`suspendRole`/`reactivateRole`/`logRoleChange`
+(permission-service). Rules: the `users` `allow write: if hasPermission(...
+'manage-users')` clause is removed — role writes are now impossible from the
+client; the owner create/update clauses (login-time self-provision, added
+2026-07-11) are **kept**, so the inventory's original "relock to
+`write: if false`" became "remove the admin clause only" — the self-provision
+half of Tier 1 had already been solved by those rules clauses after the
+inventory's snapshot date.
+
+**Rationale:** every role change was silently losing its audit entry
+(`permission_logs` = `write: if false`; the client write was denied and the
+failure swallowed) — a governance gap that becomes untenable with a second
+mountain owner (multi-tenant decision doc §6 lists this as a prerequisite of
+the identity split). Role writes are the escalation-sensitive crown jewels and
+now sit behind a single server-enforced, transactional, audited path.
+
+**Verified:** `npx tsc --noEmit` clean; `npm run test:smoke` 27/27 green.
+⚠️ **Rules deploy pending (owner-run):** `firebase deploy --only firestore:rules`
+must ship the `users` clause removal; until then the old client write clause
+remains live in prod (the app no longer uses it). Live-browser verification of
+the members page recommended post-deploy (assign a role → check
+`permission_logs` gains an entry).
+
+---
+
 ## 2026-07-15 — Playwright e2e main-plan suites complete (Phases 2–6) + Phase 7 flake audit
 
 **Area:** added (test-only — no `src/` change) — `tests/e2e/{public,auth,member,admin,api}/**`

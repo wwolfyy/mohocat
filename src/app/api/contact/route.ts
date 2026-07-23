@@ -14,6 +14,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import nodemailer from 'nodemailer';
 import { db, auth } from '@/lib/firebase-admin';
 import { getMountainConfig } from '@/utils/config';
+import { getRequestMountainId } from '@/lib/tenant';
 
 // nodemailer needs the Node.js runtime (not the Edge runtime).
 export const runtime = 'nodejs';
@@ -58,7 +59,7 @@ function parseBody(raw: unknown): { data: ContactBody } | { error: string } {
 }
 
 /** Best-effort admin notification. Throws on send failure so the caller can decide. */
-async function sendNotification(contact: ContactBody): Promise<void> {
+async function sendNotification(contact: ContactBody, mountainId: string): Promise<void> {
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASSWORD;
@@ -72,7 +73,7 @@ async function sendNotification(contact: ContactBody): Promise<void> {
     throw new Error('SMTP not configured');
   }
 
-  const recipient = getMountainConfig().adminEmail;
+  const recipient = getMountainConfig(mountainId).adminEmail;
   if (!recipient) {
     throw new Error('adminEmail not configured for the active mountain');
   }
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest) {
     // 3. Write via the Admin SDK (bypasses client rules).
     await db.collection(COLLECTION_NAME).add({
       ...contact,
+      mountainId: getRequestMountainId(request),
       createdAt: FieldValue.serverTimestamp(),
     });
 
@@ -136,7 +138,7 @@ export async function POST(request: NextRequest) {
     //    fail the request (that would prompt a resubmit → duplicate record). Log + flag it.
     let emailDelivered = true;
     try {
-      await sendNotification(contact);
+      await sendNotification(contact, getRequestMountainId(request));
     } catch (error) {
       emailDelivered = false;
       console.error('Contact recorded but admin notification failed:', error);

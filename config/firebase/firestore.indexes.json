@@ -1,0 +1,53 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "cat_images",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mountainId", "order": "ASCENDING" },
+        { "fieldPath": "tags", "arrayConfig": "CONTAINS" }
+      ]
+    },
+    {
+      "collectionGroup": "cat_videos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mountainId", "order": "ASCENDING" },
+        { "fieldPath": "tags", "arrayConfig": "CONTAINS" }
+      ]
+    },
+    {
+      "collectionGroup": "posts_butler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mountainId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "posts_feeding",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mountainId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "feeding_spots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mountainId", "order": "ASCENDING" },
+        { "fieldPath": "id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contacts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mountainId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

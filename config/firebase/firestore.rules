@@ -2,191 +2,192 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
+    // ── Multi-mountain (plan §2.4) ────────────────────────────────────────────
+    // Every content doc carries a `mountainId`. A write is authorized only when
+    // the actor holds the required permission *on that doc's mountain* (their
+    // `roles[mountainId]` entry) — a role on another mountain grants nothing.
+    // Reads of the sensitive set (contacts, permission_logs, admin_data) are
+    // likewise scoped to the doc's mountain. Public content stays world-readable.
+    //
+    // ⚠️ Deploy ORDER: run scripts/migration/migrate-m5-role-and-about.js
+    // (currentRole → roles[mountainId]) BEFORE deploying these rules — a user
+    // whose doc has no `roles` yet resolves to no permissions (fail-closed).
+
     // Public collections - no auth required.
     // points: public read; writes come from the 급식소 관리 admin CMS
-    // (src/app/admin/points/page.tsx) via the client SDK, so gate on the
-    // canteen-management permission — mirroring the cats rule. (The 겨울집
-    // admin page is still a disabled placeholder.)
+    // (src/app/[mountain]/admin/points/page.tsx) via the client SDK, so gate on
+    // the canteen-management permission — mirroring the cats rule.
     match /points/{x} {
       allow read: if true;
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-canteen');
+      allow write: if canWrite('manage-canteen');
     }
 
     match /cats/{x} {
       allow read: if true;
-      // The admin Cat CMS (src/app/admin/cats/page.tsx) writes via the client
-      // SDK, so gate writes on the cat-management permission — mirroring the
-      // posts_feeding / posts_butler rules. (Future consideration: move admin
-      // writes behind Admin SDK routes and restore `write: if false` — see
-      // docs/handoff/2026-06-28-handoff-10.md.)
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-cat');
+      // The admin Cat CMS writes via the client SDK, so gate writes on the
+      // cat-management permission — mirroring the posts_feeding / posts_butler rules.
+      allow write: if canWrite('manage-cat');
     }
 
     // The admin CMS writes these collections via the client SDK, so gate writes
     // on the relevant management permission — mirroring the cats / posts_* rules.
-    // (Future consideration: move admin writes behind Admin SDK routes and restore
-    // `write: if false` — see docs/handoff/2026-06-28-handoff-11.md §4.)
 
     // About-page editor (src/components/admin/AboutContentEditor.tsx) → 앱관리.
+    // Doc id is the mountainId (about_content/{mountainId}) since M5.2a.
     match /about_content/{x} {
       allow read: if true;
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-app');
+      allow write: if canWrite('manage-app');
     }
 
-    // Photo album tagging (src/app/admin/tag-images/page.tsx, NewPostForm, …).
+    // Photo album tagging (tag-images, NewPostForm, …).
     match /cat_images/{x} {
       allow read: if true;
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-photo');
+      allow write: if canWrite('manage-photo');
     }
 
-    // Video album tagging (src/app/admin/tag-videos/page.tsx). Server-side YouTube
-    // sync/upload uses the Admin SDK and bypasses these rules.
+    // Video album tagging (tag-videos). Server-side YouTube sync/upload uses the
+    // Admin SDK and bypasses these rules.
     match /cat_videos/{x} {
       allow read: if true;
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-video');
+      allow write: if canWrite('manage-video');
     }
 
-    // Announcements admin (src/app/admin/posts/page.tsx via announcement-service).
+    // Announcements admin (via announcement-service).
     match /posts_announcements/{x} {
       allow read: if true;
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-posts');
+      allow write: if canWrite('manage-posts');
     }
 
     // 입양홍보 (adoption promotion) posts — admin-created, publicly readable.
-    // Mirrors posts_announcements: public read for the /pages/adoption feed;
-    // write gated on 'manage-posts' (admin/posts 입양홍보 tab via adoption-service).
     match /posts_adoption/{x} {
       allow read: if true;
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-posts');
+      allow write: if canWrite('manage-posts');
     }
 
     // 동참(contact) submissions — members-only create, admin-only read.
     // create: never from the client. Submissions go through POST /api/contact, which
     //   verifies the submitter's ID token and writes via the Admin SDK (bypasses rules).
-    // read: admins with 'manage-users' (the Contact Management admin view).
+    // read: admins with 'manage-users' *on the contact's mountain* (plan §2.4 — this
+    //   closes the concrete PII leak: a manage-users holder on mountain #2 reading
+    //   another mountain's 동참 submissions).
     // update/delete: never from the client.
     match /contacts/{document} {
       allow create: if false;
       allow read: if request.auth != null &&
-        hasPermission(request.auth.uid, 'manage-users');
+        hasPermissionFor(request.auth.uid, 'manage-users', resource.data.mountainId);
       allow update, delete: if false;
     }
 
     // Permission-managed collections
 
-    // Feeding-spot status (급식소 현황) read by FeedingSpotsList on the butler-stream
-    // page and written by the client SDK when a butler logs a feeding post
-    // (feeding-spots-service.updateFeedingSpots, via NewPostForm) — so gate writes on
-    // 'manage-posts', mirroring posts_feeding. The server-side admin path uses the
-    // Admin SDK (feeding-spots-admin-service) and bypasses these rules.
+    // Feeding-spot status (급식소 현황) read by FeedingSpotsList and written by the
+    // client SDK when a butler logs a feeding post — gate writes on 'manage-posts'.
+    // The server-side admin path uses the Admin SDK and bypasses these rules.
     match /feeding_spots/{document} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null &&
-        hasPermission(request.auth.uid, 'manage-posts');
+      allow write: if canWrite('manage-posts');
     }
 
     match /posts_feeding/{document} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null &&
-        hasPermission(request.auth.uid, 'manage-posts');
+      allow write: if canWrite('manage-posts');
     }
 
     match /posts_butler/{document} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        hasPermission(request.auth.uid, 'manage-posts');
+      allow write: if canWrite('manage-posts');
     }
 
     // Permission system collections
     // NOTE: the app migrated this collection from `user_permissions` to `users`
-    // (see PermissionService.usersCollection). The rule and the hasPermission()
-    // helper below must reference `users` to match the live data.
+    // (see PermissionService.usersCollection).
     match /users/{userId} {
-      // Users can read their own doc; admins (manage-users) can read any user doc.
-      // The latter is required by the client-SDK role-assignment path
-      // (RoleAssignmentService.assignSpecificRole reads the target user's doc before
-      // writing the new role).
-      allow read: if request.auth != null &&
-        (request.auth.uid == userId || hasPermission(request.auth.uid, 'manage-users'));
+      // Client reads are self-only. The admin members roster reads every user via
+      // the Admin-SDK route (/api/admin/get-all-user-permissions-client, gated by
+      // requireApiPermission('manage-users')), which bypasses these rules — so no
+      // client-side admin read of other users' docs exists, and this rule needn't
+      // grant one. (User docs are identity-domain, not per-mountain content.)
+      allow read: if request.auth != null && request.auth.uid == userId;
 
-      // Role/permission writes go through the client SDK (the admin members page →
-      // RoleAssignmentService). Gate on `manage-users` (admin-only) so role
-      // assignment stays a server-enforced boundary — mirroring the cats rule.
-      // Future consideration: move these writes behind an Admin SDK API route and
-      // restore `write: if false` (see PROJECT_PLAN §7 / handoff-10).
-      allow write: if request.auth != null && hasPermission(request.auth.uid, 'manage-users');
+      // Role/permission writes are Admin-SDK-only (Tier 1 write migration):
+      // POST /api/admin/assign-role, gated by requireApiPermission('manage-users'),
+      // writes roles[mountainId] and its permission_logs audit entry in one
+      // transaction. No admin client write to other users' docs remains.
 
-      // A signed-in user may create + update their OWN doc — this is the
-      // login/signup profile sync (`PermissionService.ensureUserExists`, client
-      // SDK): create seeds the default `viewer` role; update refreshes profile
-      // fields (email/displayName/photoURL/phoneNumber/emailVerified). They may
-      // NOT set or change their own role/permissions — `currentRole` is the only
-      // thing `hasPermission()` reads, so locking it blocks self-escalation; role
-      // assignment stays admin-only (the `manage-users` clause above). Without this
-      // the repo rules deny every non-admin login's self-write (see DEBUG_LOG
-      // 2026-07-11) — the client SDK has no Admin-SDK fallback for this path.
+      // A signed-in user may create + update their OWN doc — the login/signup
+      // profile sync (PermissionService.ensureUserExists, client SDK). create
+      // seeds an EMPTY `roles` map; update refreshes profile fields only. They may
+      // NOT set or change their own roles — role assignment stays admin-only
+      // (Admin SDK). Locking `roles` here blocks self-escalation.
       allow create: if request.auth != null && request.auth.uid == userId &&
-        request.resource.data.currentRole.role == 'viewer' &&
-        request.resource.data.currentRole.permissions == [];
+        request.resource.data.get('roles', {}).size() == 0;
       allow update: if request.auth != null && request.auth.uid == userId &&
-        request.resource.data.currentRole == resource.data.currentRole;
+        request.resource.data.get('roles', {}) == resource.data.get('roles', {});
     }
 
     // Role→permission matrix — the single source of truth for role permissions:
-    // both hasPermission() (below) and requireApiPermission (server API gate) read
-    // this doc live. Allow authed clients to read it too, so the client UI resolves
-    // permissions from the LIVE matrix instead of the stale bundled JSON fallback
-    // (permission-service.loadConfig). Not sensitive — role→permission config, no
-    // PII/secrets. Writes stay Admin-SDK-only (POST /api/admin/role-permissions,
-    // manage-users) → never from the client.
-    // (resource-config in this same collection is intentionally NOT matched here: it
-    // is read/written only via /api/admin/resource-permissions, so it stays on the
-    // default-deny below.)
+    // both hasPermissionFor() (below) and requireApiPermission (server API gate) read
+    // this doc live. Authed clients may read it so the UI resolves permissions from
+    // the LIVE matrix. Not sensitive (role→permission config, no PII/secrets). Writes
+    // stay Admin-SDK-only (POST /api/admin/role-permissions, manage-users).
     match /role_permissions/role-config {
       allow read: if request.auth != null;
       allow write: if false;
     }
 
     match /permission_logs/{logId} {
-      // Read access for admins
-      allow read: if request.auth != null && 
-        hasPermission(request.auth.uid, 'view-analytics');
-      
-      // Write access only via cloud functions
+      // Read for admins with 'view-analytics' on the audit row's mountain.
+      allow read: if request.auth != null &&
+        hasPermissionFor(request.auth.uid, 'view-analytics', resource.data.mountainId);
+
+      // Write only via the Admin SDK (POST /api/admin/assign-role writes the audit
+      // entry server-side; a client-writable audit log would be forgeable).
       allow write: if false;
     }
 
     // Admin-only collections
     match /admin_data/{document} {
-      allow read, write: if request.auth != null && 
-        hasPermission(request.auth.uid, 'manage-users');
+      allow read: if request.auth != null &&
+        hasPermissionFor(request.auth.uid, 'manage-users', resource.data.mountainId);
+      allow write: if canWrite('manage-users');
     }
 
-    match /analytics/{document} {
-      allow read: if request.auth != null && 
-        hasPermission(request.auth.uid, 'view-analytics');
-      allow write: if request.auth != null && 
-        hasPermission(request.auth.uid, 'manage-settings');
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    // MUST live INSIDE this match block: a top-level function cannot see the
+    // match's `database` variable, so `$(database)` resolves empty and every
+    // gated rule silently denies (this was a real bug — see
+    // docs/codebase/permissions-and-roles.md).
+
+    // Does `userId` have `permission` on `mountainId`? Resolves the user's role on
+    // that mountain (roles[mountainId]) to permissions via the live role-config
+    // matrix. `.get('roles', {})` tolerates a not-yet-migrated doc (→ no
+    // permission, fail-closed) rather than erroring.
+    function hasPermissionFor(userId, permission, mountainId) {
+      let userPath = /databases/$(database)/documents/users/$(userId);
+      let configPath = /databases/$(database)/documents/role_permissions/role-config;
+      return exists(userPath) && exists(configPath) && mountainId != null &&
+             mountainId in get(userPath).data.get('roles', {}) &&
+             get(userPath).data.roles[mountainId].isActive == true &&
+             get(userPath).data.roles[mountainId].role in get(configPath).data.roles &&
+             permission in get(configPath).data.roles[get(userPath).data.roles[mountainId].role].permissions;
     }
 
-    // Helper: does the user have `permission`?
-    // Resolves the user's role -> permissions from the single source of truth
-    // `role_permissions/role-config` (the same doc the admin Permission Matrix edits),
-    // instead of a per-user `currentRole.permissions` snapshot — that array is left
-    // empty by design; permissions are derived from the role, not stored per user.
-    //
-    // MUST live INSIDE this match block: a top-level function cannot see the match's
-    // `database` variable, so `$(database)` resolves empty and every hasPermission-
-    // gated rule silently denies (this was the bug). See
-    // docs/codebase/permissions-and-roles.md.
-    function hasPermission(userId, permission) {
-      let user = /databases/$(database)/documents/users/$(userId);
-      let config = /databases/$(database)/documents/role_permissions/role-config;
-      return exists(user) && exists(config) &&
-             get(user).data.currentRole.isActive == true &&
-             get(user).data.currentRole.role in get(config).data.roles &&
-             permission in get(config).data.roles[get(user).data.currentRole.role].permissions;
+    // The mountain a write targets: the incoming doc on create/update, the
+    // existing doc on delete (request.resource is null on delete).
+    function writeMountainId() {
+      return request.resource != null
+        ? request.resource.data.mountainId
+        : resource.data.mountainId;
+    }
+
+    // A content write is allowed when the actor holds `permission` on the doc's
+    // mountain AND the write does not move the doc to another mountain.
+    function canWrite(permission) {
+      return request.auth != null &&
+             hasPermissionFor(request.auth.uid, permission, writeMountainId()) &&
+             (request.resource == null || resource == null ||
+              request.resource.data.mountainId == resource.data.mountainId);
     }
 
     // Default deny all other access

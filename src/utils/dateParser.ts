@@ -1,13 +1,14 @@
 /**
- * Utility function to parse recording dates from video titles
- * Extracted from admin video tagging page for reuse in post creation forms
+ * Utility functions to parse recording/creation dates from video titles and
+ * image filenames. Extracted from the admin media tagging pages for reuse in
+ * post creation forms; both parsers share the same pattern set.
  */
 
-export const parseRecordingDateFromTitle = (title: string): Date | null => {
+const parseDateFromText = (text: string, sourceLabel: string): Date | null => {
   try {
     // Pattern 1: yyyy-mm-dd hh.MM.ss (with spaces or special chars around)
     const pattern1 = /(\d{4}-\d{2}-\d{2}\s+\d{2}\.\d{2}\.\d{2})/;
-    const match1 = title.match(pattern1);
+    const match1 = text.match(pattern1);
 
     if (match1) {
       const dateTimeStr = match1[1];
@@ -21,7 +22,7 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
 
     // Pattern 2: yyyymmdd_hhMMss (with spaces or special chars around)
     const pattern2 = /(\d{8}_\d{6})/;
-    const match2 = title.match(pattern2);
+    const match2 = text.match(pattern2);
 
     if (match2) {
       const dateTimeStr = match2[1];
@@ -42,7 +43,7 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
 
     // Additional pattern: yyyy-mm-dd (date only, no time)
     const pattern3 = /(\d{4}-\d{2}-\d{2})/;
-    const match3 = title.match(pattern3);
+    const match3 = text.match(pattern3);
 
     if (match3) {
       const dateStr = match3[1];
@@ -54,7 +55,7 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
 
     // Additional pattern: yyyymmdd (date only, no time)
     const pattern4 = /(\d{8})/;
-    const match4 = title.match(pattern4);
+    const match4 = text.match(pattern4);
 
     if (match4) {
       const dateStr = match4[1];
@@ -71,10 +72,16 @@ export const parseRecordingDateFromTitle = (title: string): Date | null => {
 
     return null;
   } catch (error) {
-    console.warn(`Error parsing date from video title "${title}":`, error);
+    console.warn(`Error parsing date from ${sourceLabel} "${text}":`, error);
     return null;
   }
 };
+
+export const parseRecordingDateFromTitle = (title: string): Date | null =>
+  parseDateFromText(title, 'video title');
+
+export const parseCreatedDateFromFilename = (filename: string): Date | null =>
+  parseDateFromText(filename, 'filename');
 
 /**
  * Converts a Date object to YYYY-MM-DD format for HTML date inputs

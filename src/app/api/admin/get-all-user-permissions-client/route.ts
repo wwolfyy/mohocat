@@ -3,11 +3,14 @@ import { db } from '@/lib/firebase-admin';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 // Gated: returns every user's email + role (PII + the full role roster). Require manage-users.
+// The role shown is the user's role *on the request's mountain* (roles[mountainId]);
+// the roster itself stays central (identity-domain, not per-mountain — plan §2.4).
 export async function GET(request: NextRequest) {
   const authz = await requireApiPermission(request, 'manage-users');
   if (!authz.ok) {
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }
+  const { mountainId } = authz;
   try {
     console.log('=== FETCHING ALL USERS FROM FIRESTORE USING ADMIN SDK ===');
 
@@ -37,20 +40,23 @@ export async function GET(request: NextRequest) {
     snapshot.forEach((doc) => {
       try {
         const data = doc.data();
+        // The user's role on *this* mountain (roles[mountainId]) — a role on
+        // another mountain is not shown here.
+        const role = data.roles?.[mountainId];
         console.log(`Processing user ${doc.id}:`, {
           email: data.email,
-          role: data.currentRole?.role,
+          role: role?.role,
           displayName: data.displayName,
         });
 
         users.push({
           uid: doc.id,
           email: data.email || 'No email',
-          role: data.currentRole?.role || 'No role assigned',
+          role: role?.role || 'No role assigned',
           displayName: data.displayName || data.email?.split('@')[0] || 'Unknown',
-          permissions: data.currentRole?.permissions || [],
-          assignedAt: data.currentRole?.assignedAt || null,
-          isActive: data.currentRole?.isActive !== false,
+          permissions: role?.permissions || [],
+          assignedAt: role?.assignedAt || null,
+          isActive: role?.isActive !== false,
         });
         processedCount++;
       } catch (docError) {

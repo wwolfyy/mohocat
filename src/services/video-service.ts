@@ -20,10 +20,12 @@ import {
 } from './media-albums';
 
 export class FirebaseVideoService implements IVideoService {
+  constructor(private readonly mountainId: string) {}
+
   async getAllVideos(options?: any): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
-      return await getVideosFromMediaAlbums(options);
+      return await getVideosFromMediaAlbums(this.mountainId, options);
     } catch (error) {
       console.error('Error fetching videos:', error);
       throw new Error('Failed to fetch videos');
@@ -33,7 +35,7 @@ export class FirebaseVideoService implements IVideoService {
   async getCatVideos(catName: string): Promise<any[]> {
     try {
       // Delegate to existing media-albums service
-      return await getCatVideosFromMediaAlbums(catName);
+      return await getCatVideosFromMediaAlbums(catName, this.mountainId);
     } catch (error) {
       console.error('Error fetching cat videos:', error);
       throw new Error('Failed to fetch cat videos');
@@ -53,7 +55,7 @@ export class FirebaseVideoService implements IVideoService {
   async addVideoRecord(videoData: any): Promise<string | null> {
     try {
       // Delegate to existing media-albums service
-      return await addVideoRecordFromMediaAlbums(videoData);
+      return await addVideoRecordFromMediaAlbums(videoData, this.mountainId);
     } catch (error) {
       console.error('Error adding video record:', error);
       throw new Error('Failed to add video record');
@@ -64,7 +66,7 @@ export class FirebaseVideoService implements IVideoService {
 
   async getVideoById(videoId: string): Promise<any | null> {
     try {
-      return await getVideoByIdFromMediaAlbums(videoId);
+      return await getVideoByIdFromMediaAlbums(videoId, this.mountainId);
     } catch (error) {
       console.error('Error fetching video by ID:', error);
       throw new Error('Failed to fetch video by ID');
@@ -74,7 +76,7 @@ export class FirebaseVideoService implements IVideoService {
   async createVideo(videoData: any): Promise<string> {
     try {
       // Create is the same as add for videos
-      const result = await addVideoRecordFromMediaAlbums(videoData);
+      const result = await addVideoRecordFromMediaAlbums(videoData, this.mountainId);
       if (!result) {
         throw new Error('Failed to create video - no ID returned');
       }
@@ -149,7 +151,7 @@ export class FirebaseVideoService implements IVideoService {
 
   async syncWithYouTube(): Promise<any[]> {
     try {
-      await syncVideosFromMediaAlbums();
+      await syncVideosFromMediaAlbums(this.mountainId);
       // Return all videos after sync
       return await this.getAllVideos();
     } catch (error) {

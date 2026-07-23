@@ -25,6 +25,8 @@ import { db } from './firebase';
 export class FirebaseAnnouncementService implements IPostService {
   private readonly COLLECTION_NAME = 'posts_announcements';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPosts(): Promise<any[]> {
     try {
       console.log(
@@ -32,7 +34,9 @@ export class FirebaseAnnouncementService implements IPostService {
         this.COLLECTION_NAME
       );
 
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
       console.log('FirebaseAnnouncementService: Query snapshot size:', querySnapshot.size);
 
       const allPosts = querySnapshot.docs.map((doc) => {
@@ -83,7 +87,7 @@ export class FirebaseAnnouncementService implements IPostService {
 
       const postDoc = await getDoc(doc(db, this.COLLECTION_NAME, postId));
 
-      if (!postDoc.exists()) {
+      if (!postDoc.exists() || postDoc.data().mountainId !== this.mountainId) {
         console.log('FirebaseAnnouncementService: Announcement not found');
         return null;
       }
@@ -108,6 +112,7 @@ export class FirebaseAnnouncementService implements IPostService {
 
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
         ...postData,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         replyCount: 0, // Announcements don't have replies
       });
@@ -186,7 +191,11 @@ export class FirebaseAnnouncementService implements IPostService {
   async getModalAnnouncement(): Promise<any | null> {
     try {
       // Get all announcements with showInModal = true
-      const q = query(collection(db, this.COLLECTION_NAME), where('showInModal', '==', true));
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
+        where('showInModal', '==', true)
+      );
 
       const querySnapshot = await getDocs(q);
 

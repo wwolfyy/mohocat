@@ -6,6 +6,7 @@ import { Cat } from '@/types';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { cn } from '@/utils/cn';
+import { useMountain } from '@/components/MountainProvider';
 
 interface CatSelectorModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
   onTagsChange,
   title = '고양이 선택',
 }) => {
+  const mountainId = useMountain();
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,7 +61,7 @@ const CatSelectorModal: React.FC<CatSelectorModalProps> = ({
     try {
       setLoading(true);
       console.log('CatSelectorModal: Loading cats...');
-      const catService = getCatService();
+      const catService = getCatService(mountainId);
       const catsData = await catService.getAllCats();
       console.log('CatSelectorModal: Loaded cats:', catsData.length, catsData);
       setCats(catsData);

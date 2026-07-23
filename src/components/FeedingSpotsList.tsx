@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { getFeedingSpotsService, FeedingSpot } from '@/services';
+import { useMountain } from '@/components/MountainProvider';
 
 const FeedingSpotsList = () => {
   const [feedingSpots, setFeedingSpots] = useState<FeedingSpot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const feedingSpotsService = getFeedingSpotsService();
+  const mountainId = useMountain();
+  const feedingSpotsService = getFeedingSpotsService(mountainId);
 
   // Calculate color based on hours ago (0 hours = green, 60+ hours = red)
   const getColorForHours = (

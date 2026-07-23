@@ -13,6 +13,7 @@ import { User } from 'firebase/auth';
 import { cn } from '@/utils/cn';
 import Link from 'next/link';
 import AdminReplyList from './AdminReplyList';
+import { useMountain } from '@/components/MountainProvider';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -112,10 +113,11 @@ interface AdminPostListProps {
 const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   // Service references
   const authService = getAuthService();
-  const postService = getPostService();
-  const butlerTalkService = getButlerTalkService();
-  const announcementService = getAnnouncementService();
-  const adoptionService = getAdoptionService();
+  const mountainId = useMountain();
+  const postService = getPostService(mountainId);
+  const butlerTalkService = getButlerTalkService(mountainId);
+  const announcementService = getAnnouncementService(mountainId);
+  const adoptionService = getAdoptionService(mountainId);
 
   // The post service backing the active tab.
   const serviceFor = (type: AdminPostListProps['postType']) =>

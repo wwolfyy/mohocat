@@ -25,6 +25,8 @@ import { db } from './firebase';
 export class FirebasePostService implements IPostService {
   private readonly COLLECTION_NAME = 'posts_feeding';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPosts(): Promise<any[]> {
     try {
       console.log(
@@ -33,7 +35,9 @@ export class FirebasePostService implements IPostService {
       );
 
       // First try without ordering to see if there are any posts at all
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
 
       console.log('FirebasePostService: Query snapshot size:', querySnapshot.size);
 
@@ -73,7 +77,11 @@ export class FirebasePostService implements IPostService {
   async getAllPostsIncludingReplies(): Promise<any[]> {
     try {
       const querySnapshot = await getDocs(
-        query(collection(db, this.COLLECTION_NAME), orderBy('createdAt', 'desc'))
+        query(
+          collection(db, this.COLLECTION_NAME),
+          where('mountainId', '==', this.mountainId),
+          orderBy('createdAt', 'desc')
+        )
       );
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -96,7 +104,7 @@ export class FirebasePostService implements IPostService {
       const docRef = doc(db, this.COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
+      if (docSnap.exists() && docSnap.data().mountainId === this.mountainId) {
         const data = docSnap.data();
         return {
           id: docSnap.id,
@@ -116,6 +124,7 @@ export class FirebasePostService implements IPostService {
     try {
       const postData = {
         ...post,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         replyCount: 0,
         depth: 0,
@@ -148,7 +157,11 @@ export class FirebasePostService implements IPostService {
 
       // Remove orderBy to avoid requiring a composite index
       // We'll sort in the application layer instead
-      const q = query(collection(db, this.COLLECTION_NAME), where('parentId', '==', postId));
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mountainId', '==', this.mountainId),
+        where('parentId', '==', postId)
+      );
 
       const querySnapshot = await getDocs(q);
       console.log('FirebasePostService: Reply query snapshot size:', querySnapshot.size);
@@ -188,6 +201,7 @@ export class FirebasePostService implements IPostService {
 
       const replyData = {
         ...reply,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         isReply: true,
         depth: (parentPost.depth || 0) + 1,

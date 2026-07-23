@@ -95,6 +95,15 @@ graph LR
 - **Old media-admin components were removed**: `ImageEdit`, `ImageList`, `VideoEdit`,
   `VideoList`. Tagging now happens in `admin/tag-images` and `admin/tag-videos` with the newer
   `YouTubeAuthPanelNew`. Don't reintroduce the old list/edit components.
+- **The tagging pages compose a shared toolkit** (2026-07 complexity retirement):
+  `src/components/admin/media/` holds `useMediaListController<T>` (load/selection/filter/
+  sort/pagination on the shared `parseDate` normalizer), `useDateAutoParse<T>` (자동 날짜 인식
+  loop), and the presentational set (`MediaStatsCards`/`MediaFilterBar`/`BatchActionsPanel`/
+  `MediaGrid`/`PaginationBar`/`CatTagField`). **Write paths stay page-owned** — tag-videos'
+  YouTube orchestration lives in the colocated `useYouTubeVideoMutations.ts` and is
+  deliberately NOT genericized. Cat selection is the shared `CatSelectorModal`
+  (commit-on-done); user prompts are the shared `ui/useDialog` Modal, not native
+  `alert()/confirm()`.
 - **Native `<img>` inside `Lightbox`**: the immersive viewer historically used a native img (not
   Next `<Image>`) — verify before "optimizing" it (documented in project memory).
 - The album filter chip row was consolidated to render selected cats **once**; if you refactor

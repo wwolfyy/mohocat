@@ -1,0 +1,89 @@
+{
+  "_comment": "Second-tenant (manisan) fixtures for the M5.4 two-tenant isolation e2e. Distinct ids/names from the geyang fixtures so a spec can assert cross-tenant invisibility (manisan content must not appear on geyang surfaces and vice versa). Seeded stamped mountainId='manisan' by seed-emulators.mjs, alongside the default (geyang) pass. Users carry an explicit roles[] map: `manisan-admin` is manisan-only (asserts denial on geyang); `dual-admin` holds admin on BOTH (asserts allowed on each of their mountains).",
+  "points": [
+    {
+      "id": "manisan-point-01",
+      "x": 40,
+      "y": 50,
+      "title": "마니산 급식소 1",
+      "description": "마니산 픽스처 급식소 — 현재 거주 고양이 있음"
+    }
+  ],
+  "cats": [
+    {
+      "id": "manisan-cat-01",
+      "name": "마니산냥이일",
+      "alt_name": "마니일냥이",
+      "description": "마니산 픽스처 고양이 1 — 현재 거주",
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "dwelling": "manisan-point-01",
+      "date_of_birth": 2021,
+      "dob_certainty": "정확",
+      "sex": "남아",
+      "status": "건강",
+      "character": "활발함",
+      "isNeutered": true,
+      "adoptable": false,
+      "name_origin": "마니산 테스트를 위해 지은 이름이에요."
+    }
+  ],
+  "cat_images": [
+    {
+      "id": "manisan-img-01",
+      "imageUrl": "/images/test-fixtures/album-01.jpg",
+      "fileName": "manisan-album-01.jpg",
+      "tags": ["manisan-cat-01"],
+      "uploadDate": "2026-01-02",
+      "uploadedBy": "manisan-admin",
+      "description": "마니산 픽스처 사진 1"
+    }
+  ],
+  "posts_announcements": [
+    {
+      "id": "manisan-anno-01",
+      "title": "마니산 공지 1",
+      "message": "마니산 첫 번째 공지 본문이에요.",
+      "username": "마니산관리자",
+      "date": "2026-01-02",
+      "time": "10:00"
+    }
+  ],
+  "contacts": [
+    {
+      "id": "manisan-contact-01",
+      "name": "마니산동참자",
+      "phone": "+821099998888",
+      "message": "마니산 동참 신청 픽스처 — geyang 관리자에게는 보이면 안 돼요.",
+      "createdAt": "2026-01-02T10:00:00.000Z"
+    }
+  ],
+  "about_content": {
+    "title": "마니산 고양이들",
+    "subtitle": "마니산 테스트 픽스처 소개 문구",
+    "mainContent": "이 문서는 마니산 e2e 테스트용 about 픽스처예요. 실제 데이터가 아니에요.",
+    "sections": [
+      { "title": "우리의 이야기", "content": "마니산 테스트 섹션 1 본문이에요." }
+    ]
+  },
+  "users": [
+    {
+      "uid": "manisan-admin-uid",
+      "email": "manisan-admin@test.local",
+      "password": "Passw0rd!manisan",
+      "displayName": "마니산관리자",
+      "nickname": "마니산관리자",
+      "roles": [{ "mountainId": "manisan", "role": "admin" }]
+    },
+    {
+      "uid": "dual-admin-uid",
+      "email": "dual-admin@test.local",
+      "password": "Passw0rd!dual",
+      "displayName": "겸직관리자",
+      "nickname": "겸직관리자",
+      "roles": [
+        { "mountainId": "geyang", "role": "admin" },
+        { "mountainId": "manisan", "role": "admin" }
+      ]
+    }
+  ]
+}

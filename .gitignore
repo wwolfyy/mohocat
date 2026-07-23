@@ -86,3 +86,6 @@ _infra/_terraform/terraform.tfstate
 _infra/_terraform/terraform.tfstate.backup
 _infra/_terraform/.terraform.lock.hcl
 
+
+# Firestore offline exports — contain OAuth tokens + PII, never commit
+/backups/

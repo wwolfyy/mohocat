@@ -31,6 +31,7 @@ import {
 import { selectColumn, type SelectOption } from './selectColumn';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
+import { useMountain } from '@/components/MountainProvider';
 
 const { catGrid: t, common } = adminStrings;
 
@@ -309,7 +310,8 @@ function analyzeRows(rows: Cat[], originalById: Map<string, Cat>): RowAnalysis {
 }
 
 export default function CatGrid() {
-  const catService = getCatService();
+  const mountainId = useMountain();
+  const catService = getCatService(mountainId);
   const { user } = useAuth();
 
   const [originalCats, setOriginalCats] = useState<Cat[]>([]);

@@ -1,9 +1,11 @@
 # 산냥이집냥이 — Testing Hand-off (Playwright e2e harness + CI)
 
-**Date:** 2026-07-12 · **Branch:** `dev` · **Committed** to `dev` across several commits
-this workstream — harness/CI, the landing-marker bake fix, **Phase 2 `public/`**, and
-**Phase 6 `api/` + flake hardening** (see the newest-first updates below) · **Push:** ❌
-not pushed (owner to push).
+**Date:** 2026-07-12 (last updated 2026-07-16) · **Status:** ✅ **WORKSTREAM CLOSED —
+merged to `main` via PR #7 (2026-07-16).** All main-plan phases (0–7) done: harness/CI,
+`public`/`auth`/`member`/`admin`/`api` suites (~140 tests), flake audit (local 3× + CI
+green), docs, and branch protection. See the 2026-07-16 update below for the promotion +
+branch-protection details. **Only open owner action:** `firebase deploy --only
+firestore:rules` for prod parity.
 
 > **This is a standalone testing hand-off — deliberately kept OUT of the numbered
 > `docs/handoff/handoff-NN` engineering series.** It is the single narrative for the
@@ -17,6 +19,52 @@ not pushed (owner to push).
 [`…-prerequisite-plan.md`](../../planning/playwright-ci-prerequisite-plan.md) (this harness, ✅ EXECUTED),
 [`log/FEATURE_MOD_LOG.md`](../../../log/FEATURE_MOD_LOG.md) (1 new: harness),
 [`log/DEBUG_LOG.md`](../../../log/DEBUG_LOG.md) (2 new: non-admin login; landing-marker bake).
+
+---
+
+## Update — 2026-07-16: merged to `main` (PR #7) + branch protection — WORKSTREAM CLOSED
+
+**The e2e workstream is complete and live on `main`.** With Phase 7 done (below), the
+whole of `dev` was promoted to production `main` via **PR #7** and branch protection now
+enforces the suite.
+
+**PR #7 — `dev → main` promotion, merged with a MERGE COMMIT (`65d2020`).**
+
+- **CI green on the PR** — the `e2e` job (and `checks`) passed on `pull_request` and on
+  the `dev` pushes; Vercel preview deployed clean. This is the **CI half of the Phase-7
+  flake-audit exit criterion** (the local half — 3× consecutive green — was already met).
+- **Merge method mattered.** PR #6 had earlier been **squash-merged** into `main`
+  (`a7bfe3c`), which collapsed that work into one new commit `main` didn't share with
+  `dev`. `dev` already contained the same work as its original commits, so `dev`/`main`
+  showed a **textual (not real) conflict** — a squash artifact. **Resolved** by
+  `git merge -s ours origin/main` on `dev` (`fdd8077`): records `main` as an ancestor
+  and keeps `dev`'s tree **byte-for-byte** (verified `dev` is a semantic superset of
+  `main` first — the only `main`-only content was stale docs + dead code `dev` had
+  already removed). PR #7 then merged cleanly **with a merge commit** (not squash/rebase),
+  which keeps `dev` an ancestor of `main` and avoids recreating the divergence.
+- **Current branch state:** `dev` is an ancestor of `main`; `main` is **+1 merge commit
+  ahead** of `dev`. Optionally `git checkout dev && git merge --ff-only main && git push`
+  to fully sync (zero drift).
+
+**Branch protection on `main` — now enforced.**
+
+- `e2e` is a **required status check** (classic protection). The **`protect-main`
+  ruleset** adds `deletion` (can't delete `main`), `non_fast_forward` (no force-push),
+  and a `pull_request` rule (review count **0**). The **linear-history rule was removed**
+  so promotions can use a merge commit — the right tool for a long-lived `dev`.
+
+**Rulesets vs classic protection gotcha (worth remembering):** the merge-commit option
+disappeared from the GitHub merge button because a **ruleset** `required_linear_history`
+rule was active — even though _classic_ branch protection had linear history **off**. The
+two systems stack; check **Settings → Rules → Rulesets**, not just classic protection.
+
+**Only remaining owner action:** `firebase deploy --only firestore:rules` (prod parity on
+the scoped `users` self-write rule — repo rules are ahead of deployed prod).
+
+**Open (not part of this workstream): workflow direction.** Whether to keep the
+`dev`-promotion model (use **merge commits** for `dev → main`, as PR #7 did — no drift) or
+move to **GitHub Flow** (delete `dev`, short-lived branches off `main`, squash-merge) is an
+undecided call. Both are viable; merge-commit fits promotion, squash fits GitHub Flow.
 
 ---
 

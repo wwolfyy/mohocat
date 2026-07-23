@@ -11,6 +11,111 @@
 
 ---
 
+## 2026-07-19 — Modal dialog conversion silently canceled the post-submit redirect (App-Router transition vs. modal-unmount re-render)
+
+**Symptom:** After the P6.1 `alert()` → shared `ui/Modal` conversion, all four
+content-form create flows stopped redirecting: the success dialog appeared, 확인
+dismissed it, the post WAS created — but the page stayed on the composer. Caught by
+the P0 characterization net (4 e2e failures: `posts.spec` + `butler-create.spec`
+redirect polls timing out).
+
+**Root cause:** the converted flow is `await dialog.alert(msg); router.push(path)`.
+`useDialog`'s 확인 handler resolved the promise and then queued the modal-unmount
+`setState(null)` — so `router.push` ran while that unmount re-render was still
+pending, and the re-render canceled the in-flight App-Router transition. The Playwright
+trace's network log proved the push actually started (`/pages/butler_talk?_rsc=…`
+navigation fetch fired) but the URL never committed. The native `alert()` never had
+this problem because it blocks the main thread: by the time `push` ran, no other
+update was pending.
+
+**Fix:** `useDialog.close()` now clears the dialog state first and resolves the
+promise in a `setTimeout(…, 0)` — continuations run only after React has committed
+the modal unmount, restoring the native-alert timing shape
+(`src/components/ui/useDialog.tsx`).
+
+**Verified:** the four failing specs green after the fix (plus the full e2e suite);
+the redirect assertions now pass against the Modal dialogs.
+
+---
+
+## 2026-07-19 — 집사톡 image upload could never have worked (signed-URL response keys drifted in the copy)
+
+**Symptom:** Latent — found by source inspection during the complexity-retirement P3
+convergence, not by a user report. Any image attached to a 집사톡 (`NewButlerTalkForm`)
+post would fail with the form's "Image upload failed" alert; the same flow in
+집사게시판 (`NewPostForm`) worked.
+
+**Root cause:** copy-drift in the duplicated signed-URL upload helper. The
+`/api/generate-signed-url` route returns `{ signedUrl, publicUrl }`. `NewPostForm`'s
+copy destructures those keys correctly; `NewButlerTalkForm`'s copy destructures
+`{ uploadUrl, downloadUrl }` — both `undefined` — then `fetch(undefined, { PUT … })`
+resolves against the page URL and fails its ok-check. Nobody noticed because the two
+"twin" helpers were maintained separately (the exact failure mode the refactor
+retires). Bonus finding in the working copy: `NewPostForm` never checked the PUT
+response, so a failed Storage upload would still silently embed `publicUrl` in the
+post.
+
+**Fix:** P3.0 lifted the strategy into
+`src/components/forms/uploadStrategies.ts#uploadImagesWithSignedUrls`, canonicalized
+on the route's real contract (`{ signedUrl, publicUrl }`) **plus** the PUT ok-check
+from the butler copy. Both forms now share it via `useRichContentForm`.
+
+**Verified:** unit tests pin the contract (`tests/unit/uploadStrategies.test.ts` —
+happy path, signed-URL failure, PUT failure, non-fatal `cat_images` entry); the full
+media path stays on the scripted manual pass (YouTube + prod-host public URLs are not
+emulator-testable).
+
+---
+
+## 2026-07-18 — Every admin role change silently lost its audit entry (permission_logs write denied & swallowed)
+
+**Symptom:** No entries ever appeared in `permission_logs` for role assignments made
+from `/admin/members`, despite the UI reporting success and the role change itself
+persisting. Nothing surfaced in the UI or server logs — the only trace was a non-fatal
+`console.error` in the browser console ("Failed to log role change"), which the e2e
+suite had even been configured to tolerate (`members.spec.ts` used the non-watchdog
+`baseTest` specifically to ignore it).
+
+**Root cause:** two layers, each defensible alone, silently fatal together:
+
+1. `firestore.rules` locks `permission_logs` to `write: if false` — **correct** (a
+   client-writable audit log would be forgeable), on the assumption writes would come
+   from a server path.
+2. But the audit write lived in the **client** SDK
+   (`RoleAssignmentService.logRoleChange`, called after the role write in
+   `assignSpecificRole`) — and its `catch` block deliberately swallowed the failure
+   ("Don't throw error for logging failure — role assignment should still work"). So
+   the rule denied every audit write, and the swallow guaranteed nobody noticed.
+
+   The gap was **known** — recorded 2026-06-30 in
+   `docs/planning/firebase-sdk-usage-inventory.md` §D ("every role change currently
+   loses its audit entry", verdict: migrate, "strong yes") — but sat unscheduled for
+   ~3 weeks until the multi-tenant assessment resurfaced it as a governance
+   prerequisite (a second mountain owner assigning roles with no audit trail).
+
+**Fix:** Tier 1 write migration (see `log/FEATURE_MOD_LOG.md` 2026-07-18): role
+assignment moved behind `POST /api/admin/assign-role` (Admin SDK, gated
+`requireApiPermission('manage-users')`), where the `users/{uid}` role write and the
+`permission_logs` audit entry run in **one transaction** — the audit entry can no
+longer be skipped, and the Admin SDK legitimately bypasses the (kept) `write: if
+false` rule. The swallowed-catch client path was deleted, not repaired: per the repo
+error-handling convention, an audit write that fails must fail the operation, which
+only a server-side transactional write can express.
+
+**Verified:** e2e `members.spec.ts` 4/4 against the emulator suite (with the updated
+rules loaded): assigning a role through the real members page now succeeds through the
+new route. `tsc` + smoke green. Prod requires the owner-run
+`firebase deploy --only firestore:rules` (the app no longer uses the removed clause
+either way).
+
+**Lesson:** a rules-denied write plus a swallowed catch is _silent_ data loss — the
+rules layer can't warn you, and the catch made sure the app didn't either. When a
+write is moved behind `write: if false`, grep for every client writer **and their
+catch blocks** at the same time; and treat "tolerated console.error" entries in the
+e2e watchdog config as a standing list of known-swallowed failures worth auditing.
+
+---
+
 ## 2026-07-13 — Intermittent e2e build hang/"markerless bake" — a SECOND page (냥이들) read points via the client Web SDK at build
 
 **Symptom:** The e2e gate (`npm run test:e2e`) intermittently produced failing marker

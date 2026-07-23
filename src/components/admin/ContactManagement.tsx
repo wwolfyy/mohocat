@@ -6,6 +6,7 @@ import type { Contact } from '@/types';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { useMountain } from '@/components/MountainProvider';
 
 const { contacts: t, common } = adminStrings;
 
@@ -23,6 +24,7 @@ function formatCreatedAt(createdAt: Contact['createdAt']): string {
 }
 
 export default function ContactManagement() {
+  const mountainId = useMountain();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,7 +33,7 @@ export default function ContactManagement() {
     setLoading(true);
     setError('');
     try {
-      const all = await getContactService().getAllContacts();
+      const all = await getContactService(mountainId).getAllContacts();
       setContacts(all);
     } catch (err) {
       console.error('Failed to load contacts:', err);
@@ -39,7 +41,7 @@ export default function ContactManagement() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mountainId]);
 
   useEffect(() => {
     loadContacts();

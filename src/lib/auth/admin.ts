@@ -8,12 +8,12 @@ import { PermissionService } from '@/services/permission-service';
 /**
  * Check if a user is an admin based on their Firestore permissions
  */
-export async function isAdmin(user: User | null): Promise<boolean> {
+export async function isAdmin(user: User | null, mountainId: string): Promise<boolean> {
   if (!user?.uid) return false;
 
   try {
     const permissionService = new PermissionService();
-    const permissions = await permissionService.getUserPermissions(user.uid);
+    const permissions = await permissionService.getUserPermissions(user.uid, mountainId);
 
     // Check if user has any admin-level permissions
     const adminPermissions = ['manage-cats', 'manage-posts', 'manage-users', 'manage-settings'];
@@ -31,12 +31,12 @@ export async function isAdmin(user: User | null): Promise<boolean> {
 /**
  * Get user's role from Firestore permissions
  */
-export async function getUserRole(user: User | null): Promise<string | null> {
+export async function getUserRole(user: User | null, mountainId: string): Promise<string | null> {
   if (!user?.uid) return null;
 
   try {
     const permissionService = new PermissionService();
-    const permissions = await permissionService.getUserPermissions(user.uid);
+    const permissions = await permissionService.getUserPermissions(user.uid, mountainId);
 
     // Determine role based on permissions
     if (permissions.includes('manage-users')) {
@@ -59,12 +59,16 @@ export async function getUserRole(user: User | null): Promise<string | null> {
 /**
  * Check if user has permission for a specific action on a resource
  */
-export async function hasPermission(user: User | null, permission: string): Promise<boolean> {
+export async function hasPermission(
+  user: User | null,
+  permission: string,
+  mountainId: string
+): Promise<boolean> {
   if (!user?.uid) return false;
 
   try {
     const permissionService = new PermissionService();
-    return await permissionService.checkPermission(user.uid, permission);
+    return await permissionService.checkPermission(user.uid, permission, mountainId);
   } catch (error) {
     console.error('Error checking permission:', error);
     return false;
@@ -74,17 +78,17 @@ export async function hasPermission(user: User | null, permission: string): Prom
 /**
  * Create admin user object from Firebase user
  */
-export async function createAdminUser(user: User): Promise<AdminUser | null> {
+export async function createAdminUser(user: User, mountainId: string): Promise<AdminUser | null> {
   if (!user.uid) return null;
 
-  const isAdminUser = await isAdmin(user);
+  const isAdminUser = await isAdmin(user, mountainId);
   if (!isAdminUser) return null;
 
-  const role = await getUserRole(user);
+  const role = await getUserRole(user, mountainId);
   if (!role) return null;
 
   const permissionService = new PermissionService();
-  const permissions = await permissionService.getUserPermissions(user.uid);
+  const permissions = await permissionService.getUserPermissions(user.uid, mountainId);
 
   // Map permission system permissions to admin interface permissions
   const adminPermissions: AdminPermission[] = [];
@@ -128,10 +132,10 @@ export async function createAdminUser(user: User): Promise<AdminUser | null> {
 /**
  * Admin authentication hook
  */
-export async function useAdminAuth(): Promise<AdminUser | null> {
+export async function useAdminAuth(mountainId: string): Promise<AdminUser | null> {
   return new Promise((resolve) => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      const adminUser = user ? await createAdminUser(user) : null;
+      const adminUser = user ? await createAdminUser(user, mountainId) : null;
       resolve(adminUser);
       unsubscribe();
     });
@@ -141,12 +145,12 @@ export async function useAdminAuth(): Promise<AdminUser | null> {
 /**
  * Require admin authentication middleware for API routes
  */
-export async function requireAdminAuth(user: User | null): Promise<AdminUser> {
+export async function requireAdminAuth(user: User | null, mountainId: string): Promise<AdminUser> {
   if (!user) {
     throw new Error('Authentication required');
   }
 
-  const adminUser = await createAdminUser(user);
+  const adminUser = await createAdminUser(user, mountainId);
   if (!adminUser) {
     throw new Error('Admin access required');
   }

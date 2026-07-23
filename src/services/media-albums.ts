@@ -61,11 +61,11 @@ export const COLLECTIONS = {
 } as const;
 
 // Get images for a specific cat
-export const getCatImages = async (catName: string): Promise<CatImage[]> => {
+export const getCatImages = async (catName: string, mountainId: string): Promise<CatImage[]> => {
   try {
-    // Use a simpler query to avoid index requirement
     const q = query(
       collection(db, COLLECTIONS.CAT_IMAGES),
+      where('mountainId', '==', mountainId),
       where('tags', 'array-contains', catName)
     );
 
@@ -92,11 +92,11 @@ export const getCatImages = async (catName: string): Promise<CatImage[]> => {
 };
 
 // Get videos for a specific cat
-export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
+export const getCatVideos = async (catName: string, mountainId: string): Promise<CatVideo[]> => {
   try {
-    // Use a simpler query to avoid index requirement
     const q = query(
       collection(db, COLLECTIONS.CAT_VIDEOS),
+      where('mountainId', '==', mountainId),
       where('tags', 'array-contains', catName)
     );
 
@@ -123,10 +123,13 @@ export const getCatVideos = async (catName: string): Promise<CatVideo[]> => {
 };
 
 // Get all images (with optional filtering)
-export const getAllImages = async (options: MediaQueryOptions = {}): Promise<CatImage[]> => {
+export const getAllImages = async (
+  mountainId: string,
+  options: MediaQueryOptions = {}
+): Promise<CatImage[]> => {
   try {
     let q = collection(db, COLLECTIONS.CAT_IMAGES);
-    const constraints = [];
+    const constraints = [where('mountainId', '==', mountainId)];
 
     // Apply tag filtering if specified
     if (options.tags && options.tags.length > 0) {
@@ -134,7 +137,7 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
     }
 
     // Create query without orderBy to avoid index issues
-    const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
+    const queryRef = query(q, ...constraints);
     const querySnapshot = await getDocs(queryRef);
 
     let results = querySnapshot.docs.map((doc) => {
@@ -177,10 +180,13 @@ export const getAllImages = async (options: MediaQueryOptions = {}): Promise<Cat
 };
 
 // Get all videos (with optional filtering)
-export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<CatVideo[]> => {
+export const getAllVideos = async (
+  mountainId: string,
+  options: MediaQueryOptions = {}
+): Promise<CatVideo[]> => {
   try {
     let q = collection(db, COLLECTIONS.CAT_VIDEOS);
-    const constraints = [];
+    const constraints = [where('mountainId', '==', mountainId)];
 
     // Apply tag filtering if specified
     if (options.tags && options.tags.length > 0) {
@@ -188,7 +194,7 @@ export const getAllVideos = async (options: MediaQueryOptions = {}): Promise<Cat
     }
 
     // Create query without orderBy to avoid index issues
-    const queryRef = constraints.length > 0 ? query(q, ...constraints) : q;
+    const queryRef = query(q, ...constraints);
     const querySnapshot = await getDocs(queryRef);
 
     let results = querySnapshot.docs.map((doc) => {
@@ -264,12 +270,16 @@ export const updateVideoTags = async (videoId: string, tags: string[]): Promise<
 };
 
 // Add new image record to Firestore
-export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<string | null> => {
+export const addImageRecord = async (
+  imageData: Omit<CatImage, 'id'>,
+  mountainId: string
+): Promise<string | null> => {
   try {
     // Filter out undefined values to avoid Firestore errors
     const cleanedData = Object.fromEntries(
       Object.entries({
         ...imageData,
+        mountainId,
         uploadDate: new Date(),
       }).filter(([_, value]) => value !== undefined)
     );
@@ -283,12 +293,16 @@ export const addImageRecord = async (imageData: Omit<CatImage, 'id'>): Promise<s
 };
 
 // Add new video record to Firestore
-export const addVideoRecord = async (videoData: Omit<CatVideo, 'id'>): Promise<string | null> => {
+export const addVideoRecord = async (
+  videoData: Omit<CatVideo, 'id'>,
+  mountainId: string
+): Promise<string | null> => {
   try {
     // Filter out undefined values to avoid Firestore errors
     const cleanedData = Object.fromEntries(
       Object.entries({
         ...videoData,
+        mountainId,
         uploadDate: new Date(),
       }).filter(([_, value]) => value !== undefined)
     );
@@ -315,12 +329,17 @@ export const getStorageFileUrl = async (storagePath: string): Promise<string | n
 
 // Additional CRUD operations for images
 
-export const getImageById = async (imageId: string): Promise<CatImage | null> => {
+export const getImageById = async (
+  imageId: string,
+  mountainId: string
+): Promise<CatImage | null> => {
   try {
     const imageRef = doc(db, COLLECTIONS.CAT_IMAGES, imageId);
     const imageDoc = await getDoc(imageRef);
 
-    if (!imageDoc.exists()) {
+    // Doc-id reads can't be scoped by `where` — check the tenant after the read
+    // so a known id from another mountain reads as "not found".
+    if (!imageDoc.exists() || imageDoc.data().mountainId !== mountainId) {
       return null;
     }
 
@@ -410,7 +429,7 @@ export const batchDeleteImages = async (imageIds: string[]): Promise<boolean> =>
   }
 };
 
-export const syncImages = async (): Promise<boolean> => {
+export const syncImages = async (mountainId: string): Promise<boolean> => {
   try {
     console.log('Starting image sync with Firebase Storage...');
 
@@ -462,6 +481,7 @@ export const syncImages = async (): Promise<boolean> => {
             // Check if already exists in Firestore
             const q = query(
               collection(db, COLLECTIONS.CAT_IMAGES),
+              where('mountainId', '==', mountainId),
               where('storagePath', '==', storagePath)
             );
             const existingDocs = await getDocs(q);
@@ -481,6 +501,7 @@ export const syncImages = async (): Promise<boolean> => {
               imageUrl,
               fileName: fileRef.name,
               storagePath,
+              mountainId,
               tags: [], // Empty initially - needs manual tagging
               uploadDate: new Date(), // Use current date since we can't get original upload date easily
               uploadedBy: 'system_sync',
@@ -513,12 +534,17 @@ export const syncImages = async (): Promise<boolean> => {
 
 // Additional CRUD operations for videos
 
-export const getVideoById = async (videoId: string): Promise<CatVideo | null> => {
+export const getVideoById = async (
+  videoId: string,
+  mountainId: string
+): Promise<CatVideo | null> => {
   try {
     const videoRef = doc(db, COLLECTIONS.CAT_VIDEOS, videoId);
     const videoDoc = await getDoc(videoRef);
 
-    if (!videoDoc.exists()) {
+    // Doc-id reads can't be scoped by `where` — check the tenant after the read
+    // so a known id from another mountain reads as "not found".
+    if (!videoDoc.exists() || videoDoc.data().mountainId !== mountainId) {
       return null;
     }
 
@@ -609,20 +635,24 @@ export const batchDeleteVideos = async (videoIds: string[]): Promise<boolean> =>
   }
 };
 
-export const syncVideos = async (): Promise<boolean> => {
+export const syncVideos = async (mountainId: string): Promise<boolean> => {
   try {
     console.log('Starting YouTube video discovery and sync...');
 
     // Import the fetchChannelVideos function
     const { fetchChannelVideos } = await import('./youtube');
+    const { getYouTubeChannelId } = await import('@/utils/config');
 
-    // Fetch all videos from YouTube channel
+    // Fetch all videos from the tenant's YouTube channel
     console.log('Fetching videos from YouTube channel...');
-    const youtubeVideos = await fetchChannelVideos();
+    const youtubeVideos = await fetchChannelVideos(getYouTubeChannelId(mountainId));
     console.log(`Found ${youtubeVideos.length} videos on YouTube channel`);
 
     // Get existing videos from Firestore
-    const existingVideosQuery = query(collection(db, COLLECTIONS.CAT_VIDEOS));
+    const existingVideosQuery = query(
+      collection(db, COLLECTIONS.CAT_VIDEOS),
+      where('mountainId', '==', mountainId)
+    );
     const existingVideosSnapshot = await getDocs(existingVideosQuery);
     const existingYouTubeIds = new Set();
 
@@ -644,6 +674,7 @@ export const syncVideos = async (): Promise<boolean> => {
     for (const video of newVideos) {
       try {
         const videoData = {
+          mountainId,
           youtubeId: video.id,
           videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
           title: video.title,

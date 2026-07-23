@@ -20,6 +20,11 @@ const ALLOWED_ERROR_SUBSTRINGS: string[] = [
   // in-flight RSC link prefetches; Next logs this and falls back to a browser
   // navigation. Benign navigation-abort noise, not an app error.
   'Failed to fetch RSC payload',
+  // /admin/tag-videos loads YouTube playlists on mount; the emulator env has no
+  // YouTube OAuth creds, so /api/manage-playlists 500s and the page logs this and
+  // continues (playlists are optional there — source-verified in loadPlaylists()).
+  // The P0 editor characterization specs pin that the page still works without it.
+  'Error loading playlists',
 ];
 
 function isAllowed(text: string): boolean {
@@ -37,6 +42,14 @@ const EMULATOR_HOSTS = [':9099', ':8088', ':9199'];
 
 function isEmulatorResourceFailure(text: string, url: string): boolean {
   return /Failed to load resource/.test(text) && EMULATOR_HOSTS.some((h) => url.includes(h));
+}
+
+// The browser also logs the raw 500 for the credential-less /api/manage-playlists
+// call (see the 'Error loading playlists' allowance above) as a generic
+// "Failed to load resource" whose only detail is the URL. Same justification;
+// every other /api failure still fails the test.
+function isPlaylistApiFailure(text: string, url: string): boolean {
+  return /Failed to load resource/.test(text) && url.includes('/api/manage-playlists');
 }
 
 // Projects whose tests run with a signed-in session (storageState, or a UI login).
@@ -68,6 +81,7 @@ export const test = base.extend<{ consoleWatchdog: void }>({
         // For failed subresource loads the failing URL is only in the location.
         const url = msg.location()?.url ?? '';
         if (isEmulatorResourceFailure(text, url)) return;
+        if (isPlaylistApiFailure(text, url)) return;
         errors.push(`console.error: ${text}${url ? ` [${url}]` : ''}`);
       };
       const authed = AUTHED_PROJECTS.includes(testInfo.project.name);

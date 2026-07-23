@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getAboutContentService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
 import { getMountainAbout } from '@/utils/config';
+import { useMountain } from '@/components/MountainProvider';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -12,13 +13,14 @@ import Alert from '@/components/ui/Alert';
 const { aboutEditor: t } = adminStrings;
 
 export default function AboutContentEditor() {
+  const mountainId = useMountain();
   const [content, setContent] = useState<AboutContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const aboutContentService = getAboutContentService();
+  const aboutContentService = getAboutContentService(mountainId);
 
   useEffect(() => {
     loadAboutContent();
@@ -35,7 +37,7 @@ export default function AboutContentEditor() {
         setContent(firestoreContent);
       } else {
         // Initialize with current JSON config if no Firestore data exists
-        const jsonConfig = getMountainAbout();
+        const jsonConfig = getMountainAbout(mountainId);
         const initialContent: AboutContent = {
           title: jsonConfig.title,
           subtitle: jsonConfig.subtitle,

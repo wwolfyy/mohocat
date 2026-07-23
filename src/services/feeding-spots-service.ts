@@ -26,6 +26,12 @@ export interface IFeedingSpotsService {
 
 export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
   private readonly COLLECTION_NAME = 'feeding_spots';
+
+  // Feeding spots have no create path in the app (docs are seeded by
+  // migration scripts); updates patch existing docs, so there is nothing to
+  // stamp in M4 — the tenant id is held for M5's scoped reads.
+  constructor(private readonly mountainId: string) {}
+
   private formatTimestamp(timestamp: any): string {
     if (!timestamp) return '';
 
@@ -105,7 +111,11 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
   async getAllFeedingSpots(): Promise<FeedingSpot[]> {
     try {
       const feedingSpotsRef = collection(db, this.COLLECTION_NAME);
-      const q = query(feedingSpotsRef, orderBy('id', 'asc'));
+      const q = query(
+        feedingSpotsRef,
+        where('mountainId', '==', this.mountainId),
+        orderBy('id', 'asc')
+      );
       const querySnapshot = await getDocs(q);
 
       return querySnapshot.docs.map((doc) => {
@@ -142,7 +152,11 @@ export class FirebaseFeedingSpotsService implements IFeedingSpotsService {
       const updatePromises = spotIds.map(async (spotId) => {
         // Find the document by id field
         const feedingSpotsRef = collection(db, this.COLLECTION_NAME);
-        const q = query(feedingSpotsRef, where('id', '==', spotId));
+        const q = query(
+          feedingSpotsRef,
+          where('mountainId', '==', this.mountainId),
+          where('id', '==', spotId)
+        );
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {

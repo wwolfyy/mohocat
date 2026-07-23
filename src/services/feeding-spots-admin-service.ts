@@ -1,28 +1,4 @@
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirebaseConfig } from '@/utils/config';
-import * as path from 'path';
-import * as fs from 'fs';
-
-// Initialize Firebase Admin if not already done
-if (!getApps().length) {
-  const serviceAccountPath = path.join(
-    process.cwd(),
-    'config/firebase/mountaincats-61543-7329e795c352.json'
-  );
-
-  if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-    const firebaseConfig = getFirebaseConfig();
-
-    initializeApp({
-      credential: cert(serviceAccount),
-      storageBucket: firebaseConfig?.storageBucket,
-    });
-  } else {
-    throw new Error('Firebase service account file not found');
-  }
-}
+import { db as adminDb } from '@/lib/firebase-admin';
 
 export interface BasicFeedingSpot {
   id: number;
@@ -40,7 +16,7 @@ export interface FeedingSpot {
 
 export class AdminFeedingSpotsService {
   private readonly COLLECTION_NAME = 'feeding_spots';
-  private db = getFirestore();
+  private db = adminDb;
 
   private formatTimestamp(timestamp: any): string {
     if (!timestamp) return '';

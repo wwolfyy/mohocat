@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useIsPhoneLandscape } from '@/hooks/useIsPhoneLandscape';
 import { thumbnailPreloader } from '@/services/thumbnailPreloader';
 import { getMapConfig } from '@/utils/config';
+import { useMountain } from '@/components/MountainProvider';
 
 // Leaflet touches `window`, so the map must be client-only (no SSR).
 const LeafletMountainMap = dynamic(() => import('./LeafletMountainMap'), {
@@ -48,7 +49,8 @@ export default function MountainViewer({ points, catsByPoint }: MountainViewerPr
   // Per-mountain map tunables — config-driven so they can change without a code
   // edit (config/mountains/mountains.json): whether the mobile map clusters, and
   // the clustering radius.
-  const { clustering, maxClusterRadius } = getMapConfig();
+  const mountainId = useMountain();
+  const { clustering, maxClusterRadius } = getMapConfig(mountainId);
 
   // Warm the marker avatars into the browser cache. The cat data is already
   // baked (props) — this only preloads the image *files*, with no Firestore

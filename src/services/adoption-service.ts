@@ -16,15 +16,21 @@ import {
   updateDoc,
   Timestamp,
   deleteDoc,
+  query,
+  where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebaseAdoptionService implements IPostService {
   private readonly COLLECTION_NAME = 'posts_adoption';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPosts(): Promise<any[]> {
     try {
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
 
       const allPosts = querySnapshot.docs.map((doc) => {
         const data = doc.data();
@@ -66,7 +72,7 @@ export class FirebaseAdoptionService implements IPostService {
     try {
       const postDoc = await getDoc(doc(db, this.COLLECTION_NAME, postId));
 
-      if (!postDoc.exists()) {
+      if (!postDoc.exists() || postDoc.data().mountainId !== this.mountainId) {
         return null;
       }
 
@@ -86,6 +92,7 @@ export class FirebaseAdoptionService implements IPostService {
     try {
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
         ...postData,
+        mountainId: this.mountainId,
         createdAt: Timestamp.now(),
         replyCount: 0, // Adoption posts don't have replies
       });

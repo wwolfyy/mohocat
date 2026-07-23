@@ -24,9 +24,12 @@ export type CatsByPoint = Record<string, { current: Cat[]; former: Cat[] }>;
 
 /** Reads every cat once via the Admin SDK. Logs + re-raises on failure (a build
  *  read that fails must surface, not silently ship an empty map). */
-export async function getAllCatsServer(): Promise<Cat[]> {
+export async function getAllCatsServer(mountainId: string): Promise<Cat[]> {
   try {
-    const snapshot = await db.collection(CATS_COLLECTION).get();
+    const snapshot = await db
+      .collection(CATS_COLLECTION)
+      .where('mountainId', '==', mountainId)
+      .get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Cat[];
   } catch (error) {
     console.error('[cat-reads] Failed to read cats via Admin SDK:', error);

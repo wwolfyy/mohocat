@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { PermissionService } from '@/services/permission-service';
-import { RoleAssignmentService } from '@/services/role-assignment-service';
 import { authHeader } from '@/lib/auth/authHeader';
 import { cn } from '@/utils/cn';
 import { adminStrings } from '@/constants/adminStrings';
@@ -12,9 +10,6 @@ const { roleManagement: t, roleLabels } = adminStrings;
 
 export default function RoleManagement() {
   const { user } = useAuth();
-  const [roleAssignmentService] = useState(() => new RoleAssignmentService());
-  const [permissionService] = useState(() => new PermissionService());
-
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -61,7 +56,20 @@ export default function RoleManagement() {
 
     try {
       setMessage(t.messages.assigning(roleLabels[role] ?? role));
-      await roleAssignmentService.assignSpecificRole(userId, role, user.uid, 'geyang');
+      // Admin-SDK route (Tier 1 write migration): the role write + its
+      // permission_logs audit entry happen server-side in one transaction.
+      const res = await fetch('/api/admin/assign-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await authHeader(user)),
+        },
+        body: JSON.stringify({ userId, role }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`${res.status} - ${errorData.error || 'No error details'}`);
+      }
       setMessage(t.messages.assigned(roleLabels[role] ?? role));
       loadUsers();
     } catch (error) {

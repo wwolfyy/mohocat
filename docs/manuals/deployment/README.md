@@ -236,3 +236,7 @@ If/when you reactivate it, see:
 4. New custom domain → add in Vercel **Settings → Domains** + DNS at the registrar, then
    whitelist it in Kakao / Google OAuth / Firebase Auth — see **"Whitelisting a new domain with
    the auth / identity providers"** above for the exact places.
+
+**One-off cutovers with a data migration + rules change** are order-critical (a rules
+deploy can outrun the app code / data it depends on). The multi-mountain M5 cutover has a
+worked runbook: [`m5-prod-cutover-runbook.md`](./m5-prod-cutover-runbook.md).

@@ -2,6 +2,9 @@ import { db } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 export interface AboutContent {
+  /** Owning mountain (multi-mountain plan §2.3). Optional until the M4 backfill
+   *  stamps every existing doc; M5 tightens reads/rules around it. */
+  mountainId?: string;
   title: string;
   subtitle: string;
   mainContent: string;
@@ -21,11 +24,14 @@ export interface AboutContent {
 
 export class AboutContentService {
   private collectionName = 'about_content';
-  private documentId = 'about';
+  // Per-tenant doc id: each mountain owns `about_content/{mountainId}` (M5.2a).
+  // Previously a single shared `about_content/about` doc both tenants collided
+  // on; the migration copies the legacy doc to its per-mountain id.
+  constructor(private readonly mountainId: string) {}
 
   async getAboutContent(): Promise<AboutContent | null> {
     try {
-      const docRef = doc(db, this.collectionName, this.documentId);
+      const docRef = doc(db, this.collectionName, this.mountainId);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -41,9 +47,10 @@ export class AboutContentService {
 
   async updateAboutContent(content: AboutContent, userEmail?: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, this.documentId);
+      const docRef = doc(db, this.collectionName, this.mountainId);
       const updateData = {
         ...content,
+        mountainId: this.mountainId,
         lastUpdated: serverTimestamp(),
         lastUpdatedBy: userEmail || 'unknown',
       };
@@ -57,9 +64,10 @@ export class AboutContentService {
 
   async createAboutContent(content: AboutContent, userEmail?: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collectionName, this.documentId);
+      const docRef = doc(db, this.collectionName, this.mountainId);
       const createData = {
         ...content,
+        mountainId: this.mountainId,
         lastUpdated: serverTimestamp(),
         lastUpdatedBy: userEmail || 'unknown',
       };
@@ -85,6 +93,3 @@ export class AboutContentService {
     }
   }
 }
-
-// Export a singleton instance
-export const aboutContentService = new AboutContentService();

@@ -1,6 +1,15 @@
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { loadPermissionConfig } from '@/config/permission-config';
-import type { UserPermissions, UserRole } from '@/types/permissions';
+import type { UserPermissions } from '@/types/permissions';
+
+// NOTE (Tier 1 write migration, 2026-07-18): this service no longer writes.
+// Role assignment moved to POST /api/admin/assign-role (Admin SDK route behind
+// requireApiPermission('manage-users')), which also writes the permission_logs
+// audit entry — the client-SDK audit write was rule-denied (`write: if false`)
+// and silently swallowed, losing every role change's audit trail. The removed
+// client write methods (assignUserRole / assignSpecificRole / logRoleChange)
+// must not be reintroduced here. See PROJECT_PLAN §7 /
+// docs/planning/firebase-sdk-usage-inventory.md §D.
 
 export class RoleAssignmentService {
   private db = getFirestore();
@@ -14,173 +23,6 @@ export class RoleAssignmentService {
       this.config = loadPermissionConfig();
     }
     return this.config;
-  }
-
-  /**
-   * Automatically assign role to user based on email and mountain configuration
-   */
-  async assignUserRole(
-    userId: string,
-    email: string,
-    mountainId: string = 'geyang'
-  ): Promise<void> {
-    try {
-      const config = this.loadConfig();
-
-      // Check if user is admin for the mountain
-      const mountainConfig = config.mountains[mountainId];
-      if (!mountainConfig) {
-        console.warn(`Mountain ${mountainId} not found in configuration`);
-        return;
-      }
-
-      let assignedRole = mountainConfig.defaultRole || 'viewer';
-
-      // Check if user is admin
-      if (mountainConfig.adminUsers && mountainConfig.adminUsers.includes(email)) {
-        assignedRole = 'admin';
-      }
-      // Check if user is butler-ground
-      else if (
-        mountainConfig.butlerGroundUsers &&
-        mountainConfig.butlerGroundUsers.includes(email)
-      ) {
-        assignedRole = 'butler-ground';
-      }
-      // Check if user is butler-internet
-      else if (
-        mountainConfig.butlerInternetUsers &&
-        mountainConfig.butlerInternetUsers.includes(email)
-      ) {
-        assignedRole = 'butler-internet';
-      }
-
-      // Get role permissions
-      const roleConfig = config.roles[assignedRole];
-      if (!roleConfig) {
-        console.error(`Role ${assignedRole} not found in configuration`);
-        return;
-      }
-
-      const userRole: UserRole = {
-        role: assignedRole,
-        permissions: roleConfig.permissions,
-        mountainId,
-        assignedBy: 'system',
-        assignedAt: new Date(),
-        isActive: true,
-      };
-
-      // Create or update user permissions document
-      const userRef = doc(this.db, 'users', userId);
-      const userDoc = await getDoc(userRef);
-
-      if (userDoc.exists()) {
-        // Update existing user permissions
-        await setDoc(
-          userRef,
-          {
-            email,
-            currentRole: userRole,
-            updatedAt: new Date(),
-          },
-          { merge: true }
-        );
-      } else {
-        // Create new user permissions
-        const newUserPermissions: UserPermissions = {
-          uid: userId,
-          email,
-          currentRole: userRole,
-          roleHistory: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        await setDoc(userRef, newUserPermissions);
-      }
-
-      console.log(`Assigned role ${assignedRole} to user ${email} for mountain ${mountainId}`);
-    } catch (error) {
-      console.error('Failed to assign user role:', error);
-    }
-  }
-
-  /**
-   * Manually assign a specific role to a user (for admin use)
-   */
-  async assignSpecificRole(
-    userId: string,
-    role: string,
-    assignedBy: string,
-    mountainId: string = 'geyang'
-  ): Promise<void> {
-    try {
-      const config = await this.loadConfig();
-
-      // Validate role exists
-      const roleConfig = config.roles[role];
-      if (!roleConfig) {
-        throw new Error(`Invalid role: ${role}`);
-      }
-
-      const userRole: UserRole = {
-        role: role,
-        permissions: roleConfig.permissions,
-        mountainId,
-        assignedBy: assignedBy,
-        assignedAt: new Date(),
-        isActive: true,
-      };
-
-      // Create or update user permissions document
-      const userRef = doc(this.db, 'users', userId);
-      const userDoc = await getDoc(userRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data() as UserPermissions;
-
-        // Add current role to history
-        const roleHistory = userData.roleHistory || [];
-        if (userData.currentRole) {
-          roleHistory.push({
-            ...userData.currentRole,
-            isActive: false,
-          });
-        }
-
-        // Update existing user permissions
-        await setDoc(
-          userRef,
-          {
-            currentRole: userRole,
-            roleHistory: roleHistory,
-            updatedAt: new Date(),
-          },
-          { merge: true }
-        );
-      } else {
-        // Create new user permissions
-        const newUserPermissions: UserPermissions = {
-          uid: userId,
-          email: '', // Will be populated when user logs in
-          currentRole: userRole,
-          roleHistory: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        await setDoc(userRef, newUserPermissions);
-      }
-
-      // Log the role assignment
-      await this.logRoleChange(userId, role, mountainId, assignedBy);
-
-      console.log(`Assigned role ${role} to user ${userId} for mountain ${mountainId}`);
-    } catch (error) {
-      console.error('Failed to assign specific role:', error);
-      throw error;
-    }
   }
 
   /**
@@ -199,9 +41,9 @@ export class RoleAssignmentService {
   }
 
   /**
-   * Get user's current role
+   * Get user's role on a given mountain (its `roles[mountainId]`).
    */
-  async getUserRole(userId: string): Promise<string | null> {
+  async getUserRole(userId: string, mountainId: string): Promise<string | null> {
     try {
       const userRef = doc(this.db, 'users', userId);
       const userDoc = await getDoc(userRef);
@@ -211,7 +53,7 @@ export class RoleAssignmentService {
       }
 
       const userData = userDoc.data() as UserPermissions;
-      return userData.currentRole?.role || null;
+      return userData.roles?.[mountainId]?.role || null;
     } catch (error) {
       console.error('Error getting user role:', error);
       return null;
@@ -228,36 +70,6 @@ export class RoleAssignmentService {
     } catch (error) {
       console.error('Error getting available roles:', error);
       return [];
-    }
-  }
-
-  /**
-   * Log role change for audit purposes
-   */
-  async logRoleChange(
-    userId: string,
-    newRole: string,
-    mountainId: string,
-    changedBy: string
-  ): Promise<void> {
-    try {
-      const { getFirestore, addDoc, collection } = await import('firebase/firestore');
-      const db = getFirestore();
-
-      await addDoc(collection(db, 'permission_logs'), {
-        userId,
-        action: 'role-assigned',
-        newRole,
-        mountainId,
-        changedBy,
-        timestamp: new Date(),
-        metadata: {
-          source: 'admin-interface',
-        },
-      });
-    } catch (error) {
-      console.error('Failed to log role change:', error);
-      // Don't throw error for logging failure - role assignment should still work
     }
   }
 

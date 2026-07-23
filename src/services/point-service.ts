@@ -7,15 +7,29 @@
 
 import type { IPointService } from './interfaces';
 import type { Point } from '../types';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+} from 'firebase/firestore';
 import { db } from './firebase';
 
 export class FirebasePointService implements IPointService {
   private readonly COLLECTION_NAME = 'points';
 
+  constructor(private readonly mountainId: string) {}
+
   async getAllPoints(): Promise<Point[]> {
     try {
-      const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
+      const querySnapshot = await getDocs(
+        query(collection(db, this.COLLECTION_NAME), where('mountainId', '==', this.mountainId))
+      );
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -31,7 +45,7 @@ export class FirebasePointService implements IPointService {
       const docRef = doc(db, this.COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
+      if (docSnap.exists() && docSnap.data().mountainId === this.mountainId) {
         return {
           id: docSnap.id,
           ...docSnap.data(),
@@ -47,10 +61,11 @@ export class FirebasePointService implements IPointService {
 
   async createPoint(point: Omit<Point, 'id'>): Promise<Point> {
     try {
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), point);
+      const pointData = { ...point, mountainId: this.mountainId };
+      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), pointData);
       return {
         id: docRef.id,
-        ...point,
+        ...pointData,
       };
     } catch (error) {
       console.error('Error creating point:', error);

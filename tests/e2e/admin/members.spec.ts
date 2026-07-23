@@ -3,17 +3,19 @@
  * bullet 4). Runs in the `admin` project.
  *
  *   - role assignment: promote the seeded viewer to 집사 (온라인) and confirm the
- *     success message (client-SDK write gated on manage-users, which admin holds);
+ *     success message (POST /api/admin/assign-role — Admin-SDK route gated on
+ *     manage-users, which admin holds; Tier 1 write migration 2026-07-18);
  *   - Contact Management: a submitted 동참 appears in the 문의 tab.
  */
 import { test, expect } from '../setup/test';
 import { test as baseTest } from '@playwright/test';
 
-// Role assignment persists via the client SDK, but the follow-on audit-log write to
-// `permission_logs` is denied by the repo firestore.rules (the client has no create
-// grant there) — RoleManagement logs that as a non-fatal console.error. That is a
-// pre-existing rules gap, not a failure of the assignment, so use the plain
-// (non-watchdog) test here to avoid the console-error guard tripping on it.
+// Historical note: this suite uses the plain (non-watchdog) baseTest because the
+// old client-SDK path emitted a non-fatal console.error (its `permission_logs`
+// audit write was rule-denied). The Tier 1 migration (2026-07-18) moved the write
+// — audit entry included — behind /api/admin/assign-role, so that error is gone;
+// upgrading this suite to the watchdog `test` is now possible (left as-is here to
+// keep the migration diff behavior-neutral for the test tier).
 baseTest.describe('사용자 관리 — role assignment', () => {
   baseTest('assigns a new role to the seeded viewer', async ({ page }) => {
     await page.goto('/admin/members'); // 사용자 tab (RoleManagement) is the default

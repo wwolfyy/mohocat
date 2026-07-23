@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getAnnouncementService } from '@/services';
 import AnnouncementModal from '@/components/AnnouncementModal';
+import { useMountain } from '@/components/MountainProvider';
 
 interface AnnouncementModalContextType {
   showModal: (announcement: any) => void;
@@ -32,7 +33,8 @@ export const AnnouncementModalProvider: React.FC<AnnouncementModalProviderProps>
   const [currentAnnouncement, setCurrentAnnouncement] = useState<any | null>(null);
   const [hasCheckedOnLoad, setHasCheckedOnLoad] = useState(false);
 
-  const announcementService = getAnnouncementService();
+  const mountainId = useMountain();
+  const announcementService = getAnnouncementService(mountainId);
 
   // Check for modal announcement on initial load
   useEffect(() => {
