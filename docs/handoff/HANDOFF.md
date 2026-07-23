@@ -86,7 +86,7 @@ the testing hand-off
   the migration and the rules deploy (and indexes must build before the app goes live).
   Full 6-step sequence + rollbacks in the Open threads and the
   [`m5-prod-cutover-runbook`](../manuals/deployment/m5-prod-cutover-runbook.md). **Resume =
-  M5.4 two-tenant isolation e2e** (M5.3 route audit done 2026-07-23).
+  M5.4b two-tenant isolation spec** (M5.3 audit + M5.4a stub config/seed done 2026-07-23).
 - ⚠️ **NEXT-SESSION THREAD (owner-flagged): CI must be updated for M5.** The new
   `npm run test:rules` suite (mountain-aware rules, 11 tests) is **not yet in CI**, so
   the rules aren't CI-gated; the coming M5.4 two-tenant isolation e2e will also need

@@ -7,21 +7,21 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M4 + M5.1 + M5.2 + M5.3 ✅ COMPLETE.** M1–M3 (`8920c66`/
-> `092d226`/`491b832`, 2026-07-19) → **M4** `b83a112` (2026-07-20, incl. the verified
-> 99-doc prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite indexes →
-> **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) +
-> mountain-aware rules (both 2026-07-22). M5.2a/M5.2b were **inseparable at the
-> emulator gate**. Gates: tsc, smoke 30/30, unit 39/39, **rules 11/11**, full e2e
-> 116/13/0. **M0 rules deploy DONE (owner, 2026-07-22).** ⚠️ **A NEW rules deploy is
-> owed for M5.2b — ORDER-CRITICAL: run `migrate-m5-role-and-about.js` FIRST, then
-> deploy** (a not-yet-migrated user is fail-closed → locked out). **M5.3 route audit DONE
-> (2026-07-23 — no leak-by-omission; only residual cross-tenant surface is the shared
-> YouTube channel, non-Firestore/deferred). **M5.4a stub-tenant config + seed DONE
-> (2026-07-23):** `manisan` added to `mountains.json` (`hidden: true` — routable but not
-> in the public selector) + seeded in `seed-emulators.mjs`; full e2e still 116/13/0.
-> **Next: M5.4b two-tenant isolation spec** (+ wire `test:rules` into CI). ⚠️ CI not yet updated for `test:rules` / the isolation e2e (owner-flagged,
-> fresh session). Process note: commits are **owner-gated\*\*.
+> **Status:** 🚧 **EXECUTING — M1–M4 + M5.1 + M5.2 + M5.3 + M5.4a ✅ COMPLETE.** M1–M3
+> (`8920c66`/`092d226`/`491b832`, 2026-07-19) → **M4** `b83a112` (2026-07-20, incl. the
+> verified 99-doc prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite indexes →
+> **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) + mountain-aware
+> rules (both 2026-07-22). M5.2a/M5.2b were **inseparable at the emulator gate**. Gates:
+> tsc, smoke 30/30, unit 39/39, **rules 11/11**, full e2e 116/13/0. **M0 rules deploy DONE
+> (owner, 2026-07-22).** ⚠️ **A NEW rules deploy is owed for M5.2b — ORDER-CRITICAL: run
+> `migrate-m5-role-and-about.js` FIRST, then deploy** (a not-yet-migrated user is
+> fail-closed → locked out; full sequence in the M5 prod-cutover runbook). **M5.3 route
+> audit DONE** (2026-07-23 — no leak-by-omission; only residual cross-tenant surface is the
+> shared YouTube channel, non-Firestore/deferred). **M5.4a stub-tenant config + seed DONE**
+> (`3054f96`, 2026-07-23): `manisan` added to `mountains.json` (`hidden: true` — routable
+> but not in the public selector) + seeded in `seed-emulators.mjs`; full e2e still
+> 116/13/0. **Next: M5.4b two-tenant isolation spec** (+ wire `test:rules` into CI, still
+> owner-flagged for a fresh session). Process note: commits are **owner-gated**.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
