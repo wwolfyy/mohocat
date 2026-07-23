@@ -15,6 +15,28 @@
 
 ---
 
+## 2026-07-23 — CI: emulator-backed `rules` job (mountain-aware Firestore rules now gated)
+
+**Area:** changed — `.github/workflows/ci.yml` (added a `rules` job).
+
+**What changed:** a dedicated CI job that runs `npm run test:rules` (the 11
+mountain-aware Firestore security-rules tests) on the Firebase emulator — checkout →
+setup-node → setup-java 21 → `npm ci` → Firebase-emulator cache → `npm run test:rules`,
+gated `needs: checks`, running in parallel with the `e2e` job. No Playwright/browser
+install (rules tests need only the Firestore emulator), so it's much lighter than `e2e`.
+
+**Rationale:** the default `npm test` (CI's `checks` job) **excludes `tests/rules/**`**
+(they require the emulator; kept out of the emulator-less run via
+`vitest.rules.config.ts`), so a mountain-aware rules regression would have passed CI.
+This was the one real CI gap for M5 — the M5.4 two-tenant isolation e2e needed no
+wiring, since the existing `e2e`job's`npm run test:e2e`already globs all of`tests/e2e/\*\*`.
+
+**Verified:** `ci.yml` parses as valid YAML with three jobs (`checks` → `rules` +
+`e2e`); the `rules` job's step list and `needs: checks` gate confirmed. (The
+`test:rules` suite itself is green at 11/11 from M5.2.)
+
+---
+
 ## 2026-07-23 — Multi-mountain M5.4b: two-tenant isolation e2e (M5 code-complete)
 
 **Area:** added — `tests/e2e/api/tenant-isolation.spec.ts`,

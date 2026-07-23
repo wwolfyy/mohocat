@@ -7,24 +7,27 @@
 > (its §9 Q1–Q8). Every current-state claim below was re-verified against `dev` on
 > 2026-07-19 (post complexity-retirement, tree clean through `2584dcb`).
 >
-> **Status:** 🚧 **EXECUTING — M1–M4 + M5 (all sub-phases) ✅ CODE COMPLETE.** M1–M3
+> **Status:** ✅ **M1–M5 DONE & SHIPPED TO PROD (PR #8, 2026-07-23); cutover complete —
+> next open phase is M6.** M1–M3
 > (`8920c66`/`092d226`/`491b832`, 2026-07-19) → **M4** `b83a112` (2026-07-20, incl. the
 > verified 99-doc prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite indexes →
 > **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) + mountain-aware
 > rules (both 2026-07-22). M5.2a/M5.2b were **inseparable at the emulator gate**. Gates:
 > tsc, smoke 30/30, unit 39/39, **rules 11/11**, full e2e 116/13/0. **M0 rules deploy DONE
-> (owner, 2026-07-22).** ⚠️ **A NEW rules deploy is owed for M5.2b — ORDER-CRITICAL: run
-> `migrate-m5-role-and-about.js` FIRST, then deploy** (a not-yet-migrated user is
-> fail-closed → locked out; full sequence in the M5 prod-cutover runbook). **M5.3 route
+> (owner, 2026-07-22); the M5.2b mountain-aware rules deployed 2026-07-23 as the last step
+> of the cutover (see below).** **M5.3 route
 > audit DONE** (2026-07-23 — no leak-by-omission; only residual cross-tenant surface is the
 > shared YouTube channel, non-Firestore/deferred). **M5.4a stub-tenant config + seed DONE**
 > (`3054f96`, 2026-07-23): `manisan` added to `mountains.json` (`hidden: true` — routable
 > but not in the public selector) + seeded in `seed-emulators.mjs`. **M5.4b two-tenant
 > isolation spec DONE** (2026-07-23): api-layer (Host-scoped reads + mountain-scoped
-> authz) + public-content specs; **full e2e 125/13/0**. **M5 code is now complete** — what
-> remains is the owner-gated rules/index deploy (see the prod-cutover runbook) and wiring
-> `test:rules` + the multi-mountain e2e into CI (still owner-flagged for a fresh session).
-> Process note: commits are **owner-gated**.
+> authz) + public-content specs; **full e2e 125/13/0**. **CI wired** (2026-07-23): a
+> dedicated emulator-backed `rules` job in `ci.yml` runs `npm run test:rules`; the
+> isolation e2e already rode the existing `e2e` job. ✅ **PROD CUTOVER COMPLETE 2026-07-23
+> (owner):** snapshot → migration → `firestore:indexes` (Enabled) → **PR #8 `dev → main`
+> merge** → `firestore:rules`. Multi-mountain is live in production. Tail: delete legacy
+> `currentRole` + `about_content/about` + local dump once the CMS is confirmed healthy.
+> **The active track advances to M6.** Process note: commits are **owner-gated**.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -462,7 +465,7 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
   Worth hardening if it recurs — the durable fix would be awaiting the unmount
   commit rather than deferring a macrotask.
 
-### M5 — ✅ CODE COMPLETE (M5.1–M5.4 done; owner-gated rules deploy + CI wiring remain) — Data tenancy 2: scoped reads + enforcement (large)
+### M5 — ✅ DONE & DEPLOYED TO PROD (M5.1–M5.4 + CI + cutover, 2026-07-23) — Data tenancy 2: scoped reads + enforcement (large)
 
 > **Read first — two things learned after this phase was written:**
 >
@@ -604,16 +607,21 @@ mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
       `픽스처 사진 1` substring trap. - **Not duplicated:** the `contacts` PII read-isolation (a geyang admin must not read a
       manisan 동참 submission) is client-SDK + rules, already covered by
       `tests/rules/users.rules.test.ts`. - Gate: **full e2e 125/13/0** (was 116 → +9: 5 api + 4 public across desktop+mobile);
-      tsc clean. ⚠️ **Still owner-flagged (separate):** wire `npm run test:rules` **and**
-      this multi-mountain e2e into GitHub Actions (CI thread).
-- [ ] 🔑 `firebase deploy --only firestore:rules` (+ indexes) after the emulator net
-      is green; staged post-deploy click-through of geyang admin CMS.
-- Gates: full e2e (old suite + isolation spec) green; this phase is **the** isolation
-  proof.
-- [ ] 🔑 `firebase deploy --only firestore:rules` (+ indexes) after the emulator net
-      is green; staged post-deploy click-through of geyang admin CMS.
-- Gates: full e2e (old suite + isolation spec) green; this phase is **the** isolation
-  proof.
+      tsc clean.
+- [x] **M5.4c — CI wiring DONE (2026-07-23, uncommitted).** Added a dedicated
+      emulator-backed `rules` job to `.github/workflows/ci.yml` (Java 21 + Firebase-emulator
+      cache, no browser) that runs `npm run test:rules`, gated `needs: checks`, parallel to
+      `e2e`. Closes the real gap — the default `npm test` (CI `checks`) **excludes**
+      `tests/rules/**`, so the 11 mountain-aware rules tests ran nowhere. The M5.4
+      isolation e2e needed no wiring (the `e2e` job's `npm run test:e2e` globs all
+      `tests/e2e/**`). YAML validated.
+- [x] 🔑 **`firebase deploy --only firestore:indexes` then `firestore:rules` — DONE
+      2026-07-23 (owner).** Ran as part of the order-critical cutover (indexes Enabled
+      before the PR #8 merge; rules deployed immediately after). Multi-mountain is live
+      in prod. ⏳ Tail: delete legacy `currentRole` + `about_content/about` + the local
+      dump once the prod CMS is confirmed healthy over a few days.
+- Gates: full e2e (old suite + isolation spec) green — **125/13/0**; this phase is **the**
+  isolation proof.
 
 ### M6 — Assets & storage namespacing (medium)
 
