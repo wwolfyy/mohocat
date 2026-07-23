@@ -45,13 +45,17 @@ the testing hand-off
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
-- **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4 +
-  M5.1 + M5.2 + M5.3 ✅ COMPLETE (incl. the prod backfill) + M5.4a stub config+seed ✅;
-  next = M5.4b two-tenant isolation spec.** **M5.4a (2026-07-23):** `manisan` added as a
-  `hidden: true` stub tenant in `mountains.json` (routable at `/manisan`, prerendered, but
-  excluded from the public `MountainSelector`) + seeded in `seed-emulators.mjs`
-  (`tests/e2e/fixtures/manisan.json` — distinct content + a manisan-only admin and a
-  dual-mountain admin); full e2e stayed **116/13/0**. **M5.3 route audit DONE (2026-07-23):** walked all 21 `src/app/api/**`
+- **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4 + M5
+  (all sub-phases) ✅ CODE COMPLETE; what remains is the owner-gated rules deploy + CI
+  wiring.** **M5.4a (2026-07-23):** `manisan` added as a `hidden: true` stub tenant in
+  `mountains.json` (routable at `/manisan`, prerendered, but excluded from the public
+  `MountainSelector`) + seeded in `seed-emulators.mjs` (distinct content + a manisan-only
+  admin and a dual-mountain admin). **M5.4b (2026-07-23):** the two-tenant isolation e2e —
+  `tests/e2e/api/tenant-isolation.spec.ts` (Host-scoped data reads + mountain-scoped API
+  authz: single-mountain admin 403 cross-tenant, dual admin 200 on both) +
+  `tests/e2e/public/tenant-isolation.spec.ts` (rendered content isolation, desktop+mobile).
+  **Full e2e 125/13/0** (+9). The `contacts` PII read-isolation is covered by the rules
+  suite, not duplicated. **M5.3 route audit DONE (2026-07-23):** walked all 21 `src/app/api/**`
   routes — every Firestore access path is either correctly tenant-scoped (cats/points/
   contact/assign-role/upload-youtube video record) or correctly central-by-design
   (users, `role_permissions/*` matrix). **No leak-by-omission.** The only residual
@@ -85,12 +89,14 @@ the testing hand-off
   stamping code (M4) is only on `dev`, so the `dev → main` promotion must land **between**
   the migration and the rules deploy (and indexes must build before the app goes live).
   Full 6-step sequence + rollbacks in the Open threads and the
-  [`m5-prod-cutover-runbook`](../manuals/deployment/m5-prod-cutover-runbook.md). **Resume =
-  M5.4b two-tenant isolation spec** (M5.3 audit + M5.4a stub config/seed done 2026-07-23).
-- ⚠️ **NEXT-SESSION THREAD (owner-flagged): CI must be updated for M5.** The new
+  [`m5-prod-cutover-runbook`](../manuals/deployment/m5-prod-cutover-runbook.md). **M5 is
+  now code-complete** (M5.1–M5.4 all done 2026-07-23); **resume = the owner-gated rules/
+  index deploy (the cutover) + the CI wiring thread.**
+- ⚠️ **NEXT-SESSION THREAD (owner-flagged): CI must be updated for M5.** The
   `npm run test:rules` suite (mountain-aware rules, 11 tests) is **not yet in CI**, so
-  the rules aren't CI-gated; the coming M5.4 two-tenant isolation e2e will also need
-  wiring. The owner wants this discussed fresh. See Open threads.
+  the rules aren't CI-gated; the **now-written M5.4 two-tenant isolation e2e** (api +
+  public specs) also needs to run in CI under the multi-mountain config. The owner wants
+  this discussed fresh. See Open threads.
 - **NEW — data protection now exists (2026-07-20).** Prompted by M4's backfill
   running against prod with **no backup and no PITR** (safe only because it was
   additive and exactly reversible). Now in place: **PITR enabled** (7-day
@@ -189,7 +195,7 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5.1 + M5.2 committed, M5.3 audit ✅, M5.4a stub config+seed ✅; next = M5.4b spec)
+### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5 all sub-phases ✅ CODE COMPLETE; owner-gated rules deploy + CI wiring remain)
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
@@ -510,16 +516,17 @@ mountaincats-61543`. Verify immediately: a CMS cat edit saves; a role-assign on
   1. **Wire `npm run test:rules` into CI.** The mountain-aware Firestore rules (11
      tests, emulator-backed) are **not in GitHub Actions today**, so a rules
      regression would pass CI. It needs the Firestore emulator step, like the e2e job
-     (CI lives in `.github/workflows/`).
-  2. ✅ **Second stub mountain added (M5.4a, 2026-07-23) — DONE.** `manisan` is in
-     `config/mountains/mountains.json` (`hidden: true` — routable at `/manisan`, the build
-     prerenders it, but it's excluded from the public `MountainSelector` via the new
-     `MountainConfig.hidden` + `getPublicMountains()`) and seeded in `seed-emulators.mjs`
-     from `tests/e2e/fixtures/manisan.json` (distinct content + a manisan-only admin and a
-     dual-mountain admin `dual-admin-uid`). Full e2e stayed **116/13/0** (geyang
-     unperturbed). This was the config half of plan **M8's "stub tenant,"** pulled forward.
-     ⏳ What's left of this thread: **(1)** wire `test:rules` into CI (above), and **(2)**
-     write the **M5.4b isolation spec** itself against the now-seeded stub.
+     (CI lives in `.github/workflows/`). **⚠️ Still the one open piece of this thread.**
+  2. ✅ **Second stub mountain (M5.4a) + isolation e2e (M5.4b) — DONE 2026-07-23.**
+     `manisan` is in `config/mountains/mountains.json` (`hidden: true` — routable at
+     `/manisan`, prerendered, excluded from the public `MountainSelector` via the new
+     `MountainConfig.hidden` + `getPublicMountains()`) and seeded from
+     `tests/e2e/fixtures/manisan.json` (distinct content + a manisan-only admin and a
+     dual-mountain admin `dual-admin-uid`). The isolation specs now exist —
+     `tests/e2e/api/tenant-isolation.spec.ts` + `tests/e2e/public/tenant-isolation.spec.ts`
+     — full e2e **125/13/0**. So the only work left in this thread is **piece 1** (wire
+     `test:rules` into CI; the isolation e2e already rides the existing e2e job's
+     multi-mountain config).
   3. **The e2e seed/gate now assumes the `roles`-map shape** (M5.2) — any CI change
      must keep that in sync. (The M5.4a seed already builds per-user `roles` maps.)
 - ⚠️ **7 ungated write/credential API routes (pre-existing auth gap, surfaced by the
@@ -548,22 +555,19 @@ mountaincats-61543`. Verify immediately: a CMS cat edit saves; a role-assign on
 
 ## Uncommitted (as of this update)
 
-**M5.4a — stub tenant `manisan` (code + this doc pass), uncommitted.** Changed:
-`src/utils/config.ts` (+`MountainConfig.hidden`, +`getPublicMountains()`),
-`src/components/MountainSelector.tsx`, `config/mountains/mountains.json` (+`manisan`),
-`scripts/test/seed-emulators.mjs` (two-tenant seed). Added:
-`tests/e2e/fixtures/manisan.json`. Plus the doc pass (HANDOFF + the two planning docs
-
-- FEATURE_MOD_LOG). Gates green (tsc/smoke/unit + full e2e 116/13/0). **Nothing pushed
-  beyond `cff0902`.** Recent `dev` commits:
+**M5.4b — two-tenant isolation e2e (code + this doc pass), uncommitted.** Added
+`tests/e2e/api/tenant-isolation.spec.ts` + `tests/e2e/public/tenant-isolation.spec.ts`,
+plus the doc pass (HANDOFF + the two planning docs + FEATURE_MOD_LOG). Gates green
+(tsc + full e2e 125/13/0). **M5.4a is already committed + pushed** (`3054f96` + doc-tidy
+`c88045a`). Recent `dev` commits:
 
 | Commit    | What                                                                       |
 | --------- | -------------------------------------------------------------------------- |
+| `c88045a` | docs — tidy M5 status blocks after M5.4a (pushed)                          |
+| `3054f96` | **M5.4a** — `manisan` stub tenant (config + seed) + `hidden` flag (pushed) |
 | `cff0902` | **M5.3 route audit + corrected M5 prod-cutover runbook** (docs, pushed)    |
 | `47d0f3d` | **M5.2** — per-mountain role model (map) + mountain-aware rules (17 files) |
 | `d4a0bb2` | **M5.1** — scope all content reads by `mountainId` + composite indexes     |
-| `69fcb00` | session close — M4 + data protection recorded                              |
-| `c8829e2` | `import-firestore.js`, round-trip verified lossless                        |
 | `b83a112` | M4 — per-tenant service factory + write stamps                             |
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
@@ -574,7 +578,18 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-23 (latest)** — **Multi-mountain M5.4a — stub tenant (`manisan`) added to
+- **2026-07-23 (latest)** — **Multi-mountain M5.4b — two-tenant isolation e2e written;
+  M5 now code-complete.** Two specs: `tests/e2e/api/tenant-isolation.spec.ts` (pure HTTP —
+  data reads partitioned by request Host, and mountain-scoped API authz: a single-mountain
+  admin is 403 on the other mountain's gated route / 200 on its own, asserted both ways,
+  and a dual admin is 200 on both) + `tests/e2e/public/tenant-isolation.spec.ts` (rendered
+  photo-album + 공지사항 content isolation, geyang `/pages/…` vs manisan `/manisan/pages/…`,
+  desktop+mobile). Tenant targeted by overriding the request `Host` (verified Playwright
+  honors it); tokens minted from the Auth-emulator REST. The `contacts` PII read-isolation
+  is left to the rules suite (`users.rules.test.ts`), not duplicated. **Full e2e 125/13/0**
+  (+9). Uncommitted. **Remaining on M5: the owner-gated rules/index deploy (cutover
+  runbook) + wiring `test:rules` into CI.**
+- **2026-07-23** — **Multi-mountain M5.4a — stub tenant (`manisan`) added to
   config + seed.** The M5.4 isolation e2e's config prerequisite. `manisan` added to
   `config/mountains/mountains.json` with a new **`hidden: true`** flag (routable at
   `/manisan` + prerendered, but excluded from the public `MountainSelector` via the new

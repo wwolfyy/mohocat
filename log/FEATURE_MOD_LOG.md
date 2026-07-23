@@ -15,6 +15,40 @@
 
 ---
 
+## 2026-07-23 — Multi-mountain M5.4b: two-tenant isolation e2e (M5 code-complete)
+
+**Area:** added — `tests/e2e/api/tenant-isolation.spec.ts`,
+`tests/e2e/public/tenant-isolation.spec.ts`.
+
+**What changed:** the two-tenant (geyang / manisan) isolation e2e — the enforcement
+proof that closes M5. Split by layer. The **api** spec (pure Playwright request, no
+browser) targets a tenant by overriding the request **Host** header (`/api/*` is
+excluded from the host-rewrite middleware, so `getRequestMountainId` reads Host) and
+asserts: (a/d) `GET /api/admin/cats` + `/api/points` return **only** the Host
+mountain's seeded docs; (b) a **single-mountain** admin gets **403** on the other
+mountain's gated route and **200** on its own (asserted both ways — a manisan-only and
+a geyang-only admin); (c) the **dual** admin is **200** on both. Tokens are minted
+from the Auth-emulator REST endpoint (the `api/security.spec` pattern). The **public**
+spec asserts rendered-content isolation — the photo album and 공지사항 show only the
+active tenant's content, geyang at `/pages/…` and manisan at `/manisan/pages/…` (the
+path prefix passes through the middleware) — on desktop + mobile, using each tenant's
+_exclusive_ text markers so the absence checks can't false-pass on a substring.
+
+**Rationale:** M5's central risk is leak-by-omission (a missed tenant scope). The M5.3
+route audit proved it by inspection; this spec proves it by execution and — unlike the
+audit — is a **permanent regression net**. The `contacts` PII read-isolation is a
+client-SDK + firestore.rules concern already covered by `tests/rules/users.rules.test.ts`,
+so it is referenced rather than duplicated.
+
+**Verified:** tsc clean; **full e2e 125 passed / 13 skipped / 0 failed** (was 116 → +9:
+5 api + 4 public across the desktop and mobile projects). Confirmed en route that
+Playwright's request context honors an overridden `Host` header (the mechanism the api
+spec depends on). Remaining on M5 (both owner-gated, not code): the ORDER-CRITICAL
+rules/index prod deploy (see `docs/manuals/deployment/m5-prod-cutover-runbook.md`) and
+wiring `npm run test:rules` into CI.
+
+---
+
 ## 2026-07-23 — Multi-mountain M5.4a: second stub tenant (`manisan`) + `hidden` config flag
 
 **Area:** changed — `src/utils/config.ts` (added `MountainConfig.hidden` +
