@@ -136,6 +136,13 @@ export interface MountainConfig {
   features: MountainFeatures;
   social: MountainSocial;
   map?: MountainMapConfig;
+  /**
+   * When true, the mountain is a real, routable tenant (`/{id}` resolves, it can
+   * be seeded and tested) but is **not** advertised in the public
+   * `MountainSelector` — used for a preparatory stub tenant that exists in config
+   * before the mountain goes live (plan Q8). Omitted/false = publicly listed.
+   */
+  hidden?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -222,6 +229,16 @@ export function getAllMountains(): Array<{ id: string; name: string; description
       name: (config as any).name,
       description: (config as any).description,
     }));
+}
+
+/**
+ * Public (selectable) mountains — `getAllMountains()` minus any flagged `hidden`
+ * in config. The visitor-facing `MountainSelector` uses this; routing,
+ * `generateStaticParams`, and `resolveMountainIdOrNull` keep using
+ * `getAllMountains()` so a hidden stub tenant stays reachable by URL.
+ */
+export function getPublicMountains(): Array<{ id: string; name: string; description: string }> {
+  return getAllMountains().filter((mountain) => !getMountainConfig(mountain.id).hidden);
 }
 
 // ---------------------------------------------------------------------------

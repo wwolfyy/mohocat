@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { getAllMountains, getMountainConfig, getMountainName } from '@/utils/config';
+import { getPublicMountains, getMountainConfig, getMountainName } from '@/utils/config';
 import { findMountainIdByHost } from '@/lib/tenant';
 import { useMountain } from '@/components/MountainProvider';
 
@@ -18,8 +18,8 @@ export default function MountainSelector() {
   const currentMountainId = useMountain();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get available mountains from config helper
-  const mountains: MountainOption[] = getAllMountains();
+  // Get selectable mountains — hidden stub tenants are routable but not listed here.
+  const mountains: MountainOption[] = getPublicMountains();
   const currentMountainName = getMountainName(currentMountainId);
 
   // Close dropdown when clicking outside

@@ -46,8 +46,12 @@ the testing hand-off
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
 - **Active track: multi-tenant / multi-mountain refactor — 🚧 EXECUTING, M1–M4 +
-  M5.1 + M5.2 + M5.3 ✅ COMPLETE (incl. the prod backfill); next = M5.4 two-tenant
-  isolation e2e.** **M5.3 route audit DONE (2026-07-23):** walked all 21 `src/app/api/**`
+  M5.1 + M5.2 + M5.3 ✅ COMPLETE (incl. the prod backfill) + M5.4a stub config+seed ✅;
+  next = M5.4b two-tenant isolation spec.** **M5.4a (2026-07-23):** `manisan` added as a
+  `hidden: true` stub tenant in `mountains.json` (routable at `/manisan`, prerendered, but
+  excluded from the public `MountainSelector`) + seeded in `seed-emulators.mjs`
+  (`tests/e2e/fixtures/manisan.json` — distinct content + a manisan-only admin and a
+  dual-mountain admin); full e2e stayed **116/13/0**. **M5.3 route audit DONE (2026-07-23):** walked all 21 `src/app/api/**`
   routes — every Firestore access path is either correctly tenant-scoped (cats/points/
   contact/assign-role/upload-youtube video record) or correctly central-by-design
   (users, `role_permissions/*` matrix). **No leak-by-omission.** The only residual
@@ -185,7 +189,7 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5.1 + M5.2 committed, M5.3 audit ✅; next = M5.4)
+### Multi-tenant / multi-mountain refactor — 🚧 EXECUTING (M1–M4 + M5.1 + M5.2 committed, M5.3 audit ✅, M5.4a stub config+seed ✅; next = M5.4b spec)
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
@@ -507,18 +511,17 @@ mountaincats-61543`. Verify immediately: a CMS cat edit saves; a role-assign on
      tests, emulator-backed) are **not in GitHub Actions today**, so a rules
      regression would pass CI. It needs the Firestore emulator step, like the e2e job
      (CI lives in `.github/workflows/`).
-  2. 🔑 **Add a second stub mountain to the test config — prerequisite for M5.4.** The
-     platform is currently configured with **only `geyang`**
-     (`config/mountains/mountains.json`), and the emulator seed uses a single
-     `SEED_MOUNTAIN_ID`. The M5.4 two-tenant isolation e2e can't exist until a second
-     tenant (e.g. `manisan`) is **(a)** added to `mountains.json` (so
-     `generateStaticParams` / `resolveMountainIdOrNull` / the selector treat `/manisan`
-     as real, not a 404) and **(b)** seeded in `seed-emulators.mjs` alongside geyang
-     (its own content + a manisan-role admin), so the spec can assert cross-tenant
-     invisibility + denial. This is the config half of plan **M8's "stub tenant"**,
-     pulled forward because M5.4/CI depend on it.
+  2. ✅ **Second stub mountain added (M5.4a, 2026-07-23) — DONE.** `manisan` is in
+     `config/mountains/mountains.json` (`hidden: true` — routable at `/manisan`, the build
+     prerenders it, but it's excluded from the public `MountainSelector` via the new
+     `MountainConfig.hidden` + `getPublicMountains()`) and seeded in `seed-emulators.mjs`
+     from `tests/e2e/fixtures/manisan.json` (distinct content + a manisan-only admin and a
+     dual-mountain admin `dual-admin-uid`). Full e2e stayed **116/13/0** (geyang
+     unperturbed). This was the config half of plan **M8's "stub tenant,"** pulled forward.
+     ⏳ What's left of this thread: **(1)** wire `test:rules` into CI (above), and **(2)**
+     write the **M5.4b isolation spec** itself against the now-seeded stub.
   3. **The e2e seed/gate now assumes the `roles`-map shape** (M5.2) — any CI change
-     must keep that in sync.
+     must keep that in sync. (The M5.4a seed already builds per-user `roles` maps.)
 - ⚠️ **7 ungated write/credential API routes (pre-existing auth gap, surfaced by the
   M5.3 route audit 2026-07-23).** These have **no auth gate at all** — any unauthenticated
   caller can hit them: `manage-playlists`, `refresh-video-metadata`, `update-youtube-video`,
@@ -545,14 +548,20 @@ mountaincats-61543`. Verify immediately: a CMS cat edit saves; a role-assign on
 
 ## Uncommitted (as of this update)
 
-Only this doc pass (`docs/handoff/HANDOFF.md` + the two planning docs). **All code
-is committed; nothing is pushed.** Latest multi-tenant commits on `dev`:
+**M5.4a — stub tenant `manisan` (code + this doc pass), uncommitted.** Changed:
+`src/utils/config.ts` (+`MountainConfig.hidden`, +`getPublicMountains()`),
+`src/components/MountainSelector.tsx`, `config/mountains/mountains.json` (+`manisan`),
+`scripts/test/seed-emulators.mjs` (two-tenant seed). Added:
+`tests/e2e/fixtures/manisan.json`. Plus the doc pass (HANDOFF + the two planning docs
+
+- FEATURE_MOD_LOG). Gates green (tsc/smoke/unit + full e2e 116/13/0). **Nothing pushed
+  beyond `cff0902`.** Recent `dev` commits:
 
 | Commit    | What                                                                       |
 | --------- | -------------------------------------------------------------------------- |
+| `cff0902` | **M5.3 route audit + corrected M5 prod-cutover runbook** (docs, pushed)    |
 | `47d0f3d` | **M5.2** — per-mountain role model (map) + mountain-aware rules (17 files) |
 | `d4a0bb2` | **M5.1** — scope all content reads by `mountainId` + composite indexes     |
-| `6ba2b9d` | docs — TL;DR fix                                                           |
 | `69fcb00` | session close — M4 + data protection recorded                              |
 | `c8829e2` | `import-firestore.js`, round-trip verified lossless                        |
 | `b83a112` | M4 — per-tenant service factory + write stamps                             |
@@ -565,7 +574,21 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-23 (latest)** — **Multi-mountain M5.3 route audit DONE (docs-only; no code
+- **2026-07-23 (latest)** — **Multi-mountain M5.4a — stub tenant (`manisan`) added to
+  config + seed.** The M5.4 isolation e2e's config prerequisite. `manisan` added to
+  `config/mountains/mountains.json` with a new **`hidden: true`** flag (routable at
+  `/manisan` + prerendered, but excluded from the public `MountainSelector` via the new
+  `MountainConfig.hidden` + `getPublicMountains()` — routing keeps `getAllMountains()`);
+  distinct branding, `storagePrefix: 'mountains/manisan/'`, reuses geyang map imagery.
+  Resolves the `permissions.json` drift (it already listed `manisan`). Seed:
+  `tests/e2e/fixtures/manisan.json` (distinct points/cats/cat_images/announcements/
+  contacts/about + a manisan-only admin and a dual-mountain admin `dual-admin-uid`);
+  `seed-emulators.mjs` refactored to stamp an explicit `mountainId` per pass + a
+  `seedManisanTenant()` pass, and `seedAuthAndUsers` now takes both single-`role` and
+  `roles[]` shapes. Gates: tsc, smoke 30/30, unit 39/39, **full e2e 116/13/0** (geyang
+  unperturbed; build prerenders both `/geyang` and `/manisan`). Uncommitted. **Next =
+  M5.4b isolation spec + wiring `test:rules` into CI.**
+- **2026-07-23** — **Multi-mountain M5.3 route audit DONE (docs-only; no code
   change).** Walked all 21 `src/app/api/**` routes, checking every Firestore access path
   against the tenant model. **Verdict: no leak-by-omission** — content routes are
   tenant-scoped (cats/points/contact/assign-role/upload-youtube video record) and the

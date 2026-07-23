@@ -17,9 +17,11 @@
 > owed for M5.2b — ORDER-CRITICAL: run `migrate-m5-role-and-about.js` FIRST, then
 > deploy** (a not-yet-migrated user is fail-closed → locked out). **M5.3 route audit DONE
 > (2026-07-23 — no leak-by-omission; only residual cross-tenant surface is the shared
-> YouTube channel, non-Firestore/deferred). Next: M5.4 two-tenant isolation e2e** (needs
-> a `manisan` stub in config + seed — see M5.4). ⚠️ CI not yet updated for `test:rules` / the isolation e2e (owner-flagged,
-> fresh session). Process note: commits are **owner-gated**.
+> YouTube channel, non-Firestore/deferred). **M5.4a stub-tenant config + seed DONE
+> (2026-07-23):** `manisan` added to `mountains.json` (`hidden: true` — routable but not
+> in the public selector) + seeded in `seed-emulators.mjs`; full e2e still 116/13/0.
+> **Next: M5.4b two-tenant isolation spec** (+ wire `test:rules` into CI). ⚠️ CI not yet updated for `test:rules` / the isolation e2e (owner-flagged,
+> fresh session). Process note: commits are **owner-gated\*\*.
 >
 > **Companion docs:** the decision framework (verified current state + why each axis was
 > chosen) · [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md) +
@@ -457,7 +459,7 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
   Worth hardening if it recurs — the durable fix would be awaiting the unmount
   commit rather than deferring a macrotask.
 
-### M5 — 🚧 IN PROGRESS (M5.1/M5.2/M5.3 ✅; M5.4 next) — Data tenancy 2: scoped reads + enforcement (large)
+### M5 — 🚧 IN PROGRESS (M5.1/M5.2/M5.3 ✅, M5.4a stub config+seed ✅; M5.4b spec next) — Data tenancy 2: scoped reads + enforcement (large)
 
 > **Read first — two things learned after this phase was written:**
 >
@@ -567,19 +569,30 @@ mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
       `upload-youtube`, `youtube-playlists`, `generate-signed-url`,
       `generate-youtube-signed-url`). Orthogonal to tenancy; surfaced by the systematic
       walk.
-- [ ] **M5.4 — two-tenant e2e isolation spec.** 🔑 **Config prerequisite (the config
-      half of M8's stub tenant, pulled forward):** the platform is currently configured
-      with **only `geyang`** and the seed uses a single `SEED_MOUNTAIN_ID`. First add a
-      second stub mountain (`manisan`) to `config/mountains/mountains.json` (so
-      `generateStaticParams` / `resolveMountainIdOrNull` / the selector treat it as
-      real, not a 404) and seed it in `seed-emulators.mjs` alongside geyang (its own
-      content + a manisan-role admin). Then the spec asserts (a) its content is
-      invisible on geyang surfaces & vice versa (public feeds, map, albums, admin
-      lists), (b) a **single-mountain** (manisan-only) admin gets denied on geyang API
-      routes + cannot read geyang `contacts`, (c) a **multi-role** admin (roles on both)
-      is allowed on each of their mountains, (d) creates land with the right
-      `mountainId`. ⚠️ **CI must run this multi-mountain config** (owner-flagged CI
-      thread — also wire `npm run test:rules` into GitHub Actions).
+- [x] **M5.4a — stub-tenant config + seed prerequisite DONE (2026-07-23, uncommitted).**
+      `manisan` added to `config/mountains/mountains.json` — routable
+      (`generateStaticParams` / `resolveMountainIdOrNull` treat `/manisan` as real; the
+      build prerenders both `/geyang` and `/manisan` trees) but flagged **`hidden: true`**
+      so it is **not** advertised in the public `MountainSelector` (new
+      `MountainConfig.hidden` + `getPublicMountains()`; the selector switched to it, while
+      routing keeps `getAllMountains()`). Distinct branding (마니산, blue/teal theme),
+      `storagePrefix: 'mountains/manisan/'`, reuses geyang map imagery for the stub. This
+      also **resolves the `permissions.json` drift** (it already listed `manisan`). Seed:
+      new `tests/e2e/fixtures/manisan.json` (distinct points/cats/cat_images/
+      posts_announcements/contacts/about + a **manisan-only admin** and a **dual-mountain
+      admin**); `seed-emulators.mjs` refactored so `withTenant`/`seedCollection`/`seedDoc`
+      take an explicit `mountainId` (geyang pass unchanged) + a `seedManisanTenant()` pass,
+      and `seedAuthAndUsers` accepts both the single-`role` and explicit `roles[]` shapes.
+      Gates: tsc, smoke 30/30, unit 39/39, **full e2e 116/13/0** (geyang suite unperturbed
+      by the second seeded tenant). ⏳ Remaining for M5.4: the isolation **spec itself**.
+- [ ] **M5.4b — two-tenant e2e isolation spec.** With the `manisan` stub now seeded, the
+      spec asserts (a) its content is invisible on geyang surfaces & vice versa (public
+      feeds, map, albums, admin lists), (b) a **single-mountain** (manisan-only) admin
+      gets denied on geyang API routes + cannot read geyang `contacts`, (c) a **multi-role**
+      admin (roles on both — the seeded `dual-admin-uid`) is allowed on each of their
+      mountains, (d) creates land with the right `mountainId`. ⚠️ **CI must run this
+      multi-mountain config** (owner-flagged CI thread — also wire `npm run test:rules`
+      into GitHub Actions; both still pending).
 - [ ] 🔑 `firebase deploy --only firestore:rules` (+ indexes) after the emulator net
       is green; staged post-deploy click-through of geyang admin CMS.
 - Gates: full e2e (old suite + isolation spec) green; this phase is **the** isolation

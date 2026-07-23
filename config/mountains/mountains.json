@@ -77,5 +77,71 @@
       "defaultRole": "viewer",
       "requireApproval": true
     }
+  },
+  "manisan": {
+    "id": "manisan",
+    "name": "마니산",
+    "description": "마니산에서 살고 있는 고양이들의 이야기",
+    "adminEmail": "jaesangpark@gmail.com",
+    "hidden": true,
+    "domains": [
+      "manisan.mohocats.org"
+    ],
+    "storagePrefix": "mountains/manisan/",
+    "about": {
+      "title": "마니산에서 만나는 고양이 이야기",
+      "subtitle": "마니산에서 만나는 특별한 이야기들",
+      "mainContent": "마니산 산냥이집냥이는 강화도 마니산에 살고 있거나 살았던 고양이들의 이야기입니다.",
+      "sections": [
+        {
+          "title": "우리의 미션",
+          "content": "마니산의 고양이들이 안전하고 행복하게 살 수 있도록 보호하고 돌봅니다."
+        }
+      ]
+    },
+    "theme": {
+      "primaryColor": "#0ea5e9",
+      "secondaryColor": "#0369a1",
+      "accentColor": "#38bdf8"
+    },
+    "features": {
+      "videoAlbum": true,
+      "photoAlbum": true,
+      "advancedFiltering": true,
+      "adminPanel": true
+    },
+    "social": {
+      "youtubeChannelId": "",
+      "instagramHandle": "",
+      "facebookPage": ""
+    },
+    "map": {
+      "clustering": false,
+      "maxClusterRadius": 50,
+      "landscapeImage": {
+        "url": "/images/screenshot_mt_geyang_50.png",
+        "width": 1616,
+        "height": 808
+      },
+      "portraitImage": {
+        "url": "/images/screenshot_mt_geyang_50_rot90cw.png",
+        "width": 808,
+        "height": 1616
+      }
+    },
+    "authentication": {
+      "type": "centralized",
+      "roles": [
+        "admin",
+        "butler-ground",
+        "butler-internet",
+        "viewer"
+      ],
+      "smsRegions": [
+        "KR"
+      ],
+      "defaultRole": "viewer",
+      "requireApproval": true
+    }
   }
 }

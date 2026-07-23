@@ -15,6 +15,41 @@
 
 ---
 
+## 2026-07-23 — Multi-mountain M5.4a: second stub tenant (`manisan`) + `hidden` config flag
+
+**Area:** changed — `src/utils/config.ts` (added `MountainConfig.hidden` +
+`getPublicMountains()`), `src/components/MountainSelector.tsx` (uses
+`getPublicMountains()`), `config/mountains/mountains.json` (added `manisan`),
+`scripts/test/seed-emulators.mjs` (two-tenant seed). Added —
+`tests/e2e/fixtures/manisan.json`.
+
+**What changed:** added `manisan` as a second, **preparatory stub tenant**. It is a
+real routable tenant (`/manisan` resolves, `generateStaticParams` prerenders it) but
+carries a new **`hidden: true`** config flag that keeps it out of the visitor-facing
+`MountainSelector` — routing/`generateStaticParams`/`resolveMountainIdOrNull` keep
+using `getAllMountains()`, while the selector switched to the new
+`getPublicMountains()` (which filters `hidden`). The stub has distinct branding
+(마니산, blue/teal theme), `storagePrefix: 'mountains/manisan/'`, and reuses geyang's
+map imagery. The emulator seed was refactored so `withTenant`/`seedCollection`/
+`seedDoc` take an explicit `mountainId` (the geyang pass is unchanged) plus a new
+`seedManisanTenant()` pass from `manisan.json` (distinct content + a manisan-only
+admin and a dual-mountain admin); `seedAuthAndUsers` now builds per-user `roles` maps
+from either a single `role` or an explicit `roles[]` list.
+
+**Rationale:** the M5.4 two-tenant isolation e2e (and the eventual M8 "geyang as one
+of many") need a second tenant to exist in config + seed before the spec can assert
+cross-tenant invisibility and per-mountain admin scoping. Adding it as `hidden`
+avoids exposing an empty stub to real visitors in the production mountain selector
+while still making it fully testable. Also resolves a pre-existing drift — `manisan`
+was already listed in `config/permissions.json` but not in `mountains.json`.
+
+**Verified:** tsc / smoke 30 / unit 39 green; **full e2e 116 passed / 13 skipped / 0
+failed** — the geyang suite is unperturbed by the second seeded tenant, and the build
+prerenders both `/geyang` and `/manisan` route trees. The isolation **spec** that
+consumes this stub (M5.4b) and wiring `test:rules` into CI are separate follow-ups.
+
+---
+
 ## 2026-07-23 — Multi-mountain M5.3 route audit: Admin-SDK routes verified tenant-safe; prod-cutover order corrected
 
 **Area:** docs / verification only — no code change. Reviewed all 21
