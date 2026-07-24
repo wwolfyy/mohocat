@@ -1,6 +1,6 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-23 · **Branch:** `dev` · **`main`:** promoted through PR #8
+**Last updated:** 2026-07-25 · **Branch:** `dev` · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
@@ -54,8 +54,18 @@ the testing hand-off
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion.
 - **Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8,
-  2026-07-23; cutover complete).** The next open phase is **M6** (assets/storage
-  namespacing) — see the workstream section. Summary of the M5 sub-phases below.
+  2026-07-23; cutover complete). ✅ M6 DONE on `dev` (2026-07-25) — no prod migration needed.**
+  **M6 (2026-07-25):** per-tenant **upload** namespacing — `generate-signed-url` + the form
+  image strategy prepend the active tenant's `storagePrefix` (geyang `''` → exact no-op), so a
+  future mountain's uploads land under `mountains/<id>/…`. **Scope was corrected mid-flight:**
+  the first draft also namespaced baked thumbnails + a `cats.thumbnailUrl` migration, but
+  inspecting prod showed cat thumbnails **and** album photos are served from live Firebase
+  **Storage URLs** (not baked paths) — already tenant-scoped, so the migration was a 0-change
+  no-op and was **reverted/deleted** (baking + fixtures back to flat). Gates: tsc 0 / unit +2 /
+  smoke 30 / **e2e 125/13/0**. **No cutover.** Image-serving model now documented in
+  [`media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy).
+  **Next open phase: M7** (analytics → gtag.js). See the workstream section. Summary of the M5
+  sub-phases below.
   **M5.4a (2026-07-23):** `manisan` added as a `hidden: true` stub tenant in
   `mountains.json` (routable at `/manisan`, prerendered, but excluded from the public
   `MountainSelector`) + seeded in `seed-emulators.mjs` (distinct content + a manisan-only
@@ -202,7 +212,26 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8, 2026-07-23; cutover complete). Next open phase: M6.
+### Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 done on `dev` (uncommitted); no prod cutover. Next open phase: M7.
+
+**M6 (2026-07-25) — per-tenant upload namespacing (uncommitted on `dev`).** Image uploads
+prepend the active tenant's `storagePrefix`: `uploadStrategies.uploadImagesToStorage(…,
+storagePrefix)` (threaded via `useMountain()` in `useSimpleContentForm`) + the
+`generate-signed-url` route (per-request tenant, prefixes object path + `publicUrl`). Geyang
+`''` → exact no-op; a new tenant's uploads land under `mountains/<id>/…`.
+
+⚠️ **Scope was corrected mid-flight — read this so it isn't re-litigated.** The plan assumed
+thumbnails serve from **baked local paths**; that's only true in e2e fixtures. In **prod**,
+cat thumbnails (`cats.thumbnailUrl`) **and** album photos (`cat_images.imageUrl`) are live
+Firebase **Storage URLs** (verified against the prod dump), served via Next `<Image>` — so
+they're already tenant-scoped by the object path. The drafted thumbnail-namespacing +
+`cats.thumbnailUrl` migration were therefore a **0-change no-op** (the dry-run confirmed:
+32/32 cats `not-baked`) and were **reverted/deleted** (`fetch-static-assets.js` + `cats.json`
+back to flat; `backfill-thumbnail-namespace.js` + the M6 runbook removed). The cat-thumbnail
+baking is legacy/dead-in-prod (e2e-only). Full model:
+[`media-and-youtube.md → Image storage & serving strategy`](../codebase/media-and-youtube.md#image-storage--serving-strategy).
+Gates: tsc 0, unit +2, smoke 30/30, **e2e 125/13/0**. **No prod migration/cutover** —
+about-photos stay baked + per-mountain (already handled pre-M6).
 
 **Read-first to resume:**
 [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
@@ -484,6 +513,10 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- ✅ **M6 — no prod cutover needed (resolved 2026-07-25).** The upload-prefix wiring is a
+  no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
+  on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail
+  migration was reverted after a dry-run found 0 changes.)
 - ✅ **M5 prod cutover — DONE 2026-07-23 (owner-run).** Ran in the required order:
   snapshot → `APPLY=true` migration (`currentRole`→`roles`, `'default'`→`geyang`) →
   `firestore:indexes` (6 composite, Enabled) → PR #8 `dev → main` merge → `firestore:rules`.
@@ -537,9 +570,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-**This doc pass (post-cutover), uncommitted** — HANDOFF + the two planning docs +
-FEATURE_MOD_LOG, recording the M5 prod cutover / PR #8 promotion. The CI `rules` job
-itself is already committed (owner's `72432df`) and now in prod via PR #8. **`main` carries
+**M6 (per-tenant upload namespacing), uncommitted on `dev`** — code:
+`src/components/forms/uploadStrategies.ts` + `useSimpleContentForm.ts`,
+`src/app/api/generate-signed-url/route.ts` + a `uploadStrategies` unit test. Docs:
+this HANDOFF + plan §3 M6 + FEATURE_MOD_LOG + the image-storage-strategy doc pass
+(`media-and-youtube.md`, `deployment-and-build.md`, admin + provisioning manuals, archived
+`IMAGE_STORAGE_EXPLAINED`). (The drafted thumbnail baking/migration/runbook were reverted &
+deleted — `fetch-static-assets.js` + `cats.json` are back at their committed baseline.)
+Gates green (tsc, unit, smoke 30/30, **e2e 125/13/0**). Awaiting a commit go-ahead.
+
+**Earlier doc pass (post-M5-cutover), uncommitted** — HANDOFF + planning docs +
+FEATURE_MOD_LOG recording the M5 prod cutover / PR #8 promotion; plus the numbered
+`handoff-NN` files reorganized into `docs/handoff/archive/` (deletions + untracked
+`archive/`). The CI `rules` job itself is already committed (owner's `72432df`) and now in
+prod via PR #8. **`main` carries
 everything through PR #8 (merge `366425c`); `dev` is a merge commit behind `main` — ff
 `dev` to `main` to resync** (`git checkout dev && git merge --ff-only main && git push`).
 Recent `main` history:
@@ -561,7 +605,21 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-23 (latest)** — **🎉 Multi-mountain M5 SHIPPED TO PRODUCTION (PR #8; cutover
+- **2026-07-25 (latest)** — **Multi-mountain M6 DONE on `dev` — scope corrected to
+  per-tenant upload namespacing (no prod migration).** Shipped: image uploads prepend the
+  active tenant's `storagePrefix` (`generate-signed-url` route + the direct-storage form
+  strategy via `useMountain()`); geyang `''` → exact no-op, a new tenant's uploads isolate
+  under `mountains/<id>/…`. **Correction:** the first draft also namespaced baked thumbnails +
+  a `cats.thumbnailUrl` migration, but the owner's dry-run found **0 changes** — inspecting
+  prod showed cat thumbnails **and** album photos serve from live Firebase **Storage URLs**,
+  not baked paths, so they're already tenant-scoped. The thumbnail namespacing +
+  `backfill-thumbnail-namespace.js` + the M6 cutover runbook + the e2e-fixture edits were
+  **reverted/deleted**. Documented the baked-vs-Storage-URL model across
+  `docs/codebase/media-and-youtube.md` (new "Image storage & serving strategy" section),
+  `deployment-and-build.md`, both manuals, and the archived `IMAGE_STORAGE_EXPLAINED` (now
+  flagged superseded). Gates: tsc 0, unit +2, smoke 30/30, **full e2e 125/13/0**. **No prod
+  cutover.** **Next open phase: M7** (analytics → gtag.js).
+- **2026-07-23** — **🎉 Multi-mountain M5 SHIPPED TO PRODUCTION (PR #8; cutover
   complete).** The `dev → main` promotion (merge commit `366425c`, 34 commits) put the full
   M1–M5 multi-tenant refactor + data protection + CI rules gate on prod. The owner ran the
   order-critical cutover in sequence: snapshot → migration (`currentRole`→`roles` map,

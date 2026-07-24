@@ -275,6 +275,17 @@ Mostly one-time or infrequent setup. Details live in
 - **Build assets:** thumbnails / about-photos are fetched from Firebase Storage at build
   time (`npm run fetch:assets`, run automatically by `npm run build`). They are **not** in
   git — a fresh dev checkout needs `npm run fetch:assets` before pages with photos render.
+  - **How images are actually served (important mental model):** cat **thumbnails** and
+    **album photos** are **not** served from these baked files — they ride on live Firebase
+    **Storage URLs** stored in Firestore (`cats.thumbnailUrl` / `cat_images.imageUrl`),
+    optimized by Next `<Image>`. Only **about-page photos** are served from the baked
+    `public/` files. (The baked `thumbnails/` folder is legacy/unused in prod.) Full detail:
+    [`docs/codebase/media-and-youtube.md`](../../codebase/media-and-youtube.md#image-storage--serving-strategy).
+  - **Per-mountain uploads (M6):** new image uploads (the signed-URL route + the form image
+    upload) automatically land under the active mountain's `storagePrefix` in Storage, so a
+    second mountain's photos are isolated — operators set nothing. The default mountain
+    (`geyang`) has `storagePrefix: ""` (flat bucket, `uploads/`); a new tenant uses a
+    non-empty prefix (e.g. `mountains/<id>/`).
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
 - **Map clustering (mobile):** the **whole-mountain** lever for cluttered pins (option 3 in

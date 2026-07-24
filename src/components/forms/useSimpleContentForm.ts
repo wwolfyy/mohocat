@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { uploadImagesToStorage, uploadVideosToYouTube } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
+import { useMountain } from '@/components/MountainProvider';
+import { getMountainConfig } from '@/utils/config';
 
 /**
  * Shared submit/upload flow for the simple-content family (공지사항 + 입양홍보;
@@ -49,6 +51,8 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const router = useRouter();
   const { user } = useAuth();
   const dialog = useDialog();
+  const mountainId = useMountain();
+  const storagePrefix = getMountainConfig(mountainId).storagePrefix;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +80,11 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
 
       if (imageFiles.length > 0) {
         try {
-          const uploadedImageUrls = await uploadImagesToStorage(imageFiles, config.imagePathPrefix);
+          const uploadedImageUrls = await uploadImagesToStorage(
+            imageFiles,
+            config.imagePathPrefix,
+            storagePrefix
+          );
           allImageUrls = [...allImageUrls, ...uploadedImageUrls];
         } catch (error) {
           await dialog.alert(

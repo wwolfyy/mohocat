@@ -1,5 +1,14 @@
 # Image Storage and Optimization Explained
 
+> ⚠️ **OUTDATED / ARCHIVED — do not rely on this.** It describes the old
+> `images.unoptimized: true` setup where images were passed through directly from Firebase's
+> CDN, and treats Next.js image optimization as a hypothetical _"if enabled."_ Optimization has
+> since been **turned on** (`next.config.js` `remotePatterns` whitelists
+> `firebasestorage.googleapis.com`), so cat thumbnails and album photos are now served through
+> the Next `<Image>` optimizer, live from their Storage URLs. For the **current** strategy —
+> including which images are Storage-URL-served vs. baked into the build — see
+> [`docs/codebase/media-and-youtube.md` → "Image storage & serving strategy"](../../codebase/media-and-youtube.md#image-storage--serving-strategy).
+
 ## Current Configuration Analysis
 
 ### What's Happening Now

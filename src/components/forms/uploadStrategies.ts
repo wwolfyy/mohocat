@@ -27,14 +27,20 @@ import { getImageService, getStorageService } from '@/services';
 /**
  * Upload images straight to Firebase Storage via the service layer and return
  * their download URLs. `pathPrefix` example: `announcements/images`.
+ *
+ * `storagePrefix` is the owning tenant's Storage namespace (multi-tenant M6,
+ * e.g. `mountains/manisan/`); it is prepended so each mountain's uploads land
+ * under its own prefix. Geyang's prefix is `''` → the flat path is unchanged,
+ * so this defaults to `''` and existing two-arg callers keep their behavior.
  */
 export const uploadImagesToStorage = async (
   files: File[],
-  pathPrefix: string
+  pathPrefix: string,
+  storagePrefix: string = ''
 ): Promise<string[]> => {
   const storageService = getStorageService();
   const uploadPromises = files.map(async (file) => {
-    const path = `${pathPrefix}/${Date.now()}_${file.name}`;
+    const path = `${storagePrefix}${pathPrefix}/${Date.now()}_${file.name}`;
     return await storageService.uploadFile(file, path);
   });
   return await Promise.all(uploadPromises);

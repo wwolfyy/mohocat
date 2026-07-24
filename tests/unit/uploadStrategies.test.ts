@@ -45,6 +45,24 @@ describe('uploadImagesToStorage (direct-storage strategy, Family B)', () => {
     uploadFileMock.mockRejectedValue(new Error('storage down'));
     await expect(uploadImagesToStorage([file('a.jpg')], 'p')).rejects.toThrow('storage down');
   });
+
+  it('prepends the tenant storagePrefix to the object path (multi-tenant M6)', async () => {
+    uploadFileMock.mockImplementation(async (_f: File, path: string) => `https://cdn/${path}`);
+
+    await uploadImagesToStorage([file('a.jpg')], 'announcements/images', 'mountains/manisan/');
+
+    const path = uploadFileMock.mock.calls[0][1] as string;
+    expect(path).toMatch(/^mountains\/manisan\/announcements\/images\/\d+_a\.jpg$/);
+  });
+
+  it('an empty storagePrefix (geyang) leaves the flat path unchanged', async () => {
+    uploadFileMock.mockImplementation(async (_f: File, path: string) => `https://cdn/${path}`);
+
+    await uploadImagesToStorage([file('a.jpg')], 'announcements/images', '');
+
+    const path = uploadFileMock.mock.calls[0][1] as string;
+    expect(path).toMatch(/^announcements\/images\/\d+_a\.jpg$/);
+  });
 });
 
 describe('uploadVideoToYouTube (shared YouTube strategy)', () => {

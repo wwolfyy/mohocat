@@ -61,6 +61,11 @@ graph LR
 - **Env vars by hand**: managed in the Vercel dashboard (Production + Preview), not by IaC.
 - **Build pre-step pulls assets**: `fetch-static-assets.js` materializes thumbnails/about-photos
   into `public/` (they are **not** committed to git). Run `npm run fetch:assets` in dev.
+  ⚠️ **Only about-photos are actually _served_ from these baked files.** Prod cat thumbnails
+  ride on live Firebase **Storage URLs** (`cats.thumbnailUrl`) rendered via Next `<Image>`, so
+  the baked `public/images/thumbnails/…` files are unreferenced in prod (legacy; still used by
+  the e2e fixtures). Full strategy:
+  [`media-and-youtube.md` → Image storage & serving strategy](media-and-youtube.md#image-storage--serving-strategy).
 - **Hybrid ISR freshness (§7a)**: `REVALIDATE_SECONDS` (1h) is the _backstop_; admin cat edits
   trigger instant `revalidatePath` via `/api/revalidate`. Point edits rely on the 1h backstop.
 - **Rules deploy is separate**: only the Firestore `rules` remain in `firebase.json`; deploy them

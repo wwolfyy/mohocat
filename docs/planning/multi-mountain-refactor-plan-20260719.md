@@ -623,21 +623,42 @@ mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
 - Gates: full e2e (old suite + isolation spec) green — **125/13/0**; this phase is **the**
   isolation proof.
 
-### M6 — Assets & storage namespacing (medium)
+### M6 — Assets & storage namespacing — ✅ DONE on `dev` (2026-07-25); no prod migration needed
 
-> 🔑 **Precondition — snapshot first:** run `npm run backup:firestore` before any
-> script in this phase writes to production. Added after M4's backfill ran with no
-> snapshot and no PITR (safe only because it was additive and exactly reversible).
-> PITR is now enabled (7-day window) + a weekly backup schedule; the local dump is
-> the pre-migration insurance on top. Runbook:
-> [`docs/manuals/admin-manual/README.md`](../manuals/admin-manual/README.md#10-backups--recovery-owner) §10.
+**🔑 Scope corrected 2026-07-25 (verified against prod data).** The plan assumed thumbnails
+are served from **baked local paths** (`/images/thumbnails/…`) — true only in the **e2e
+fixtures**. In **prod**, cat thumbnails (`cats.thumbnailUrl`) **and** album photos
+(`cat_images.imageUrl`) are full Firebase **Storage download URLs**, served live via Next
+`<Image>` (see [`docs/codebase/media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy)).
+So:
 
-- [ ] `fetch-static-assets.js` loops all mountains → per-mountain `public/` paths;
-      consumer sweep (thumbnail preloader, avatars, about page) — geyang's baked
-      thumbnail paths change here.
-- [ ] `storagePrefix` wired through `storage-service.ts`, both signed-URL routes, and
-      the form upload strategies (geyang `''` → no-op).
-- [ ] Browser pass on media surfaces (map avatars, albums, upload flows) + e2e green.
+- **Thumbnail namespacing + a `cats.thumbnailUrl` migration are unnecessary** — prod values
+  are already tenant-scoped Storage URLs (a dry-run of the drafted migration found **0**
+  changes: all 32 cats classified `not-baked`, i.e. non-local URLs). The cat-thumbnail
+  **baking** in `fetch-static-assets.js` is legacy/dead-in-prod (only the e2e fixtures
+  reference the baked files). A first-draft namespaced-baking + migration approach was built,
+  then **reverted** once the data was inspected — the baking/fixtures returned to flat and
+  `backfill-thumbnail-namespace.js` + the M6 cutover runbook were deleted.
+- **Tenant isolation for images = the Storage object path**, which the upload-prefix wiring
+  already handles. That is the real (and only needed) M6 change.
+
+**Done (the upload-prefix wiring — geyang `''` → no-op):**
+
+- [x] **`storagePrefix` wired through the upload paths.**
+      `uploadStrategies.uploadImagesToStorage(files, pathPrefix, storagePrefix='')` prepends
+      it; `useSimpleContentForm` threads it from `useMountain()`+`getMountainConfig()`. The
+      `generate-signed-url` route resolves the tenant per-request (`getRequestMountainId`)
+      and prefixes both the object path and the returned `publicUrl`. So a new mountain's
+      album/signed-URL uploads land under `mountains/<id>/…` and their Storage URLs are
+      naturally scoped. `generate-youtube-signed-url` = **no-op** (YouTube, no Storage path);
+      `uploadImagesWithSignedUrls` (Family A) needs no client change (path built server-side
+      by the now-prefixed route); `storage-service.ts` stays tenant-free.
+- [x] **Gates.** tsc 0, unit (incl. +2 `storagePrefix` path tests), smoke 30/30, full e2e
+      125/13/0 (validated on the earlier namespaced build; the trim reverts test fixtures to
+      the long-green flat baseline + keeps the no-op-for-geyang upload wiring — re-run green).
+- **No prod cutover step.** Nothing to migrate; the wiring is a no-op for geyang and only
+  affects a future tenant's uploads. (about-photos remain baked + per-mountain foldered,
+  already handled pre-M6.)
 
 ### M7 — Analytics decoupling (small)
 

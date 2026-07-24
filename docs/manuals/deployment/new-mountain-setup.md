@@ -100,9 +100,29 @@ bring-up will hit gaps. Before/while writing this guide, resolve or account for
 
 ## 7. Build & assets
 
-> **TODO:** `npm run fetch:assets` sources thumbnails/about-photos from **this tenant's**
-> Storage bucket (verify it's not hard-coded to the default bucket — §9 gap). First build
-> / deploy walkthrough.
+**How images are served (read this first — it determines what a new tenant needs).** Cat
+**thumbnails** and **album photos** are served from live Firebase **Storage URLs** stored in
+Firestore (`cats.thumbnailUrl` / `cat_images.imageUrl`), optimized by Next `<Image>` — **not**
+from the build. Only **about-page photos** are baked into `public/`. Full model:
+[`docs/codebase/media-and-youtube.md`](../../codebase/media-and-youtube.md#image-storage--serving-strategy).
+
+For a new tenant this means:
+
+- **Uploads are auto-namespaced (multi-mountain M6).** The signed-URL route
+  (`generate-signed-url`) and the direct-storage form image strategy prepend the tenant's
+  `storagePrefix`, so a new mountain's uploaded photos land under `mountains/<id>/…` in
+  Storage and their URLs are naturally isolated. Set `storagePrefix` (e.g. `mountains/<id>/`)
+  in the tenant's config block — see §6. (No thumbnail data migration exists or is needed —
+  thumbnails ride on Storage URLs, not baked local paths.)
+- **Thumbnails/album photos:** get the tenant's cat/album image files into its
+  `mountains/<id>/…` Storage folder and set the Firestore records' URLs to those objects.
+  There's no build step to run for these.
+- **about-photos (baked):** placed per mountain at `about-photos/{mountainId}/…` in Storage;
+  `npm run fetch:assets` (run by `npm run build`) downloads them into `public/`, driven by the
+  tenant's `config.about.mainPhoto.localPath`.
+
+> **TODO:** first build / deploy walkthrough for a real second tenant (§9 gap items that
+> remain: the map-image asset path).
 
 ## 8. Verification checklist
 
