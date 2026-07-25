@@ -597,15 +597,27 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
      of `tests/e2e/**`), so it needed no extra wiring. Full e2e **125/13/0**.
   3. ✅ **The e2e seed/gate assumes the `roles`-map shape** (M5.2) — kept in sync (the seed
      builds per-user `roles` maps).
-- ⚠️ **7 ungated write/credential API routes (pre-existing auth gap, surfaced by the
-  M5.3 route audit 2026-07-23).** These have **no auth gate at all** — any unauthenticated
-  caller can hit them: `manage-playlists`, `refresh-video-metadata`, `update-youtube-video`,
-  `upload-youtube` (writes a Firestore video record via the Admin SDK), `youtube-playlists`,
-  `generate-signed-url` (mints storage upload URLs), `generate-youtube-signed-url`. This is
-  **orthogonal to multi-tenancy** (not an M5 regression — the routes predate the refactor),
-  so it was logged rather than fixed inside M5.3. Fix = add `requireApiPermission`
-  (`manage-video` for the YouTube routes; an appropriate perm for the signed-url routes),
-  as its own small hardening pass. Owner chose "log as a thread" 2026-07-23.
+- ✅ **7 ungated write/credential API routes — FIXED 2026-07-26 (thread resolved).** They
+  had **no auth gate at all**. Six now open with `requireApiPermission`, and every in-app
+  caller sends its ID token via `authHeader(user)`; the seventh was **deleted as dead code**
+  (below). Permission per route **mirrors the `firestore.rules` clause already guarding the
+  resource it touches**: `generate-signed-url` → **`manage-photo`** (its uploads become
+  `cat_images`); `upload-youtube`, `update-youtube-video`, `refresh-video-metadata`,
+  `manage-playlists` (GET+POST), `youtube-playlists` → **`manage-video`** (mirrors
+  `cat_videos`). So each route is exactly as permissive as the write it enables and **no
+  working flow lost access**. New net: `tests/e2e/api/media-route-authz.spec.ts` (21 tests —
+  401 unauthenticated / 403 for a butler / past-the-gate for an admin, on all 7 method+route
+  pairs). Gates: tsc 0, smoke 30/30, unit 71/71, **full e2e 146/13/0**. Detail +
+  the status-vs-message gotcha: `log/FEATURE_MOD_LOG.md` 2026-07-26.
+  - 🗑️ **`generate-youtube-signed-url` DELETED (owner-approved 2026-07-26).** No caller
+    anywhere, and `git log -S` over all history showed every reference outside its own
+    folder was **documentation** — it has had no code caller since the commit that created
+    it (`b901359`, pages-router → app-router), superseded by `upload-youtube`. No env var
+    orphaned (`getYouTubeOAuthConfig()` reads the same four).
+  - 📌 **Left as-is (owner's call 2026-07-26):** the butler post pages
+    (`/pages/butler_{stream,talk}/new`) gate only on `isAuthenticated` — their writes
+    already fail at the `posts_butler` rule without `manage-posts` (nothing leaks), but a
+    signed-in user without it only finds out on submit. Accepted.
 - **탈퇴 flow live click-through** with a **throwaway** account — it irreversibly
   deletes, so it hasn't been end-to-end clicked in prod yet.
 - **Compliance carry-overs** (deferred, accepted — reopen before scaling membership):
@@ -648,7 +660,33 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-25 (latest)** — **Multi-mountain M8 DONE & committed on `dev` (`a237e8b`) — theme
+- **2026-07-26 (latest)** — **The 7 ungated write/credential API routes are now gated (one
+  deleted) — the open thread is resolved.** `manage-playlists` (GET+POST),
+  `refresh-video-metadata`, `update-youtube-video`, `upload-youtube`, `youtube-playlists`,
+  `generate-signed-url`, and `generate-youtube-signed-url` had **no auth gate at all** — an
+  unauthenticated caller could mint Storage write URLs, drive the shared YouTube channel on
+  the operator's OAuth credential, and write `cat_videos` via the Admin SDK (bypassing
+  `firestore.rules`). Six now
+  open with `requireApiPermission`; every in-app caller sends its ID token through the
+  existing `authHeader(user)` helper (`uploadStrategies` takes `user` as an **injected**
+  option, so the strategy module keeps no Firebase coupling; the tag-videos page +
+  `useYouTubeVideoMutations` route 10 fetch sites through one `jsonAuthHeaders()`). The
+  permission per route **mirrors the rules clause already guarding the resource it touches**
+  (`generate-signed-url` → `manage-photo`, everything YouTube → `manage-video`), so each route
+  is exactly as permissive as the write it enables and **no working flow lost access**. New
+  net: `tests/e2e/api/media-route-authz.spec.ts` — 21 pure-HTTP tests covering all 7
+  method+route pairs (401 unauthenticated / 403 for a butler holding neither permission /
+  past-the-gate for an admin). Gates: tsc 0, smoke 30/30, unit 71/71, **full e2e 146/13/0**
+  (the 125 pre-existing tests all still green). ⚠️ **Gotcha worth keeping:** status alone
+  can't distinguish a gate rejection from a downstream failure — without YouTube OAuth
+  credentials `update-youtube-video` answers an `invalid_grant` with **its own 401** — so the
+  admin case asserts on the gate's error _messages_, not the code. **The 7th route,
+  `generate-youtube-signed-url`, was DELETED rather than gated** (owner-approved): no caller
+  anywhere, and `git log -S` showed every historical reference outside its own folder was
+  documentation — dead since the commit that created it, superseded by `upload-youtube`; no
+  env var orphaned. The butler post pages keeping only their `isAuthenticated` gate is
+  **accepted** (owner, same day).
+- **2026-07-25** — **Multi-mountain M8 DONE & committed on `dev` (`a237e8b`) — theme
   wiring + provisioning proof + docs close-out; the M0–M8 track is now complete.** `config.theme`
   is now
   live (was dead): a

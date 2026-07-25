@@ -24,7 +24,7 @@ videos look and behave consistently.
 | Media links hook     | `src/hooks/useMediaLinks.tsx`                                                                         | Resolves media link tokens                                                                                         |
 | YouTube service      | `src/services/youtube.ts`                                                                             | `fetchChannelVideos`, `searchYouTubeVideos`, YouTube data types                                                    |
 | Image/video services | `src/services/image-service.ts`, `video-service.ts`, `media-albums.ts`                                | Firestore-backed media records + album grouping                                                                    |
-| Storage/signed URLs  | `src/services/storage-service.ts`, API `generate-signed-url`, `generate-youtube-signed-url`           | Firebase Storage access + signed upload URLs                                                                       |
+| Storage/signed URLs  | `src/services/storage-service.ts`, API `generate-signed-url`                                          | Firebase Storage access + signed upload URLs                                                                       |
 | YouTube admin        | `src/components/admin/YouTubeAuthPanelNew.tsx`, `admin/tag-videos`, `tag-images`                      | OAuth panel + tagging surfaces                                                                                     |
 | YouTube API routes   | `api/{manage-playlists,youtube-playlists,upload-youtube,update-youtube-video,refresh-video-metadata}` | Playlist/video management. See [api-routes](api-routes.md)                                                         |
 

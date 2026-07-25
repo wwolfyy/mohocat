@@ -22,7 +22,7 @@ account deletion, points, media/YouTube, signed URLs, and ISR revalidation.
 | Auth                 | `auth/kakao/callback`                                                                                       | Kakao OIDC callback                                                                             |
 | Contact              | `contact`                                                                                                   | 동참/문의 submission: verify token → Admin-SDK write → SMTP email to `adminEmail`               |
 | Points               | `points`                                                                                                    | Feeding-point data endpoint                                                                     |
-| Media — signed URLs  | `generate-signed-url`, `generate-youtube-signed-url`                                                        | Firebase Storage / YouTube upload signed URLs                                                   |
+| Media — signed URLs  | `generate-signed-url`                                                                                       | Firebase Storage signed upload URLs                                                             |
 | Media — YouTube      | `manage-playlists`, `youtube-playlists`, `upload-youtube`, `update-youtube-video`, `refresh-video-metadata` | YouTube playlist/video management. See [media-and-youtube](media-and-youtube.md)                |
 | Revalidation         | `revalidate`                                                                                                | On-demand ISR: admin cat mutation → `revalidatePath` for `BAKED_PATHS` (`/`, `/pages/adoption`) |
 
@@ -74,7 +74,15 @@ graph LR
 'nodejs'` (Admin SDK can't run on edge).
 - **Self-enforced auth**: because the Admin SDK bypasses Firestore rules, admin routes call
   `requireApiPermission(req, '<permission>')` and map its result to 401/403; the client attaches
-  the token via `authHeader.ts`.
+  the token via `authHeader.ts`. **This is not limited to `admin/*`** — the media/credential
+  routes at the API root (`generate-signed-url`, `upload-youtube`, `update-youtube-video`,
+  `refresh-video-metadata`, `manage-playlists`, `youtube-playlists`) are gated the same way
+  as of 2026-07-26.
+- **Pick the permission by mirroring `firestore.rules`.** A route that writes (or enables a
+  write to) a collection should require the permission that rules already enforce on it — so
+  the route is exactly as permissive as the write it performs, and gating one doesn't quietly
+  revoke a working flow. That's why `generate-signed-url` takes `manage-photo` (its uploads
+  become `cat_images`) while every YouTube route takes `manage-video` (`cat_videos`).
 - **Token → identity, never the body**: routes derive the caller's uid from the verified Bearer
   token (e.g. `account/delete`, `contact`), never from request parameters.
 - **No secret/PII logging**: contact/account routes explicitly avoid logging tokens or
@@ -99,4 +107,9 @@ real,simple,working}` family, `get-all-users`, `update-static-data`, and `health
   export anymore.
 - Adding a new admin mutation route? It has **no protection** until you add
   `requireApiPermission` — the Admin SDK ignores Firestore rules.
+- **Status codes alone don't prove a gate.** `update-youtube-video` answers a YouTube
+  `invalid_grant` with its **own 401** ("YouTube authentication failed…"), which is
+  indistinguishable by status from the guard's 401. Anything asserting on authorization
+  (see `tests/e2e/api/media-route-authz.spec.ts`) must key on the guard's error _messages_ —
+  `Authentication required` / `Invalid token` / `Insufficient permissions`.
   </content>

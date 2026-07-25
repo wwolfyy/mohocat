@@ -100,6 +100,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
             title: title || config.youtubeDefaults.title,
             description: message || config.youtubeDefaults.description,
             tags: config.youtubeDefaults.tags,
+            user,
           });
           allVideoUrls = [...allVideoUrls, ...uploadedVideoUrls];
         } catch (error) {

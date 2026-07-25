@@ -3,10 +3,19 @@ import { db } from '@/lib/firebase-admin';
 import { getYouTubeApiKey, getYouTubeChannelId } from '@/utils/config';
 import { getRequestMountainId } from '@/lib/tenant';
 import { NextURL } from 'next/dist/server/web/next-url';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 const YOUTUBE_API_KEY = getYouTubeApiKey();
 
+// Gated: re-reads YouTube metadata and writes it back to `cat_videos` via the Admin SDK
+// (which bypasses firestore.rules) — require 'manage-video', the same permission the
+// cat_videos rule enforces on client writes.
 export async function POST(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
+
   try {
     console.log('=== REFRESH METADATA API CALLED ===');
     const { videoIds, expectedRecordingDate, retryCount = 0 } = await request.json();

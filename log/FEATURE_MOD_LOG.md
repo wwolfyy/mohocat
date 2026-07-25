@@ -15,6 +15,70 @@
 
 ---
 
+## 2026-07-26 — Auth gate on the 7 ungated media / credential API routes (one deleted)
+
+**Area:** changed — `src/app/api/{generate-signed-url,upload-youtube,update-youtube-video,
+refresh-video-metadata,manage-playlists,youtube-playlists}/route.ts`,
+`src/components/forms/{uploadStrategies.ts,useRichContentForm.ts,useSimpleContentForm.ts}`,
+`src/app/[mountain]/admin/tag-videos/{page.tsx,useYouTubeVideoMutations.ts}`.
+Removed — `src/app/api/generate-youtube-signed-url/route.ts`.
+Added — `tests/e2e/api/media-route-authz.spec.ts`.
+
+**What shipped:** these seven routes had **no auth gate at all** — any unauthenticated
+caller could mint 15-minute Firebase Storage _write_ URLs, upload to the shared YouTube
+channel on the operator's OAuth credential, and write `cat_videos` through the Admin SDK
+(which bypasses `firestore.rules`). Six now open with `requireApiPermission`, and every
+in-app caller sends `Authorization: Bearer <idToken>` via the existing `authHeader(user)`
+helper. The seventh — **`generate-youtube-signed-url` — was deleted as dead code** rather
+than gated (see below).
+
+**Permission choice — mirror the rule that already guards the resource:**
+`generate-signed-url` → **`manage-photo`** (its uploads are recorded as `cat_images`,
+which `firestore.rules` gates on `manage-photo`); all six YouTube routes →
+**`manage-video`** (mirrors the `cat_videos` rule). This deliberately makes each route
+exactly as permissive as the write it enables, so **nobody who can successfully complete
+these flows today loses access**: the post/image writes they end in already require
+`manage-posts`/`manage-photo` at the rules layer.
+
+**Rationale:** surfaced by the M5.3 route audit (2026-07-23) as a **pre-existing gap,
+orthogonal to multi-tenancy** — the routes predate the refactor — and logged as an open
+thread at the time (owner chose log-not-fix then). This is that hardening pass.
+
+**Client threading:** `uploadStrategies.ts` takes the signed-in `user` as an injected
+option (type-only `firebase/auth` import, matching `lib/auth/authHeader.ts`) rather than
+reaching into the auth SDK — the module stays a plain strategy with no Firebase coupling.
+`useRichContentForm`/`useSimpleContentForm` pass `user` through; the tag-videos page and
+`useYouTubeVideoMutations` route their 10 fetch sites through one `jsonAuthHeaders()`
+helper.
+
+**Verified:** new `tests/e2e/api/media-route-authz.spec.ts` (21 tests, pure HTTP) pins all
+7 method/route pairs three ways — 401 unauthenticated, 403 for a seeded butler holding
+neither permission, and past-the-gate for the seeded admin. Gates: tsc 0, smoke 30/30,
+unit 71/71, **full e2e 146/13/0** (125 pre-existing all still green).
+
+⚠️ **Non-obvious, pinned in the spec:** status alone can't tell a gate rejection from a
+downstream failure — with no YouTube OAuth credentials (the emulator, and any
+unauthorized deploy), `update-youtube-video` answers an `invalid_grant` with **its own
+401** ("YouTube authentication failed…"). The spec's admin case therefore asserts on the
+gate's error _messages_ ('Authentication required' / 'Invalid token' / 'Insufficient
+permissions'), not on the status code. A first draft keyed on status and failed for
+exactly this reason.
+
+**`generate-youtube-signed-url` DELETED, not gated (owner-approved).** It had **no caller
+anywhere** in `src/`, `tests/`, or `scripts/`, and `git log -S` over all history showed
+every reference outside its own folder was **documentation** — it has had no code caller
+since the commit that created it (`b901359`, the pages-router → app-router conversion),
+superseded by `upload-youtube`. It also read `process.env.YOUTUBE_*` directly rather than
+going through `getYouTubeOAuthConfig()`, so it would have drifted from the Firestore
+refresh-token fallback the live upload path uses. **No env var is orphaned** — the same
+four vars are read by `getYouTubeOAuthConfig()` in `src/utils/config.ts`. Verified by
+re-running the full suite after removal.
+
+**One adjacent finding left as-is (owner's call, 2026-07-26):** the butler post pages
+(`/pages/butler_{stream,talk}/new`) gate only on `isAuthenticated`; their writes already
+fail at the `posts_butler` rule without `manage-posts`, so nothing leaks, but a signed-in
+user without it only discovers this on submit. Accepted.
+
 ## 2026-07-25 — Multi-mountain M8: per-tenant theming (minimal — primary color only)
 
 **Area:** changed — `tailwind.config.js`, `src/app/globals.css`,

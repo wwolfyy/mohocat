@@ -1,8 +1,19 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig } from '@/utils/config';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
+// Gated: lists the shared YouTube channel's playlists via the operator's OAuth
+// credential — require 'manage-video', mirroring the cat_videos rule.
 export async function GET(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    // Keep the caller's degrade-gracefully contract (an empty playlist list) while
+    // still reporting the real status — the content forms only use this to populate
+    // an optional dropdown.
+    return NextResponse.json({ error: authz.error, playlists: [] }, { status: authz.status });
+  }
+
   try {
     // Get YouTube OAuth configuration from centralized config
     const youtubeOAuth = getYouTubeOAuthConfig();

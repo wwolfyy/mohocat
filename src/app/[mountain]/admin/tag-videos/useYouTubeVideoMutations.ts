@@ -5,6 +5,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { CatVideo } from '@/types/media';
 import { adminStrings } from '@/constants/adminStrings';
 import type { DialogApi } from '@/components/ui/useDialog';
+import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 
 const { tagVideos: t } = adminStrings;
 
@@ -43,6 +45,14 @@ export function useYouTubeVideoMutations({
   videoService,
   dialog,
 }: UseYouTubeVideoMutationsOptions) {
+  // The YouTube API routes are gated on 'manage-video', so every call below carries
+  // the signed-in user's ID token alongside the JSON content type.
+  const { user } = useAuth();
+  const jsonAuthHeaders = async () => ({
+    'Content-Type': 'application/json',
+    ...(await authHeader(user)),
+  });
+
   // Selected video + YouTube-specific form states
   const [selectedVideo, setSelectedVideo] = useState<AdminVideo | null>(null);
   const [youtubeTitle, setYoutubeTitle] = useState<string>('');
@@ -181,9 +191,7 @@ export function useYouTubeVideoMutations({
       // Step 1: Update YouTube video metadata
       const updateResponse = await fetch('/api/update-youtube-video', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await jsonAuthHeaders(),
         body: JSON.stringify({
           videoId: videoId,
           updates: updates,
@@ -220,9 +228,7 @@ export function useYouTubeVideoMutations({
 
       const refreshResponse = await fetch('/api/refresh-video-metadata', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await jsonAuthHeaders(),
         body: JSON.stringify(refreshPayload),
       });
 
@@ -322,7 +328,7 @@ export function useYouTubeVideoMutations({
           try {
             const youtubeResponse = await fetch('/api/update-youtube-video', {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: await jsonAuthHeaders(),
               body: JSON.stringify({
                 videoId: video.youtubeId || video.id,
                 updates: { tags: newTags },
@@ -361,7 +367,7 @@ export function useYouTubeVideoMutations({
 
         const refreshResponse = await fetch('/api/refresh-video-metadata', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await jsonAuthHeaders(),
           body: JSON.stringify({ videoIds: successfulVideoIds }),
         });
 
@@ -417,7 +423,7 @@ export function useYouTubeVideoMutations({
           try {
             const youtubeResponse = await fetch('/api/update-youtube-video', {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: await jsonAuthHeaders(),
               body: JSON.stringify({
                 videoId: video.youtubeId || video.id,
                 updates: { createdTime: newCreatedTime },
@@ -456,7 +462,7 @@ export function useYouTubeVideoMutations({
 
         const refreshResponse = await fetch('/api/refresh-video-metadata', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await jsonAuthHeaders(),
           body: JSON.stringify({
             videoIds: successfulVideoIds,
             expectedRecordingDate: new Date(batchYoutubeCreatedTime).toISOString(),
@@ -515,9 +521,7 @@ export function useYouTubeVideoMutations({
       // Call the refresh metadata API to update all YouTube videos
       const response = await fetch('/api/refresh-video-metadata', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await jsonAuthHeaders(),
         body: JSON.stringify({
           videoIds: youtubeVideoIds,
         }),

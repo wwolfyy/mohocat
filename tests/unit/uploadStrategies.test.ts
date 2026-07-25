@@ -5,6 +5,7 @@
  * request shape, result mapping, and fail-loud error propagation.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { User } from 'firebase/auth';
 
 const uploadFileMock = vi.fn();
 const createImageMock = vi.fn();
@@ -22,6 +23,13 @@ import {
 } from '@/components/forms/uploadStrategies';
 
 const file = (name: string) => new File(['x'], name, { type: 'application/octet-stream' });
+
+/**
+ * Stand-in for the signed-in Firebase user the strategies now take: both the
+ * YouTube-upload and signed-URL routes are permission-gated, so the strategies
+ * attach this user's ID token. Only `getIdToken()` is exercised.
+ */
+const testUser = { getIdToken: async () => 'test-id-token' } as unknown as User;
 
 beforeEach(() => {
   uploadFileMock.mockReset();
@@ -89,11 +97,13 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
       title: '공지사항 동영상',
       description: '설명',
       tags: '공지사항',
+      user: testUser,
     });
 
     expect(url).toBe('https://youtu.be/abc');
     expect(fetchMock).toHaveBeenCalledWith('/api/upload-youtube', {
       method: 'POST',
+      headers: { Authorization: 'Bearer test-id-token' },
       body: expect.any(FormData),
     });
     const body = fetchMock.mock.calls[0][1].body as FormData;
@@ -115,6 +125,7 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
       tags: '',
       createdTime: '2026-02-01',
       playlistId: 'PL123',
+      user: testUser,
     });
 
     const body = fetchMock.mock.calls[0][1].body as FormData;
@@ -131,7 +142,7 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     });
 
     await expect(
-      uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd' })
+      uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd', user: testUser })
     ).rejects.toThrow('Failed to upload video: Internal Server Error - quota exceeded');
   });
 
@@ -139,7 +150,7 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
 
     await expect(
-      uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd' })
+      uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd', user: testUser })
     ).rejects.toThrow('No video URL returned from upload');
   });
 
@@ -151,6 +162,7 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     const urls = await uploadVideosToYouTube([file('1.mp4'), file('2.mp4')], {
       title: 't',
       description: 'd',
+      user: testUser,
     });
 
     expect(urls).toEqual(['https://youtu.be/one', 'https://youtu.be/two']);
@@ -166,6 +178,7 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     createdTime: '2026-02-01',
     uploadedBy: 'admin@example.com',
     description: '본문',
+    user: testUser,
   };
 
   beforeEach(() => {
@@ -197,6 +210,11 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       fileName: 'a.jpg',
       fileType: 'application/octet-stream',
+    });
+    // The route is permission-gated, so the caller's ID token rides along.
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer test-id-token',
     });
     // The PUT goes to the signedUrl with the file body.
     expect(fetchMock.mock.calls[1][0]).toBe('https://signed/1');

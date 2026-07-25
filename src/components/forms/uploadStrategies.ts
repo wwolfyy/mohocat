@@ -22,7 +22,9 @@
  *   log/DEBUG_LOG.md 2026-07-19) — and on NewButlerTalkForm's PUT ok-check,
  *   which NewPostForm's copy lacked.
  */
+import type { User } from 'firebase/auth';
 import { getImageService, getStorageService } from '@/services';
+import { authHeader } from '@/lib/auth/authHeader';
 
 /**
  * Upload images straight to Firebase Storage via the service layer and return
@@ -55,6 +57,12 @@ export interface YouTubeUploadOptions {
   createdTime?: string;
   /** Target playlist id (Family A sends this when selected). */
   playlistId?: string;
+  /**
+   * Signed-in user, used to attach the `Authorization: Bearer <idToken>` header the
+   * gated route requires ('manage-video'). Injected rather than read from the auth
+   * SDK here so this module stays a plain strategy with no Firebase coupling.
+   */
+  user: User | null;
 }
 
 /** Upload one video via POST /api/upload-youtube and return its YouTube URL. */
@@ -78,6 +86,7 @@ export const uploadVideoToYouTube = async (
 
   const response = await fetch('/api/upload-youtube', {
     method: 'POST',
+    headers: await authHeader(options.user),
     body: formData,
   });
 
@@ -114,6 +123,11 @@ export interface SignedUrlImageContext {
   uploadedBy: string;
   /** Post message, reused as the image description. */
   description: string;
+  /**
+   * Signed-in user, used to attach the `Authorization: Bearer <idToken>` header the
+   * gated signed-URL route requires ('manage-photo'). See YouTubeUploadOptions.user.
+   */
+  user: User | null;
 }
 
 /**
@@ -126,6 +140,7 @@ export const uploadImagesWithSignedUrls = async (
   context: SignedUrlImageContext
 ): Promise<string[]> => {
   const imageService = getImageService(context.mountainId);
+  const authorization = await authHeader(context.user);
 
   return await Promise.all(
     files.map(async (file) => {
@@ -133,6 +148,7 @@ export const uploadImagesWithSignedUrls = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...authorization,
         },
         body: JSON.stringify({ fileName: file.name, fileType: file.type }),
       });

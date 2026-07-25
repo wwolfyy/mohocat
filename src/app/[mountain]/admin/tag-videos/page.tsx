@@ -9,6 +9,8 @@ import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
+import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 import {
   useMediaListController,
   useDateAutoParse,
@@ -74,6 +76,10 @@ const sortDate = (video: AdminVideo, sortBy: VideoSortKey): Date | null => {
 
 export default function TagVideosPage() {
   const mountainId = useMountain();
+
+  // Signed-in user — the YouTube API routes are gated on 'manage-video', so every
+  // call below carries this user's ID token.
+  const { user } = useAuth();
 
   // Service references
   const videoService = getVideoService(mountainId);
@@ -147,7 +153,9 @@ export default function TagVideosPage() {
       setLoadingPlaylists(true);
       console.log('Loading playlists...');
 
-      const response = await fetch('/api/manage-playlists?action=list_playlists');
+      const response = await fetch('/api/manage-playlists?action=list_playlists', {
+        headers: await authHeader(user),
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch playlists');
       }
@@ -283,6 +291,7 @@ export default function TagVideosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(await authHeader(user)),
         },
         body: JSON.stringify({
           action: 'batch_update_playlists',
@@ -323,6 +332,7 @@ export default function TagVideosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(await authHeader(user)),
         },
         body: JSON.stringify({
           videoIds: [videoId],

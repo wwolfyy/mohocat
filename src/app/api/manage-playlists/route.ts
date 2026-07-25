@@ -1,13 +1,19 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getYouTubeOAuthConfig, getYouTubeChannelId } from '@/utils/config';
-import { getRequestMountainId } from '@/lib/tenant';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
+// Gated: reads the shared YouTube channel's playlists/memberships with the operator's
+// OAuth credential — require 'manage-video', mirroring the cat_videos rule.
 export async function GET(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const channelId =
-      searchParams.get('channelId') || getYouTubeChannelId(getRequestMountainId(request));
+    const channelId = searchParams.get('channelId') || getYouTubeChannelId(authz.mountainId);
 
     if (!channelId) {
       return NextResponse.json({ error: 'Channel ID is required' }, { status: 400 });
@@ -78,7 +84,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Gated: mutates playlist membership on the shared YouTube channel — same permission
+// as the GET above.
 export async function POST(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
+
   try {
     const { action, videoId, playlistId, playlistIds } = await request.json();
 

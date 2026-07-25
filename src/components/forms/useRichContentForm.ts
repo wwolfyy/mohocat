@@ -11,6 +11,7 @@ import {
 import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
+import { authHeader } from '@/lib/auth/authHeader';
 
 interface Playlist {
   id: string;
@@ -92,7 +93,11 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     const fetchData = async () => {
       setLoadingPlaylists(true);
       try {
-        const response = await fetch('/api/youtube-playlists');
+        // The route is gated on 'manage-video'; a signed-in user without it gets a
+        // 403 with an empty list, which the existing warn-and-continue path handles.
+        const response = await fetch('/api/youtube-playlists', {
+          headers: await authHeader(user),
+        });
         if (response.ok) {
           const data = await response.json();
           const playlistsData = data.playlists || [];
@@ -121,7 +126,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     };
 
     fetchData();
-  }, [isAuthenticated, loading]);
+  }, [isAuthenticated, loading, user]);
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -180,6 +185,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
                 tags: selectedVideoTags.length > 0 ? selectedVideoTags.join(', ') : '산고양이',
                 createdTime: createdTime || undefined,
                 playlistId: selectedPlaylist || undefined,
+                user,
               })
             )
           );
@@ -201,6 +207,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
             createdTime,
             uploadedBy: user?.email || 'unknown',
             description: message || '',
+            user,
           });
           if (!videoThumb && imageUrls.length > 0) {
             videoThumb = imageUrls[0];

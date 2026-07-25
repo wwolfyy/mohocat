@@ -719,7 +719,11 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > `npm run test:rules`; the M5.4 isolation e2e already rides the `e2e` job. **M5.3 route
 > audit DONE 2026-07-23** (all 21 API routes verified: no leak-by-omission; residual
 > cross-tenant surface = shared YouTube channel only, non-Firestore/deferred; a pre-existing
-> 7-ungated-route auth gap logged as a thread). **M5.4a + M5.4b DONE 2026-07-23** — `manisan`
+> 7-ungated-route auth gap logged as a thread — **that gap is now CLOSED, 2026-07-26**: six
+> routes gated with `requireApiPermission`, permission mirroring the `firestore.rules`
+> clause on the resource each touches, the 7th (`generate-youtube-signed-url`) **deleted as
+> dead code**, + a 21-test `media-route-authz` e2e net;
+> `log/FEATURE_MOD_LOG.md` 2026-07-26). **M5.4a + M5.4b DONE 2026-07-23** — `manisan`
 > stub added to `mountains.json` (`hidden: true`) + seeded, and the two-tenant isolation
 > e2e written; full e2e 125/13/0. **✅ PROD CUTOVER COMPLETE 2026-07-23 (owner):** snapshot →
 > migration (`currentRole`→`roles`, `'default'`→`geyang`) → `firestore:indexes` (Enabled) →

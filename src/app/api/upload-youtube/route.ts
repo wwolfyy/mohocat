@@ -5,6 +5,7 @@ import { getVideoService } from '@/services';
 import { getYouTubeOAuthConfig } from '@/utils/config';
 import { getRequestMountainId } from '@/lib/tenant';
 import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 async function getYouTubeRefreshToken() {
   // First try to get token from environment variable
@@ -40,7 +41,15 @@ async function getYouTubeRefreshToken() {
   return null;
 }
 
+// Gated: uploads a video to the shared YouTube channel with the operator's OAuth
+// credential AND writes a `cat_videos` record via the Admin SDK (bypassing
+// firestore.rules) — require 'manage-video', the permission that rule enforces.
 export async function POST(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
+
   try {
     // Get YouTube OAuth configuration from centralized config or Firestore
     const tokenConfig = await getYouTubeRefreshToken();
