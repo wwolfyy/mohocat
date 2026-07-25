@@ -256,9 +256,9 @@ export function getFirebaseConfig() {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
-    ...(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID && {
-      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-    }),
+    // measurementId intentionally omitted: analytics is decoupled from the Firebase
+    // app (multi-mountain plan M7 §2.7) and driven by NEXT_PUBLIC_GA_MEASUREMENT_ID
+    // via gtag.js, so the Firebase config no longer needs it.
   };
 
   if (process.env.FIREBASE_CONFIG) {

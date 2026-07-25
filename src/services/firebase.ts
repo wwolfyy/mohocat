@@ -16,7 +16,6 @@ import {
   Auth,
 } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
 import { getFirebaseConfig } from '@/utils/config';
 
 // E2E test mode only: route the client SDK to the local Firebase Emulator Suite.
@@ -83,12 +82,11 @@ if (USE_EMULATORS && !(globalThis as any).__FIREBASE_EMULATORS_CONNECTED__) {
   (globalThis as any).__FIREBASE_EMULATORS_CONNECTED__ = true;
 }
 
-// Initialize Analytics only on the client-side. Skipped in emulator mode: the fake
-// config has no measurementId, so getAnalytics would throw. `null` is already its
-// SSR value, so no consumer needs to change.
-const analytics = typeof window !== 'undefined' && !USE_EMULATORS ? getAnalytics(app) : null;
-
-export { storage, auth, db, analytics };
+// Analytics is no longer initialized here. It was decoupled from the Firebase app
+// in multi-mountain plan M7 (§2.7): a shared GA4 property loaded via gtag.js in the
+// root layout (gated on NEXT_PUBLIC_GA_MEASUREMENT_ID), with page_view + mountain_id
+// emitted by AnalyticsTracker. This removes the browser-only `getAnalytics` guard.
+export { storage, auth, db };
 
 export async function uploadImageToFirebase(file: File): Promise<string> {
   const user = auth.currentUser;

@@ -660,14 +660,33 @@ So:
   affects a future tenant's uploads. (about-photos remain baked + per-mountain foldered,
   already handled pre-M6.)
 
-### M7 — Analytics decoupling (small)
+### M7 — Analytics decoupling (small) — ✅ CODE DONE on `dev` (2026-07-25); 🔑 GA4 console + Vercel env var owner-owed
 
-- [ ] `firebase/analytics` → `gtag.js` + `mountain_id` event param (§2.7); remove the
-      `analytics` export from `services/firebase.ts`.
-- [ ] Delete the dead `analytics` collection scaffolding (rules block; leave the
-      `view-analytics` permission — `permission_logs` uses it). 🔑 Owner confirm.
-- [ ] 🔑 GA4: property + `mountain_id` custom dimension registered (before any
-      tenant-2 traffic, ever).
+- [x] `firebase/analytics` → `gtag.js` + `mountain_id` event param (§2.7); remove the
+      `analytics` export from `services/firebase.ts`. **Done:** gtag.js loads via a
+      `next/script` `<Script>` in the **root** layout, gated on
+      `NEXT_PUBLIC_GA_MEASUREMENT_ID` and configured `send_page_view: false` so
+      `AnalyticsTracker` emits **every** `page_view` with `mountain_id` (from
+      `useMountain()`) — the shared GA4 property can then segment by tenant, and the
+      old auto page_view (which had no `mountain_id`) no longer double-fires.
+      `services/firebase.ts` drops the `getAnalytics` import + the browser-only
+      `analytics` guard + the export; the now-dead `measurementId` was removed from
+      `getFirebaseConfig` (`config.ts`). Unset env var (local dev / emulator / e2e /
+      Preview) → no script, `window.gtag` undefined, `AnalyticsTracker` no-ops —
+      exactly today's "analytics = null" behavior. Gates: tsc 0, smoke 30/30, unit
+      71/71, **full e2e 125/13/0** (no regression).
+- [x] Delete the dead `analytics` collection scaffolding (rules block; leave the
+      `view-analytics` permission — `permission_logs` uses it). **Already done in M5.2**
+      — `firestore.rules` no longer has an `analytics` collection block; the only
+      remaining `analytics` reference is the retained `view-analytics` permission on
+      `permission_logs`. No change needed at M7.
+- [ ] 🔑 **GA4 console (owner):** create/confirm the property + register `mountain_id`
+      as a **custom dimension** — ⚠️ **before any second-tenant traffic ever exists**
+      (GA4 does not backfill dimensions).
+- [ ] 🔑 **Vercel (owner):** add `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the `G-XXXX` id) to
+      **Production + Preview**. It replaces the analytics use of
+      `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`, which is now unused and can be removed.
+      Until this is set, analytics simply doesn't load (no error).
 
 ### M8 — Geyang as one-of-many + provisioning proof (medium)
 

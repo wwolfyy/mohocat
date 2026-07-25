@@ -64,8 +64,15 @@ the testing hand-off
   no-op and was **reverted/deleted** (baking + fixtures back to flat). Gates: tsc 0 / unit +2 /
   smoke 30 / **e2e 125/13/0**. **No cutover.** Image-serving model now documented in
   [`media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy).
-  **Next open phase: M7** (analytics → gtag.js). See the workstream section. Summary of the M5
-  sub-phases below.
+  **M7 (2026-07-25) — ✅ code done on `dev` (uncommitted):** analytics decoupled from the
+  Firebase SDK → shared **GA4** via `gtag.js` (root-layout `<Script>`, gated on
+  `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `send_page_view:false`); `AnalyticsTracker` emits every
+  `page_view` with `mountain_id` from `useMountain()`. `getAnalytics` + the `analytics`
+  export gone from `services/firebase.ts`. Gates: tsc 0 / smoke 30 / unit 71 / **e2e
+  125/13/0**. 🔑 **Owner-owed (not code):** register the GA4 property + `mountain_id` custom
+  dimension **before any tenant-2 traffic**, and add `NEXT_PUBLIC_GA_MEASUREMENT_ID` to Vercel
+  Prod+Preview. **Next open phase: M8** (geyang-as-one-of-many + theme wiring + provisioning
+  guide). See the workstream section. Summary of the M5 sub-phases below.
   **M5.4a (2026-07-23):** `manisan` added as a `hidden: true` stub tenant in
   `mountains.json` (routable at `/manisan`, prerendered, but excluded from the public
   `MountainSelector`) + seeded in `seed-emulators.mjs` (distinct content + a manisan-only
@@ -212,7 +219,21 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 done on `dev` (uncommitted); no prod cutover. Next open phase: M7.
+### Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 committed on `dev` (`d644d1b`). ✅ M7 code done on `dev` (uncommitted). Next open phase: M8.
+
+**M7 (2026-07-25) — analytics decoupling (uncommitted on `dev`).** `firebase/analytics` →
+shared **GA4** via `gtag.js`. A `next/script` `<Script>` in the **root** layout
+(`src/app/layout.tsx`) loads gtag gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID`, configured
+`send_page_view: false`; `AnalyticsTracker` sends every `page_view` with `mountain_id` (from
+`useMountain()`) so the shared property segments per tenant. `services/firebase.ts` drops the
+`getAnalytics` import + browser-only `analytics` guard + export; dead `measurementId` removed
+from `getFirebaseConfig`. Unset env var (dev/emulator/e2e) → no script, `AnalyticsTracker`
+no-ops (= old `analytics=null`). The dead `analytics` **rules** block was already removed in
+M5.2 (only the `view-analytics` permission remains). Gates: tsc 0, smoke 30/30, unit 71/71,
+**e2e 125/13/0**. 🔑 **Owner-owed (not code):** GA4 property + `mountain_id` custom dimension
+registered **before any tenant-2 traffic**, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` set in Vercel
+Prod+Preview (supersedes `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`, now unused). **No prod
+migration.**
 
 **M6 (2026-07-25) — per-tenant upload namespacing (uncommitted on `dev`).** Image uploads
 prepend the active tenant's `storagePrefix`: `uploadStrategies.uploadImagesToStorage(…,
@@ -517,6 +538,12 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
   on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail
   migration was reverted after a dry-run found 0 changes.)
+- 🔑 **M7 — GA4 setup owner-owed (2026-07-25).** The gtag.js code is on `dev`, but analytics
+  won't emit anything until: (1) `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the `G-XXXX` id) is set in
+  Vercel **Production + Preview** — until then the snippet isn't rendered (no error); and (2)
+  the GA4 property has `mountain_id` registered as a **custom dimension** ⚠️ **before any
+  second-tenant traffic ever exists** (GA4 does not backfill dimensions). The old
+  `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is now unused and can be removed from Vercel.
 - ✅ **M5 prod cutover — DONE 2026-07-23 (owner-run).** Ran in the required order:
   snapshot → `APPLY=true` migration (`currentRole`→`roles`, `'default'`→`geyang`) →
   `firestore:indexes` (6 composite, Enabled) → PR #8 `dev → main` merge → `firestore:rules`.
@@ -570,14 +597,16 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-**M6 (per-tenant upload namespacing), uncommitted on `dev`** — code:
-`src/components/forms/uploadStrategies.ts` + `useSimpleContentForm.ts`,
-`src/app/api/generate-signed-url/route.ts` + a `uploadStrategies` unit test. Docs:
-this HANDOFF + plan §3 M6 + FEATURE_MOD_LOG + the image-storage-strategy doc pass
-(`media-and-youtube.md`, `deployment-and-build.md`, admin + provisioning manuals, archived
-`IMAGE_STORAGE_EXPLAINED`). (The drafted thumbnail baking/migration/runbook were reverted &
-deleted — `fetch-static-assets.js` + `cats.json` are back at their committed baseline.)
-Gates green (tsc, unit, smoke 30/30, **e2e 125/13/0**). Awaiting a commit go-ahead.
+**M6 is now committed** (`d644d1b`, per-tenant upload namespacing + image-storage-strategy
+docs) — its former "uncommitted" note is retired.
+
+**M7 (analytics decoupling → gtag.js), uncommitted on `dev`** — code:
+`src/app/layout.tsx` (root-layout gtag `<Script>`), `src/components/AnalyticsTracker.tsx`
+(gtag `page_view` + `mountain_id`), `src/services/firebase.ts` (drop `getAnalytics` + the
+`analytics` export), `src/utils/config.ts` (drop dead `measurementId`). Docs: this HANDOFF +
+plan §3 M7 + FEATURE_MOD_LOG. Gates green (tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**).
+Awaiting a commit go-ahead. 🔑 Owner-owed before it does anything in prod:
+`NEXT_PUBLIC_GA_MEASUREMENT_ID` in Vercel + the GA4 `mountain_id` custom dimension.
 
 **Earlier doc pass (post-M5-cutover), uncommitted** — HANDOFF + planning docs +
 FEATURE_MOD_LOG recording the M5 prod cutover / PR #8 promotion; plus the numbered
@@ -605,7 +634,24 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-25 (latest)** — **Multi-mountain M6 DONE on `dev` — scope corrected to
+- **2026-07-25 (latest)** — **Multi-mountain M7 DONE on `dev` (uncommitted) — analytics
+  decoupled from Firebase → gtag.js + `mountain_id`.** `firebase/analytics` replaced by a
+  shared **GA4** property loaded via `gtag.js`: a `next/script` `<Script>` in the **root**
+  layout gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID` and configured `send_page_view: false`, so
+  `AnalyticsTracker` emits **every** `page_view` itself (on route change) carrying
+  `mountain_id` from `useMountain()` — the shared property now segments per tenant, and the
+  SDK's old no-`mountain_id` auto page_view no longer double-fires. `services/firebase.ts`
+  drops the `getAnalytics` import + the browser-only `analytics` init guard + the export (only
+  `AnalyticsTracker` used it); dead `measurementId` removed from `getFirebaseConfig`. Unset
+  env var (dev / emulator / e2e / Preview) → no script, `window.gtag` undefined,
+  `AnalyticsTracker` no-ops — identical to the old `analytics=null`. The dead `analytics`
+  **rules** block was already removed in M5.2 (only `view-analytics` remains). Gates: tsc 0,
+  smoke 30/30, unit 71/71, **full e2e 125/13/0** (no regression). **No prod migration.** 🔑
+  **Owner-owed (not code):** GA4 property + `mountain_id` custom dimension registered **before
+  any tenant-2 traffic** (GA4 never backfills), and `NEXT_PUBLIC_GA_MEASUREMENT_ID` set in
+  Vercel Prod+Preview (supersedes the now-unused `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`).
+  **Next open phase: M8** (geyang-as-one-of-many + theme wiring + provisioning guide).
+- **2026-07-25** — **Multi-mountain M6 DONE on `dev` — scope corrected to
   per-tenant upload namespacing (no prod migration).** Shipped: image uploads prepend the
   active tenant's `storagePrefix` (`generate-signed-url` route + the direct-storage form
   strategy via `useMountain()`); geyang `''` → exact no-op, a new tenant's uploads isolate

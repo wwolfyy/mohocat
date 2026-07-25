@@ -15,6 +15,44 @@
 
 ---
 
+## 2026-07-25 — Multi-mountain M7: analytics decoupled from Firebase → gtag.js + `mountain_id`
+
+**Area:** changed — `src/components/AnalyticsTracker.tsx`, `src/app/layout.tsx`,
+`src/services/firebase.ts`, `src/utils/config.ts`.
+
+**What shipped:** analytics no longer runs through the Firebase SDK. A single shared
+**GA4** property now loads via `gtag.js` — a `next/script` `<Script>` in the **root**
+layout, gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID` and configured with
+`send_page_view: false`. `AnalyticsTracker` sends every `page_view` itself, on route
+change, carrying `mountain_id` from `useMountain()` — so the shared property can be
+segmented per tenant. `services/firebase.ts` drops the `getAnalytics` import, the
+browser-only `analytics` init guard, and the `analytics` export (only `AnalyticsTracker`
+consumed it); the now-dead `measurementId` was removed from `getFirebaseConfig`.
+
+**Rationale (multi-mountain plan M7 §2.7):** decouple measurement from the single
+Firebase app so a **future** per-mountain GA4 property is a config change
+(`gtag('config', 'G-OTHER')`), not a rewrite — `firebase/analytics` welds measurement to
+the app's one id. Doing it now, while geyang is the only analytics consumer, is cheap; it
+also drops the `typeof window && !USE_EMULATORS` guard that existed only because
+`getAnalytics` throws server-side / without a `measurementId`. `send_page_view: false`
+additionally removes a pre-existing double-count (the SDK's auto page_view, which never
+carried `mountain_id`).
+
+**Behavior when unconfigured:** unset `NEXT_PUBLIC_GA_MEASUREMENT_ID` (local dev /
+emulator / e2e / Preview-without-it) → the snippet isn't rendered, `window.gtag` is
+undefined, `AnalyticsTracker` no-ops — identical to the old "analytics = null" path. No
+analytics in e2e, as before.
+
+**Owner-owed (🔑, not code):** register the GA4 property + `mountain_id` **custom
+dimension** in the GA4 console **before any tenant-2 traffic** (GA4 never backfills
+dimensions), and add `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the `G-XXXX` id) to Vercel
+**Production + Preview**. The old `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is now unused and
+can be removed.
+
+**Verified:** tsc 0, smoke 30/30, unit 71/71, **full e2e 125 passed / 13 skipped / 0
+failed** (no regression vs the M6 baseline). The dead `analytics` **rules** block was
+already removed in M5.2 — only the retained `view-analytics` permission remains.
+
 ## 2026-07-25 — Multi-mountain M6: per-tenant upload namespacing (scope corrected mid-flight)
 
 **Area:** changed — `src/components/forms/uploadStrategies.ts` +
