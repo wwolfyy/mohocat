@@ -71,7 +71,7 @@ the testing hand-off
   export gone from `services/firebase.ts`. 🔑 **Owner-owed (not code):** register the GA4
   property + `mountain_id` custom dimension **before any tenant-2 traffic**, and add
   `NEXT_PUBLIC_GA_MEASUREMENT_ID` to Vercel Prod+Preview.
-  **M8 (2026-07-25) — 🚧 in progress on `dev` (theme wiring done, uncommitted):** per-tenant
+  **M8 (2026-07-25) — ✅ committed on `dev` (`a237e8b`):** per-tenant
   **primary color** — a `primary` tailwind token → `--color-primary` CSS var, injected per
   tenant on `:root` by the `[mountain]` layout; public CTAs repointed `from-brand`→
   `from-primary`; geyang reconciled to zero-change (`#FACC15`), manisan verified sky-blue.
@@ -154,8 +154,9 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   and it must be preceded by the migration (see Open threads for the exact order).
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **Tree:** clean through `47d0f3d`. Multi-tenant M5 rides in two commits on `dev` —
-  **M5.1 `d4a0bb2`, M5.2 `47d0f3d`** — plus the earlier bundle; **none pushed**.
+- **Tree:** clean through **`7e3c517`** (the GA4 guide). The whole multi-tenant epic (M0–M8)
+  is committed on `dev`; `main` is an ancestor of `dev` (`dev` leads by 234). M6/M7/M8 + the
+  GA4 guide are on `dev` but **not yet promoted to prod** — gated on the P5.4 YouTube pass.
 
 ---
 
@@ -226,9 +227,9 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — ✅ COMPLETE (M0–M8). ✅ M1–M5 DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 (`d644d1b`) + M7 (`48f7085`) committed on `dev`. ✅ M8 done on `dev` (uncommitted). Only owner-gated externalities remain (GA4 dimension + Vercel env var; real-mountain DNS).
+### Multi-tenant / multi-mountain refactor — ✅ COMPLETE (M0–M8), all committed on `dev`. ✅ M1–M5 DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 (`d644d1b`) + M7 (`48f7085`) + M8 (`a237e8b`) + GA4 guide (`7e3c517`) on `dev`, not yet promoted. Only owner-gated externalities remain (GA4 dimension + Vercel env var; real-mountain DNS).
 
-**M8 (2026-07-25, IN PROGRESS) — per-tenant theming, minimal scope (uncommitted on `dev`).**
+**M8 (2026-07-25, committed `a237e8b`) — per-tenant theming, minimal scope.**
 `config.theme` is now **live** (was dead). A `primary` tailwind token → `--color-primary` CSS
 var (default `#FACC15` = geyang's shipped `brand.DEFAULT`); the `[mountain]` layout injects
 `:root{--color-primary:<tenant primaryColor>}` per request (hex-validated fail-loud; on
@@ -260,7 +261,7 @@ registered **before any tenant-2 traffic**, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` 
 Prod+Preview (supersedes `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`, now unused). **No prod
 migration.**
 
-**M6 (2026-07-25) — per-tenant upload namespacing (uncommitted on `dev`).** Image uploads
+**M6 (2026-07-25, committed `d644d1b`) — per-tenant upload namespacing.** Image uploads
 prepend the active tenant's `storagePrefix`: `uploadStrategies.uploadImagesToStorage(…,
 storagePrefix)` (threaded via `useMountain()` in `useSimpleContentForm`) + the
 `generate-signed-url` route (per-request tenant, prefixes object path + `publicUrl`). Geyang
@@ -620,42 +621,24 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ---
 
-## Uncommitted (as of this update)
+## Commit state & branch position (as of this update)
 
-**M6 (`d644d1b`) and M7 (`48f7085`) are committed** on `dev` — their former "uncommitted"
-notes are retired.
+**Working tree is CLEAN** — everything through the GA4 guide is committed on `dev`. The
+multi-tenant epic (M0–M8) is fully committed. Newest `dev` commits:
 
-**M8 (per-tenant theming + provisioning proof + docs close-out), uncommitted on `dev`.**
-_Theme code:_ `tailwind.config.js` (+`primary` token), `src/app/globals.css`
-(`--color-primary` default), `src/app/[mountain]/layout.tsx` (per-tenant `:root` injection,
-hex-validated), `src/components/ui/Button.tsx` + `src/components/Navigation.tsx` +
-`src/components/LeafletMountainMap.tsx` + `src/app/[mountain]/pages/{adoption,faq}/page.tsx`
-(`from-brand`→`from-primary` on public CTAs), `config/mountains/mountains.json` (geyang
-`primaryColor` `#ffbc00`→`#FACC15`). _Docs:_ rewritten
-`docs/manuals/deployment/new-mountain-setup.md` (real provisioning runbook); close-out across
-`docs/codebase/multi-tenant-config.md` + `services-layer.md`, `AGENTS.md` (= `CLAUDE.md`
-symlink), `docs/manuals/admin-manual/README.md` §9, PROJECT_PLAN §9, the decision framework
-(→ EXECUTED), plan §3 M8, this HANDOFF + FEATURE_MOD_LOG. Gates green (tsc 0, smoke 30/30, unit
-71/71, **e2e 125/13/0**); browser-verified geyang-unchanged / manisan-sky-blue. **M8 complete**
-(only owner-gated GA4/DNS externalities remain). Awaiting a commit go-ahead.
+| Commit    | What                                                                              |
+| --------- | --------------------------------------------------------------------------------- |
+| `7e3c517` | **docs** — GA4 setup & operations guide (`admin-manual/google_analytics.md`)      |
+| `a237e8b` | **M8** — per-tenant theming (primary color) + provisioning guide + docs close-out |
+| `48f7085` | **M7** — analytics decoupled from Firebase → gtag.js + `mountain_id`              |
+| `d644d1b` | **M6** — per-tenant upload namespacing + image-storage-strategy docs              |
+| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)            |
 
-**Earlier doc pass (post-M5-cutover), uncommitted** — HANDOFF + planning docs +
-FEATURE_MOD_LOG recording the M5 prod cutover / PR #8 promotion; plus the numbered
-`handoff-NN` files reorganized into `docs/handoff/archive/` (deletions + untracked
-`archive/`). The CI `rules` job itself is already committed (owner's `72432df`) and now in
-prod via PR #8. **`main` carries
-everything through PR #8 (merge `366425c`); `dev` is a merge commit behind `main` — ff
-`dev` to `main` to resync** (`git checkout dev && git merge --ff-only main && git push`).
-Recent `main` history:
-
-| Commit    | What                                                                   |
-| --------- | ---------------------------------------------------------------------- |
-| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23) |
-| `72432df` | CI — emulator-backed `rules` job (`test:rules`)                        |
-| `6e37c6c` | **M5.4b** — two-tenant isolation e2e                                   |
-| `3054f96` | **M5.4a** — `manisan` stub tenant (config + seed) + `hidden` flag      |
-| `47d0f3d` | **M5.2** — per-mountain role model (map) + mountain-aware rules        |
-| `d4a0bb2` | **M5.1** — scope all content reads by `mountainId` + composite indexes |
+**Branch position:** `main` is now an **ancestor** of `dev` (`git rev-list --count
+main...dev` = `0  234`) — the old "dev is behind main, ff to resync" note is obsolete. `dev`
+is 234 commits ahead; **M6 + M7 + M8 + the GA4 guide are on `dev` but not yet in prod.**
+Promoting them (`dev → main`) is **gated on the owner's P5.4 scripted manual YouTube pass**
+(see Open threads / the complexity-retirement section).
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -665,8 +648,9 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-25 (latest)** — **Multi-mountain M8 DONE on `dev` (uncommitted) — theme wiring +
-  provisioning proof + docs close-out; the M0–M8 track is now complete.** `config.theme` is now
+- **2026-07-25 (latest)** — **Multi-mountain M8 DONE & committed on `dev` (`a237e8b`) — theme
+  wiring + provisioning proof + docs close-out; the M0–M8 track is now complete.** `config.theme`
+  is now
   live (was dead): a
   `primary` tailwind token resolves to a `--color-primary` CSS var (default `#FACC15` =
   geyang's shipped `brand.DEFAULT`), and the `[mountain]` layout injects
@@ -683,8 +667,10 @@ longer wanted.
   `services-layer.md`, `AGENTS.md`/`CLAUDE.md`, admin-manual §9, PROJECT_PLAN §9, decision
   framework → EXECUTED). **Multi-tenant hardening (M0–M8) is complete** — only owner-gated
   externalities remain (GA4 `mountain_id` dimension + Vercel `NEXT_PUBLIC_GA_MEASUREMENT_ID`;
-  per-mountain DNS/allowlists for a real 2nd mountain). Also committed M7 (`48f7085`) since the
-  prior entry.
+  per-mountain DNS/allowlists for a real 2nd mountain). Committed as three commits: M7
+  (`48f7085`), M8 theme + docs close-out (`a237e8b`), and the standalone GA4 setup guide
+  (`7e3c517`). `dev` now leads `main` by these + M6; promotion to prod is gated on the P5.4
+  YouTube pass.
 - **2026-07-25** — **Multi-mountain M7 DONE on `dev` (committed `48f7085`) — analytics
   decoupled from Firebase → gtag.js + `mountain_id`.** `firebase/analytics` replaced by a
   shared **GA4** property loaded via `gtag.js`: a `next/script` `<Script>` in the **root**
