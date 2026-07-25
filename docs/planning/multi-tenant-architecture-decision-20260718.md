@@ -12,11 +12,15 @@
 > path + its rules coverage). Under option B1 (§5) these are effectively the pre-built
 > work-item list for tenant-scoping enforcement.
 >
-> **Status:** ✅ **decisions LOCKED (2026-07-19, owner-answered)** — see the §9 table's
-> Answer column. Execution is planned and sequenced in
-> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md),
-> which supersedes this doc's §10 checklist as the task tracker. This doc remains the
-> rationale record (§1–§8).
+> **Status:** ✅ **EXECUTED (2026-07-25)** — decisions were locked 2026-07-19 (owner-answered;
+> see the §9 table's Answer column) and the execution plan
+> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
+> (phases M0–M8) is now **complete**: M1–M5 shipped to prod (PR #8, 2026-07-23), M6–M8 done on
+> `dev`. The chosen architecture is live — one Firebase + one Vercel, host-routed tenancy,
+> `mountainId`-scoped data, mountain-aware rules, a per-`mountainId` role map, per-tenant
+> uploads/theme, and shared GA4 with a `mountain_id` dimension. Only owner-gated externalities
+> remain (GA4 dimension + Vercel GA env var; per-mountain DNS for a real 2nd mountain). This
+> doc remains the rationale record (§1–§8); the plan is the task tracker.
 >
 > **Origin:** Started as "should we replace Firebase with Supabase to escape vendor
 > lock-in?" That question was **set aside** (see §0) once it became clear the blocker is

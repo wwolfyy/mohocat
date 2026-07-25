@@ -20,6 +20,13 @@ module.exports = {
       // adopting these tokens causes no visual regression.
       // ─────────────────────────────────────────────────────────────────────
       colors: {
+        // Per-tenant primary brand color (multi-mountain plan M8). Resolves to the
+        // `--color-primary` CSS variable that the `[mountain]` layout sets per
+        // tenant; the fallback == geyang's shipped `brand.DEFAULT`, so surfaces
+        // adopting `primary` are unchanged for geyang. Flat (no ramp) by design —
+        // the minimal theming pass themes the signature CTA only; the `brand`
+        // ramp below stays the static source of truth for everything else.
+        primary: 'var(--color-primary, #FACC15)',
         // Brand yellow — the warm, playful core of the identity.
         // `brand.DEFAULT` == deployed yellow-400; the ramp is Tailwind's
         // yellow scale so tints/shades stay coherent.

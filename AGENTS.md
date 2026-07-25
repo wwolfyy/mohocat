@@ -8,8 +8,11 @@
 
 This is a Next.js 14 (App Router, TypeScript strict) multi-tenant platform for tracking
 mountain cats with a Korean UI ("계양산 고양이들"). Data, auth, and image hosting run on
-**Firebase**; the app is deployed to **Vercel**. The codebase is **multi-tenant ready** —
-a `MOUNTAIN_ID` drives per-mountain config, theme, and feature flags.
+**Firebase**; the app is deployed to **Vercel**. The codebase is **multi-tenant** (M1–M8
+complete): one Firebase + one Vercel project serve every mountain, the active tenant is
+resolved **per request by Host** (production subdomains, `/{id}` path in dev/preview), every
+content doc carries a `mountainId`, and per-mountain config/theme/features come from
+`config/mountains/mountains.json`.
 
 ## Where the docs live (orient here first)
 
@@ -79,13 +82,21 @@ deep detail this file deliberately keeps out:
 ### 2. Multi-Tenant Configuration System
 
 - **Mountain configs**: `config/mountains/mountains.json` defines per-mountain settings
-  (public branding/theme/features/social); secrets come from env and are merged in.
-- **Environment switching**: `MOUNTAIN_ID` (or `NEXT_PUBLIC_MOUNTAIN_ID`) selects the active
-  mountain.
+  (public branding/theme/features/social/`domains`/`storagePrefix`/`hidden`); secrets come from
+  env and are merged in. A new mountain is also added to `config/permissions.json`'s `mountains`
+  block (kept coherent).
+- **Host resolution**: the active tenant is resolved **per request by Host** via each
+  mountain's `domains` (`src/lib/tenant.ts` + middleware), with a `/{id}` path fallback for
+  dev/preview. `MOUNTAIN_ID` (or `NEXT_PUBLIC_MOUNTAIN_ID`) is only the **default** fallback,
+  not a selector.
 - **Config utils**: `src/utils/config.ts` provides `getMountainConfig()`,
-  `getCurrentMountainId()`, `isFeatureEnabled()`, etc. Import mountain context from here —
-  never read `process.env.MOUNTAIN_ID` directly.
-- **Default**: falls back to `'geyang'` if no env var is set.
+  `getDefaultMountainId()`, `getPublicMountains()`, `isFeatureEnabled()`, etc.; tenant
+  resolution helpers live in `src/lib/tenant.ts`. Import mountain context from here — never read
+  `process.env.MOUNTAIN_ID` directly.
+- **Per-tenant theme (M8)**: `theme.primaryColor` drives the primary-CTA brand color via a
+  `--color-primary` CSS variable the `[mountain]` layout injects on `:root` (geyang `#FACC15` =
+  unchanged). Only `primaryColor` is wired; the `brand` ramp stays static.
+- **Default**: an unmapped host or missing env falls back to `'geyang'`.
 
 ### 3. Service Layer Abstraction
 

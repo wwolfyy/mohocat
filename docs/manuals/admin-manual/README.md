@@ -263,8 +263,20 @@ Mostly one-time or infrequent setup. Details live in
 
 - **Environment variables** (Vercel dashboard — Production **and** Preview): Firebase
   `NEXT_PUBLIC_FIREBASE_*`, `SERVICE_ACCOUNT_KEY` (Admin SDK), Gmail SMTP
-  (`SMTP_HOST/PORT/USER/PASSWORD/FROM`) for 동참 email, optional `MOUNTAIN_ID`
-  (defaults to `geyang`).
+  (`SMTP_HOST/PORT/USER/PASSWORD/FROM`) for 동참 email, `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+  (GA4 analytics — see the next bullet), optional `MOUNTAIN_ID` (defaults to `geyang`).
+- **Analytics (GA4 via gtag.js).** Page-view analytics run through a **single shared GA4
+  property**, tagged per mountain. Setup is env-driven: set `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+  to the GA4 `G-XXXX` id in Vercel (Production **and** Preview). **Until it is set, no
+  analytics loads at all** (no error — the tracking script simply isn't rendered), which is
+  also why local dev / Preview stay analytics-free. Each page view is sent with a
+  `mountain_id` field so one property can be filtered per mountain — but GA4 only records
+  that field once it is registered as a **custom dimension** in the GA4 console, and GA4
+  **does not backfill**, so register `mountain_id` **before** a second mountain ever gets
+  traffic. _(The older `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is no longer used for analytics
+  and can be removed.)_ **Full step-by-step:**
+  [`google_analytics.md`](./google_analytics.md) (create the property, register the dimension,
+  set the Vercel var, verify, read per-mountain data).
 - **Deploy = `git push`** (Vercel Git integration): Production ← `main`, Preview
   ("staging") ← `dev`. There is no deploy command.
 - **Firestore security rules** are **not** auto-deployed. After editing
@@ -288,6 +300,16 @@ Mostly one-time or infrequent setup. Details live in
     non-empty prefix (e.g. `mountains/<id>/`).
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
+  - **Per-mountain brand color (theme).** Each mountain's `theme.primaryColor` now drives
+    the **primary brand color** — the signature CTA gradient (the header 입양홍보 button, the
+    shared action buttons, the map cluster-count markers, and the adoption / FAQ page CTAs)
+    recolors to it per tenant. `geyang` is `#FACC15` (the shipped brand yellow — unchanged).
+    The value **must be a 6-digit hex** like `#0EA5E9`; a malformed value makes that
+    mountain's pages fail to render (fail-loud, by design). ⚠️ Only `primaryColor` is wired
+    today — `secondaryColor` / `accentColor` in the same block are **not** yet used, and the
+    rest of the palette (the fixed `brand` color ramp) does **not** follow `primaryColor`, so
+    a new mountain's non-CTA surfaces still read the default yellow until a fuller theming
+    pass. **Baked at build** — edit the file and `git push` (no runtime toggle).
 - **Map clustering (mobile):** the **whole-mountain** lever for cluttered pins (option 3 in
   [§4 → Three ways to fix cluttered pins](#three-ways-to-fix-cluttered--overlapping-pins); the
   other two — label position and coordinates — are per-pin CMS edits). Two per-mountain knobs in

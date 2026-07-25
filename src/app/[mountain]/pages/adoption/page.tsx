@@ -73,7 +73,7 @@ export default async function AdoptionPage({ params }: { params: { mountain: str
           </p>
           <Link
             href="/pages/contact"
-            className="mt-5 inline-block rounded-lg bg-gradient-to-r from-brand to-accent px-5 py-2.5 font-bold text-ink shadow-sm transition hover:shadow-md"
+            className="mt-5 inline-block rounded-lg bg-gradient-to-r from-primary to-accent px-5 py-2.5 font-bold text-ink shadow-sm transition hover:shadow-md"
           >
             문의하러 가기
           </Link>

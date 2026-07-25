@@ -64,15 +64,22 @@ the testing hand-off
   no-op and was **reverted/deleted** (baking + fixtures back to flat). Gates: tsc 0 / unit +2 /
   smoke 30 / **e2e 125/13/0**. **No cutover.** Image-serving model now documented in
   [`media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy).
-  **M7 (2026-07-25) — ✅ code done on `dev` (uncommitted):** analytics decoupled from the
+  **M7 (2026-07-25) — ✅ committed on `dev` (`48f7085`):** analytics decoupled from the
   Firebase SDK → shared **GA4** via `gtag.js` (root-layout `<Script>`, gated on
   `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `send_page_view:false`); `AnalyticsTracker` emits every
   `page_view` with `mountain_id` from `useMountain()`. `getAnalytics` + the `analytics`
-  export gone from `services/firebase.ts`. Gates: tsc 0 / smoke 30 / unit 71 / **e2e
-  125/13/0**. 🔑 **Owner-owed (not code):** register the GA4 property + `mountain_id` custom
-  dimension **before any tenant-2 traffic**, and add `NEXT_PUBLIC_GA_MEASUREMENT_ID` to Vercel
-  Prod+Preview. **Next open phase: M8** (geyang-as-one-of-many + theme wiring + provisioning
-  guide). See the workstream section. Summary of the M5 sub-phases below.
+  export gone from `services/firebase.ts`. 🔑 **Owner-owed (not code):** register the GA4
+  property + `mountain_id` custom dimension **before any tenant-2 traffic**, and add
+  `NEXT_PUBLIC_GA_MEASUREMENT_ID` to Vercel Prod+Preview.
+  **M8 (2026-07-25) — 🚧 in progress on `dev` (theme wiring done, uncommitted):** per-tenant
+  **primary color** — a `primary` tailwind token → `--color-primary` CSS var, injected per
+  tenant on `:root` by the `[mountain]` layout; public CTAs repointed `from-brand`→
+  `from-primary`; geyang reconciled to zero-change (`#FACC15`), manisan verified sky-blue.
+  Owner-chose the minimal "primary only" scope. Gates tsc 0 / smoke 30 / unit 71 / **e2e
+  125/13/0**. M8 also rewrote the provisioning guide + finished the docs close-out — **the
+  multi-tenant track (M0–M8) is complete**; only owner-gated GA4/DNS externalities remain. See
+  the workstream section.
+  Summary of the M5 sub-phases below.
   **M5.4a (2026-07-23):** `manisan` added as a `hidden: true` stub tenant in
   `mountains.json` (routable at `/manisan`, prerendered, but excluded from the public
   `MountainSelector`) + seeded in `seed-emulators.mjs` (distinct content + a manisan-only
@@ -219,9 +226,27 @@ snapshot and no PITR — see the M4 note below for why that was survivable.
   local, delete when done.
 - Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).
 
-### Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 committed on `dev` (`d644d1b`). ✅ M7 code done on `dev` (uncommitted). Next open phase: M8.
+### Multi-tenant / multi-mountain refactor — ✅ COMPLETE (M0–M8). ✅ M1–M5 DEPLOYED TO PROD (PR #8, 2026-07-23). ✅ M6 (`d644d1b`) + M7 (`48f7085`) committed on `dev`. ✅ M8 done on `dev` (uncommitted). Only owner-gated externalities remain (GA4 dimension + Vercel env var; real-mountain DNS).
 
-**M7 (2026-07-25) — analytics decoupling (uncommitted on `dev`).** `firebase/analytics` →
+**M8 (2026-07-25, IN PROGRESS) — per-tenant theming, minimal scope (uncommitted on `dev`).**
+`config.theme` is now **live** (was dead). A `primary` tailwind token → `--color-primary` CSS
+var (default `#FACC15` = geyang's shipped `brand.DEFAULT`); the `[mountain]` layout injects
+`:root{--color-primary:<tenant primaryColor>}` per request (hex-validated fail-loud; on
+`:root` so portaled modals inherit it). The `from-brand to-accent` CTA gradient was repointed
+to `from-primary` on the **public** surfaces — shared `ui/Button`, header 입양홍보 CTA
+(`Navigation`), Leaflet cluster marker, adoption + faq page CTAs. geyang's stale
+`theme.primaryColor` `#ffbc00` → **`#FACC15`** (zero-change). **Owner-chosen scope: "primary
+color only"** over the rejected full-ramp option — the `brand` ramp + admin-only `from-brand`
+CTAs stay static (a real 2nd mountain would still read yellow there; fuller pass later).
+**Browser-verified** (`/` vs `/manisan`): geyang CTA `#FACC15` (unchanged), manisan `#0ea5e9`
+(sky-blue). Gates: tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**. The **provisioning guide**
+(`new-mountain-setup.md`) was rewritten as a real runbook and the **docs close-out** is done
+(`multi-tenant-config.md`, `services-layer.md`, AGENTS/CLAUDE.md, admin manual §9, PROJECT_PLAN
+§9, decision framework → EXECUTED). **M8 complete** — only 🔑 owner-gated externalities remain
+(GA4 `mountain_id` dimension + Vercel `NEXT_PUBLIC_GA_MEASUREMENT_ID`; per-mountain DNS/console
+allowlists when a real mountain #2 arrives).
+
+**M7 (2026-07-25, committed `48f7085`) — analytics decoupling.** `firebase/analytics` →
 shared **GA4** via `gtag.js`. A `next/script` `<Script>` in the **root** layout
 (`src/app/layout.tsx`) loads gtag gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID`, configured
 `send_page_view: false`; `AnalyticsTracker` sends every `page_view` with `mountain_id` (from
@@ -597,16 +622,22 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Uncommitted (as of this update)
 
-**M6 is now committed** (`d644d1b`, per-tenant upload namespacing + image-storage-strategy
-docs) — its former "uncommitted" note is retired.
+**M6 (`d644d1b`) and M7 (`48f7085`) are committed** on `dev` — their former "uncommitted"
+notes are retired.
 
-**M7 (analytics decoupling → gtag.js), uncommitted on `dev`** — code:
-`src/app/layout.tsx` (root-layout gtag `<Script>`), `src/components/AnalyticsTracker.tsx`
-(gtag `page_view` + `mountain_id`), `src/services/firebase.ts` (drop `getAnalytics` + the
-`analytics` export), `src/utils/config.ts` (drop dead `measurementId`). Docs: this HANDOFF +
-plan §3 M7 + FEATURE_MOD_LOG. Gates green (tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**).
-Awaiting a commit go-ahead. 🔑 Owner-owed before it does anything in prod:
-`NEXT_PUBLIC_GA_MEASUREMENT_ID` in Vercel + the GA4 `mountain_id` custom dimension.
+**M8 (per-tenant theming + provisioning proof + docs close-out), uncommitted on `dev`.**
+_Theme code:_ `tailwind.config.js` (+`primary` token), `src/app/globals.css`
+(`--color-primary` default), `src/app/[mountain]/layout.tsx` (per-tenant `:root` injection,
+hex-validated), `src/components/ui/Button.tsx` + `src/components/Navigation.tsx` +
+`src/components/LeafletMountainMap.tsx` + `src/app/[mountain]/pages/{adoption,faq}/page.tsx`
+(`from-brand`→`from-primary` on public CTAs), `config/mountains/mountains.json` (geyang
+`primaryColor` `#ffbc00`→`#FACC15`). _Docs:_ rewritten
+`docs/manuals/deployment/new-mountain-setup.md` (real provisioning runbook); close-out across
+`docs/codebase/multi-tenant-config.md` + `services-layer.md`, `AGENTS.md` (= `CLAUDE.md`
+symlink), `docs/manuals/admin-manual/README.md` §9, PROJECT_PLAN §9, the decision framework
+(→ EXECUTED), plan §3 M8, this HANDOFF + FEATURE_MOD_LOG. Gates green (tsc 0, smoke 30/30, unit
+71/71, **e2e 125/13/0**); browser-verified geyang-unchanged / manisan-sky-blue. **M8 complete**
+(only owner-gated GA4/DNS externalities remain). Awaiting a commit go-ahead.
 
 **Earlier doc pass (post-M5-cutover), uncommitted** — HANDOFF + planning docs +
 FEATURE_MOD_LOG recording the M5 prod cutover / PR #8 promotion; plus the numbered
@@ -634,7 +665,27 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-25 (latest)** — **Multi-mountain M7 DONE on `dev` (uncommitted) — analytics
+- **2026-07-25 (latest)** — **Multi-mountain M8 DONE on `dev` (uncommitted) — theme wiring +
+  provisioning proof + docs close-out; the M0–M8 track is now complete.** `config.theme` is now
+  live (was dead): a
+  `primary` tailwind token resolves to a `--color-primary` CSS var (default `#FACC15` =
+  geyang's shipped `brand.DEFAULT`), and the `[mountain]` layout injects
+  `:root{--color-primary:<tenant primaryColor>}` per request (hex-validated, on `:root` so
+  portaled modals inherit). The `from-brand to-accent` CTA gradient was repointed to
+  `from-primary` on the **public** surfaces (shared `ui/Button`, header 입양홍보 CTA, Leaflet
+  cluster marker, adoption + faq CTAs); geyang's stale `theme.primaryColor` `#ffbc00` →
+  `#FACC15` so geyang is pixel-identical. **Owner chose "primary color only"** over the
+  full-brand-ramp option — the `brand` ramp + admin-only `from-brand` CTAs stay static
+  (documented as deliberately partial). Browser-verified: geyang CTA `#FACC15` (unchanged),
+  manisan `#0ea5e9` (sky-blue). Gates: tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**. M8 also
+  **rewrote the provisioning guide** (`new-mountain-setup.md` → a real one-Firebase/one-Vercel
+  host-routed runbook) and **finished the docs close-out** (`multi-tenant-config.md`,
+  `services-layer.md`, `AGENTS.md`/`CLAUDE.md`, admin-manual §9, PROJECT_PLAN §9, decision
+  framework → EXECUTED). **Multi-tenant hardening (M0–M8) is complete** — only owner-gated
+  externalities remain (GA4 `mountain_id` dimension + Vercel `NEXT_PUBLIC_GA_MEASUREMENT_ID`;
+  per-mountain DNS/allowlists for a real 2nd mountain). Also committed M7 (`48f7085`) since the
+  prior entry.
+- **2026-07-25** — **Multi-mountain M7 DONE on `dev` (committed `48f7085`) — analytics
   decoupled from Firebase → gtag.js + `mountain_id`.** `firebase/analytics` replaced by a
   shared **GA4** property loaded via `gtag.js`: a `next/script` `<Script>` in the **root**
   layout gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID` and configured `send_page_view: false`, so

@@ -4,29 +4,37 @@
 
 ## Purpose
 
-The multi-tenant system that lets one codebase serve multiple mountains. A `MOUNTAIN_ID` env
-var selects the active mountain; its public settings (branding, theme, features, map tuning,
-social, auth policy) come from `config/mountains/mountains.json`, and secrets are merged in from
-env. All mountain context is accessed through `src/utils/config.ts` — never `process.env`
-directly.
+The multi-tenant system that lets one codebase serve multiple mountains (M1–M8 complete). The
+active mountain is resolved **per request by Host** — each mountain's `domains` map its
+production subdomain (e.g. `geyangsan.mohocats.org`) to a tenant, with a `/{mountainId}` path
+fallback for dev/preview and `MOUNTAIN_ID` as a last-resort **default** (not a selector). A
+tenant's public settings (branding, theme, features, map tuning, social, auth policy) come from
+`config/mountains/mountains.json`; secrets are merged in from env. **All mountains share one
+Firebase project and one Vercel project** — tenancy is enforced by a `mountainId` stamped on
+every content doc, not by separate infrastructure. All mountain context is accessed through
+`src/utils/config.ts` / `src/lib/tenant.ts` — never `process.env` directly.
 
 ## Key Components
 
-| Component            | File(s)                               | Responsibility                                                                                                                            |
-| -------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Mountain config JSON | `config/mountains/mountains.json`     | Per-mountain public config (`geyang`) + `_meta.centralUserService`; theme/features/map/social/authentication                              |
-| Config utils         | `src/utils/config.ts`                 | `getCurrentMountainId`, `getMountainConfig`, `getMapConfig`, `isFeatureEnabled`, `getFirebaseConfig`, OAuth getters, `getAllMountains`, … |
-| Mountain selector    | `src/components/MountainSelector.tsx` | UI to view/switch mountains (`getAllMountains`, `getMountainName`)                                                                        |
-| Firebase init        | `src/services/firebase.ts`            | Consumes `getFirebaseConfig()` to init the SDK                                                                                            |
-| Firestore rules      | `config/firebase/firestore.rules`     | Access rules (deployed via Firebase CLI)                                                                                                  |
+| Component            | File(s)                               | Responsibility                                                                                                                                                  |
+| -------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mountain config JSON | `config/mountains/mountains.json`     | Per-mountain public config (`geyang`, `manisan` stub); theme/features/map/social/authentication + `domains`/`storagePrefix`/`hidden`                            |
+| Permissions JSON     | `config/permissions.json`             | Global `roles`→permission matrix + a `mountains` listing (kept coherent with `mountains.json`)                                                                  |
+| Config utils         | `src/utils/config.ts`                 | `getDefaultMountainId`, `getMountainConfig`, `getMapConfig`, `isFeatureEnabled`, `getFirebaseConfig`, OAuth getters, `getAllMountains`, `getPublicMountains`, … |
+| Tenant resolution    | `src/lib/tenant.ts` + middleware      | `findMountainIdByHost`, `getRequestMountainId`, `resolveMountainIdOrNull` — Host→tenant, consumed by the `[mountain]` layout + API routes                       |
+| Mountain selector    | `src/components/MountainSelector.tsx` | UI to view/switch mountains (`getPublicMountains` — excludes `hidden`)                                                                                          |
+| Firebase init        | `src/services/firebase.ts`            | Consumes `getFirebaseConfig()` to init the single shared SDK                                                                                                    |
+| Firestore rules      | `config/firebase/firestore.rules`     | Mountain-aware access rules (deployed via Firebase CLI)                                                                                                         |
 
 ## Data Flow
 
 ```mermaid
 flowchart TD
-    Env[MOUNTAIN_ID env] --> CurId[getCurrentMountainId]
+    Host[request Host] --> Resolve[tenant.ts: findMountainIdByHost]
+    Env[MOUNTAIN_ID env - default only] --> Resolve
+    Resolve --> MId[active mountainId]
     Json[mountains.json - static import] --> Cfg[getMountainConfig]
-    CurId --> Cfg
+    MId --> Cfg
     EnvSecrets[env secrets: FIREBASE_*, KAKAO_*, YOUTUBE_*, SERVICE_ACCOUNT_KEY] --> Cfg
     Cfg --> MapCfg[getMapConfig]
     Cfg --> Features[isFeatureEnabled]
@@ -55,28 +63,41 @@ graph LR
   `process.env.MOUNTAIN_ID` directly, or hard-coding a mountain's config, is an anti-pattern.
 - **Public vs secret split**: `mountains.json` holds only non-sensitive config; secrets
   (Firebase keys, OAuth secrets, service account) live in env and are merged by `config.ts`.
-- **Default fallback**: absent `MOUNTAIN_ID`, the system falls back to `geyang`.
+- **Host-resolved, with a default fallback**: the tenant comes from the request Host (via each
+  mountain's `domains`); an unmapped host or a missing `MOUNTAIN_ID` falls back to `geyang`.
+  `MOUNTAIN_ID` is the default, **not** a selector.
 - **Feature flags gate UI**: `features` (e.g. `videoAlbum`, `photoAlbum`, `advancedFiltering`,
   `adminPanel`) are checked via `isFeatureEnabled` before rendering optional surfaces.
-- **Centralized auth**: `authentication.type = "centralized"` points at the
-  `mountain-cats-users` project; roles, `defaultRole`, `smsRegions`, and `requireApproval` are
-  declared per mountain.
+- **Per-tenant theme (M8)**: `theme.primaryColor` drives the primary-CTA brand color via a
+  `--color-primary` CSS variable injected on `:root` by the `[mountain]` layout (default =
+  geyang's `#FACC15`). Only `primaryColor` is wired; the `brand` ramp stays static.
+- **Centralized auth**: `authentication.type = "centralized"` means email/password, phone
+  (SMS), and Kakao OIDC are shared across all mountains on the single Firebase project (no
+  per-mountain provider setup). `roles`, `defaultRole`, `smsRegions`, and `requireApproval` are
+  declared per mountain. A user's roles are a **map keyed by `mountainId`**
+  (`users/{uid}.roles`), so one account can administer several mountains.
 
 ## External Integrations
 
-- **Firebase** (per mountain) — credentials assembled by `getFirebaseConfig` /
-  `getFirebaseAdminServiceAccount`.
-- **`mountain-cats-users`** — shared central auth project (`_meta.centralUserService`).
-- **Kakao / Google OAuth, YouTube** — enablement + keys resolved through config getters.
+- **Firebase** (one shared project for all mountains) — credentials assembled by
+  `getFirebaseConfig` / `getFirebaseAdminServiceAccount`.
+- **Kakao / Google OAuth, YouTube** — enablement + keys resolved through config getters
+  (shared credentials; `social.youtubeChannelId` selects the channel but the OAuth token is
+  shared).
 
 ## Watch-outs
 
-- **Config knobs are BAKED, not live.** `mountains.json` is a **static import**, so theme,
-  features, and `map.*` (e.g. `clustering`, `maxClusterRadius`) change **only on redeploy** —
-  unlike Firestore data (points/cats) which is ISR-fresh. This is a different mental model from
-  the data layer; don't expect a config edit to appear without a deploy.
+- **Which tenant is request-time; the config values are still BAKED.** Tenant _selection_ is
+  now resolved per request (Host → `mountainId`), so it is not baked. But the config **values**
+  still are: `mountains.json` is a **static import**, so theme, features, `domains`,
+  `storagePrefix`, and `map.*` change **only on redeploy** — unlike Firestore data (points/cats)
+  which is ISR-fresh. Don't expect a config-value edit to appear without a deploy.
 - Firestore **rules** still deploy separately via the Firebase CLI (`firebase deploy --only
-firestore:rules`); `firebase.json` is trimmed to the `firestore` block.
-- Adding a second mountain means adding a JSON block + provisioning its Firebase project +
-  setting env — see `docs/manuals/deployment/` for provisioning.
+firestore:rules`); `firebase.json` is trimmed to the `firestore` block. They are **mountain-aware**
+  (gate writes on the doc's own `mountainId`, block cross-mountain moves, scope sensitive reads).
+- Adding a second mountain is **config + DNS + console allowlists + data** — a JSON block in
+  **both** `mountains.json` and `permissions.json`, a subdomain attached to the same Vercel
+  project, and the subdomain allowlisted in Firebase Auth + Kakao. **No new Firebase project and
+  no new env vars.** Full runbook:
+  [`docs/manuals/deployment/new-mountain-setup.md`](../manuals/deployment/new-mountain-setup.md).
   </content>

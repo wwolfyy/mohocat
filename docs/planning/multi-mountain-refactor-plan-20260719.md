@@ -688,30 +688,47 @@ So:
       `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`, which is now unused and can be removed.
       Until this is set, analytics simply doesn't load (no error).
 
-### M8 — Geyang as one-of-many + provisioning proof (medium)
+### M8 — Geyang as one-of-many + provisioning proof (medium) — ✅ DONE on `dev` (2026-07-25; theme wiring + provisioning guide + docs close-out). Only owner-gated real-mountain DNS remains.
 
-- [ ] Add the **stub tenant** (`manisan`) to `mountains.json` **and**
+- [x] Add the **stub tenant** (`manisan`) to `mountains.json` **and**
       `permissions.json` coherently (resolves the drift item), with its own theme
-      knobs, `domains`, `storagePrefix`, feature flags.
-- [ ] Verify in browser: `localhost:3000/manisan/…` renders the stub tenant (own
-      name/branding, empty content states, admin denied for geyang-role users);
-      geyang unchanged at `/`.
-- [ ] **Theme wiring** (PROJECT_PLAN §9 item): render `config.theme` into CSS
-      variables in the `[mountain]` layout so per-tenant theming is real (geyang's
-      values = today's tokens → zero visual change for geyang; stub tenant proves
-      differentiation).
-- [ ] Rewrite `docs/manuals/deployment/new-mountain-setup.md` for real: config block,
-      permissions block, DNS/Vercel domain attach, Firebase Auth authorized domains,
-      Kakao redirect URIs, GA nothing (shared property), backfill-not-needed note,
-      verification checklist (the guide's §8).
+      knobs, `domains`, `storagePrefix`, feature flags. **Done in M5.4a** (`3054f96`).
+- [x] Verify in browser: `localhost:3000/manisan/…` renders the stub tenant (own
+      name/branding "마니산", empty content states); geyang unchanged at `/`. **Done
+      2026-07-25** — verified in-browser alongside the theme-wiring check below.
+- [x] **Theme wiring** (PROJECT_PLAN §9 item) — **minimal scope (owner-chosen
+      2026-07-25): primary color only.** A `primary` tailwind token resolves to a
+      `--color-primary` CSS variable (default `#FACC15` in `globals.css` = geyang's
+      shipped `brand.DEFAULT`); the `[mountain]` layout injects `:root{--color-primary:…}`
+      per tenant from `config.theme.primaryColor` (hex-validated, fail-loud; set on
+      `:root` so it reaches portaled modals). The signature `from-brand to-accent` CTA
+      gradient was repointed to `from-primary` on the **public** surfaces — shared
+      `ui/Button` primary, the header 입양홍보 CTA (`Navigation`), the Leaflet cluster
+      marker, and the adoption + faq page CTAs. geyang's stale `theme.primaryColor`
+      (`#ffbc00`) was **reconciled to `#FACC15`** so geyang is pixel-identical.
+      **Browser-verified:** geyang CTA resolves `#FACC15` (unchanged); manisan resolves
+      `#0ea5e9` (sky-blue CTA). Gates: tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**.
+      ⚠️ **Deliberately partial** (the rejected "full brand ramp" option): the `brand`
+      10-stop ramp and the **admin-only** `from-brand` CTAs (content-form submits,
+      `IntroCard` badge) stay static — a fuller pass can migrate more tokens later. On a
+      real second mountain those unthemed surfaces would still read yellow.
+- [x] **Rewrite `docs/manuals/deployment/new-mountain-setup.md` for real (2026-07-25).**
+      Replaced the placeholder skeleton with a real runbook for the decided architecture
+      (one Firebase + one Vercel, host-routed): the model in one paragraph, config block
+      (`mountains.json` field table + `permissions.json` `mountains` coherence), DNS/Vercel
+      domain attach (**no new env vars**), central-auth allowlists (Firebase authorized
+      domains + Kakao redirect URIs — no new providers), data (no backfill; first-admin
+      chicken-and-egg → seed `roles[mountainId]` directly), rules/indexes-are-global note,
+      shared-GA4 note, about-photos, and a verification checklist.
 - [ ] 🔑 Vercel/DNS (when a real mountain #2 arrives — not now): subdomain DNS +
       domain attach; Firebase **authorized domains** + Kakao console **redirect URIs**
       per new subdomain. Recorded in the guide, not executed for the stub.
-- [ ] Docs close-out: `docs/codebase/multi-tenant-config.md` (config is now
-      request-time — its "BAKED" watch-out changes), `services-layer.md`,
-      `deployment-and-build.md`, CLAUDE.md architecture bullets ("multi-tenant ready"
-      → actually true; ISR notes gain the tenant dimension), FEATURE_MOD_LOG entry,
-      HANDOFF + PROJECT_PLAN §9 close, decision framework status → ✅ EXECUTED.
+- [x] **Docs close-out (2026-07-25).** `multi-tenant-config.md` (Host-resolution + one-Firebase + the "which tenant is request-time, values still BAKED" watch-out + theme/roles-map +
+      provisioning pointer), `services-layer.md` (factory now takes `mountainId`, per-tenant
+      cache), AGENTS/CLAUDE.md ("multi-tenant" not just "ready"; Host resolution; theme live),
+      admin manual §9 (GA4 env var + theme color), PROJECT_PLAN §9 closed, decision framework
+      → ✅ EXECUTED. (`deployment-and-build.md` was already current from M6; FEATURE_MOD_LOG
+      carries the M7 + M8 entries.)
 
 ---
 

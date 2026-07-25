@@ -15,6 +15,40 @@
 
 ---
 
+## 2026-07-25 — Multi-mountain M8: per-tenant theming (minimal — primary color only)
+
+**Area:** changed — `tailwind.config.js`, `src/app/globals.css`,
+`src/app/[mountain]/layout.tsx`, `src/components/ui/Button.tsx`,
+`src/components/Navigation.tsx`, `src/components/LeafletMountainMap.tsx`,
+`src/app/[mountain]/pages/adoption/page.tsx`, `src/app/[mountain]/pages/faq/page.tsx`,
+`config/mountains/mountains.json`.
+
+**What shipped:** `config.theme` is now **live** (it was typed but read nowhere). A new
+`primary` tailwind token resolves to a `--color-primary` CSS variable — default `#FACC15`
+in `globals.css` (== geyang's shipped `brand.DEFAULT`). The `[mountain]` layout injects
+`:root{--color-primary:<tenant primaryColor>}` per request (hex-validated, throws on a
+malformed value; set on `:root` so it also covers modals that portal to `document.body`).
+The signature `from-brand to-accent` CTA gradient was repointed to `from-primary` on the
+**public** brand surfaces: shared `ui/Button` (primary variant), the header 입양홍보 CTA
+(`Navigation`), the Leaflet cluster-count marker, and the adoption + faq page CTAs.
+
+**Rationale (multi-mountain plan M8; PROJECT_PLAN §9):** make per-tenant theming real so a
+second mountain isn't hard-locked to geyang yellow. **Scope was owner-chosen: "primary
+color only" (minimal)** over the "full brand ramp via CSS vars" option — lower risk on
+live geyang (`brand` is used 261×), themes the design-sanctioned CTA surface, and leaves
+the ramp static. geyang's `theme.primaryColor` was **stale** (`#ffbc00` ≠ the shipped
+`#FACC15`); reconciled to `#FACC15` so honoring "geyang = zero visual change" holds.
+
+**Verified in-browser** (dev, `/` vs `/manisan`): geyang's CTA computes gradient-from
+`#FACC15` (pixel-identical to today); manisan's computes `#0ea5e9` (sky-blue) — proving
+differentiation. Gates: tsc 0, smoke 30/30, unit 71/71, **full e2e 125/13/0** (no
+regression).
+
+**Deliberately partial** (documented so it isn't mistaken for a bug): the `brand` 10-stop
+ramp and the **admin-only** `from-brand` CTAs (content-form submit buttons, the `IntroCard`
+badge) stay static — on a real second mountain those would still read yellow until a fuller
+token-migration pass. That pass is out of scope for the minimal M8 theming.
+
 ## 2026-07-25 — Multi-mountain M7: analytics decoupled from Firebase → gtag.js + `mountain_id`
 
 **Area:** changed — `src/components/AnalyticsTracker.tsx`, `src/app/layout.tsx`,

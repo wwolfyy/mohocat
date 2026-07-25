@@ -122,7 +122,7 @@ const FAQPage = () => {
         </p>
         <Link
           href="/pages/contact"
-          className="inline-block rounded-lg bg-gradient-to-r from-brand to-accent px-5 py-2.5 font-bold text-ink shadow-sm transition hover:shadow-md"
+          className="inline-block rounded-lg bg-gradient-to-r from-primary to-accent px-5 py-2.5 font-bold text-ink shadow-sm transition hover:shadow-md"
         >
           문의하러 가기
         </Link>

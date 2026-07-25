@@ -6,6 +6,12 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+
+  /* Per-tenant primary brand color (multi-mountain plan M8). Default = the
+     shipped geyang brand yellow (== tailwind `brand.DEFAULT`), so surfaces using
+     the `primary` token are visually identical to today. The `[mountain]` layout
+     overrides this at `:root` for the active tenant. */
+  --color-primary: #facc15;
 }
 
 body {

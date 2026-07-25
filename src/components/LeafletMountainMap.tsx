@@ -166,7 +166,7 @@ function buildClusterHtml(count: number): string {
   return `<div class="relative cursor-pointer transition-transform duration-200 hover:scale-110" title="고양이 급식소 ${count}곳 — 펼치기">
       <span class="absolute -top-2 left-1.5 h-0 w-0 border-l-[7px] border-r-[7px] border-b-[10px] border-l-transparent border-r-transparent border-b-brand"></span>
       <span class="absolute -top-2 right-1.5 h-0 w-0 border-l-[7px] border-r-[7px] border-b-[10px] border-l-transparent border-r-transparent border-b-brand"></span>
-      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand to-accent text-ink text-sm font-bold border-2 border-white shadow-lg">${count}</span>
+      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-ink text-sm font-bold border-2 border-white shadow-lg">${count}</span>
     </div>`;
 }
 
