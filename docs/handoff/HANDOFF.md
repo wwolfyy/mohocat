@@ -6,15 +6,22 @@
 > ### 🔜 Starting a fresh session? Read this box first.
 >
 > The last session (2026-07-26) ran the **P5.4 manual YouTube pass** and it turned into a
-> bug hunt: **six defects found and fixed**, all pre-existing, none reachable by any
-> automated test. Everything is committed **and pushed** to `origin/dev` (`dc8391f`).
+> bug hunt: **seven defects found and fixed**, all pre-existing, none reachable by the
+> automated suites as they stood.
+>
+> 🔎 **Pattern worth carrying forward:** twice, the **e2e fixtures were concealing a
+> production-only failure mode** — the seed gave videos no `youtubeId`, so `youtubeId || id`
+> collapsed to the doc id and an entire class of bug could not be reproduced. When a test
+> cannot fail, check whether the fixture is shaped like production before trusting green.
 >
 > **Do these next, in this order:**
 >
 > 1. **Verify on Preview what no test can reach** (needs the new deploy + one
 >    **🔄 토큰 갱신** on 대쉬보드, since the OAuth scopes changed): a metadata edit, a
->    playlist save, `자동 날짜 인식`, and — new — that a synced video **keeps its original
->    게시일** and that **메타데이터 수정** now shows a date instead of 없음.
+>    playlist save, `자동 날짜 인식`, that a synced video **keeps its original 게시일** and
+>    that **메타데이터 수정** now shows a date instead of 없음 — and that **batch** tag /
+>    촬영일 / playlist edits now reach Firestore **without** a manual 동기화 (the owner's
+>    2026-07-26 report; fixed in `9c31f5e`).
 > 2. **Re-run the P5.4 manual pass from the top.** Every earlier step is invalidated: the
 >    credential source, the OAuth scopes, and three write paths all changed under it. It is
 >    still the gate on the next `dev → main` promotion.
@@ -73,14 +80,16 @@ the testing hand-off
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
   `dev → main` promotion. 🐛 **STARTED 2026-07-26 and became a bug hunt — six defects found
-  and fixed, all pre-existing, none reachable by an automated test.** In order: (1) routes
-  read the refresh token from env while the 「토큰 갱신」 button writes it to Firestore;
-  (2) `manage-playlists` POST read a channel-ID env var set nowhere; (3) the admin OAuth
-  flow requested too few **scopes**, so its tokens could never edit metadata; (4)
+  and fixed, all pre-existing, none reachable by the automated suites as they stood.** In
+  order: (1) routes read the refresh token from env while the 「토큰 갱신」 button writes it to
+  Firestore; (2) `manage-playlists` POST read a channel-ID env var set nowhere; (3) the admin
+  OAuth flow requested too few **scopes**, so its tokens could never edit metadata; (4)
   `자동 날짜 인식` wrote Firestore, and the sync erased those dates; (5) batch playlist save
   ignored the batch selection; (6) every sync reset a video's 게시일 to "now", reordering the
-  **public** 영상첩. All ✅ fixed and pushed. **The pass must re-run from the top** — the
-  credential source, the scopes, and three write paths all changed under it.
+  **public** 영상첩; (7) **owner-reported** — batch edits reached YouTube but never synced back,
+  because the batch mutations handed the sync route **Firestore doc ids** where it needs
+  **YouTube ids**. All ✅ fixed and pushed. **The pass must re-run from the top** — the
+  credential source, the scopes, and four write paths all changed under it.
   _Exactly what a manual pass is for; the automated suites were green throughout._
 - **Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8,
   2026-07-23; cutover complete). ✅ M6 DONE on `dev` (2026-07-25) — no prod migration needed.**
@@ -679,6 +688,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - ⏳ **Unverified against real YouTube** (emulator fixtures have no publish dates and no
     credentials): the 게시일 repair, 메타데이터 수정 appearing, `자동 날짜 인식`, and the batch
     playlist save. All four are stubbed in e2e — see the fresh-session box at the top.
+- ✅ **Batch edits never reached Firestore — FIXED 2026-07-26 (owner-reported).** Batch tag /
+  촬영일 / playlist saves applied to YouTube but the site's copy only updated after a manual
+  📺 YouTube와 동기화; individual saves synced automatically. `/api/refresh-video-metadata`
+  takes **YouTube video ids** (it queries the Data API, then finds the doc by
+  `where('youtubeId','==',id)`), but the batch loops recorded the **Firestore doc id** from
+  the selection and sent those — a 404 the caller swallowed (`if (res.ok) log(…)`, no `else`),
+  so the dialog still said 완료. `saveVideoMetadata` was immune because it resolves the
+  YouTube id once and reuses it. Fixed: results keyed by `youtubeVideoId`; the refresh call
+  extracted into `syncToFirestore()`, which **returns** success and logs the status + body;
+  on failure the dialog now says the change reached YouTube but not the site and to press
+  동기화. ⚠️ **The fixtures had made this untestable** — no seeded video had a `youtubeId`, so
+  `youtubeId || id` collapsed to the doc id; both now carry a distinct one
+  (`yt-vid-01/02`), matching production. New regression test asserts the PUT **and** the
+  refresh both carry the YouTube id.
 - 📌 **New workstream started: per-page admin button spec sheets.** The first is
   [`tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md), organised by **what each
   button writes to** (🔴 YouTube→Firestore = public and irreversible, vs ⚪ local) — a
@@ -795,19 +818,21 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN and everything is PUSHED** — `dev` and `origin/dev` are both at
-`dc8391f`. Newest `dev` commits (the six from the 2026-07-26 YouTube session on top):
+**Working tree is CLEAN.** `origin/dev` is at `dc8391f`; **`56110c6` and `9c31f5e` are
+committed locally and NOT yet pushed.** Newest `dev` commits (the six from the 2026-07-26 YouTube session on top):
 
-| Commit    | What                                                                                  |
-| --------- | ------------------------------------------------------------------------------------- |
-| `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet  |
-| `80ba04a` | **fix** — batch playlist save applies to the selection, not one video                 |
-| `b5f08b7` | **fix** — `자동 날짜 인식` writes YouTube, not Firestore                              |
-| `05fdbd9` | **fix** — admin OAuth flow requests the write scopes it was missing                   |
-| `6b2b4f9` | **feat** — one shared YouTube channel for all mountains (decision + `manisan` config) |
-| `8a0c87d` | **fix** — one credential source: Firestore, not env (`lib/youtube/credentials.ts`)    |
-| `e929c39` | **feat** — `mountain_id` on every GA4 event                                           |
-| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                |
+| Commit    | What                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `9c31f5e` | **fix** — batch edits sync to Firestore (YouTube ids, not doc ids) + prod-shaped fixtures |
+| `56110c6` | **docs** — 2026-07-26 session close-out (hand-off / plan / debug log)                     |
+| `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet      |
+| `80ba04a` | **fix** — batch playlist save applies to the selection, not one video                     |
+| `b5f08b7` | **fix** — `자동 날짜 인식` writes YouTube, not Firestore                                  |
+| `05fdbd9` | **fix** — admin OAuth flow requests the write scopes it was missing                       |
+| `6b2b4f9` | **feat** — one shared YouTube channel for all mountains (decision + `manisan` config)     |
+| `8a0c87d` | **fix** — one credential source: Firestore, not env (`lib/youtube/credentials.ts`)        |
+| `e929c39` | **feat** — `mountain_id` on every GA4 event                                               |
+| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                    |
 
 **Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
 main...dev` = `0  243`). `dev` is **243 commits ahead**; M6 + M7 + M8 + the GA4 guide + this
@@ -815,9 +840,10 @@ session's six fixes are all on `dev` and **not yet in prod**. Promoting them (`d
 is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
 top** (see the fresh-session box at the head of this doc).
 
-**Gate status at `dc8391f`:** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 147 passed /
-13 skipped / 0 failed** (+2 net this session: the auto-parse characterization test was
-rewritten to the new contract, and a batch-playlist regression test is new).
+**Gate status at `9c31f5e`:** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 148 passed /
+13 skipped / 0 failed** (+3 net this session: the auto-parse characterization test rewritten
+to its new contract, plus new regression tests for the batch playlist save and the batch
+Firestore sync).
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no

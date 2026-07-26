@@ -73,7 +73,7 @@ test.describe('동영상 태깅 — characterization', () => {
 
     // Both are YouTube-type (badge + youtu.be id line on the card).
     await expect(card(page, VID2_TITLE).getByText('YouTube')).toBeVisible();
-    await expect(card(page, VID2_TITLE).getByText('youtu.be/test-vid-02')).toBeVisible();
+    await expect(card(page, VID2_TITLE).getByText('youtu.be/yt-vid-02')).toBeVisible();
 
     await expect(
       editPanel(page).getByText('동영상을 선택하면 메타데이터를 편집할 수 있어요.')
@@ -176,19 +176,75 @@ test.describe('동영상 태깅 — characterization', () => {
 
     // The parsed date went to YouTube, for that video only.
     expect(youtubeUpdates).toHaveLength(1);
-    expect(youtubeUpdates[0].videoId).toBe('test-vid-02');
+    expect(youtubeUpdates[0].videoId).toBe('yt-vid-02');
     // UTC midnight of the calendar date, not the local-midnight Date the parser returns —
     // .toISOString() on that would send 2024-03-14T15:00Z in KST and shift the day back.
     expect(youtubeUpdates[0].updates.createdTime).toBe('2024-03-15T00:00:00.000Z');
 
     // …and was then synced back from YouTube, rather than written here.
     expect(refreshCalls).toHaveLength(1);
-    expect(refreshCalls[0].videoIds).toEqual(['test-vid-02']);
+    expect(refreshCalls[0].videoIds).toEqual(['yt-vid-02']);
 
     // Firestore is untouched (the sync was stubbed), so both cards stay dateless. A
     // direct service-layer write would show a real 촬영: date here.
     await expect(card(page, VID2_TITLE).getByText('촬영: 없음')).toBeVisible();
     await expect(card(page, 'test-vid-01').getByText('촬영: 없음')).toBeVisible();
+  });
+
+  test('일괄 태그 저장 syncs Firestore with the YouTube ids, not the Firestore doc ids', async ({
+    page,
+  }) => {
+    // Regression guard: the batch mutations keyed their results by the Firestore doc id from
+    // the selection, then handed those to /api/refresh-video-metadata — which looks videos up
+    // on YouTube and finds each doc by `where('youtubeId','==',id)`. It 404'd and did nothing,
+    // so batch edits reached YouTube but never came back to Firestore, and the completion
+    // dialog still said 완료 because the failure was swallowed. The fixtures now give each
+    // video a youtubeId that differs from its doc id (as production always does) — with the
+    // two equal, this bug is invisible.
+    const youtubeUpdates: Array<{ videoId: string }> = [];
+    await page.route('**/api/update-youtube-video', async (route) => {
+      youtubeUpdates.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
+
+    const refreshCalls: Array<{ videoIds: string[] }> = [];
+    await page.route('**/api/refresh-video-metadata', async (route) => {
+      refreshCalls.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ updated: 1 }),
+      });
+    });
+
+    await page.goto('/admin/tag-videos');
+    await expect(card(page, VID2_TITLE)).toBeVisible();
+
+    await card(page, VID2_TITLE).locator('input[type="checkbox"]').check();
+
+    // Batch panel → set a tag via the cat selector, then save.
+    await page.getByPlaceholder('클릭해서 고양이 선택...').click();
+    await catSelector(page).getByText('테스트냥이이').click();
+    await catSelector(page).getByRole('button', { name: /완료/ }).click();
+    await expect(catSelector(page)).toHaveCount(0);
+
+    await page.getByRole('button', { name: '태그 저장' }).click();
+
+    await expect(appDialog(page).getByText(/태그 업데이트를 완료했어요/)).toBeVisible({
+      timeout: 30_000,
+    });
+    // No sync warning: the refresh was accepted.
+    await expect(appDialog(page).getByText(/동기화에 실패했어요/)).toHaveCount(0);
+    await appDialog(page).getByRole('button', { name: '확인' }).click();
+
+    // Both calls must carry the YouTube id. Before the fix the refresh got 'test-vid-02'.
+    expect(youtubeUpdates.map((u) => u.videoId)).toEqual(['yt-vid-02']);
+    expect(refreshCalls).toHaveLength(1);
+    expect(refreshCalls[0].videoIds).toEqual(['yt-vid-02']);
   });
 
   test('재생목록 일괄 변경 applies to every selected video, not just the one open in the form', async ({
@@ -264,7 +320,7 @@ test.describe('동영상 태깅 — characterization', () => {
 
     // One call per selected video, each carrying the ticked playlist set.
     expect(playlistPosts).toHaveLength(2);
-    expect(playlistPosts.map((p) => p.videoId).sort()).toEqual(['test-vid-01', 'test-vid-02']);
+    expect(playlistPosts.map((p) => p.videoId).sort()).toEqual(['yt-vid-01', 'yt-vid-02']);
     expect(playlistPosts.every((p) => p.playlistIds.length === 1)).toBe(true);
     expect(playlistPosts.every((p) => p.playlistIds[0] === 'PL-one')).toBe(true);
   });

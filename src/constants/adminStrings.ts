@@ -683,6 +683,8 @@ export const adminStrings = {
       parseFailed: (msg: string) => `날짜를 인식하지 못했어요: ${msg}`,
       parsedFromTitle: (d: string) => `✅ 제목에서 날짜를 인식했어요: ${d}`,
       parseFromTitleFailed: '❌ 제목에서 날짜를 인식하지 못했어요',
+      firestoreSyncFailed:
+        '\n\n⚠️ YouTube에는 반영됐지만 사이트 정보 동기화에 실패했어요.\n"📺 YouTube와 동기화"를 눌러 주세요.',
       noYoutubeSelectedForPlaylists: '선택한 동영상 중 YouTube 동영상이 없어요.',
       batchPlaylistConfirm: (videoCount: number, playlistCount: number) =>
         `🎬 재생목록 일괄 변경\n\n선택한 동영상 ${videoCount}개를 재생목록 ${playlistCount}개에 정확히 맞춰요.\n\n⚠️ 선택하지 않은 재생목록에서는 제거돼요. YouTube에 바로 반영되고 되돌릴 수 없어요.\n\n계속할까요?`,

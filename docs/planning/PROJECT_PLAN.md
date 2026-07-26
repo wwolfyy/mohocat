@@ -432,7 +432,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       day back in KST). (b) **Batch playlist save ignored the batch selection**, acting on the
       video open in the edit form or silently nothing; now applies to the whole selection with
       **set semantics** + confirmation. (c) **Every sync reset 게시일** (`uploadDate: new
-    Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
+  Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
       YouTube's `publishedAt`, so mis-stamped records **self-heal, no migration**. Alongside (c):
       `uploadedBy` no longer clobbered to `'admin'`, and the refresh now writes `updated` (the
       field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh` —
@@ -451,6 +451,19 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       null-overwrite applies to `tags`, `location`, `title`, `description`; the rule — not a code
       guard — is what prevents the next occurrence. _(Photos are the opposite: `cat_images` has
       no upstream, so Firestore **is** their source of truth.)_
+- [x] ✅ **Batch edits reached YouTube but never Firestore (owner-reported + FIXED
+      2026-07-26).** Batch tag / 촬영일 / playlist saves needed a manual 📺 YouTube와 동기화 to
+      show up on the site, while individual saves synced themselves.
+      `/api/refresh-video-metadata` takes **YouTube video ids** (Data API lookup, then
+      `where('youtubeId','==',id)`), but the batch loops recorded the **Firestore doc id** from
+      the selection and passed those — a 404 the caller swallowed, so the dialog still said
+      완료. Fixed: results keyed by `youtubeVideoId`; the refresh extracted into
+      `syncToFirestore()`, which returns success and logs failures; the dialog now reports a
+      failed sync instead of claiming success. ⚠️ **The e2e fixtures had made this
+      unreproducible** — no seeded video had a `youtubeId`, so `youtubeId || id` collapsed to
+      the doc id; both fixtures now carry a distinct one, matching production. **Second time
+      this session a fixture concealed a production-only failure mode** (the first: emulator
+      videos have no YouTube publish dates). Worth a broader fixture-realism audit.
 - [ ] 📄 **NEW workstream — per-page admin button spec sheets.** First one shipped:
       [`docs/manuals/admin-manual/tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md),
       organised by **what each button writes to** (🔴 YouTube→Firestore = public and
