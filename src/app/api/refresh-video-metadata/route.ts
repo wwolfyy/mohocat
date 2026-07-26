@@ -231,14 +231,31 @@ export async function POST(request: NextRequest) {
         videoType: 'youtube',
 
         // System fields
-        uploadDate: new Date(),
-        uploadedBy: 'admin',
+        //
+        // ⚠️ uploadDate is the date the video was PUBLISHED, and must not move. Until
+        // 2026-07-26 this wrote `new Date()`, so every refresh stamped the video with the
+        // moment of the sync — and since the admin grid, the public 영상첩 and the per-cat
+        // video lists all sort by uploadDate desc, any video you saved or synced jumped to
+        // the top of the public album showing today as its 게시일. It is now taken from
+        // YouTube's publishedAt (immutable, and authoritative per the videos-are-
+        // YouTube-owned rule), which also repairs already-stamped records on their next
+        // refresh. Existing value is kept when YouTube gives us nothing.
+        uploadDate: video.snippet?.publishedAt
+          ? new Date(video.snippet.publishedAt)
+          : existingData.uploadDate || new Date(),
+        // uploadedBy is deliberately NOT written: it records who put the video there
+        // ('youtube_sync' for imports, the uploader for app uploads) and a refresh is not
+        // an upload. It used to be forced to 'admin' here.
 
         // Playlist information
         allPlaylists: videoPlaylists,
 
-        // Update timestamp
-        lastMetadataRefresh: new Date(),
+        // The metadata-edit timestamp. DB-only — YouTube has no such field — and this is
+        // the one date that SHOULD move on a refresh. Note it is `updated`, the field the
+        // admin UI reads for 메타데이터 수정 and its sort; the old `lastMetadataRefresh`
+        // was written here but read nowhere, while `updated` was read but (since its only
+        // writers lost their callers) written nowhere.
+        updated: new Date(),
       };
 
       console.log(`Updating Firestore document for ${videoId}...`);

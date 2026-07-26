@@ -682,6 +682,12 @@ export const syncVideos = async (mountainId: string): Promise<boolean> => {
           thumbnailUrl: video.thumbnailUrl || '',
           duration: video.duration || 0,
           publishedAt: video.publishedAt,
+          // Imported videos had NO uploadDate: the field only appeared because
+          // refresh-video-metadata stamped `new Date()` on every video right after the
+          // import. Now that the refresh no longer invents it, set it here from YouTube's
+          // publish date — the album listings sort on `uploadDate.getTime()`, so a record
+          // without one would throw (parseDate returns null for a missing value).
+          uploadDate: video.publishedAt ? new Date(video.publishedAt) : new Date(),
           channelTitle: video.channelTitle || 'Mountain Cats',
           tags: [],
           location: '',

@@ -231,11 +231,36 @@ photo/video album pages.
 - **사진 관리** (`/admin/tag-images`) — browse images, assign/adjust cat tags.
 - **동영상 관리** (`/admin/tag-videos`) — browse videos, edit metadata, manage playlists;
   YouTube integration lives here (auth/refresh handled server-side).
+  📄 **Button-by-button reference: [`tag-videos-spec.md`](./tag-videos-spec.md)** — what each
+  button writes to (YouTube vs Firestore vs nothing), when it's disabled, and the known traps.
+
+### ⚠️ Video data: YouTube is the source of truth — never edit it in Firebase
+
+**Rule: every change to a video must be made on YouTube (via this admin UI, or on YouTube
+itself). Never edit a video's data directly in the Firebase console — the edit will not
+survive.**
+
+Videos live in two places. The real video and its metadata (title, description, tags, 촬영일,
+playlists) belong to the **YouTube channel**. Firestore holds a **copy** that the 영상첩 album
+reads, and that copy is rebuilt from YouTube every time a video is synced. The rebuild is a
+straight overwrite: whatever YouTube says wins, and a field YouTube doesn't have is **cleared**.
+
+So a value written straight into Firestore has no defence. It survives until the next sync of
+that video — which happens on the 📺 YouTube와 동기화 button, and also automatically after **any**
+save on that video — and is then silently replaced by YouTube's value, or by nothing.
+
+This is why the admin UI always writes to YouTube first and then copies the result back, and why
+`/admin/tag-videos` performs **no direct writes to Firestore at all**. If you're ever tempted to
+"just fix it in the console", fix it on YouTube instead and press 📺 YouTube와 동기화.
+
+_(Photos are the opposite: `cat_images` has no upstream, so Firestore **is** the source of truth
+for them. The rule above is about videos.)_
 
 **YouTube 토큰 갱신 (re-authorization).** Google's refresh token expires every **7–14 days**;
-when video edits, uploads, or playlist saves start failing with an authentication error, click
-**🔄 토큰 갱신** in the YouTube 토큰 관리 panel on 동영상 관리, sign in on the Google window that
-opens, and let it close by itself. That's the whole procedure — since 2026-07-26 the new token is
+when video edits, uploads, or playlist saves start failing with an authentication error, go to
+the **대쉬보드** (`/admin` — _not_ this page) and click **🔄 토큰 갱신** in the
+**🎬 YouTube API 토큰 관리** panel, sign in on the Google window that opens, and let it close by
+itself. That's the whole procedure — since 2026-07-26 the new token is
 stored server-side and takes effect immediately for **every** YouTube function. **No
 environment-variable edit and no redeploy are needed**; older instructions saying to paste
 `YOUTUBE_REFRESH_TOKEN` into Vercel are obsolete — that variable no longer exists, and the

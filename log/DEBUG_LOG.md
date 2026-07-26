@@ -11,6 +11,50 @@
 
 ---
 
+## 2026-07-26 — Every metadata sync reset a video's 게시일 to "now", reordering the public 영상첩
+
+**Symptom:** videos showed today's date as 게시: in 동영상 관리 and jumped to the top of the
+listing after any save or sync. **Not admin-only** — the public 영상첩
+(`getAllVideos`) and the per-cat video lists sort by `uploadDate` descending, so a synced
+video jumped the public album too. Found while auditing the sync's write block after the
+owner asked how far the "never write video data to Firestore" hazard actually reached.
+
+**Root cause:** `refresh-video-metadata` built its Firestore payload with
+
+```ts
+uploadDate: new Date(),   // ← the moment of the sync
+uploadedBy: 'admin',
+lastMetadataRefresh: new Date(),
+```
+
+`uploadDate` means "when the video was published" and must never move; the refresh
+overwrote it with the sync time on every call — including the per-video refresh that runs
+after **every** metadata save. YouTube's real publish date was sitting right there in the
+same payload as `publishedAt`, which nothing reads. Two related crossings in the same three
+lines: `uploadedBy` was forced to `'admin'`, erasing `'youtube_sync'`; and the edit
+timestamp was written as `lastMetadataRefresh`, a field **nothing reads**, while the field
+the admin UI _does_ read for 메타데이터 수정 (and its sort), `updated`, was written by
+`videoService.updateVideo`/`updateVideoTags` — both of which have had **no callers** since
+the auto-parse fix, so that column and sort were dead.
+
+**Fix:** `uploadDate` now comes from YouTube's `publishedAt` (immutable, authoritative, and
+consistent with videos being YouTube-owned), falling back to the stored value; existing
+mis-stamped records **self-heal on their next refresh**, so no migration is needed.
+`uploadedBy` is no longer written — a refresh is not an upload. `lastMetadataRefresh` is
+replaced by `updated`, which makes 메타데이터 수정 and its sort work for the first time.
+
+⚠️ **The clobber was masking a latent crash.** `syncVideos()` never set `uploadDate` on
+import; imported records only got one because the refresh stamped it moments later. Removing
+the stamp alone would have left freshly imported videos with no `uploadDate`, and the album
+sorts call `.getTime()` on it (`parseDate` returns `null` when absent). `syncVideos` now sets
+it from `publishedAt` at import.
+
+**Verified:** tsc 0, smoke 30/30, unit 80/80, full e2e green. ⚠️ The repair itself is only
+observable against real YouTube data — the emulator has no publish dates — so confirm on
+Preview that a synced video keeps its original 게시일.
+
+---
+
 ## 2026-07-26 — Batch playlist assignment updated one video (or none): the modal's save ignored the batch selection
 
 **Symptom:** latent — found while writing the button spec for `/admin/tag-videos`, not from a
