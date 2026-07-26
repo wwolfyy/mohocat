@@ -21,7 +21,7 @@
 >    playlist save, `자동 날짜 인식`, that a synced video **keeps its original 게시일** and
 >    that **메타데이터 수정** now shows a date instead of 없음 — and that **batch** tag /
 >    촬영일 / playlist edits now reach Firestore **without** a manual 동기화 (the owner's
->    2026-07-26 report; fixed in `9c31f5e`).
+>    2026-07-26 report; fixed in `c94d02e`).
 > 2. **Re-run the P5.4 manual pass from the top.** Every earlier step is invalidated: the
 >    credential source, the OAuth scopes, and three write paths all changed under it. It is
 >    still the gate on the next `dev → main` promotion.
@@ -818,12 +818,12 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN.** `origin/dev` is at `dc8391f`; **`56110c6` and `9c31f5e` are
+**Working tree is CLEAN.** `origin/dev` is at `dc8391f`; **`56110c6` and `c94d02e` are
 committed locally and NOT yet pushed.** Newest `dev` commits (the six from the 2026-07-26 YouTube session on top):
 
 | Commit    | What                                                                                      |
 | --------- | ----------------------------------------------------------------------------------------- |
-| `9c31f5e` | **fix** — batch edits sync to Firestore (YouTube ids, not doc ids) + prod-shaped fixtures |
+| `c94d02e` | **fix** — batch edits sync to Firestore (YouTube ids, not doc ids) + prod-shaped fixtures |
 | `56110c6` | **docs** — 2026-07-26 session close-out (hand-off / plan / debug log)                     |
 | `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet      |
 | `80ba04a` | **fix** — batch playlist save applies to the selection, not one video                     |
@@ -840,7 +840,7 @@ session's six fixes are all on `dev` and **not yet in prod**. Promoting them (`d
 is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
 top** (see the fresh-session box at the head of this doc).
 
-**Gate status at `9c31f5e`:** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 148 passed /
+**Gate status at `c94d02e`:** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 148 passed /
 13 skipped / 0 failed** (+3 net this session: the auto-parse characterization test rewritten
 to its new contract, plus new regression tests for the batch playlist save and the batch
 Firestore sync).
