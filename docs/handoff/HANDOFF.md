@@ -1,7 +1,27 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-25 · **Branch:** `dev` · **`main`:** promoted through PR #8
+**Last updated:** 2026-07-26 · **Branch:** `dev` · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
+
+> ### 🔜 Starting a fresh session? Read this box first.
+>
+> The last session (2026-07-26) ran the **P5.4 manual YouTube pass** and it turned into a
+> bug hunt: **six defects found and fixed**, all pre-existing, none reachable by any
+> automated test. Everything is committed **and pushed** to `origin/dev` (`dc8391f`).
+>
+> **Do these next, in this order:**
+>
+> 1. **Verify on Preview what no test can reach** (needs the new deploy + one
+>    **🔄 토큰 갱신** on 대쉬보드, since the OAuth scopes changed): a metadata edit, a
+>    playlist save, `자동 날짜 인식`, and — new — that a synced video **keeps its original
+>    게시일** and that **메타데이터 수정** now shows a date instead of 없음.
+> 2. **Re-run the P5.4 manual pass from the top.** Every earlier step is invalidated: the
+>    credential source, the OAuth scopes, and three write paths all changed under it. It is
+>    still the gate on the next `dev → main` promotion.
+> 3. Then the promotion itself (M6/M7/M8 + the GA4 guide + this session are all waiting).
+>
+> **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
+> lands — `main` is pre-fix and reads the token from env only.
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
 > hand-off — read it first. It is edited **in place** (present tense = how things are
@@ -52,13 +72,16 @@ the testing hand-off
   broken image upload fixed; `react-hook-form` removed. ⚠️ **The one remaining
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
-  `dev → main` promotion. 🐛 **STARTED 2026-07-26 and immediately blocked** — the pass
-  found a real bug on its first step (the YouTube routes read the refresh token from
-  env while the admin re-authorize button writes it to Firestore). ✅ **Both bugs are now
-  fixed** (same day — shared credential resolver, Firestore-first; + the
-  `manage-playlists` channel-ID leak); see **Open threads**. **The pass must re-run from
-  the top**, since the fix changes which credential every route uses.
-  _Exactly what a manual pass is for — no emulator-backed test could have caught it._
+  `dev → main` promotion. 🐛 **STARTED 2026-07-26 and became a bug hunt — six defects found
+  and fixed, all pre-existing, none reachable by an automated test.** In order: (1) routes
+  read the refresh token from env while the 「토큰 갱신」 button writes it to Firestore;
+  (2) `manage-playlists` POST read a channel-ID env var set nowhere; (3) the admin OAuth
+  flow requested too few **scopes**, so its tokens could never edit metadata; (4)
+  `자동 날짜 인식` wrote Firestore, and the sync erased those dates; (5) batch playlist save
+  ignored the batch selection; (6) every sync reset a video's 게시일 to "now", reordering the
+  **public** 영상첩. All ✅ fixed and pushed. **The pass must re-run from the top** — the
+  credential source, the scopes, and three write paths all changed under it.
+  _Exactly what a manual pass is for; the automated suites were green throughout._
 - **Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8,
   2026-07-23; cutover complete). ✅ M6 DONE on `dev` (2026-07-25) — no prod migration needed.**
   **M6 (2026-07-25):** per-tenant **upload** namespacing — `generate-signed-url` + the form
@@ -622,6 +645,46 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
     which succeeds regardless of scope — so a scope-starved token still reports
     유효한 토큰이 있습니다. Same shape as the timestamp bug: reassuring about a credential that
     can't do the job. Detecting it means probing a write endpoint (a product call).
+- ✅ **Three more `/admin/tag-videos` bugs found & FIXED 2026-07-26** (`b5f08b7`, `80ba04a`,
+  `dc8391f`) — all found by **reading the page while writing its button spec**, none reported,
+  none catchable by the existing suites. Full detail in `log/DEBUG_LOG.md`; per-button
+  behaviour in [`tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md).
+  - **`자동 날짜 인식` wrote Firestore, so its dates were erased.** Video data is
+    YouTube-owned and `refresh-video-metadata` rebuilds Firestore from YouTube as a straight
+    overwrite (`createdTime: youtubeRecordingDate ? … : null`) — so for exactly the dateless
+    videos that button targets, the next sync **or any other save on that video** wrote
+    `null` back over the parsed date. Now writes YouTube first, then syncs back.
+  - **Batch playlist save ignored the selection.** The modal's save always acted on the video
+    open in the edit form, so the batch entry point updated one video — or silently none.
+    Now applies to every selected video, **set semantics** (each video ends up in exactly the
+    ticked playlists), opening unticked and confirming first because that removal is
+    destructive.
+  - **Every sync reset 게시일 to "now".** `refresh-video-metadata` wrote
+    `uploadDate: new Date()`, and since the admin grid, the **public 영상첩** and the per-cat
+    lists all sort by `uploadDate` desc, any edited video jumped to the top of the public
+    album with today's date. Now sourced from YouTube's `publishedAt` — so mis-stamped
+    records **self-heal on their next refresh, no migration needed**. Two crossings fixed
+    alongside: `uploadedBy` was forced to `'admin'` (erasing `'youtube_sync'`), and the edit
+    timestamp was written as `lastMetadataRefresh` — a field nothing reads — while the field
+    the UI _does_ read (`updated`) was written nowhere, leaving 메타데이터 수정 permanently
+    blank. It now writes `updated`.
+  - 🔑 **Principle adopted (owner, 2026-07-26): YouTube is the source of truth for videos; no
+    UI path may write video data to Firestore.** Anything written there is undone by the next
+    sync, so such a write is broken by construction, not merely risky. `/admin/tag-videos` now
+    makes **zero** direct Firestore writes (`videoService` there is reads-only), and
+    `videoService.updateVideo` has no callers left. Recorded for operators in
+    [`admin-manual` §6](../manuals/admin-manual/README.md). ⚠️ The same null-overwrite applies
+    to `tags`, `location`, `title`, `description` — the rule, not a code guard, is what stops
+    the next occurrence.
+  - ⏳ **Unverified against real YouTube** (emulator fixtures have no publish dates and no
+    credentials): the 게시일 repair, 메타데이터 수정 appearing, `자동 날짜 인식`, and the batch
+    playlist save. All four are stubbed in e2e — see the fresh-session box at the top.
+- 📌 **New workstream started: per-page admin button spec sheets.** The first is
+  [`tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md), organised by **what each
+  button writes to** (🔴 YouTube→Firestore = public and irreversible, vs ⚪ local) — a
+  distinction the UI itself doesn't show. Owner wants the same for the other CMS pages.
+  ⚠️ It is **source-derived, not browser-verified** — worth a `/chrome` pass over the live
+  page before cloning the format.
 - 🆕 **`syncVideos()` claims the whole channel for whichever mountain runs it — must be fixed
   before a real mountain #2 (logged 2026-07-26, not urgent).** Follows from the owner's
   **single-shared-channel decision** (same day): rather than one YouTube channel per mountain,
@@ -732,22 +795,29 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN** — everything through the GA4 guide is committed on `dev`. The
-multi-tenant epic (M0–M8) is fully committed. Newest `dev` commits:
+**Working tree is CLEAN and everything is PUSHED** — `dev` and `origin/dev` are both at
+`dc8391f`. Newest `dev` commits (the six from the 2026-07-26 YouTube session on top):
 
-| Commit    | What                                                                              |
-| --------- | --------------------------------------------------------------------------------- |
-| `7e3c517` | **docs** — GA4 setup & operations guide (`admin-manual/google_analytics.md`)      |
-| `a237e8b` | **M8** — per-tenant theming (primary color) + provisioning guide + docs close-out |
-| `48f7085` | **M7** — analytics decoupled from Firebase → gtag.js + `mountain_id`              |
-| `d644d1b` | **M6** — per-tenant upload namespacing + image-storage-strategy docs              |
-| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)            |
+| Commit    | What                                                                                  |
+| --------- | ------------------------------------------------------------------------------------- |
+| `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet  |
+| `80ba04a` | **fix** — batch playlist save applies to the selection, not one video                 |
+| `b5f08b7` | **fix** — `자동 날짜 인식` writes YouTube, not Firestore                              |
+| `05fdbd9` | **fix** — admin OAuth flow requests the write scopes it was missing                   |
+| `6b2b4f9` | **feat** — one shared YouTube channel for all mountains (decision + `manisan` config) |
+| `8a0c87d` | **fix** — one credential source: Firestore, not env (`lib/youtube/credentials.ts`)    |
+| `e929c39` | **feat** — `mountain_id` on every GA4 event                                           |
+| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                |
 
-**Branch position:** `main` is now an **ancestor** of `dev` (`git rev-list --count
-main...dev` = `0  234`) — the old "dev is behind main, ff to resync" note is obsolete. `dev`
-is 234 commits ahead; **M6 + M7 + M8 + the GA4 guide are on `dev` but not yet in prod.**
-Promoting them (`dev → main`) is **gated on the owner's P5.4 scripted manual YouTube pass**
-(see Open threads / the complexity-retirement section).
+**Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
+main...dev` = `0  243`). `dev` is **243 commits ahead**; M6 + M7 + M8 + the GA4 guide + this
+session's six fixes are all on `dev` and **not yet in prod**. Promoting them (`dev → main`)
+is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
+top** (see the fresh-session box at the head of this doc).
+
+**Gate status at `dc8391f`:** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 147 passed /
+13 skipped / 0 failed** (+2 net this session: the auto-parse characterization test was
+rewritten to the new contract, and a batch-playlist regression test is new).
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -757,7 +827,31 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-26 (latest)** — **Third YouTube bug, exposed by the second: the admin OAuth flow
+- **2026-07-26 (latest)** — **Three more `/admin/tag-videos` bugs fixed (`b5f08b7`,
+  `80ba04a`, `dc8391f`), a source-of-truth principle adopted, and the page's button spec sheet
+  written.** All three were found by **reading the page to document it**, not from reports, and
+  none was reachable by the existing suites. (1) `자동 날짜 인식` wrote its parsed dates to
+  Firestore, where the next sync — or any other save on that video — overwrote them with `null`,
+  because `refresh-video-metadata` rebuilds Firestore from YouTube and YouTube has no recording
+  date for exactly those videos. It now writes YouTube first. The rewrite also exposed a
+  timezone bug in its own fix, caught by the new test: the parser returns **local-time** Dates,
+  so `.toISOString()` shifted every date back a day in KST — it now sends UTC midnight of the
+  calendar date, matching `saveVideoMetadata`. (2) The batch playlist save always acted on the
+  video open in the edit form, so the batch entry point updated one video or silently none; it
+  now applies to the whole selection with **set semantics** and a confirmation. (3) Every sync
+  wrote `uploadDate: new Date()`, resetting 게시일 to the sync time — and since the **public**
+  영상첩 sorts by it, edited videos jumped to the top of the public album with today's date. It
+  now comes from YouTube's `publishedAt`, so mis-stamped records **self-heal** with no
+  migration; `uploadedBy` is no longer clobbered, and the refresh now writes `updated` (the
+  field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh`. ⚠️ That
+  clobber had been **masking a latent crash** — `syncVideos()` never set `uploadDate` on import
+  and the album sorts call `.getTime()` on it, so the import now sets it too. 🔑 **Principle
+  adopted:** YouTube is the source of truth for videos and no UI path may write video data to
+  Firestore; `/admin/tag-videos` now makes zero direct Firestore writes, and the rule is in
+  `admin-manual` §6. New: `docs/manuals/admin-manual/tag-videos-spec.md`, a button-by-button
+  spec sheet keyed on what each button writes to — the first of a per-CMS-page series. Gates:
+  tsc 0, smoke 30/30, unit 80/80, **e2e 147/13/0**.
+- **2026-07-26** — **Third YouTube bug, exposed by the second: the admin OAuth flow
   requested too few scopes.** On the owner's retry after the credential fix, a metadata edit
   failed with Google's _"Insufficient Permission"_ (not our gate's "Insufficient permissions").
   `auth-url` asked for `youtube.upload` + `youtube.readonly` only — no `videos.update`, no

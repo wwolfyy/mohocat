@@ -49,7 +49,7 @@ the stamp alone would have left freshly imported videos with no `uploadDate`, an
 sorts call `.getTime()` on it (`parseDate` returns `null` when absent). `syncVideos` now sets
 it from `publishedAt` at import.
 
-**Verified:** tsc 0, smoke 30/30, unit 80/80, full e2e green. ⚠️ The repair itself is only
+**Verified:** tsc 0, smoke 30/30, unit 80/80, full e2e 147/13/0. ⚠️ The repair itself is only
 observable against real YouTube data — the emulator has no publish dates — so confirm on
 Preview that a synced video keeps its original 게시일.
 
@@ -87,7 +87,7 @@ unticked playlists are removed.
 **Verified:** new e2e regression test — stubs both playlist routes plus the refresh, selects
 two videos, **deliberately leaves the edit form empty** (the condition that made the old code
 a silent no-op), and asserts one POST per selected video carrying the ticked playlist set.
-The old code would produce zero POSTs. tsc 0, smoke 30/30, unit 80/80, full e2e green.
+The old code would produce zero POSTs. tsc 0, smoke 30/30, unit 80/80, full e2e 147/13/0.
 
 ---
 
@@ -135,7 +135,7 @@ behavior and was rewritten to the new contract — it stubs both YouTube routes,
 `PUT` carries the parsed date for the right video and that the refresh follows, then asserts
 **both cards stay dateless**, which is a direct regression guard on the principle (with the
 sync stubbed, only an illegal direct write could produce a date). tsc 0, smoke 30/30, unit
-80/80, full e2e green.
+80/80, full e2e 146/13/0 (this fix's own rewritten test included).
 
 ---
 

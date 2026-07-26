@@ -378,9 +378,12 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
     the shared `ui/Modal` system via the new `useDialog` primitive.
   - ⚠️ Owner-owed before the next `dev → main` promotion: the scripted **manual pass over the
     YouTube surfaces** (P5.4 — sync, playlists, real creds). 🐛 **Started 2026-07-26 on Preview
-    and blocked on its first step** by two pre-existing YouTube bugs it surfaced; **both are now
-    fixed (below) and the pass can resume** — it must re-run from the top, since the fix changes
-    which credential every route uses.
+    and became a bug hunt: six pre-existing defects found and fixed** (credential source, OAuth
+    scopes, channel-ID env var, `자동 날짜 인식` writing Firestore, batch playlist save ignoring
+    the selection, and the sync resetting 게시일). All ✅ fixed and pushed; **the pass must
+    restart from the top**, since the credential source, the scopes and three write paths all
+    changed under it. **Not one of the six was reachable by an automated test** — the emulator
+    has no YouTube credentials, which is precisely the case for keeping P5.4 as a manual gate.
 - [x] ✅ **YouTube credential source unified — the admin "re-authorize" button now fixes
       everything (found + FIXED 2026-07-26).** `/api/admin/youtube-auth/callback` writes the fresh
       refresh token to **Firestore** (`admin_config/youtube_auth`), but every route read it from
@@ -408,6 +411,54 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       `getYouTubeChannelId(authz.mountainId)`. Missed when M1 moved channel config out of env
       vars; both a live bug and a multi-tenant leak. **Fixed** with the tenant-aware getter (no
       env var added).
+- [x] ✅ **Admin OAuth flow requested too few scopes (found + FIXED 2026-07-26, `05fdbd9`).**
+      `auth-url` asked only for `youtube.upload` + `youtube.readonly`, which cover
+      `videos.insert` and reads but **not** `videos.update` or `playlistItems.insert/delete` —
+      so metadata edits failed with Google's _"Insufficient Permission"_ (distinct from our
+      gate's "Insufficient permissions"). The retired CLI token script requested all four
+      scopes, so the token actually in use had them: **the admin panel had never minted a token
+      capable of editing metadata**, and only fixing the credential source put its token into
+      play. Fixed by requesting the same four scopes; **requires a re-authorization**, since
+      scopes are granted at consent time. 📌 Known gap left open: the token status panel
+      validates by refreshing, which succeeds regardless of scope, so it reports healthy on a
+      token that cannot write.
+- [x] ✅ **Three `/admin/tag-videos` write-path bugs (found + FIXED 2026-07-26 — `b5f08b7`,
+      `80ba04a`, `dc8391f`).** All three found by reading the page while writing its button
+      spec; none reported, none reachable by the existing suites. (a) **`자동 날짜 인식` wrote
+      Firestore**, so `refresh-video-metadata` — which rebuilds Firestore from YouTube and nulls
+      `createdTime` when YouTube has none — erased every parsed date on the next sync **or any
+      other save on that video**; it now writes YouTube first (and sends UTC midnight of the
+      calendar date, since the parser returns local-time Dates and `.toISOString()` shifted the
+      day back in KST). (b) **Batch playlist save ignored the batch selection**, acting on the
+      video open in the edit form or silently nothing; now applies to the whole selection with
+      **set semantics** + confirmation. (c) **Every sync reset 게시일** (`uploadDate: new
+    Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
+      YouTube's `publishedAt`, so mis-stamped records **self-heal, no migration**. Alongside (c):
+      `uploadedBy` no longer clobbered to `'admin'`, and the refresh now writes `updated` (the
+      field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh` —
+      making that column and its sort work for the first time. ⚠️ The clobber had been masking a
+      latent crash (`syncVideos()` never set `uploadDate`; the album sorts call `.getTime()` on
+      it), so the import sets it now too. Net: 2 e2e tests (one rewritten, one new) →
+      **147/13/0**. ⏳ The 게시일 repair, 메타데이터 수정, `자동 날짜 인식` and the batch playlist
+      save are **stubbed in tests and unverified against real YouTube** — Preview checks listed
+      in the hand-off's fresh-session box.
+- [x] 🔑 **Principle adopted (owner, 2026-07-26): YouTube is the source of truth for video
+      data.** No UI path may write video data to Firestore — anything written there is undone by
+      the next sync, so such a write is broken by construction rather than merely risky.
+      `/admin/tag-videos` now performs **zero** direct Firestore writes (its `videoService` use
+      is reads-only) and `videoService.updateVideo` has no callers left. Operator-facing rule in
+      `admin-manual` §6 ("never edit video data in Firebase — it will not survive"). ⚠️ The same
+      null-overwrite applies to `tags`, `location`, `title`, `description`; the rule — not a code
+      guard — is what prevents the next occurrence. _(Photos are the opposite: `cat_images` has
+      no upstream, so Firestore **is** their source of truth.)_
+- [ ] 📄 **NEW workstream — per-page admin button spec sheets.** First one shipped:
+      [`docs/manuals/admin-manual/tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md),
+      organised by **what each button writes to** (🔴 YouTube→Firestore = public and
+      irreversible vs ⚪ local) — a distinction the UI doesn't surface, and the frame that
+      exposed all three bugs above. Owner wants the same for the remaining CMS pages
+      (`tag-images`, `cats`, `points`, `posts`, `members`, `app-management`). ⚠️ The first sheet
+      is **source-derived, not browser-verified** — do a `/chrome` pass over the live page before
+      cloning the format.
 - [x] **✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated.**
       `GET`/`POST /api/admin/role-permissions` read/rewrite `role_permissions/role-config` via the
       **Admin SDK** (bypasses Firestore rules). Once `firestore.rules` `hasPermission` started
