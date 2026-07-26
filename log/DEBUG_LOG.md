@@ -11,6 +11,45 @@
 
 ---
 
+## 2026-07-26 — "Insufficient Permission" on video metadata edits: the admin OAuth flow asked for too few scopes
+
+**Symptom:** immediately after the credential fix below, editing a video's metadata as an
+admin holding every permission failed with
+_"❌ 동영상 메타데이터를 업데이트하지 못했어요: Insufficient Permission"_.
+
+**Root cause:** that message is **Google's**, not ours — our permission gate says
+"Insufficient permissions" (lowercase, plural), while `Insufficient Permission` is the
+YouTube Data API rejecting the access token's **OAuth scope**. `/api/admin/youtube-auth/
+auth-url` requested only `youtube.upload` + `youtube.readonly`, which cover
+`videos.insert` and reads but **not** `videos.update` (metadata) or
+`playlistItems.insert/delete` (playlist membership) — those need `youtube` or
+`youtube.force-ssl`. The retired `scripts/auth/generate_youtube_refresh_token.js`
+requested all four, so the token that had actually been in use for years (pasted into
+`YOUTUBE_REFRESH_TOKEN` from that script) carried the broad scopes. **The admin panel's
+re-authorize button had never once produced a token that could edit metadata** — nobody
+noticed because its token was never the one being used.
+
+⚠️ **Exposed by, not caused by, the credential fix below.** Making the routes read the
+panel's Firestore token — the correct behavior — is what put the narrow-scoped token into
+play. Two latent bugs were stacked: the wrong token source hid the wrong scope set.
+
+**Fix:** `auth-url` now requests the same four scopes the CLI script did (`youtube.upload`,
+`youtube`, `youtube.readonly`, `youtube.force-ssl`) — the set empirically proven against
+every operation this app performs. **Re-authorizing is required**: scopes are fixed at
+consent time, so the already-stored token cannot gain them (`prompt: 'consent'` is already
+set, so the flow returns a fresh refresh token).
+
+📌 **Related gap, deliberately not fixed:** the token status panel calls
+`refreshAccessToken()`, which succeeds regardless of scope — so a scope-starved token still
+reports "유효한 토큰이 있습니다". Same class as the timestamp problem below: the panel is
+reassuring about a credential that cannot do the job. Detecting it would mean probing a
+write endpoint, which is a product decision, not a bug fix.
+
+**Verified:** tsc 0, smoke 30/30, unit 80/80. ⚠️ The real proof is the **manual pass** —
+no automated test can reach Google's consent screen or a scoped token.
+
+---
+
 ## 2026-07-26 — Re-authorizing YouTube fixed nothing: the button writes the token to Firestore, every route read it from env
 
 **Symptom:** Found on Preview during the P5.4 scripted manual YouTube pass. The
@@ -58,7 +97,7 @@ call). The first cut resolved Firestore-first with env behind it; the fallback w
 dropped because it preserves the same failure shape whenever the Firestore doc is missing
 — routes would quietly resume on a stale env token. It also earns nothing: obtaining a
 token needs client identity only, so a deployment with no token anywhere recovers by
-clicking 재인증. Follow-on cleanups: the status route reports one token source instead of
+clicking 「토큰 갱신」. Follow-on cleanups: the status route reports one token source instead of
 two (it used to show **Firestore's** timestamp against the **env** token — much of why
 the split went unnoticed); the OAuth success page no longer prints the raw token with
 instructions to paste it into `.env.local`; `scripts/auth/` (the command-line

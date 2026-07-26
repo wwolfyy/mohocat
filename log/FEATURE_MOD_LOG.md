@@ -24,7 +24,7 @@ second "environment" token row. Changed — `src/components/admin/YouTubeAuthPan
 `scripts/README.md`.
 
 **What changed:** the YouTube refresh token now lives in exactly one place — Firestore
-`admin_config/youtube_auth`, written by the admin 재인증 button. The env var is gone, along
+`admin_config/youtube_auth`, written by the admin panel's 「토큰 갱신」 button. The env var is gone, along
 with `generate_youtube_refresh_token.js` / `refresh_youtube_token.js`, the command-line
 "generate a token, paste it into `.env`, redeploy" workflow the admin panel replaced (the
 generator script already pointed at the GUI in its own header).

@@ -25,7 +25,7 @@ This directory contains utility scripts for various project operations, organize
 
 - **`auth/`** - _Removed 2026-07-26._ These were the manual YouTube OAuth workflow
   (generate a refresh token on the command line, paste it into `.env`, redeploy). The
-  admin panel's 재인증 button now runs the whole flow and stores the token in Firestore
+  admin panel's 「토큰 갱신」 button now runs the whole flow and stores the token in Firestore
   (`admin_config/youtube_auth`) — there is no `YOUTUBE_REFRESH_TOKEN` env var any more.
   See `src/lib/youtube/credentials.ts`.
 

@@ -392,7 +392,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       **Fixed:** new `src/lib/youtube/credentials.ts` splits **client identity** (env) from **the
       refresh token** (Firestore **only** — `YOUTUBE_REFRESH_TOKEN` removed outright rather than
       kept as a fallback, which would preserve the same failure whenever the Firestore doc goes
-      missing; obtaining a token needs client identity only, so 재인증 is the recovery); all six
+      missing; obtaining a token needs client identity only, so 「토큰 갱신」 is the recovery); all six
       OAuth consumers migrated and `getYouTubeOAuthConfig()` deleted. Also unblocks a **bootstrap
       deadlock**: `auth-url` used to need a refresh token in order to obtain one. ⚠️ Keep the var
       in Vercel **Production** until this promotes (`main` is pre-fix and env-only). `refresh-video-metadata` was never affected

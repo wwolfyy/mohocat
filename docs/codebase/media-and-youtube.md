@@ -103,11 +103,17 @@ because the credential has two halves that live in different places:
 | Refresh token (`getYouTubeOAuthCredentials`) | Firestore `admin_config/youtube_auth` — **only**  | every 7–14 days   |
 
 - ⚠️ **There is no `YOUTUBE_REFRESH_TOKEN` env var, by design.** Reading the token from env is
-  what let a stale value silently shadow the one the admin 재인증 button had just written, so
+  what let a stale value silently shadow the one the admin 「토큰 갱신」 button had just written, so
   re-authorizing appeared to work and changed nothing. Env was removed rather than demoted to a
   fallback, because a fallback keeps that same failure shape for the case where the Firestore doc
   goes missing. **Don't reintroduce an env token path** — obtaining a token needs client identity
-  only, so the recovery from "no token anywhere" is just 재인증.
+  only, so the recovery from "no token anywhere" is just 「토큰 갱신」.
+- ⚠️ **Scopes are fixed at consent time and must cover writes.** `auth-url` requests
+  `youtube.upload` + `youtube` + `youtube.readonly` + `youtube.force-ssl`. Trimming to
+  upload+readonly (as it did until 2026-07-26) still yields a token that refreshes fine and
+  reports healthy, but fails `videos.update` and `playlistItems.insert/delete` with Google's
+  **"Insufficient Permission"** — distinct from our gate's "Insufficient permissions". Changing
+  this list requires a re-authorize; an existing token cannot gain scopes.
 - **Client identity resolves without a token** so `auth-url`/`callback` can _obtain_ one. The
   predecessor (`getYouTubeOAuthConfig()` in `utils/config.ts`, now deleted) required all three env
   vars together, which deadlocked the OAuth flow on a fresh deployment.

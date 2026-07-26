@@ -32,9 +32,16 @@ export async function GET(request: Request) {
     // Generate the auth URL
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
+      // The full set the retired scripts/auth/generate_youtube_refresh_token.js requested —
+      // i.e. the scopes the token that actually worked in production carried. `upload` and
+      // `readonly` alone cover videos.insert and reads, but NOT videos.update (metadata
+      // edits) or playlistItems.insert/delete (playlist membership), which need `youtube`
+      // or `youtube.force-ssl` and fail with Google's "Insufficient Permission".
       scope: [
         'https://www.googleapis.com/auth/youtube.upload',
+        'https://www.googleapis.com/auth/youtube',
         'https://www.googleapis.com/auth/youtube.readonly',
+        'https://www.googleapis.com/auth/youtube.force-ssl',
       ],
       prompt: 'consent', // Force consent screen to ensure we get a refresh token
     });

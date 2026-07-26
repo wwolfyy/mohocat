@@ -14,8 +14,9 @@
  *   `YOUTUBE_REDIRECT_URI`) — env-only. It identifies the Google Cloud OAuth app and
  *   effectively never changes.
  * - **The refresh token** — rotated every 7–14 days by Google, and stored **only** in
- *   Firestore (`admin_config/youtube_auth`), written by the admin "re-authorize"
- *   button via the OAuth callback.
+ *   Firestore (`admin_config/youtube_auth`), written via the OAuth callback by the admin
+ *   panel's 「토큰 갱신」 button (which, despite the name, runs the full consent flow — it
+ *   is the re-authorization, not a silent refresh).
  *
  * ⚠️ **There is deliberately no `YOUTUBE_REFRESH_TOKEN` env fallback** (removed
  * 2026-07-26). Until then every route read the token from env only, so a stale env
@@ -24,7 +25,7 @@
  * env even as a *fallback* would have preserved that failure shape for the case where
  * the Firestore doc goes missing. It also isn't needed to bootstrap: obtaining a token
  * requires client identity only, so a deployment with no token anywhere recovers by
- * clicking 재인증. **Don't reintroduce an env token path.**
+ * clicking 「토큰 갱신」. **Don't reintroduce an env token path.**
  *
  * Never log a token value.
  */
@@ -103,7 +104,7 @@ export async function getStoredRefreshToken(): Promise<StoredRefreshToken | null
  * the stored refresh token.
  *
  * Returns `null` when the OAuth app is unconfigured or the flow has never run — routes
- * map that to "credentials not configured", and the operator's fix is 재인증.
+ * map that to "credentials not configured", and the operator's fix is 「토큰 갱신」.
  */
 export async function getYouTubeOAuthCredentials(): Promise<YouTubeOAuthCredentials | null> {
   const client = getYouTubeOAuthClient();

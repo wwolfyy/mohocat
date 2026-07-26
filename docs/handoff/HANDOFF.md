@@ -600,11 +600,28 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
     save 500'd; the GET beside it already used `getYouTubeChannelId(authz.mountainId)`. Missed
     when M1 moved channel config out of env vars — both a live bug and a multi-tenant leak.
     Fixed with the tenant-aware getter (no env var added).
+  - **Bug 3 — the admin OAuth flow asked for too few scopes** (surfaced immediately after the
+    above, on the owner's retry: _"Insufficient Permission"_ on a metadata edit). That message is
+    **Google's**, not our gate's ("Insufficient permissions", lowercase/plural) — the token
+    lacked the **OAuth scope**. `auth-url` requested only `youtube.upload` + `youtube.readonly`,
+    which cover `videos.insert` and reads but **not** `videos.update` or
+    `playlistItems.insert/delete` (those need `youtube` / `youtube.force-ssl`). The retired
+    `scripts/auth/generate_youtube_refresh_token.js` requested all four, so the token actually in
+    use carried them — meaning **the admin panel had never once minted a token that could edit
+    metadata**, and only fixing the source above put that token into play. ⚠️ **Exposed by, not
+    caused by, the credential fix**: two latent bugs were stacked, the wrong source hiding the
+    wrong scopes. Fixed by requesting the CLI script's four scopes. **Requires a
+    re-authorization** — scopes are fixed at consent time, so an existing token can't gain them.
   - **Net:** `tests/unit/youtubeCredentials.test.ts` (9 tests) pins the precedence. Gates: tsc
     0, smoke 30/30, unit 80/80, full e2e green. Detail: `log/DEBUG_LOG.md` 2026-07-26.
-  - 📌 **Operator note:** re-authorizing is now the entire procedure — click 재인증 in the
-    YouTube panel, complete Google consent, done. No env edit, no redeploy, and nothing else to
-    keep in sync.
+  - 📌 **Operator note:** the button is **`🔄 토큰 갱신`** on 동영상 관리 — and despite the name
+    it runs the **full consent flow**, not a silent refresh, which is why it's also the fix when
+    a token's _scopes_ are wrong rather than expired. Click it, sign in, let the window close.
+    No env edit, no redeploy, nothing else to keep in sync.
+  - 📌 **Known gap, logged not fixed:** the status panel validates a token by refreshing it,
+    which succeeds regardless of scope — so a scope-starved token still reports
+    유효한 토큰이 있습니다. Same shape as the timestamp bug: reassuring about a credential that
+    can't do the job. Detecting it means probing a write endpoint (a product call).
 - 🆕 **`syncVideos()` claims the whole channel for whichever mountain runs it — must be fixed
   before a real mountain #2 (logged 2026-07-26, not urgent).** Follows from the owner's
   **single-shared-channel decision** (same day): rather than one YouTube channel per mountain,
@@ -740,7 +757,19 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-26 (latest)** — **Both P5.4 YouTube bugs FIXED; and the platform commits to a
+- **2026-07-26 (latest)** — **Third YouTube bug, exposed by the second: the admin OAuth flow
+  requested too few scopes.** On the owner's retry after the credential fix, a metadata edit
+  failed with Google's _"Insufficient Permission"_ (not our gate's "Insufficient permissions").
+  `auth-url` asked for `youtube.upload` + `youtube.readonly` only — no `videos.update`, no
+  playlist writes. The retired CLI token script requested all four scopes, so the token in real
+  use had them; **the admin panel had never minted a token capable of editing metadata**, and
+  only routing the routes to that token revealed it. Fixed by requesting the same four scopes;
+  **a re-authorization is required**, since scopes are granted at consent time. Also corrected
+  throughout the docs: the button is **`🔄 토큰 갱신`**, not the "재인증" label these notes had
+  invented — and it runs the full consent flow despite the name, which is why it fixes scope
+  problems and not just expiry. Logged as a known gap: the status panel validates by refreshing,
+  which succeeds regardless of scope, so it reports healthy on a token that cannot write.
+- **2026-07-26** — **Both P5.4 YouTube bugs FIXED; and the platform commits to a
   single shared YouTube channel.** (1) New `src/lib/youtube/credentials.ts` is now the only
   place the shared OAuth credential is resolved, splitting **client identity** (env, never
   rotates) from **the refresh token** (Firestore only). This is **stricter than the plan
