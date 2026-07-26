@@ -9,8 +9,10 @@
  * their parity check is the scripted manual pass with real creds. What IS
  * automatable and pinned here: load + stats, selecting a video populates the
  * YouTube edit form, cat tagging into the tags field via the selector (local
- * state), 제목에서 날짜 인식 (local), and bulk 자동 날짜 인식 — the one
- * Firestore-only write path (videoService.updateVideo).
+ * state), 제목에서 날짜 인식 (local), and bulk 자동 날짜 인식 — which since
+ * 2026-07-26 writes to YouTube like every other save (it used to write Firestore
+ * directly, and those dates did not survive the next sync), so its test stubs the
+ * two YouTube routes and asserts the page makes NO direct Firestore write.
  *
  * Also pinned: the page mounts cleanly when /api/manage-playlists fails (no
  * YouTube creds in the emulator env — playlists are optional; the console
@@ -130,31 +132,62 @@ test.describe('동영상 태깅 — characterization', () => {
     await expect(editPanel(page).locator('input[type="date"]')).toHaveValue('2024-03-16');
   });
 
-  test('자동 날짜 인식 writes parsed 촬영일 to Firestore via the service layer', async ({
+  test('자동 날짜 인식 pushes the parsed date to YouTube and never writes Firestore directly', async ({
     page,
   }) => {
+    // Video data is YouTube-owned: writing a parsed date straight to Firestore does not
+    // survive, because refresh-video-metadata re-reads YouTube and nulls createdTime when
+    // YouTube has none (DEBUG_LOG 2026-07-26). The YouTube calls are stubbed because the
+    // emulator has no credentials — stubbing is also what makes the Firestore assertion
+    // below meaningful: with the refresh faked, the only way the card could gain a date is
+    // a direct write, which is exactly what must never happen.
+    const youtubeUpdates: Array<{ videoId: string; updates: Record<string, string> }> = [];
+    await page.route('**/api/update-youtube-video', async (route) => {
+      youtubeUpdates.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
+
+    const refreshCalls: Array<{ videoIds: string[] }> = [];
+    await page.route('**/api/refresh-video-metadata', async (route) => {
+      refreshCalls.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ updated: 1 }),
+      });
+    });
+
     await page.goto('/admin/tag-videos');
     await expect(card(page, VID2_TITLE)).toBeVisible();
 
     // Bulk parse reads description||id: only test-vid-02 ('… 20240315') matches.
     await page.getByRole('button', { name: /자동 날짜 인식/ }).click();
-
-    // First run: confirm dialog → service updates → result report. On a serial
-    // retry the video already carries a date → the "nothing to parse" alert.
     await expect(appDialog(page)).toBeVisible({ timeout: 15_000 });
-    if (await appDialog(page).getByText('날짜 인식이 필요한 동영상이 없어요').isVisible()) {
-      await appDialog(page).getByRole('button', { name: '확인' }).click();
-    } else {
-      await appDialog(page).getByRole('button', { name: '확인' }).click(); // confirm the run
-      await expect(appDialog(page).getByText(/자동 날짜 인식 완료/)).toBeVisible({
-        timeout: 30_000,
-      });
-      await appDialog(page).getByRole('button', { name: '확인' }).click();
-    }
+    await appDialog(page).getByRole('button', { name: '확인' }).click(); // confirm the run
 
-    // test-vid-02 now carries a real 촬영: date; test-vid-01 stays 촬영: 없음.
-    await expect(card(page, VID2_TITLE).getByText('촬영: 없음')).toHaveCount(0);
-    await expect(card(page, VID2_TITLE).getByText(/촬영:/)).toBeVisible();
+    await expect(appDialog(page).getByText(/자동 날짜 인식 완료/)).toBeVisible({
+      timeout: 30_000,
+    });
+    await appDialog(page).getByRole('button', { name: '확인' }).click();
+
+    // The parsed date went to YouTube, for that video only.
+    expect(youtubeUpdates).toHaveLength(1);
+    expect(youtubeUpdates[0].videoId).toBe('test-vid-02');
+    // UTC midnight of the calendar date, not the local-midnight Date the parser returns —
+    // .toISOString() on that would send 2024-03-14T15:00Z in KST and shift the day back.
+    expect(youtubeUpdates[0].updates.createdTime).toBe('2024-03-15T00:00:00.000Z');
+
+    // …and was then synced back from YouTube, rather than written here.
+    expect(refreshCalls).toHaveLength(1);
+    expect(refreshCalls[0].videoIds).toEqual(['test-vid-02']);
+
+    // Firestore is untouched (the sync was stubbed), so both cards stay dateless. A
+    // direct service-layer write would show a real 촬영: date here.
+    await expect(card(page, VID2_TITLE).getByText('촬영: 없음')).toBeVisible();
     await expect(card(page, 'test-vid-01').getByText('촬영: 없음')).toBeVisible();
   });
 });

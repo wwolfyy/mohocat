@@ -675,7 +675,7 @@ export const adminStrings = {
       noVideosNeedParsing:
         '❌ 날짜 인식이 필요한 동영상이 없어요.\n\n모든 동영상에 이미 촬영일이 있거나, 설명/ID에 인식 가능한 날짜 패턴이 없어요.',
       autoParseConfirm: (n: number) =>
-        `🤖 자동 날짜 인식\n\n동영상 설명/ID에서 촬영일을 인식해 업데이트해요.\n\n인식 가능한 동영상 ${n}개를 찾았어요.\n\n⚠️ 데이터베이스가 변경되고 시간이 걸릴 수 있어요.\n\n계속할까요?`,
+        `🤖 자동 날짜 인식\n\n동영상 설명/ID에서 촬영일을 인식해 업데이트해요.\n\n인식 가능한 동영상 ${n}개를 찾았어요.\n\n⚠️ YouTube에 바로 반영돼요 (되돌릴 수 없어요). 동영상 수만큼 시간이 걸려요.\n\n계속할까요?`,
       doneHeader: '🎉 자동 날짜 인식 완료!',
       successLine: (n: number) => `✅ 성공: ${n}개`,
       failLine: (n: number) => `❌ 실패: ${n}개`,

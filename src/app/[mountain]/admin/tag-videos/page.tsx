@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideoService } from '@/services';
 import { parseRecordingDateFromTitle } from '@/utils/dateParser';
 import { parseDate } from '@/utils/parse-date';
@@ -131,14 +131,55 @@ export default function TagVideosPage() {
   const [savingPlaylists, setSavingPlaylists] = useState(false);
 
   // 자동 날짜 인식: shared loop machinery (title/description date-source)
+  /**
+   * YouTube IDs whose parsed date landed on YouTube, collected during a run so the
+   * Firestore sync afterwards knows which videos to re-read.
+   */
+  const autoParsedYoutubeIds = useRef<string[]>([]);
+
   const autoParse = useDateAutoParse<AdminVideo>({
     items: c.items,
     setItems: c.setItems,
     needsDate: (video) => !video.createdTime,
     parse: (video) => parseRecordingDateFromTitle(video.description || video.id || ''),
     label: (video) => video.description || video.id,
+    // ⚠️ Writes to YouTube, NOT straight to Firestore. Video data is YouTube-owned: a
+    // Firestore-only write does not survive, because refresh-video-metadata re-reads
+    // YouTube's recordingDetails and nulls createdTime when YouTube has none — so the
+    // next sync (or any other save on that video) erased every date parsed here.
+    // Same shape as batchUpdateDate: PUT per video, then one Firestore sync at the end.
     applyUpdate: async (video, date) => {
-      await videoService.updateVideo(video.id, { createdTime: date });
+      const youtubeVideoId = video.youtubeId || video.id;
+
+      // parseRecordingDateFromTitle builds its Date from an ISO string with no `Z`, so it
+      // is LOCAL time: calling .toISOString() on it moves the calendar day backwards in
+      // any timezone ahead of UTC (2024-03-15 00:00 KST → 2024-03-14T15:00Z). Send the
+      // calendar date the operator sees, at UTC midnight — the convention
+      // saveVideoMetadata already uses for the per-video 촬영일 field.
+      const calendarDate = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+      ].join('-');
+
+      const response = await fetch('/api/update-youtube-video', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await authHeader(user)),
+        },
+        body: JSON.stringify({
+          videoId: youtubeVideoId,
+          updates: { createdTime: `${calendarDate}T00:00:00.000Z` },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update YouTube video');
+      }
+
+      autoParsedYoutubeIds.current.push(youtubeVideoId);
     },
     mergeParsedDate: (video, date) => ({ ...video, createdTime: date }),
   });
@@ -186,7 +227,29 @@ export default function TagVideosPage() {
 
     try {
       c.setError(null);
+      autoParsedYoutubeIds.current = [];
       const report = await autoParse.run();
+
+      // Pull the dates YouTube just accepted back into Firestore. Without this the
+      // parsed dates live only on YouTube until the next sync — the mirror image of the
+      // bug this replaced (Firestore-only writes that YouTube later erased).
+      if (autoParsedYoutubeIds.current.length > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // YouTube propagation
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await authHeader(user)),
+          },
+          body: JSON.stringify({ videoIds: autoParsedYoutubeIds.current }),
+        });
+
+        if (!refreshResponse.ok) {
+          console.warn('Failed to sync auto-parsed dates to Firestore');
+        }
+
+        await c.reload();
+      }
 
       let resultMessage = `${t.alerts.doneHeader}\n\n`;
       resultMessage += `${t.alerts.successLine(report.successCount)}\n`;
