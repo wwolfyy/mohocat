@@ -190,4 +190,82 @@ test.describe('동영상 태깅 — characterization', () => {
     await expect(card(page, VID2_TITLE).getByText('촬영: 없음')).toBeVisible();
     await expect(card(page, 'test-vid-01').getByText('촬영: 없음')).toBeVisible();
   });
+
+  test('재생목록 일괄 변경 applies to every selected video, not just the one open in the form', async ({
+    page,
+  }) => {
+    // Regression guard: until 2026-07-26 the modal's save always acted on the video open
+    // in the edit form, so the batch entry point silently updated one video — or none.
+    // Both playlist routes are stubbed (the emulator has no YouTube credentials, and the
+    // real GET 500s), which also lets the assertions read the exact per-video calls.
+    const playlistPosts: Array<{ videoId: string; playlistIds: string[] }> = [];
+    await page.route('**/api/manage-playlists**', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            playlists: [
+              { id: 'PL-one', title: '재생목록 하나', description: '', itemCount: 0 },
+              { id: 'PL-two', title: '재생목록 둘', description: '', itemCount: 0 },
+            ],
+          }),
+        });
+        return;
+      }
+
+      playlistPosts.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          results: [],
+          summary: { added: 1, removed: 0, failed: 0 },
+        }),
+      });
+    });
+
+    await page.route('**/api/refresh-video-metadata', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ updated: 2 }),
+      });
+    });
+
+    await page.goto('/admin/tag-videos');
+    await expect(card(page, VID2_TITLE)).toBeVisible();
+
+    // Select both videos — and deliberately leave the edit form empty, which is what made
+    // the old behavior a no-op rather than a wrong-video write.
+    await card(page, VID2_TITLE).locator('input[type="checkbox"]').check();
+    await card(page, 'test-vid-01').locator('input[type="checkbox"]').check();
+
+    await page.getByRole('button', { name: /재생목록 선택/ }).click();
+
+    const playlistModal = page
+      .locator('div.fixed')
+      .filter({ has: page.getByRole('heading', { name: /재생목록 선택/ }) });
+    await expect(playlistModal).toBeVisible();
+
+    await playlistModal.getByText('재생목록 하나').click();
+    await playlistModal.getByRole('button', { name: /변경사항 저장/ }).click();
+
+    // Destructive (unticked playlists are removed), so it confirms first.
+    await expect(appDialog(page).getByText(/재생목록 일괄 변경/)).toBeVisible({ timeout: 15_000 });
+    await appDialog(page).getByRole('button', { name: '확인' }).click();
+
+    await expect(appDialog(page).getByText(/재생목록 일괄 변경을 완료했어요/)).toBeVisible({
+      timeout: 30_000,
+    });
+    await appDialog(page).getByRole('button', { name: '확인' }).click();
+
+    // One call per selected video, each carrying the ticked playlist set.
+    expect(playlistPosts).toHaveLength(2);
+    expect(playlistPosts.map((p) => p.videoId).sort()).toEqual(['test-vid-01', 'test-vid-02']);
+    expect(playlistPosts.every((p) => p.playlistIds.length === 1)).toBe(true);
+    expect(playlistPosts.every((p) => p.playlistIds[0] === 'PL-one')).toBe(true);
+  });
 });

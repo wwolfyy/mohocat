@@ -683,6 +683,15 @@ export const adminStrings = {
       parseFailed: (msg: string) => `날짜를 인식하지 못했어요: ${msg}`,
       parsedFromTitle: (d: string) => `✅ 제목에서 날짜를 인식했어요: ${d}`,
       parseFromTitleFailed: '❌ 제목에서 날짜를 인식하지 못했어요',
+      noYoutubeSelectedForPlaylists: '선택한 동영상 중 YouTube 동영상이 없어요.',
+      batchPlaylistConfirm: (videoCount: number, playlistCount: number) =>
+        `🎬 재생목록 일괄 변경\n\n선택한 동영상 ${videoCount}개를 재생목록 ${playlistCount}개에 정확히 맞춰요.\n\n⚠️ 선택하지 않은 재생목록에서는 제거돼요. YouTube에 바로 반영되고 되돌릴 수 없어요.\n\n계속할까요?`,
+      batchPlaylistDone: (success: number, fail: number) => {
+        let m = '재생목록 일괄 변경을 완료했어요!';
+        if (success > 0) m += `\n✅ 성공: ${success}개`;
+        if (fail > 0) m += `\n❌ 실패: ${fail}개`;
+        return m;
+      },
       playlistSaved: (added: number, removed: number) =>
         `재생목록을 업데이트했어요! ${added}개 추가, ${removed}개 제거.`,
       playlistSavedFailures: (failed: number) =>

@@ -11,6 +11,42 @@
 
 ---
 
+## 2026-07-26 — Batch playlist assignment updated one video (or none): the modal's save ignored the batch selection
+
+**Symptom:** latent — found while writing the button spec for `/admin/tag-videos`, not from a
+report. Selecting several videos, opening 재생목록 선택 from the batch panel, ticking a
+playlist and saving appeared to work, but only ever changed **one** video — or silently
+nothing at all.
+
+**Root cause:** the playlist modal is opened from two places (the batch panel and the
+per-video 📋 재생목록 관리), tracked by `playlistSelectorContext`. Its save handler,
+`savePlaylistChanges()`, never read that context: it opened with
+`if (!ytm.selectedVideo …) return;` and operated on `selectedVideo` — the video open in the
+right-hand **edit form**, which has nothing to do with the batch checkboxes. So the batch
+path wrote to whatever was open in the form, and short-circuited to a no-op when nothing
+was. Nothing surfaced the mismatch: the panel's own hint says `✅ 모달에서 저장하기`, and the
+success dialog reports the single video's result.
+
+**Fix:** `savePlaylistChanges()` now dispatches on the context. The new
+`saveBatchPlaylistChanges()` walks every selected **YouTube** video, POSTing
+`batch_update_playlists` per video, then syncs the successes back with one
+`refresh-video-metadata` call and reports a tally — the same shape as `batchUpdateTags`.
+
+**Semantics chosen (worth not re-litigating): set, not merge.** Each selected video ends up
+in exactly the ticked playlists and is removed from the others. That matches 태그 저장 (which
+replaces the tag list) and is what the route's `batch_update_playlists` action already does
+per video, since it diffs against that video's own membership. Because the removal is
+destructive and a mixed selection has no meaningful "current" state to pre-tick, the batch
+modal opens with **nothing ticked** and the save **confirms first**, spelling out that
+unticked playlists are removed.
+
+**Verified:** new e2e regression test — stubs both playlist routes plus the refresh, selects
+two videos, **deliberately leaves the edit form empty** (the condition that made the old code
+a silent no-op), and asserts one POST per selected video carrying the ticked playlist set.
+The old code would produce zero POSTs. tsc 0, smoke 30/30, unit 80/80, full e2e green.
+
+---
+
 ## 2026-07-26 — 자동 날짜 인식's parsed dates silently vanished: it wrote Firestore, and the sync overwrites Firestore from YouTube
 
 **Symptom:** videos kept reappearing in 동영상 관리 with no 촬영일 after the bulk

@@ -332,8 +332,105 @@ export default function TagVideosPage() {
     setSelectedPlaylists(newSelectedPlaylists);
   };
 
-  // Save playlist changes for the selected video
+  /**
+   * Apply the ticked playlists to every selected video (batch context).
+   *
+   * **Set semantics, matching 태그 저장:** each video ends up in exactly the ticked
+   * playlists and is removed from the rest — which is also what the route's
+   * `batch_update_playlists` action does per video, since it diffs against that video's
+   * own current membership. Because that removal is destructive and the modal can't show
+   * a meaningful "current" state for a mixed selection, it confirms first.
+   */
+  const saveBatchPlaylistChanges = async () => {
+    const targets = c.items.filter(
+      (video) => c.selectedIds.has(video.id) && video.videoType === 'youtube'
+    );
+
+    if (targets.length === 0) {
+      await dialog.alert(t.alerts.noYoutubeSelectedForPlaylists);
+      return;
+    }
+
+    if (
+      !(await dialog.confirm(t.alerts.batchPlaylistConfirm(targets.length, selectedPlaylists.size)))
+    )
+      return;
+
+    try {
+      setSavingPlaylists(true);
+      const playlistIds = Array.from(selectedPlaylists);
+      const succeededIds: string[] = [];
+      let failCount = 0;
+
+      // Sequential on purpose: the same one-at-a-time shape as the other batch
+      // mutations, so a single video's failure doesn't abandon the rest.
+      for (const video of targets) {
+        const youtubeVideoId = video.youtubeId || video.id;
+        try {
+          const response = await fetch('/api/manage-playlists', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(await authHeader(user)),
+            },
+            body: JSON.stringify({
+              action: 'batch_update_playlists',
+              videoId: youtubeVideoId,
+              playlistIds,
+            }),
+          });
+
+          if (response.ok) {
+            succeededIds.push(youtubeVideoId);
+          } else {
+            failCount++;
+            const errorData = await response.json();
+            console.error(`Failed to update playlists for ${youtubeVideoId}:`, errorData.error);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Exception updating playlists for ${youtubeVideoId}:`, error);
+        }
+      }
+
+      if (succeededIds.length > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // YouTube propagation
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await authHeader(user)),
+          },
+          body: JSON.stringify({ videoIds: succeededIds }),
+        });
+
+        if (!refreshResponse.ok) {
+          console.warn('Failed to sync batch playlist changes to Firestore');
+        }
+      }
+
+      await c.reload();
+      setShowPlaylistSelector(false);
+      await dialog.alert(t.alerts.batchPlaylistDone(succeededIds.length, failCount));
+    } catch (error) {
+      console.error('Error saving batch playlist changes:', error);
+      await dialog.alert(
+        t.alerts.playlistSaveFailed(error instanceof Error ? error.message : '알 수 없는 오류')
+      );
+    } finally {
+      setSavingPlaylists(false);
+    }
+  };
+
+  // Save playlist changes — the modal is opened from two places, and until 2026-07-26 this
+  // always acted on `selectedVideo`, so the batch entry point silently applied to the one
+  // video open in the edit form (or did nothing at all).
   const savePlaylistChanges = async () => {
+    if (playlistSelectorContext === 'batch') {
+      await saveBatchPlaylistChanges();
+      return;
+    }
+
     if (!ytm.selectedVideo || ytm.selectedVideo.videoType !== 'youtube') {
       return;
     }
@@ -760,6 +857,11 @@ export default function TagVideosPage() {
               type="button"
               onClick={() => {
                 setPlaylistSelectorContext('batch');
+                // A mixed selection has no single "current" membership to pre-tick, and
+                // inheriting the last single-video selection would be misleading — the
+                // save is set-semantics, so start from nothing and let the confirm spell
+                // out what gets removed.
+                setSelectedPlaylists(new Set());
                 setShowPlaylistSelector(true);
               }}
               disabled={loadingPlaylists}
@@ -1324,10 +1426,13 @@ export default function TagVideosPage() {
               <button
                 onClick={() => {
                   setShowPlaylistSelector(false);
-                  // Reset selected playlists to original state
-                  const videoPlaylists = ytm.selectedVideo?.allPlaylists || [];
-                  const preSelectedPlaylists = new Set(videoPlaylists.map((p) => p.id));
-                  setSelectedPlaylists(preSelectedPlaylists);
+                  // Reset the ticks: back to the video's real membership for the single
+                  // context, or to nothing for a batch (which never had one).
+                  const videoPlaylists =
+                    playlistSelectorContext === 'batch'
+                      ? []
+                      : ytm.selectedVideo?.allPlaylists || [];
+                  setSelectedPlaylists(new Set(videoPlaylists.map((p) => p.id)));
                 }}
                 disabled={savingPlaylists}
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm disabled:opacity-50"
