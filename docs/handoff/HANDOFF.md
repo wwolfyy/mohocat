@@ -605,6 +605,23 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - 📌 **Operator note:** re-authorizing is now the entire procedure — click 재인증 in the
     YouTube panel, complete Google consent, done. No env edit, no redeploy, and nothing else to
     keep in sync.
+- 🆕 **`syncVideos()` claims the whole channel for whichever mountain runs it — must be fixed
+  before a real mountain #2 (logged 2026-07-26, not urgent).** Follows from the owner's
+  **single-shared-channel decision** (same day): rather than one YouTube channel per mountain,
+  all mountains publish to the one channel and per-mountain attribution comes from
+  `cat_videos.mountainId` (already stamped by `upload-youtube`). Rationale: a new channel would
+  have to clear YouTube's monetization thresholds (1,000 subs / 4,000 watch hours) on its own
+  before earning anything, and N channels means N OAuth credentials with N independently
+  expiring refresh tokens — exactly the failure mode above, multiplied. `manisan`'s
+  `social.youtubeChannelId` was set to geyang's channel accordingly.
+  - **The consequence:** `syncVideos(mountainId)` (`src/services/media-albums.ts` ~L638)
+    fetches _every_ video on the configured channel and imports anything missing from that
+    mountain's Firestore set, stamping it with that `mountainId`. With one shared channel, a
+    second mountain's sync would claim geyang's entire back catalogue. Inert today (manisan has
+    no prod data and is `hidden: true`), so this is a **prerequisite for provisioning a real
+    mountain #2**, not a live bug. Fix shape: scope the import by something channel-side that
+    identifies the mountain (a per-mountain playlist is the natural handle, and doubles as the
+    auditable attribution the other mountain's owner would want for a revenue split).
 - ✅ **M6 — no prod cutover needed (resolved 2026-07-25).** The upload-prefix wiring is a
   no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
   on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail
@@ -749,7 +766,11 @@ longer wanted.
   its channel from `getYouTubeChannelId(authz.mountainId)` instead of a
   `NEXT_PUBLIC_YOUTUBE_CHANNEL_ID` env var that is set nowhere. New net:
   `tests/unit/youtubeCredentials.test.ts` (9). Gates: tsc 0, smoke 30/30, unit 80/80, full e2e
-  146/13/0. Detail: `log/DEBUG_LOG.md` 2026-07-26.
+  146/13/0. (3) **Owner decision: one YouTube channel for all mountains** (per-mountain channels
+  rejected — each would have to clear monetization thresholds alone, and N credentials means N
+  expiring tokens); attribution rides on `cat_videos.mountainId`. `manisan` repointed at
+  geyang's channel, and the resulting `syncVideos()` cross-tenant hazard logged as a
+  prerequisite for a real mountain #2. Detail: `log/DEBUG_LOG.md` 2026-07-26.
 - **2026-07-26** — **P5.4 manual YouTube pass STARTED on Preview and immediately
   found two pre-existing bugs; both queued for a fresh session.** (1) **Split refresh-token
   source** — the admin "re-authorize" button writes the fresh token to Firestore
