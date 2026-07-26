@@ -564,12 +564,30 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
   on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail
   migration was reverted after a dry-run found 0 changes.)
-- 🔑 **M7 — GA4 setup owner-owed (2026-07-25).** The gtag.js code is on `dev`, but analytics
-  won't emit anything until: (1) `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the `G-XXXX` id) is set in
-  Vercel **Production + Preview** — until then the snippet isn't rendered (no error); and (2)
-  the GA4 property has `mountain_id` registered as a **custom dimension** ⚠️ **before any
-  second-tenant traffic ever exists** (GA4 does not backfill dimensions). The old
-  `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is now unused and can be removed from Vercel.
+- ✅ **M7 — GA4 console setup DONE by the owner 2026-07-26** (pending post-redeploy
+  verification). What was done: the **Firebase-linked GA4 property is reused** (same
+  measurement ID the retired `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` held — pre-M7 history and
+  new gtag data stay in one property); `mountain_id` registered as a **custom dimension**
+  (scope Event); `NEXT_PUBLIC_GA_MEASUREMENT_ID` set in Vercel **Production only** —
+  deliberate, to keep `dev` traffic out of the data; Enhanced measurement turned **on** with
+  **"Page changes based on browser history events" off** (that sub-option would emit a second,
+  `mountain_id`-less `page_view` per navigation → ~2× counts). ⏳ Verify Realtime/DebugView
+  after the prod redeploy. Full runbook incl. all of the above:
+  [`admin-manual/google_analytics.md`](../manuals/admin-manual/google_analytics.md).
+  - ✅ **Gap closed same day:** `mountain_id` was attached per-event to `page_view` only, so
+    the newly-enabled Enhanced-measurement events (scroll, outbound click, file download, video
+    engagement, form interaction) carried none. `AnalyticsTracker` now calls
+    `gtag('set', { mountain_id })` first, making it a **default parameter on every event**.
+    Residual limit: only events after hydration inherit it (the root layout sits above
+    `MountainProvider`, so it can't be set in the gtag `config` call) — automatic events need
+    interaction, so they land later anyway.
+  - ⚠️ **Sequencing trap — production is pre-M7.** `main` still runs `getAnalytics(app)` off
+    `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` and reads `NEXT_PUBLIC_GA_MEASUREMENT_ID` **nowhere**.
+    On that build the new var does nothing and deleting the old one **turns analytics off**.
+    Keep **both** set on Production until M7 promotes and Part B verification passes; only then
+    delete the Firebase one. Recorded as step **A0** of the GA4 guide.
+  - 📌 **Form interactions** (newly enabled) widens automatic collection on the 동참/content
+    forms — worth checking against the 개인정보처리방침 with the compliance carry-overs.
 - ✅ **M5 prod cutover — DONE 2026-07-23 (owner-run).** Ran in the required order:
   snapshot → `APPLY=true` migration (`currentRole`→`roles`, `'default'`→`geyang`) →
   `firestore:indexes` (6 composite, Enabled) → PR #8 `dev → main` merge → `firestore:rules`.
