@@ -23,7 +23,7 @@
 >    촬영일 / playlist edits now reach Firestore **without** a manual 동기화 (the owner's
 >    2026-07-26 report; fixed in `c94d02e`).
 > 2. **Re-run the P5.4 manual pass from the top.** Every earlier step is invalidated: the
->    credential source, the OAuth scopes, and three write paths all changed under it. It is
+>    credential source, the OAuth scopes, and four write paths all changed under it. It is
 >    still the gate on the next `dev → main` promotion.
 > 3. Then the promotion itself (M6/M7/M8 + the GA4 guide + this session are all waiting).
 >
@@ -853,7 +853,26 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-26 (latest)** — **Three more `/admin/tag-videos` bugs fixed (`b5f08b7`,
+- **2026-07-26 (latest)** — **Batch edits never reached Firestore — the seventh bug of the
+  session, and the only one reported rather than found by reading (`c94d02e`).** Batch tag /
+  촬영일 / playlist saves applied to YouTube but the site's copy only updated after a manual
+  📺 YouTube와 동기화, while individual saves synced themselves — the asymmetry that localized
+  it. `/api/refresh-video-metadata` takes **YouTube video ids** (Data API lookup, then
+  `where('youtubeId','==',id)`), but the batch loops recorded the **Firestore doc id** from the
+  selection and passed those, so the route 404'd. The caller did `if (res.ok) log(…)` with no
+  `else`, so the failure was invisible and the dialog still reported 완료; `saveVideoMetadata`
+  was immune because it resolves the YouTube id once and reuses it. Fixed: results keyed by
+  `youtubeVideoId`; the refresh extracted into `syncToFirestore()`, which returns success and
+  logs the status + body; on failure the dialog now says the change reached YouTube but not the
+  site. ⚠️ **The fixtures had made this untestable** — no seeded video carried a `youtubeId`, so
+  `youtubeId || id` collapsed to the doc id and the two could never diverge; both fixtures now
+  have a distinct one (`yt-vid-01/02`), matching production, and the four assertions that
+  referenced the old ids moved with them. **Second time this session a fixture concealed a
+  production-only failure mode** (the first: emulator videos have no YouTube publish dates), so
+  the hand-off's fresh-session box now carries it as a standing check and the plan proposes a
+  broader fixture-realism audit. New regression test asserts the PUT **and** the refresh both
+  carry the YouTube id. Gates: tsc 0, smoke 30/30, unit 80/80, **e2e 148/13/0**.
+- **2026-07-26** — **Three more `/admin/tag-videos` bugs fixed (`b5f08b7`,
   `80ba04a`, `dc8391f`), a source-of-truth principle adopted, and the page's button spec sheet
   written.** All three were found by **reading the page to document it**, not from reports, and
   none was reachable by the existing suites. (1) `자동 날짜 인식` wrote its parsed dates to
