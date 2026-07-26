@@ -52,7 +52,13 @@ the testing hand-off
   broken image upload fixed; `react-hook-form` removed. ⚠️ **The one remaining
   track item is owner-owed:** the P5.4 scripted manual YouTube pass (editor
   sync/playlists + form video upload, real creds, on Preview) before the next
-  `dev → main` promotion.
+  `dev → main` promotion. 🐛 **STARTED 2026-07-26 and immediately blocked** — the pass
+  found a real bug on its first step (the YouTube routes read the refresh token from
+  env while the admin re-authorize button writes it to Firestore). ✅ **Both bugs are now
+  fixed** (same day — shared credential resolver, Firestore-first; + the
+  `manage-playlists` channel-ID leak); see **Open threads**. **The pass must re-run from
+  the top**, since the fix changes which credential every route uses.
+  _Exactly what a manual pass is for — no emulator-backed test could have caught it._
 - **Multi-tenant / multi-mountain refactor — ✅ M1–M5 DONE & DEPLOYED TO PROD (PR #8,
   2026-07-23; cutover complete). ✅ M6 DONE on `dev` (2026-07-25) — no prod migration needed.**
   **M6 (2026-07-25):** per-tenant **upload** namespacing — `generate-signed-url` + the form
@@ -560,6 +566,45 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- ✅ **The two P5.4 YouTube bugs are FIXED (2026-07-26) — the manual pass can resume.**
+  Both were surfaced by the pass's first step on Preview and neither is reachable by any
+  automated test (the emulator has no YouTube credentials), so **the pass must re-run from the
+  top**: the fix changes which credential every route uses.
+  - **Bug 1 — split credential source.** `/api/admin/youtube-auth/callback` writes the fresh
+    refresh token to **Firestore** (`admin_config/youtube_auth`), but every consuming route went
+    through `getYouTubeOAuthConfig()`, which read **env only** — so a stale
+    `YOUTUBE_REFRESH_TOKEN` shadowed it and re-authorizing changed nothing. Two extras found
+    while fixing: `upload-youtube`'s apparent Firestore fallback was **dead code** (it needed
+    the client id/secret from the very config whose absence triggered it), and the same
+    all-or-nothing gate meant **`auth-url` refused to start the OAuth flow without a refresh
+    token already present** — a bootstrap deadlock on a fresh deployment. Correction to the
+    original write-up: **`refresh-video-metadata` was never affected** (it uses the public API
+    key, not OAuth).
+  - **Fix:** new `src/lib/youtube/credentials.ts` — one resolver for the single shared
+    credential, splitting **client identity** (env; effectively never rotates) from **the
+    refresh token** (rotates every 7–14 days). All six OAuth consumers migrated;
+    `getYouTubeOAuthConfig()` deleted.
+  - 🔑 **`YOUTUBE_REFRESH_TOKEN` is gone — the token lives only in Firestore** (owner's call,
+    stricter than the originally-planned env → Firestore fallback, which wouldn't even have
+    fixed the reported symptom: the stale env token _was_ set and would still have won). A
+    fallback was rejected too — it keeps the same failure shape whenever the Firestore doc is
+    missing, and earns nothing, since obtaining a token needs client identity only. Follow-ons:
+    the status route reports one source instead of two (it used to show Firestore's timestamp
+    against the env token); the callback page no longer prints the raw token; `scripts/auth/`
+    (the command-line generate-and-paste workflow) deleted; `.env.example` updated.
+    ⚠️ **Do not delete the var from Vercel _Production_ before this promotes** — `main` is
+    pre-fix and env-only there, so removing it turns YouTube off. Preview can be cleared now,
+    and clearing it is the sharpest version of the P5.4 test.
+  - **Bug 2 — `manage-playlists` POST channel ID.** `batch_update_playlists` read
+    `process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID`, set **nowhere**, so every playlist-membership
+    save 500'd; the GET beside it already used `getYouTubeChannelId(authz.mountainId)`. Missed
+    when M1 moved channel config out of env vars — both a live bug and a multi-tenant leak.
+    Fixed with the tenant-aware getter (no env var added).
+  - **Net:** `tests/unit/youtubeCredentials.test.ts` (9 tests) pins the precedence. Gates: tsc
+    0, smoke 30/30, unit 80/80, full e2e green. Detail: `log/DEBUG_LOG.md` 2026-07-26.
+  - 📌 **Operator note:** re-authorizing is now the entire procedure — click 재인증 in the
+    YouTube panel, complete Google consent, done. No env edit, no redeploy, and nothing else to
+    keep in sync.
 - ✅ **M6 — no prod cutover needed (resolved 2026-07-25).** The upload-prefix wiring is a
   no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
   on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail
@@ -678,7 +723,60 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-26 (latest)** — **The 7 ungated write/credential API routes are now gated (one
+- **2026-07-26 (latest)** — **Both P5.4 YouTube bugs FIXED; and the platform commits to a
+  single shared YouTube channel.** (1) New `src/lib/youtube/credentials.ts` is now the only
+  place the shared OAuth credential is resolved, splitting **client identity** (env, never
+  rotates) from **the refresh token** (Firestore only). This is **stricter than the plan
+  recorded the day before**: env → Firestore would not have fixed the reported failure at all
+  (the stale env token _was_ set and would still have won), and even Firestore-first-with-env-
+  fallback was rejected — a fallback keeps the same failure shape whenever the Firestore doc
+  goes missing, and buys nothing, since obtaining a token needs client identity only.
+  `YOUTUBE_REFRESH_TOKEN` is gone from the code, `.env.example`, and the deleted `scripts/auth/`
+  workflow; the admin "re-authorize" button is now the whole procedure, with no env edit and no
+  redeploy. ⚠️ Leave the var set in Vercel **Production** until this promotes — `main` is
+  pre-fix and env-only. Two further defects fell out of the same
+  root cause: `upload-youtube`'s Firestore fallback was **dead code** (it required client
+  credentials from the very config whose absence triggered it — so _no_ route had ever
+  successfully fallen back), and `auth-url` required a refresh token in order to obtain one, a
+  bootstrap deadlock on a fresh deployment. 🔑 **`YOUTUBE_REFRESH_TOKEN` was then removed
+  entirely** (owner's call — an env fallback preserves the same failure whenever the Firestore
+  doc goes missing, and isn't needed to bootstrap); the token now lives only in Firestore. Do
+  not clear the var from Vercel **Production** until this promotes — `main` is still env-only. All six OAuth consumers migrated;
+  `getYouTubeOAuthConfig()` deleted; the status panel stopped lending Firestore's timestamp to
+  the env token (that display is a large part of why the split went unnoticed); the OAuth
+  success page stopped printing the raw token. **Correction:** `refresh-video-metadata` was
+  never affected — it uses the public API key, not OAuth. (2) `manage-playlists` POST now takes
+  its channel from `getYouTubeChannelId(authz.mountainId)` instead of a
+  `NEXT_PUBLIC_YOUTUBE_CHANNEL_ID` env var that is set nowhere. New net:
+  `tests/unit/youtubeCredentials.test.ts` (9). Gates: tsc 0, smoke 30/30, unit 80/80, full e2e
+  146/13/0. Detail: `log/DEBUG_LOG.md` 2026-07-26.
+- **2026-07-26** — **P5.4 manual YouTube pass STARTED on Preview and immediately
+  found two pre-existing bugs; both queued for a fresh session.** (1) **Split refresh-token
+  source** — the admin "re-authorize" button writes the fresh token to Firestore
+  (`admin_config/youtube_auth`), but `getYouTubeOAuthConfig()` reads **env only**; only
+  `upload-youtube` falls back to Firestore, so `update-youtube-video` / `manage-playlists` /
+  `youtube-playlists` / `refresh-video-metadata` keep using a stale `YOUTUBE_REFRESH_TOKEN` and
+  fail `invalid_grant`, while the status panel looks healthy because it checks **both** sources.
+  Fix = one shared env → Firestore credential helper across all five routes. (2)
+  **`manage-playlists` POST reads `process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID`** — set nowhere,
+  so playlist saves 500; the GET beside it already uses `getYouTubeChannelId(mountainId)`
+  (missed in M1's config move; also a multi-tenant leak). Both are **pre-existing, not
+  regressions** from the same-day auth-gating pass, and **neither is reachable by automated
+  tests** — the emulator has no YouTube credentials, which is exactly why P5.4 exists as a
+  manual pass. Also this session: **GA4 console setup completed** by the owner (Firebase-linked
+  property reused, `mountain_id` dimension registered, Enhanced measurement on with
+  history-based page views **off**, env var Production-only) and the ⚠️ **pre-M7 sequencing
+  trap** recorded — `main` still runs the Firebase SDK off
+  `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` and reads `NEXT_PUBLIC_GA_MEASUREMENT_ID` nowhere, so
+  both vars must stay set until M7 promotes. Full runbook:
+  [`admin-manual/google_analytics.md`](../manuals/admin-manual/google_analytics.md).
+- **2026-07-26** — **`mountain_id` is now a GA4 default parameter (`e929c39`).**
+  `AnalyticsTracker` calls `gtag('set', { mountain_id })` before its `page_view`, so the
+  Enhanced-measurement events enabled the same day (scroll, outbound click, download, video,
+  form) carry the tenant too — previously it was attached per-event to `page_view` alone.
+  Residual limit: only post-hydration events inherit it (the root layout sits above
+  `MountainProvider`).
+- **2026-07-26** — **The 7 ungated write/credential API routes are now gated (one
   deleted) — the open thread is resolved.** `manage-playlists` (GET+POST),
   `refresh-video-metadata`, `update-youtube-video`, `upload-youtube`, `youtube-playlists`,
   `generate-signed-url`, and `generate-youtube-signed-url` had **no auth gate at all** — an

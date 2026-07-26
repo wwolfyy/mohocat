@@ -88,13 +88,6 @@ export interface OAuthProviderConfig {
   };
 }
 
-export interface YouTubeOAuthConfig {
-  clientId: string;
-  clientSecret: string;
-  refreshToken: string;
-  redirectUri?: string;
-}
-
 export interface AboutSection {
   title: string;
   content: string;
@@ -279,24 +272,11 @@ export function getYouTubeApiKey(): string {
   return process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
 }
 
-/**
- * Get YouTube OAuth configuration
- */
-export function getYouTubeOAuthConfig(): YouTubeOAuthConfig | undefined {
-  if (
-    process.env.YOUTUBE_CLIENT_ID &&
-    process.env.YOUTUBE_CLIENT_SECRET &&
-    process.env.YOUTUBE_REFRESH_TOKEN
-  ) {
-    return {
-      clientId: process.env.YOUTUBE_CLIENT_ID,
-      clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
-      refreshToken: process.env.YOUTUBE_REFRESH_TOKEN,
-      redirectUri: process.env.YOUTUBE_REDIRECT_URI,
-    };
-  }
-  return undefined;
-}
+// getYouTubeOAuthConfig() lived here until 2026-07-26. It required all three of
+// YOUTUBE_CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN before returning anything, which made
+// an env-only credential the only one any route could see. The OAuth credential now
+// lives in `src/lib/youtube/credentials.ts`, which reads the freshest refresh token
+// from Firestore and keeps client identity separate from it.
 
 /**
  * Get Firebase Admin Service Account configuration for admin operations

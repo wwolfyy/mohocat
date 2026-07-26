@@ -15,6 +15,40 @@
 
 ---
 
+## 2026-07-26 — Removed: the `YOUTUBE_REFRESH_TOKEN` env var and the command-line token workflow
+
+**Area:** removed — `scripts/auth/` (both scripts), the `YOUTUBE_REFRESH_TOKEN` entry in
+`.env.example`, the env branch in `getYouTubeOAuthCredentials()`, and the status route's
+second "environment" token row. Changed — `src/components/admin/YouTubeAuthPanelNew.tsx`
+(shows the stored token's real issue date instead of the env token's placeholder),
+`scripts/README.md`.
+
+**What changed:** the YouTube refresh token now lives in exactly one place — Firestore
+`admin_config/youtube_auth`, written by the admin 재인증 button. The env var is gone, along
+with `generate_youtube_refresh_token.js` / `refresh_youtube_token.js`, the command-line
+"generate a token, paste it into `.env`, redeploy" workflow the admin panel replaced (the
+generator script already pointed at the GUI in its own header).
+
+**Rationale:** this rides on the same-day credential fix (`DEBUG_LOG.md` 2026-07-26), which
+first kept env as a _fallback_ behind Firestore. The owner opted to remove it outright, and
+that's the better line: a fallback preserves the exact failure that was just fixed for the
+case where the Firestore doc goes missing — routes would quietly resume on a stale token —
+while adding no capability, since obtaining a token needs only the client id/secret. The
+recovery from "no token anywhere" is the same button as every other token problem. What
+remains in env is client identity (`YOUTUBE_CLIENT_ID`/`_SECRET`/`_REDIRECT_URI`), which
+identifies the OAuth app and effectively never rotates.
+
+⚠️ **Sequencing:** production runs `main`, which is pre-fix and reads the token from env only.
+`YOUTUBE_REFRESH_TOKEN` must stay set in Vercel **Production** until this promotes, or YouTube
+stops working there. Preview can be cleared immediately — and clearing it makes the P5.4 manual
+pass strictly stronger, since with nothing to fall back to, a working video edit proves the
+Firestore path end to end.
+
+**Verified:** tsc 0, smoke 30/30, unit 80/80 (the suite now asserts a leftover
+`YOUTUBE_REFRESH_TOKEN` is ignored), full e2e 146/13/0.
+
+---
+
 ## 2026-07-26 — Analytics: `mountain_id` becomes a GA4 default parameter (all events, not just `page_view`)
 
 **Area:** changed — `src/components/AnalyticsTracker.tsx`;

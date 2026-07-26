@@ -232,6 +232,15 @@ photo/video album pages.
 - **동영상 관리** (`/admin/tag-videos`) — browse videos, edit metadata, manage playlists;
   YouTube integration lives here (auth/refresh handled server-side).
 
+**YouTube re-authorization.** Google's refresh token expires every **7–14 days**; when video
+edits, uploads, or playlist saves start failing with an authentication error, click
+**재인증/re-authorize** in the YouTube panel on 동영상 관리 and complete the Google consent
+screen. That's the whole procedure — since 2026-07-26 the new token is stored server-side and
+takes effect immediately for **every** YouTube function. **No environment-variable edit and no
+redeploy are needed**; older instructions saying to paste `YOUTUBE_REFRESH_TOKEN` into Vercel are
+obsolete — that variable no longer exists, and the command-line token scripts that went with it
+were deleted. If the panel ever reports no token at all, the fix is the same button.
+
 _⚠️ expand: step-by-step tagging workflow, bulk-tagging, and the YouTube auth setup._
 
 ---

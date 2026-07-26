@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeOAuthConfig } from '@/utils/config';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
 
 // Gated: lists the shared YouTube channel's playlists via the operator's OAuth
 // credential — require 'manage-video', mirroring the cat_videos rule.
@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get YouTube OAuth configuration from centralized config
-    const youtubeOAuth = getYouTubeOAuthConfig();
+    // Client identity from env + the freshest refresh token (Firestore first)
+    const youtubeOAuth = await getYouTubeOAuthCredentials();
     if (!youtubeOAuth) {
       return NextResponse.json(
         {

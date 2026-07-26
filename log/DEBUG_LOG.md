@@ -11,6 +11,67 @@
 
 ---
 
+## 2026-07-26 — Re-authorizing YouTube fixed nothing: the button writes the token to Firestore, every route read it from env
+
+**Symptom:** Found on Preview during the P5.4 scripted manual YouTube pass. The
+`/admin` "re-authorize" button reported success, and the token status panel showed
+healthy tokens — but editing a video's metadata still failed with _"YouTube
+authentication failed. The refresh token may be expired or invalid."_ Saving playlist
+membership failed separately with _"Channel ID not configured."_
+
+**Root cause — two independent bugs, both invisible to the automated suites** (the
+emulator has no YouTube credentials, which is exactly why P5.4 exists as a manual pass):
+
+1. **Split credential sources.** `/api/admin/youtube-auth/callback` stores the fresh
+   refresh token in Firestore (`admin_config/youtube_auth`), but every consuming route
+   went through `getYouTubeOAuthConfig()` (`utils/config.ts`), which read **env only**.
+   So a stale `YOUTUBE_REFRESH_TOKEN` shadowed the token that had just been written, and
+   the operator was silently expected to hand-copy it into Vercel and redeploy. Three
+   things conspired to hide it: (a) the error said "expired or invalid", not "not
+   configured" — so the var _was_ set, just stale; (b) the status panel checks **both**
+   sources, and worse, displayed **Firestore's** `updatedAt` against the **env** token
+   ("they should be the same token"), so a stale copy rendered with a fresh timestamp;
+   (c) `upload-youtube` looked like it had a Firestore fallback, so uploads were assumed
+   to prove the whole path worked. That fallback was **dead code**: it only ran when
+   `getYouTubeOAuthConfig()` returned `undefined`, but it then needed `clientId`/
+   `clientSecret` _from that same undefined config_ → always `null`. The same
+   all-or-nothing gate also meant `auth-url` refused to start the OAuth flow without a
+   refresh token already present — a bootstrap deadlock on any fresh deployment.
+2. **`manage-playlists` POST read a retired env var for the channel ID.**
+   `batch_update_playlists` did `process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID`, which is
+   set nowhere (not in Vercel, not in `.env.example`) — M1 moved channel config into
+   `mountains.json` and this call site was missed. The GET in the same file already did
+   it right (`getYouTubeChannelId(authz.mountainId)`). Both a live 500 and a
+   multi-tenant leak: a global where the request's tenant belonged.
+
+**Fix:** new `src/lib/youtube/credentials.ts` — one resolver for the single shared
+credential, splitting **client identity** (env; effectively never rotates) from **the
+refresh token** (rotates every 7–14 days, and now lives **only** in Firestore).
+`getYouTubeOAuthClient()` returns identity alone, so `auth-url`/`callback`/`status` no
+longer need a token to obtain one. All six OAuth consumers migrated (`upload-youtube`,
+`update-youtube-video`, `manage-playlists` GET+POST, `youtube-playlists`,
+`admin/youtube-auth/{auth-url,callback,status}`); `getYouTubeOAuthConfig()` deleted.
+Bug 2 is the one-line switch to `getYouTubeChannelId(authz.mountainId)`.
+
+⚠️ **`YOUTUBE_REFRESH_TOKEN` was removed outright, not demoted to a fallback** (owner's
+call). The first cut resolved Firestore-first with env behind it; the fallback was then
+dropped because it preserves the same failure shape whenever the Firestore doc is missing
+— routes would quietly resume on a stale env token. It also earns nothing: obtaining a
+token needs client identity only, so a deployment with no token anywhere recovers by
+clicking 재인증. Follow-on cleanups: the status route reports one token source instead of
+two (it used to show **Firestore's** timestamp against the **env** token — much of why
+the split went unnoticed); the OAuth success page no longer prints the raw token with
+instructions to paste it into `.env.local`; `scripts/auth/` (the command-line
+generate-and-paste workflow) deleted; `.env.example` updated.
+
+**Verified:** `tests/unit/youtubeCredentials.test.ts` (9 tests) — the token resolves from
+Firestore, a leftover `YOUTUBE_REFRESH_TOKEN` is ignored entirely, identity resolves with
+no token present, and a Firestore read failure re-raises instead of degrading to
+"unconfigured". tsc 0, smoke 30/30, unit 80/80, full e2e 146/13/0. ⚠️ The end-to-end proof
+is still the **manual pass on Preview** — no emulator can reach YouTube.
+
+---
+
 ## 2026-07-19 — Modal dialog conversion silently canceled the post-submit redirect (App-Router transition vs. modal-unmount re-render)
 
 **Symptom:** After the P6.1 `alert()` → shared `ui/Modal` conversion, all four

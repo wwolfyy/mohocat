@@ -1,7 +1,8 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeOAuthConfig, getYouTubeChannelId } from '@/utils/config';
+import { getYouTubeChannelId } from '@/utils/config';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
 
 // Gated: reads the shared YouTube channel's playlists/memberships with the operator's
 // OAuth credential — require 'manage-video', mirroring the cat_videos rule.
@@ -19,8 +20,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Channel ID is required' }, { status: 400 });
     }
 
-    // Get YouTube OAuth configuration from centralized config
-    const youtubeOAuth = getYouTubeOAuthConfig();
+    // Client identity from env + the freshest refresh token (Firestore first)
+    const youtubeOAuth = await getYouTubeOAuthCredentials();
     if (!youtubeOAuth) {
       return NextResponse.json(
         {
@@ -95,8 +96,8 @@ export async function POST(request: NextRequest) {
   try {
     const { action, videoId, playlistId, playlistIds } = await request.json();
 
-    // Get YouTube OAuth configuration from centralized config
-    const youtubeOAuth = getYouTubeOAuthConfig();
+    // Client identity from env + the freshest refresh token (Firestore first)
+    const youtubeOAuth = await getYouTubeOAuthCredentials();
     if (!youtubeOAuth) {
       return NextResponse.json(
         {
@@ -189,8 +190,11 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // First, get current playlists for the video
-        const channelId = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
+        // First, get current playlists for the video. The channel comes from the
+        // request's tenant config (same getter the GET above uses) — it used to read a
+        // `NEXT_PUBLIC_YOUTUBE_CHANNEL_ID` env var that M1 retired and that is set
+        // nowhere, so every batch save 500'd.
+        const channelId = getYouTubeChannelId(authz.mountainId);
         if (!channelId) {
           return NextResponse.json({ error: 'Channel ID not configured' }, { status: 500 });
         }

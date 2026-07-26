@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
 interface TokenInfo {
-  source: 'environment' | 'firestore';
+  source: 'firestore';
   // The raw refresh token is deliberately NOT returned by /api/admin/youtube-auth/status
   // (it's a secret); the client only needs source/validity/expiry.
   isValid: boolean;
@@ -21,10 +21,6 @@ interface YouTubeAuthStatus {
   message: string;
   tokens: TokenInfo[];
   expiresAt?: string | null;
-  envTokenInfo?: {
-    issuedAt: string;
-    status: string;
-  };
   firestoreTokenInfo?: {
     issuedAt: string;
     status: string;
@@ -200,8 +196,8 @@ export default function YouTubeAuthPanel() {
 
               {authStatus.status === 'valid' && (
                 <div className="text-sm text-gray-500 mt-2">
-                  {authStatus.envTokenInfo?.issuedAt && (
-                    <div>📅 토큰 발급: {formatDate(authStatus.envTokenInfo.issuedAt)}</div>
+                  {authStatus.firestoreTokenInfo?.issuedAt && (
+                    <div>📅 토큰 발급: {formatDate(authStatus.firestoreTokenInfo.issuedAt)}</div>
                   )}
                 </div>
               )}

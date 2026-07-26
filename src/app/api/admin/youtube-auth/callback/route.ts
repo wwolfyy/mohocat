@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
 import { db } from '@/lib/firebase-admin';
+import { getYouTubeOAuthClient } from '@/lib/youtube/credentials';
 
 // NOT gated by requireApiPermission: this is the Google OAuth redirect target, hit by the
 // browser after consent — there's no Authorization header to verify. It only acts on a
@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No authentication code provided' }, { status: 400 });
     }
 
-    const oauthConfig = getYouTubeOAuthConfig();
+    // Client identity only — exchanging the consent `code` needs the app's id/secret,
+    // not a pre-existing refresh token (this is where the new one comes from).
+    const oauthConfig = getYouTubeOAuthClient();
 
     if (!oauthConfig) {
       return NextResponse.json({ error: 'YouTube OAuth not configured' }, { status: 500 });
@@ -72,12 +74,9 @@ export async function GET(request: NextRequest) {
           <body>
             <h1>YouTube Authorization Successful!</h1>
             <p>✅ New refresh token has been generated and stored.</p>
-            <p>🔄 Your YouTube upload functionality should now work properly.</p>
+            <p>🔄 All YouTube functionality (upload, metadata edits, playlists) is now live on
+               the new token — no environment-variable change and no redeploy needed.</p>
             <p>📅 This token will be valid for 7-14 days.</p>
-            <p><strong>💡 Important:</strong> Please update your .env.local file with the new token:</p>
-            <div style="background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; word-break: break-all;">
-              YOUTUBE_REFRESH_TOKEN=${tokens.refresh_token}
-            </div>
             <p>You can now close this window and return to the admin panel.</p>
             <script>
               setTimeout(() => {

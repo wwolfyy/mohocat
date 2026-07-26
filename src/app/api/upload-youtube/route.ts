@@ -2,44 +2,9 @@ import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { Readable } from 'stream';
 import { getVideoService } from '@/services';
-import { getYouTubeOAuthConfig } from '@/utils/config';
 import { getRequestMountainId } from '@/lib/tenant';
-import { db } from '@/lib/firebase-admin';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
-
-async function getYouTubeRefreshToken() {
-  // First try to get token from environment variable
-  const youtubeOAuth = getYouTubeOAuthConfig();
-  if (youtubeOAuth?.refreshToken) {
-    return {
-      refreshToken: youtubeOAuth.refreshToken,
-      clientId: youtubeOAuth.clientId,
-      clientSecret: youtubeOAuth.clientSecret,
-      redirectUri: youtubeOAuth.redirectUri,
-    };
-  }
-
-  // If env var token is not available, try to get from Firestore
-  try {
-    const doc = await db.collection('admin_config').doc('youtube_auth').get();
-
-    if (doc.exists) {
-      const data = doc.data();
-      if (data?.refreshToken && youtubeOAuth?.clientId && youtubeOAuth?.clientSecret) {
-        return {
-          refreshToken: data.refreshToken,
-          clientId: youtubeOAuth.clientId,
-          clientSecret: youtubeOAuth.clientSecret,
-          redirectUri: youtubeOAuth.redirectUri,
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to get YouTube token from Firestore:', error);
-  }
-
-  return null;
-}
+import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
 
 // Gated: uploads a video to the shared YouTube channel with the operator's OAuth
 // credential AND writes a `cat_videos` record via the Admin SDK (bypassing
@@ -51,8 +16,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Get YouTube OAuth configuration from centralized config or Firestore
-    const tokenConfig = await getYouTubeRefreshToken();
+    // Client identity from env + the freshest refresh token (Firestore first)
+    const tokenConfig = await getYouTubeOAuthCredentials();
     if (!tokenConfig) {
       return NextResponse.json(
         {

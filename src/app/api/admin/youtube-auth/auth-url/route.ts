@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getYouTubeOAuthClient } from '@/lib/youtube/credentials';
 
 // Gated: only video managers may initiate the YouTube OAuth flow.
 export async function GET(request: Request) {
@@ -10,7 +10,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }
   try {
-    const oauthConfig = getYouTubeOAuthConfig();
+    // Client identity only — this route *obtains* a refresh token, so requiring one to
+    // already exist would be a bootstrap deadlock on a fresh deployment.
+    const oauthConfig = getYouTubeOAuthClient();
 
     if (!oauthConfig) {
       return NextResponse.json(

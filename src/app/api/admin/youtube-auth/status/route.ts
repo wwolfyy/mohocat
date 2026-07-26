@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getYouTubeOAuthConfig } from '@/utils/config';
 import { google } from 'googleapis';
-import { db } from '@/lib/firebase-admin';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getStoredRefreshToken, getYouTubeOAuthClient } from '@/lib/youtube/credentials';
 
 interface TokenInfo {
-  source: 'environment' | 'firestore';
+  source: 'firestore';
   token: string;
   isValid: boolean;
   expiresAt: string | null;
@@ -21,7 +20,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }
   try {
-    const oauthConfig = getYouTubeOAuthConfig();
+    // Client identity only — the stored token is checked separately below. There is
+    // exactly one token source now (Firestore); the env token this route used to report
+    // alongside it was removed with the fallback (DEBUG_LOG 2026-07-26).
+    const oauthConfig = getYouTubeOAuthClient();
 
     if (!oauthConfig) {
       return NextResponse.json({
@@ -32,32 +34,17 @@ export async function GET(request: Request) {
     }
 
     const tokens: TokenInfo[] = [];
-    let firestoreTokenData: any = null;
+    let firestoreTokenData: Awaited<ReturnType<typeof getStoredRefreshToken>> = null;
 
-    // First, try to get Firestore token data to use its timestamp
+    // A read failure leaves this reporting "no token" rather than failing the whole
+    // status check — a diagnostics panel is more useful degraded than absent, and the
+    // logged error says which it is.
     try {
-      const authDoc = await db.collection('admin_config').doc('youtube_auth').get();
-
-      if (authDoc.exists) {
-        firestoreTokenData = authDoc.data();
-      }
+      firestoreTokenData = await getStoredRefreshToken();
     } catch (error) {
       console.error('Failed to get Firestore token data:', error);
     }
 
-    // Check environment token
-    if (oauthConfig.refreshToken) {
-      const envTokenInfo = await checkToken(oauthConfig, 'environment');
-      // Use Firestore token's updatedAt if available, since they should be the same token
-      if (firestoreTokenData?.updatedAt) {
-        envTokenInfo.updatedAt = firestoreTokenData.updatedAt;
-      } else {
-        envTokenInfo.updatedAt = '환경변수 (발급일 불명)';
-      }
-      tokens.push(envTokenInfo);
-    }
-
-    // Check Firestore token
     if (firestoreTokenData?.refreshToken) {
       const firestoreConfig = {
         ...oauthConfig,
@@ -72,8 +59,6 @@ export async function GET(request: Request) {
     const validTokens = tokens.filter((t) => t.isValid);
     const hasValidToken = validTokens.length > 0;
 
-    // Find specific token info for UI
-    const envToken = tokens.find((t) => t.source === 'environment');
     const firestoreToken = tokens.find((t) => t.source === 'firestore');
 
     // Never send the raw refresh token (a secret) to the client. The UI only needs each
@@ -83,18 +68,12 @@ export async function GET(request: Request) {
     return NextResponse.json({
       status: hasValidToken ? 'valid' : tokens.length > 0 ? 'expired' : 'not_configured',
       message: hasValidToken
-        ? `${validTokens.length}개의 유효한 토큰 (${validTokens.map((t) => t.source).join(', ')})`
+        ? '유효한 토큰이 있습니다'
         : tokens.length > 0
-          ? '모든 토큰이 만료됨'
+          ? '토큰이 만료됨'
           : '토큰이 설정되지 않음',
       tokens: safeTokens,
       expiresAt: validTokens.length > 0 ? validTokens[0].expiresAt : null,
-      envTokenInfo: envToken
-        ? {
-            issuedAt: envToken.updatedAt || '환경변수 (발급일 불명)',
-            status: envToken.isValid ? 'valid' : 'expired',
-          }
-        : undefined,
       firestoreTokenInfo: firestoreToken
         ? {
             issuedAt: firestoreToken.updatedAt || 'Firestore (발급일 불명)',
@@ -116,10 +95,7 @@ export async function GET(request: Request) {
   }
 }
 
-async function checkToken(
-  oauthConfig: any,
-  source: 'environment' | 'firestore'
-): Promise<TokenInfo> {
+async function checkToken(oauthConfig: any, source: 'firestore'): Promise<TokenInfo> {
   const oauth2Client = new google.auth.OAuth2(
     oauthConfig.clientId,
     oauthConfig.clientSecret,

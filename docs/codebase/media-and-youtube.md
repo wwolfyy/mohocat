@@ -84,6 +84,43 @@ graph LR
   mutating YouTube (upload, playlist edits, metadata) goes through the admin API routes using
   `googleapis` + refresh-token OAuth.
 
+## YouTube OAuth credential (single shared channel)
+
+> Corrected 2026-07-26 after the P5.4 manual pass found the routes and the admin
+> re-authorize button using different token sources (`log/DEBUG_LOG.md`).
+
+**One channel serves every mountain**, on one OAuth credential — per-mountain channels were
+considered and rejected (monetization thresholds apply per channel; N channels means N expiring
+refresh tokens). Per-mountain attribution comes from `cat_videos.mountainId`, not from channel
+ownership.
+
+`src/lib/youtube/credentials.ts` is the **only** place that credential is resolved. It exists
+because the credential has two halves that live in different places:
+
+| Half                                         | Source                                            | Rotates           |
+| -------------------------------------------- | ------------------------------------------------- | ----------------- |
+| Client identity (`getYouTubeOAuthClient`)    | env `YOUTUBE_CLIENT_ID`/`_SECRET`/`_REDIRECT_URI` | effectively never |
+| Refresh token (`getYouTubeOAuthCredentials`) | Firestore `admin_config/youtube_auth` — **only**  | every 7–14 days   |
+
+- ⚠️ **There is no `YOUTUBE_REFRESH_TOKEN` env var, by design.** Reading the token from env is
+  what let a stale value silently shadow the one the admin 재인증 button had just written, so
+  re-authorizing appeared to work and changed nothing. Env was removed rather than demoted to a
+  fallback, because a fallback keeps that same failure shape for the case where the Firestore doc
+  goes missing. **Don't reintroduce an env token path** — obtaining a token needs client identity
+  only, so the recovery from "no token anywhere" is just 재인증.
+- **Client identity resolves without a token** so `auth-url`/`callback` can _obtain_ one. The
+  predecessor (`getYouTubeOAuthConfig()` in `utils/config.ts`, now deleted) required all three env
+  vars together, which deadlocked the OAuth flow on a fresh deployment.
+- **One token source means one status row.** `/api/admin/youtube-auth/status` used to report an
+  `environment` token beside the `firestore` one — and displayed Firestore's timestamp against the
+  env token, which is much of why the split went unnoticed. It now reports the stored token alone.
+- **Consumers:** `upload-youtube`, `update-youtube-video`, `manage-playlists` (GET+POST),
+  `youtube-playlists`, `admin/youtube-auth/{auth-url,callback,status}`. `refresh-video-metadata`
+  is **not** one — it uses the public API key.
+- **No automated test reaches YouTube** (the emulator has no credentials). Precedence is pinned by
+  `tests/unit/youtubeCredentials.test.ts`; everything past the credential is covered only by the
+  P5.4 manual pass on Preview.
+
 ## Image storage & serving strategy
 
 > Verified against prod data 2026-07-25. Supersedes the archived, stale
