@@ -18,7 +18,7 @@ interface AdminAuthProps {
 
 // Sign an idle admin out of the CMS after this long with no interaction.
 // Admin-only, idle (not absolute) — see FEATURE_MOD_LOG (session timeout).
-const ADMIN_IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+const ADMIN_IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 hours
 // Shared across admin tabs so an idle background tab doesn't sign out an active
 // one (auth state is synced cross-tab via Firebase's localStorage persistence).
 const ADMIN_IDLE_ACTIVITY_KEY = 'mohocat:admin:lastActivity';
@@ -206,7 +206,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
           {sessionExpired && (
             <Alert variant="warning" className="text-center mb-6">
-              2시간 동안 활동이 없어 자동으로 로그아웃되었어요. 다시 로그인해 주세요.
+              24시간 동안 활동이 없어 자동으로 로그아웃되었어요. 다시 로그인해 주세요.
             </Alert>
           )}
 

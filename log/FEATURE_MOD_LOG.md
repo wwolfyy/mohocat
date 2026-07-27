@@ -15,6 +15,33 @@
 
 ---
 
+## 2026-07-28 — admin CMS idle timeout raised from 2 hours to 24
+
+**Area:** `src/components/admin/AdminAuth.tsx`. **Type:** small change (owner's call).
+
+**What changed and why:** `ADMIN_IDLE_TIMEOUT_MS` 2h → **24h**. Two hours was short
+enough to interrupt real operator sessions — a CMS tab left over lunch or overnight
+was signed out — for a single-operator site where the walk-away risk the timeout
+guards is low. It remains an **idle** window, not an absolute one, so an active
+session still never expires under anyone.
+
+⚠️ **The duration is written in two places** and they must move together: the constant
+(`AdminAuth.tsx:21`) and the Korean expiry notice on the admin login screen
+(`AdminAuth.tsx:209`), which hardcodes it — "24시간 동안 활동이 없어 자동으로
+로그아웃되었어요." Changing the constant alone leaves the notice lying to the operator.
+No test pins that copy, so nothing fails if they drift.
+
+📌 Still global, not per-mountain: the constant applies to `/admin` on every tenant, and
+does not affect member sessions. Making it per-tenant would mean moving it into
+`mountains.json`. Supersedes the 2-hour value recorded in the original session-timeout
+entry below (kept as history).
+
+**Verified:** tsc 0, smoke 31/31, unit 102/102. The timing itself is not
+machine-verified — a 24h idle window isn't practical to exercise in a test, and the
+hook it drives (`useIdleTimeout`) is unchanged.
+
+---
+
 ## 2026-07-28 — 내 집사 정보 offers a 관리자 shortcut to members who have CMS access
 
 **Area:** `src/app/[mountain]/mypage/page.tsx`, `src/constants/strings.ts`,
