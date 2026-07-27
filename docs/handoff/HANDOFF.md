@@ -1,17 +1,29 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-27 · **Branch:** `dev` · **`main`:** promoted through PR #8
+**Last updated:** 2026-07-28 · **Branch:** `dev` · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> The last session (2026-07-27) separated the two post composers and made YouTube filing
-> per-mountain — four commits, plan
-> [`butler-media-separation-plan-20260727.md`](../planning/butler-media-separation-plan-20260727.md).
-> **집사게시판 no longer uploads media at all** (it is a 급식소 log; 집사톡 is the media
-> composer), 집사톡 gained one-file-per-section with per-file 제목/설명, and every uploaded
-> video is now filed into its mountain's playlist from config instead of by matching a
-> playlist _title_.
+> The last session (2026-07-28) shipped one small feature and then turned into an
+> **architecture review of multi-tenancy**. Four commits: a 관리자 shortcut on 내 집사 정보
+> for members with CMS access (`1bd9dc1`), the admin idle timeout 2h → **24h** (`d4c36a1`),
+> the **mountain-#2 prerequisites** consolidated into one doc plus an owner-facing
+> provisioning checklist (`d522a67`), and a **decision doc recommending path-based tenancy**
+> over subdomains (`f09d0e1`).
+>
+> 🚨 **The one thing to carry forward:** signing out clears **only the origin it runs on**,
+> so once a second subdomain exists, a user who logs out of one mountain stays logged in on
+> the others — members and admins alike, and it hollows out the admin idle timeout. Zero
+> exposure today (production serves a single origin). Full write-up + fix shape:
+> [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) §1.1.
+>
+> 🟡 **An architectural decision is open and blocks part of that list:**
+> [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md)
+> — host-based (subdomains) or path-based (`/manisan`)? It recommends **path-based**, which
+> would delete the security defect above along with the re-login friction and the
+> per-mountain DNS/console chore, at the cost of a measured ~80-call-site link sweep. **Do
+> not start prerequisites §1.1 / §1.5 / §1.6 / §2 before that is answered.**
 >
 > 🔎 **Pattern worth carrying forward, again:** the 촬영일 off-by-one (`97b72ed`) was
 > **correct at UTC and wrong in KST**, so CI could never have caught it — the same shape as
@@ -21,8 +33,8 @@
 >
 > **Do these next, in this order:**
 >
-> 1. **Push.** Everything from `d7999e2` on is committed locally but **not pushed**, so
->    Preview does not have it yet.
+> 1. **Push.** `origin/dev` is at `4315fea`; everything from `7e08933` on (5 commits) is
+>    committed locally but **not pushed**, so Preview does not have it yet.
 > 2. **Verify on Preview what no test can reach** (needs the deploy + one **🔄 토큰 갱신** on
 >    대쉬보드, since the OAuth scopes changed): a metadata edit, a playlist save,
 >    `자동 날짜 인식`, that a synced video **keeps its original 게시일** and that
@@ -205,9 +217,27 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   and it must be preceded by the migration (see Open threads for the exact order).
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **Tree:** clean through **`7e3c517`** (the GA4 guide). The whole multi-tenant epic (M0–M8)
-  is committed on `dev`; `main` is an ancestor of `dev` (`dev` leads by 234). M6/M7/M8 + the
-  GA4 guide are on `dev` but **not yet promoted to prod** — gated on the P5.4 YouTube pass.
+- **🟡 NEW — the multi-tenant URL model is under review (2026-07-28).** Is a mountain
+  identified by **host** (`manisan.mohocats.org`) or by **path** (`mohocats.org/manisan`)?
+  [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md)
+  recommends **path-based** and is **open for the owner**. Its case: every mountain-#2 blocker
+  found that day — the 🚨 sign-out security defect, the re-login friction, the cost of fixing
+  that friction (a bearer credential we'd own), the per-subdomain authorized-domain chore, the
+  provisioning-order trap — is **one root cause, more than one origin**. Path-based deletes
+  the class for a measured ~80 call sites across 27 files. Two facts carry it: **nothing has
+  been provisioned** (the subdomains are NXDOMAIN; prod runs on the apex via the fallback), and
+  **the `[mountain]` segment already exists** with the host-rewrite middleware as an adapter on
+  top. ⚠️ It is **not** a silver bullet — `syncVideos`, the playlist back-fill, the roster
+  leak, and the missing CMS mountain label survive either way.
+- **📁 Mountain-#2 readiness now has one home:**
+  [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) (blocking ·
+  should-fix · decided/won't-do · already-closed), with the console half carved into
+  [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
+  blocks the `dev → main` promotion.
+- **Tree:** clean through **`f09d0e1`**. The whole multi-tenant epic (M0–M8) is committed on
+  `dev`; `main` is an ancestor of `dev` (`dev` leads by 258). M6/M7/M8 + the GA4 guide + the
+  2026-07-26/27/28 sessions are on `dev` but **not yet promoted to prod** — gated on the P5.4
+  YouTube pass.
 
 ---
 
@@ -862,12 +892,17 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN.** `origin/dev` is at `e948496`; **everything from `d7999e2` on is
-committed locally and NOT yet pushed** (the 2026-07-27 butler/playlist session). Newest `dev`
-commits:
+**Working tree is CLEAN.** `origin/dev` is at `4315fea`; **everything from `7e08933` on (5
+commits) is committed locally and NOT yet pushed** — the tail of the 2026-07-27
+butler/playlist session plus all of 2026-07-28. Newest `dev` commits:
 
 | Commit    | What                                                                                      |
 | --------- | ----------------------------------------------------------------------------------------- |
+| `f09d0e1` | **docs** — decision doc: subdomain vs path-based tenancy (recommends path-based)          |
+| `d522a67` | **docs** — mountain-#2 prerequisites consolidated + owner provisioning checklist          |
+| `d4c36a1` | **feat** — admin CMS idle timeout 2h → 24h                                                |
+| `1bd9dc1` | **feat** — 관리자 shortcut on 내 집사 정보 for members with CMS access                    |
+| `7e08933` | **docs** — mark the 촬영일-from-metadata item as deferred, not queued                     |
 | `97b72ed` | **fix** — 촬영일 is a calendar date, not an instant (KST off-by-one)                      |
 | `bd7ce23` | **feat** — 집사톡: one file per section, each with its own 제목/설명 + 취소               |
 | `c2fc78f` | **feat** — per-mountain playlist filing from config (+ shared 입양홍보 playlist)          |
@@ -887,15 +922,17 @@ commits:
 | `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                    |
 
 **Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
-main...dev` = `0  252`). `dev` is **252 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
-2026-07-26 YouTube fixes + the 2026-07-27 butler/playlist work are all on `dev` and **not yet
-in prod**. Promoting them (`dev → main`)
+main...dev` = `0  258`). `dev` is **258 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
+2026-07-26 YouTube fixes + the 2026-07-27 butler/playlist work + the 2026-07-28 session are
+all on `dev` and **not yet in prod**. Promoting them (`dev → main`)
 is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
 top** (see the fresh-session box at the head of this doc).
 
-**Gate status at `97b72ed`:** tsc 0 · smoke 31/31 · unit 102/102 · **full e2e 153 passed /
-13 skipped / 0 failed** (+5 this session: the 집사게시판 no-upload boundary guard, two 취소
-specs, the per-file media sections, and the config-driven playlist label).
+**Gate status at `f09d0e1`:** tsc 0 · smoke 31/31 · unit 102/102 · `member/mypage.spec.ts`
+6/6 (+2 this session — the 관리자 shortcut guard, both directions). The **full e2e** was last
+run green at `97b72ed`: **153 passed / 13 skipped / 0 failed**; 2026-07-28 added no
+non-test source beyond the mypage section and the timeout constant, and ran the affected
+spec file rather than the whole suite.
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -905,7 +942,37 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-27 (latest)** — **The two post composers were separated, and YouTube filing
+- **2026-07-28 (latest)** — **A small feature, a timeout change, and then an architecture
+  review that questioned the multi-tenant URL model.** 내 집사 정보 gained a **관리자
+  shortcut** for members who hold CMS access on the active mountain (`1bd9dc1`) — the CMS had
+  no entry point from the member surface at all. Its gate **reuses `isAdmin(user, mountainId)`,
+  the same function `AdminAuth` runs**, so the link cannot drift from what the gate allows; an
+  e2e guard pins both directions. The admin idle timeout went **2h → 24h** (`d4c36a1`), with
+  the Korean expiry notice moved in step (the duration is hardcoded in two places).
+  Then the question "what's left before mountain #2?" found no single answer — items were
+  scattered across four docs — so they were consolidated into
+  [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) and the console work
+  split into an owner-facing
+  [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md) (`d522a67`).
+  🚨 **Assembling it surfaced a security defect nobody had logged: 로그아웃 signs the user out
+  of one origin only**, so with a second subdomain a user who logs out of one mountain stays
+  logged in on the others — **members and admins alike**, since no sign-out path is role-aware,
+  and the admin idle timeout signs out the same way. Zero exposure today because production
+  serves a single origin. Recommended fix is server-side `revokeRefreshTokens`; ⚠️ **a
+  correction worth keeping — cross-origin session propagation would _multiply_ this, not fix
+  it**, since every such design mints the second origin its own refresh token. Two smaller
+  finds, also unlogged: the **members roster** runs an unfiltered `users` query (every
+  mountain's emails to any `manage-users` holder), and **production serves from the apex**,
+  which isn't in geyang's `domains`, so it resolves via the fallback rather than the Host
+  mapping. 📌 Also corrected: **Kakao needs no per-subdomain redirect URI** — it is a Firebase
+  OIDC provider used through `signInWithPopup`, so its redirect URI is Firebase's fixed handler,
+  constant across tenants; two docs had claimed otherwise. 🟡 The session closed with
+  [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md),
+  which observes that **every one of those blockers traces to a single root cause — more than
+  one origin** — and recommends **path-based tenancy**, at a measured cost of ~80 in-app
+  navigation sites across 27 files. **Open for the owner**; nothing was changed in code on its
+  strength. Gates: tsc 0, smoke 31/31, unit 102/102, `member/mypage.spec.ts` 6/6.
+- **2026-07-27** — **The two post composers were separated, and YouTube filing
   became per-mountain.** 집사게시판 was doing two jobs — a 급식소 check-in log _and_ a second
   media composer — while 집사톡 already did the second one properly, so it **lost media upload
   entirely** (`0f9190f`); compose-time only, since legacy posts keep rendering and admins keep
