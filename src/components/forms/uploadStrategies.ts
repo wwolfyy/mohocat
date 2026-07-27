@@ -25,6 +25,7 @@
 import type { User } from 'firebase/auth';
 import { getImageService, getStorageService } from '@/services';
 import { authHeader } from '@/lib/auth/authHeader';
+import { calendarDateToInstant } from '@/utils/dateParser';
 
 /**
  * Upload images straight to Firebase Storage via the service layer and return
@@ -124,7 +125,7 @@ export interface SignedUrlImageContext {
   mountainId: string;
   /** Cat tags recorded on the `cat_images` entry. */
   tags: string[];
-  /** Recording date (date or datetime-local string); empty → upload time. */
+  /** Recorded calendar date `YYYY-MM-DD`; empty → the upload moment. */
   createdTime: string;
   /** Uploader identity recorded on the entry (user email or 'unknown'). */
   uploadedBy: string;
@@ -199,7 +200,11 @@ export const uploadImagesWithSignedUrls = async (
           storagePath: publicUrl, // For direct uploads, this is the same as imageUrl
           tags: context.tags,
           uploadDate: new Date(),
-          createdTime: context.createdTime ? new Date(context.createdTime) : new Date(),
+          // UTC midnight of the recorded calendar date, matching the video path
+          // and the admin editor. Falls back to the upload moment when unset.
+          createdTime: context.createdTime
+            ? calendarDateToInstant(context.createdTime)
+            : new Date(),
           uploadedBy: context.uploadedBy,
           description,
           location: '',

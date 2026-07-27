@@ -84,17 +84,58 @@ export const parseCreatedDateFromFilename = (filename: string): Date | null =>
   parseDateFromText(filename, 'filename');
 
 /**
- * Converts a Date object to YYYY-MM-DD format for HTML date inputs
+ * Converts a Date to the YYYY-MM-DD an HTML date input expects, reading the
+ * date **as it reads on the local wall clock**.
+ *
+ * ⚠️ It must not use `toISOString()`. A filename carries a *calendar date* —
+ * a day, with no instant and no timezone — and the parsers above build it with
+ * `new Date('…T00:00:00')`, which JS reads as **local** midnight. Serializing
+ * that through `toISOString()` converts to **UTC**, and the two conversions do
+ * not cancel: east of Greenwich the date lands a day early (KST: `2026-03-15`
+ * displayed as `2026-03-14`), west of it a day late. It reads correctly at
+ * UTC only — which is why CI never caught it and every Korean user saw it.
  */
 export const formatDateForInput = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 /**
- * Converts a Date object to YYYY-MM-DDTHH:MM format for HTML datetime-local inputs
+ * Turns a `YYYY-MM-DD` calendar date into the instant stored for it: **UTC
+ * midnight of that date**.
+ *
+ * Firestore Timestamps and YouTube's `recordingDate` are instants, so a
+ * calendar date has to be encoded as one. UTC midnight is the convention the
+ * admin editor already writes (`tag-videos/page.tsx`), and it is what makes the
+ * date read back identically everywhere — in the app, in the Firebase console,
+ * in an export. Local midnight would store the *previous* day in UTC for
+ * anyone east of Greenwich.
+ *
+ * Explicit rather than leaning on `new Date(str)`, whose rule flips on the
+ * input's shape: a bare `'2026-03-15'` parses as UTC, `'2026-03-15T00:00'` as
+ * local. That inconsistency is the root of the bug this replaced.
  */
-export const formatDateTimeForInput = (date: Date): string => {
-  // Get ISO string and remove seconds and milliseconds
-  const isoString = date.toISOString();
-  return isoString.slice(0, 16); // "YYYY-MM-DDTHH:MM"
+export const calendarDateToInstant = (calendarDate: string): Date => {
+  const match = calendarDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error(`Expected a YYYY-MM-DD calendar date, got: "${calendarDate}"`);
+  }
+
+  const [, year, month, day] = match;
+  const instant = new Date(`${calendarDate}T00:00:00.000Z`);
+
+  // ⚠️ Verify the components survived. An impossible date does not produce
+  // NaN — JS rolls it over silently (2026-02-31 becomes 2026-03-03), which is
+  // precisely the kind of quietly-wrong value this module exists to stop.
+  const roundTrips =
+    instant.getUTCFullYear() === Number(year) &&
+    instant.getUTCMonth() + 1 === Number(month) &&
+    instant.getUTCDate() === Number(day);
+
+  if (isNaN(instant.getTime()) || !roundTrips) {
+    throw new Error(`Not a valid calendar date: "${calendarDate}"`);
+  }
+  return instant;
 };

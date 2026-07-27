@@ -38,7 +38,6 @@ const NewButlerTalkForm = () => {
   const form = useRichContentForm({
     buildDefaultTitle: generateDynamicTitle,
     buildPostTitleFallback: () => DEFAULT_TITLE,
-    createdTimeInputType: 'datetime-local',
     createPost: (post) => butlerTalkService.createPost(post),
     resetAfterCreate: false,
     successMessage: '글이 성공적으로 작성되었습니다!',
@@ -124,10 +123,13 @@ const NewButlerTalkForm = () => {
           {/* Created Time */}
           <div className="mb-4">
             <label htmlFor="createdTime" className="block text-sm font-medium text-gray-700 mb-1">
-              촬영 시간 (선택사항)
+              촬영 날짜 (선택사항)
             </label>
+            {/* A calendar date, not an instant: the filename gives a day, and the
+                stored value is that day. Was datetime-local, but the time had
+                nowhere to live and was silently discarded. */}
             <input
-              type="datetime-local"
+              type="date"
               id="createdTime"
               value={form.createdTime}
               onChange={(e) => form.setCreatedTime(e.target.value)}

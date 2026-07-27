@@ -708,6 +708,31 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   distinction the UI itself doesn't show. Owner wants the same for the other CMS pages.
   ⚠️ It is **source-derived, not browser-verified** — worth a `/chrome` pass over the live
   page before cloning the format.
+- 🐛 **촬영일 is guessed from the filename when it should be read from the file — logged
+  2026-07-27, owner-agreed to defer.** The composers derive 촬영일 by regex-matching the
+  **filename** (`parseRecordingDateFromTitle`, 4 patterns: `yyyy-mm-dd hh.MM.ss`,
+  `yyyymmdd_hhMMss`, `yyyy-mm-dd`, `yyyymmdd`). Nothing reads the file's own contents.
+  Consequences, verified against realistic names:
+  - **iPhone files never parse.** `IMG_1234.MOV` / `.HEIC` carry no date in the name, so the
+    field is left empty and — unless someone types it — `createdTime` silently becomes the
+    **upload** moment. Android/KakaoTalk names (`VID_20260315_101530.mp4`) parse fine, so the
+    feature works for roughly half of likely sources.
+  - **The last pattern is loose** — any 8 digits forming a valid date. `회원 20240101 명단.mp4`
+    reads as 2024-01-01. Invalid combinations self-reject, so it is contained but can be
+    confidently wrong.
+  - 🔑 **The fix (owner, 2026-07-27):** read the **capture date from the file's metadata**,
+    with timezone when the metadata carries it, and fall back to the filename only when that
+    fails. Applies to **both** video and photo. Landscape: MP4/MOV `mvhd` creation_time is
+    spec'd UTC but often written as local with no offset (unreliable); Apple's
+    `com.apple.quicktime.creationdate` **does** carry an offset; JPEG EXIF `DateTimeOriginal`
+    has no zone historically, with `OffsetTimeOriginal` added in EXIF 2.31 and unevenly
+    populated. Needs a client-side binary parse (e.g. `exifr` + an MP4 box reader) before
+    upload — a new dependency and a real chunk of work, hence deferred.
+  - 📌 **Cheap interim option, not taken:** `File.lastModified` is already on the picked file
+    for free and would beat "upload time" for the iPhone case, though it is the filesystem
+    mtime rather than true capture time.
+  - _Distinct from the timezone bug fixed the same day_ (`DEBUG_LOG` 2026-07-27) — that one
+    was about the parsed date shifting a day; this one is about parsing the filename at all.
 - 🆕 **`syncVideos()` claims the whole channel for whichever mountain runs it — must be fixed
   before a real mountain #2 (logged 2026-07-26, not urgent).** Follows from the owner's
   **single-shared-channel decision** (same day): rather than one YouTube channel per mountain,

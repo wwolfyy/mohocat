@@ -6,6 +6,7 @@ import { getRequestMountainId } from '@/lib/tenant';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
 import { getYouTubePlaylistId } from '@/utils/config';
+import { calendarDateToInstant } from '@/utils/dateParser';
 
 // Gated: uploads a video to the shared YouTube channel with the operator's OAuth
 // credential AND writes a `cat_videos` record via the Admin SDK (bypassing
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string; // Enhanced metadata options
     const tags = formData.get('tags') as string; // Comma-separated tags
-    const createdTime = formData.get('createdTime') as string; // ISO date string
+    // A YYYY-MM-DD calendar date (the day the media was recorded), not an instant.
+    const createdTime = formData.get('createdTime') as string;
     // Repeated field: a video is filed into its mountain's playlist, and 입양홍보
     // additionally into the cross-mountain adoption playlist (plan D8).
     const playlistIds = formData
@@ -95,14 +97,13 @@ export async function POST(request: NextRequest) {
     let recordingDetails: any = undefined;
     if (createdTime) {
       try {
-        const date = new Date(createdTime);
-        if (!isNaN(date.getTime())) {
-          recordingDetails = {
-            recordingDate: date.toISOString(),
-          };
-        }
+        // UTC midnight of that calendar date — the same encoding the admin
+        // editor writes, so one field never carries two conventions.
+        recordingDetails = {
+          recordingDate: calendarDateToInstant(createdTime).toISOString(),
+        };
       } catch (e) {
-        console.warn('Invalid created time provided:', createdTime);
+        console.warn('Invalid created time provided:', createdTime, e);
       }
     }
 
@@ -175,7 +176,10 @@ export async function POST(request: NextRequest) {
         storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
         tags: tagsArray,
         uploadDate: new Date(),
-        createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
+        // The recorded day if given, else the upload moment. ⚠️ That fallback is
+        // a known gap: the date should come from the file's own metadata and only
+        // then from the filename (see HANDOFF open threads).
+        createdTime: createdTime ? calendarDateToInstant(createdTime) : new Date(),
         uploadedBy: 'user', // or get from authentication context
         description: response.data.snippet?.description || description || '',
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,

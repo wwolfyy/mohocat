@@ -181,6 +181,12 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
     // whichever playlist was *titled* 집사게시판, so this asserts the mountain name
     // to catch a regression back to the title match.
     await expect(page.getByText('동영상은 "계양산" 재생목록에 추가돼요')).toBeVisible();
+
+    // 촬영 날짜 shows the day written in the filename. ⚠️ This only discriminates
+    // when the browser runs east/west of UTC — the formatter used to round-trip
+    // through toISOString() and land a day early in KST, while reading correctly
+    // at UTC. tests/unit/dateParser.test.ts pins the timezone to cover CI.
+    await expect(page.locator('#createdTime')).toHaveValue('2026-03-15');
   });
 
   test('집사톡: a text post publishes to the 집사톡 list', async ({ page }) => {

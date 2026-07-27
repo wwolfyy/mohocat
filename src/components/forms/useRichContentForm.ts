@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  parseRecordingDateFromTitle,
-  formatDateForInput,
-  formatDateTimeForInput,
-} from '@/utils/dateParser';
+import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
 import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
@@ -40,8 +36,6 @@ export interface RichContentFormConfig {
    * `buildDefaultTitle` (ButlerTalk stores the undated '집사톡 글입니다').
    */
   buildPostTitleFallback?: () => string;
-  /** Drives the created-time input type AND the filename auto-parse format. */
-  createdTimeInputType: 'date' | 'datetime-local';
   /** Firestore write, injected from the owning form's service. */
   createPost: (post: Record<string, unknown>) => Promise<unknown>;
   /** Post-create side effects (Post: feeding-spots update; non-fatal inside). */
@@ -72,9 +66,6 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const dialog = useDialog();
   const { user, isAuthenticated, loading } = useAuth();
 
-  const formatParsedDate =
-    config.createdTimeInputType === 'date' ? formatDateForInput : formatDateTimeForInput;
-
   // The mountain's own playlist on the shared channel, straight from config —
   // this replaced a `/api/youtube-playlists` fetch that picked the playlist whose
   // title happened to equal '집사게시판' (a rename on YouTube silently stopped
@@ -93,7 +84,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     for (const item of items) {
       const parsedDate = parseRecordingDateFromTitle(item.file.name);
       if (parsedDate) {
-        setCreatedTime(formatParsedDate(parsedDate));
+        setCreatedTime(formatDateForInput(parsedDate));
         return;
       }
     }
