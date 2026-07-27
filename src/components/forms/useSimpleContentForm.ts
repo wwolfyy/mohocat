@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { uploadImagesToStorage, uploadVideosToYouTube } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
-import { getMountainConfig } from '@/utils/config';
+import { getMountainConfig, getYouTubePlaylistId } from '@/utils/config';
 
 /**
  * Shared submit/upload flow for the simple-content family (공지사항 + 입양홍보;
@@ -27,6 +27,13 @@ export interface SimpleContentFormConfig {
   imagePathPrefix: string;
   /** YouTube metadata fallbacks (used when title/message are empty) + fixed tag. */
   youtubeDefaults: { title: string; description: string; tags: string };
+  /**
+   * Playlists to file uploaded videos into, beyond the owning mountain's own
+   * (which this hook always adds). 입양홍보 passes the cross-mountain adoption
+   * playlist here (plan D7/D8); 공지사항 passes nothing and stays unfiled apart
+   * from its mountain playlist.
+   */
+  extraPlaylistIds?: () => (string | null)[];
   /** Firestore write, injected from the owning form's service. */
   createPost: (postData: Record<string, unknown>) => Promise<unknown>;
   /** Extra fields merged into postData (e.g. the announcement's showInModal). */
@@ -96,10 +103,19 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
 
       if (videoFiles.length > 0) {
         try {
+          // The mountain's own playlist always, plus whatever the form adds
+          // (입양홍보 → the cross-mountain adoption playlist). Nulls = "not
+          // configured yet" and drop out.
+          const playlistIds = [
+            getYouTubePlaylistId(mountainId),
+            ...(config.extraPlaylistIds?.() ?? []),
+          ].filter((playlistId): playlistId is string => Boolean(playlistId));
+
           const uploadedVideoUrls = await uploadVideosToYouTube(videoFiles, {
             title: title || config.youtubeDefaults.title,
             description: message || config.youtubeDefaults.description,
             tags: config.youtubeDefaults.tags,
+            playlistIds,
             user,
           });
           allVideoUrls = [...allVideoUrls, ...uploadedVideoUrls];

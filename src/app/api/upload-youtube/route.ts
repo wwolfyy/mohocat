@@ -5,6 +5,7 @@ import { getVideoService } from '@/services';
 import { getRequestMountainId } from '@/lib/tenant';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
+import { getYouTubePlaylistId } from '@/utils/config';
 
 // Gated: uploads a video to the shared YouTube channel with the operator's OAuth
 // credential AND writes a `cat_videos` record via the Admin SDK (bypassing
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // The tenant this upload belongs to (Host-resolved) — used for the video's
+    // own playlist and for the `cat_videos` write below.
+    const mountainId = getRequestMountainId(request);
+
     // Client identity from env + the freshest refresh token (Firestore first)
     const tokenConfig = await getYouTubeOAuthCredentials();
     if (!tokenConfig) {
@@ -32,7 +37,12 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description') as string; // Enhanced metadata options
     const tags = formData.get('tags') as string; // Comma-separated tags
     const createdTime = formData.get('createdTime') as string; // ISO date string
-    const playlistId = formData.get('playlistId') as string; // Playlist ID
+    // Repeated field: a video is filed into its mountain's playlist, and 입양홍보
+    // additionally into the cross-mountain adoption playlist (plan D8).
+    const playlistIds = formData
+      .getAll('playlistId')
+      .map((value) => String(value).trim())
+      .filter((value) => value.length > 0);
 
     if (!file) {
       return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
@@ -121,14 +131,17 @@ export async function POST(request: NextRequest) {
       throw new Error('No video ID returned from YouTube');
     }
 
-    // Add video to playlist if specified
-    if (playlistId && playlistId.trim()) {
+    // File the video into each requested playlist. Non-fatal per playlist (the
+    // video is already on YouTube), but log WHICH one failed: with more than one
+    // target, "the upload succeeded but it isn't in a playlist" would otherwise be
+    // an ambiguous warning.
+    for (const playlistId of playlistIds) {
       try {
         await youtube.playlistItems.insert({
           part: ['snippet'],
           requestBody: {
             snippet: {
-              playlistId: playlistId,
+              playlistId,
               resourceId: {
                 kind: 'youtube#video',
                 videoId: videoId,
@@ -137,7 +150,7 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (playlistError) {
-        console.warn('Failed to add video to playlist:', playlistError);
+        console.warn(`Failed to add video ${videoId} to playlist ${playlistId}:`, playlistError);
         // Don't fail the entire upload if playlist addition fails
       }
     }
@@ -170,14 +183,17 @@ export async function POST(request: NextRequest) {
         publishedAt: new Date().toISOString(),
         channelTitle: 'Mountain Cats', // or get from YouTube API
         catName: '', // Empty initially, can be filled later through tagging
-        playlist: playlistId || '', // Add playlist field
+        // The owning mountain's playlist — resolved from config, not from the
+        // request, so it does not depend on the order the caller sent them in
+        // (an 입양홍보 upload sends two). Ownership itself lives in `mountainId`.
+        playlist: getYouTubePlaylistId(mountainId) ?? '',
         autoTagged: false, // User manually provided tags
         // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
       };
 
       console.log('Creating Firestore entry for uploaded video:', videoData);
 
-      const videoService = getVideoService(getRequestMountainId(request));
+      const videoService = getVideoService(mountainId);
       const firestoreVideoId = await videoService.createVideo(videoData);
       console.log('Created cat_videos entry with ID:', firestoreVideoId);
     } catch (firestoreError) {

@@ -151,26 +151,31 @@ const NewButlerTalkForm = () => {
             </p>
           </div>
 
-          {/* Playlist Selection */}
+          {/* Playlist — the mountain's own, from config (no picker: filing is
+              per-mountain by design, plan D4). */}
           <div className="mb-4">
             <label htmlFor="playlist" className="block text-sm font-medium text-gray-700 mb-1">
-              재생목록 선택
+              재생목록
             </label>
-            {form.loadingPlaylists ? (
-              <p className="text-sm text-gray-600">재생목록을 불러오는 중...</p>
-            ) : (
+            {form.playlistLabel ? (
               <>
                 <input
                   type="text"
-                  value="집사게시판"
+                  value={form.playlistLabel}
                   readOnly
                   disabled
                   className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  모든 동영상은 자동으로 &quot;집사게시판&quot; 재생목록에 추가됩니다
+                  동영상은 &quot;{form.playlistLabel}&quot; 재생목록에 추가돼요
                 </p>
               </>
+            ) : (
+              // Never show a mountain name here when nothing will be filed — that
+              // is the shape of the bug this replaced.
+              <p className="text-sm text-gray-600">
+                재생목록이 아직 없어요. 동영상은 재생목록에 추가되지 않아요.
+              </p>
             )}
           </div>
         </div>

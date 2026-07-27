@@ -34,6 +34,13 @@ export interface MountainSocial {
   youtubeChannelId: string;
   instagramHandle: string;
   facebookPage: string;
+  /**
+   * The mountain's own playlist on the shared YouTube channel. Every video
+   * uploaded for this mountain is filed into it, which is what makes a video
+   * attributable to one mountain **on the YouTube side** (Firestore already has
+   * `cat_videos.mountainId`). See `getYouTubePlaylistId`.
+   */
+  youtubePlaylistId: string;
 }
 
 export interface MapImageConfig {
@@ -201,6 +208,60 @@ export function getMountainDescription(mountainId: string): string {
 export function getYouTubeChannelId(mountainId: string): string {
   const config = getMountainConfig(mountainId);
   return config.social.youtubeChannelId;
+}
+
+/**
+ * The mountain's playlist on the shared YouTube channel, or `null` when the
+ * mountain deliberately has none yet.
+ *
+ * ⚠️ **A missing key and an empty value mean different things**, and conflating
+ * them is the bug this replaced: filing used to find its playlist by matching
+ * the literal title `'집사게시판'`, so renaming the playlist on YouTube stopped
+ * filing silently. Here:
+ *
+ * - key **absent** → `throw`. A typo or an unprovisioned mountain must be loud.
+ * - value `''` → `null`. An explicit, reviewable "no playlist yet"; the caller
+ *   skips filing and logs that it did.
+ * - value set → file into it.
+ *
+ * All three playlists are configured today, so the `null` branch is defensive:
+ * it exists so adding a mountain and creating its playlist need not be one
+ * atomic chore.
+ */
+export function getYouTubePlaylistId(mountainId: string): string | null {
+  const config = getMountainConfig(mountainId);
+  const playlistId = config.social.youtubePlaylistId;
+  if (playlistId === undefined || playlistId === null) {
+    throw new Error(
+      `social.youtubePlaylistId is not configured for mountain: ${mountainId} ` +
+        `(use "" to declare that it deliberately has no playlist yet)`
+    );
+  }
+  return playlistId.trim() || null;
+}
+
+/**
+ * The one cross-mountain 입양홍보 playlist (owner decision, 2026-07-27).
+ *
+ * Adoption promotion is platform-wide, so this is **not** a tenant knob — hence
+ * no `mountainId` parameter and a home in the `_shared` block rather than in a
+ * mountain. An 입양홍보 video is filed into *both* this and its own mountain's
+ * playlist, so per-mountain attribution survives.
+ *
+ * Same missing-vs-empty contract as `getYouTubePlaylistId`.
+ */
+export function getAdoptionPlaylistId(): string | null {
+  const shared = (mountainsConfig as Record<string, unknown>)._shared as
+    | { youtube?: { adoptionPlaylistId?: string } }
+    | undefined;
+  const playlistId = shared?.youtube?.adoptionPlaylistId;
+  if (playlistId === undefined || playlistId === null) {
+    throw new Error(
+      '_shared.youtube.adoptionPlaylistId is not configured ' +
+        '(use "" to declare that there is deliberately no 입양홍보 playlist yet)'
+    );
+  }
+  return playlistId.trim() || null;
 }
 
 /**

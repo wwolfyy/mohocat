@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -11,27 +11,22 @@ import {
 import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
-import { authHeader } from '@/lib/auth/authHeader';
-
-interface Playlist {
-  id: string;
-  title: string;
-  description?: string;
-}
+import { getMountainName, getYouTubePlaylistId } from '@/utils/config';
 
 /**
- * Shared submit/upload flow for the rich-content family (집사게시판 NewPostForm +
- * 집사톡 NewButlerTalkForm; complexity-retirement P3.1). Owns the state and
- * pipeline the two forms duplicated: file selection with filename date
- * auto-parse, the YouTube playlist fetch (auto-selecting 집사게시판), cat-tag
- * selector state, video upload via the shared YouTube strategy, image upload via
- * the signed-URL strategy, post assembly, and the create/reset/redirect tail.
- * Form-specific behavior is injected via config; Post-only side effects
- * (feeding-spots update, visit-time reset) ride through `afterCreate` /
- * `onResetExtras`.
+ * Shared submit/upload flow for the rich-content family (complexity-retirement
+ * P3.1). Owns file selection with filename date auto-parse, the per-mountain
+ * playlist, cat-tag selector state, video upload via the shared YouTube
+ * strategy, image upload via the signed-URL strategy, post assembly, and the
+ * create/reset/redirect tail. Form-specific behavior is injected via config.
+ *
+ * ⚠️ **집사톡(NewButlerTalkForm) is the only consumer** since 2026-07-27:
+ * 집사게시판 dropped media upload entirely and now has a plain submit handler of
+ * its own (plan D1). Kept as a hook rather than inlined because the per-file
+ * media rework (D2) lands here next.
  *
  * Convergence deltas accepted at P3 (documented in the assessment): empty
- * `createdTime`/`playlistId` are now omitted from the YouTube request instead of
+ * `createdTime`/`playlistIds` are omitted from the YouTube request instead of
  * sent as '' (old ButlerTalk), single-video titles lose a trailing space (old
  * Post), and both forms share the statusText-style upload error message.
  */
@@ -71,9 +66,6 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
   const [createdTime, setCreatedTime] = useState('');
-  const [selectedPlaylist, setSelectedPlaylist] = useState('');
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
   const [selectedImageTags, setSelectedImageTags] = useState<string[]>([]);
   const [showVideoTagSelector, setShowVideoTagSelector] = useState(false);
@@ -86,47 +78,13 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const formatParsedDate =
     config.createdTimeInputType === 'date' ? formatDateForInput : formatDateTimeForInput;
 
-  // Fetch the YouTube playlists once signed in; auto-select 집사게시판.
-  useEffect(() => {
-    if (!isAuthenticated || loading) return;
-
-    const fetchData = async () => {
-      setLoadingPlaylists(true);
-      try {
-        // The route is gated on 'manage-video'; a signed-in user without it gets a
-        // 403 with an empty list, which the existing warn-and-continue path handles.
-        const response = await fetch('/api/youtube-playlists', {
-          headers: await authHeader(user),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const playlistsData = data.playlists || [];
-          setPlaylists(playlistsData);
-
-          const butlerPlaylist = playlistsData.find(
-            (playlist: Playlist) => playlist.title === '집사게시판'
-          );
-          if (butlerPlaylist) {
-            setSelectedPlaylist(butlerPlaylist.id);
-          }
-        } else {
-          const errorText = await response.text();
-          console.warn(
-            'Failed to fetch playlists:',
-            response.status,
-            response.statusText,
-            errorText
-          );
-        }
-      } catch (error) {
-        console.error('Error fetching playlists:', error);
-      } finally {
-        setLoadingPlaylists(false);
-      }
-    };
-
-    fetchData();
-  }, [isAuthenticated, loading, user]);
+  // The mountain's own playlist on the shared channel, straight from config —
+  // this replaced a `/api/youtube-playlists` fetch that picked the playlist whose
+  // title happened to equal '집사게시판' (a rename on YouTube silently stopped
+  // filing, and it filed every mountain into the same list). `null` = the mountain
+  // deliberately has no playlist yet; the upload proceeds unfiled.
+  const playlistId = getYouTubePlaylistId(mountainId);
+  const playlistLabel = playlistId ? getMountainName(mountainId) : null;
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -184,7 +142,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
                 description: message || config.youtubeDescriptionDefault,
                 tags: selectedVideoTags.length > 0 ? selectedVideoTags.join(', ') : '산고양이',
                 createdTime: createdTime || undefined,
-                playlistId: selectedPlaylist || undefined,
+                playlistIds: playlistId ? [playlistId] : undefined,
                 user,
               })
             )
@@ -283,9 +241,10 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     uploading,
     createdTime,
     setCreatedTime,
-    selectedPlaylist,
-    playlists,
-    loadingPlaylists,
+    /** The mountain's playlist, or `null` when it has none configured yet. */
+    playlistId,
+    /** Display name for the locked 재생목록 field; `null` mirrors `playlistId`. */
+    playlistLabel,
     selectedVideoTags,
     setSelectedVideoTags,
     selectedImageTags,

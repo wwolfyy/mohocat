@@ -96,6 +96,28 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
       .toBe('/pages/butler_stream');
   });
 
+  test('집사톡: the video panel names the mountain’s own playlist, from config', async ({
+    page,
+  }) => {
+    await page.goto('/pages/butler_talk/new');
+    await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Picking a file only sets local state — nothing uploads until submit, so this
+    // is safe without YouTube credentials.
+    await page.locator('input[type="file"][accept="video/*"]').setInputFiles({
+      name: '2026-03-15 산책.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('not a real video'),
+    });
+
+    // Filing is per-mountain and config-driven (plan D4). The old behavior picked
+    // whichever playlist was *titled* 집사게시판, so this asserts the mountain name
+    // to catch a regression back to the title match.
+    await expect(page.getByText('동영상은 "계양산" 재생목록에 추가돼요')).toBeVisible();
+  });
+
   test('집사톡: a text post publishes to the 집사톡 list', async ({ page }) => {
     const title = `E2E 집사톡 ${Date.now() % 100000}`;
 

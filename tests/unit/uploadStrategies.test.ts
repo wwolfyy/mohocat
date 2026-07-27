@@ -116,7 +116,7 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     expect(body.get('playlistId')).toBeNull();
   });
 
-  it('appends optional Family-A fields (createdTime/playlistId) when provided and omits empty tags', async () => {
+  it('appends optional Family-A fields (createdTime/playlistIds) when provided and omits empty tags', async () => {
     fetchMock.mockResolvedValue(okResponse('https://youtu.be/abc'));
 
     await uploadVideoToYouTube(file('v.mp4'), {
@@ -124,7 +124,7 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
       description: 'd',
       tags: '',
       createdTime: '2026-02-01',
-      playlistId: 'PL123',
+      playlistIds: ['PL123'],
       user: testUser,
     });
 
@@ -132,6 +132,34 @@ describe('uploadVideoToYouTube (shared YouTube strategy)', () => {
     expect(body.get('tags')).toBeNull();
     expect(body.get('createdTime')).toBe('2026-02-01');
     expect(body.get('playlistId')).toBe('PL123');
+  });
+
+  it('sends one repeated playlistId field per playlist (입양홍보 files into two)', async () => {
+    fetchMock.mockResolvedValue(okResponse('https://youtu.be/abc'));
+
+    await uploadVideoToYouTube(file('v.mp4'), {
+      title: 't',
+      description: 'd',
+      playlistIds: ['PLmountain', 'PLadoption'],
+      user: testUser,
+    });
+
+    const body = fetchMock.mock.calls[0][1].body as FormData;
+    expect(body.getAll('playlistId')).toEqual(['PLmountain', 'PLadoption']);
+  });
+
+  it('omits playlistId entirely when the list is empty (mountain has no playlist yet)', async () => {
+    fetchMock.mockResolvedValue(okResponse('https://youtu.be/abc'));
+
+    await uploadVideoToYouTube(file('v.mp4'), {
+      title: 't',
+      description: 'd',
+      playlistIds: [],
+      user: testUser,
+    });
+
+    const body = fetchMock.mock.calls[0][1].body as FormData;
+    expect(body.getAll('playlistId')).toEqual([]);
   });
 
   it('throws with statusText + response body when the API rejects', async () => {

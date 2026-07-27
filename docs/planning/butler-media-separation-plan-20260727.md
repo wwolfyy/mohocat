@@ -9,12 +9,14 @@
 > side (they are already attributable on the Firestore side) — plus one **cross-mountain
 > 입양홍보 playlist**, since adoption promotion is platform-wide by nature.
 >
-> **Status:** 🚧 **IN PROGRESS — B1 done, B2/B3/B4 open.** Every current-state
+> **Status:** 🚧 **IN PROGRESS — B1 + B2 done, B3/B4 open.** Every current-state
 > claim below was verified against `dev` @ `d7999e2` on 2026-07-27; §1.1's description of
 > 집사게시판 is now **history** — B1 removed it.
 >
 > **B1 gates (2026-07-27):** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 150 passed / 13
 > skipped / 0 failed** (+2 = the new 취소 specs) · browser pass on the rebuilt form.
+> **B2 gates (2026-07-27):** tsc 0 · smoke 30/30 · **unit 91/91** (+11) · **full e2e 151 passed /
+> 13 skipped / 0 failed** (+1 = the playlist-label spec).
 >
 > **Companion docs:** [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
 > (§6 deferred items — the `syncVideos` hazard this plan deliberately does **not** close) ·
@@ -161,9 +163,9 @@ stage, run gates, summarize, wait for go-ahead.
       post **that has media** and confirm it still renders (this is the D1 "compose-only"
       guarantee).
 
-### B2 — Config-driven playlist filing (replaces the title match)
+### B2 — Config-driven playlist filing ✅ **DONE 2026-07-27**
 
-- [ ] B2.1 `config/mountains/mountains.json` — all three playlists exist and were
+- [x] B2.1 `config/mountains/mountains.json` — all three playlists exist and were
       **API-verified on 2026-07-27** (title + channel + item count):
 
       ```jsonc
@@ -177,7 +179,7 @@ stage, run gates, summarize, wait for go-ahead.
       length-validate playlist IDs.** `PLVEAQ-0vlkXw` is 13 chars against the other two's 34
       and is perfectly valid; YouTube does not guarantee a single ID length.
 
-- [ ] B2.2 `src/utils/config.ts`: `getYouTubePlaylistId(mountainId)` beside
+- [x] B2.2 `src/utils/config.ts`: `getYouTubePlaylistId(mountainId)` beside
       `getYouTubeChannelId`, plus `getAdoptionPlaylistId()` (**no `mountainId` argument** —
       the missing parameter is what documents it as platform-scoped, exactly like the
       env-sourced deployment secrets in the same file).
@@ -196,40 +198,46 @@ stage, run gates, summarize, wait for go-ahead.
       will be provisioned before its playlist is created. Keep it anyway: blanket fail-loud
       would make "add a mountain" and "make its playlist" a single atomic chore.
 
-- [ ] B2.3 `useRichContentForm`: delete the `/api/youtube-playlists` fetch, the `playlists` /
+- [x] B2.3 `useRichContentForm`: delete the `/api/youtube-playlists` fetch, the `playlists` /
       `loadingPlaylists` / `selectedPlaylist` state, and the title match; take the playlist ID
       from config via `useMountain()`. This removes a gated network call and its 403
       warn-and-continue path from the form.
-- [ ] B2.4 `NewButlerTalkForm`: the locked 재생목록 input shows the **mountain's display name**
+- [x] B2.4 `NewButlerTalkForm`: the locked 재생목록 input shows the **mountain's display name**
       (from config), not the hard-coded `집사게시판`; helper text updated to say the video is
       filed under that mountain. ⚠️ If the ID is ever blank it must **say so** — _재생목록이
       아직 없어요. 동영상은 재생목록에 추가되지 않아요_ — never a mountain name that implies filing
       that won't happen. (Not reachable today; both mountains are configured.)
-- [ ] B2.5 **`/api/upload-youtube` takes a list of playlists.** It reads a single
+- [x] B2.5 **`/api/upload-youtube` takes a list of playlists.** It reads a single
       `formData.get('playlistId')` and does one `playlistItems.insert` today; accept repeated
       `playlistId` fields (`formData.getAll`) and insert into each. ⚠️ Keep the existing
       **non-fatal** per-insert behavior (a failed filing warns, the upload still succeeds) —
       but log _which_ playlist failed, since with two of them "the video uploaded but isn't in
       a playlist" is now ambiguous.
-- [ ] B2.6 `uploadStrategies.uploadVideo(s)ToYouTube`: `playlistId?: string` →
+- [x] B2.6 `uploadStrategies.uploadVideo(s)ToYouTube`: `playlistId?: string` →
       `playlistIds?: string[]`, appending one field per ID. Update
       `tests/unit/uploadStrategies.test.ts` (it pins the current single-field encoding).
-- [ ] B2.7 **Family B wiring** — `useSimpleContentForm` gains a playlist list in its config;
+- [x] B2.7 **Family B wiring** — `useSimpleContentForm` gains a playlist list in its config;
       `NewAdoptionForm` passes `[mountainPlaylistId, adoptionPlaylistId]` (D8),
       `NewAnnouncementForm` passes nothing (§4.5). This is the part D7 adds to the original
       scope.
-- [ ] B2.8 `cat_videos.playlist` is a **single string** (`upload-youtube` writes
+- [x] B2.8 `cat_videos.playlist` is a **single string** (`upload-youtube` writes
       `playlist: playlistId || ''`). Write the **mountain** playlist there — it is the
       ownership handle — and leave the adoption membership to YouTube. ⚠️ Do not widen this
       field: nothing reads it for behavior, and the video record's mountain already lives in
       `mountainId`.
-- [ ] B2.9 Unit tests: `getYouTubePlaylistId` (present / missing / unknown mountain),
+- [x] B2.9 Unit tests: `getYouTubePlaylistId` (present / missing / unknown mountain),
       `getAdoptionPlaylistId` (present / missing), and that the `_shared` key is invisible to
       `getAllMountains()` / `getPublicMountains()` / `resolveMountainIdOrNull` — the
       regression guard for the `_`-prefix mechanism.
-- [ ] B2.10 ⚠️ Check whether `/api/youtube-playlists` still has callers after B2.3. If the
-      admin editor is its only remaining consumer, say so in the commit message; **do not
-      delete it** in this change (`/admin/tag-videos` playlist panel uses it).
+- [x] B2.10 ⚠️ Check whether `/api/youtube-playlists` still has callers after B2.3.
+      🔎 **Finding: it now has NONE.** The plan assumed `/admin/tag-videos` used it — it does
+      not; that page goes through `/api/manage-playlists?action=list_playlists`
+      (`page.tsx:197,370,450`). After B2.3 removed the forms' fetch, the only remaining
+      reference in the repo is `tests/e2e/api/media-route-authz.spec.ts:83`, which asserts the
+      route's auth gate. **Left in place, not deleted** — same shape as
+      `generate-youtube-signed-url` (deleted 2026-07-26 after a `git log -S` history check
+      showed no caller had ever existed). Deleting this one deserves the same check and an
+      owner decision, so it is logged as an open thread rather than done here.
 
 ### B3 — 집사톡 per-file media sections
 

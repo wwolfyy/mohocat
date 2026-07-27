@@ -55,8 +55,13 @@ export interface YouTubeUploadOptions {
   tags?: string;
   /** YYYY-MM-DD recording date (Family A sends this when set). */
   createdTime?: string;
-  /** Target playlist id (Family A sends this when selected). */
-  playlistId?: string;
+  /**
+   * Playlists to file the video into, sent as one repeated `playlistId` field
+   * each. Normally the owning mountain's playlist; 입양홍보 additionally sends the
+   * cross-mountain adoption playlist (plan D8), which is why this is a list.
+   * Empty/omitted → the video is uploaded but left unfiled.
+   */
+  playlistIds?: string[];
   /**
    * Signed-in user, used to attach the `Authorization: Bearer <idToken>` header the
    * gated route requires ('manage-video'). Injected rather than read from the auth
@@ -80,8 +85,10 @@ export const uploadVideoToYouTube = async (
   if (options.createdTime) {
     formData.append('createdTime', options.createdTime);
   }
-  if (options.playlistId) {
-    formData.append('playlistId', options.playlistId);
+  for (const playlistId of options.playlistIds ?? []) {
+    if (playlistId) {
+      formData.append('playlistId', playlistId);
+    }
   }
 
   const response = await fetch('/api/upload-youtube', {

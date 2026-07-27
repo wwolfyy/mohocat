@@ -6,6 +6,7 @@ import { cn } from '@/utils/cn';
 import MediaUploadField from '@/components/forms/MediaUploadField';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
 import { useMountain } from '@/components/MountainProvider';
+import { getAdoptionPlaylistId } from '@/utils/config';
 
 /**
  * 입양홍보 (adoption promotion) post composer — admin-authored, publicly shown on
@@ -24,6 +25,10 @@ const NewAdoptionForm = () => {
       tags: '입양홍보',
     },
     createPost: (postData) => adoptionService.createPost(postData),
+    // 입양홍보 is platform-wide, so its videos also join the one cross-mountain
+    // adoption playlist — on top of the mountain playlist the hook always adds,
+    // which is what keeps them attributable to a single mountain (plan D7/D8).
+    extraPlaylistIds: () => [getAdoptionPlaylistId()],
     successMessage: '입양홍보 글이 성공적으로 작성되었습니다!',
     errorMessagePrefix: '입양홍보 글 작성 중 오류가 발생했습니다: ',
     redirectPath: '/pages/adoption',

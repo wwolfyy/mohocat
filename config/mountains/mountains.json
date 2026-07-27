@@ -3,6 +3,11 @@
     "version": "3.0",
     "lastUpdated": "2026-07-19"
   },
+  "_shared": {
+    "youtube": {
+      "adoptionPlaylistId": "PL3DBzcr-rpCG8QxBiLgcSZtgD9LoXjY58"
+    }
+  },
   "geyang": {
     "id": "geyang",
     "name": "계양산",
@@ -47,7 +52,8 @@
     "social": {
       "youtubeChannelId": "UC1g-XZS4wwyUu7JHDEpB0jw",
       "instagramHandle": "",
-      "facebookPage": ""
+      "facebookPage": "",
+      "youtubePlaylistId": "PL3DBzcr-rpCGQtNw2dgC8cJcDTjIEOSxa"
     },
     "map": {
       "clustering": false,
@@ -113,7 +119,8 @@
     "social": {
       "youtubeChannelId": "UC1g-XZS4wwyUu7JHDEpB0jw",
       "instagramHandle": "",
-      "facebookPage": ""
+      "facebookPage": "",
+      "youtubePlaylistId": "PLVEAQ-0vlkXw"
     },
     "map": {
       "clustering": false,
