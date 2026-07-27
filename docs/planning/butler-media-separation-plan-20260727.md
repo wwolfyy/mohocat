@@ -9,7 +9,7 @@
 > side (they are already attributable on the Firestore side) — plus one **cross-mountain
 > 입양홍보 playlist**, since adoption promotion is platform-wide by nature.
 >
-> **Status:** 🚧 **IN PROGRESS — B1 + B2 done, B3/B4 open.** Every current-state
+> **Status:** 🚧 **IN PROGRESS — B1 + B2 + B3 done; B4 docs remain.** Every current-state
 > claim below was verified against `dev` @ `d7999e2` on 2026-07-27; §1.1's description of
 > 집사게시판 is now **history** — B1 removed it.
 >
@@ -17,6 +17,8 @@
 > skipped / 0 failed** (+2 = the new 취소 specs) · browser pass on the rebuilt form.
 > **B2 gates (2026-07-27):** tsc 0 · smoke 30/30 · **unit 91/91** (+11) · **full e2e 151 passed /
 > 13 skipped / 0 failed** (+1 = the playlist-label spec).
+> **B3 gates (2026-07-27):** tsc 0 · **smoke 31/31** · **unit 92/92** · **full e2e 153 passed /
+> 13 skipped / 0 failed** (+2) · browser pass on the rebuilt 집사톡 composer.
 >
 > **Companion docs:** [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
 > (§6 deferred items — the `syncVideos` hazard this plan deliberately does **not** close) ·
@@ -239,29 +241,29 @@ stage, run gates, summarize, wait for go-ahead.
       showed no caller had ever existed). Deleting this one deserves the same check and an
       owner decision, so it is logged as an open thread rather than done here.
 
-### B3 — 집사톡 per-file media sections
+### B3 — 집사톡 per-file media sections ✅ **DONE 2026-07-27**
 
-- [ ] B3.1 New shared component `src/components/forms/MediaItemList.tsx`: renders an ordered
+- [x] B3.1 New shared component `src/components/forms/MediaItemList.tsx`: renders an ordered
       list of media items, each = single-file picker (`multiple` **removed**) + 제목 (video
       only) + 설명 + 삭제. A fresh empty section is appended as soon as the last one has a
       file. `kind: 'image' | 'video'` selects the label set, as `MediaUploadField` does today.
-- [ ] B3.2 `useRichContentForm`: `videoFiles: File[]` / `imageFiles: File[]` become
+- [x] B3.2 `useRichContentForm`: `videoFiles: File[]` / `imageFiles: File[]` become
       `videoItems: {file, title, description}[]` / `imageItems: {file, description}[]`. The
       upload loop passes each item's own title/description to `uploadVideoToYouTube`; the
       filename date auto-parse keys off the **first item that yields a date** (unchanged in
       spirit).
-- [ ] B3.3 `uploadImagesWithSignedUrls`: accept a per-file description instead of one shared
+- [x] B3.3 `uploadImagesWithSignedUrls`: accept a per-file description instead of one shared
       `context.description`. Signature change → update `tests/unit/uploadStrategies.test.ts`.
-- [ ] B3.4 `/api/upload-youtube`: drop the hard-coded
+- [x] B3.4 `/api/upload-youtube`: drop the hard-coded
       `description: description || 'Uploaded via Mountain Cats app'` default so an empty
       description reaches YouTube empty. ✅ **Verified safe for the other callers** —
       공지사항/입양홍보 always send a non-empty `youtubeDefaults.description`
       (`NewAnnouncementForm.tsx:23`, `NewAdoptionForm.tsx:21`), so this is a no-op for them.
-- [ ] B3.5 Helper text under each field (Korean, 해요체): 제목 → _비어 있으면 글 제목이
+- [x] B3.5 Helper text under each field (Korean, 해요체): 제목 → _비어 있으면 글 제목이
       사용돼요_; 동영상 설명 → _비어 있으면 YouTube 설명 없이 올라가요_; 사진 설명 → _비어
       있으면 설명 없이 저장돼요_.
-- [ ] B3.6 취소 button on 집사톡, same rules as B1.4 (dirty check includes picked files).
-- [ ] B3.7 Browser pass: two videos with different titles, one with an empty title, one photo
+- [x] B3.6 취소 button on 집사톡, same rules as B1.4 (dirty check includes picked files).
+- [x] B3.7 Browser pass: two videos with different titles, one with an empty title, one photo
       with a description and one without.
 
 ### B4 — Tests & docs

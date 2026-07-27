@@ -12,6 +12,7 @@ import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrate
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
 import { getMountainName, getYouTubePlaylistId } from '@/utils/config';
+import type { MediaItem } from './MediaItemList';
 
 /**
  * Shared submit/upload flow for the rich-content family (complexity-retirement
@@ -39,12 +40,8 @@ export interface RichContentFormConfig {
    * `buildDefaultTitle` (ButlerTalk stores the undated '집사톡 글입니다').
    */
   buildPostTitleFallback?: () => string;
-  /** YouTube description fallback when the message is empty. */
-  youtubeDescriptionDefault: string;
   /** Drives the created-time input type AND the filename auto-parse format. */
   createdTimeInputType: 'date' | 'datetime-local';
-  /** Multi-video uploads get " (Part n)" title suffixes (Post behavior). */
-  multiPartVideoTitles: boolean;
   /** Firestore write, injected from the owning form's service. */
   createPost: (post: Record<string, unknown>) => Promise<unknown>;
   /** Post-create side effects (Post: feeding-spots update; non-fatal inside). */
@@ -60,8 +57,8 @@ export interface RichContentFormConfig {
 
 export const useRichContentForm = (config: RichContentFormConfig) => {
   const mountainId = useMountain();
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [videoItems, setVideoItems] = useState<MediaItem[]>([]);
+  const [imageItems, setImageItems] = useState<MediaItem[]>([]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -86,36 +83,52 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const playlistId = getYouTubePlaylistId(mountainId);
   const playlistLabel = playlistId ? getMountainName(mountainId) : null;
 
-  const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const files = Array.from(event.target.files);
-      setVideoFiles(files);
-
-      // Auto-parse the recording date from the first video file name.
-      if (!createdTime) {
-        const parsedDate = parseRecordingDateFromTitle(files[0].name);
-        if (parsedDate) {
-          setCreatedTime(formatParsedDate(parsedDate));
-        }
+  /**
+   * Fill 촬영일 from a filename the first time one yields a date. Unchanged in
+   * spirit from the single-picker version (first video, else first image) — with
+   * one file per section, "first" is now the first item that parses.
+   */
+  const autoParseCreatedTime = (items: MediaItem[]) => {
+    if (createdTime) return;
+    for (const item of items) {
+      const parsedDate = parseRecordingDateFromTitle(item.file.name);
+      if (parsedDate) {
+        setCreatedTime(formatParsedDate(parsedDate));
+        return;
       }
-    } else {
-      setVideoFiles([]);
     }
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const files = Array.from(event.target.files);
-      setImageFiles(files);
+  const handleVideoItemsChange = (items: MediaItem[]) => {
+    setVideoItems(items);
+    autoParseCreatedTime(items);
+  };
 
-      // Fall back to the first image file name when no video set the date.
-      if (files.length > 0 && videoFiles.length === 0 && !createdTime) {
-        const parsedDate = parseRecordingDateFromTitle(files[0].name);
-        if (parsedDate) {
-          setCreatedTime(formatParsedDate(parsedDate));
-        }
-      }
+  const handleImageItemsChange = (items: MediaItem[]) => {
+    setImageItems(items);
+    // Videos take precedence for the date, as before.
+    if (videoItems.length === 0) {
+      autoParseCreatedTime(items);
     }
+  };
+
+  /**
+   * Leave without posting, confirming first if anything would be lost. Files
+   * count as content: picking three videos and then typing nothing is still work
+   * the user would not want silently dropped.
+   */
+  const handleCancel = async () => {
+    const isDirty =
+      title.trim().length > 0 ||
+      message.trim().length > 0 ||
+      videoItems.length > 0 ||
+      imageItems.length > 0;
+
+    if (isDirty) {
+      const confirmed = await dialog.confirm('작성 중인 내용이 사라져요. 그만 쓸까요?');
+      if (!confirmed) return;
+    }
+    router.push(config.redirectPath);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -129,23 +142,35 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       let mediaType: 'video' | 'image' = 'image';
 
       // Upload videos first if present (this takes longer)
-      if (videoFiles.length > 0) {
+      if (videoItems.length > 0) {
         try {
-          const finalTitle = title.trim() || config.buildDefaultTitle();
+          const fallbackTitle = title.trim() || config.buildDefaultTitle();
+          // Only videos left untitled fall back to the post title, so only those
+          // need numbering to stay distinct on YouTube — a title the user typed is
+          // uploaded verbatim (plan §4.3).
+          const fallbackCount = videoItems.filter((item) => !item.title.trim()).length;
+          let fallbackIndex = 0;
+
           videoUrls = await Promise.all(
-            videoFiles.map((file, index) =>
-              uploadVideoToYouTube(file, {
-                title:
-                  config.multiPartVideoTitles && videoFiles.length > 1
-                    ? `${finalTitle} (Part ${index + 1})`
-                    : finalTitle,
-                description: message || config.youtubeDescriptionDefault,
+            videoItems.map((item) => {
+              const ownTitle = item.title.trim();
+              if (!ownTitle) fallbackIndex += 1;
+              const videoTitle = ownTitle
+                ? ownTitle
+                : fallbackCount > 1
+                  ? `${fallbackTitle} (Part ${fallbackIndex})`
+                  : fallbackTitle;
+
+              return uploadVideoToYouTube(item.file, {
+                title: videoTitle,
+                // Empty stays empty: no description on YouTube (plan D2).
+                description: item.description,
                 tags: selectedVideoTags.length > 0 ? selectedVideoTags.join(', ') : '산고양이',
                 createdTime: createdTime || undefined,
                 playlistIds: playlistId ? [playlistId] : undefined,
                 user,
-              })
-            )
+              });
+            })
           );
           mediaType = 'video';
         } catch (videoError) {
@@ -157,16 +182,18 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
         }
       }
 
-      if (imageFiles.length > 0) {
+      if (imageItems.length > 0) {
         try {
-          imageUrls = await uploadImagesWithSignedUrls(imageFiles, {
-            mountainId,
-            tags: selectedImageTags,
-            createdTime,
-            uploadedBy: user?.email || 'unknown',
-            description: message || '',
-            user,
-          });
+          imageUrls = await uploadImagesWithSignedUrls(
+            imageItems.map((item) => ({ file: item.file, description: item.description })),
+            {
+              mountainId,
+              tags: selectedImageTags,
+              createdTime,
+              uploadedBy: user?.email || 'unknown',
+              user,
+            }
+          );
           if (!videoThumb && imageUrls.length > 0) {
             videoThumb = imageUrls[0];
           }
@@ -198,7 +225,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       };
 
       // Validate that we have the expected content
-      if (videoFiles.length > 0 && videoUrls.length === 0) {
+      if (videoItems.length > 0 && videoUrls.length === 0) {
         throw new Error('Video files were selected but no video URLs were generated');
       }
 
@@ -207,8 +234,8 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       await config.afterCreate?.();
 
       if (config.resetAfterCreate) {
-        setVideoFiles([]);
-        setImageFiles([]);
+        setVideoItems([]);
+        setImageItems([]);
         setTitle('');
         setMessage('');
       }
@@ -230,10 +257,10 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     user,
     isAuthenticated,
     loading,
-    videoFiles,
-    imageFiles,
-    handleVideoChange,
-    handleImageChange,
+    videoItems,
+    imageItems,
+    handleVideoItemsChange,
+    handleImageItemsChange,
     title,
     setTitle,
     message,
@@ -254,6 +281,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     showImageTagSelector,
     setShowImageTagSelector,
     handleSubmit,
+    handleCancel,
     /** Render once inside the owning form (replaces native alert dialogs). */
     dialog: dialog.element,
   };

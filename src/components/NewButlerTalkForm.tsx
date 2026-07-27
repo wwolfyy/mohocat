@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useRichContentForm } from '@/components/forms/useRichContentForm';
 import { useMountain } from '@/components/MountainProvider';
+import MediaItemList from '@/components/forms/MediaItemList';
 
 /**
  * 집사톡(butler_talk) post composer. Submit/upload flow comes from the shared
@@ -37,9 +38,7 @@ const NewButlerTalkForm = () => {
   const form = useRichContentForm({
     buildDefaultTitle: generateDynamicTitle,
     buildPostTitleFallback: () => DEFAULT_TITLE,
-    youtubeDescriptionDefault: '산고양이 영상',
     createdTimeInputType: 'datetime-local',
-    multiPartVideoTitles: false,
     createPost: (post) => butlerTalkService.createPost(post),
     resetAfterCreate: false,
     successMessage: '글이 성공적으로 작성되었습니다!',
@@ -93,28 +92,16 @@ const NewButlerTalkForm = () => {
         />
       </div>
 
-      {/* Video Upload */}
-      <div>
-        <label htmlFor="videos" className="block text-sm font-medium text-gray-700 mb-1">
-          동영상 파일 (YouTube 업로드)
-        </label>
-        <input
-          type="file"
-          id="videos"
-          accept="video/*"
-          multiple
-          onChange={form.handleVideoChange}
-          className="w-full p-2 border border-gray-300 rounded-md"
-        />
-        {form.videoFiles.length > 0 && (
-          <p className="text-sm text-green-600 mt-2">
-            {form.videoFiles.length}개의 동영상 파일이 선택되었습니다.
-          </p>
-        )}
-      </div>
+      {/* Video Upload — one file per section, each with its own 제목/설명 */}
+      <MediaItemList
+        kind="video"
+        items={form.videoItems}
+        onItemsChange={form.handleVideoItemsChange}
+        disabled={form.uploading}
+      />
 
       {/* YouTube Metadata - only show if video files are selected */}
-      {form.videoFiles.length > 0 && (
+      {form.videoItems.length > 0 && (
         <div className="border-t pt-4 mt-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">YouTube 업로드 설정</h3>
 
@@ -181,28 +168,16 @@ const NewButlerTalkForm = () => {
         </div>
       )}
 
-      {/* Image Upload */}
-      <div>
-        <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
-          이미지 파일
-        </label>
-        <input
-          type="file"
-          id="images"
-          accept="image/*"
-          multiple
-          onChange={form.handleImageChange}
-          className="w-full p-2 border border-gray-300 rounded-md"
-        />
-        {form.imageFiles.length > 0 && (
-          <p className="text-sm text-green-600 mt-2">
-            {form.imageFiles.length}개의 이미지 파일이 선택되었습니다.
-          </p>
-        )}
-      </div>
+      {/* Image Upload — one file per section, each with its own 설명 */}
+      <MediaItemList
+        kind="image"
+        items={form.imageItems}
+        onItemsChange={form.handleImageItemsChange}
+        disabled={form.uploading}
+      />
 
       {/* Image Cat Tags - only show if images are selected */}
-      {form.imageFiles.length > 0 && (
+      {form.imageItems.length > 0 && (
         <div>
           <label htmlFor="imageTags" className="block text-sm font-medium text-gray-700 mb-1">
             등장하는 고양이
@@ -219,16 +194,25 @@ const NewButlerTalkForm = () => {
         </div>
       )}
 
-      {/* Submit Button */}
-      <div className="pt-4">
+      {/* Submit / Cancel */}
+      <div className="pt-4 flex gap-2">
         <Button
           type="submit"
           variant="primary"
           size="lg"
-          className="w-full"
+          className="flex-1"
           disabled={form.uploading}
         >
           {form.uploading ? '업로드 중...' : '글 작성'}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          onClick={form.handleCancel}
+          disabled={form.uploading}
+        >
+          취소
         </Button>
       </div>
 

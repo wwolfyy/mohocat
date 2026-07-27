@@ -128,13 +128,23 @@ export interface SignedUrlImageContext {
   createdTime: string;
   /** Uploader identity recorded on the entry (user email or 'unknown'). */
   uploadedBy: string;
-  /** Post message, reused as the image description. */
-  description: string;
   /**
    * Signed-in user, used to attach the `Authorization: Bearer <idToken>` header the
    * gated signed-URL route requires ('manage-photo'). See YouTubeUploadOptions.user.
    */
   user: User | null;
+}
+
+/** One photo plus the caption written for it. */
+export interface SignedUrlImageUpload {
+  file: File;
+  /**
+   * Saved to `cat_images.description` — the caption the 사진첩 grid and the
+   * lightbox show. Empty is saved as empty (the album renders its own '설명 없음'
+   * placeholder); it used to inherit the post body, which meant every photo in a
+   * post carried the same caption whether it fitted or not.
+   */
+  description: string;
 }
 
 /**
@@ -143,14 +153,14 @@ export interface SignedUrlImageContext {
  * tagging tools. Returns the public URLs in order.
  */
 export const uploadImagesWithSignedUrls = async (
-  files: File[],
+  uploads: SignedUrlImageUpload[],
   context: SignedUrlImageContext
 ): Promise<string[]> => {
   const imageService = getImageService(context.mountainId);
   const authorization = await authHeader(context.user);
 
   return await Promise.all(
-    files.map(async (file) => {
+    uploads.map(async ({ file, description }) => {
       const response = await fetch('/api/generate-signed-url', {
         method: 'POST',
         headers: {
@@ -191,7 +201,7 @@ export const uploadImagesWithSignedUrls = async (
           uploadDate: new Date(),
           createdTime: context.createdTime ? new Date(context.createdTime) : new Date(),
           uploadedBy: context.uploadedBy,
-          description: context.description,
+          description,
           location: '',
           autoTagged: false,
           fileSize: file.size,

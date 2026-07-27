@@ -96,6 +96,71 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
       .toBe('/pages/butler_stream');
   });
 
+  test('집사톡: each file gets its own section, its own 제목/설명, and its own 삭제', async ({
+    page,
+  }) => {
+    await page.goto('/pages/butler_talk/new');
+    await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const videoPicker = () => page.locator('input[type="file"][accept="video/*"]');
+    // One picker to start; each pick appends a section AND a fresh empty picker.
+    await expect(videoPicker()).toHaveCount(1);
+
+    await videoPicker().setInputFiles({
+      name: '첫번째.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('one'),
+    });
+    await expect(page.getByText('첫번째.mp4')).toBeVisible();
+
+    await videoPicker().setInputFiles({
+      name: '두번째.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('two'),
+    });
+    await expect(page.getByText('두번째.mp4')).toBeVisible();
+
+    // Per-file fields are independent — the whole point of the change.
+    const titles = page.getByPlaceholder('이 동영상의 YouTube 제목');
+    await expect(titles).toHaveCount(2);
+    await titles.nth(0).fill('산책하는 냥이');
+    await titles.nth(1).fill('밥 먹는 냥이');
+    await expect(titles.nth(0)).toHaveValue('산책하는 냥이');
+    await expect(titles.nth(1)).toHaveValue('밥 먹는 냥이');
+
+    // 삭제 removes the section it belongs to, not the first one.
+    await page.getByRole('button', { name: '삭제' }).nth(0).click();
+    await expect(page.getByText('첫번째.mp4')).toHaveCount(0);
+    await expect(page.getByText('두번째.mp4')).toBeVisible();
+    await expect(titles).toHaveCount(1);
+    await expect(titles.nth(0)).toHaveValue('밥 먹는 냥이');
+  });
+
+  test('집사톡: 취소 confirms once files have been picked, even with no text', async ({ page }) => {
+    await page.goto('/pages/butler_talk/new');
+    await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Files count as work in progress: picking three videos and typing nothing is
+    // still something the user would not want silently dropped.
+    await page.locator('input[type="file"][accept="image/*"]').setInputFiles({
+      name: '사진.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('img'),
+    });
+
+    await page.getByRole('button', { name: '취소' }).click();
+    await expect(confirmDialog(page)).toBeVisible();
+    await confirmDialog(page).getByRole('button', { name: '확인' }).click();
+
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 20_000 })
+      .toBe('/pages/butler_talk');
+  });
+
   test('집사톡: the video panel names the mountain’s own playlist, from config', async ({
     page,
   }) => {

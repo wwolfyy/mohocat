@@ -76,7 +76,11 @@ export async function POST(request: NextRequest) {
     const stream = Readable.from(buffer); // Prepare snippet data with enhanced metadata
     const snippetData: any = {
       title: title || file.name,
-      description: description || 'Uploaded via Mountain Cats app',
+      // No invented default: an empty description means the uploader left it
+      // empty on purpose, and the video goes up without one (plan B3.4). The
+      // other callers (공지사항/입양홍보) always send their own non-empty text, so
+      // dropping the old 'Uploaded via Mountain Cats app' changes nothing there.
+      description: description || '',
     };
 
     // Add tags if provided

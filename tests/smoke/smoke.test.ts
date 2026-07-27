@@ -94,6 +94,9 @@ describe('smoke: content-form primitives exist (complexity-retirement P1)', () =
   // behavioral coverage lives in tests/unit/uploadStrategies.test.ts + the e2e net.
   const primitives = [
     'components/forms/MediaUploadField.tsx',
+    // One-file-per-section picker with per-file metadata; 집사톡 uses this, the
+    // Family B forms still use MediaUploadField's multi-file picker.
+    'components/forms/MediaItemList.tsx',
     'components/forms/uploadStrategies.ts',
   ];
   it.each(primitives)('%s exists', (rel) => {

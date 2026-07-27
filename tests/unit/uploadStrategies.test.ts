@@ -205,7 +205,6 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     tags: ['테스트냥이이'],
     createdTime: '2026-02-01',
     uploadedBy: 'admin@example.com',
-    description: '본문',
     user: testUser,
   };
 
@@ -230,7 +229,10 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
       .mockResolvedValueOnce({ ok: true }); // PUT upload
     createImageMock.mockResolvedValue('img-id');
 
-    const urls = await uploadImagesWithSignedUrls([file('a.jpg')], context);
+    const urls = await uploadImagesWithSignedUrls(
+      [{ file: file('a.jpg'), description: '본문' }],
+      context
+    );
 
     expect(urls).toEqual(['https://public/1']);
     // Canonical route contract: POST /api/generate-signed-url with name+type.
@@ -256,12 +258,34 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     expect(entry.description).toBe('본문');
   });
 
+  it('gives each photo its OWN description, not one shared caption', async () => {
+    // Uploads run in Promise.all, so both signed-URL requests fire before either
+    // PUT — key the mock on the URL rather than on call order.
+    let issued = 0;
+    fetchMock.mockImplementation(async (url: string) =>
+      url === '/api/generate-signed-url' ? signedUrlResponse((issued += 1)) : { ok: true }
+    );
+    createImageMock.mockResolvedValue('img-id');
+
+    await uploadImagesWithSignedUrls(
+      [
+        { file: file('a.jpg'), description: '첫 번째 사진' },
+        // Left empty on purpose: saved empty rather than inheriting anything.
+        { file: file('b.jpg'), description: '' },
+      ],
+      context
+    );
+
+    const descriptions = createImageMock.mock.calls.map((call) => call[0].description);
+    expect(descriptions).toEqual(['첫 번째 사진', '']);
+  });
+
   it('throws when the signed-URL request fails', async () => {
     fetchMock.mockResolvedValue({ ok: false, statusText: 'Forbidden' });
 
-    await expect(uploadImagesWithSignedUrls([file('a.jpg')], context)).rejects.toThrow(
-      'Failed to get signed URL: Forbidden'
-    );
+    await expect(
+      uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '본문' }], context)
+    ).rejects.toThrow('Failed to get signed URL: Forbidden');
   });
 
   it('throws when the PUT upload fails (adopted ok-check)', async () => {
@@ -269,9 +293,9 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
       .mockResolvedValueOnce(signedUrlResponse(1))
       .mockResolvedValueOnce({ ok: false, statusText: 'Bad Gateway' });
 
-    await expect(uploadImagesWithSignedUrls([file('a.jpg')], context)).rejects.toThrow(
-      'Failed to upload file: Bad Gateway'
-    );
+    await expect(
+      uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '본문' }], context)
+    ).rejects.toThrow('Failed to upload file: Bad Gateway');
     expect(createImageMock).not.toHaveBeenCalled();
   });
 
@@ -280,7 +304,10 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     createImageMock.mockRejectedValue(new Error('rules denied'));
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const urls = await uploadImagesWithSignedUrls([file('a.jpg')], context);
+    const urls = await uploadImagesWithSignedUrls(
+      [{ file: file('a.jpg'), description: '본문' }],
+      context
+    );
 
     expect(urls).toEqual(['https://public/1']);
     expect(consoleError).toHaveBeenCalled();
