@@ -22,7 +22,11 @@ deep detail this file deliberately keeps out:
 - **`docs/handoff/`** — chronological engineering hand-offs. **Read the latest first** for
   current state and what's next (e.g. what feature is mid-flight).
 - **`docs/planning/PROJECT_PLAN.md`** — the cross-workstream status tracker (what's done,
-  in progress, deferred). Companion plans sit alongside it in `docs/planning/`.
+  in progress, deferred). Companion plans sit **one level down**, split by state:
+  **`docs/planning/pending/`** (open, in progress, or decided-but-not-executed — start
+  here) and **`docs/planning/completed/`** (executed; historical record). A doc moves
+  from `pending/` to `completed/` when its own status line says it's done, and the links
+  to it are updated in the same change. New companion plans go in `pending/`.
 - **`docs/codebase/`** — per-domain deep dives (auth, permissions, services, API routes,
   admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshot docs — verify against code before trusting specifics.)_

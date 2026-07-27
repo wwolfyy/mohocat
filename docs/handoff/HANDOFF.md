@@ -16,16 +16,16 @@
 > so once a second subdomain exists, a user who logs out of one mountain stays logged in on
 > the others — members and admins alike, and it hollows out the admin idle timeout. Zero
 > exposure today (production serves a single origin). Full write-up + fix shape:
-> [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) §1.1.
+> [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md) §1.1.
 >
 > ✅ **That decision is now ANSWERED — path-based (owner, 2026-07-28).** A mountain will be
 > identified by a **path prefix** (`mohocats.org/manisan`), with geyang keeping its prefix-free
 > URLs at the apex; a second mountain's owner does **not** need their own hostname. This deletes
 > the security defect above structurally, along with the re-login friction and the per-mountain
 > DNS/console chore. Decision record:
-> [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md)
+> [`tenancy-url-model-decision-20260728.md`](../planning/pending/tenancy-url-model-decision-20260728.md)
 > → execution plan:
-> [`tenancy-path-migration-plan-20260728.md`](../planning/tenancy-path-migration-plan-20260728.md)
+> [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md)
 > (T0–T7, 28 tasks). **Prerequisites §1.1 / §1.5 / §1.6 / §2 are superseded — do not work them;
 > they get rewritten by the migration's T7.**
 >
@@ -68,7 +68,7 @@
 > 🔑 **One owner chore is outstanding** (the 계양산 playlist back-fill, 4 of 13 videos) —
 > but it is **not** part of the sequence above. It, and everything else gated on
 > "before a real mountain #2", now lives in
-> [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md). Nothing there
+> [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md). Nothing there
 > blocks the promotion.
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
@@ -84,7 +84,7 @@
 **Where the deep detail lives:** [`PROJECT_PLAN.md`](../planning/PROJECT_PLAN.md)
 (cross-workstream status) · [`log/FEATURE_MOD_LOG.md`](../../log/FEATURE_MOD_LOG.md) +
 [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md) · the frozen
-[`handoff-28`](./2026-07-11-handoff-28.md) / [`-27`](./2026-07-10-handoff-27.md) ·
+[`handoff-28`](./archive/2026-07-11-handoff-28.md) / [`-27`](./archive/2026-07-10-handoff-27.md) ·
 the testing hand-off
 [`testing/2026-07-12-e2e-harness-handoff.md`](./testing/2026-07-12-e2e-harness-handoff.md).
 
@@ -177,7 +177,7 @@ the testing hand-off
   ungated write/credential routes (pre-existing, orthogonal to tenancy). Q1–Q8 answered (management-only · B1 one-Firestore-
   `mountainId` · A1 one-Vercel + subdomains · visitor-facing selector); plan + live
   tracker:
-  [`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md).
+  [`multi-mountain-refactor-plan-20260719.md`](../planning/completed/multi-mountain-refactor-plan-20260719.md).
   M1–M3 (`8920c66`/`092d226`/`491b832`, 2026-07-19) + **M4 (`b83a112`, 2026-07-20)**
   landed the `[mountain]` segment + host-rewrite middleware, the per-tenant service
   factory, write stamps, and the **prod backfill (99 docs stamped `mountainId=
@@ -238,13 +238,13 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   the apex; a second mountain's owner does **not** need their own hostname (the one argument that
   could have reversed it). Execution plan (T0–T7, 28 tasks, **not started** — gated behind the
   P5.4 pass and the promotion):
-  [`tenancy-path-migration-plan-20260728.md`](../planning/tenancy-path-migration-plan-20260728.md).
+  [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md).
   🚨 **The plan re-measured the surface and found one the decision doc missed:** all `/api/*`
   routes resolve the tenant from the **Host header**, so path-based would resolve every API call
   to geyang — including `requireApiPermission`, an authorization inversion (geyang-only admin
   allowed on manisan, manisan-only admin denied on their own). Fixed by a validated
   `X-Mountain-Id` header, sequenced ahead of the link sweep. Original rationale record:
-  [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md)
+  [`tenancy-url-model-decision-20260728.md`](../planning/pending/tenancy-url-model-decision-20260728.md)
   — its case: every mountain-#2 blocker
   found that day — the 🚨 sign-out security defect, the re-login friction, the cost of fixing
   that friction (a bearer credential we'd own), the per-subdomain authorized-domain chore, the
@@ -255,7 +255,7 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   top. ⚠️ It is **not** a silver bullet — `syncVideos`, the playlist back-fill, the roster
   leak, and the missing CMS mountain label survive either way.
 - **📁 Mountain-#2 readiness now has one home:**
-  [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) (blocking ·
+  [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md) (blocking ·
   should-fix · decided/won't-do · already-closed), with the console half carved into
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
   blocks the `dev → main` promotion.
@@ -284,7 +284,7 @@ promotions can use a merge commit). Full narrative + run instructions:
 개인정보처리방침 (`/pages/privacy`) + 이용약관 (`/pages/terms`), footer links, email-signup
 consent gating, 국외 이전 disclosure (PIPA Art. 28-8, disclosure-based not consent), and a
 member self-service **탈퇴/deletion** flow (`POST /api/account/delete`, Admin-SDK
-hard-delete). Detail: [`handoff-28`](./2026-07-11-handoff-28.md) §1–2 +
+hard-delete). Detail: [`handoff-28`](./archive/2026-07-11-handoff-28.md) §1–2 +
 [`compliance-plan.md`](../compliance/compliance-plan.md). **⚠️ Draft copy — a
 professional/legal review is still owed before scaling membership.**
 
@@ -387,14 +387,14 @@ Gates: tsc 0, unit +2, smoke 30/30, **e2e 125/13/0**. **No prod migration/cutove
 about-photos stay baked + per-mountain (already handled pre-M6).
 
 **Read-first to resume:**
-[`multi-mountain-refactor-plan-20260719.md`](../planning/multi-mountain-refactor-plan-20260719.md)
+[`multi-mountain-refactor-plan-20260719.md`](../planning/completed/multi-mountain-refactor-plan-20260719.md)
 — the execution plan **and live tracker**: decisions locked (§0), target
 architecture (§1), design specs (§2), phases **M0–M8** with per-phase gates and
 in-place execution notes (§3), risks (§5), deferred items (§6). **Resume = its §3
 `M5`**, where M5.1/M5.2/M5.3 are now checked off with execution notes and the
 remaining item is **M5.4 two-tenant isolation e2e**. The
 2026-07-18 decision framework
-([`multi-tenant-architecture-decision-20260718.md`](../planning/multi-tenant-architecture-decision-20260718.md))
+([`multi-tenant-architecture-decision-20260718.md`](../planning/completed/multi-tenant-architecture-decision-20260718.md))
 stays as the rationale record; its §9 table carries the answers. PROJECT_PLAN
 **§9** is the tracker entry.
 
@@ -515,7 +515,7 @@ on the media surfaces; the §9 PROJECT_PLAN gaps).
 ### Complexity retirement (refactor) — ✅ COMPLETE — P0–P6 all committed (`6454d80`…`2584dcb`)
 
 Source-verified deep dive + execution plan:
-[`complexity-retirement-assessment-20260716.md`](../planning/complexity-retirement-assessment-20260716.md).
+[`complexity-retirement-assessment-20260716.md`](../planning/completed/complexity-retirement-assessment-20260716.md).
 
 Started as a "should we move Next.js/React → HTMX?" feasibility question; answer is **no**
 — the complexity is duplication + local-state sprawl _inside client components_, not
@@ -806,7 +806,7 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - _Distinct from the timezone bug fixed the same day_ (`DEBUG_LOG` 2026-07-27) — that one
     was about the parsed date shifting a day; this one is about parsing the filename at all.
 - 📁 **Everything gated on "before a real mountain #2" now lives in one doc:**
-  [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) (created
+  [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md) (created
   2026-07-28). It absorbed this hand-off's `syncVideos()` thread and the 계양산 playlist
   chore, plus the same items previously scattered across the multi-mountain plan's deferred
   list, PROJECT_PLAN §9, and the 2026-07-18 decision framework. **Do not re-add them here** —
@@ -982,7 +982,7 @@ longer wanted.
   (`mohocats.org/manisan`), geyang keeps its prefix-free URLs at the apex, and a second
   mountain's owner does **not** need their own hostname — the one argument §4.2 said could
   reverse the recommendation. Written up as
-  [`tenancy-path-migration-plan-20260728.md`](../planning/tenancy-path-migration-plan-20260728.md):
+  [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md):
   phases **T0–T7**, 28 checklist items, net-first (two navigation-retention specs that must
   **fail** before the sweep, since a spec that passes beforehand is not a net).
   🚨 **Planning it surfaced a cost the decision doc had not priced, and it is the one that
@@ -1011,7 +1011,7 @@ longer wanted.
   the Korean expiry notice moved in step (the duration is hardcoded in two places).
   Then the question "what's left before mountain #2?" found no single answer — items were
   scattered across four docs — so they were consolidated into
-  [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) and the console work
+  [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md) and the console work
   split into an owner-facing
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md) (`d522a67`).
   🚨 **Assembling it surfaced a security defect nobody had logged: 로그아웃 signs the user out
@@ -1027,7 +1027,7 @@ longer wanted.
   mapping. 📌 Also corrected: **Kakao needs no per-subdomain redirect URI** — it is a Firebase
   OIDC provider used through `signInWithPopup`, so its redirect URI is Firebase's fixed handler,
   constant across tenants; two docs had claimed otherwise. 🟡 The session closed with
-  [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md),
+  [`tenancy-url-model-decision-20260728.md`](../planning/pending/tenancy-url-model-decision-20260728.md),
   which observes that **every one of those blockers traces to a single root cause — more than
   one origin** — and recommends **path-based tenancy**, at a measured cost of ~80 in-app
   navigation sites across 27 files. **Open for the owner**; nothing was changed in code on its
