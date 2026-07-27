@@ -1045,7 +1045,7 @@ none block the completed workstream.
       keeps URL-based editing. The form dropped `useRichContentForm` for a plain submit
       handler. Both composers gained **취소**.
 - [x] **B2 `c2fc78f` — config-driven, per-mountain playlist filing.** `social
-    .youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
+  .youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
       입양홍보 playlist. Replaces a lookup that matched the playlist **titled** `집사게시판`
       (a rename on YouTube stopped filing silently; every mountain filed into one list).
       `upload-youtube` takes repeated `playlistId` fields, so an 입양홍보 video joins **both**
@@ -1060,9 +1060,12 @@ none block the completed workstream.
 🔑 **Owner-owed:** add the channel's back catalogue to the 계양산 playlist — it holds **4** of
 **13** videos, and the deferred `syncVideos` fix will treat the rest as unowned.
 
-📌 **Logged, not fixed** (both in the HANDOFF open threads): 촬영일 should come from the
-**file's own metadata** with its timezone rather than the filename (iPhone files parse to
-nothing and silently take the upload time); and `/api/youtube-playlists` now has **no caller**.
+⏸️ **DEFERRED, not queued** (HANDOFF open threads): 촬영일 should come from the **file's own
+metadata** with its timezone rather than the filename — iPhone files parse to nothing and
+silently take the upload time. **The owner deferred this deliberately on 2026-07-27; do not
+start it unasked.** Recorded to explain the behavior, not to schedule it.
+
+📌 **Logged, not fixed:** `/api/youtube-playlists` now has **no caller**.
 
 **Gates:** tsc 0 · smoke 31/31 · unit 102/102 · **full e2e 153 passed / 13 skipped / 0
 failed** · browser passes on both composers. ⚠️ YouTube-side behavior is **Preview-verified

@@ -62,8 +62,9 @@ pattern, year boundaries and a leap day, the full filename → input → stored 
 loop, and the rejections. Plus an e2e assertion on the field value. Gates: tsc 0, smoke 31/31,
 unit 102/102, full e2e 153 passed / 13 skipped / 0 failed.
 
-📌 **Related but separate, logged not fixed:** 촬영일 is derived from the _filename_ at all,
-rather than from the file's own metadata — see the HANDOFF open thread (2026-07-27).
+⏸️ **Related but separate, and deliberately deferred:** 촬영일 is derived from the _filename_
+at all, rather than from the file's own metadata. The owner deferred that on 2026-07-27 — it is
+**not queued work**; see the HANDOFF open thread for the behavior it explains.
 
 ---
 

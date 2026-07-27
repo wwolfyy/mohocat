@@ -720,8 +720,11 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   distinction the UI itself doesn't show. Owner wants the same for the other CMS pages.
   ⚠️ It is **source-derived, not browser-verified** — worth a `/chrome` pass over the live
   page before cloning the format.
-- 🐛 **촬영일 is guessed from the filename when it should be read from the file — logged
-  2026-07-27, owner-agreed to defer.** The composers derive 촬영일 by regex-matching the
+- ⏸️ **DEFERRED — 촬영일 is guessed from the filename when it should be read from the file.**
+  Logged 2026-07-27; **the owner explicitly deferred this and does not want it picked up
+  soon.** It is **not queued work** — it is recorded so that whoever wonders why 촬영일 comes
+  out empty or wrong (an iPhone upload, say) finds the answer instead of re-deriving it. Do
+  not start it without the owner asking. The composers derive 촬영일 by regex-matching the
   **filename** (`parseRecordingDateFromTitle`, 4 patterns: `yyyy-mm-dd hh.MM.ss`,
   `yyyymmdd_hhMMss`, `yyyy-mm-dd`, `yyyymmdd`). Nothing reads the file's own contents.
   Consequences, verified against realistic names:
@@ -732,7 +735,8 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - **The last pattern is loose** — any 8 digits forming a valid date. `회원 20240101 명단.mp4`
     reads as 2024-01-01. Invalid combinations self-reject, so it is contained but can be
     confidently wrong.
-  - 🔑 **The fix (owner, 2026-07-27):** read the **capture date from the file's metadata**,
+  - 🔑 **The eventual fix, whenever the owner calls for it (shape agreed 2026-07-27):** read
+    the **capture date from the file's metadata**,
     with timezone when the metadata carries it, and fall back to the filename only when that
     fails. Applies to **both** video and photo. Landscape: MP4/MOV `mvhd` creation_time is
     spec'd UTC but often written as local with no offset (unreliable); Apple's
@@ -915,9 +919,10 @@ longer wanted.
   was parsed as local and serialized as UTC — arithmetic that is correct at UTC and wrong
   everywhere else, so **CI could never have caught it**. Fixed by treating 촬영일 as a calendar
   date end to end and encoding it once, as UTC midnight, matching what `/admin/tag-videos`
-  already writes. 📌 Logged not fixed (owner-agreed): 촬영일 should come from the **file's own
-  metadata** with its timezone, with the filename as fallback — today iPhone files parse to
-  nothing and silently take the upload time. 📌 Also found: `/api/youtube-playlists` now has no
+  already writes. ⏸️ **Deferred, not queued** (owner's explicit call): 촬영일 should come from the
+  **file's own metadata** with its timezone, with the filename as fallback — today iPhone files
+  parse to nothing and silently take the upload time. Recorded to explain the behavior, not to
+  schedule the work. 📌 Also found: `/api/youtube-playlists` now has no
   caller at all. Gates: tsc 0, smoke 31/31, unit 102/102, **e2e 153/13/0**.
 - **2026-07-26** — **Batch edits never reached Firestore — the seventh bug of the
   session, and the only one reported rather than found by reading (`c94d02e`).** Batch tag /
