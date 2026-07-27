@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useMountain } from '@/components/MountainProvider';
+import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
 import { auth } from '@/services/firebase';
 import { RecaptchaVerifier } from 'firebase/auth';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
@@ -28,6 +30,8 @@ export default function MyPage() {
     signInWithPhoneNumber,
   } = useAuth();
 
+  const mountainId = useMountain();
+
   // Track whether this session was ever authenticated here, so the guard can tell
   // a logout (was signed in → send to the landing page) from a direct logged-out
   // visit (never signed in → send to the login page). Covers logout via the
@@ -48,6 +52,36 @@ export default function MyPage() {
       window.location.replace(wasAuthedRef.current ? '/' : '/login');
     }
   }, [user, loading]);
+
+  // Show the CMS shortcut only to members who would actually get in. Uses the
+  // very check the admin gate uses (`isAdmin`, on the active mountain), so the
+  // link can't drift away from what AdminAuth allows.
+  const [canAccessAdmin, setCanAccessAdmin] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      setCanAccessAdmin(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const allowed = await checkIsAdmin(user, mountainId);
+        if (!cancelled) setCanAccessAdmin(allowed);
+      } catch (error) {
+        // `isAdmin` re-raises when the permission read fails (blocked/offline).
+        // This is only a shortcut, so log it and leave the link hidden rather
+        // than offering an entry point we couldn't verify — /admin is still
+        // reachable directly, and it has its own retry UI for this case.
+        console.error('Admin access check failed on mypage:', error);
+        if (!cancelled) setCanAccessAdmin(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, mountainId]);
 
   const handleSignOut = async () => {
     try {
@@ -483,6 +517,20 @@ export default function MyPage() {
           </button>
         </div>
       </section>
+
+      {/* Admin CMS shortcut — only for members with admin access on this mountain. */}
+      {canAccessAdmin && (
+        <section className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-800 mb-1">{t.admin.heading}</h2>
+          <p className="text-sm text-gray-500 mb-4">{t.admin.description}</p>
+          <a
+            href="/admin"
+            className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-3 font-bold text-ink transition-all hover:shadow-lg"
+          >
+            {t.admin.link}
+          </a>
+        </section>
+      )}
 
       {/* Sign Out */}
       <button
