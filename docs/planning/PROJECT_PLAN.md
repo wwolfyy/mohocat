@@ -860,8 +860,12 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > decision framework → EXECUTED). Gates: tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**.
 > ⚠️ Theming is **deliberately partial** — the `brand` ramp + admin-only `from-brand` CTAs
 > stay static (a real 2nd mountain reads yellow there until a fuller pass). **The
-> multi-tenant hardening track is complete; remaining items are owner-gated externalities
-> (GA4 dimension + Vercel env var; per-mountain DNS/allowlists for a real 2nd mountain).**
+> multi-tenant hardening track is complete.**
+>
+> 📁 **Everything still gated on a real mountain #2 lives in one doc** (created 2026-07-28):
+> [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) — the blocking code items,
+> the owner-run provisioning externalities, the should-fixes, and the decided/won't-fix
+> record. This §9 no longer tracks them individually; add new ones there.
 
 ### ⚠️ Production data was modified — 2026-07-20 (`mountainId` backfill)
 
@@ -1045,7 +1049,7 @@ none block the completed workstream.
       keeps URL-based editing. The form dropped `useRichContentForm` for a plain submit
       handler. Both composers gained **취소**.
 - [x] **B2 `c2fc78f` — config-driven, per-mountain playlist filing.** `social
-  .youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
+.youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
       입양홍보 playlist. Replaces a lookup that matched the playlist **titled** `집사게시판`
       (a rename on YouTube stopped filing silently; every mountain filed into one list).
       `upload-youtube` takes repeated `playlistId` fields, so an 입양홍보 video joins **both**

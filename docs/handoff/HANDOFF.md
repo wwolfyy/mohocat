@@ -37,10 +37,11 @@
 > **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
 > lands — `main` is pre-fix and reads the token from env only.
 >
-> 🔑 **One owner chore is outstanding:** the 계양산 playlist holds **4** of the channel's
-> **13** videos. The back catalogue needs a one-time bulk add, because the per-mountain
-> playlist is the handle the deferred `syncVideos` fix will use — videos left out will look
-> unowned.
+> 🔑 **One owner chore is outstanding** (the 계양산 playlist back-fill, 4 of 13 videos) —
+> but it is **not** part of the sequence above. It, and everything else gated on
+> "before a real mountain #2", now lives in
+> [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md). Nothing there
+> blocks the promotion.
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
 > hand-off — read it first. It is edited **in place** (present tense = how things are
@@ -749,23 +750,25 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
     mtime rather than true capture time.
   - _Distinct from the timezone bug fixed the same day_ (`DEBUG_LOG` 2026-07-27) — that one
     was about the parsed date shifting a day; this one is about parsing the filename at all.
-- 🆕 **`syncVideos()` claims the whole channel for whichever mountain runs it — must be fixed
-  before a real mountain #2 (logged 2026-07-26, not urgent).** Follows from the owner's
-  **single-shared-channel decision** (same day): rather than one YouTube channel per mountain,
-  all mountains publish to the one channel and per-mountain attribution comes from
-  `cat_videos.mountainId` (already stamped by `upload-youtube`). Rationale: a new channel would
-  have to clear YouTube's monetization thresholds (1,000 subs / 4,000 watch hours) on its own
-  before earning anything, and N channels means N OAuth credentials with N independently
-  expiring refresh tokens — exactly the failure mode above, multiplied. `manisan`'s
-  `social.youtubeChannelId` was set to geyang's channel accordingly.
-  - **The consequence:** `syncVideos(mountainId)` (`src/services/media-albums.ts` ~L638)
-    fetches _every_ video on the configured channel and imports anything missing from that
-    mountain's Firestore set, stamping it with that `mountainId`. With one shared channel, a
-    second mountain's sync would claim geyang's entire back catalogue. Inert today (manisan has
-    no prod data and is `hidden: true`), so this is a **prerequisite for provisioning a real
-    mountain #2**, not a live bug. Fix shape: scope the import by something channel-side that
-    identifies the mountain (a per-mountain playlist is the natural handle, and doubles as the
-    auditable attribution the other mountain's owner would want for a revenue split).
+- 📁 **Everything gated on "before a real mountain #2" now lives in one doc:**
+  [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) (created
+  2026-07-28). It absorbed this hand-off's `syncVideos()` thread and the 계양산 playlist
+  chore, plus the same items previously scattered across the multi-mountain plan's deferred
+  list, PROJECT_PLAN §9, and the 2026-07-18 decision framework. **Do not re-add them here** —
+  add to that doc and leave this one pointing at it. Nothing in it is urgent (manisan is a
+  hidden stub with no prod data); it is a gate, not a backlog. It also records the
+  **decided-and-closed** items so they aren't re-litigated — notably that multi-mountain
+  admins **re-logging in when switching mountains is accepted, won't-fix** (owner,
+  2026-07-28).
+  - 🚨 **One item there is a security defect, not a rough edge — prerequisites §1.1:
+    `로그아웃` does not sign the user out of the other mountains.** `signOut(auth)` clears
+    only the origin it runs on, so a user who logs out on one subdomain stays logged in on
+    the others, indefinitely and invisibly — including, for a dual-mountain admin, a live
+    CMS session. It also hollows out the admin idle timeout, which signs out the same
+    per-origin way. **Zero exposure today** (production serves one origin and the subdomains
+    do not resolve), which is why it is a gate rather than an incident — but it is the
+    **first** thing to fix before a second subdomain goes live, ahead of everything else on
+    that list. Recommended fix: server-side `revokeRefreshTokens(uid)` on sign-out.
 - ✅ **M6 — no prod cutover needed (resolved 2026-07-25).** The upload-prefix wiring is a
   no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
   on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail

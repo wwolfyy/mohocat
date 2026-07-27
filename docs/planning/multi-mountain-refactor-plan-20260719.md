@@ -720,9 +720,10 @@ So:
       domains + Kakao redirect URIs — no new providers), data (no backfill; first-admin
       chicken-and-egg → seed `roles[mountainId]` directly), rules/indexes-are-global note,
       shared-GA4 note, about-photos, and a verification checklist.
-- [ ] 🔑 Vercel/DNS (when a real mountain #2 arrives — not now): subdomain DNS +
-      domain attach; Firebase **authorized domains** + Kakao console **redirect URIs**
-      per new subdomain. Recorded in the guide, not executed for the stub.
+- [ ] 🔑 Vercel/DNS and the other provisioning externalities — **moved out of this plan**
+      (2026-07-28) to [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) §2,
+      which is now the single list of what must be true before a real mountain #2. Steps
+      stay in the guide; this plan no longer tracks them.
 - [x] **Docs close-out (2026-07-25).** `multi-tenant-config.md` (Host-resolution + one-Firebase + the "which tenant is request-time, values still BAKED" watch-out + theme/roles-map +
       provisioning pointer), `services-layer.md` (factory now takes `mountainId`, per-tenant
       cache), AGENTS/CLAUDE.md ("multi-tenant" not just "ready"; Host resolution; theme live),
@@ -769,11 +770,18 @@ sequential. Rough total: ~6–8 working sessions at the complexity-retirement ca
 
 ## 6. Deferred / out of scope (recorded, not lost)
 
-- Cross-subdomain SSO cookie session on `.mohocats.org`.
+> ⚠️ **Anything here that gates a real mountain #2 has moved** (2026-07-28) to
+> [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) — the single list, kept
+> current. Add new mountain-#2 items there, not here. Two entries that used to sit in this
+> list are now resolved rather than deferred: **cross-subdomain SSO** is a recorded
+> **won't-fix** (owner, 2026-07-28), and **multi-role users** shipped in **M5.2** as the
+> `roles` map keyed by `mountainId`.
+
+Still deferred, and **not** mountain-#2 gates — independent cleanups:
+
 - Storage **paths-not-URLs** persistence + geyang object re-prefixing.
 - `next/image` prod re-test on media surfaces (framework §8 — independent).
 - Dual-tag per-mountain GA4 properties (config add once needed).
-- Multi-role users (one user holding roles on several mountains) — `currentRole` stays
-  single; a real mountain #2 with shared humans would reopen this.
-- Admin read-route hardening for `contacts`/`users` (read inventory R3 note).
-- Real mountain #2 provisioning (Q8: preparatory only).
+- Admin read-route hardening for `contacts`/`users` (read inventory R3 note) — ⚠️ the
+  **members-roster** half of this turned out to be a concrete mountain-#2 item and is
+  tracked in the prerequisites doc §1.4.

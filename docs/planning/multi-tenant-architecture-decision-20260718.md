@@ -346,6 +346,12 @@ Central collection with per-mountain breakdown is achievable and cheap.
 
 ## 8. Work required under _every_ option
 
+> 🗂️ **Historical — do not work from this section.** The framework is ✅ EXECUTED and most
+> of the list below shipped in M0–M8. The **live** list of what still gates a real
+> mountain #2 is [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md)
+> (created 2026-07-28). This section is kept as the record of what was identified in
+> 2026-07-18, not as a to-do.
+
 These are vendor- and topology-independent. They gate mountain #2 regardless of §3–§5.
 
 From PROJECT_PLAN §9:

@@ -362,7 +362,9 @@ stage, run gates, summarize, wait for go-ahead.
 ## §7 Explicitly out of scope
 
 - The **`syncVideos` cross-tenant hazard** (D6) — still a prerequisite for provisioning a real
-  mountain #2, tracked in the multi-mountain plan's deferred list.
+  mountain #2, tracked in
+  [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) §1.2 (the single list since
+  2026-07-28; it was previously in the multi-mountain plan's deferred list).
 - **공지사항 / 입양홍보 media _input_** — they keep `MediaUploadField` and its multi-file picker.
   ⚠️ Consequence: two media-input patterns coexist after B3. Acceptable for now; converging
   them is a later pass. (Their **playlist filing** is in scope — B2.7 — only their pickers are

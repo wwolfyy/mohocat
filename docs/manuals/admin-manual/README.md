@@ -301,6 +301,14 @@ Mostly one-time or infrequent setup. Details live in
 [`docs/manuals/deployment/README.md`](../deployment/README.md) and the root
 [`CLAUDE.md`](../../../CLAUDE.md); the essentials:
 
+> 🏔️ **Adding a new mountain?** The owner-facing checklist is
+> [`adding-a-mountain.md`](./adding-a-mountain.md) — DNS, Vercel, Firebase authorized
+> domains, Kakao redirect URIs, the YouTube playlist, and seeding the first admin. ⛔ It
+> starts by sending you to
+> [`mountain-2-prerequisites.md`](../../planning/mountain-2-prerequisites.md), which lists
+> what must be fixed **before** a second mountain goes live — including a security defect
+> (§1.1) that becomes real the day a second subdomain resolves.
+
 - **Environment variables** (Vercel dashboard — Production **and** Preview): Firebase
   `NEXT_PUBLIC_FIREBASE_*`, `SERVICE_ACCOUNT_KEY` (Admin SDK), Gmail SMTP
   (`SMTP_HOST/PORT/USER/PASSWORD/FROM`) for 동참 email, `NEXT_PUBLIC_GA_MEASUREMENT_ID`

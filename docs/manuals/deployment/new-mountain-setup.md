@@ -10,6 +10,15 @@
 > **Audience:** developer / operator provisioning a tenant (not the CMS operator — that's
 > [`docs/manuals/admin-manual/`](../admin-manual/README.md)).
 >
+> ⛔ **Read this first:**
+> [`docs/planning/mountain-2-prerequisites.md`](../../planning/mountain-2-prerequisites.md)
+> — what must be **fixed or decided** before a second mountain goes live. 🚨 Its **§1.1 is a
+> security defect**: `로그아웃` only signs the user out of the origin it runs on, so once a
+> second subdomain resolves, logging out of one mountain leaves the session live on the
+> other. Also there: `syncVideos()` would claim the shared channel's whole back catalogue for
+> whichever mountain syncs first, and the members roster shows every mountain's users. This
+> guide is the **how**; that doc is the **gate** — do not provision past it.
+>
 > **Companion docs:** [`README.md`](./README.md) (how deploys work today) ·
 > `config/mountains/mountains.json` + `config/permissions.json` (per-mountain config) ·
 > `src/lib/tenant.ts` (Host→tenant resolution) · `src/utils/config.ts` (config accessors) ·
@@ -86,13 +95,13 @@ the whole task.
 
 ## 3. Domain / DNS / Vercel
 
-1. **DNS:** add the subdomain (e.g. `CNAME <id>.mohocats.org → cname.vercel-dns.com`, or per
-   Vercel's instructions).
-2. **Vercel:** in the **same** project (Settings → Domains), add `<id>.mohocats.org`. No new
-   project, no new env scope. Vercel issues TLS automatically.
-3. The `domains` entry from §2a is what maps that Host to the tenant (`src/lib/tenant.ts`
-   `findMountainIdByHost`). Until DNS + the config entry are both live, reach the tenant by
-   path (`/<id>`) on any existing deployment.
+👉 **The steps are the owner's** — DNS record and Vercel domain attach are in
+[`admin-manual/adding-a-mountain.md`](../admin-manual/adding-a-mountain.md) §1–2. Not
+repeated here, so they can't drift.
+
+What matters on the code side: the `domains` entry from §2a is what maps that Host to the
+tenant (`src/lib/tenant.ts` `findMountainIdByHost`). Until DNS **and** the config entry are
+both live, reach the tenant by path (`/<id>`) on any existing deployment.
 
 **No environment-variable changes.** Every env var (`NEXT_PUBLIC_FIREBASE_*`,
 `SERVICE_ACCOUNT_KEY`, SMTP, Kakao/YouTube, `NEXT_PUBLIC_GA_MEASUREMENT_ID`,
@@ -102,13 +111,23 @@ the whole task.
 
 ## 4. Central auth — allowlist the new subdomain
 
-Auth is shared, so there are **no new providers to configure** — but two consoles key on the
-exact domain and must learn the new subdomain:
+Auth is shared, so there are **no new providers to configure**. Exactly **one** thing keys on
+the new host: **Firebase → Authentication → Authorized domains**, which must list the new
+subdomain or OAuth/popup sign-in there is rejected. 👉 Step in
+[`admin-manual/adding-a-mountain.md`](../admin-manual/adding-a-mountain.md) §3.
 
-- **Firebase Console → Authentication → Settings → Authorized domains:** add
-  `<id>.mohocats.org`. Without it, sign-in on the new subdomain is rejected.
-- **Kakao Developers → your app → redirect URIs:** add the new subdomain's OAuth callback
-  (mirror geyang's path on the new host). Skip only if Kakao login isn't offered there.
+⚠️ **Correction (2026-07-28): Kakao needs nothing per-subdomain.** This section previously
+said to add a redirect URI per host. Kakao is a Firebase **OIDC** provider (`oidc.kakao`) via
+`signInWithPopup`, so its redirect URI is Firebase's fixed handler
+(`https://<authDomain>/__/auth/handler`, `src/services/auth-service.ts:150-153`) — constant
+across tenants. Kakao never sees the mountain's subdomain.
+
+⚠️ **Authorized domains has no wildcard.** `*.mohocats.org` is not supported by Firebase Auth
+(exact-host matching only), and no maximum count is documented. It **is** scriptable, though —
+the Identity Toolkit Admin API `PATCH
+https://identitytoolkit.googleapis.com/admin/v2/projects/{PROJECT_ID}/config?updateMask=authorizedDomains`
+takes the full list, and this project already holds a service account (`SERVICE_ACCOUNT_KEY`).
+Worth automating if mountain count ever grows past a handful.
 
 Phone/SMS and email/password need nothing per-subdomain.
 
@@ -121,10 +140,11 @@ Phone/SMS and email/password need nothing per-subdomain.
   predated tenancy — it does not recur.)
 - **Bootstrap the first admin (chicken-and-egg).** The in-app role-assignment flow
   (`POST /api/admin/assign-role`) requires an existing `manage-users` admin **on that
-  mountain**, which a brand-new mountain has none of. So seed the first admin **directly**:
-  set `users/{uid}.roles.<id> = { role: "admin", permissions: [...], isActive: true }` on the
-  chosen account via the **Firebase Console** or a one-off **Admin SDK** script. After that,
-  further roles on the mountain can be granted normally through the CMS (members/roles).
+  mountain**, which a brand-new mountain has none of — so the first one is seeded directly
+  onto `users/{uid}.roles.<id>`. 👉 Console steps in
+  [`admin-manual/adding-a-mountain.md`](../admin-manual/adding-a-mountain.md) §6; a one-off
+  Admin SDK script does the same thing if you'd rather not click. After that, further roles
+  are granted normally through the CMS.
 - **Seed content** (points, cats, cat_images, about, announcements) either through the
   `/admin` CMS while browsing the tenant, or with a seeding script that stamps `mountainId`.
   Uploaded images auto-namespace under `storagePrefix` (§2a).
