@@ -432,7 +432,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       day back in KST). (b) **Batch playlist save ignored the batch selection**, acting on the
       video open in the edit form or silently nothing; now applies to the whole selection with
       **set semantics** + confirmation. (c) **Every sync reset 게시일** (`uploadDate: new
-  Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
+Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
       YouTube's `publishedAt`, so mis-stamped records **self-heal, no migration**. Alongside (c):
       `uploadedBy` no longer clobbered to `'admin'`, and the refresh now writes `updated` (the
       field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh` —
@@ -1030,6 +1030,43 @@ none block the completed workstream.
 - [-] Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream
   (§4 perf item), not this suite.
 - [-] YouTube tagging admin flows (external API).
+
+---
+
+## 10a. ✅ Post-composer separation + per-mountain playlist filing (DONE 2026-07-27)
+
+> **Goal:** stop 집사게시판 from being a second media composer, move the per-file media work
+> to the one that does the job (집사톡), and make YouTube filing per-mountain instead of
+> title-matched. Plan + decisions:
+> [`butler-media-separation-plan-20260727.md`](./butler-media-separation-plan-20260727.md).
+
+- [x] **B1 `0f9190f` — 집사게시판 drops media upload.** It is a 급식소 check-in log. Compose
+      time only: legacy posts still render their media through `PostList`, and `EditPostForm`
+      keeps URL-based editing. The form dropped `useRichContentForm` for a plain submit
+      handler. Both composers gained **취소**.
+- [x] **B2 `c2fc78f` — config-driven, per-mountain playlist filing.** `social
+    .youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
+      입양홍보 playlist. Replaces a lookup that matched the playlist **titled** `집사게시판`
+      (a rename on YouTube stopped filing silently; every mountain filed into one list).
+      `upload-youtube` takes repeated `playlistId` fields, so an 입양홍보 video joins **both**
+      its mountain playlist and the adoption one — keeping the mountain playlist a complete
+      ownership record for §9's deferred `syncVideos` fix.
+- [x] **B3 `bd7ce23` — 집사톡 one file per section**, each with its own 제목/설명. Empty
+      description now stays empty (no invented default, no post body copied onto every photo).
+- [x] **B4 `97b72ed` + docs — 촬영일 is a calendar date.** ⚠️ It was a day early in KST: parsed
+      local, serialized UTC. **Correct at UTC, wrong in Korea — CI could not have caught it.**
+      Now encoded once as UTC midnight, matching `/admin/tag-videos`.
+
+🔑 **Owner-owed:** add the channel's back catalogue to the 계양산 playlist — it holds **4** of
+**13** videos, and the deferred `syncVideos` fix will treat the rest as unowned.
+
+📌 **Logged, not fixed** (both in the HANDOFF open threads): 촬영일 should come from the
+**file's own metadata** with its timezone rather than the filename (iPhone files parse to
+nothing and silently take the upload time); and `/api/youtube-playlists` now has **no caller**.
+
+**Gates:** tsc 0 · smoke 31/31 · unit 102/102 · **full e2e 153 passed / 13 skipped / 0
+failed** · browser passes on both composers. ⚠️ YouTube-side behavior is **Preview-verified
+only** — no credentials in the emulator.
 
 ---
 

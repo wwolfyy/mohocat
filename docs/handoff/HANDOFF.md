@@ -1,34 +1,46 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-26 · **Branch:** `dev` · **`main`:** promoted through PR #8
+**Last updated:** 2026-07-27 · **Branch:** `dev` · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> The last session (2026-07-26) ran the **P5.4 manual YouTube pass** and it turned into a
-> bug hunt: **seven defects found and fixed**, all pre-existing, none reachable by the
-> automated suites as they stood.
+> The last session (2026-07-27) separated the two post composers and made YouTube filing
+> per-mountain — four commits, plan
+> [`butler-media-separation-plan-20260727.md`](../planning/butler-media-separation-plan-20260727.md).
+> **집사게시판 no longer uploads media at all** (it is a 급식소 log; 집사톡 is the media
+> composer), 집사톡 gained one-file-per-section with per-file 제목/설명, and every uploaded
+> video is now filed into its mountain's playlist from config instead of by matching a
+> playlist _title_.
 >
-> 🔎 **Pattern worth carrying forward:** twice, the **e2e fixtures were concealing a
-> production-only failure mode** — the seed gave videos no `youtubeId`, so `youtubeId || id`
-> collapsed to the doc id and an entire class of bug could not be reproduced. When a test
-> cannot fail, check whether the fixture is shaped like production before trusting green.
+> 🔎 **Pattern worth carrying forward, again:** the 촬영일 off-by-one (`97b72ed`) was
+> **correct at UTC and wrong in KST**, so CI could never have caught it — the same shape as
+> the fixture problems of 2026-07-26. When a date, a fixture, or an environment differs
+> between CI and production, green means nothing. The new date tests pin `TZ=Asia/Seoul` and
+> assert the timezone fixture is real before anything else.
 >
 > **Do these next, in this order:**
 >
-> 1. **Verify on Preview what no test can reach** (needs the new deploy + one
->    **🔄 토큰 갱신** on 대쉬보드, since the OAuth scopes changed): a metadata edit, a
->    playlist save, `자동 날짜 인식`, that a synced video **keeps its original 게시일** and
->    that **메타데이터 수정** now shows a date instead of 없음 — and that **batch** tag /
->    촬영일 / playlist edits now reach Firestore **without** a manual 동기화 (the owner's
->    2026-07-26 report; fixed in `c94d02e`).
-> 2. **Re-run the P5.4 manual pass from the top.** Every earlier step is invalidated: the
->    credential source, the OAuth scopes, and four write paths all changed under it. It is
->    still the gate on the next `dev → main` promotion.
-> 3. Then the promotion itself (M6/M7/M8 + the GA4 guide + this session are all waiting).
+> 1. **Push.** Everything from `d7999e2` on is committed locally but **not pushed**, so
+>    Preview does not have it yet.
+> 2. **Verify on Preview what no test can reach** (needs the deploy + one **🔄 토큰 갱신** on
+>    대쉬보드, since the OAuth scopes changed): a metadata edit, a playlist save,
+>    `자동 날짜 인식`, that a synced video **keeps its original 게시일** and that
+>    **메타데이터 수정** shows a date, and that **batch** tag / 촬영일 / playlist edits reach
+>    Firestore **without** a manual 동기화. **New this session:** that a 집사톡 upload lands in
+>    the **계양산** playlist, an 입양홍보 upload lands in **both** its mountain playlist and
+>    **산냥이집냥이 - 입양홍보**, and that an empty 설명 uploads with no description.
+> 3. **Re-run the P5.4 manual pass from the top.** Still the gate on the next `dev → main`
+>    promotion.
+> 4. Then the promotion itself (M6/M7/M8 + the GA4 guide + both July sessions are waiting).
 >
 > **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
 > lands — `main` is pre-fix and reads the token from env only.
+>
+> 🔑 **One owner chore is outstanding:** the 계양산 playlist holds **4** of the channel's
+> **13** videos. The back catalogue needs a one-time bulk add, because the per-mountain
+> playlist is the handle the deferred `syncVideos` fix will use — videos left out will look
+> unowned.
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
 > hand-off — read it first. It is edited **in place** (present tense = how things are
@@ -843,11 +855,19 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN.** `origin/dev` is at `dc8391f`; **`56110c6` and `c94d02e` are
-committed locally and NOT yet pushed.** Newest `dev` commits (the six from the 2026-07-26 YouTube session on top):
+**Working tree is CLEAN.** `origin/dev` is at `e948496`; **everything from `d7999e2` on is
+committed locally and NOT yet pushed** (the 2026-07-27 butler/playlist session). Newest `dev`
+commits:
 
 | Commit    | What                                                                                      |
 | --------- | ----------------------------------------------------------------------------------------- |
+| `97b72ed` | **fix** — 촬영일 is a calendar date, not an instant (KST off-by-one)                      |
+| `bd7ce23` | **feat** — 집사톡: one file per section, each with its own 제목/설명 + 취소               |
+| `c2fc78f` | **feat** — per-mountain playlist filing from config (+ shared 입양홍보 playlist)          |
+| `0f9190f` | **refactor** — 집사게시판 drops media upload; it is a 급식소 log                          |
+| `297ca9f` | **docs** — the butler media separation + playlist plan                                    |
+| `d7999e2` | **docs** — changelog entry for the batch-sync fix                                         |
+| `e948496` | **docs** — corrected commit hash for the batch-sync fix                                   |
 | `c94d02e` | **fix** — batch edits sync to Firestore (YouTube ids, not doc ids) + prod-shaped fixtures |
 | `56110c6` | **docs** — 2026-07-26 session close-out (hand-off / plan / debug log)                     |
 | `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet      |
@@ -860,15 +880,15 @@ committed locally and NOT yet pushed.** Newest `dev` commits (the six from the 2
 | `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                    |
 
 **Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
-main...dev` = `0  243`). `dev` is **243 commits ahead**; M6 + M7 + M8 + the GA4 guide + this
-session's six fixes are all on `dev` and **not yet in prod**. Promoting them (`dev → main`)
+main...dev` = `0  252`). `dev` is **252 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
+2026-07-26 YouTube fixes + the 2026-07-27 butler/playlist work are all on `dev` and **not yet
+in prod**. Promoting them (`dev → main`)
 is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
 top** (see the fresh-session box at the head of this doc).
 
-**Gate status at `c94d02e`:** tsc 0 · smoke 30/30 · unit 80/80 · **full e2e 148 passed /
-13 skipped / 0 failed** (+3 net this session: the auto-parse characterization test rewritten
-to its new contract, plus new regression tests for the batch playlist save and the batch
-Firestore sync).
+**Gate status at `97b72ed`:** tsc 0 · smoke 31/31 · unit 102/102 · **full e2e 153 passed /
+13 skipped / 0 failed** (+5 this session: the 집사게시판 no-upload boundary guard, two 취소
+specs, the per-file media sections, and the config-driven playlist label).
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -878,7 +898,28 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-26 (latest)** — **Batch edits never reached Firestore — the seventh bug of the
+- **2026-07-27 (latest)** — **The two post composers were separated, and YouTube filing
+  became per-mountain.** 집사게시판 was doing two jobs — a 급식소 check-in log _and_ a second
+  media composer — while 집사톡 already did the second one properly, so it **lost media upload
+  entirely** (`0f9190f`); compose-time only, since legacy posts keep rendering and admins keep
+  URL-based media editing. The per-file rework then landed where it belongs: 집사톡 got
+  **one file per section with its own 제목/설명** (`bd7ce23`), so two videos of different cats
+  no longer share a caption, and an empty description now stays empty instead of being
+  replaced by an invented default. Both composers gained **취소**. Filing (`c2fc78f`) stopped
+  matching the playlist _titled_ `집사게시판` — a rename on YouTube silently stopped it, and
+  with one shared channel every mountain filed into the same list — and now reads
+  `social.youtubePlaylistId` per mountain, plus a **`_shared`** platform block for the one
+  cross-mountain 입양홍보 playlist (an 입양홍보 video joins **both**, so the mountain playlist
+  stays a complete ownership record for the deferred `syncVideos` fix). ⚠️ Then a browser pass
+  caught a fourth thing (`97b72ed`): 촬영일 was **a day early in KST**, because a calendar date
+  was parsed as local and serialized as UTC — arithmetic that is correct at UTC and wrong
+  everywhere else, so **CI could never have caught it**. Fixed by treating 촬영일 as a calendar
+  date end to end and encoding it once, as UTC midnight, matching what `/admin/tag-videos`
+  already writes. 📌 Logged not fixed (owner-agreed): 촬영일 should come from the **file's own
+  metadata** with its timezone, with the filename as fallback — today iPhone files parse to
+  nothing and silently take the upload time. 📌 Also found: `/api/youtube-playlists` now has no
+  caller at all. Gates: tsc 0, smoke 31/31, unit 102/102, **e2e 153/13/0**.
+- **2026-07-26** — **Batch edits never reached Firestore — the seventh bug of the
   session, and the only one reported rather than found by reading (`c94d02e`).** Batch tag /
   촬영일 / playlist saves applied to YouTube but the site's copy only updated after a manual
   📺 YouTube와 동기화, while individual saves synced themselves — the asymmetry that localized

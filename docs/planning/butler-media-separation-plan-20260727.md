@@ -9,7 +9,9 @@
 > side (they are already attributable on the Firestore side) — plus one **cross-mountain
 > 입양홍보 playlist**, since adoption promotion is platform-wide by nature.
 >
-> **Status:** 🚧 **IN PROGRESS — B1 + B2 + B3 done; B4 docs remain.** Every current-state
+> **Status:** ✅ **COMPLETE (2026-07-27)** — B1–B4 done, committed `0f9190f` → `c2fc78f` →
+> `bd7ce23` → `97b72ed` (+ the docs close-out). ⚠️ Not pushed, and the YouTube-side behavior is
+> **Preview-verified only**. Every current-state
 > claim below was verified against `dev` @ `d7999e2` on 2026-07-27; §1.1's description of
 > 집사게시판 is now **history** — B1 removed it.
 >
@@ -266,19 +268,19 @@ stage, run gates, summarize, wait for go-ahead.
 - [x] B3.7 Browser pass: two videos with different titles, one with an empty title, one photo
       with a description and one without.
 
-### B4 — Tests & docs
+### B4 — Tests & docs ✅ **DONE 2026-07-27**
 
-- [ ] B4.1 `butler-create.spec.ts` test 1: delete the image-pick / cat-tag / clear-file block;
+- [x] B4.1 `butler-create.spec.ts` test 1: delete the image-pick / cat-tag / clear-file block;
       assert **no file inputs exist** on 집사게시판 (the regression guard for D1). Scope the
       `textarea` locator.
-- [ ] B4.2 New e2e coverage on 집사톡: picking a file reveals a second empty section; per-file
+- [x] B4.2 New e2e coverage on 집사톡: picking a file reveals a second empty section; per-file
       fields are independently editable; 삭제 removes the right one. ⚠️ Upload itself stays out
       of the automated net for the reasons in the spec header (YouTube + production Storage
       URLs) — per-file **metadata reaching the request** is unit-testable instead.
-- [ ] B4.3 취소 covered on both forms (navigates away; confirms when dirty).
-- [ ] B4.4 `log/FEATURE_MOD_LOG.md` entry — intentional product change, not a bug fix.
-- [ ] B4.5 `docs/handoff/HANDOFF.md` — update in place + one changelog line.
-- [ ] B4.6 `docs/planning/PROJECT_PLAN.md` tracker entry; note in
+- [x] B4.3 취소 covered on both forms (navigates away; confirms when dirty).
+- [x] B4.4 `log/FEATURE_MOD_LOG.md` entry — intentional product change, not a bug fix.
+- [x] B4.5 `docs/handoff/HANDOFF.md` — update in place + one changelog line.
+- [x] B4.6 `docs/planning/PROJECT_PLAN.md` tracker entry; note in
       `docs/codebase/media-and-youtube.md` that 집사게시판 is no longer an upload surface and
       that playlist filing is per-mountain and config-driven.
 

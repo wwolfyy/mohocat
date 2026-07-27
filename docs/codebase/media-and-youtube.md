@@ -127,6 +127,43 @@ because the credential has two halves that live in different places:
   `tests/unit/youtubeCredentials.test.ts`; everything past the credential is covered only by the
   P5.4 manual pass on Preview.
 
+## Playlist filing (per mountain, from config)
+
+> Added 2026-07-27 (plan `butler-media-separation-plan-20260727.md`). Replaces a lookup that
+> matched the playlist **titled** `집사게시판`.
+
+Every uploaded video is filed into **its mountain's playlist** on the shared channel. That
+membership is what makes a video attributable to one mountain _on the YouTube side_ — Firestore
+already has `cat_videos.mountainId`, stamped from the request Host.
+
+| Playlist                  | Config                                | Who files into it                 |
+| ------------------------- | ------------------------------------- | --------------------------------- |
+| The mountain's own        | `<mountain>.social.youtubePlaylistId` | every upload, all composers       |
+| `산냥이집냥이 - 입양홍보` | `_shared.youtube.adoptionPlaylistId`  | 입양홍보 uploads, **in addition** |
+
+- ⚠️ **`_shared` is platform config, not a tenant.** It rides the `_`-prefix convention
+  `getAllMountains()` already filters as meta entries, so it can never be routed to or read as a
+  mountain. `getAdoptionPlaylistId()` takes **no `mountainId`** — the missing parameter is what
+  documents it as platform-scoped.
+- ⚠️ **A missing key and an empty value differ.** An absent key **throws** (a typo or an
+  unprovisioned mountain must be loud); `""` means "no playlist yet", returns `null`, and the
+  upload proceeds unfiled with a log line. All three IDs are populated today, so the empty branch
+  is defensive — it exists so adding a mountain and creating its playlist need not be one atomic
+  chore.
+- **An 입양홍보 video joins both playlists**, deliberately: if it were only in the adoption one,
+  the mountain playlist would stop being a complete record of what that mountain owns — and that
+  record is the handle the deferred `syncVideos` fix needs (see the multi-mountain plan's deferred
+  items). `upload-youtube` accepts **repeated** `playlistId` form fields for this, filing into each
+  and logging _which_ one failed; with two targets, a single "not in a playlist" warning would be
+  ambiguous.
+- **`cat_videos.playlist`** stores the **mountain** playlist, resolved from config rather than from
+  the request, so it does not depend on the order the caller sent them.
+- ⚠️ **Not retroactive.** Filing starts at the next upload; existing channel videos have to be
+  added to their mountain's playlist by hand (as of 2026-07-27 the 계양산 playlist holds 4 of the
+  channel's 13 videos).
+- 📌 **`/api/youtube-playlists` has no caller** since the forms stopped fetching the list
+  (`/admin/tag-videos` uses `/api/manage-playlists`). Left in place pending a history check.
+
 ## Image storage & serving strategy
 
 > Verified against prod data 2026-07-25. Supersedes the archived, stale
