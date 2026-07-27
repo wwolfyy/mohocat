@@ -1,16 +1,24 @@
 # Tenancy URL model — subdomains or paths? — Decision doc — 20260728
 
-> **Status:** 🟡 **RECOMMENDED, awaiting owner decision.** Nothing has been changed in the
-> code on the strength of this doc.
+> **Status:** ✅ **DECIDED — path-based (option 2), owner 2026-07-28.** Not yet executed;
+> nothing has been changed in the code on the strength of this doc.
 >
-> **The question:** should a mountain be identified by its **host**
+> **The §11 answers (owner, 2026-07-28):**
+>
+> 1. Does a second mountain's owner need their own hostname? — **No, a path is fine.** This was
+>    the only argument that could have reversed the recommendation (§4.2).
+> 2. geyang keeps prefix-free URLs at the apex — **confirmed**.
+> 3. Sequencing — **before mountain #2**, and specifically **after** the pending P5.4 manual
+>    YouTube pass and the `dev → main` promotion.
+>
+> **The question it answered:** should a mountain be identified by its **host**
 > (`manisan.mohocats.org`) or by a **path prefix** (`mohocats.org/manisan`)?
 >
-> **Recommendation:** **switch to path-based**, migrated asymmetrically so geyang keeps its
-> current prefix-free URLs. Reasoning in §6; costs, honestly stated, in §4.
->
-> **Deliberately not here:** a task-level execution plan. That is a separate exercise for a
-> fresh session, and §7 gives only the phase shape it should follow.
+> ➡️ **Execution plan:** [`tenancy-path-migration-plan-20260728.md`](./tenancy-path-migration-plan-20260728.md)
+> — phases T0–T7 with a task checklist. ⚠️ It found one cost this doc did **not** price: every
+> `/api/*` route resolves the tenant from the **Host header**, which path-based makes constant —
+> including `requireApiPermission`, which would then gate on the wrong mountain's roles. See its
+> §2.2; it is sequenced first (T2) for that reason.
 >
 > **Companion docs:** [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) (several
 > of its items are deleted outright by this decision — see §8) ·

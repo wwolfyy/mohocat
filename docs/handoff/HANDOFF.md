@@ -18,12 +18,27 @@
 > exposure today (production serves a single origin). Full write-up + fix shape:
 > [`mountain-2-prerequisites.md`](../planning/mountain-2-prerequisites.md) §1.1.
 >
-> 🟡 **An architectural decision is open and blocks part of that list:**
+> ✅ **That decision is now ANSWERED — path-based (owner, 2026-07-28).** A mountain will be
+> identified by a **path prefix** (`mohocats.org/manisan`), with geyang keeping its prefix-free
+> URLs at the apex; a second mountain's owner does **not** need their own hostname. This deletes
+> the security defect above structurally, along with the re-login friction and the per-mountain
+> DNS/console chore. Decision record:
 > [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md)
-> — host-based (subdomains) or path-based (`/manisan`)? It recommends **path-based**, which
-> would delete the security defect above along with the re-login friction and the
-> per-mountain DNS/console chore, at the cost of a measured ~80-call-site link sweep. **Do
-> not start prerequisites §1.1 / §1.5 / §1.6 / §2 before that is answered.**
+> → execution plan:
+> [`tenancy-path-migration-plan-20260728.md`](../planning/tenancy-path-migration-plan-20260728.md)
+> (T0–T7, 28 tasks). **Prerequisites §1.1 / §1.5 / §1.6 / §2 are superseded — do not work them;
+> they get rewritten by the migration's T7.**
+>
+> ⏱️ **But do not start T0 yet.** Sequencing is owner-decided: **P5.4 pass → `dev → main`
+> promotion → migration.** The migration touches `/admin/tag-videos` heavily, which is exactly
+> what the pass must hold still, and `dev` already leads `main` by 258 commits.
+>
+> 🚨 **The plan found a cost the decision doc had not priced.** Every `/api/*` route resolves
+> the tenant from the **Host header** (`/api` is excluded from the middleware matcher), which
+> path-based makes constant — so every API call would resolve to **geyang**. That includes
+> `requireApiPermission`, which gates on `roles[requestMountainId]`: a geyang-only admin would be
+> **allowed on manisan's surfaces** and a manisan-only admin **denied on their own**. Fix is a
+> validated `X-Mountain-Id` header (host as fallback), sequenced **before** the link sweep. Plan §2.2.
 >
 > 🔎 **Pattern worth carrying forward, again:** the 촬영일 off-by-one (`97b72ed`) was
 > **correct at UTC and wrong in KST**, so CI could never have caught it — the same shape as
@@ -33,8 +48,9 @@
 >
 > **Do these next, in this order:**
 >
-> 1. **Push.** `origin/dev` is at `4315fea`; everything from `7e08933` on (5 commits) is
->    committed locally but **not pushed**, so Preview does not have it yet.
+> 1. **Push.** `origin/dev` is at `1bd9dc1`; everything from `d4c36a1` on is committed locally
+>    but **not pushed**, so Preview does not have it yet. _(The owner said they would push this
+>    themselves — verify with `git rev-parse origin/dev` before assuming.)_
 > 2. **Verify on Preview what no test can reach** (needs the deploy + one **🔄 토큰 갱신** on
 >    대쉬보드, since the OAuth scopes changed): a metadata edit, a playlist save,
 >    `자동 날짜 인식`, that a synced video **keeps its original 게시일** and that
@@ -217,10 +233,19 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   and it must be preceded by the migration (see Open threads for the exact order).
 - Also owner-owed before the next `dev → main` promotion: the P5.4 scripted manual
   YouTube pass (see the complexity-retirement section).
-- **🟡 NEW — the multi-tenant URL model is under review (2026-07-28).** Is a mountain
-  identified by **host** (`manisan.mohocats.org`) or by **path** (`mohocats.org/manisan`)?
+- **✅ DECIDED (owner, 2026-07-28) — the multi-tenant URL model goes PATH-BASED.** A mountain is
+  identified by **path** (`mohocats.org/manisan`), not host; geyang keeps its prefix-free URLs at
+  the apex; a second mountain's owner does **not** need their own hostname (the one argument that
+  could have reversed it). Execution plan (T0–T7, 28 tasks, **not started** — gated behind the
+  P5.4 pass and the promotion):
+  [`tenancy-path-migration-plan-20260728.md`](../planning/tenancy-path-migration-plan-20260728.md).
+  🚨 **The plan re-measured the surface and found one the decision doc missed:** all `/api/*`
+  routes resolve the tenant from the **Host header**, so path-based would resolve every API call
+  to geyang — including `requireApiPermission`, an authorization inversion (geyang-only admin
+  allowed on manisan, manisan-only admin denied on their own). Fixed by a validated
+  `X-Mountain-Id` header, sequenced ahead of the link sweep. Original rationale record:
   [`tenancy-url-model-decision-20260728.md`](../planning/tenancy-url-model-decision-20260728.md)
-  recommends **path-based** and is **open for the owner**. Its case: every mountain-#2 blocker
+  — its case: every mountain-#2 blocker
   found that day — the 🚨 sign-out security defect, the re-login friction, the cost of fixing
   that friction (a bearer credential we'd own), the per-subdomain authorized-domain chore, the
   provisioning-order trap — is **one root cause, more than one origin**. Path-based deletes
@@ -799,6 +824,14 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
     do not resolve), which is why it is a gate rather than an incident — but it is the
     **first** thing to fix before a second subdomain goes live, ahead of everything else on
     that list. Recommended fix: server-side `revokeRefreshTokens(uid)` on sign-out.
+    - ✅ **SUPERSEDED the same day by the path-based decision.** With a single origin the defect
+      becomes **structurally impossible** rather than fixed, so `revokeRefreshTokens` drops from
+      prerequisite to **optional hardening** — it would now buy only multi-device sign-out.
+      **Nothing to implement**; prerequisites §1.1 gets deleted by the migration's T7 doc pass.
+      Same for §1.5 (geyang's own subdomain), §1.6 (bare links — promoted into the migration's
+      actual work) and most of §2 (ops externalities). ⚠️ Still live either way, so do not
+      assume they went with it: §1.2 `syncVideos()`, §1.3 the playlist back-fill, **§1.4 the
+      members roster leaking every mountain's users**, §3.1 the CMS mountain label.
 - ✅ **M6 — no prod cutover needed (resolved 2026-07-25).** The upload-prefix wiring is a
   no-op for geyang and only affects a future tenant; prod thumbnails/album photos already ride
   on tenant-scoped Storage URLs, so there is nothing to migrate. (The drafted thumbnail
@@ -892,12 +925,14 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN.** `origin/dev` is at `4315fea`; **everything from `7e08933` on (5
-commits) is committed locally and NOT yet pushed** — the tail of the 2026-07-27
-butler/playlist session plus all of 2026-07-28. Newest `dev` commits:
+**Working tree is CLEAN.** `origin/dev` is at **`1bd9dc1`**; **everything from `d4c36a1` on is
+committed locally and NOT yet pushed** — all of 2026-07-28. (Corrected 2026-07-28: an earlier
+revision of this section said `4315fea`/5 commits, which was already stale — `7e08933`,
+`4315fea` and `1bd9dc1` had reached the remote.) Newest `dev` commits:
 
 | Commit    | What                                                                                      |
 | --------- | ----------------------------------------------------------------------------------------- |
+| `d129b9e` | **docs** — hand-off + project-plan update                                                 |
 | `f09d0e1` | **docs** — decision doc: subdomain vs path-based tenancy (recommends path-based)          |
 | `d522a67` | **docs** — mountain-#2 prerequisites consolidated + owner provisioning checklist          |
 | `d4c36a1` | **feat** — admin CMS idle timeout 2h → 24h                                                |
@@ -942,7 +977,32 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-28 (latest)** — **A small feature, a timeout change, and then an architecture
+- **2026-07-28 (latest)** — **The tenancy URL model was decided — path-based — and planned.**
+  The owner answered the open decision: a mountain is identified by a **path prefix**
+  (`mohocats.org/manisan`), geyang keeps its prefix-free URLs at the apex, and a second
+  mountain's owner does **not** need their own hostname — the one argument §4.2 said could
+  reverse the recommendation. Written up as
+  [`tenancy-path-migration-plan-20260728.md`](../planning/tenancy-path-migration-plan-20260728.md):
+  phases **T0–T7**, 28 checklist items, net-first (two navigation-retention specs that must
+  **fail** before the sweep, since a spec that passes beforehand is not a net).
+  🚨 **Planning it surfaced a cost the decision doc had not priced, and it is the one that
+  matters.** Every `/api/*` route resolves the tenant from the **Host header** —
+  `getRequestMountainId`, because `/api` is excluded from the middleware matcher and there is no
+  tenant in an API URL — so with one constant Host every API call would resolve to **geyang**:
+  wrong-tenant reads and writes on `points`/`admin/cats`, 동참 submissions stamped with the wrong
+  `mountainId`, and — the real defect — **`requireApiPermission` gating on the wrong mountain's
+  roles**, so a geyang-only admin would be allowed on manisan's surfaces and a manisan-only admin
+  denied on their own. Fix is a validated `X-Mountain-Id` header with Host as fallback, **400 on
+  an unknown value** (never a silent fallback to the default tenant); it is sequenced as **T2,
+  ahead of the link sweep**, and the existing `api/tenant-isolation.spec.ts` authz cases are
+  already its regression net. Not a weakening: the header only _selects_ the mountain, and the
+  permission is still checked against it. 📐 Surface re-measured at `d129b9e`: **83 navigation
+  sites / 29 files** (56 `href`, 24 `router.push/replace`, 3 `window.location` — `Navigation.tsx`
+  alone is 23), **27 fetch sites / 11 files**, and **4 `usePathname()` comparison sites** the
+  decision doc had not counted at all, one of which is the login redirect-back. ⏱️ **Sequencing
+  decided: P5.4 pass → `dev → main` promotion → migration.** Nothing was changed in code;
+  prerequisites §1.1/§1.5/§1.6/§2 are now superseded and must not be worked.
+- **2026-07-28** — **A small feature, a timeout change, and then an architecture
   review that questioned the multi-tenant URL model.** 내 집사 정보 gained a **관리자
   shortcut** for members who hold CMS access on the active mountain (`1bd9dc1`) — the CMS had
   no entry point from the member surface at all. Its gate **reuses `isAdmin(user, mountainId)`,

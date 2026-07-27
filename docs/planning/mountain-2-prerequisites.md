@@ -21,20 +21,28 @@
 > **None of this is urgent _yet_.** `manisan` is a hidden stub with no production data and
 > no admin, so nothing below is a live bug. This is a gate, not a backlog.
 >
-> 🚨 **One item is a security defect, not a rough edge: [§1.1](#11--security--로그아웃-does-not-sign-the-user-out-of-the-other-mountains) — 로그아웃 does not sign the
-> user out of the other mountains.** It has zero exposure today only because production
-> serves a single origin. It becomes real on the day a second subdomain resolves, and it
-> partly hollows out the admin idle timeout. Treat it as the first thing to fix, ahead of
-> everything else here.
+> ⚠️ **PARTLY SUPERSEDED — read this before working anything below.** The open architectural
+> decision was **answered on 2026-07-28: tenancy goes path-based** (`mohocats.org/manisan`,
+> geyang prefix-free at the apex) —
+> [`tenancy-url-model-decision-20260728.md`](./tenancy-url-model-decision-20260728.md), executed by
+> [`tenancy-path-migration-plan-20260728.md`](./tenancy-path-migration-plan-20260728.md).
+> With **one origin**, these stop being work:
 >
-> ⏸️ **Several items here are pending an open architectural decision.**
-> [`tenancy-url-model-decision-20260728.md`](./tenancy-url-model-decision-20260728.md) asks
-> whether a mountain should be identified by **host** or by **path prefix**, and recommends
-> path-based. If that is adopted, **§1.1, §1.5, most of §2, and §4's re-login entry are
-> deleted or rewritten** — they are all symptoms of having more than one origin, and §1.6
-> becomes the actual work instead of an accepted caveat. **Read that decision before
-> starting anything in §1.1, §1.5, §1.6, or §2.** §1.2, §1.3, §1.4, and §3.1 are unaffected
-> either way.
+> | Section                               | Fate under path-based                                                                                    |
+> | ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+> | **§1.1** sign-out security defect     | **Structurally impossible** — not fixed, _deleted_. `revokeRefreshTokens` demotes to optional hardening. |
+> | **§1.5** geyang's own subdomain       | **Moot** — production stays on the apex.                                                                 |
+> | **§1.6** bare links escape the tenant | **Promoted** — it _is_ the migration's link sweep (plan T3), no longer an accepted dev-only caveat.      |
+> | **§2** ops externalities              | **Mostly deleted** — no per-mountain DNS, Vercel domain, TLS wait, or authorized-domain entry.           |
+> | **§4** re-login when switching        | **Moot** — one session covers every mountain.                                                            |
+>
+> 🔑 **Still live, and path-based fixes none of them:** **§1.2** `syncVideos()` claiming the
+> shared YouTube channel · **§1.3** the 계양산 playlist back-fill (owner chore) · **§1.4** the
+> members roster returning every mountain's users (a real data leak) · **§3.1** the CMS never
+> naming the mountain being edited · **§3.2** the geyang-yellow admin `brand` ramp.
+>
+> These sections are rewritten wholesale by the migration's **T7**, not edited piecemeal now —
+> so the original text is left standing below as the record of what the problem was.
 
 ---
 
