@@ -115,35 +115,15 @@ deep detail this file deliberately keeps out:
 
 ### Build Process
 
-```bash
-npm run build         # Runs: fetch-static-assets.js → next build
-npm run vercel-build  # Same as build (what Vercel runs)
-```
-
-### Development Commands
-
-```bash
-npm run dev                # Development server
-npm run fetch:assets       # Download thumbnails/about-photos from Firebase Storage
-npm run test:smoke         # Fast structural smoke suite (gate for refactors/cleanup)
-```
+- `npm run build` (and `vercel-build`, what Vercel runs) is **not** a bare `next build` — it
+  runs `scripts/maintenance/fetch-static-assets.js` first to download about-photos from
+  Firebase Storage into `public/`. Other scripts are in `package.json`.
 
 ### Admin CMS Access
 
 - Navigate to `/admin` for the Cat Management System (gated by `AdminAuth`).
 - Direct Firestore-backed editing of cats, media, posts, announcements, members/roles, and
   the about-page content — no Google Sheets dependency.
-
-## Critical Component Patterns
-
-- **Server-render the data, ISR-refresh it.** The home page (`src/app/page.tsx`) is an
-  `async` Server Component that `await`s **points and cats together** server-side
-  (`getAllPoints()` + `getAllCatsServer()`) and passes them to the client map as props. It
-  sets `revalidate = REVALIDATE_SECONDS` (3600s), so Firestore edits reflect within ≤1h
-  without a redeploy (admin cat edits also trigger on-demand `revalidatePath('/')`).
-- **Always go through the service factory.** Components call `getCatService()`,
-  `getImageService()`, etc. from `@/services` — never `import` from `firebase/*` directly.
-  (See `docs/codebase/services-layer.md` for the full pattern.)
 
 ## Project-Specific Conventions
 
@@ -188,18 +168,11 @@ npm run test:smoke         # Fast structural smoke suite (gate for refactors/cle
   (`firebase deploy --only firestore:rules`); `firebase.json` is trimmed to the `firestore`
   block.
 
-## Environment Variables Required
+## Environment Variables
 
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-SERVICE_ACCOUNT_KEY=                 # Admin SDK creds (server-side)
-MOUNTAIN_ID=geyang                   # Optional, defaults to 'geyang'
-```
+- **See [`.env.example`](./.env.example)** for the full set (Firebase, YouTube OAuth, Kakao,
+  SMTP, `SERVICE_ACCOUNT_KEY`). `MOUNTAIN_ID` is optional and only the **fallback** tenant
+  (defaults to `geyang`) — never a selector; see §2 above.
 
 ## Testing & Debugging
 
