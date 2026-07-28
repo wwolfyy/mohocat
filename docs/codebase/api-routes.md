@@ -12,19 +12,19 @@ account deletion, points, media/YouTube, signed URLs, and ISR revalidation.
 
 ## Key Components
 
-| Group                | Route(s)                                                                                                    | Responsibility                                                                                  |
-| -------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Account              | `account/delete`                                                                                            | Member self-service hard-delete (Bearer token → uid). See [authentication](authentication.md)   |
-| Admin — cats         | `admin/cats`                                                                                                | Admin cat reads/writes (Admin SDK)                                                              |
-| Admin — posts        | `admin/posts-collections`                                                                                   | Post/collection management for the CMS                                                          |
-| Admin — permissions  | `admin/role-permissions`, `admin/resource-permissions`, `admin/get-all-user-permissions-client`             | Read/write the live role & resource permission matrices                                         |
-| Admin — YouTube auth | `admin/youtube-auth/{auth-url,callback,status}`                                                             | YouTube OAuth handshake + status for the admin panel                                            |
-| Auth                 | `auth/kakao/callback`                                                                                       | Kakao OIDC callback                                                                             |
-| Contact              | `contact`                                                                                                   | 동참/문의 submission: verify token → Admin-SDK write → SMTP email to `adminEmail`               |
-| Points               | `points`                                                                                                    | Feeding-point data endpoint                                                                     |
-| Media — signed URLs  | `generate-signed-url`                                                                                       | Firebase Storage signed upload URLs                                                             |
-| Media — YouTube      | `manage-playlists`, `youtube-playlists`, `upload-youtube`, `update-youtube-video`, `refresh-video-metadata` | YouTube playlist/video management. See [media-and-youtube](media-and-youtube.md)                |
-| Revalidation         | `revalidate`                                                                                                | On-demand ISR: admin cat mutation → `revalidatePath` for `BAKED_PATHS` (`/`, `/pages/adoption`) |
+| Group                | Route(s)                                                                                                                    | Responsibility                                                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Account              | `account/delete`                                                                                                            | Member self-service hard-delete (Bearer token → uid). See [authentication](authentication.md)                                                                |
+| Admin — cats         | `admin/cats`                                                                                                                | Admin cat reads/writes (Admin SDK)                                                                                                                           |
+| Admin — posts        | `admin/posts-collections`                                                                                                   | Post/collection management for the CMS                                                                                                                       |
+| Admin — permissions  | `admin/role-permissions`, `admin/resource-permissions`, `admin/get-all-user-permissions-client`                             | Read/write the live role & resource permission matrices                                                                                                      |
+| Admin — YouTube auth | `admin/youtube-auth/{auth-url,callback,status}`                                                                             | YouTube OAuth handshake + status for the admin panel                                                                                                         |
+| Auth                 | `auth/kakao/callback`                                                                                                       | Kakao OIDC callback                                                                                                                                          |
+| Contact              | `contact`                                                                                                                   | 동참/문의 submission: verify token → Admin-SDK write → SMTP email to `adminEmail`                                                                            |
+| Points               | `points`                                                                                                                    | Feeding-point data endpoint                                                                                                                                  |
+| Media — signed URLs  | `generate-signed-url`                                                                                                       | Firebase Storage signed upload URLs                                                                                                                          |
+| Media — YouTube      | `manage-playlists`, `youtube-playlists`, `upload-youtube` (+ `/complete`), `update-youtube-video`, `refresh-video-metadata` | YouTube playlist/video management. ⚠️ Video **bytes** bypass these routes entirely (Vercel's 4.5 MB body cap). See [media-and-youtube](media-and-youtube.md) |
+| Revalidation         | `revalidate`                                                                                                                | On-demand ISR: admin cat mutation → `revalidatePath` for `BAKED_PATHS` (`/`, `/pages/adoption`)                                                              |
 
 ## Data Flow
 
@@ -75,9 +75,9 @@ graph LR
 - **Self-enforced auth**: because the Admin SDK bypasses Firestore rules, admin routes call
   `requireApiPermission(req, '<permission>')` and map its result to 401/403; the client attaches
   the token via `authHeader.ts`. **This is not limited to `admin/*`** — the media/credential
-  routes at the API root (`generate-signed-url`, `upload-youtube`, `update-youtube-video`,
-  `refresh-video-metadata`, `manage-playlists`, `youtube-playlists`) are gated the same way
-  as of 2026-07-26.
+  routes at the API root (`generate-signed-url`, `upload-youtube`, `upload-youtube/complete`,
+  `update-youtube-video`, `refresh-video-metadata`, `manage-playlists`, `youtube-playlists`) are
+  gated the same way as of 2026-07-26.
 - **Pick the permission by mirroring `firestore.rules`.** A route that writes (or enables a
   write to) a collection should require the permission that rules already enforce on it — so
   the route is exactly as permissive as the write it performs, and gating one doesn't quietly

@@ -9,11 +9,13 @@
  *   lifted verbatim from NewAnnouncementForm (path prefix parameterized:
  *   `announcements/images` vs `adoption/images`).
  * - `uploadVideosToYouTube` — the shared YouTube strategy (all four forms upload
- *   video via POST /api/upload-youtube). Family B always sends title/description/
- *   tags; Family A additionally sends createdTime/playlistId and omits empty tags
- *   — covered via optional fields. P3 reconciliation: NewPostForm's
- *   `!result.videoUrl` guard IS adopted (fail-loud on a broken upload response);
- *   its status-based error message is not (this module keeps the statusText form).
+ *   video through it). Family B always sends title/description/tags; Family A
+ *   additionally sends createdTime/playlistId and omits empty tags — covered via
+ *   optional fields. P3 reconciliation: NewPostForm's `!result.videoUrl` guard IS
+ *   adopted (fail-loud on a broken upload response); its status-based error message
+ *   is not (this module keeps the statusText form). Since 2026-07-29 the upload is
+ *   **resumable and direct-to-Google** rather than a single POST through our own
+ *   API — see `uploadVideoToYouTube` for why that is not optional.
  * - `uploadImagesWithSignedUrls` — the Family-A image strategy (lifted from
  *   NewPostForm at P3.0): signed-URL PUT + a `cat_images` Firestore entry so the
  *   photos surface in the album/tagging tools. Canonicalized on the route's real
@@ -69,41 +71,201 @@ export interface YouTubeUploadOptions {
    * SDK here so this module stays a plain strategy with no Firebase coupling.
    */
   user: User | null;
+  /**
+   * Bytes of **this** file uploaded so far. Low-level: callers uploading more than
+   * one video want `onProgress` on the plural form, which aggregates these into one
+   * fraction. Omitted → no progress events are requested at all.
+   */
+  onBytesUploaded?: (loadedBytes: number) => void;
 }
 
-/** Upload one video via POST /api/upload-youtube and return its YouTube URL. */
+/** Fraction (0 → 1) of one submit's video bytes uploaded so far. */
+export type UploadProgressCallback = (fraction: number) => void;
+
+export interface YouTubeBatchUploadOptions extends Omit<YouTubeUploadOptions, 'onBytesUploaded'> {
+  /** Overall progress across every file in the batch. */
+  onProgress?: UploadProgressCallback;
+}
+
+/**
+ * Aggregates concurrent video uploads into the single 0 → 1 fraction a form shows on
+ * one progress bar, and returns a per-file reporter to pass as `onBytesUploaded`.
+ *
+ * Per-file tracking is the point: the uploads run in **parallel**, so each file's
+ * latest byte count has to be stored separately and re-summed. Accumulating into a
+ * running total instead would count every progress event on top of the last one and
+ * race past 100%. Indexed rather than keyed by `File` so that picking the same file
+ * twice still tracks two independent uploads.
+ */
+export function createUploadProgressTracker(
+  files: File[],
+  onProgress?: UploadProgressCallback
+): (index: number) => ((loadedBytes: number) => void) | undefined {
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  const loadedByFile = new Array<number>(files.length).fill(0);
+
+  return (index: number) => {
+    // No callback, or nothing to measure against — don't ask for progress events.
+    if (!onProgress || totalBytes <= 0) {
+      return undefined;
+    }
+
+    return (loadedBytes: number) => {
+      loadedByFile[index] = loadedBytes;
+      const uploaded = loadedByFile.reduce((sum, bytes) => sum + bytes, 0);
+      onProgress(Math.min(uploaded / totalBytes, 1));
+    };
+  };
+}
+
+interface RawUploadResult {
+  ok: boolean;
+  statusText: string;
+  body: string;
+}
+
+/**
+ * PUT the file to Google's resumable session URI, reporting upload progress.
+ *
+ * ⚠️ Uses `XMLHttpRequest`, not `fetch`, and that is not a style choice: `fetch`
+ * cannot report **request** upload progress. Streaming a request body is
+ * Chrome-only, needs HTTP/2 and `duplex: 'half'`, and Safari does not support it at
+ * all — while `xhr.upload.onprogress` works everywhere. This is the only leg that
+ * carries bytes, so it is the only one that needs XHR.
+ */
+function putFileWithProgress(
+  sessionUrl: string,
+  file: File,
+  mimeType: string,
+  onBytesUploaded?: (loadedBytes: number) => void
+): Promise<RawUploadResult> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', sessionUrl, true);
+    xhr.setRequestHeader('Content-Type', mimeType);
+
+    if (onBytesUploaded) {
+      xhr.upload.onprogress = (event: ProgressEvent) => {
+        if (event.lengthComputable) {
+          onBytesUploaded(event.loaded);
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      // Settle on the full byte count: the last progress event can arrive before the
+      // request completes, which would otherwise leave the bar stuck just short.
+      onBytesUploaded?.(file.size);
+      resolve({
+        ok: xhr.status >= 200 && xhr.status < 300,
+        statusText: xhr.statusText,
+        body: xhr.responseText,
+      });
+    };
+
+    // Network-level failures have no status to report, so they fail loud with their
+    // own message rather than being folded into the status-based error below.
+    xhr.onerror = () =>
+      reject(new Error('Failed to upload video: the connection to YouTube failed'));
+    xhr.onabort = () => reject(new Error('Failed to upload video: the upload was interrupted'));
+
+    xhr.send(file);
+  });
+}
+
+/**
+ * Upload one video and return its YouTube URL, in three steps:
+ *
+ * 1. `POST /api/upload-youtube` — our server opens a resumable session on YouTube
+ *    and returns the session URI (metadata only, a few hundred bytes).
+ * 2. `PUT` the file **straight to Google**, bypassing our server entirely.
+ * 3. `POST /api/upload-youtube/complete` — our server files the video into its
+ *    playlists and writes the `cat_videos` record.
+ *
+ * ⚠️ Step 2 must not be routed through our own API. Vercel rejects any function
+ * request body over **4.5 MB** at the proxy (413 `FUNCTION_PAYLOAD_TOO_LARGE`),
+ * which is smaller than essentially any real video — the previous single-POST
+ * version of this function could not upload one at all (`log/DEBUG_LOG.md`
+ * 2026-07-29). Sending the bytes to Google directly removes the ceiling entirely.
+ * The session URI carries its own authorization, so no token is exposed here.
+ */
 export const uploadVideoToYouTube = async (
   file: File,
   options: YouTubeUploadOptions
 ): Promise<string> => {
-  const formData = new FormData();
-  formData.append('video', file);
-  formData.append('title', options.title);
-  formData.append('description', options.description);
-  if (options.tags) {
-    formData.append('tags', options.tags);
-  }
-  if (options.createdTime) {
-    formData.append('createdTime', options.createdTime);
-  }
-  for (const playlistId of options.playlistIds ?? []) {
-    if (playlistId) {
-      formData.append('playlistId', playlistId);
-    }
-  }
+  const headers = await authHeader(options.user);
+  // Google matches this against the PUT below, so both must send the same value.
+  const mimeType = file.type || 'application/octet-stream';
 
-  const response = await fetch('/api/upload-youtube', {
+  const sessionResponse = await fetch('/api/upload-youtube', {
     method: 'POST',
-    headers: await authHeader(options.user),
-    body: formData,
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType,
+      title: options.title,
+      description: options.description,
+      tags: options.tags,
+      createdTime: options.createdTime,
+    }),
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to upload video: ${response.statusText} - ${errorText}`);
+  if (!sessionResponse.ok) {
+    const errorText = await sessionResponse.text();
+    throw new Error(`Failed to upload video: ${sessionResponse.statusText} - ${errorText}`);
   }
 
-  const result = await response.json();
+  const { sessionUrl } = await sessionResponse.json();
+  if (!sessionUrl) {
+    throw new Error('No upload session returned from upload');
+  }
+
+  // The bytes go to Google, not to us. No Authorization header: the session URI is
+  // itself the capability, and we hold no token client-side.
+  const uploadResult = await putFileWithProgress(
+    sessionUrl,
+    file,
+    mimeType,
+    options.onBytesUploaded
+  );
+
+  if (!uploadResult.ok) {
+    throw new Error(`Failed to upload video: ${uploadResult.statusText} - ${uploadResult.body}`);
+  }
+
+  let uploaded: { id?: string } = {};
+  try {
+    uploaded = JSON.parse(uploadResult.body);
+  } catch {
+    // A 2xx whose body isn't the created video resource means the contract moved —
+    // fall through to the id guard below rather than guessing.
+  }
+
+  if (!uploaded.id) {
+    throw new Error('No video ID returned from upload');
+  }
+
+  const completeResponse = await fetch('/api/upload-youtube/complete', {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      videoId: uploaded.id,
+      fileName: file.name,
+      title: options.title,
+      description: options.description,
+      tags: options.tags,
+      createdTime: options.createdTime,
+      playlistIds: (options.playlistIds ?? []).filter((id) => id),
+    }),
+  });
+
+  if (!completeResponse.ok) {
+    const errorText = await completeResponse.text();
+    throw new Error(`Failed to upload video: ${completeResponse.statusText} - ${errorText}`);
+  }
+
+  const result = await completeResponse.json();
 
   if (!result.videoUrl) {
     throw new Error('No video URL returned from upload');
@@ -112,12 +274,22 @@ export const uploadVideoToYouTube = async (
   return result.videoUrl;
 };
 
-/** Upload several videos in parallel; resolves to their YouTube URLs in order. */
+/**
+ * Upload several videos in parallel; resolves to their YouTube URLs in order.
+ * `onProgress` reports one fraction across the whole batch, not per file.
+ */
 export const uploadVideosToYouTube = async (
   files: File[],
-  options: YouTubeUploadOptions
+  options: YouTubeBatchUploadOptions
 ): Promise<string[]> => {
-  return await Promise.all(files.map((file) => uploadVideoToYouTube(file, options)));
+  const { onProgress, ...perFileOptions } = options;
+  const reporterFor = createUploadProgressTracker(files, onProgress);
+
+  return await Promise.all(
+    files.map((file, index) =>
+      uploadVideoToYouTube(file, { ...perFileOptions, onBytesUploaded: reporterFor(index) })
+    )
+  );
 };
 
 export interface SignedUrlImageContext {

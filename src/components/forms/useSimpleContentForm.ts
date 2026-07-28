@@ -54,6 +54,8 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  /** 0 → 1 while video bytes are in flight; null when no video upload is running. */
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const router = useRouter();
   const { user } = useAuth();
@@ -111,12 +113,14 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
             ...(config.extraPlaylistIds?.() ?? []),
           ].filter((playlistId): playlistId is string => Boolean(playlistId));
 
+          setUploadProgress(0);
           const uploadedVideoUrls = await uploadVideosToYouTube(videoFiles, {
             title: title || config.youtubeDefaults.title,
             description: message || config.youtubeDefaults.description,
             tags: config.youtubeDefaults.tags,
             playlistIds,
             user,
+            onProgress: setUploadProgress,
           });
           allVideoUrls = [...allVideoUrls, ...uploadedVideoUrls];
         } catch (error) {
@@ -169,6 +173,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
       );
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -189,6 +194,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
     videoUrls,
     setVideoUrls,
     uploading,
+    uploadProgress,
     handleSubmit,
     cancel,
     /** Render once inside the owning form (replaces native alert dialogs). */

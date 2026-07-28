@@ -7,6 +7,7 @@ import CatSelectorModal from '@/components/CatSelectorModal';
 import { useRichContentForm } from '@/components/forms/useRichContentForm';
 import { useMountain } from '@/components/MountainProvider';
 import MediaItemList from '@/components/forms/MediaItemList';
+import UploadProgressBar from '@/components/forms/UploadProgressBar';
 
 /**
  * 집사톡(butler_talk) post composer. Submit/upload flow comes from the shared
@@ -197,6 +198,7 @@ const NewButlerTalkForm = () => {
       )}
 
       {/* Submit / Cancel */}
+      <UploadProgressBar progress={form.uploadProgress} />
       <div className="pt-4 flex gap-2">
         <Button
           type="submit"

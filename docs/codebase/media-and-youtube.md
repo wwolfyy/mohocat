@@ -11,22 +11,22 @@ videos look and behave consistently.
 
 ## Key Components
 
-| Component            | File(s)                                                                                               | Responsibility                                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Photo album          | `src/app/pages/photo-album/page.tsx`, `components/PhotoAlbum.tsx`                                     | 사진첩 — reads images via `getImageService`, grid of `MediaTile`, opens `Lightbox`                                 |
-| Video album          | `src/app/pages/video-album/page.tsx`, `components/VideoAlbum.tsx`                                     | 영상첩 — reads videos via `getVideoService`, grid of `MediaTile`, opens `VideoPlayer`                              |
-| Album tile           | `src/components/album/MediaTile.tsx`                                                                  | Shared grid card (rounded, hover lift/zoom, badge/placeholder slots; `square` for photos, `video` 16:9 for videos) |
-| Album filter         | `src/components/album/AlbumFilterBar.tsx`                                                             | Shared search + cat-name filter; owns the `CatSelectorModal`; single consolidated chip row                         |
-| Album states         | `src/components/album/AlbumStates.tsx`                                                                | Branded loading/empty/error states                                                                                 |
-| Lightbox             | `src/components/ui/Lightbox.tsx`                                                                      | Full-bleed dark image viewer; Esc closes, ←/→ navigate (topmost layer)                                             |
-| Video player         | `src/components/ui/VideoPlayer.tsx`                                                                   | Full-bleed dark video viewer; same key/nav language as Lightbox                                                    |
-| Filter hook          | `src/hooks/useMediaFilter.ts`                                                                         | Shared free-text (description + tags) + cat-tag filtering for both albums                                          |
-| Media links hook     | `src/hooks/useMediaLinks.tsx`                                                                         | Resolves media link tokens                                                                                         |
-| YouTube service      | `src/services/youtube.ts`                                                                             | `fetchChannelVideos`, `searchYouTubeVideos`, YouTube data types                                                    |
-| Image/video services | `src/services/image-service.ts`, `video-service.ts`, `media-albums.ts`                                | Firestore-backed media records + album grouping                                                                    |
-| Storage/signed URLs  | `src/services/storage-service.ts`, API `generate-signed-url`                                          | Firebase Storage access + signed upload URLs                                                                       |
-| YouTube admin        | `src/components/admin/YouTubeAuthPanelNew.tsx`, `admin/tag-videos`, `tag-images`                      | OAuth panel + tagging surfaces                                                                                     |
-| YouTube API routes   | `api/{manage-playlists,youtube-playlists,upload-youtube,update-youtube-video,refresh-video-metadata}` | Playlist/video management. See [api-routes](api-routes.md)                                                         |
+| Component            | File(s)                                                                                                                       | Responsibility                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Photo album          | `src/app/pages/photo-album/page.tsx`, `components/PhotoAlbum.tsx`                                                             | 사진첩 — reads images via `getImageService`, grid of `MediaTile`, opens `Lightbox`                                 |
+| Video album          | `src/app/pages/video-album/page.tsx`, `components/VideoAlbum.tsx`                                                             | 영상첩 — reads videos via `getVideoService`, grid of `MediaTile`, opens `VideoPlayer`                              |
+| Album tile           | `src/components/album/MediaTile.tsx`                                                                                          | Shared grid card (rounded, hover lift/zoom, badge/placeholder slots; `square` for photos, `video` 16:9 for videos) |
+| Album filter         | `src/components/album/AlbumFilterBar.tsx`                                                                                     | Shared search + cat-name filter; owns the `CatSelectorModal`; single consolidated chip row                         |
+| Album states         | `src/components/album/AlbumStates.tsx`                                                                                        | Branded loading/empty/error states                                                                                 |
+| Lightbox             | `src/components/ui/Lightbox.tsx`                                                                                              | Full-bleed dark image viewer; Esc closes, ←/→ navigate (topmost layer)                                             |
+| Video player         | `src/components/ui/VideoPlayer.tsx`                                                                                           | Full-bleed dark video viewer; same key/nav language as Lightbox                                                    |
+| Filter hook          | `src/hooks/useMediaFilter.ts`                                                                                                 | Shared free-text (description + tags) + cat-tag filtering for both albums                                          |
+| Media links hook     | `src/hooks/useMediaLinks.tsx`                                                                                                 | Resolves media link tokens                                                                                         |
+| YouTube service      | `src/services/youtube.ts`                                                                                                     | `fetchChannelVideos`, `searchYouTubeVideos`, YouTube data types                                                    |
+| Image/video services | `src/services/image-service.ts`, `video-service.ts`, `media-albums.ts`                                                        | Firestore-backed media records + album grouping                                                                    |
+| Storage/signed URLs  | `src/services/storage-service.ts`, API `generate-signed-url`                                                                  | Firebase Storage access + signed upload URLs                                                                       |
+| YouTube admin        | `src/components/admin/YouTubeAuthPanelNew.tsx`, `admin/tag-videos`, `tag-images`                                              | OAuth panel + tagging surfaces                                                                                     |
+| YouTube API routes   | `api/{manage-playlists,youtube-playlists,upload-youtube,upload-youtube/complete,update-youtube-video,refresh-video-metadata}` | Playlist/video management. See [api-routes](api-routes.md)                                                         |
 
 ## Data Flow
 
@@ -127,6 +127,35 @@ because the credential has two halves that live in different places:
   `tests/unit/youtubeCredentials.test.ts`; everything past the credential is covered only by the
   P5.4 manual pass on Preview.
 
+## Video upload (resumable, direct-to-Google)
+
+> Changed 2026-07-29 (`log/DEBUG_LOG.md`). Before this, the composer POSTed the file itself to
+> `/api/upload-youtube` — which meant **no real video could be uploaded at all**.
+
+🚨 **The file must never pass through a Vercel function.** Vercel caps a function's request body
+at **4.5 MB** and rejects anything larger at the proxy with 413 `FUNCTION_PAYLOAD_TOO_LARGE` —
+before the handler runs, so it cannot be caught, and no `vercel.json` setting, plan tier or Fluid
+compute changes it. 4.5 MB is a few seconds of phone video.
+
+The upload is therefore three legs, all from `uploadVideoToYouTube` in `uploadStrategies.ts`:
+
+| Step            | Where                                          | Carries                                                                                       |
+| --------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1. Open session | `POST /api/upload-youtube`                     | Metadata only (a few hundred bytes) → returns Google's session URI from the `Location` header |
+| 2. Upload bytes | **Browser → Google**, `PUT` to the session URI | The file. Never touches our server, so there is no size ceiling                               |
+| 3. Record it    | `POST /api/upload-youtube/complete`            | The new video id → playlist filing + the `cat_videos` write                                   |
+
+- **Both routes gate on `manage-video` independently.** Step 3 writes via the Admin SDK, so it
+  must not trust step 1's gate.
+- **No token reaches the browser.** The session URI is itself the upload capability; the `PUT`
+  carries no `Authorization` header.
+- ⚠️ **Browser uploads depend on Google's CORS**, which their docs do not mention. Verified by
+  preflight: `googleapis.com/upload/youtube/v3/videos` echoes the caller's origin and allows
+  `POST, GET, PUT, PATCH` plus the `x-upload-content-*` headers. Re-check this before assuming a
+  CORS failure is our bug.
+- ⚠️ **A failure in step 3 leaves a video public on YouTube but unrecorded in Firestore** — never
+  a lost video. The next sync reconciles it.
+
 ## Playlist filing (per mountain, from config)
 
 > Added 2026-07-27 (plan `butler-media-separation-plan-20260727.md`). Replaces a lookup that
@@ -153,9 +182,10 @@ already has `cat_videos.mountainId`, stamped from the request Host.
 - **An 입양홍보 video joins both playlists**, deliberately: if it were only in the adoption one,
   the mountain playlist would stop being a complete record of what that mountain owns — and that
   record is the handle the deferred `syncVideos` fix needs (see the multi-mountain plan's deferred
-  items). `upload-youtube` accepts **repeated** `playlistId` form fields for this, filing into each
-  and logging _which_ one failed; with two targets, a single "not in a playlist" warning would be
-  ambiguous.
+  items). `upload-youtube/complete` accepts a **`playlistIds` array** for this, filing into each and
+  logging _which_ one failed; with two targets, a single "not in a playlist" warning would be
+  ambiguous. _(Until 2026-07-29 this was a repeated `playlistId` form field on `upload-youtube`
+  itself, before the upload was split into session + complete — see below.)_
 - **`cat_videos.playlist`** stores the **mountain** playlist, resolved from config rather than from
   the request, so it does not depend on the order the caller sent them.
 - ⚠️ **Not retroactive.** Filing starts at the next upload; existing channel videos have to be

@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
-import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
+import {
+  uploadVideoToYouTube,
+  uploadImagesWithSignedUrls,
+  createUploadProgressTracker,
+} from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
 import { getMountainName, getYouTubePlaylistId } from '@/utils/config';
@@ -56,6 +60,8 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  /** 0 → 1 while video bytes are in flight; null when no video upload is running. */
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [createdTime, setCreatedTime] = useState('');
   const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
   const [selectedImageTags, setSelectedImageTags] = useState<string[]>([]);
@@ -142,8 +148,17 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
           const fallbackCount = videoItems.filter((item) => !item.title.trim()).length;
           let fallbackIndex = 0;
 
+          // One bar for the whole submit: this form uploads its videos in parallel
+          // with per-item titles, so it drives the tracker itself rather than going
+          // through `uploadVideosToYouTube`.
+          const reporterFor = createUploadProgressTracker(
+            videoItems.map((item) => item.file),
+            setUploadProgress
+          );
+          setUploadProgress(0);
+
           videoUrls = await Promise.all(
-            videoItems.map((item) => {
+            videoItems.map((item, index) => {
               const ownTitle = item.title.trim();
               if (!ownTitle) fallbackIndex += 1;
               const videoTitle = ownTitle
@@ -160,6 +175,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
                 createdTime: createdTime || undefined,
                 playlistIds: playlistId ? [playlistId] : undefined,
                 user,
+                onBytesUploaded: reporterFor(index),
               });
             })
           );
@@ -241,6 +257,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       );
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -257,6 +274,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     message,
     setMessage,
     uploading,
+    uploadProgress,
     createdTime,
     setCreatedTime,
     /** The mountain's playlist, or `null` when it has none configured yet. */

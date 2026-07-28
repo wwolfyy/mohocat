@@ -11,6 +11,63 @@
 
 ---
 
+## 2026-07-29 — every video upload over 4.5 MB failed: the file was POSTed through a Vercel function
+
+**Symptom:** uploading a 48 MB video from the 집사톡 composer failed with
+`Request Entity Too Large` / `FUNCTION_PAYLOAD_TOO_LARGE`. Owner-reported. The message is
+**Vercel's**, not ours — no Korean dialog copy, and a Vercel request id (`icn1::…`) — because
+the request never reached our handler.
+
+**Root cause:** `uploadVideoToYouTube` sent the raw file as multipart form data to
+`POST /api/upload-youtube`, which buffered it whole (`Buffer.from(await file.arrayBuffer())`)
+before streaming it on to YouTube. **Vercel caps a function's request body at 4.5 MB** and
+rejects anything larger at the proxy, before the handler runs — so it can be neither caught
+nor configured away (no `vercel.json` setting, no plan tier, unchanged by Fluid compute).
+4.5 MB is a few seconds of phone video, so in practice _no_ real video could be uploaded
+through any of the four composers. Images were never affected: they already go direct to
+Storage via `generate-signed-url`, where the server only mints a URL.
+
+⚠️ **The misleading part, and why this went unnoticed for months.** The owner was certain a
+much larger video had gone up through 급식현황 on the same Vercel deployment, which made the
+cap look like the wrong explanation and sent the first investigation into deployment history
+(the app did run on Cloud Run / a home server until 2026-03-04, neither of which caps bodies —
+a true fact that explained nothing, since the upload in question postdated it). Re-running the
+same upload on 급식현황 reproduced the identical error, which is what finally ruled the
+premise out. **Reproducing beat reasoning here**: the code path is shared, so no amount of
+reading could have distinguished the two composers — there was nothing to find.
+
+⚠️ Vercel runtime-log retention is **1 hour** (Hobby) / **1 day** (Pro), so a next-day log
+hunt would have found nothing either way. And a 413 is rejected at the proxy, so it produces
+no function invocation at all — its _absence_ from the logs proves nothing.
+
+**Fix:** the bytes no longer cross our own API. The upload is now a **resumable, direct-to-
+Google** three-step flow:
+
+1. `POST /api/upload-youtube` — the server opens a resumable session (metadata only, a few
+   hundred bytes) and returns the session URI from Google's `Location` header.
+2. The browser `PUT`s the file **straight to Google**. No size ceiling, and no token is
+   exposed: the session URI is itself the upload capability.
+3. `POST /api/upload-youtube/complete` — the server files the video into its playlists and
+   writes the `cat_videos` record, exactly as the old route did after `videos.insert`.
+
+Both routes keep the `manage-video` gate independently — the second one writes Firestore via
+the Admin SDK, so it must not trust the first.
+
+📌 **CORS was the load-bearing assumption and was verified before any code was written**, since
+the whole approach dies without it. An unauthenticated `OPTIONS` preflight against
+`googleapis.com/upload/youtube/v3/videos` returns `access-control-allow-origin` echoing the
+caller's origin, `access-control-allow-methods: POST, GET, PUT, PATCH`, and allows
+`authorization, content-type, x-upload-content-length, x-upload-content-type`. Google's docs
+do not mention browser uploads at all, so this is worth keeping recorded.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 106/106 (the strategy's unit net rewritten to the
+three-step shape, including a regression asserting the file body goes to the session URL and
+that our own API only ever receives JSON) · `media-route-authz.spec.ts` extended to cover
+`/complete`. ⏳ **Not yet verified against real YouTube** — the emulator has no credentials, so
+a Preview pass with a genuinely large file is still owed.
+
+---
+
 ## 2026-07-27 — 촬영일 landed a day early in KST: a calendar date round-tripped through an instant
 
 **Symptom:** picking `2026-03-15 산책.mp4` in 집사톡 filled 촬영 시간 with **2026-03-14,

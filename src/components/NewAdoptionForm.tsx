@@ -4,6 +4,7 @@ import React from 'react';
 import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
 import MediaUploadField from '@/components/forms/MediaUploadField';
+import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
 import { useMountain } from '@/components/MountainProvider';
 import { getAdoptionPlaylistId } from '@/utils/config';
@@ -74,6 +75,8 @@ const NewAdoptionForm = () => {
         urls={form.videoUrls}
         onUrlsChange={form.setVideoUrls}
       />
+
+      <UploadProgressBar progress={form.uploadProgress} />
 
       <div className="flex gap-4">
         <button

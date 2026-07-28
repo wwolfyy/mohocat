@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { getAnnouncementService } from '@/services';
 import { cn } from '@/utils/cn';
 import MediaUploadField from '@/components/forms/MediaUploadField';
+import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
 import { useMountain } from '@/components/MountainProvider';
 
@@ -127,6 +128,8 @@ const NewAnnouncementForm = () => {
         urls={form.videoUrls}
         onUrlsChange={form.setVideoUrls}
       />
+
+      <UploadProgressBar progress={form.uploadProgress} />
 
       <div className="flex gap-4">
         <button

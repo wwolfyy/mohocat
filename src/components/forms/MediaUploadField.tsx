@@ -11,9 +11,9 @@ import React, { useState } from 'react';
  *
  * The parent owns `files` and `urls` and receives whole-array updates; only the
  * transient URL text input is component-local. `kind` selects the image/video
- * label set the forms share verbatim. No progress UI: none of the current forms
- * render per-file progress (they disable the submit button while uploading), and
- * the migrations are behavior-preserving.
+ * label set the forms share verbatim. No **per-file** progress UI: video upload
+ * progress is aggregated across the submit and rendered by `UploadProgressBar`
+ * next to the submit button (2026-07-29), so this field stays a plain picker.
  */
 
 const LABELS = {

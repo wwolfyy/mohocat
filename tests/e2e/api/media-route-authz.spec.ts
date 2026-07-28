@@ -62,6 +62,17 @@ const GATED_ROUTES: GatedRoute[] = [
   },
   { name: 'POST /api/upload-youtube', method: 'post', path: '/api/upload-youtube' },
   {
+    // Second half of the resumable upload: it writes `cat_videos` via the Admin SDK,
+    // so it carries its own gate rather than trusting the session route's.
+    // ⚠️ The body is deliberately empty: a valid `videoId` would sail past the gate
+    // and write a stray video record into the emulator for every other spec to trip
+    // over. Empty → 400 before any write, which is still "past the gate".
+    name: 'POST /api/upload-youtube/complete',
+    method: 'post',
+    path: '/api/upload-youtube/complete',
+    data: {},
+  },
+  {
     name: 'PUT /api/update-youtube-video',
     method: 'put',
     path: '/api/update-youtube-video',
