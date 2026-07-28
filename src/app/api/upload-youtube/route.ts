@@ -42,6 +42,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // The origin the browser will send on its PUT — it must match what this session
+    // is opened with (see the Origin header below). Browsers send `Origin` on any
+    // POST, including same-origin ones, so the header is normally present; the
+    // Host-derived fallback covers non-browser callers and keeps this fail-loud
+    // rather than silently opening an origin-less session.
+    const browserOrigin =
+      request.headers.get('origin') ??
+      `${request.headers.get('x-forwarded-proto') ?? 'https'}://${request.headers.get('host') ?? ''}`;
+
+    if (!browserOrigin || browserOrigin.endsWith('://')) {
+      return NextResponse.json(
+        { error: 'Could not determine the request origin for the upload session' },
+        { status: 400 }
+      );
+    }
+
     // Client identity from env + the freshest refresh token (Firestore).
     const tokenConfig = await getYouTubeOAuthCredentials();
     if (!tokenConfig) {
@@ -117,6 +133,14 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json; charset=UTF-8',
           'X-Upload-Content-Length': String(fileSize),
           'X-Upload-Content-Type': mimeType,
+          // 🚨 Load-bearing. Google decides the `Access-Control-Allow-Origin` for
+          // **every request in the session** from the Origin on this initiating call
+          // — and this call is server-side, so without forwarding it there is no
+          // Origin at all. The browser then delivers all the bytes and gets a
+          // response it is not allowed to read: the upload reaches 100%, XHR fires
+          // `onerror` with status 0, and the video lands on YouTube unrecorded.
+          // Verified the hard way (`log/DEBUG_LOG.md` 2026-07-29).
+          Origin: browserOrigin,
         },
         body: JSON.stringify(videoResource),
       }

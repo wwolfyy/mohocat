@@ -66,6 +66,41 @@ that our own API only ever receives JSON) · `media-route-authz.spec.ts` extende
 `/complete`. ⏳ **Not yet verified against real YouTube** — the emulator has no credentials, so
 a Preview pass with a genuinely large file is still owed.
 
+### Follow-up the same day: the first real upload reached 100%, then failed — CORS
+
+**Symptom:** on Preview, the progress bar ran smoothly to 100% and only then raised
+`Failed to upload video: the connection to YouTube failed`. Nothing in the network was
+actually wrong.
+
+**Root cause:** **Google fixes a resumable session's `Access-Control-Allow-Origin` from the
+`Origin` on the request that _opened_ the session** — and that request is ours, made
+server-side, which sends no `Origin` at all. So the session was bound to no origin. The
+browser then PUT every byte successfully (hence a bar that reached 100%), Google answered
+201, and the browser **refused to expose the response** because it carried no matching
+`Access-Control-Allow-Origin`. XHR surfaces that as `onerror` with status 0 — indistinguishable
+from a dead socket, which is exactly why the message blamed the connection.
+
+⚠️ **The earlier preflight check did not cover this and looked like it did.** It probed the
+**initiation endpoint** (`/upload/youtube/v3/videos`), which happily echoes any origin. The
+session URI is a different resource with its own, already-decided CORS answer. Verifying the
+wrong URL is worse than not verifying: it retired the risk in the write-up while leaving it
+live in the code.
+
+⚠️ **Failures here are not clean.** The video **does** land on YouTube — public, and with no
+`cat_videos` record, because `/complete` never runs. Check the channel for orphans before
+retrying, or the retry silently double-posts.
+
+**Fix:** forward the browser's `Origin` on the session-initiation call
+(`upload-youtube/route.ts`), falling back to `x-forwarded-proto` + `host`, and **400 rather
+than opening an origin-less session** — the failure mode is too expensive to reach silently.
+The client's transport-error message no longer asserts the upload failed; it says the video
+may already be up and to check the channel.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 118/118. New `tests/unit/uploadYouTubeSession.test.ts`
+(7 tests) pins the forwarded `Origin`, the host fallback, and the 400 — the header is invisible
+to every other layer: the e2e authz suite only proves the gate, and no automated test reaches
+Google. ⏳ Still owed: the Preview re-test that this actually completes.
+
 ---
 
 ## 2026-07-27 — 촬영일 landed a day early in KST: a calendar date round-tripped through an instant

@@ -149,10 +149,15 @@ The upload is therefore three legs, all from `uploadVideoToYouTube` in `uploadSt
   must not trust step 1's gate.
 - **No token reaches the browser.** The session URI is itself the upload capability; the `PUT`
   carries no `Authorization` header.
-- ⚠️ **Browser uploads depend on Google's CORS**, which their docs do not mention. Verified by
-  preflight: `googleapis.com/upload/youtube/v3/videos` echoes the caller's origin and allows
-  `POST, GET, PUT, PATCH` plus the `x-upload-content-*` headers. Re-check this before assuming a
-  CORS failure is our bug.
+- 🚨 **Step 1 must forward the browser's `Origin`.** Google fixes the session's
+  `Access-Control-Allow-Origin` from the Origin on the call that **opened** it — a server-side
+  call, which sends none by default. Omit it and the browser uploads every byte, then cannot
+  read the response: 100% followed by an `onerror` that looks like a dead connection, with the
+  video **public on YouTube and unrecorded** because step 3 never runs. The route 400s rather
+  than opening an origin-less session.
+  - ⚠️ Preflighting `googleapis.com/upload/youtube/v3/videos` does **not** test this — that
+    endpoint echoes any origin. The session URI is a separate resource whose CORS answer is
+    already fixed. Checking the wrong URL is what let this ship.
 - ⚠️ **A failure in step 3 leaves a video public on YouTube but unrecorded in Firestore** — never
   a lost video. The next sync reconciles it.
 

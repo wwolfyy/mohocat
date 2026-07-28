@@ -302,13 +302,19 @@ describe('uploadVideoToYouTube (shared YouTube strategy — resumable, direct-to
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('throws when the connection to Google drops mid-upload', async () => {
+  /**
+   * A transport failure is status 0 and nothing more: it cannot distinguish bytes
+   * that never arrived from bytes that arrived behind a response the browser was
+   * not allowed to read. The message must not claim the upload failed outright —
+   * that wording sent the 2026-07-29 CORS diagnosis looking at the network first.
+   */
+  it('throws without claiming the upload failed when the transport gives no answer', async () => {
     mockApi();
     FakeXhr.failWith = 'error';
 
     await expect(
       uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd', user: testUser })
-    ).rejects.toThrow('the connection to YouTube failed');
+    ).rejects.toThrow('may still have been uploaded');
   });
 
   it('throws when the session route responds ok but without a session URL', async () => {

@@ -165,8 +165,18 @@ function putFileWithProgress(
 
     // Network-level failures have no status to report, so they fail loud with their
     // own message rather than being folded into the status-based error below.
+    // A transport-level failure gives us status 0 and nothing else — and it cannot
+    // tell "the bytes never arrived" apart from "they arrived but the browser was
+    // not allowed to read the response" (a CORS-blocked session, which is what
+    // 2026-07-29 hit). So the message must not claim the upload failed outright:
+    // the video may well be on YouTube, just unrecorded here.
     xhr.onerror = () =>
-      reject(new Error('Failed to upload video: the connection to YouTube failed'));
+      reject(
+        new Error(
+          'Failed to upload video: YouTube did not return a readable response. ' +
+            'The video may still have been uploaded — check the channel before retrying.'
+        )
+      );
     xhr.onabort = () => reject(new Error('Failed to upload video: the upload was interrupted'));
 
     xhr.send(file);
