@@ -24,7 +24,6 @@ const NewAnnouncementForm = () => {
     youtubeDefaults: {
       title: '공지사항 동영상',
       description: '공지사항 동영상',
-      tags: '공지사항',
     },
     createPost: (postData) => announcementService.createPost(postData),
     extraPostData: () => ({ showInModal }),

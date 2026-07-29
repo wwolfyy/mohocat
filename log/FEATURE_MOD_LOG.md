@@ -15,6 +15,38 @@
 
 ---
 
+## 2026-07-29 — video uploads no longer invent tags nobody chose
+
+**Area:** `useRichContentForm.ts`, `useSimpleContentForm.ts`, `NewAnnouncementForm`,
+`NewAdoptionForm`. **Type:** small fix (owner-reported, then extended on the owner's call).
+
+**What changed and why:** uploading a video from 집사톡 with no cat selected sent
+`tags: '산고양이'` instead of nothing. The record then landed with
+`needsTagging: tagsArray.length === 0` → **false**, so a video that had never been tagged
+was excluded from the tagging queue that exists to find exactly those. A fallback that
+fills a field also erases the signal that the field is empty. Now the selection is passed
+through as-is; empty stays empty, and `needsTagging` becomes true.
+
+📌 **Photos were already correct** — the 집사톡 image path passes `selectedImageTags`
+straight through, no fallback. The suspicion that it did the same was worth checking, but
+`산고양이` appeared exactly once in the codebase.
+
+**The same rule then went to 공지사항 / 입양홍보 (owner, same day).** Those composers attached
+a fixed `공지사항` / `입양홍보` tag to every video via `youtubeDefaults.tags` — a category
+label rather than a fallback, but with the identical downstream effect: `needsTagging` false,
+so **none of those videos ever reached the tagging queue** despite none of them carrying a cat
+tag. The field is **removed from the config type**, not set to `''`: neither form offers the
+uploader any tag input, so "empty unless specified" means always empty here, and a lingering
+empty string would only invite someone to refill it. Every video from these composers now
+lands in the queue — which is correct, since they all still need cat tags.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 119/119 (one test pins that an empty selection
+reaches YouTube with no `snippet.tags`, so no default can creep back in downstream). The
+composers have no unit coverage — vitest runs in a `node` environment with no React harness —
+so this is guarded at the route boundary and by `tsc` on the removed field.
+
+---
+
 ## 2026-07-29 — video uploads show a progress bar
 
 **Area:** `src/components/forms/UploadProgressBar.tsx` (new), `uploadStrategies.ts`,

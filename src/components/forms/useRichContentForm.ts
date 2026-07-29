@@ -171,7 +171,10 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
                 title: videoTitle,
                 // Empty stays empty: no description on YouTube (plan D2).
                 description: item.description,
-                tags: selectedVideoTags.length > 0 ? selectedVideoTags.join(', ') : '산고양이',
+                // Untagged stays untagged. A '산고양이' fallback used to fill this in,
+                // which set `needsTagging: false` on the record and hid the video from
+                // the very queue meant to surface it (owner, 2026-07-29).
+                tags: selectedVideoTags.join(', '),
                 createdTime: createdTime || undefined,
                 playlistIds: playlistId ? [playlistId] : undefined,
                 user,

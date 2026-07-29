@@ -25,8 +25,16 @@ import { getMountainConfig, getYouTubePlaylistId } from '@/utils/config';
 export interface SimpleContentFormConfig {
   /** Storage path prefix for image uploads, e.g. 'announcements/images'. */
   imagePathPrefix: string;
-  /** YouTube metadata fallbacks (used when title/message are empty) + fixed tag. */
-  youtubeDefaults: { title: string; description: string; tags: string };
+  /**
+   * YouTube metadata fallbacks, used when title/message are empty.
+   *
+   * ⚠️ **No `tags` here, deliberately.** These composers offer the uploader no cat
+   * selection, and they used to attach a fixed `공지사항` / `입양홍보` tag regardless —
+   * which made `needsTagging` false and kept every one of those videos out of the
+   * tagging queue that exists to find untagged ones. Untagged now stays untagged
+   * (owner, 2026-07-29); don't reintroduce a default here.
+   */
+  youtubeDefaults: { title: string; description: string };
   /**
    * Playlists to file uploaded videos into, beyond the owning mountain's own
    * (which this hook always adds). 입양홍보 passes the cross-mountain adoption
@@ -117,7 +125,6 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
           const uploadedVideoUrls = await uploadVideosToYouTube(videoFiles, {
             title: title || config.youtubeDefaults.title,
             description: message || config.youtubeDefaults.description,
-            tags: config.youtubeDefaults.tags,
             playlistIds,
             user,
             onProgress: setUploadProgress,

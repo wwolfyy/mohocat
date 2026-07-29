@@ -23,7 +23,6 @@ const NewAdoptionForm = () => {
     youtubeDefaults: {
       title: '입양홍보 동영상',
       description: '입양홍보 동영상',
-      tags: '입양홍보',
     },
     createPost: (postData) => adoptionService.createPost(postData),
     // 입양홍보 is platform-wide, so its videos also join the one cross-mountain

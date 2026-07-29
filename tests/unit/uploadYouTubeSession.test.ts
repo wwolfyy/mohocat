@@ -127,6 +127,18 @@ describe('POST /api/upload-youtube — resumable session', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  /**
+   * Untagged must stay untagged all the way to YouTube. The composer used to
+   * substitute '산고양이' when no cat was selected, which made `needsTagging` false and
+   * hid the video from the tagging queue; nothing downstream may reintroduce a default.
+   */
+  it('sends no tags at all when the uploader selected none', async () => {
+    await POST(makeRequest({ origin: 'https://mohocats.org' }, { ...VALID_BODY, tags: '' }));
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.snippet.tags).toBeUndefined();
+  });
+
   it('declares the byte count and content type up front', async () => {
     await POST(makeRequest({ origin: 'https://mohocats.org' }));
 
