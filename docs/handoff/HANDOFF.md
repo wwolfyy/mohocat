@@ -1,16 +1,36 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-28 · **Branch:** `dev` · **`main`:** promoted through PR #8
+**Last updated:** 2026-07-29 · **Branch:** `dev` · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> The last session (2026-07-28) shipped one small feature and then turned into an
-> **architecture review of multi-tenancy**. Four commits: a 관리자 shortcut on 내 집사 정보
-> for members with CMS access (`1bd9dc1`), the admin idle timeout 2h → **24h** (`d4c36a1`),
-> the **mountain-#2 prerequisites** consolidated into one doc plus an owner-facing
-> provisioning checklist (`d522a67`), and a **decision doc recommending path-based tenancy**
-> over subdomains (`f09d0e1`).
+> **The 2026-07-29 session started as "a 48 MB video won't upload" and ended having found
+> that video upload had never worked on Vercel at all** — plus three older bugs stacked
+> behind it. Three commits (`e96588c`, `7e3b1ee`, `24f355c`) and **uncommitted work in the
+> tree**; see _Commit state_ below before doing anything.
+>
+> 🚨 **The headline: the composer POSTed the video file through a Vercel function, which
+> caps request bodies at 4.5 MB** and rejects anything larger at the proxy (413
+> `FUNCTION_PAYLOAD_TOO_LARGE`) before the handler runs. 4.5 MB is a few seconds of phone
+> video, so **no real video could be posted from any composer** since the move to Vercel.
+> Now a **resumable, direct-to-Google** upload: our API opens the session, the browser PUTs
+> the bytes straight to YouTube, our API records the result. Full chain in
+> [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md) 2026-07-29.
+>
+> 🔑 **Three lessons that cost real time here, in order of how much:**
+>
+> 1. **Reproducing beat reasoning.** The owner was certain a larger video had gone up
+>    through 급식현황 on the same deployment, which made the size cap look like the wrong
+>    answer and sent the first investigation into deployment history. Re-running that same
+>    upload reproduced the identical error and ended the debate. The composers share a code
+>    path — no amount of reading could have separated them, because there was nothing to find.
+> 2. **Verifying the wrong URL is worse than not verifying.** A CORS preflight was checked
+>    before building on it — against the _initiation endpoint_, which echoes any origin. The
+>    _session URI_ is a separate resource whose CORS answer is already fixed. The check
+>    retired the risk in the write-up while leaving it live in the code.
+> 3. **Trust the failing request's URL over any config file.** The bucket name was read out
+>    of `.env`; `.env` was stale. The browser console had the real bucket in it the whole time.
 >
 > 🚨 **The one thing to carry forward:** signing out clears **only the origin it runs on**,
 > so once a second subdomain exists, a user who logs out of one mountain stays logged in on
@@ -48,6 +68,16 @@
 >
 > **Do these next, in this order:**
 >
+> 0. **Finish 2026-07-29's loose ends first — they are half-verified, which is worse than
+>    unstarted.** (a) Commit the working tree (the 산고양이 tag fix, the CORS script, the
+>    `.env.example` correction — see _Commit state_). (b) Push, then **retest 집사톡 upload on
+>    `dev.mohocats.org`**: the image PUT (bucket CORS is now applied and preflight-verified)
+>    and that the video appears in **영상첩** (the Admin-SDK `cat_videos` fix). Video →
+>    YouTube → correct playlist is already confirmed working; the Firestore record and the
+>    image upload are **not**. (c) 🔑 **Owner-owed, local only:** set
+>    `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=mountaincats-61543` in `.env` — it still names the
+>    **pre-migration** bucket, so local uploads succeed into a bucket nothing reads.
+>    `.env.example` is already corrected.
 > 1. **Push.** `origin/dev` is at `1bd9dc1`; everything from `d4c36a1` on is committed locally
 >    but **not pushed**, so Preview does not have it yet. _(The owner said they would push this
 >    themselves — verify with `git rev-parse origin/dev` before assuming.)_
@@ -92,6 +122,32 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🚨 Video upload from the composers was broken outright and is now fixed (2026-07-29,
+  three commits + uncommitted follow-ups).** The file used to be POSTed through a Vercel
+  function, whose **4.5 MB request-body cap** is enforced at the proxy — so nothing bigger
+  than a few seconds of phone video could be uploaded from 공지사항 / 입양홍보 / 집사톡. Now
+  **resumable, direct-to-Google**: `POST /api/upload-youtube` opens the session, the browser
+  PUTs the bytes to YouTube, `POST /api/upload-youtube/complete` files the playlists and
+  writes `cat_videos`. Both halves gate on `manage-video` independently. Uploads also show a
+  **progress bar** now (`UploadProgressBar`, one bar per submit, aggregated across files;
+  `XMLHttpRequest` because `fetch` cannot report request upload progress).
+  **Three older bugs were stacked behind it**, none reachable until an upload first
+  completed: (1) the resumable session must be opened with the **browser's `Origin`**, or the
+  browser uploads every byte and is then forbidden to read the response — 100% then a failure
+  that looks like a dead socket, video public and unrecorded; (2) `cat_videos` was written
+  with the **client** Firestore SDK from the server, so `firestore.rules` denied it silently —
+  **every form-uploaded video has been reaching YouTube unrecorded**, appearing in 영상첩 only
+  after a manual 📺 YouTube와 동기화; (3) the live Storage bucket had **no CORS at all**.
+  Full chain, with the two-bucket table: [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md)
+  2026-07-29. ⏳ Image upload + the 영상첩 record are **still unverified on `dev`**.
+- **🪣 There are two Storage buckets and only one is live — this misled the debugging twice.**
+  `mountaincats-61543` is the real one (the Seoul/`asia-northeast3` bucket every deployment
+  uses; all 30 prod `cat_images` URLs point at it). `mountaincats-61543.firebasestorage.app`
+  is the **pre-migration default, still present and unused**. The Seoul migration moved the
+  files and rewrote the Firestore URLs but **left the bucket CORS behind on the old bucket** —
+  which is both why deployed image upload failed and why it appeared to work locally (local
+  `.env` still names the old bucket). CORS is now applied to the live bucket and verified by
+  preflight; `npm run storage:cors` (new, dry-run by default) reads and applies it.
 - **🎉 Production `main` now runs the multi-mountain platform** — promoted via **PR #8**
   (`dev → main`, merge commit `366425c`, 2026-07-23), a 34-commit bundle: the whole
   multi-tenant **M1–M5** refactor, data protection (PITR/backups), and the CI rules gate.
@@ -666,6 +722,37 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- **`[ ]` Shareable link to one cat's modal — DECIDED 2026-07-29, not started.** There is no
+  URL that opens a specific cat; the only mechanism is the in-content `[catmodal:이름]` token.
+  **Owner chose the cheap option** — a `?cat=<id>` param on `/pages/cats` that `CatsBrowser`
+  reads on mount — and **explicitly declined** the real fix (a `/pages/cats/[id]` page). Spec,
+  including what the cheap version cannot do: PROJECT_PLAN **§10c**.
+  - ⚠️ **Key the URL on the cat `id`, not the name.** `[catmodal:]` matches by name, so a
+    rename breaks every existing link silently — a URL people paste into KakaoTalk must not
+    inherit that.
+  - 📌 **It will not fix link previews.** The app has **no `generateMetadata`/`openGraph`
+    anywhere**, so a shared cat link renders the same generic card as the homepage. Worth
+    revisiting only if the use case turns out to be 입양홍보, where the preview does the
+    persuading.
+- 🔑 **Owner-owed, local only:** `.env` still sets
+  `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=mountaincats-61543.firebasestorage.app` — the
+  **pre-migration** bucket. Local uploads therefore succeed into a bucket nothing reads.
+  Change it to `mountaincats-61543`. (`.env.example` corrected 2026-07-29; `.env` is
+  git-ignored.) ⚠️ Anything uploaded from localhost since the Seoul migration is **stranded**
+  in the old bucket — worth a look before writing that bucket off.
+- ⏳ **Unverified on `dev` (2026-07-29):** the 집사톡 **image** upload (bucket CORS is applied
+  and preflight-verified, but no successful upload has been observed) and whether an uploaded
+  video now appears in **영상첩** (the Admin-SDK `cat_videos` fix). Video → YouTube → correct
+  playlist **is** confirmed. Neither is reachable by any automated test: e2e uses the storage
+  emulator (no CORS) and has no YouTube credentials.
+- ✅ **RESOLVED 2026-07-29 — no composer invents tags any more.** 집사톡 had a `산고양이`
+  fallback and 공지사항 / 입양홍보 attached a fixed `공지사항` / `입양홍보` to every video.
+  Both made `needsTagging` false, hiding exactly the videos the tagging queue exists to
+  surface. Both are gone (owner's call); `youtubeDefaults.tags` was **removed from the config
+  type** rather than emptied, since neither Family-B composer offers a tag input at all.
+  ⚠️ **Existing videos are not retroactively fixed** — anything already uploaded still carries
+  the invented tag and still reads as tagged. Only new uploads land in the queue.
+
 - ✅ **The two P5.4 YouTube bugs are FIXED (2026-07-26) — the manual pass can resume.**
   Both were surfaced by the pass's first step on Preview and neither is reachable by any
   automated test (the emulator has no YouTube credentials), so **the pass must re-run from the
@@ -925,36 +1012,46 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-**Working tree is CLEAN.** `origin/dev` is at **`1bd9dc1`**; **everything from `d4c36a1` on is
-committed locally and NOT yet pushed** — all of 2026-07-28. (Corrected 2026-07-28: an earlier
-revision of this section said `4315fea`/5 commits, which was already stale — `7e08933`,
-`4315fea` and `1bd9dc1` had reached the remote.) Newest `dev` commits:
+⚠️ **The working tree is NOT clean (2026-07-29).** Uncommitted and belonging to that session:
+the **산고양이 tag-fallback removal** (`useRichContentForm` + a route test), the new
+**`scripts/maintenance/set-storage-cors.js`** + its `package.json` entry, the corrected
+**`.env.example`** bucket, `config/firebase/cors_fbstorage.json`, the deployment runbook
+section, and a `DEBUG_LOG` correction. Gates were green at the last run (tsc 0 · smoke 32/32 ·
+unit 119/119). _Also present but **not** from this work and not to be swept in:_ a `.gitignore`
+change and two untracked `code-graph-tooling-*` planning docs.
 
-| Commit    | What                                                                                      |
-| --------- | ----------------------------------------------------------------------------------------- |
-| `d129b9e` | **docs** — hand-off + project-plan update                                                 |
-| `f09d0e1` | **docs** — decision doc: subdomain vs path-based tenancy (recommends path-based)          |
-| `d522a67` | **docs** — mountain-#2 prerequisites consolidated + owner provisioning checklist          |
-| `d4c36a1` | **feat** — admin CMS idle timeout 2h → 24h                                                |
-| `1bd9dc1` | **feat** — 관리자 shortcut on 내 집사 정보 for members with CMS access                    |
-| `7e08933` | **docs** — mark the 촬영일-from-metadata item as deferred, not queued                     |
-| `97b72ed` | **fix** — 촬영일 is a calendar date, not an instant (KST off-by-one)                      |
-| `bd7ce23` | **feat** — 집사톡: one file per section, each with its own 제목/설명 + 취소               |
-| `c2fc78f` | **feat** — per-mountain playlist filing from config (+ shared 입양홍보 playlist)          |
-| `0f9190f` | **refactor** — 집사게시판 drops media upload; it is a 급식소 log                          |
-| `297ca9f` | **docs** — the butler media separation + playlist plan                                    |
-| `d7999e2` | **docs** — changelog entry for the batch-sync fix                                         |
-| `e948496` | **docs** — corrected commit hash for the batch-sync fix                                   |
-| `c94d02e` | **fix** — batch edits sync to Firestore (YouTube ids, not doc ids) + prod-shaped fixtures |
-| `56110c6` | **docs** — 2026-07-26 session close-out (hand-off / plan / debug log)                     |
-| `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet      |
-| `80ba04a` | **fix** — batch playlist save applies to the selection, not one video                     |
-| `b5f08b7` | **fix** — `자동 날짜 인식` writes YouTube, not Firestore                                  |
-| `05fdbd9` | **fix** — admin OAuth flow requests the write scopes it was missing                       |
-| `6b2b4f9` | **feat** — one shared YouTube channel for all mountains (decision + `manisan` config)     |
-| `8a0c87d` | **fix** — one credential source: Firestore, not env (`lib/youtube/credentials.ts`)        |
-| `e929c39` | **feat** — `mountain_id` on every GA4 event                                               |
-| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                    |
+`origin/dev` was at **`1bd9dc1`** at the start of 2026-07-29 and the owner pushed during the
+session; **verify with `git rev-parse origin/dev` rather than trusting this line.** Newest
+`dev` commits:
+
+| Commit    | What                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| `24f355c` | **fix** — `cat_videos` written with the Admin SDK (was client SDK → silently denied); bucket CORS |
+| `7e3b1ee` | **fix** — open the YouTube resumable session with the browser's `Origin` (CORS)                   |
+| `e96588c` | **fix** — video bytes go straight to YouTube, not through a Vercel function; progress bar         |
+| `d129b9e` | **docs** — hand-off + project-plan update                                                         |
+| `f09d0e1` | **docs** — decision doc: subdomain vs path-based tenancy (recommends path-based)                  |
+| `d522a67` | **docs** — mountain-#2 prerequisites consolidated + owner provisioning checklist                  |
+| `d4c36a1` | **feat** — admin CMS idle timeout 2h → 24h                                                        |
+| `1bd9dc1` | **feat** — 관리자 shortcut on 내 집사 정보 for members with CMS access                            |
+| `7e08933` | **docs** — mark the 촬영일-from-metadata item as deferred, not queued                             |
+| `97b72ed` | **fix** — 촬영일 is a calendar date, not an instant (KST off-by-one)                              |
+| `bd7ce23` | **feat** — 집사톡: one file per section, each with its own 제목/설명 + 취소                       |
+| `c2fc78f` | **feat** — per-mountain playlist filing from config (+ shared 입양홍보 playlist)                  |
+| `0f9190f` | **refactor** — 집사게시판 drops media upload; it is a 급식소 log                                  |
+| `297ca9f` | **docs** — the butler media separation + playlist plan                                            |
+| `d7999e2` | **docs** — changelog entry for the batch-sync fix                                                 |
+| `e948496` | **docs** — corrected commit hash for the batch-sync fix                                           |
+| `c94d02e` | **fix** — batch edits sync to Firestore (YouTube ids, not doc ids) + prod-shaped fixtures         |
+| `56110c6` | **docs** — 2026-07-26 session close-out (hand-off / plan / debug log)                             |
+| `dc8391f` | **fix** — sync no longer resets 게시일; writes `updated` + the tag-videos spec sheet              |
+| `80ba04a` | **fix** — batch playlist save applies to the selection, not one video                             |
+| `b5f08b7` | **fix** — `자동 날짜 인식` writes YouTube, not Firestore                                          |
+| `05fdbd9` | **fix** — admin OAuth flow requests the write scopes it was missing                               |
+| `6b2b4f9` | **feat** — one shared YouTube channel for all mountains (decision + `manisan` config)             |
+| `8a0c87d` | **fix** — one credential source: Firestore, not env (`lib/youtube/credentials.ts`)                |
+| `e929c39` | **feat** — `mountain_id` on every GA4 event                                                       |
+| `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                            |
 
 **Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
 main...dev` = `0  258`). `dev` is **258 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
@@ -977,7 +1074,23 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-28 (latest)** — **The tenancy URL model was decided — path-based — and planned.**
+- **2026-07-29 (latest)** — **"A 48 MB video won't upload" turned out to be: video upload had
+  never worked on Vercel.** The composer POSTed the file through a function capped at **4.5 MB**
+  by the platform, rejected at the proxy before any handler ran. Replaced with a **resumable,
+  direct-to-Google** upload (`e96588c`), plus a **progress bar** now that a submit can
+  legitimately run for minutes. Three older bugs sat behind it, each only reachable once the
+  previous was fixed: the session must carry the **browser's `Origin`** or the response is
+  unreadable after a 100% upload (`7e3b1ee`); `cat_videos` was written with the **client** SDK
+  server-side and silently denied by rules, so **every form-uploaded video since forever
+  reached YouTube unrecorded** (`24f355c`); and the live Storage bucket had **no CORS at all** —
+  the Seoul migration left it on the **old** bucket, which is also why it looked fine locally
+  (local `.env` still names that old bucket). New `npm run storage:cors` applies bucket CORS
+  without a `gcloud` install, dry-run by default. Also: 집사톡 stopped inventing a `산고양이`
+  tag when none was chosen — the fallback set `needsTagging: false` and hid exactly the videos
+  the tagging queue exists to find. **Decided, not started:** a `?cat=<id>` deep link to one
+  cat's modal (PROJECT_PLAN §10c); the owner declined the per-cat page. ⏳ Image upload and the
+  영상첩 record are still unverified on `dev`; the tree has uncommitted work.
+- **2026-07-28** — **The tenancy URL model was decided — path-based — and planned.**
   The owner answered the open decision: a mountain is identified by a **path prefix**
   (`mohocats.org/manisan`), geyang keeps its prefix-free URLs at the apex, and a second
   mountain's owner does **not** need their own hostname — the one argument §4.2 said could

@@ -1088,6 +1088,36 @@ only** — no credentials in the emulator.
 
 ---
 
+## 10c. `[ ]` Shareable link to one cat's modal (DECIDED 2026-07-29, not started)
+
+> **Ask:** "invite someone to view a particular cat." Today the only answer is _link to
+> `/pages/cats` and tell them the name_ — there is no URL that opens a specific cat.
+
+**Decision (owner, 2026-07-29): take the cheap option. The "real fix" is explicitly declined.**
+
+- [ ] **C1 — `?cat=<id>` on `/pages/cats`.** `CatsBrowser` reads the param on mount and opens
+      that cat's `CatInfo` modal; opening a modal pushes the param, closing it clears one.
+      Contained to a single client component. Gives a shareable link **and** working
+      back/forward + reload, which the modal has never had.
+- [ ] **C2 — key on the cat `id`, not the name.** The existing `[catmodal:이름]` token matches
+      by **name**, so renaming a cat silently breaks every link to it. Do not repeat that in a
+      URL, which people paste into KakaoTalk and keep.
+
+**What this deliberately does NOT do — recorded so it isn't re-litigated.** There is no
+`generateMetadata` / `openGraph` anywhere in the app, so a shared link renders whatever generic
+preview the site's default gives — the same card for 아롱이 as for the homepage. A `?cat=` param
+on a client component **cannot change that**. Per-cat link previews would need a real
+`/pages/cats/[id]` page; the owner weighed that and declined the cost (2026-07-29). ⚠️ If the
+motivating use case ever turns out to be **입양홍보** — persuading someone about a specific
+adoptable cat, where the preview card does the persuading — this decision is worth revisiting,
+because a faceless link wastes the share.
+
+📌 **Sequencing note:** the path-based tenancy migration rewrites ~83 navigation sites, so new
+URL surface built now is touched again by it. Not a blocker at this size; it is the reason the
+contained version won.
+
+---
+
 ## 11. 🔴 Functional gaps — broken / missing nav destinations
 
 > **Functional, not design** (flagged by the user). The nav menu links to
