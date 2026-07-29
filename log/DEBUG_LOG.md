@@ -101,6 +101,48 @@ may already be up and to check the channel.
 to every other layer: the e2e authz suite only proves the gate, and no automated test reaches
 Google. ⏳ Still owed: the Preview re-test that this actually completes.
 
+### Second follow-up: video upload worked, and uncovered two older bugs behind it
+
+With the video path finally reaching the end, the next Preview attempt failed on
+`Image upload failed: Failed to fetch`, and neither the video nor the photo appeared in the
+albums. **Both causes predate this work** — they had simply never been reachable, because
+nothing had ever completed a video upload from a deployed origin before.
+
+**Bug A — the Storage bucket allowed uploads from `localhost` only.** 집사톡 images are PUT
+from the browser **straight to the bucket** with a signed URL, so the bucket's own CORS list
+decides which origins may upload — and `config/firebase/cors_fbstorage.json` listed exactly
+one: `http://localhost:3000`. Every deployed origin was rejected, surfacing as a bare
+`TypeError: Failed to fetch`, which names neither CORS nor the bucket. It survived because the
+one path that hits it is invisible to every test: e2e uses the **storage emulator** (no CORS),
+and 공지사항/입양홍보 images take a **different route entirely** — the Firebase JS SDK, which
+doesn't consult this list. So "images work over there" was true and meant nothing.
+⚠️ **Fix is configuration, not code**, and needs applying to the bucket with `gcloud` —
+committing the JSON changes nothing on its own. Runbook + the no-wildcards trap:
+[`deployment/README.md`](../docs/manuals/deployment/README.md).
+
+**Bug B — the `cat_videos` record was written with the client SDK from the server, and always
+failed.** `/api/upload-youtube/complete` wrote through `getVideoService()`, whose
+implementation is `firebase/firestore` — the **client** SDK. Server-side it carries no
+authenticated user, so `firestore.rules` denied the create (`cat_videos` requires
+`manage-video`); `addVideoRecord` caught it, returned `null`, and the route logged and carried
+on. **Every form-uploaded video has reached YouTube unrecorded**, appearing in 영상첩 only
+after somebody ran 📺 YouTube와 동기화 — which is exactly why nobody noticed. The sibling
+`refresh-video-metadata` had used the Admin SDK for this collection all along.
+
+🔑 **Rule this establishes: a server-side write must never go through the service layer.**
+The service factory is client-SDK-backed; it looks identical at the call site and fails only
+at the rules boundary, where the failure is a returned `null` rather than a throw. The route's
+own comment claimed "Admin SDK (bypassing firestore.rules)" — it had been wrong since it was
+written.
+
+**Fix:** the route writes `cat_videos` via `@/lib/firebase-admin`, stamping `mountainId`
+itself (the service used to). Kept non-fatal — the video really is public by then, and failing
+would push the operator into a retry that double-posts — but it now returns `recorded: false`
+instead of swallowing, since silent swallowing is precisely what hid this.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 118/118. ⏳ Both need the Preview re-test, and Bug A
+needs the bucket updated first.
+
 ---
 
 ## 2026-07-27 — 촬영일 landed a day early in KST: a calendar date round-tripped through an instant

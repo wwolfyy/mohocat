@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { getVideoService } from '@/services';
+import { db } from '@/lib/firebase-admin';
 import { getRequestMountainId } from '@/lib/tenant';
 import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
@@ -86,12 +86,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the Firestore entry in cat_videos.
+    //
+    // 🚨 Admin SDK, deliberately. This used to go through `getVideoService()`, whose
+    // implementation is the **client** Firestore SDK — which on the server carries no
+    // authenticated user, so `firestore.rules` denied the write (`cat_videos` requires
+    // `manage-video`). `addVideoRecord` caught that, returned null, and the route
+    // logged and moved on: every form-uploaded video reached YouTube and was never
+    // recorded, surfacing in 영상첩 only after somebody ran 📺 YouTube와 동기화.
+    // Fixed 2026-07-29; `refresh-video-metadata` already wrote this collection the
+    // same way. **Do not route a server-side write through the service layer.**
+    let recorded = false;
     try {
       const videoData = {
         videoUrl,
         fileName: resolvedTitle,
         storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
         tags: tagsArray,
+        // Stamped here rather than by the service layer, which used to add it.
+        mountainId,
         uploadDate: new Date(),
         // The recorded day if given, else the upload moment. ⚠️ That fallback is a
         // known gap: the date should come from the file's own metadata and only then
@@ -100,7 +112,8 @@ export async function POST(request: NextRequest) {
         uploadedBy: 'user',
         description: description || '',
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        duration: undefined, // YouTube doesn't return duration in upload response
+        // `duration` is deliberately absent rather than undefined — YouTube doesn't
+        // return it on upload, and Firestore rejects an undefined field value.
         needsTagging: tagsArray.length === 0,
         videoType: 'youtube' as const,
         youtubeId: videoId, // Important: YouTube video ID
@@ -116,16 +129,18 @@ export async function POST(request: NextRequest) {
         // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
       };
 
-      const videoService = getVideoService(mountainId);
-      const firestoreVideoId = await videoService.createVideo(videoData);
-      console.log('Created cat_videos entry with ID:', firestoreVideoId);
+      const docRef = await db.collection('cat_videos').add(videoData);
+      recorded = true;
+      console.log('Created cat_videos entry with ID:', docRef.id);
     } catch (firestoreError) {
-      console.error('Failed to create Firestore entry:', firestoreError);
-      // Don't fail the entire upload if Firestore creation fails — the video is
-      // already public on YouTube, and the next sync reconciles the record.
+      // Still not fatal — the video is already public on YouTube, and failing here
+      // would push the operator into a retry that double-posts. But it is reported
+      // now (`recorded: false`) instead of being swallowed, which is precisely how
+      // the client-SDK bug above stayed invisible.
+      console.error('Failed to create the cat_videos entry:', firestoreError);
     }
 
-    return NextResponse.json({ videoId, videoUrl, title: resolvedTitle });
+    return NextResponse.json({ videoId, videoUrl, title: resolvedTitle, recorded });
   } catch (error) {
     console.error('Error completing the YouTube upload:', error);
 

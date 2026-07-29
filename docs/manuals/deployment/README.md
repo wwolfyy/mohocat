@@ -148,6 +148,42 @@ so a redeploy is required for a change to take effect — there is no runtime di
   npx firebase use                 # confirm the active project (or pass --project <id>)
   ```
 
+- **Storage bucket CORS** — `config/firebase/cors_fbstorage.json`, applied with `gcloud`,
+  not the Firebase CLI:
+
+  ```bash
+  gcloud storage buckets update gs://mountaincats-61543.firebasestorage.app \
+    --cors-file=config/firebase/cors_fbstorage.json
+
+  # inspect what is actually live:
+  gcloud storage buckets describe gs://mountaincats-61543.firebasestorage.app \
+    --format="default(cors_config)"
+  ```
+
+  🚨 **This gates 집사톡 image upload, and it is easy to miss.** Those images are PUT
+  from the **browser straight to the bucket** with a signed URL (`generate-signed-url`),
+  so the bucket's own CORS list decides which origins may upload. Until 2026-07-29 that
+  list held **only `http://localhost:3000`** — so the upload worked in dev and failed on
+  every deployed origin with a bare `TypeError: Failed to fetch`, which names neither
+  CORS nor the bucket (`log/DEBUG_LOG.md`).
+  - 공지사항 / 입양홍보 images are **not** affected: they go through the Firebase JS SDK,
+    which uses a different endpoint that doesn't consult this list. Only the signed-URL
+    path does — so "images upload fine over there" proves nothing about this.
+  - ⚠️ **No wildcards.** GCS matches origins exactly: `*.vercel.app` does not work.
+    A Vercel **preview** origin has to be added by name (the stable branch alias,
+    `<project>-git-<branch>-<team>.vercel.app`, rather than the per-deployment URL that
+    changes every push), or the flow can only be tested on production.
+  - 📌 **The list is short on purpose — one origin per environment.** Tenancy is
+    **path-based** (`mohocats.org/manisan`), so a new mountain adds a _path_, never an
+    origin, and nothing here changes when one is provisioned. Do not add per-mountain
+    subdomains: `geyangsan.` / `manisan.mohocats.org` are **NXDOMAIN** and stay that way
+    (decision `tenancy-url-model-decision-20260728.md`). `mountains.json` still carries a
+    `domains` field because host resolution hasn't been retired yet — it is not evidence
+    that those hosts exist.
+  - The origin list is not a security boundary — the short-lived signed URL is the
+    credential, and minting one already requires `manage-photo`. It only decides which
+    browser origins may present it.
+
 ## Whitelisting a new domain with the auth / identity providers
 
 When you add or change a domain (see the deploy checklist below), several **external consoles**
