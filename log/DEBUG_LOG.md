@@ -108,16 +108,41 @@ With the video path finally reaching the end, the next Preview attempt failed on
 albums. **Both causes predate this work** — they had simply never been reachable, because
 nothing had ever completed a video upload from a deployed origin before.
 
-**Bug A — the Storage bucket allowed uploads from `localhost` only.** 집사톡 images are PUT
-from the browser **straight to the bucket** with a signed URL, so the bucket's own CORS list
-decides which origins may upload — and `config/firebase/cors_fbstorage.json` listed exactly
-one: `http://localhost:3000`. Every deployed origin was rejected, surfacing as a bare
-`TypeError: Failed to fetch`, which names neither CORS nor the bucket. It survived because the
-one path that hits it is invisible to every test: e2e uses the **storage emulator** (no CORS),
-and 공지사항/입양홍보 images take a **different route entirely** — the Firebase JS SDK, which
-doesn't consult this list. So "images work over there" was true and meant nothing.
-⚠️ **Fix is configuration, not code**, and needs applying to the bucket with `gcloud` —
-committing the JSON changes nothing on its own. Runbook + the no-wildcards trap:
+**Bug A — the live Storage bucket had no CORS configuration at all, because the Seoul
+migration left it behind on the old bucket.** 집사톡 images are PUT from the browser
+**straight to the bucket** with a signed URL, so the bucket's own CORS list decides which
+origins may upload. Every deployed origin was rejected, surfacing as a bare
+`TypeError: Failed to fetch`, which names neither CORS nor the bucket.
+
+⚠️ **There are two buckets, and only one is live** — this is the part that misled the first
+two attempts at fixing it:
+
+| Bucket                                   | CORS before the fix | Used by                                            |
+| ---------------------------------------- | ------------------- | -------------------------------------------------- |
+| `mountaincats-61543`                     | **`[]` — none**     | every deployment; all 30 `cat_images` URLs in prod |
+| `mountaincats-61543.firebasestorage.app` | `localhost:3000`    | **nothing** — the pre-migration default bucket     |
+
+The `us-central1` → `asia-northeast3` (Seoul) migration created the new bucket, moved the
+files and rewrote the Firestore URLs — but **CORS was never applied to it**, and stayed on
+the bucket being abandoned. The first fix attempt then applied the corrected list to the
+_wrong_ bucket, because **local `.env` still names the old one** (so does `.env.example`,
+now corrected). The console error naming the bucket in the request URL is what finally
+separated them: trust the failing request's URL over any config file.
+
+🔑 **That stale local env is also why this looked like it worked in dev.** Local uploads
+succeed against the old bucket — which has localhost CORS and which nothing reads — so they
+land nowhere the app will ever look. Anything uploaded from localhost since the migration is
+stranded there.
+
+It survived because the one path that hits it is invisible to every test: e2e uses the
+**storage emulator** (no CORS), and 공지사항/입양홍보 images take a **different route
+entirely** — the Firebase JS SDK, which doesn't consult this list. So "images work over
+there" was true and meant nothing.
+
+⚠️ **Fix is configuration, not code** — committing the JSON changes nothing on its own.
+Applied with `npm run storage:cors` (dry-run by default; `APPLY=true CONFIRM_PROJECT=…` to
+write), and verified by preflighting the live bucket with the exact
+origin/method/header triple the browser sends. Runbook + the no-wildcards trap:
 [`deployment/README.md`](../docs/manuals/deployment/README.md).
 
 **Bug B — the `cat_videos` record was written with the client SDK from the server, and always

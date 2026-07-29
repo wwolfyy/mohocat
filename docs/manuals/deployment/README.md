@@ -148,17 +148,32 @@ so a redeploy is required for a change to take effect — there is no runtime di
   npx firebase use                 # confirm the active project (or pass --project <id>)
   ```
 
-- **Storage bucket CORS** — `config/firebase/cors_fbstorage.json`, applied with `gcloud`,
-  not the Firebase CLI:
+- **Storage bucket CORS** — `config/firebase/cors_fbstorage.json`, applied with an npm
+  script (**not** the Firebase CLI, and no `gcloud` install needed):
+
+  ```bash
+  npm run storage:cors                                  # dry run: prints live vs desired
+  APPLY=true CONFIRM_PROJECT=mountaincats-61543 npm run storage:cors   # apply
+  ```
+
+  Dry-run by default, because `setCorsConfiguration` **replaces** the whole list rather
+  than merging. It prints the live config, the desired config, and the origin-level diff,
+  then reads back what actually landed. Uses the `@google-cloud/storage` client that
+  `firebase-admin` already ships with, and the same service-account credential as the
+  other maintenance scripts.
+
+  <details>
+  <summary>Equivalent with the Google Cloud SDK, if you have it</summary>
 
   ```bash
   gcloud storage buckets update gs://mountaincats-61543.firebasestorage.app \
     --cors-file=config/firebase/cors_fbstorage.json
 
-  # inspect what is actually live:
   gcloud storage buckets describe gs://mountaincats-61543.firebasestorage.app \
     --format="default(cors_config)"
   ```
+
+  </details>
 
   🚨 **This gates 집사톡 image upload, and it is easy to miss.** Those images are PUT
   from the **browser straight to the bucket** with a signed URL (`generate-signed-url`),
@@ -169,17 +184,19 @@ so a redeploy is required for a change to take effect — there is no runtime di
   - 공지사항 / 입양홍보 images are **not** affected: they go through the Firebase JS SDK,
     which uses a different endpoint that doesn't consult this list. Only the signed-URL
     path does — so "images upload fine over there" proves nothing about this.
-  - ⚠️ **No wildcards.** GCS matches origins exactly: `*.vercel.app` does not work.
-    A Vercel **preview** origin has to be added by name (the stable branch alias,
-    `<project>-git-<branch>-<team>.vercel.app`, rather than the per-deployment URL that
-    changes every push), or the flow can only be tested on production.
-  - 📌 **The list is short on purpose — one origin per environment.** Tenancy is
-    **path-based** (`mohocats.org/manisan`), so a new mountain adds a _path_, never an
-    origin, and nothing here changes when one is provisioned. Do not add per-mountain
-    subdomains: `geyangsan.` / `manisan.mohocats.org` are **NXDOMAIN** and stay that way
-    (decision `tenancy-url-model-decision-20260728.md`). `mountains.json` still carries a
-    `domains` field because host resolution hasn't been retired yet — it is not evidence
-    that those hosts exist.
+  - ⚠️ **No wildcards.** GCS matches origins exactly: `*.vercel.app` does not work. The
+    list therefore names each environment — `http://localhost:3000` (local),
+    `https://dev.mohocats.org` (the `dev` branch on Vercel) and `https://mohocats.org`
+    (production). A one-off PR preview on a per-deployment `*.vercel.app` URL is **not**
+    covered: test the upload path on `dev.mohocats.org` rather than adding a URL that
+    changes on the next push.
+  - 📌 **One origin per _environment_, never per mountain.** Tenancy is **path-based**
+    (`mohocats.org/manisan`), so a new mountain adds a _path_ and nothing here changes when
+    one is provisioned. `dev.` earns its place as an environment; per-mountain subdomains do
+    not — `geyangsan.` / `manisan.mohocats.org` are **NXDOMAIN** and stay that way (decision
+    `tenancy-url-model-decision-20260728.md`). `mountains.json` still carries a `domains`
+    field because host resolution hasn't been retired yet; that is not evidence those hosts
+    exist.
   - The origin list is not a security boundary — the short-lived signed URL is the
     credential, and minting one already requires `manage-photo`. It only decides which
     browser origins may present it.

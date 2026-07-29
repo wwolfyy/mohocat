@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["http://localhost:3000", "https://mohocats.org"],
+    "origin": ["http://localhost:3000", "https://dev.mohocats.org", "https://mohocats.org"],
     "method": ["PUT", "GET"],
     "responseHeader": ["Content-Type", "Authorization"],
     "maxAgeSeconds": 3600
