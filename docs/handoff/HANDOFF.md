@@ -1,110 +1,81 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-29 · **Branch:** `dev` · **`main`:** promoted through PR #8
+**Last updated:** 2026-07-31 · **Branch:** `dev` (`bb181a6`) · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **The 2026-07-29 session started as "a 48 MB video won't upload" and ended having found
-> that video upload had never worked on Vercel at all** — plus three older bugs stacked
-> behind it. Three commits (`e96588c`, `7e3b1ee`, `24f355c`) and **uncommitted work in the
-> tree**; see _Commit state_ below before doing anything.
+> **The 2026-07-31 session rebuilt how posts take and show media.** Five commits, all pushed;
+> `origin/dev` = **`bb181a6`**. The tree is clean apart from a `.gitignore` hunk and two
+> untracked `code-graph-tooling-*` docs, which belong to a **different** workstream — do not
+> sweep them into a media commit.
 >
-> 🚨 **The headline: the composer POSTed the video file through a Vercel function, which
-> caps request bodies at 4.5 MB** and rejects anything larger at the proxy (413
-> `FUNCTION_PAYLOAD_TOO_LARGE`) before the handler runs. 4.5 MB is a few seconds of phone
-> video, so **no real video could be posted from any composer** since the move to Vercel.
-> Now a **resumable, direct-to-Google** upload: our API opens the session, the browser PUTs
-> the bytes straight to YouTube, our API records the result. Full chain in
-> [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md) 2026-07-29.
+> 🔑 **The one pattern to carry forward: three hand-rolled copies of the same thing had
+> drifted.** `AnnouncementModal`, the 입양홍보 feed card, and `/pages/announcements/[id]` each
+> rendered a post's media their own way, with different capabilities and different bugs. Every
+> defect reported this session was a symptom of that. They now share `PostMedia`. When a fourth
+> surface needs to show a post, use it — do not copy it.
 >
-> 🔑 **Three lessons that cost real time here, in order of how much:**
+> 🚨 **Two self-inflicted bugs, both worth reading before touching upload or shared components:**
 >
-> 1. **Reproducing beat reasoning.** The owner was certain a larger video had gone up
->    through 급식현황 on the same deployment, which made the size cap look like the wrong
->    answer and sent the first investigation into deployment history. Re-running that same
->    upload reproduced the identical error and ended the debate. The composers share a code
->    path — no amount of reading could have separated them, because there was nothing to find.
-> 2. **Verifying the wrong URL is worse than not verifying.** A CORS preflight was checked
->    before building on it — against the _initiation endpoint_, which echoes any origin. The
->    _session URI_ is a separate resource whose CORS answer is already fixed. The check
->    retired the risk in the write-up while leaving it live in the code.
-> 3. **Trust the failing request's URL over any config file.** The bucket name was read out
->    of `.env`; `.env` was stale. The browser console had the real bucket in it the whole time.
+> 1. **A one-header hardening silently killed every image upload** (`log/DEBUG_LOG.md`
+>    2026-07-30). Signing the upload URL with `x-goog-if-generation-match` was correct in
+>    principle and made the cross-origin PUT **preflighted**; the bucket's CORS allow-list has
+>    only `Content-Type` and `Authorization`, so the browser refused to send it. Nothing logged
+>    server-side — the request never left the browser. ⚠️ **Do not add a header to that PUT.**
+>    A unit test now pins it. Reproduce a CORS answer in two seconds with a bare `OPTIONS`
+>    against `storage.googleapis.com/<bucket>/<object>` — the **bucket** host, not our API.
+> 2. **Adopting a shared component downgraded the surface it landed on.** `PostMedia` carried
+>    the modal's image sizing onto the detail page and shrank photos that had been full-width.
+>    Caught before commit; it took a `layout` prop. Check what a surface looked like _before_
+>    you generalise it.
 >
-> 🚨 **The one thing to carry forward:** signing out clears **only the origin it runs on**,
-> so once a second subdomain exists, a user who logs out of one mountain stays logged in on
-> the others — members and admins alike, and it hollows out the admin idle timeout. Zero
-> exposure today (production serves a single origin). Full write-up + fix shape:
-> [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md) §1.1.
+> 📌 **A green test was covering a broken feature.** The adoption e2e asserted
+> `getByAltText('이미지')` and passed the whole time the expanded post was failing to show
+> images — the old markup emitted that alt on the one path the spec exercised, and **no fixture
+> in the repo carried any media**. If a spec has only ever seen the happy input, it is not a net.
 >
-> ✅ **That decision is now ANSWERED — path-based (owner, 2026-07-28).** A mountain will be
-> identified by a **path prefix** (`mohocats.org/manisan`), with geyang keeping its prefix-free
-> URLs at the apex; a second mountain's owner does **not** need their own hostname. This deletes
-> the security defect above structurally, along with the re-login friction and the per-mountain
-> DNS/console chore. Decision record:
-> [`tenancy-url-model-decision-20260728.md`](../planning/pending/tenancy-url-model-decision-20260728.md)
-> → execution plan:
-> [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md)
-> (T0–T7, 28 tasks). **Prerequisites §1.1 / §1.5 / §1.6 / §2 are superseded — do not work them;
-> they get rewritten by the migration's T7.**
+> ✅ **e2e runs locally — the earlier "no JDK on this machine" claim was WRONG.** OpenJDK 26 is
+> at **`/usr/local/opt/openjdk/bin`** (Intel-prefix Homebrew). Bare `java` resolves to
+> `/usr/bin/java`, a macOS shim with no runtime, so `java -version` and `java_home -V` both
+> report nothing installed — do not conclude "no JDK" from those. Run with
+> `export PATH=/usr/local/opt/openjdk/bin:$PATH` before `npm run test:e2e`.
 >
-> ⏱️ **But do not start T0 yet.** Sequencing is owner-decided: **P5.4 pass → `dev → main`
-> promotion → migration.** The migration touches `/admin/tag-videos` heavily, which is exactly
-> what the pass must hold still, and `dev` already leads `main` by 258 commits.
->
-> 🚨 **The plan found a cost the decision doc had not priced.** Every `/api/*` route resolves
-> the tenant from the **Host header** (`/api` is excluded from the middleware matcher), which
-> path-based makes constant — so every API call would resolve to **geyang**. That includes
-> `requireApiPermission`, which gates on `roles[requestMountainId]`: a geyang-only admin would be
-> **allowed on manisan's surfaces** and a manisan-only admin **denied on their own**. Fix is a
-> validated `X-Mountain-Id` header (host as fallback), sequenced **before** the link sweep. Plan §2.2.
->
-> 🔎 **Pattern worth carrying forward, again:** the 촬영일 off-by-one (`97b72ed`) was
-> **correct at UTC and wrong in KST**, so CI could never have caught it — the same shape as
-> the fixture problems of 2026-07-26. When a date, a fixture, or an environment differs
-> between CI and production, green means nothing. The new date tests pin `TZ=Asia/Seoul` and
-> assert the timezone fixture is real before anything else.
+> ⚠️ **Suite stability, measured not guessed.** Baseline (`HEAD`, clean tree) ran green twice
+> (158/13/0). With this session's work the suite reaches green (**162 passed / 13 skipped / 0
+> failed**) but several runs each lost **1–2 unrelated, timing-sensitive specs** — the 동참 pair
+> (`member/contact-submit` writes, `admin/members` reads it) most often, plus
+> `member/nav-permissions` and `auth/login-logout`. All pass on re-run and none touch media. If
+> CI goes red there, that is the fragile spot, not the feature.
 >
 > **Do these next, in this order:**
 >
-> 0. **Finish 2026-07-29's loose ends first — they are half-verified, which is worse than
->    unstarted.** (a) Commit the working tree (the 산고양이 tag fix, the CORS script, the
->    `.env.example` correction — see _Commit state_). (b) Push, then **retest 집사톡 upload on
->    `dev.mohocats.org`**: the image PUT (bucket CORS is now applied and preflight-verified)
->    and that the video appears in **영상첩** (the Admin-SDK `cat_videos` fix). Video →
->    YouTube → correct playlist is already confirmed working; the Firestore record and the
->    image upload are **not**. (c) 🔑 **Owner-owed, local only:** set
->    `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=mountaincats-61543` in `.env` — it still names the
->    **pre-migration** bucket, so local uploads succeed into a bucket nothing reads.
->    `.env.example` is already corrected.
-> 1. **Push.** `origin/dev` is at `1bd9dc1`; everything from `d4c36a1` on is committed locally
->    but **not pushed**, so Preview does not have it yet. _(The owner said they would push this
->    themselves — verify with `git rev-parse origin/dev` before assuming.)_
-> 2. **Verify on Preview what no test can reach** (needs the deploy + one **🔄 토큰 갱신** on
->    대쉬보드, since the OAuth scopes changed): a metadata edit, a playlist save,
->    `자동 날짜 인식`, that a synced video **keeps its original 게시일** and that
->    **메타데이터 수정** shows a date, and that **batch** tag / 촬영일 / playlist edits reach
->    Firestore **without** a manual 동기화. **New this session:** that a 집사톡 upload lands in
->    the **계양산** playlist, an 입양홍보 upload lands in **both** its mountain playlist and
->    **산냥이집냥이 - 입양홍보**, and that an empty 설명 uploads with no description.
-> 3. **Re-run the P5.4 manual pass from the top.** Still the gate on the next `dev → main`
->    promotion.
-> 4. Then the promotion itself (M6/M7/M8 + the GA4 guide + both July sessions are waiting).
+> 1. **Verify the 2026-07-31 work on `dev`** — most of it is browser-verified against
+>    production data locally, but not on the deployed Preview. Specifically: the 입양홍보 popup
+>    (needs a **fresh session** — `sessionStorage`, so a reload will not re-show it), and the
+>    duplicate-filename **409** (`이미 "…"과 같은 이름의 파일이 있어요`), which is the one path
+>    with **no automated coverage** — signing cannot run against the emulator.
+> 2. **Re-run the P5.4 manual YouTube pass from the top.** Still the gate on the next
+>    `dev → main` promotion, and this session changed upload, tagging and playlist-adjacent code
+>    under it.
+> 3. **Then the promotion itself.** `dev` now leads `main` by **274** commits — M6/M7/M8, the
+>    GA4 guide, and the whole 2026-07-26 → 07-31 run are waiting behind that one manual pass.
 >
-> 🆕 **Two small pieces of work were decided on 2026-07-29 and not started** — both are
-> specced, neither blocks the above: **one video per post** (PROJECT*PLAN §10d — note the
-> open question about whether the cap covers images) and a **`?cat=<id>` deep link** to one
-> cat's modal (§10c — the per-cat page was explicitly declined). See \_Open threads*.
+> 🆕 **Owner decisions waiting, neither blocking:** whether a video's 제목 should keep appearing
+> **twice** (YouTube's player overlay + our caption — correct, possibly redundant; one line to
+> drop), and whether an 입양홍보 popup may displace a 공지사항 one (today the most recently
+> updated wins, one popup per visit).
+>
+> **Still not started, both specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN
+> §10d D2 — ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not
+> a CMS setting) and the **`?cat=<id>` deep link** (§10c).
+>
+> ⏸️ **Do NOT start the path-based tenancy migration (T0–T7).** Still gated behind the P5.4 pass
+> and the promotion. Decision + plan:
+> [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md).
 >
 > **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
 > lands — `main` is pre-fix and reads the token from env only.
->
-> 🔑 **One owner chore is outstanding** (the 계양산 playlist back-fill, 4 of 13 videos) —
-> but it is **not** part of the sequence above. It, and everything else gated on
-> "before a real mountain #2", now lives in
-> [`mountain-2-prerequisites.md`](../planning/pending/mountain-2-prerequisites.md). Nothing there
-> blocks the promotion.
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
 > hand-off — read it first. It is edited **in place** (present tense = how things are
@@ -127,6 +98,33 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **📮 The three composers and the three post-display surfaces converged (2026-07-30/31, five
+  commits `03ce4f2`…`bb181a6`, all pushed).** 공지사항 / 입양홍보 gained 집사톡's **per-file**
+  media (each file its own 제목/설명), a **cat selector**, and framed sections with separators;
+  their images moved to the signed-URL path so a per-photo 설명 has somewhere to live — which
+  means those photos now get a **`cat_images` record** and appear in the public 사진첩 and the
+  tagging queue, where the old direct-storage path recorded nothing. Pasted-URL lists removed
+  (owner). Duplicate filenames are now **refused** (`exists()` → 409 in Korean) instead of
+  silently overwriting. On the display side, **three hand-rolled media renderers became one**
+  (`PostMedia`): the 입양홍보 expanded post shows the whole post, 입양홍보 posts can pop up on a
+  site visit like 공지사항, and every medium now shows its **제목 / 설명 / 태그** — resolved
+  **live** from the media records, so pre-existing posts display it with no migration.
+  🗑️ Deleted with no callers left: `MediaUploadField`, `uploadImagesToStorage`,
+  `imagePathPrefix`, `uploadVideosToYouTube`. Detail: PROJECT_PLAN **§10d/§10e**,
+  `log/FEATURE_MOD_LOG.md` + `log/DEBUG_LOG.md` 2026-07-30/31.
+- **🚨 Two self-inflicted regressions this run, both caught and both instructive.** (1) Signing
+  the upload URL with `x-goog-if-generation-match` made the cross-origin PUT **preflighted** and
+  **blocked every image upload from every deployed origin** — the bucket's CORS allow-list does
+  not contain it, and nothing logged server-side because the request never left the browser. A
+  unit test now pins that the PUT carries `Content-Type` and nothing else. (2) Putting the
+  shared `PostMedia` on the announcement detail page carried the _modal's_ image sizing with it
+  and shrank previously full-width photos; it took a `layout` prop. Full chains in
+  `log/DEBUG_LOG.md` 2026-07-30 / 07-31.
+- **✅ The 2026-07-29 upload work is confirmed working on `dev` (owner, 2026-07-31):** "media
+  uploads are working fine from both 공지 and 입양홍보". The `cat_videos` Admin-SDK fix is
+  corroborated too — the new tag lookup resolves a video's tags from that record, which only
+  exists if the write landed. ⏳ Still unverified on the deployed Preview: the 입양홍보 popup and
+  the duplicate-filename 409.
 - **🚨 Video upload from the composers was broken outright and is now fixed (2026-07-29,
   three commits + uncommitted follow-ups).** The file used to be POSTed through a Vercel
   function, whose **4.5 MB request-body cap** is enforced at the proxy — so nothing bigger
@@ -320,10 +318,11 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   should-fix · decided/won't-do · already-closed), with the console half carved into
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
   blocks the `dev → main` promotion.
-- **Tree:** clean through **`f09d0e1`**. The whole multi-tenant epic (M0–M8) is committed on
-  `dev`; `main` is an ancestor of `dev` (`dev` leads by 258). M6/M7/M8 + the GA4 guide + the
-  2026-07-26/27/28 sessions are on `dev` but **not yet promoted to prod** — gated on the P5.4
-  YouTube pass.
+- **Tree:** clean through **`bb181a6`** (bar a `.gitignore` hunk + two untracked
+  `code-graph-tooling-*` docs from a different workstream). The whole multi-tenant epic (M0–M8)
+  is committed on `dev`; `main` is an ancestor of `dev` (`dev` leads by **274**). M6/M7/M8 + the
+  GA4 guide + the 2026-07-26 → 07-31 sessions are on `dev` but **not yet promoted to prod** —
+  gated on the P5.4 YouTube pass.
 
 ---
 
@@ -727,14 +726,39 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
-- **`[ ]` One video per post — DECIDED 2026-07-29, not started.** The composers should not
-  accept a pile of videos. **Two different mechanisms** allow it, so both need work:
-  공지사항/입양홍보 carry `multiple` on the file input **and** an unbounded list of pasted
-  YouTube URLs; 집사톡 has no `multiple` but its trailing picker re-renders after each pick so
-  the list grows. ⚠️ **Confirm before building whether the cap applies to images too** — the
-  decision named video, but `multiple` and the growing list are shared with the image section,
-  so an implementer hits the question immediately and must not guess. Spec: PROJECT_PLAN
-  **§10d**.
+- **`[ ]` Two owner decisions from 2026-07-31, neither blocking:**
+  - **A video's 제목 now appears twice** — once in YouTube's own player overlay, once as our
+    caption under the embed. Correct, arguably redundant. Dropping the caption title for videos
+    is a one-line change in `PostMedia`; left in because the owner explicitly asked for the
+    title to be visible.
+  - **An 입양홍보 popup can displace a 공지사항 one.** Today: **one popup per visit, most
+    recently updated wins** across both kinds — the pre-existing rule extended, not a new one.
+    The alternatives (both show, or announcements always win) are a product call.
+- **`[ ]` Suite stability is worth watching in CI (measured 2026-07-31).** Baseline on a clean
+  `HEAD` ran green **twice** (158/13/0); with this session's work the suite reaches green
+  (**162/13/0**) but several runs each lost **1–2 unrelated timing-sensitive specs** — the 동참
+  pair (`member/contact-submit` writes, `admin/members` reads it) most often, plus
+  `member/nav-permissions` and `auth/login-logout`. Each passes on re-run and none touch media.
+  Most likely just +4 tests of parallel load on a suite with marginal timeouts. **Do not chase
+  it as a media regression**; if it needs fixing, the 동참 pair's cross-spec dependency is the
+  place to start.
+- 📌 **`PostMedia` is now the single renderer for a post's media** (`AnnouncementModal` →
+  `PostModal`, the 입양홍보 feed card, and `/pages/announcements/[id]`). A fourth surface should
+  use it, not copy it — the three copies that existed had each drifted into different
+  capabilities and different bugs, which is what produced every media defect reported on
+  2026-07-31. It takes a `layout` prop (`compact` for modal/feed, `full` for a dedicated page):
+  check what a surface looked like before generalising onto it.
+- **🔄 "One video per post" was REVERSED before it was built (owner, 2026-07-30) — do not
+  implement a cap.** The 2026-07-29 decision read "remove multiple-video upload from the
+  composers"; the owner replaced it the next day: 공지사항 / 입양홍보 are admin-only, so admins
+  stay **unrestricted**, and what those forms were actually missing was 집사톡's _per-file_
+  upload — the opposite of a cap. That half is **done** (§10d D1). What survives is
+  **`[ ]` D2 — a CMS-controlled toggle** for whether multiple upload is allowed, **not
+  started**. ⚠️ "CMS-controlled" **rules out `mountains.json`**: it is a static import that only
+  changes on redeploy, so a toggle there is not a CMS setting — it needs Firestore-backed config
+  (the `admin_config` shape the YouTube credential already uses). Open questions for whoever
+  picks it up: which forms it governs, whether video and image toggle separately, and whether it
+  is per-mountain. Spec: PROJECT_PLAN **§10d**.
   - 📌 **Not a bug — do not re-investigate.** Videos looked greyed-out and unselectable in
     공지사항's picker while the same files worked in 집사톡's. The **image** picker was being
     used: it is **first** in 공지사항 but **second** in 집사톡, so muscle memory lands on the
@@ -759,11 +783,17 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   Change it to `mountaincats-61543`. (`.env.example` corrected 2026-07-29; `.env` is
   git-ignored.) ⚠️ Anything uploaded from localhost since the Seoul migration is **stranded**
   in the old bucket — worth a look before writing that bucket off.
-- ⏳ **Unverified on `dev` (2026-07-29):** the 집사톡 **image** upload (bucket CORS is applied
-  and preflight-verified, but no successful upload has been observed) and whether an uploaded
-  video now appears in **영상첩** (the Admin-SDK `cat_videos` fix). Video → YouTube → correct
-  playlist **is** confirmed. Neither is reachable by any automated test: e2e uses the storage
-  emulator (no CORS) and has no YouTube credentials.
+- ✅ **RESOLVED 2026-07-31 — image upload works on `dev`** (owner: "media uploads are working
+  fine from both 공지 and 입양홍보"). The Admin-SDK `cat_videos` fix is corroborated too: the new
+  per-medium tag lookup reads that record, and it resolves, which it could not if the write were
+  still being denied.
+  - ⏳ **Still unverified on the deployed Preview:** the **입양홍보 popup** (needs a _fresh_
+    session — it is `sessionStorage`-gated, so a reload will not re-show it) and the
+    **duplicate-filename 409**. The 409 is the one path with **no automated coverage at all**:
+    `getSignedUrl` signs with a service-account key the credential-less e2e harness does not
+    have, and the Storage emulator does not implement signing — verified empirically by running
+    with the stub disabled (`Could not load the default credentials` → 500). No emulator
+    configuration fixes that.
 - ✅ **RESOLVED 2026-07-29 — no composer invents tags any more.** 집사톡 had a `산고양이`
   fallback and 공지사항 / 입양홍보 attached a fixed `공지사항` / `입양홍보` to every video.
   Both made `needsTagging` false, hiding exactly the videos the tagging queue exists to
@@ -1031,17 +1061,29 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-⚠️ **The working tree is NOT clean (2026-07-29).** Uncommitted and belonging to that session:
-the **산고양이 tag-fallback removal** (`useRichContentForm` + a route test), the new
-**`scripts/maintenance/set-storage-cors.js`** + its `package.json` entry, the corrected
-**`.env.example`** bucket, `config/firebase/cors_fbstorage.json`, the deployment runbook
-section, and a `DEBUG_LOG` correction. Gates were green at the last run (tsc 0 · smoke 32/32 ·
-unit 119/119). _Also present but **not** from this work and not to be swept in:_ a `.gitignore`
-change and two untracked `code-graph-tooling-*` planning docs.
+✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`bb181a6`**.
 
-`origin/dev` was at **`1bd9dc1`** at the start of 2026-07-29 and the owner pushed during the
-session; **verify with `git rev-parse origin/dev` rather than trusting this line.** Newest
-`dev` commits:
+The only things left in the tree are **not** from this workstream and must not be swept into a
+media commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) and two
+untracked `docs/planning/pending/code-graph-tooling-*` docs. They belong together as their own
+change whenever the owner wants it.
+
+**Gate status at `bb181a6`:** tsc 0 · smoke 32/32 · unit 121/121 · **full e2e 162 passed / 13
+skipped / 0 failed**. ⚠️ Several full-suite runs also lost 1–2 unrelated timing-sensitive specs
+that pass on re-run — see _Open threads_ before reading a red CI as a media regression.
+
+**This session (2026-07-30 → 07-31), newest first:**
+
+| Commit    | What                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `bb181a6` | **feat** — each medium shows its 제목/설명/태그; the detail page joins the shared renderer |
+| `16b5237` | **feat** — show which cats are in a post's photos and videos                               |
+| `d7156a5` | **fix** — 입양홍보 expanded post shows the whole post; 팝업 toggle added                   |
+| `897a8b8` | **fix** — drop the header that preflighted every image upload away                         |
+| `03ce4f2` | **feat** — per-file media, cat tagging, no filename collisions                             |
+| `621e275` | **docs** — queue "one video per post" (since reversed); record the picker non-bug          |
+
+**Earlier `dev` commits:**
 
 | Commit    | What                                                                                              |
 | --------- | ------------------------------------------------------------------------------------------------- |
@@ -1073,17 +1115,12 @@ session; **verify with `git rev-parse origin/dev` rather than trusting this line
 | `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                            |
 
 **Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
-main...dev` = `0  258`). `dev` is **258 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
-2026-07-26 YouTube fixes + the 2026-07-27 butler/playlist work + the 2026-07-28 session are
-all on `dev` and **not yet in prod**. Promoting them (`dev → main`)
+main...dev` = `0  274`). `dev` is **274 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
+2026-07-26 YouTube fixes, the 2026-07-27 butler/playlist work, and the 2026-07-28 → 07-31
+sessions are all on `dev` and **not yet in prod**. Promoting them (`dev → main`)
 is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
-top** (see the fresh-session box at the head of this doc).
-
-**Gate status at `f09d0e1`:** tsc 0 · smoke 31/31 · unit 102/102 · `member/mypage.spec.ts`
-6/6 (+2 this session — the 관리자 shortcut guard, both directions). The **full e2e** was last
-run green at `97b72ed`: **153 passed / 13 skipped / 0 failed**; 2026-07-28 added no
-non-test source beyond the mypage section and the timeout constant, and ran the affected
-spec file rather than the whole suite.
+top** (see the fresh-session box at the head of this doc), all the more so now that
+2026-07-30/31 changed the upload path, the tagging inputs and the post renderers underneath it.
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -1093,7 +1130,28 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-29 (latest)** — **"A 48 MB video won't upload" turned out to be: video upload had
+- **2026-07-31 (latest)** — **The composers and the post-display surfaces converged, and two
+  self-inflicted bugs got caught on the way.** 공지사항 / 입양홍보 gained 집사톡's per-file media
+  (each file its own 제목/설명), a cat selector, framed sections with separators, and refusal of
+  duplicate filenames; their images moved to the signed-URL path so a per-photo 설명 has
+  somewhere to live — which also means those photos now reach the 사진첩 and the tagging queue.
+  Pasted-URL lists removed. 🔄 **This reversed the queued "one video per post" decision before
+  any of it was built** (admin composers stay unrestricted; the surviving half is a CMS toggle,
+  not started — §10d D2). On the display side, **three hand-rolled media renderers became one**:
+  the 입양홍보 expanded post shows the whole post (it had rendered one thumbnail chosen as
+  `video ? thumb : image`, so a post with a video could never show its photos), 입양홍보 posts
+  can pop up on a site visit, and every medium shows its 제목/설명/태그 — resolved **live** from
+  the media records, so pre-existing posts display it with no migration. 🚨 **Self-inflicted #1:**
+  signing the upload URL with `x-goog-if-generation-match` made the PUT preflighted and **blocked
+  every image upload from every deployed origin**; the bucket's CORS allow-list lacks the header
+  and nothing logged server-side. 🚨 **#2:** adopting the shared `PostMedia` on the detail page
+  brought the modal's image sizing and shrank full-width photos — caught before commit, fixed
+  with a `layout` prop. 📌 **A green test was covering a broken feature:** the adoption e2e
+  asserted `getByAltText('이미지')` throughout the bug, because no fixture in the repo carried
+  any media. ✅ **Correction to the record:** e2e _does_ run locally — OpenJDK 26 is at
+  `/usr/local/opt/openjdk/bin`; bare `java` is a runtime-less macOS shim, which is what produced
+  the earlier "no JDK" claim.
+- **2026-07-29** — **"A 48 MB video won't upload" turned out to be: video upload had
   never worked on Vercel.** The composer POSTed the file through a function capped at **4.5 MB**
   by the platform, rejected at the proxy before any handler ran. Replaced with a **resumable,
   direct-to-Google** upload (`e96588c`), plus a **progress bar** now that a submit can

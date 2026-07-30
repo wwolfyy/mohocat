@@ -1158,10 +1158,18 @@ contained version won.
       each other. 🔑 **The bucket is the authority, not `cat_images`** — the record write is
       non-fatal, 공지사항's old uploads recorded nothing, and `image_uploader` shares the
       bucket, so an object can exist with no record. `generate-signed-url` now checks
-      `file.exists()` → **409** with an actionable Korean message, and signs with
-      `x-goog-if-generation-match: 0` so GCS rejects a check-then-PUT race **atomically**
-      (412) instead of overwriting. Timestamps were considered and rejected: they lower the
-      odds, a precondition removes them. ⚠️ Applies to 집사톡 too — shared route.
+      `file.exists()` → **409** with an actionable Korean message. Timestamps were
+      considered and rejected: they lower the odds of a clash, they do not remove it.
+      ⚠️ Applies to 집사톡 too — shared route.
+  - 🔁 **AMENDED the same day.** The first cut _also_ signed the URL with
+    `x-goog-if-generation-match: 0`, so GCS would refuse an overwrite **atomically** and
+    close the check-then-PUT race `exists()` cannot. That header made the cross-origin PUT
+    **preflighted**, the bucket's CORS allow-list does not contain it, and **every image
+    upload from every deployed origin silently failed** — owner-reported within hours. It is
+    gone from both ends and the residual race is documented as accepted in the route.
+    Re-adding it is an **ordered** two-step change: widen `config/firebase/cors_fbstorage.json`
+    → apply with `npm run storage:cors` → _then_ ship the code. In any other order, image
+    upload breaks again. Chain: `log/DEBUG_LOG.md` 2026-07-30.
 - [x] **D1b — conspicuous separators (DONE 2026-07-30, owner-requested).** With several files
       stacked, and a 동영상 list directly above a 사진 list, it was not visually obvious where
       one file's fields ended or which section a picker belonged to. `MediaItemList` is now a
@@ -1185,6 +1193,49 @@ both pass it correctly — **there is nothing wrong with the pickers.** The exte
 a red herring; only the two pickers' `accept` values differed. D3 exists to remove the trap.
 _D1b's framed sections and header bars address the same confusion from the other side: the
 picker now sits visibly inside a labelled 사진 or 동영상 box._
+
+---
+
+## 10e. ✅ Post media rendering converged (DONE 2026-07-31)
+
+> **Ask (owner, over one session):** the 입양홍보 feed's expanded post showed no image; 입양홍보
+> should be able to pop up on a site visit like 공지사항; and none of the per-file 제목/설명/태그
+> the composer collects was visible anywhere in a post.
+
+**The root cause behind all three: three hand-rolled media renderers.** `AnnouncementModal`,
+`AdoptionPostCard` and `/pages/announcements/[id]` each had their own copy, and they had
+drifted — different capabilities, different bugs. They now share **`PostMedia`**.
+
+- [x] **E1 — 입양홍보 expanded post shows the whole post.** It rendered ONE 80×20 thumbnail
+      chosen as `video ? youtubeThumb : image`, so a post carrying a video could never show its
+      photos, and a post with several images showed only the first. Chain:
+      `log/DEBUG_LOG.md` 2026-07-31.
+- [x] **E2 — 입양홍보 posts can pop up on a site visit.** Toggle on the composer and on
+      게시물 관리, backed by `getModalPost()` / `toggleModalDisplay()`. `AnnouncementModal`
+      generalised to `PostModal` over a `kind`; the ~50-line switch extracted to
+      `forms/ShowInModalToggle`. 🔑 **One popup per visit, most recently updated wins** across
+      both kinds — the existing rule extended, not a new one.
+- [x] **E3 — each medium shows its 제목 / 설명 / 태그.** None of it is on the post (which
+      stores only URLs); it lives on the `cat_images` / `cat_videos` record. New
+      `getImageDetailsByUrls` / `getVideoDetailsByYoutubeIds` + `useMediaDetails` resolve it
+      **live** — deliberately not copied onto the post, since the tagging surfaces keep editing
+      it and, for videos, YouTube is the source of truth (the 2026-07-26 rule). Live also means
+      **pre-existing posts display it with no migration**.
+- [x] **E4 — the announcement detail page joined the shared renderer.** It was the third copy
+      and the reason the owner still saw nothing after E3 shipped. `PostMedia` gained a
+      `layout` prop (`compact` for modal/feed, `full` for a dedicated page) so adopting it did
+      not shrink that page's previously full-width photos.
+
+📌 **Open question for the owner, not a defect:** a video's 제목 now appears **twice** — once in
+YouTube's own player overlay and once as our caption. Correct, possibly redundant; dropping the
+caption title for videos is a one-line change if wanted.
+
+⚠️ **A green test was covering a broken feature, twice over.** The adoption e2e asserted
+`getByAltText('이미지')` and passed throughout E1's bug, because the old markup emitted that alt
+on the image-only path the spec happened to exercise — and **no fixture in the repo carried any
+media at all**. `test-adopt-02` now carries two images _and_ a video (the broken combination),
+with different tags/captions per medium so a lookup returning one answer for everything cannot
+pass.
 
 ---
 
