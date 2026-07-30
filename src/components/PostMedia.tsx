@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useMediaTags } from '@/hooks/useMediaTags';
+import { useMediaDetails } from '@/hooks/useMediaDetails';
+import type { MediaDetail } from '@/services/media-albums';
 
 /**
  * The full media block of a post: **every** image, then **every** video.
@@ -21,12 +22,15 @@ import { useMediaTags } from '@/hooks/useMediaTags';
  * or pasted URLs whose dimensions aren't known ahead of render, and the lightbox
  * elsewhere in the app has the same constraint (see `modal-design-system` notes).
  *
- * **Cat tags render beneath each item** (2026-07-31, owner-requested), matching the
- * 사진첩 lightbox's `태그: …` line rather than inventing a second treatment. Below
- * rather than overlaid on the image: `object-contain` letterboxes a photo inside
- * its box, so an overlay would frequently sit on empty space instead of the
- * picture. The tags are looked up live from the media records — a post stores only
- * URLs — see `useMediaTags`.
+ * **Each item carries its own caption** (2026-07-31, owner-requested): the video
+ * 제목, the 설명 typed per file in the composer, and the cat tags. None of that is
+ * stored on the post — it lives on the `cat_images` / `cat_videos` record — so it
+ * is resolved live; see `useMediaDetails`.
+ *
+ * The tag line copies the 사진첩 lightbox's `태그: …` wording rather than inventing
+ * a second treatment. Captions sit **below** the media, not overlaid: the images
+ * render `object-contain`, so a photo is letterboxed inside its box and an overlay
+ * would frequently land on empty space instead of the picture.
  */
 
 interface PostMediaProps {
@@ -34,6 +38,17 @@ interface PostMediaProps {
   videoUrls?: string[];
   /** Used in alt text / iframe titles, e.g. '공지사항' or '입양홍보'. */
   label: string;
+  /**
+   * How much room the surface has.
+   *
+   * `compact` (default) is the modal/feed treatment: two columns on desktop, each
+   * image capped at 16rem so a multi-photo post still fits in a dialog.
+   * `full` is for a dedicated page, where the post is the only thing on screen —
+   * one column, full width. The announcement detail page showed full-width photos
+   * before it adopted this component, and shrinking them would have been an
+   * unrequested downgrade.
+   */
+  layout?: 'compact' | 'full';
 }
 
 /** YouTube id from either a watch URL or a youtu.be short link. */
@@ -45,19 +60,34 @@ const youtubeIdFrom = (url: string): string | null => {
   return id || null;
 };
 
-/** Renders the shared `태그: 이름, 이름` line, or nothing when there are none. */
-const TagLine = ({ tags }: { tags?: string[] }) =>
-  tags && tags.length > 0 ? (
-    <p className="mt-1 text-xs text-gray-500">태그: {tags.join(', ')}</p>
-  ) : null;
+/**
+ * The caption under one medium: 제목 (video), 설명, then 태그.
+ *
+ * Renders nothing at all when the record has none of them, so an untagged,
+ * uncaptioned photo keeps exactly the layout it had before captions existed.
+ */
+const MediaCaption = ({ detail, showTitle }: { detail?: MediaDetail; showTitle?: boolean }) => {
+  if (!detail) return null;
+  const { title, description, tags } = detail;
+  const hasTitle = Boolean(showTitle && title);
+  if (!hasTitle && !description && tags.length === 0) return null;
 
-const PostMedia = ({ imageUrls, videoUrls, label }: PostMediaProps) => {
+  return (
+    <div className="mt-1">
+      {hasTitle && <p className="text-sm font-medium text-gray-800">{title}</p>}
+      {description && <p className="mt-0.5 text-sm text-gray-700">{description}</p>}
+      {tags.length > 0 && <p className="mt-1 text-xs text-gray-500">태그: {tags.join(', ')}</p>}
+    </div>
+  );
+};
+
+const PostMedia = ({ imageUrls, videoUrls, label, layout = 'compact' }: PostMediaProps) => {
   const images = imageUrls?.filter(Boolean) ?? [];
   const videos = videoUrls?.filter(Boolean) ?? [];
 
   // Hooks must run unconditionally, so this sits above the early return.
   const videoIds = videos.map(youtubeIdFrom).filter((id): id is string => Boolean(id));
-  const { byImageUrl, byYoutubeId } = useMediaTags(images, videoIds);
+  const { byImageUrl, byYoutubeId } = useMediaDetails(images, videoIds);
 
   if (images.length === 0 && videos.length === 0) return null;
 
@@ -66,15 +96,23 @@ const PostMedia = ({ imageUrls, videoUrls, label }: PostMediaProps) => {
       {images.length > 0 && (
         <div className="mb-6">
           <h4 className="mb-2 font-medium text-gray-700">이미지</h4>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div
+            className={layout === 'full' ? 'space-y-6' : 'grid grid-cols-1 gap-4 md:grid-cols-2'}
+          >
             {images.map((url, index) => (
               <div key={index}>
                 <img
                   src={url}
                   alt={`${label} 이미지 ${index + 1}`}
-                  className="h-auto max-h-64 w-full rounded-lg border object-contain"
+                  className={
+                    layout === 'full'
+                      ? 'h-auto w-full rounded-lg border object-contain'
+                      : 'h-auto max-h-64 w-full rounded-lg border object-contain'
+                  }
                 />
-                <TagLine tags={byImageUrl[url]} />
+                {/* Photos have no title by design — a `cat_images` record only
+                    carries `fileName`, which is not something to show a reader. */}
+                <MediaCaption detail={byImageUrl[url]} />
               </div>
             ))}
           </div>
@@ -99,7 +137,7 @@ const PostMedia = ({ imageUrls, videoUrls, label }: PostMediaProps) => {
                         allowFullScreen
                       />
                     </div>
-                    <TagLine tags={byYoutubeId[videoId]} />
+                    <MediaCaption detail={byYoutubeId[videoId]} showTitle />
                   </div>
                 );
               }

@@ -15,7 +15,7 @@
 
 ---
 
-## 2026-07-31 — a post's media shows which cats are in it
+## 2026-07-31 — a post's media shows its 제목/설명/태그, on every surface
 
 **Area:** `media-albums.ts` (two new lookups), new `hooks/useMediaTags.ts`, `PostMedia.tsx`.
 **Type:** feature enhancement (owner-requested).
@@ -48,13 +48,31 @@ And no composite index is needed — `mountainId ==` plus an `in` is a disjuncti
 served by merging single-field indexes, with the sort done in memory; adding an `orderBy` would
 change that, and the emulator would not warn you.
 
+**Extended the same day, owner-reported: "the form has 제목/설명 fields but the post shows
+none of them."** The per-file video 제목 and the 설명 typed for each file had the same problem as
+the tags — written to the media record, never displayed — so the lookup now returns
+`{ tags, title, description }` and each medium carries a caption block.
+
+🐛 **And it surfaced a third hand-rolled media renderer.** `/pages/announcements/[id]` (the
+detail page) had its own copy: no tags, no captions, and a `videoUrl` legacy branch. It now
+uses `PostMedia` like everything else, which is why the owner's screenshot showed none of this
+even after the tags shipped — they were looking at a page the shared component had never
+reached.
+
+⚠️ **One regression caught before commit, worth recording.** Adopting `PostMedia` on the detail
+page also adopted the modal's image sizing (two columns, capped at 16rem), shrinking photos
+that had been full-width. The component took a `layout` prop — `compact` for the modal and
+feed, `full` for a dedicated page — rather than letting a shared component quietly downgrade a
+surface it was newly applied to.
+
 **Verified:** tsc 0 · smoke 32/32 · unit 121/121 · full e2e green for the affected specs
 (161 passed with one unrelated known flake, `member/nav-permissions`, which passes on re-run).
 The e2e fixtures give each medium a **different** tag on purpose — album-01 → test-cat-01,
 album-02 → test-cat-03, yt-vid-01 → test-cat-01 — so a lookup returning one answer for
 everything could not pass. Browser-verified against **production data**: the owner's 공지 post
 shows `태그: 아들조로, 찰리` under its photo and `태그: 예쁜이` under its video, i.e. correctly
-different per medium.
+different per medium — and on the detail page, the photo's 설명 ("나도 좀…"), the video's 제목
+and 설명, and both tag lines, with the photo back at full width.
 
 ---
 

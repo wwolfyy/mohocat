@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getAnnouncementService } from '@/services';
 import { useMountain } from '@/components/MountainProvider';
 import Button from '@/components/ui/Button';
+import PostMedia from '@/components/PostMedia';
 
 const AnnouncementDetailsPage = () => {
   // Service references
@@ -69,72 +70,23 @@ const AnnouncementDetailsPage = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Video content */}
-          {post.videoUrls && post.videoUrls.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">동영상</h3>
-              <div className="space-y-4">
-                {post.videoUrls.map((url: string, index: number) => {
-                  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-                  const videoId = match ? match[1] : null;
-                  if (videoId) {
-                    return (
-                      <div key={index} className="aspect-video">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${videoId}`}
-                          title={`Video ${index + 1}`}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="w-full h-full rounded"
-                        />
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Backward compatibility for single video */}
-          {post.videoUrl && !post.videoUrls && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">동영상</h3>
-              <div className="aspect-video">
-                <iframe
-                  src={post.videoUrl}
-                  title="Video"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full rounded"
-                />
-              </div>
-            </div>
-          )}
-
           {/* Message content */}
           <div className="mb-6">
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{post.message}</p>
+            <p className="whitespace-pre-wrap leading-relaxed text-gray-700">{post.message}</p>
           </div>
 
-          {/* Image content */}
-          {post.imageUrls && post.imageUrls.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">이미지</h3>
-              <div className="space-y-2">
-                {post.imageUrls.map((url: string, index: number) => (
-                  <img
-                    key={index}
-                    src={url}
-                    alt={`Image ${index + 1}`}
-                    className="w-full rounded"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Media — the shared renderer, so this page shows exactly what the
+              공지사항 popup and the 입양홍보 feed show: every image and video, each
+              with its own 제목/설명/태그. It previously hand-rolled a third copy
+              that displayed none of the per-file detail (owner-reported
+              2026-07-31), and `videoUrl` is the legacy single-value field some
+              older posts still carry. */}
+          <PostMedia
+            imageUrls={post.imageUrls}
+            videoUrls={post.videoUrls?.length ? post.videoUrls : post.videoUrl && [post.videoUrl]}
+            label="공지사항"
+            layout="full"
+          />
 
           {/* Important notice banner */}
           <div className="mt-6 p-4 bg-brand-50 ring-1 ring-brand-100 rounded-lg">

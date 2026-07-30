@@ -193,37 +193,65 @@ const chunk = <T>(items: T[], size: number): T[][] => {
   return out;
 };
 
+/** What a post can display about one of its media items, from the media record. */
+export interface MediaDetail {
+  tags: string[];
+  /** Video only — `cat_videos.title`, mirroring the YouTube title. */
+  title?: string;
+  /** The caption typed per file in the composer. */
+  description?: string;
+}
+
 /**
- * Cat tags for specific media, looked up by the identifier a **post** stores.
+ * Details for specific media, looked up by the identifier a **post** stores.
  *
  * WHY THIS EXISTS (2026-07-31): a post document holds only `imageUrls` /
- * `videoUrls` — bare URLs. The cat tags live on the `cat_images` / `cat_videos`
- * records the upload created. To show tags under a post's media we therefore have
- * to resolve URL → record.
+ * `videoUrls` — bare URLs. Everything the composer collects *per file* (the cat
+ * tags, the video 제목, the 설명) is written to the `cat_images` / `cat_videos`
+ * record the upload created, not to the post. So a post that wants to show any of
+ * it has to resolve URL → record.
  *
- * 🔑 **Deliberately a live lookup, not a copy on the post.** Stamping the tags
- * into the post at creation would be cheaper, but tags are edited afterwards in
- * `/admin/tag-images` and `/admin/tag-videos`, and a copy would silently disagree
- * with the album from the first retag. That is the same failure the 2026-07-26
- * rule was adopted to prevent ("the tagging surfaces own this data"). It also
- * means posts created *before* this shipped display their tags with no migration.
+ * 🔑 **Deliberately a live lookup, not a copy on the post.** Stamping these onto
+ * the post at creation would be cheaper, but they are edited afterwards in
+ * `/admin/tag-images` and `/admin/tag-videos` — and for videos **YouTube is the
+ * source of truth**, with `refresh-video-metadata` rebuilding the record from it
+ * (the 2026-07-26 rule). A copy on the post would be stale from the first edit and
+ * nothing would reconcile it. The live lookup also means posts created before this
+ * shipped display their captions with no migration.
  *
  * Both collections are `allow read: if true`, so this works for anonymous
- * visitors — which matters, since these tags render on public pages.
+ * visitors — which matters, since these render on public pages.
  *
  * 📌 No composite index required: `mountainId ==` plus an `in` (a disjunction of
  * equalities) is served by merging single-field indexes, and there is no
  * `orderBy`. Keep it that way — the emulator would not warn you.
+ *
+ * ⚠️ **Duplicate keys are possible** (two records pointing at one URL — legacy
+ * data, and the e2e fixtures do it deliberately), so the tie-break is explicit:
+ * a record carrying tags beats one without. Without that rule the winner would
+ * depend on Firestore's return order, and the displayed caption would flicker
+ * between deploys.
  */
-export const getImageTagsByUrls = async (
+const mergeDetail = (
+  into: Record<string, MediaDetail>,
+  key: string,
+  candidate: MediaDetail
+): void => {
+  const existing = into[key];
+  if (!existing || (candidate.tags.length > 0 && existing.tags.length === 0)) {
+    into[key] = candidate;
+  }
+};
+
+export const getImageDetailsByUrls = async (
   mountainId: string,
   imageUrls: string[]
-): Promise<Record<string, string[]>> => {
+): Promise<Record<string, MediaDetail>> => {
   const urls = Array.from(new Set(imageUrls.filter(Boolean)));
   if (urls.length === 0) return {};
 
   try {
-    const byUrl: Record<string, string[]> = {};
+    const byUrl: Record<string, MediaDetail> = {};
 
     await Promise.all(
       chunk(urls, IN_CLAUSE_LIMIT).map(async (batch) => {
@@ -236,33 +264,35 @@ export const getImageTagsByUrls = async (
         );
         snapshot.docs.forEach((docSnap) => {
           const data = docSnap.data();
-          if (data.imageUrl && Array.isArray(data.tags) && data.tags.length > 0) {
-            byUrl[data.imageUrl] = data.tags;
-          }
+          if (!data.imageUrl) return;
+          mergeDetail(byUrl, data.imageUrl, {
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            description: data.description || undefined,
+          });
         });
       })
     );
 
     return byUrl;
   } catch (error) {
-    // Non-fatal by design: tags are an enhancement to the media, and a post that
-    // renders its photo without a caption is far better than one that renders
-    // nothing. Logged so the failure is not invisible.
-    console.error('Error fetching image tags by url:', error);
+    // Non-fatal by design: captions enhance the media, and a post that renders its
+    // photo without one is far better than a post that renders nothing. Logged so
+    // the failure is not invisible.
+    console.error('Error fetching image details by url:', error);
     return {};
   }
 };
 
-/** As `getImageTagsByUrls`, keyed by YouTube video id (`cat_videos.youtubeId`). */
-export const getVideoTagsByYoutubeIds = async (
+/** As `getImageDetailsByUrls`, keyed by YouTube video id (`cat_videos.youtubeId`). */
+export const getVideoDetailsByYoutubeIds = async (
   mountainId: string,
   youtubeIds: string[]
-): Promise<Record<string, string[]>> => {
+): Promise<Record<string, MediaDetail>> => {
   const ids = Array.from(new Set(youtubeIds.filter(Boolean)));
   if (ids.length === 0) return {};
 
   try {
-    const byId: Record<string, string[]> = {};
+    const byId: Record<string, MediaDetail> = {};
 
     await Promise.all(
       chunk(ids, IN_CLAUSE_LIMIT).map(async (batch) => {
@@ -275,16 +305,19 @@ export const getVideoTagsByYoutubeIds = async (
         );
         snapshot.docs.forEach((docSnap) => {
           const data = docSnap.data();
-          if (data.youtubeId && Array.isArray(data.tags) && data.tags.length > 0) {
-            byId[data.youtubeId] = data.tags;
-          }
+          if (!data.youtubeId) return;
+          mergeDetail(byId, data.youtubeId, {
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            title: data.title || undefined,
+            description: data.description || undefined,
+          });
         });
       })
     );
 
     return byId;
   } catch (error) {
-    console.error('Error fetching video tags by youtube id:', error);
+    console.error('Error fetching video details by youtube id:', error);
     return {};
   }
 };

@@ -125,6 +125,20 @@ test.describe('입양홍보 — adoption', () => {
     // shared with the video.
     await expect(page.getByText(/^태그: /)).toHaveCount(3);
 
+    /**
+     * The per-file 설명 typed in the composer, which lives on the media record and
+     * not on the post — reported 2026-07-31 as "the form has these fields but the
+     * post shows none of them".
+     *
+     * ⚠️ album-01 has **two** `cat_images` records in the fixtures (one tagged
+     * '픽스처 사진 1', one untagged '픽스처 사진 3'). The tagged one must win, or the
+     * caption would depend on Firestore's return order and flicker between runs.
+     */
+    await expect(page.getByText('픽스처 사진 1')).toBeVisible();
+    await expect(page.getByText('픽스처 사진 2')).toBeVisible();
+    await expect(page.getByText('픽스처 사진 3')).toHaveCount(0);
+    await expect(page.getByText('픽스처 영상 1')).toBeVisible();
+
     // Folding hides the media again.
     await postHeader.click();
     await expect(page.getByAltText('입양홍보 이미지 1')).toHaveCount(0);
