@@ -59,11 +59,16 @@ timestamps — and was right to reject timestamps** (they only lower the odds). 
 non-fatal, 공지사항's old uploads recorded nothing, and the owner's separate `image_uploader`
 script shares the bucket — an object can exist with no record, and a record can outlive its
 object. So `generate-signed-url` now does a `file.exists()` check → **409** with an actionable
-Korean message, _and_ signs the URL with `x-goog-if-generation-match: 0`, which GCS enforces
-**atomically at write time** so the loser of a check-then-PUT race gets a 412 instead of
-overwriting. The client sends that header (it is part of the signature, so it is not optional)
-and translates both statuses into the same Korean message. ⚠️ This applies to 집사톡 too —
-same shared route, same latent bug.
+Korean message. ⚠️ This applies to 집사톡 too — same shared route, same latent bug.
+
+🔁 **Corrected within the day.** This first _also_ signed the URL with
+`x-goog-if-generation-match: 0`, so GCS would refuse an overwrite **atomically** and close the
+check-then-PUT race. That header made the cross-origin PUT **preflighted**, the bucket's CORS
+allow-list does not contain it, and the result was that **every image upload from every
+deployed origin silently failed** — owner-reported within hours. The header is gone from both
+ends and the residual race is documented as accepted in the route. Re-adding it is an ordered
+two-step change: widen `cors_fbstorage.json`, apply with `npm run storage:cors`, _then_ ship
+the code. Full chain: `log/DEBUG_LOG.md` 2026-07-30.
 
 **5. URL pasting removed** (owner). Both forms briefly kept an "또는 URL 입력" list beside the
 picker; it is gone, so these composers now only attach media they upload.

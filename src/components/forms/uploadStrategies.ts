@@ -395,25 +395,21 @@ export const uploadImagesWithSignedUrls = async (
 
       const { signedUrl, publicUrl } = await response.json();
 
+      // ⚠️ **Send no header here that is not CORS-safelisted.** This PUT is
+      // cross-origin to the bucket, so any custom header turns it into a
+      // preflighted request, and the preflight is answered from the bucket's own
+      // CORS `responseHeader` list (`config/firebase/cors_fbstorage.json`) — which
+      // the browser will not let us satisfy from code. A first cut of the
+      // duplicate-name fix sent `x-goog-if-generation-match: 0` here and blocked
+      // **every** image upload from every deployed origin until it was removed
+      // (2026-07-30). `Content-Type` is safelisted; almost nothing else is.
       const uploadResponse = await fetch(signedUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': file.type,
-          // Must match the `extensionHeaders` the URL was signed with, or the
-          // signature itself fails. GCS rejects the write with 412 if the object
-          // was created between our exists() check and this PUT.
-          'x-goog-if-generation-match': '0',
         },
         body: file,
       });
-
-      // 412 is that race losing, not a broken upload — same user-facing cause as
-      // the 409 above.
-      if (uploadResponse.status === 412) {
-        throw new Error(
-          `이미 "${file.name}"과 같은 이름의 파일이 있어요. 파일 이름을 바꿔서 다시 올려주세요.`
-        );
-      }
 
       if (!uploadResponse.ok) {
         throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);

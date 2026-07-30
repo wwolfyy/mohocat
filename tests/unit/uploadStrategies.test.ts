@@ -578,21 +578,22 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     expect(createImageMock).not.toHaveBeenCalled();
   });
 
-  it('sends the if-generation-match precondition, and explains a 412 as a name clash', async () => {
-    fetchMock
-      .mockResolvedValueOnce(signedUrlResponse(1))
-      .mockResolvedValueOnce({ ok: false, status: 412, statusText: 'Precondition Failed' });
+  /**
+   * 🔒 **Regression guard, 2026-07-30.** The PUT goes cross-origin to the bucket, so
+   * any header that is not CORS-safelisted turns it into a preflighted request —
+   * answered from the bucket's own CORS `responseHeader` allow-list, which code
+   * cannot influence. Sending `x-goog-if-generation-match` here (the atomic
+   * duplicate-name precondition) blocked **every** image upload from every deployed
+   * origin. If a future change adds a header to this request, this test should fail
+   * before a deploy does.
+   */
+  it('sends only Content-Type on the PUT, so the upload is never preflighted', async () => {
+    fetchMock.mockResolvedValueOnce(signedUrlResponse(1)).mockResolvedValueOnce({ ok: true });
+    createImageMock.mockResolvedValue('img-id');
 
-    await expect(
-      uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '본문' }], context)
-    ).rejects.toThrow('이미 "a.jpg"과 같은 이름의 파일이 있어요');
+    await uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '본문' }], context);
 
-    // The header must be sent, and must match what the URL was signed with — omitting
-    // it breaks the signature, so this is not merely belt-and-braces.
-    expect(fetchMock.mock.calls[1][1].headers).toMatchObject({
-      'x-goog-if-generation-match': '0',
-    });
-    expect(createImageMock).not.toHaveBeenCalled();
+    expect(Object.keys(fetchMock.mock.calls[1][1].headers)).toEqual(['Content-Type']);
   });
 
   it('throws when the signed-URL request fails', async () => {

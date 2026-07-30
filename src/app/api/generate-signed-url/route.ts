@@ -56,6 +56,10 @@ export async function POST(request: NextRequest) {
     // separate `image_uploader` script shares this bucket without writing here. An
     // object can exist with no record pointing at it, and a record can outlive its
     // object.
+    //
+    // 📌 Residual, accepted: two uploads of the same name can both pass this check
+    // before either PUTs, and the second still overwrites. Closing that needs the
+    // generation precondition described below, which costs a bucket CORS change.
     const [exists] = await file.exists();
     if (exists) {
       return NextResponse.json(
@@ -68,17 +72,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ⚠️ **No `extensionHeaders` here.** The obvious hardening is to sign with
+    // `x-goog-if-generation-match: 0`, which would make GCS refuse the write
+    // atomically and close the check-then-PUT race the `exists()` above cannot.
+    // It was implemented that way and **reverted the same day**: a signed
+    // `extensionHeader` must be echoed by the uploading browser, a custom header
+    // makes the cross-origin PUT preflighted, and the preflight is answered from
+    // the bucket's CORS `responseHeader` allow-list — which lists only
+    // `Content-Type` and `Authorization`. The result was that every image upload
+    // from every deployed origin failed. Re-adding it therefore requires
+    // `config/firebase/cors_fbstorage.json` to allow the header **and** a live
+    // `npm run storage:cors` apply, in that order, or image upload breaks again.
     const [signedUrl] = await file.getSignedUrl({
       action: 'write',
       expires: Date.now() + 15 * 60 * 1000, // 15 minutes
       contentType: fileType,
-      // Closes the gap the `exists()` check above cannot: two uploads of the same
-      // name can both pass that check before either PUTs. `0` means "only if this
-      // object does not exist", enforced **atomically by GCS at write time**, so the
-      // loser gets a 412 instead of overwriting. This is why the fix is a
-      // precondition rather than a timestamped filename — a timestamp lowers the
-      // odds of a clash, a precondition removes them.
-      extensionHeaders: { 'x-goog-if-generation-match': '0' },
     });
 
     // In a Firebase download URL the object name is a single URL-encoded segment
