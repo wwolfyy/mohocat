@@ -1118,6 +1118,36 @@ contained version won.
 
 ---
 
+## 10d. `[ ]` One video per post + consistent media-section order (2026-07-29)
+
+**Decision (owner, 2026-07-29): remove multiple-video upload from the composers.** Posts
+should not carry a pile of videos.
+
+- [ ] **D1 — cap video upload at one per post.** Two different mechanisms allow several
+      today, so both need changing:
+  - **공지사항 / 입양홍보** (`MediaUploadField`) — the file input carries `multiple`
+    (`MediaUploadField.tsx:89`), **and** the section keeps a separate list of pasted
+    YouTube **URLs**. Removing `multiple` alone still leaves the URL list unbounded.
+  - **집사톡** (`MediaItemList`) — no `multiple`, but the trailing picker re-renders after
+    each pick so the list grows one file at a time. Capping means hiding that trailing
+    picker once a video exists.
+- [ ] **D2 — ⚠️ CONFIRM BEFORE BUILDING: does the cap apply to images too?** The decision as
+      given names **video**. `MediaUploadField`'s `multiple` is shared by the image section,
+      and 집사톡's growing list is the same component for both — so an implementer will hit
+      this immediately and must not guess. Multiple photos per post is plausibly wanted.
+- [ ] **D3 — align the media-section order across composers** (proposed, **not** decided).
+      집사톡 renders 동영상 → 사진; 공지사항 renders 이미지 → 동영상. See the note below.
+
+📌 **Not a bug, recorded so it isn't re-investigated:** on 2026-07-29 videos appeared
+greyed-out and unselectable in 공지사항's picker while the same files were selectable in
+집사톡's. Cause: the **image** picker was used. It is first in 공지사항 but second in 집사톡,
+so muscle memory from one form lands on the wrong picker in the other, and `accept="image/*"`
+correctly greys out videos. Both components resolve `accept` from the same `kind` prop and
+both pass it correctly — **there is nothing wrong with the pickers.** The external drive was
+a red herring; only the two pickers' `accept` values differed. D3 exists to remove the trap.
+
+---
+
 ## 11. 🔴 Functional gaps — broken / missing nav destinations
 
 > **Functional, not design** (flagged by the user). The nav menu links to

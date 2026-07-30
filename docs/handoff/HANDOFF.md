@@ -92,6 +92,11 @@
 >    promotion.
 > 4. Then the promotion itself (M6/M7/M8 + the GA4 guide + both July sessions are waiting).
 >
+> 🆕 **Two small pieces of work were decided on 2026-07-29 and not started** — both are
+> specced, neither blocks the above: **one video per post** (PROJECT*PLAN §10d — note the
+> open question about whether the cap covers images) and a **`?cat=<id>` deep link** to one
+> cat's modal (§10c — the per-cat page was explicitly declined). See \_Open threads*.
+>
 > **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
 > lands — `main` is pre-fix and reads the token from env only.
 >
@@ -722,6 +727,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- **`[ ]` One video per post — DECIDED 2026-07-29, not started.** The composers should not
+  accept a pile of videos. **Two different mechanisms** allow it, so both need work:
+  공지사항/입양홍보 carry `multiple` on the file input **and** an unbounded list of pasted
+  YouTube URLs; 집사톡 has no `multiple` but its trailing picker re-renders after each pick so
+  the list grows. ⚠️ **Confirm before building whether the cap applies to images too** — the
+  decision named video, but `multiple` and the growing list are shared with the image section,
+  so an implementer hits the question immediately and must not guess. Spec: PROJECT_PLAN
+  **§10d**.
+  - 📌 **Not a bug — do not re-investigate.** Videos looked greyed-out and unselectable in
+    공지사항's picker while the same files worked in 집사톡's. The **image** picker was being
+    used: it is **first** in 공지사항 but **second** in 집사톡, so muscle memory lands on the
+    wrong one, and `accept="image/*"` correctly disables videos. Both components resolve
+    `accept` from the same `kind` prop and both pass it correctly. The external drive was a
+    red herring. Aligning the section order is **proposed, not decided** (§10d D3).
 - **`[ ]` Shareable link to one cat's modal — DECIDED 2026-07-29, not started.** There is no
   URL that opens a specific cat; the only mechanism is the in-content `[catmodal:이름]` token.
   **Owner chose the cheap option** — a `?cat=<id>` param on `/pages/cats` that `CatsBrowser`
@@ -1089,7 +1108,10 @@ longer wanted.
   tag when none was chosen — the fallback set `needsTagging: false` and hid exactly the videos
   the tagging queue exists to find. **Decided, not started:** a `?cat=<id>` deep link to one
   cat's modal (PROJECT_PLAN §10c); the owner declined the per-cat page. ⏳ Image upload and the
-  영상첩 record are still unverified on `dev`; the tree has uncommitted work.
+  영상첩 record are still unverified on `dev`. **Decided and not started:** one video per post
+  (§10d) and the cat deep link (§10c). 📌 A reported "공지사항 picker won't select videos" was
+  **not a bug** — the image picker was used; it sits first in 공지사항 and second in 집사톡, so
+  muscle memory lands on the wrong one. Recorded so it isn't chased again.
 - **2026-07-28** — **The tenancy URL model was decided — path-based — and planned.**
   The owner answered the open decision: a mountain is identified by a **path prefix**
   (`mohocats.org/manisan`), geyang keeps its prefix-free URLs at the apex, and a second
