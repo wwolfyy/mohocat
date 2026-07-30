@@ -6,6 +6,7 @@ import { cn } from '@/utils/cn';
 import MediaItemList from '@/components/forms/MediaItemList';
 import CatTagSelectField from '@/components/forms/CatTagSelectField';
 import CatSelectorModal from '@/components/CatSelectorModal';
+import ShowInModalToggle from '@/components/forms/ShowInModalToggle';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
 import { useMountain } from '@/components/MountainProvider';
@@ -59,59 +60,12 @@ const NewAnnouncementForm = () => {
         />
       </div>
 
-      {/* Modal Toggle */}
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <label className="block font-semibold text-lg">모달 팝업 설정</label>
-            <p className="text-sm text-gray-600 mt-1">
-              이 공지사항을 사용자가 페이지를 방문할 때 팝업으로 표시합니다
-            </p>
-          </div>
-          <div className="flex items-center">
-            <div
-              onClick={() => setShowInModal(!showInModal)}
-              className={cn(
-                'relative inline-flex items-center h-8 w-14 rounded-full cursor-pointer transition-colors duration-200',
-                showInModal ? 'bg-yellow-500' : 'bg-gray-300'
-              )}
-              role="switch"
-              aria-checked={showInModal}
-            >
-              {/* Toggle circle */}
-              <span
-                className={cn(
-                  'inline-block w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform duration-200',
-                  showInModal ? 'translate-x-8' : 'translate-x-1'
-                )}
-              />
-              {/* ON label */}
-              <span
-                className={cn(
-                  'absolute left-1.5 text-xs font-medium transition-opacity duration-200',
-                  showInModal ? 'text-white opacity-100' : 'text-gray-500 opacity-0'
-                )}
-                style={{ fontSize: '10px' }}
-              >
-                ON
-              </span>
-              {/* OFF label */}
-              <span
-                className={cn(
-                  'absolute right-1.5 text-xs font-medium transition-opacity duration-200',
-                  !showInModal ? 'text-gray-600 opacity-100' : 'text-white opacity-0'
-                )}
-                style={{ fontSize: '10px' }}
-              >
-                OFF
-              </span>
-            </div>
-            <label htmlFor="showInModal" className="ml-3 text-sm font-medium text-gray-700">
-              팝업으로 표시
-            </label>
-          </div>
-        </div>
-      </div>
+      <ShowInModalToggle
+        checked={showInModal}
+        onChange={setShowInModal}
+        description="이 공지사항을 사용자가 페이지를 방문할 때 팝업으로 표시합니다"
+        disabled={form.uploading}
+      />
 
       {/* Per-file media, each with its own 제목/설명. The cat selector sits under
           the section it tags, and only once there is something to tag. */}

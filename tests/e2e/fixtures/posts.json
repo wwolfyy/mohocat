@@ -26,6 +26,24 @@
       "username": "관리자",
       "date": "2026-01-04",
       "time": "12:00"
+    },
+    {
+      "_comment": "Reproduces the 2026-07-31 bug: the expanded card chose video OR image, so a post carrying both never showed its photos. Two images so 'only the first' is caught too.",
+      "id": "test-adopt-02",
+      "title": "입양 소식 2 — 사진과 동영상",
+      "message": "사진과 동영상이 함께 있는 글이에요.",
+      "username": "관리자",
+      "date": "2026-01-05",
+      "time": "12:00",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg",
+        "/images/test-fixtures/album-02.jpg"
+      ],
+      "videoUrls": [
+        "https://www.youtube.com/watch?v=yt-vid-01"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "video"
     }
   ],
   "posts_butler": [

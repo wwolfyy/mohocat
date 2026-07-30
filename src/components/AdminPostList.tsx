@@ -103,7 +103,7 @@ interface Post {
   time: string;
   createdAt?: any; // Can be Date, string, number, or Firestore timestamp
   replyCount?: number;
-  showInModal?: boolean; // For announcements modal popup
+  showInModal?: boolean; // Site-visit popup — 공지사항 and 입양홍보
 }
 
 interface AdminPostListProps {
@@ -249,11 +249,17 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   const handleToggleModal = async (postId: string, currentStatus: boolean) => {
     try {
       setIsLoading(true);
-      await (announcementService as any).toggleModalDisplay(postId, !currentStatus);
+      // 입양홍보 posts carry the same `showInModal` flag since 2026-07-31, so the
+      // toggle has to write through the owning collection's service — sending an
+      // adoption id to the announcement service would update nothing and still
+      // report success.
+      const service = postType === 'adoption_promotion' ? adoptionService : announcementService;
+      await (service as any).toggleModalDisplay(postId, !currentStatus);
 
       // Refresh the posts list
       await fetchPosts(currentPage);
-      alert(`공지사항 팝업이 ${!currentStatus ? '활성화' : '비활성화'}되었습니다.`);
+      const label = postType === 'adoption_promotion' ? '입양홍보' : '공지사항';
+      alert(`${label} 팝업이 ${!currentStatus ? '활성화' : '비활성화'}되었습니다.`);
     } catch (error) {
       console.error('Failed to toggle modal display:', error);
       alert('모달 설정 변경에 실패했습니다. 다시 시도해주세요.');
@@ -392,8 +398,8 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                       Delete
                     </button>
 
-                    {/* Modal Toggle Switch - Only for announcements */}
-                    {postType === 'announcements' && (
+                    {/* Modal Toggle Switch — the two popup-capable post kinds */}
+                    {(postType === 'announcements' || postType === 'adoption_promotion') && (
                       <div
                         onClick={() => handleToggleModal(post.id, post.showInModal || false)}
                         className={cn(

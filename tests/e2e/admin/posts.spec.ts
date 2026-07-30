@@ -157,7 +157,10 @@ test.describe('게시물 관리', () => {
 
     const card = page.locator('div.rounded-lg').filter({ has: header });
     await expect(card.getByText('E2E 테스트로 작성한 입양홍보 내용입니다.')).toBeVisible();
-    await expect(card.getByAltText('이미지')).toBeVisible();
+    // Since 2026-07-31 the expanded card renders the whole post through the shared
+    // `PostMedia` (every image, every video) rather than a single thumbnail, so the
+    // alt is now indexed. Full-media behaviour is pinned in public/galleries-adoption.
+    await expect(card.getByAltText('입양홍보 이미지 1')).toBeVisible();
   });
 
   /**

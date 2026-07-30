@@ -11,6 +11,47 @@
 
 ---
 
+## 2026-07-31 — expanding an 입양홍보 post showed no image (and never could, if it had a video)
+
+**Symptom:** owner-reported — the 입양홍보 feed folds each post to 3 lines, and expanding it
+"doesn't show the image". 공지사항 showed its media fine.
+
+**Root cause:** `AdoptionPostCard`'s expanded branch rendered **one** thumbnail, chosen with a
+ternary: `videoId ? <youtube thumb> : post.thumbnailUrl`. Two separate defects fell out of that
+single line:
+
+1. **A post carrying a video never displayed its photos at all** — the video branch won and the
+   image branch was unreachable. This is what was reported, because the test post had both.
+2. **A post with several images showed only the first**, since it rendered `thumbnailUrl` (which
+   `useSimpleContentForm` sets to `imageUrls[0]`) rather than the list.
+
+Both were then rendered at `h-15 w-20` — and `h-15` is not a Tailwind class, so even the one
+thumbnail that did appear had no height rule. The whole block was a miniature preview
+masquerading as "the expanded post".
+
+**Fix:** the media rendering was extracted from `AnnouncementModal` into a shared `PostMedia`
+(every image, then every video, YouTube ones embedded as `iframe`), and the adoption card's
+expanded branch now uses it. So 공지사항's popup, 입양홍보's popup and the 입양홍보 feed all
+render a post the same way.
+
+⚠️ **Why no test caught it, which is the part worth remembering.** The e2e
+`creating an 입양홍보 post with an image publishes it to the adoption feed` asserted
+`getByAltText('이미지')` and passed the entire time — the old markup _did_ emit that alt, but
+only on the image-only path the spec happened to exercise. The broken path needed a post with
+**both** kinds of media, and **no fixture in the repo had any media at all** (`posts_adoption`
+was a single text-only post). The assertion was true and the feature was broken: a green test
+over the one input that works is not coverage.
+
+**Verified:** new fixture `test-adopt-02` carries two images _and_ a video — the combination
+that was broken — and `public/galleries-adoption.spec.ts` asserts both images and the embedded
+video appear on expand, then vanish on fold. It fails against the old code by construction.
+The YouTube embed is stubbed with `page.route()` so the strict console watchdog does not see a
+real network fetch. Full suite **162 passed / 13 skipped / 0 failed**. Also confirmed in the
+browser against **production data**: the owner's real post now renders its photo under 이미지
+and a playable embed under 동영상.
+
+---
+
 ## 2026-07-30 — a one-header hardening silently blocked every image upload (self-inflicted, same day)
 
 **Symptom:** owner-reported from 공지사항 on `dev.mohocats.org` — "video is uploading fine but

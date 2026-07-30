@@ -77,4 +77,40 @@ test.describe('입양홍보 — adoption', () => {
     await page.getByPlaceholder('제목이나 내용으로 검색').fill('존재하지않는검색어zzz');
     await expect(page.getByText('검색 결과가 없어요.')).toBeVisible();
   });
+
+  /**
+   * 🐛 **Regression net for the 2026-07-31 bug (owner-reported).** Expanding a post
+   * rendered ONE 80×20 thumbnail, chosen as `video ? youtubeThumb : image` — so a
+   * post carrying a video never showed its photos at all, and a post with several
+   * images showed only the first. `test-adopt-02` carries two images *and* a video,
+   * which is the combination that was broken; nothing in the fixture set had media
+   * before, which is why no spec caught it.
+   */
+  test('소식 feed: an expanded post shows every image AND its video, not one or the other', async ({
+    page,
+  }) => {
+    // Keep the YouTube embed off the network: the console watchdog fails a test on
+    // any non-emulator resource error, and the fixture id is not a real video.
+    await page.route('**://www.youtube.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '' })
+    );
+
+    await page.goto('/pages/adoption');
+
+    const postHeader = page.getByRole('button', { name: /입양 소식 2/ });
+    await expect(postHeader).toBeVisible();
+    await postHeader.click();
+    await expect(postHeader).toHaveAttribute('aria-expanded', 'true');
+
+    // Both images — the old markup could only ever show one.
+    await expect(page.getByAltText('입양홍보 이미지 1')).toBeVisible();
+    await expect(page.getByAltText('입양홍보 이미지 2')).toBeVisible();
+
+    // …and the video, embedded rather than replacing the images.
+    await expect(page.locator('iframe[title="입양홍보 동영상 1"]')).toBeVisible();
+
+    // Folding hides the media again.
+    await postHeader.click();
+    await expect(page.getByAltText('입양홍보 이미지 1')).toHaveCount(0);
+  });
 });

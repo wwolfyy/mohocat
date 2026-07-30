@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
 import MediaItemList from '@/components/forms/MediaItemList';
 import CatTagSelectField from '@/components/forms/CatTagSelectField';
 import CatSelectorModal from '@/components/CatSelectorModal';
+import ShowInModalToggle from '@/components/forms/ShowInModalToggle';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
 import { useMountain } from '@/components/MountainProvider';
@@ -18,6 +19,7 @@ import { getAdoptionPlaylistId } from '@/utils/config';
  */
 const NewAdoptionForm = () => {
   const mountainId = useMountain();
+  const [showInModal, setShowInModal] = useState(false);
   const adoptionService = getAdoptionService(mountainId);
 
   const form = useSimpleContentForm({
@@ -26,6 +28,8 @@ const NewAdoptionForm = () => {
       description: '입양홍보 동영상',
     },
     createPost: (postData) => adoptionService.createPost(postData),
+    extraPostData: () => ({ showInModal }),
+    onResetExtras: () => setShowInModal(false),
     // 입양홍보 is platform-wide, so its videos also join the one cross-mountain
     // adoption playlist — on top of the mountain playlist the hook always adds,
     // which is what keeps them attributable to a single mountain (plan D7/D8).
@@ -59,6 +63,13 @@ const NewAdoptionForm = () => {
           required
         />
       </div>
+
+      <ShowInModalToggle
+        checked={showInModal}
+        onChange={setShowInModal}
+        description="이 입양홍보 글을 사용자가 페이지를 방문할 때 팝업으로 표시합니다"
+        disabled={form.uploading}
+      />
 
       {/* Per-file media, each with its own 제목/설명. The cat selector sits under
           the section it tags, and only once there is something to tag. */}

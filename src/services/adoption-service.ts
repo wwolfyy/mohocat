@@ -153,4 +153,74 @@ export class FirebaseAdoptionService implements IPostService {
   async updateReplyCount(postId: string): Promise<void> {
     // No-op for adoption posts since they don't have replies
   }
+
+  /**
+   * The 입양홍보 post flagged to pop up on a site visit — most recently updated
+   * first, mirroring `announcement-service.getModalAnnouncement()`.
+   *
+   * Added 2026-07-31 when 입양홍보 gained the same 팝업 toggle 공지사항 had. The
+   * caller (`AnnouncementModalContext`) asks both services and shows **one**
+   * popup per visit, so returning the single best candidate is the contract —
+   * not a list.
+   *
+   * 📌 **No composite index required, and that is load-bearing.** Both clauses are
+   * equality, which Firestore serves by merging single-field indexes; the sort is
+   * deliberately done **in memory** because adding `orderBy('updatedAt')` would
+   * turn this into an equality+orderBy query and *then* demand a composite index
+   * in `firestore.indexes.json`. That matters more than it looks: the emulator
+   * auto-creates indexes and never flags a missing one, and this method swallows
+   * its own errors to `null` — so a missing index would show up only as "the popup
+   * silently never appears in production". The announcement query it mirrors is
+   * built the same way, and likewise has no composite index.
+   */
+  async getModalPost(): Promise<any | null> {
+    try {
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, this.COLLECTION_NAME),
+          where('mountainId', '==', this.mountainId),
+          where('showInModal', '==', true)
+        )
+      );
+
+      if (querySnapshot.empty) {
+        return null;
+      }
+
+      const allDocs = querySnapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || data.createdAt?.toDate() || new Date(),
+        };
+      });
+
+      allDocs.sort((a, b) => {
+        const aTime = a.updatedAt || a.createdAt;
+        const bTime = b.updatedAt || b.createdAt;
+        return bTime.getTime() - aTime.getTime();
+      });
+
+      return allDocs[0];
+    } catch (error) {
+      console.error('Error fetching modal adoption post:', error);
+      return null;
+    }
+  }
+
+  /** Turn the site-visit popup on or off for one 입양홍보 post. */
+  async toggleModalDisplay(postId: string, showInModal: boolean): Promise<void> {
+    try {
+      const postRef = doc(db, this.COLLECTION_NAME, postId);
+      await updateDoc(postRef, {
+        showInModal,
+        updatedAt: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error('Error toggling modal display:', error);
+      throw new Error(`Failed to toggle modal display for adoption post: ${postId}`);
+    }
+  }
 }
