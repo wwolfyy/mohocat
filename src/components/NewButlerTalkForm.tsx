@@ -7,6 +7,7 @@ import CatSelectorModal from '@/components/CatSelectorModal';
 import { useRichContentForm } from '@/components/forms/useRichContentForm';
 import { useMountain } from '@/components/MountainProvider';
 import MediaItemList from '@/components/forms/MediaItemList';
+import CatTagSelectField from '@/components/forms/CatTagSelectField';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
 
 /**
@@ -107,17 +108,11 @@ const NewButlerTalkForm = () => {
 
           {/* Cat Tags */}
           <div className="mb-4">
-            <label htmlFor="videoTags" className="block text-sm font-medium text-gray-700 mb-1">
-              등장하는 고양이
-            </label>
-            <input
-              type="text"
+            <CatTagSelectField
               id="videoTags"
-              value={form.selectedVideoTags.join(', ')}
-              onClick={() => form.setShowVideoTagSelector(true)}
-              readOnly
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 cursor-pointer bg-gray-50"
-              placeholder="고양이를 선택하려면 클릭하세요"
+              tags={form.selectedVideoTags}
+              onOpen={() => form.setShowVideoTagSelector(true)}
+              disabled={form.uploading}
             />
           </div>
 
@@ -181,20 +176,12 @@ const NewButlerTalkForm = () => {
 
       {/* Image Cat Tags - only show if images are selected */}
       {form.imageItems.length > 0 && (
-        <div>
-          <label htmlFor="imageTags" className="block text-sm font-medium text-gray-700 mb-1">
-            등장하는 고양이
-          </label>
-          <input
-            type="text"
-            id="imageTags"
-            value={form.selectedImageTags.join(', ')}
-            onClick={() => form.setShowImageTagSelector(true)}
-            readOnly
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 cursor-pointer bg-gray-50"
-            placeholder="고양이를 선택하려면 클릭하세요"
-          />
-        </div>
+        <CatTagSelectField
+          id="imageTags"
+          tags={form.selectedImageTags}
+          onOpen={() => form.setShowImageTagSelector(true)}
+          disabled={form.uploading}
+        />
       )}
 
       {/* Submit / Cancel */}

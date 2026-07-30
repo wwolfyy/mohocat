@@ -1,55 +1,37 @@
 /**
  * Injectable media-upload strategies for the content forms (complexity-retirement
- * P1.2). The four content forms hand-roll near-identical copies of these; the
- * P2/P3 migrations replace those copies with calls into this module. The upload
- * strategy stays a plain injected function — `MediaUploadField` is presentational
+ * P1.2). The content forms used to hand-roll near-identical copies of these; the
+ * P2/P3 migrations replaced those copies with calls into this module. The upload
+ * strategy stays a plain injected function — `MediaItemList` is presentational
  * and never uploads.
  *
- * - `uploadImagesToStorage` — the Family-B "direct storage" image strategy,
- *   lifted verbatim from NewAnnouncementForm (path prefix parameterized:
- *   `announcements/images` vs `adoption/images`).
- * - `uploadVideosToYouTube` — the shared YouTube strategy (all four forms upload
- *   video through it). Family B always sends title/description/tags; Family A
- *   additionally sends createdTime/playlistId and omits empty tags — covered via
- *   optional fields. P3 reconciliation: NewPostForm's `!result.videoUrl` guard IS
- *   adopted (fail-loud on a broken upload response); its status-based error message
- *   is not (this module keeps the statusText form). Since 2026-07-29 the upload is
+ * **Two strategies, one per medium, shared by all three composers** since
+ * 2026-07-30:
+ *
+ * - `uploadVideoItems` / `uploadVideoToYouTube` — the shared YouTube strategy.
+ *   P3 reconciliation: NewPostForm's `!result.videoUrl` guard IS adopted
+ *   (fail-loud on a broken upload response); its status-based error message is
+ *   not (this module keeps the statusText form). Since 2026-07-29 the upload is
  *   **resumable and direct-to-Google** rather than a single POST through our own
  *   API — see `uploadVideoToYouTube` for why that is not optional.
- * - `uploadImagesWithSignedUrls` — the Family-A image strategy (lifted from
- *   NewPostForm at P3.0): signed-URL PUT + a `cat_images` Firestore entry so the
- *   photos surface in the album/tagging tools. Canonicalized on the route's real
- *   response contract `{ signedUrl, publicUrl }` — NewButlerTalkForm's copy
- *   destructured `{ uploadUrl, downloadUrl }` and could never have worked (see
+ * - `uploadImagesWithSignedUrls` — the image strategy (lifted from NewPostForm at
+ *   P3.0): signed-URL PUT + a `cat_images` Firestore entry so the photos surface
+ *   in the album/tagging tools. Canonicalized on the route's real response
+ *   contract `{ signedUrl, publicUrl }` — NewButlerTalkForm's copy destructured
+ *   `{ uploadUrl, downloadUrl }` and could never have worked (see
  *   log/DEBUG_LOG.md 2026-07-19) — and on NewButlerTalkForm's PUT ok-check,
  *   which NewPostForm's copy lacked.
+ *
+ * 🗑️ **`uploadImagesToStorage` was deleted 2026-07-30.** It was the "direct
+ * storage" image path 공지사항 / 입양홍보 used: it uploaded to
+ * `<prefix>/<Date.now()>_<name>` and recorded **nothing** in Firestore, so those
+ * photos never reached the album and a per-photo description had nowhere to live.
+ * Both forms moved to `uploadImagesWithSignedUrls`, leaving it with no callers.
  */
 import type { User } from 'firebase/auth';
-import { getImageService, getStorageService } from '@/services';
+import { getImageService } from '@/services';
 import { authHeader } from '@/lib/auth/authHeader';
 import { calendarDateToInstant } from '@/utils/dateParser';
-
-/**
- * Upload images straight to Firebase Storage via the service layer and return
- * their download URLs. `pathPrefix` example: `announcements/images`.
- *
- * `storagePrefix` is the owning tenant's Storage namespace (multi-tenant M6,
- * e.g. `mountains/manisan/`); it is prepended so each mountain's uploads land
- * under its own prefix. Geyang's prefix is `''` → the flat path is unchanged,
- * so this defaults to `''` and existing two-arg callers keep their behavior.
- */
-export const uploadImagesToStorage = async (
-  files: File[],
-  pathPrefix: string,
-  storagePrefix: string = ''
-): Promise<string[]> => {
-  const storageService = getStorageService();
-  const uploadPromises = files.map(async (file) => {
-    const path = `${storagePrefix}${pathPrefix}/${Date.now()}_${file.name}`;
-    return await storageService.uploadFile(file, path);
-  });
-  return await Promise.all(uploadPromises);
-};
 
 export interface YouTubeUploadOptions {
   title: string;
@@ -81,11 +63,6 @@ export interface YouTubeUploadOptions {
 
 /** Fraction (0 → 1) of one submit's video bytes uploaded so far. */
 export type UploadProgressCallback = (fraction: number) => void;
-
-export interface YouTubeBatchUploadOptions extends Omit<YouTubeUploadOptions, 'onBytesUploaded'> {
-  /** Overall progress across every file in the batch. */
-  onProgress?: UploadProgressCallback;
-}
 
 /**
  * Aggregates concurrent video uploads into the single 0 → 1 fraction a form shows on
@@ -284,20 +261,71 @@ export const uploadVideoToYouTube = async (
   return result.videoUrl;
 };
 
+/** One video plus the YouTube metadata written for it. */
+export interface VideoItemUpload {
+  file: File;
+  /** Empty falls back to `fallbackTitle`, numbered when several are empty. */
+  title: string;
+  /** Empty stays empty: the video is uploaded with no YouTube description. */
+  description: string;
+}
+
+export interface VideoItemsUploadOptions extends Omit<
+  YouTubeUploadOptions,
+  'onBytesUploaded' | 'title' | 'description'
+> {
+  /**
+   * Title for videos the user left untitled — normally the post title. Only the
+   * untitled ones are numbered `(Part n)`, so a title someone typed is uploaded
+   * verbatim (butler-media plan §4.3).
+   */
+  fallbackTitle: string;
+  /** Overall progress across every file, not per file. */
+  onProgress?: UploadProgressCallback;
+}
+
 /**
- * Upload several videos in parallel; resolves to their YouTube URLs in order.
- * `onProgress` reports one fraction across the whole batch, not per file.
+ * Upload several videos in parallel, **each with its own title and description**;
+ * resolves to their YouTube URLs in order. `onProgress` reports one fraction
+ * across the whole batch.
+ *
+ * Shared by every composer since 2026-07-30. It replaced a plural strategy that
+ * took `File[]` plus **one** shared title/description — which meant a post with
+ * three videos put the same title on all three — and simultaneously replaced the
+ * hand-rolled equivalent inside `useRichContentForm`. The `(Part n)` numbering
+ * below is the reason those two wanted to be one function: it has to count only
+ * the untitled videos, which is fiddly enough to be worth writing once.
  */
-export const uploadVideosToYouTube = async (
-  files: File[],
-  options: YouTubeBatchUploadOptions
+export const uploadVideoItems = async (
+  items: VideoItemUpload[],
+  options: VideoItemsUploadOptions
 ): Promise<string[]> => {
-  const { onProgress, ...perFileOptions } = options;
-  const reporterFor = createUploadProgressTracker(files, onProgress);
+  const { onProgress, fallbackTitle, ...perFileOptions } = options;
+  const reporterFor = createUploadProgressTracker(
+    items.map((item) => item.file),
+    onProgress
+  );
+
+  // Only untitled videos need numbering to stay distinct on YouTube, and a lone
+  // untitled one needs no suffix at all.
+  const untitledCount = items.filter((item) => !item.title.trim()).length;
+  let untitledIndex = 0;
+
+  const titles = items.map((item) => {
+    const ownTitle = item.title.trim();
+    if (ownTitle) return ownTitle;
+    untitledIndex += 1;
+    return untitledCount > 1 ? `${fallbackTitle} (Part ${untitledIndex})` : fallbackTitle;
+  });
 
   return await Promise.all(
-    files.map((file, index) =>
-      uploadVideoToYouTube(file, { ...perFileOptions, onBytesUploaded: reporterFor(index) })
+    items.map((item, index) =>
+      uploadVideoToYouTube(item.file, {
+        ...perFileOptions,
+        title: titles[index],
+        description: item.description,
+        onBytesUploaded: reporterFor(index),
+      })
     )
   );
 };
@@ -353,6 +381,14 @@ export const uploadImagesWithSignedUrls = async (
         body: JSON.stringify({ fileName: file.name, fileType: file.type }),
       });
 
+      // A name already taken in the bucket is refused rather than overwritten
+      // (2026-07-30). It is a normal thing for a user to do, so it gets the route's
+      // Korean message verbatim instead of a statusText the uploader can't act on.
+      if (response.status === 409) {
+        const { message } = await response.json();
+        throw new Error(message ?? `이미 "${file.name}"과 같은 이름의 파일이 있어요.`);
+      }
+
       if (!response.ok) {
         throw new Error(`Failed to get signed URL: ${response.statusText}`);
       }
@@ -363,9 +399,21 @@ export const uploadImagesWithSignedUrls = async (
         method: 'PUT',
         headers: {
           'Content-Type': file.type,
+          // Must match the `extensionHeaders` the URL was signed with, or the
+          // signature itself fails. GCS rejects the write with 412 if the object
+          // was created between our exists() check and this PUT.
+          'x-goog-if-generation-match': '0',
         },
         body: file,
       });
+
+      // 412 is that race losing, not a broken upload — same user-facing cause as
+      // the 409 above.
+      if (uploadResponse.status === 412) {
+        throw new Error(
+          `이미 "${file.name}"과 같은 이름의 파일이 있어요. 파일 이름을 바꿔서 다시 올려주세요.`
+        );
+      }
 
       if (!uploadResponse.ok) {
         throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);

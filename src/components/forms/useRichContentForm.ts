@@ -4,11 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
-import {
-  uploadVideoToYouTube,
-  uploadImagesWithSignedUrls,
-  createUploadProgressTracker,
-} from './uploadStrategies';
+import { uploadVideoItems, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
 import { getMountainName, getYouTubePlaylistId } from '@/utils/config';
@@ -141,47 +137,20 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       // Upload videos first if present (this takes longer)
       if (videoItems.length > 0) {
         try {
-          const fallbackTitle = title.trim() || config.buildDefaultTitle();
-          // Only videos left untitled fall back to the post title, so only those
-          // need numbering to stay distinct on YouTube — a title the user typed is
-          // uploaded verbatim (plan §4.3).
-          const fallbackCount = videoItems.filter((item) => !item.title.trim()).length;
-          let fallbackIndex = 0;
-
-          // One bar for the whole submit: this form uploads its videos in parallel
-          // with per-item titles, so it drives the tracker itself rather than going
-          // through `uploadVideosToYouTube`.
-          const reporterFor = createUploadProgressTracker(
-            videoItems.map((item) => item.file),
-            setUploadProgress
-          );
           setUploadProgress(0);
-
-          videoUrls = await Promise.all(
-            videoItems.map((item, index) => {
-              const ownTitle = item.title.trim();
-              if (!ownTitle) fallbackIndex += 1;
-              const videoTitle = ownTitle
-                ? ownTitle
-                : fallbackCount > 1
-                  ? `${fallbackTitle} (Part ${fallbackIndex})`
-                  : fallbackTitle;
-
-              return uploadVideoToYouTube(item.file, {
-                title: videoTitle,
-                // Empty stays empty: no description on YouTube (plan D2).
-                description: item.description,
-                // Untagged stays untagged. A '산고양이' fallback used to fill this in,
-                // which set `needsTagging: false` on the record and hid the video from
-                // the very queue meant to surface it (owner, 2026-07-29).
-                tags: selectedVideoTags.join(', '),
-                createdTime: createdTime || undefined,
-                playlistIds: playlistId ? [playlistId] : undefined,
-                user,
-                onBytesUploaded: reporterFor(index),
-              });
-            })
-          );
+          videoUrls = await uploadVideoItems(videoItems, {
+            // Untitled videos fall back to the post title; per-item titles are
+            // uploaded verbatim (plan §4.3).
+            fallbackTitle: title.trim() || config.buildDefaultTitle(),
+            // Untagged stays untagged. A '산고양이' fallback used to fill this in,
+            // which set `needsTagging: false` on the record and hid the video from
+            // the very queue meant to surface it (owner, 2026-07-29).
+            tags: selectedVideoTags.join(', '),
+            createdTime: createdTime || undefined,
+            playlistIds: playlistId ? [playlistId] : undefined,
+            user,
+            onProgress: setUploadProgress,
+          });
           mediaType = 'video';
         } catch (videoError) {
           await dialog.alert(

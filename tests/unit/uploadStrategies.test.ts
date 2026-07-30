@@ -7,18 +7,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { User } from 'firebase/auth';
 
-const uploadFileMock = vi.fn();
 const createImageMock = vi.fn();
 
 vi.mock('@/services', () => ({
-  getStorageService: () => ({ uploadFile: uploadFileMock }),
   getImageService: () => ({ createImage: createImageMock }),
 }));
 
 import {
-  uploadImagesToStorage,
   uploadVideoToYouTube,
-  uploadVideosToYouTube,
+  uploadVideoItems,
   uploadImagesWithSignedUrls,
   createUploadProgressTracker,
 } from '@/components/forms/uploadStrategies';
@@ -31,48 +28,6 @@ const file = (name: string) => new File(['x'], name, { type: 'application/octet-
  * attach this user's ID token. Only `getIdToken()` is exercised.
  */
 const testUser = { getIdToken: async () => 'test-id-token' } as unknown as User;
-
-beforeEach(() => {
-  uploadFileMock.mockReset();
-});
-
-describe('uploadImagesToStorage (direct-storage strategy, Family B)', () => {
-  it('uploads every file under the given prefix and returns the URLs in order', async () => {
-    uploadFileMock.mockImplementation(async (_f: File, path: string) => `https://cdn/${path}`);
-
-    const urls = await uploadImagesToStorage([file('a.jpg'), file('b.jpg')], 'adoption/images');
-
-    expect(uploadFileMock).toHaveBeenCalledTimes(2);
-    // Path contract from NewAnnouncementForm: `<prefix>/<Date.now()>_<fileName>`.
-    const paths = uploadFileMock.mock.calls.map((c) => c[1] as string);
-    expect(paths[0]).toMatch(/^adoption\/images\/\d+_a\.jpg$/);
-    expect(paths[1]).toMatch(/^adoption\/images\/\d+_b\.jpg$/);
-    expect(urls).toEqual([`https://cdn/${paths[0]}`, `https://cdn/${paths[1]}`]);
-  });
-
-  it('re-throws a failed upload instead of swallowing it', async () => {
-    uploadFileMock.mockRejectedValue(new Error('storage down'));
-    await expect(uploadImagesToStorage([file('a.jpg')], 'p')).rejects.toThrow('storage down');
-  });
-
-  it('prepends the tenant storagePrefix to the object path (multi-tenant M6)', async () => {
-    uploadFileMock.mockImplementation(async (_f: File, path: string) => `https://cdn/${path}`);
-
-    await uploadImagesToStorage([file('a.jpg')], 'announcements/images', 'mountains/manisan/');
-
-    const path = uploadFileMock.mock.calls[0][1] as string;
-    expect(path).toMatch(/^mountains\/manisan\/announcements\/images\/\d+_a\.jpg$/);
-  });
-
-  it('an empty storagePrefix (geyang) leaves the flat path unchanged', async () => {
-    uploadFileMock.mockImplementation(async (_f: File, path: string) => `https://cdn/${path}`);
-
-    await uploadImagesToStorage([file('a.jpg')], 'announcements/images', '');
-
-    const path = uploadFileMock.mock.calls[0][1] as string;
-    expect(path).toMatch(/^announcements\/images\/\d+_a\.jpg$/);
-  });
-});
 
 /**
  * Stand-in for the browser's XMLHttpRequest, which the byte leg uses (fetch cannot
@@ -346,8 +301,51 @@ describe('uploadVideoToYouTube (shared YouTube strategy — resumable, direct-to
       uploadVideoToYouTube(file('v.mp4'), { title: 't', description: 'd', user: testUser })
     ).rejects.toThrow('No video URL returned from upload');
   });
+});
 
-  it('uploadVideosToYouTube maps several files to their URLs in order', async () => {
+/**
+ * The per-item batch strategy every composer uses. Its whole reason to exist is
+ * that each video carries its OWN title and description — the shape it replaced
+ * took `File[]` plus one shared pair, so a post with three videos put the same
+ * title on all three.
+ */
+describe('uploadVideoItems (per-item batch upload)', () => {
+  const fetchMock = vi.fn();
+  const SESSION_URL = 'https://www.googleapis.com/upload/youtube/v3/videos?upload_id=xyz';
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    FakeXhr.reset();
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('XMLHttpRequest', FakeXhr);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const mockApi = (videoUrl = 'https://youtu.be/abc') => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/upload-youtube') {
+        return { ok: true, json: async () => ({ sessionUrl: SESSION_URL }) };
+      }
+      return { ok: true, json: async () => ({ videoUrl }) };
+    });
+  };
+
+  /** Metadata sent to the session route, one entry per uploaded video, in order. */
+  const sessionBodies = () =>
+    fetchMock.mock.calls
+      .filter(([url]) => url === '/api/upload-youtube')
+      .map(([, init]) => JSON.parse(init.body as string));
+
+  const item = (name: string, title = '', description = '') => ({
+    file: file(name),
+    title,
+    description,
+  });
+
+  it('maps several items to their URLs in order', async () => {
     fetchMock.mockImplementation(async (url: string, init: { body: unknown }) => {
       const { fileName } = JSON.parse(init.body as string);
       if (url === '/api/upload-youtube') {
@@ -356,13 +354,64 @@ describe('uploadVideoToYouTube (shared YouTube strategy — resumable, direct-to
       return { ok: true, json: async () => ({ videoUrl: `https://youtu.be/${fileName}` }) };
     });
 
-    const urls = await uploadVideosToYouTube([file('1.mp4'), file('2.mp4')], {
-      title: 't',
-      description: 'd',
+    const urls = await uploadVideoItems([item('1.mp4'), item('2.mp4')], {
+      fallbackTitle: 't',
       user: testUser,
     });
 
     expect(urls).toEqual(['https://youtu.be/1.mp4', 'https://youtu.be/2.mp4']);
+  });
+
+  it('gives each video its OWN title and description', async () => {
+    mockApi();
+
+    await uploadVideoItems(
+      [item('1.mp4', '산책하는 냥이', '첫 번째'), item('2.mp4', '밥 먹는 냥이', '두 번째')],
+      { fallbackTitle: '글 제목', user: testUser }
+    );
+
+    expect(sessionBodies().map((body) => [body.title, body.description])).toEqual([
+      ['산책하는 냥이', '첫 번째'],
+      ['밥 먹는 냥이', '두 번째'],
+    ]);
+  });
+
+  /**
+   * Only the untitled ones get numbered. Numbering every video would rename the
+   * titles someone deliberately typed.
+   */
+  it('numbers only the untitled videos, leaving typed titles verbatim', async () => {
+    mockApi();
+
+    await uploadVideoItems([item('1.mp4', '내가 쓴 제목'), item('2.mp4'), item('3.mp4')], {
+      fallbackTitle: '글 제목',
+      user: testUser,
+    });
+
+    expect(sessionBodies().map((body) => body.title)).toEqual([
+      '내가 쓴 제목',
+      '글 제목 (Part 1)',
+      '글 제목 (Part 2)',
+    ]);
+  });
+
+  it('a lone untitled video takes the fallback with no Part suffix', async () => {
+    mockApi();
+
+    await uploadVideoItems([item('1.mp4', '내가 쓴 제목'), item('2.mp4')], {
+      fallbackTitle: '글 제목',
+      user: testUser,
+    });
+
+    expect(sessionBodies().map((body) => body.title)).toEqual(['내가 쓴 제목', '글 제목']);
+  });
+
+  it('treats a whitespace-only title as untitled', async () => {
+    mockApi();
+
+    await uploadVideoItems([item('1.mp4', '   ')], { fallbackTitle: '글 제목', user: testUser });
+
+    expect(sessionBodies()[0].title).toBe('글 제목');
   });
 
   /**
@@ -370,17 +419,22 @@ describe('uploadVideoToYouTube (shared YouTube strategy — resumable, direct-to
    * and re-summed. Accumulating a running total would count each event on top of the
    * previous one and race past 100%.
    */
-  it('uploadVideosToYouTube aggregates progress across files as one fraction', async () => {
+  it('aggregates progress across files as one fraction', async () => {
     mockApi();
     FakeXhr.progressEvents = [50];
     const fractions: number[] = [];
 
-    await uploadVideosToYouTube([sizedFile('1.mp4', 100), sizedFile('2.mp4', 100)], {
-      title: 't',
-      description: 'd',
-      user: testUser,
-      onProgress: (fraction) => fractions.push(fraction),
-    });
+    await uploadVideoItems(
+      [
+        { file: sizedFile('1.mp4', 100), title: '', description: '' },
+        { file: sizedFile('2.mp4', 100), title: '', description: '' },
+      ],
+      {
+        fallbackTitle: 't',
+        user: testUser,
+        onProgress: (fraction: number) => fractions.push(fraction),
+      }
+    );
 
     // Two 100-byte files: each reports 50 then settles at 100, over a 200-byte total.
     expect(fractions[fractions.length - 1]).toBe(1);
@@ -496,6 +550,49 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
 
     const descriptions = createImageMock.mock.calls.map((call) => call[0].description);
     expect(descriptions).toEqual(['첫 번째 사진', '']);
+  });
+
+  /**
+   * Overwrite protection (2026-07-30). The object path is the filename verbatim, so
+   * a repeated name used to replace the earlier post's photo in place. Two rejections
+   * mean the same thing to the user and both must say so in Korean: 409 from our
+   * route's `exists()` check, and 412 from GCS when a concurrent upload wins the race
+   * between that check and the PUT.
+   */
+  it('surfaces the route’s Korean message when the file name is already taken (409)', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        error: 'DUPLICATE_FILE_NAME',
+        fileName: 'a.jpg',
+        message: '이미 "a.jpg"과 같은 이름의 파일이 있어요. 파일 이름을 바꿔서 다시 올려주세요.',
+      }),
+    });
+
+    await expect(
+      uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '본문' }], context)
+    ).rejects.toThrow('이미 "a.jpg"과 같은 이름의 파일이 있어요');
+    // Nothing was written: no PUT, no cat_images entry.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(createImageMock).not.toHaveBeenCalled();
+  });
+
+  it('sends the if-generation-match precondition, and explains a 412 as a name clash', async () => {
+    fetchMock
+      .mockResolvedValueOnce(signedUrlResponse(1))
+      .mockResolvedValueOnce({ ok: false, status: 412, statusText: 'Precondition Failed' });
+
+    await expect(
+      uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '본문' }], context)
+    ).rejects.toThrow('이미 "a.jpg"과 같은 이름의 파일이 있어요');
+
+    // The header must be sent, and must match what the URL was signed with — omitting
+    // it breaks the signature, so this is not merely belt-and-braces.
+    expect(fetchMock.mock.calls[1][1].headers).toMatchObject({
+      'x-goog-if-generation-match': '0',
+    });
+    expect(createImageMock).not.toHaveBeenCalled();
   });
 
   it('throws when the signed-URL request fails', async () => {

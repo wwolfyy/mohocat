@@ -3,30 +3,50 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { uploadImagesToStorage, uploadVideosToYouTube } from './uploadStrategies';
+import { uploadVideoItems, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
-import { getMountainConfig, getYouTubePlaylistId } from '@/utils/config';
+import { getYouTubePlaylistId } from '@/utils/config';
+import type { MediaItem } from './MediaItemList';
 
 /**
  * Shared submit/upload flow for the simple-content family (공지사항 + 입양홍보;
  * complexity-retirement P2.1). Owns the state and submit pipeline the two forms
  * previously duplicated line-for-line: title/message + media state, validation
- * alerts, image upload via the direct-storage strategy, video upload via the
- * shared YouTube strategy, Korea-time stamping, postData assembly, reset,
+ * alerts, image and video upload, Korea-time stamping, postData assembly, reset,
  * success dialog (shared ui/Modal via useDialog), and redirect. Per-form differences are injected via config;
  * form-specific extra fields (e.g. the announcement's 팝업 toggle) ride along
  * through `extraPostData`/`onResetExtras`.
+ *
+ * **Media is per-file since 2026-07-30 (owner).** Both forms used to hold flat
+ * `File[]`s behind one `multiple` picker, which meant every video in a post got
+ * the *same* YouTube title (the post title) and the same description, and photos
+ * carried no description at all. They now use `MediaItem[]` and the same
+ * `MediaItemList` as 집사톡, so each file carries its own 제목/설명 — and images
+ * moved onto the **signed-URL strategy**, the only image path with somewhere for
+ * a per-photo description to live. Two consequences, both intended:
+ *
+ * 1. 공지사항 / 입양홍보 photos now get a **`cat_images` record**, so they appear
+ *    in the public 사진첩 and in the admin tagging queue. The old direct-storage
+ *    path recorded nothing at all.
+ * 2. Both forms gained a **cat selector** (owner, 2026-07-30) — the same
+ *    `CatSelectorModal` 집사톡 uses, one for video and one for images — so those
+ *    records can be tagged at upload time instead of only in the tagging queue.
+ *    An empty selection still stays empty: `needsTagging` is the signal that the
+ *    photo has never been tagged, and a default would erase it.
+ *
+ * 🗑️ **The pasted-URL lists were removed (owner, 2026-07-30).** Both forms briefly
+ * kept an "또는 URL 입력" list beside the file picker; the owner dropped it, so
+ * these composers now only attach media they upload.
  *
  * State is hand-rolled useState by decision (§7: react-hook-form dropped — the
  * forms' complexity is upload management, not field state).
  */
 
 export interface SimpleContentFormConfig {
-  /** Storage path prefix for image uploads, e.g. 'announcements/images'. */
-  imagePathPrefix: string;
   /**
-   * YouTube metadata fallbacks, used when title/message are empty.
+   * YouTube metadata fallbacks, used when a video's own 제목/설명 and the post's
+   * title/message are all empty.
    *
    * ⚠️ **No `tags` here, deliberately.** These composers offer the uploader no cat
    * selection, and they used to attach a fixed `공지사항` / `입양홍보` tag regardless —
@@ -57,10 +77,12 @@ export interface SimpleContentFormConfig {
 export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [imageItems, setImageItems] = useState<MediaItem[]>([]);
+  const [videoItems, setVideoItems] = useState<MediaItem[]>([]);
+  const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
+  const [selectedImageTags, setSelectedImageTags] = useState<string[]>([]);
+  const [showVideoTagSelector, setShowVideoTagSelector] = useState(false);
+  const [showImageTagSelector, setShowImageTagSelector] = useState(false);
   const [uploading, setUploading] = useState(false);
   /** 0 → 1 while video bytes are in flight; null when no video upload is running. */
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -69,7 +91,6 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const { user } = useAuth();
   const dialog = useDialog();
   const mountainId = useMountain();
-  const storagePrefix = getMountainConfig(mountainId).storagePrefix;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,16 +112,25 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
         return;
       }
 
-      // Upload files and combine with URLs
-      let allImageUrls = [...imageUrls.filter((url) => url.trim())];
-      let allVideoUrls = [...videoUrls.filter((url) => url.trim())];
+      let allImageUrls: string[] = [];
+      let allVideoUrls: string[] = [];
 
-      if (imageFiles.length > 0) {
+      if (imageItems.length > 0) {
         try {
-          const uploadedImageUrls = await uploadImagesToStorage(
-            imageFiles,
-            config.imagePathPrefix,
-            storagePrefix
+          const uploadedImageUrls = await uploadImagesWithSignedUrls(
+            imageItems.map((item) => ({ file: item.file, description: item.description })),
+            {
+              mountainId,
+              // Whatever the uploader picked in the cat selector — empty stays
+              // empty, which is what leaves `needsTagging` true and surfaces the
+              // photo in the tagging queue.
+              tags: selectedImageTags,
+              // No 촬영일 field on these composers; the strategy falls back to the
+              // upload moment, which is what the direct-storage path recorded too.
+              createdTime: '',
+              uploadedBy: user.email,
+              user,
+            }
           );
           allImageUrls = [...allImageUrls, ...uploadedImageUrls];
         } catch (error) {
@@ -111,7 +141,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
         }
       }
 
-      if (videoFiles.length > 0) {
+      if (videoItems.length > 0) {
         try {
           // The mountain's own playlist always, plus whatever the form adds
           // (입양홍보 → the cross-mountain adoption playlist). Nulls = "not
@@ -122,13 +152,27 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
           ].filter((playlistId): playlistId is string => Boolean(playlistId));
 
           setUploadProgress(0);
-          const uploadedVideoUrls = await uploadVideosToYouTube(videoFiles, {
-            title: title || config.youtubeDefaults.title,
-            description: message || config.youtubeDefaults.description,
-            playlistIds,
-            user,
-            onProgress: setUploadProgress,
-          });
+          const uploadedVideoUrls = await uploadVideoItems(
+            // A video left without its own 설명 keeps inheriting the post body, as
+            // it did when one description covered the whole batch. Unlike 집사톡
+            // (where empty means empty), dropping this would silently blank the
+            // description on every announcement video that doesn't type one.
+            videoItems.map((item) => ({
+              ...item,
+              description:
+                item.description.trim() || message.trim() || config.youtubeDefaults.description,
+            })),
+            {
+              fallbackTitle: title.trim() || config.youtubeDefaults.title,
+              // Untagged stays untagged when nothing is picked — a default would set
+              // `needsTagging: false` and hide the video from the queue that exists
+              // to find untagged ones (owner, 2026-07-29).
+              tags: selectedVideoTags.join(', '),
+              playlistIds,
+              user,
+              onProgress: setUploadProgress,
+            }
+          );
           allVideoUrls = [...allVideoUrls, ...uploadedVideoUrls];
         } catch (error) {
           await dialog.alert(
@@ -165,10 +209,10 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
       // Reset form
       setTitle('');
       setMessage('');
-      setImageFiles([]);
-      setVideoFiles([]);
-      setImageUrls([]);
-      setVideoUrls([]);
+      setImageItems([]);
+      setVideoItems([]);
+      setSelectedVideoTags([]);
+      setSelectedImageTags([]);
       config.onResetExtras?.();
 
       await dialog.alert(config.successMessage);
@@ -192,14 +236,18 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
     setTitle,
     message,
     setMessage,
-    imageFiles,
-    setImageFiles,
-    videoFiles,
-    setVideoFiles,
-    imageUrls,
-    setImageUrls,
-    videoUrls,
-    setVideoUrls,
+    imageItems,
+    setImageItems,
+    videoItems,
+    setVideoItems,
+    selectedVideoTags,
+    setSelectedVideoTags,
+    selectedImageTags,
+    setSelectedImageTags,
+    showVideoTagSelector,
+    setShowVideoTagSelector,
+    showImageTagSelector,
+    setShowImageTagSelector,
     uploading,
     uploadProgress,
     handleSubmit,

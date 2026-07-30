@@ -93,10 +93,14 @@ describe('smoke: content-form primitives exist (complexity-retirement P1)', () =
   // The P2/P3 form migrations swap the hand-rolled upload sections for these;
   // behavioral coverage lives in tests/unit/uploadStrategies.test.ts + the e2e net.
   const primitives = [
-    'components/forms/MediaUploadField.tsx',
-    // One-file-per-section picker with per-file metadata; 집사톡 uses this, the
-    // Family B forms still use MediaUploadField's multi-file picker.
+    // One-file-per-section picker with per-file metadata. All three composers use
+    // it since 2026-07-30; the flat `MediaUploadField` multi-file picker it
+    // replaced is deleted.
     'components/forms/MediaItemList.tsx',
+    // 등장하는 고양이 selector field, shared by all three composers since the
+    // 2026-07-30 pass (distinct from admin/media/CatTagField, the editor's
+    // free-text variant).
+    'components/forms/CatTagSelectField.tsx',
     'components/forms/uploadStrategies.ts',
   ];
   it.each(primitives)('%s exists', (rel) => {

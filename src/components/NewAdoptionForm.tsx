@@ -3,7 +3,9 @@
 import React from 'react';
 import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
-import MediaUploadField from '@/components/forms/MediaUploadField';
+import MediaItemList from '@/components/forms/MediaItemList';
+import CatTagSelectField from '@/components/forms/CatTagSelectField';
+import CatSelectorModal from '@/components/CatSelectorModal';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
 import { useMountain } from '@/components/MountainProvider';
@@ -19,7 +21,6 @@ const NewAdoptionForm = () => {
   const adoptionService = getAdoptionService(mountainId);
 
   const form = useSimpleContentForm({
-    imagePathPrefix: 'adoption/images',
     youtubeDefaults: {
       title: '입양홍보 동영상',
       description: '입양홍보 동영상',
@@ -59,21 +60,42 @@ const NewAdoptionForm = () => {
         />
       </div>
 
-      <MediaUploadField
-        kind="image"
-        files={form.imageFiles}
-        onFilesChange={form.setImageFiles}
-        urls={form.imageUrls}
-        onUrlsChange={form.setImageUrls}
-      />
+      {/* Per-file media, each with its own 제목/설명. The cat selector sits under
+          the section it tags, and only once there is something to tag. */}
+      <div>
+        <MediaItemList
+          kind="image"
+          items={form.imageItems}
+          onItemsChange={form.setImageItems}
+          disabled={form.uploading}
+        />
+        {form.imageItems.length > 0 && (
+          <CatTagSelectField
+            id="imageTags"
+            tags={form.selectedImageTags}
+            onOpen={() => form.setShowImageTagSelector(true)}
+            disabled={form.uploading}
+          />
+        )}
+      </div>
 
-      <MediaUploadField
-        kind="video"
-        files={form.videoFiles}
-        onFilesChange={form.setVideoFiles}
-        urls={form.videoUrls}
-        onUrlsChange={form.setVideoUrls}
-      />
+      <div>
+        <MediaItemList
+          kind="video"
+          items={form.videoItems}
+          onItemsChange={form.setVideoItems}
+          disabled={form.uploading}
+          descriptionHelp="비어 있으면 글 내용이 사용돼요."
+        />
+        {form.videoItems.length > 0 && (
+          <CatTagSelectField
+            id="videoTags"
+            tags={form.selectedVideoTags}
+            onOpen={() => form.setShowVideoTagSelector(true)}
+            disabled={form.uploading}
+          />
+        )}
+      </div>
 
       <UploadProgressBar progress={form.uploadProgress} />
 
@@ -97,6 +119,21 @@ const NewAdoptionForm = () => {
           취소
         </button>
       </div>
+      <CatSelectorModal
+        isOpen={form.showVideoTagSelector}
+        onClose={() => form.setShowVideoTagSelector(false)}
+        selectedTags={form.selectedVideoTags}
+        onTagsChange={form.setSelectedVideoTags}
+        title="비디오에 등장하는 고양이 선택"
+      />
+
+      <CatSelectorModal
+        isOpen={form.showImageTagSelector}
+        onClose={() => form.setShowImageTagSelector(false)}
+        selectedTags={form.selectedImageTags}
+        onTagsChange={form.setSelectedImageTags}
+        title="이미지에 등장하는 고양이 선택"
+      />
       {form.dialog}
     </form>
   );

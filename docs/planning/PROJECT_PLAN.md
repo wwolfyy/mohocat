@@ -1118,25 +1118,63 @@ contained version won.
 
 ---
 
-## 10d. `[ ]` One video per post + consistent media-section order (2026-07-29)
+## 10d. Per-file media in every composer (2026-07-29 → **redirected + partly DONE** 2026-07-30)
 
-**Decision (owner, 2026-07-29): remove multiple-video upload from the composers.** Posts
-should not carry a pile of videos.
+> 🔄 **The 2026-07-29 decision was replaced by the owner on 2026-07-30, before any of it was
+> built.** It read: _"remove multiple-video upload from the composers — posts should not carry
+> a pile of videos"_, capping video at one everywhere. **That is no longer the plan.** Do not
+> implement a cap from the old text; it is kept here only so the reversal is legible.
 
-- [ ] **D1 — cap video upload at one per post.** Two different mechanisms allow several
-      today, so both need changing:
-  - **공지사항 / 입양홍보** (`MediaUploadField`) — the file input carries `multiple`
-    (`MediaUploadField.tsx:89`), **and** the section keeps a separate list of pasted
-    YouTube **URLs**. Removing `multiple` alone still leaves the URL list unbounded.
-  - **집사톡** (`MediaItemList`) — no `multiple`, but the trailing picker re-renders after
-    each pick so the list grows one file at a time. Capping means hiding that trailing
-    picker once a video exists.
-- [ ] **D2 — ⚠️ CONFIRM BEFORE BUILDING: does the cap apply to images too?** The decision as
-      given names **video**. `MediaUploadField`'s `multiple` is shared by the image section,
-      and 집사톡's growing list is the same component for both — so an implementer will hit
-      this immediately and must not guess. Multiple photos per post is plausibly wanted.
-- [ ] **D3 — align the media-section order across composers** (proposed, **not** decided).
-      집사톡 renders 동영상 → 사진; 공지사항 renders 이미지 → 동영상. See the note below.
+**Decision (owner, 2026-07-30) — two parts, in this order:**
+
+1. **Admin composers stay unrestricted.** 공지사항 and 입양홍보 are admin-only surfaces;
+   admins may attach as much media as they want. What those two forms were actually missing
+   was 집사톡's **per-file** upload — one file per section, each with its own 제목/설명 —
+   which is the opposite of a cap. **✅ DONE 2026-07-30** (see below).
+2. **`[ ]` A CMS-controlled toggle for whether multiple upload is allowed** — the real
+   intent behind the original ask, now aimed at the member-facing composer rather than
+   hard-coded everywhere. **Not started.**
+
+- [x] **D1 — per-file media in 공지사항 / 입양홍보 (DONE 2026-07-30).** Both forms moved off
+      the flat `MediaUploadField` onto `MediaItemList`, so every file carries its own 제목
+      (video) and 설명. Before this, all videos in a post shared **one** YouTube title (the
+      post title) and photos had no 설명 at all.
+  - Images moved onto `uploadImagesWithSignedUrls` — the only image path with somewhere for
+    a per-photo description to live. ⚠️ **Consequence, intended (owner-chosen):** those
+    photos now get a **`cat_images` record**, so they appear in the public 사진첩 and in the
+    admin tagging queue. The old direct-storage path recorded nothing at all.
+  - 🗑️ `MediaUploadField.tsx` and `uploadImagesToStorage` deleted — no callers left.
+- [x] **D1c — cat selector on both forms (DONE 2026-07-30, owner-requested).** The same
+      `CatSelectorModal` 집사톡 uses, one for video and one for images, shown once there is
+      media to tag — so the new `cat_images` records and the uploaded videos can be tagged at
+      upload time rather than only later in the tagging queue. Empty stays empty
+      (`needsTagging` is the never-been-tagged signal). The read-only field was extracted to
+      `forms/CatTagSelectField.tsx` and 집사톡's two hand-rolled copies now use it. ⚠️ Kept
+      separate from `admin/media/CatTagField`, the editor's free-text variant.
+- [x] **D1d — pasted-URL lists removed (DONE 2026-07-30, owner's call).** Both forms briefly
+      kept an "또는 URL 입력" list; it is gone. These composers now only attach uploads.
+- [x] **D1e — filename collisions prevented (DONE 2026-07-30).** The object path is the
+      filename verbatim (`uploads/<name>`), so two posts uploading `IMG_001.jpg` overwrote
+      each other. 🔑 **The bucket is the authority, not `cat_images`** — the record write is
+      non-fatal, 공지사항's old uploads recorded nothing, and `image_uploader` shares the
+      bucket, so an object can exist with no record. `generate-signed-url` now checks
+      `file.exists()` → **409** with an actionable Korean message, and signs with
+      `x-goog-if-generation-match: 0` so GCS rejects a check-then-PUT race **atomically**
+      (412) instead of overwriting. Timestamps were considered and rejected: they lower the
+      odds, a precondition removes them. ⚠️ Applies to 집사톡 too — shared route.
+- [x] **D1b — conspicuous separators (DONE 2026-07-30, owner-requested).** With several files
+      stacked, and a 동영상 list directly above a 사진 list, it was not visually obvious where
+      one file's fields ended or which section a picker belonged to. `MediaItemList` is now a
+      framed section with a header bar + count badge, numbered files, and a dashed rule
+      between them. Browser-verified on 공지사항 and 집사톡.
+- [ ] **D2 — the CMS toggle (NOT STARTED).** ⚠️ **"CMS-controlled" rules out
+      `mountains.json`** — that is a static import and only changes on redeploy, so a toggle
+      there is not a CMS setting. It needs a Firestore-backed config (the `admin_config`
+      shape the YouTube credential already uses) plus a control on an admin page. Open
+      questions for whoever picks it up: which forms it governs (집사톡 only, or all three),
+      whether video and image toggle separately, and whether it is per-mountain.
+- [ ] **D3 — align the media-section order across composers** (proposed, **still not**
+      decided). 집사톡 renders 동영상 → 사진; 공지사항 renders 사진 → 동영상. See the note below.
 
 📌 **Not a bug, recorded so it isn't re-investigated:** on 2026-07-29 videos appeared
 greyed-out and unselectable in 공지사항's picker while the same files were selectable in
@@ -1145,6 +1183,8 @@ so muscle memory from one form lands on the wrong picker in the other, and `acce
 correctly greys out videos. Both components resolve `accept` from the same `kind` prop and
 both pass it correctly — **there is nothing wrong with the pickers.** The external drive was
 a red herring; only the two pickers' `accept` values differed. D3 exists to remove the trap.
+_D1b's framed sections and header bars address the same confusion from the other side: the
+picker now sits visibly inside a labelled 사진 or 동영상 box._
 
 ---
 
