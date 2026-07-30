@@ -15,6 +15,49 @@
 
 ---
 
+## 2026-07-31 — a post's media shows which cats are in it
+
+**Area:** `media-albums.ts` (two new lookups), new `hooks/useMediaTags.ts`, `PostMedia.tsx`.
+**Type:** feature enhancement (owner-requested).
+
+**What changed and why.** The composers let an admin tag the cats in a post's photos and
+videos, and those tags reach `cat_images.tags` and YouTube — but nothing displayed them, so a
+reader of a 공지사항 or 입양홍보 post had no way to know who was in the picture. Each medium now
+carries a `태그: 이름, 이름` line, matching the 사진첩 lightbox's existing wording rather than
+inventing a second treatment.
+
+**Below the media, not overlaid on it.** The owner preferred tags _on_ the image if possible.
+Rejected because the images render `object-contain`: a photo is letterboxed inside its box, so
+an overlay would frequently sit on blank space rather than on the picture. Below also matches
+the album precedent the owner cited as the acceptable alternative.
+
+🔑 **Resolved live from the media records, not copied onto the post.** A post stores only
+`imageUrls` / `videoUrls` — bare URLs — while the tags live on `cat_images` / `cat_videos`. New
+`getImageTagsByUrls()` / `getVideoTagsByYoutubeIds()` resolve URL → record. Stamping the tags
+onto the post at creation would have been cheaper and was **deliberately not done**: tags keep
+being edited in `/admin/tag-images` and `/admin/tag-videos`, so a copy would disagree with the
+album from the first retag — the same failure mode the 2026-07-26 "the tagging surfaces own
+this data" rule exists to prevent. The live lookup also means **posts created before this
+shipped display their tags with no migration**, which is how the owner's existing post was
+verified.
+
+📌 **Details worth keeping:** both collections are `allow read: if true`, so this works for
+anonymous visitors — required, since these are public pages. The `in` clause is chunked at 30
+(Firestore's cap). A lookup failure is non-fatal and logged: the media still renders, untagged.
+And no composite index is needed — `mountainId ==` plus an `in` is a disjunction of equalities
+served by merging single-field indexes, with the sort done in memory; adding an `orderBy` would
+change that, and the emulator would not warn you.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 121/121 · full e2e green for the affected specs
+(161 passed with one unrelated known flake, `member/nav-permissions`, which passes on re-run).
+The e2e fixtures give each medium a **different** tag on purpose — album-01 → test-cat-01,
+album-02 → test-cat-03, yt-vid-01 → test-cat-01 — so a lookup returning one answer for
+everything could not pass. Browser-verified against **production data**: the owner's 공지 post
+shows `태그: 아들조로, 찰리` under its photo and `태그: 예쁜이` under its video, i.e. correctly
+different per medium.
+
+---
+
 ## 2026-07-31 — 입양홍보 posts can pop up on a site visit, like 공지사항
 
 **Area:** new `PostMedia.tsx`, `AnnouncementModal.tsx` → `PostModal.tsx`, new

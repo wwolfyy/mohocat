@@ -180,6 +180,115 @@ export const getAllImages = async (
 };
 
 // Get all videos (with optional filtering)
+/**
+ * Firestore `in` accepts at most 30 values per query, so a lookup over a list has
+ * to be chunked. Posts realistically carry a handful of media, but nothing stops
+ * an admin attaching more.
+ */
+const IN_CLAUSE_LIMIT = 30;
+
+const chunk = <T>(items: T[], size: number): T[][] => {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+};
+
+/**
+ * Cat tags for specific media, looked up by the identifier a **post** stores.
+ *
+ * WHY THIS EXISTS (2026-07-31): a post document holds only `imageUrls` /
+ * `videoUrls` — bare URLs. The cat tags live on the `cat_images` / `cat_videos`
+ * records the upload created. To show tags under a post's media we therefore have
+ * to resolve URL → record.
+ *
+ * 🔑 **Deliberately a live lookup, not a copy on the post.** Stamping the tags
+ * into the post at creation would be cheaper, but tags are edited afterwards in
+ * `/admin/tag-images` and `/admin/tag-videos`, and a copy would silently disagree
+ * with the album from the first retag. That is the same failure the 2026-07-26
+ * rule was adopted to prevent ("the tagging surfaces own this data"). It also
+ * means posts created *before* this shipped display their tags with no migration.
+ *
+ * Both collections are `allow read: if true`, so this works for anonymous
+ * visitors — which matters, since these tags render on public pages.
+ *
+ * 📌 No composite index required: `mountainId ==` plus an `in` (a disjunction of
+ * equalities) is served by merging single-field indexes, and there is no
+ * `orderBy`. Keep it that way — the emulator would not warn you.
+ */
+export const getImageTagsByUrls = async (
+  mountainId: string,
+  imageUrls: string[]
+): Promise<Record<string, string[]>> => {
+  const urls = Array.from(new Set(imageUrls.filter(Boolean)));
+  if (urls.length === 0) return {};
+
+  try {
+    const byUrl: Record<string, string[]> = {};
+
+    await Promise.all(
+      chunk(urls, IN_CLAUSE_LIMIT).map(async (batch) => {
+        const snapshot = await getDocs(
+          query(
+            collection(db, COLLECTIONS.CAT_IMAGES),
+            where('mountainId', '==', mountainId),
+            where('imageUrl', 'in', batch)
+          )
+        );
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.imageUrl && Array.isArray(data.tags) && data.tags.length > 0) {
+            byUrl[data.imageUrl] = data.tags;
+          }
+        });
+      })
+    );
+
+    return byUrl;
+  } catch (error) {
+    // Non-fatal by design: tags are an enhancement to the media, and a post that
+    // renders its photo without a caption is far better than one that renders
+    // nothing. Logged so the failure is not invisible.
+    console.error('Error fetching image tags by url:', error);
+    return {};
+  }
+};
+
+/** As `getImageTagsByUrls`, keyed by YouTube video id (`cat_videos.youtubeId`). */
+export const getVideoTagsByYoutubeIds = async (
+  mountainId: string,
+  youtubeIds: string[]
+): Promise<Record<string, string[]>> => {
+  const ids = Array.from(new Set(youtubeIds.filter(Boolean)));
+  if (ids.length === 0) return {};
+
+  try {
+    const byId: Record<string, string[]> = {};
+
+    await Promise.all(
+      chunk(ids, IN_CLAUSE_LIMIT).map(async (batch) => {
+        const snapshot = await getDocs(
+          query(
+            collection(db, COLLECTIONS.CAT_VIDEOS),
+            where('mountainId', '==', mountainId),
+            where('youtubeId', 'in', batch)
+          )
+        );
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.youtubeId && Array.isArray(data.tags) && data.tags.length > 0) {
+            byId[data.youtubeId] = data.tags;
+          }
+        });
+      })
+    );
+
+    return byId;
+  } catch (error) {
+    console.error('Error fetching video tags by youtube id:', error);
+    return {};
+  }
+};
+
 export const getAllVideos = async (
   mountainId: string,
   options: MediaQueryOptions = {}

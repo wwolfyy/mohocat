@@ -109,8 +109,25 @@ test.describe('입양홍보 — adoption', () => {
     // …and the video, embedded rather than replacing the images.
     await expect(page.locator('iframe[title="입양홍보 동영상 1"]')).toBeVisible();
 
+    /**
+     * Cat tags under each item (2026-07-31). A post stores only URLs, so these are
+     * resolved live from the `cat_images` / `cat_videos` records — which is what
+     * makes them correct for posts created before the feature existed, and what
+     * keeps them in step when someone retags in /admin/tag-images.
+     *
+     * The fixtures give each medium a *different* tag on purpose, so a lookup that
+     * returned the same answer for everything could not pass: album-01 →
+     * test-cat-01, album-02 → test-cat-03, yt-vid-01 → test-cat-01.
+     */
+    await expect(page.getByText('태그: test-cat-01', { exact: false }).first()).toBeVisible();
+    await expect(page.getByText('태그: test-cat-03', { exact: false })).toBeVisible();
+    // One line per tagged medium: two images + one video, and album-01's tag is
+    // shared with the video.
+    await expect(page.getByText(/^태그: /)).toHaveCount(3);
+
     // Folding hides the media again.
     await postHeader.click();
     await expect(page.getByAltText('입양홍보 이미지 1')).toHaveCount(0);
+    await expect(page.getByText(/^태그: /)).toHaveCount(0);
   });
 });

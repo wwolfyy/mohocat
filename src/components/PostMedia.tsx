@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useMediaTags } from '@/hooks/useMediaTags';
 
 /**
  * The full media block of a post: **every** image, then **every** video.
@@ -19,6 +20,13 @@ import React from 'react';
  * Plain `<img>` rather than `next/image`: these URLs are arbitrary Firebase Storage
  * or pasted URLs whose dimensions aren't known ahead of render, and the lightbox
  * elsewhere in the app has the same constraint (see `modal-design-system` notes).
+ *
+ * **Cat tags render beneath each item** (2026-07-31, owner-requested), matching the
+ * 사진첩 lightbox's `태그: …` line rather than inventing a second treatment. Below
+ * rather than overlaid on the image: `object-contain` letterboxes a photo inside
+ * its box, so an overlay would frequently sit on empty space instead of the
+ * picture. The tags are looked up live from the media records — a post stores only
+ * URLs — see `useMediaTags`.
  */
 
 interface PostMediaProps {
@@ -37,9 +45,19 @@ const youtubeIdFrom = (url: string): string | null => {
   return id || null;
 };
 
+/** Renders the shared `태그: 이름, 이름` line, or nothing when there are none. */
+const TagLine = ({ tags }: { tags?: string[] }) =>
+  tags && tags.length > 0 ? (
+    <p className="mt-1 text-xs text-gray-500">태그: {tags.join(', ')}</p>
+  ) : null;
+
 const PostMedia = ({ imageUrls, videoUrls, label }: PostMediaProps) => {
   const images = imageUrls?.filter(Boolean) ?? [];
   const videos = videoUrls?.filter(Boolean) ?? [];
+
+  // Hooks must run unconditionally, so this sits above the early return.
+  const videoIds = videos.map(youtubeIdFrom).filter((id): id is string => Boolean(id));
+  const { byImageUrl, byYoutubeId } = useMediaTags(images, videoIds);
 
   if (images.length === 0 && videos.length === 0) return null;
 
@@ -50,12 +68,14 @@ const PostMedia = ({ imageUrls, videoUrls, label }: PostMediaProps) => {
           <h4 className="mb-2 font-medium text-gray-700">이미지</h4>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {images.map((url, index) => (
-              <img
-                key={index}
-                src={url}
-                alt={`${label} 이미지 ${index + 1}`}
-                className="h-auto max-h-64 w-full rounded-lg border object-contain"
-              />
+              <div key={index}>
+                <img
+                  src={url}
+                  alt={`${label} 이미지 ${index + 1}`}
+                  className="h-auto max-h-64 w-full rounded-lg border object-contain"
+                />
+                <TagLine tags={byImageUrl[url]} />
+              </div>
             ))}
           </div>
         </div>
@@ -70,13 +90,16 @@ const PostMedia = ({ imageUrls, videoUrls, label }: PostMediaProps) => {
 
               if (videoId) {
                 return (
-                  <div key={index} className="aspect-video">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${videoId}`}
-                      title={`${label} 동영상 ${index + 1}`}
-                      className="h-full w-full rounded-lg"
-                      allowFullScreen
-                    />
+                  <div key={index}>
+                    <div className="aspect-video">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        title={`${label} 동영상 ${index + 1}`}
+                        className="h-full w-full rounded-lg"
+                        allowFullScreen
+                      />
+                    </div>
+                    <TagLine tags={byYoutubeId[videoId]} />
                   </div>
                 );
               }
