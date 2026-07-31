@@ -59,10 +59,14 @@ function AdoptionPostCard({ post }: { post: any }) {
             />
             {/* `videoUrl` is the legacy single-value field some older posts carry;
                 newer ones only ever write `videoUrls`. */}
+            {/* `full`, not the default `compact`: an expanded card is a full-width
+                page surface, so the modal's two-column, height-capped treatment
+                rendered photos at half the width of the video beside them. */}
             <PostMedia
               imageUrls={post.imageUrls}
               videoUrls={post.videoUrls?.length ? post.videoUrls : post.videoUrl && [post.videoUrl]}
               label="입양홍보"
+              layout="full"
             />
           </>
         ) : (

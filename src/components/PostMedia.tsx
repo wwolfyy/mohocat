@@ -28,9 +28,16 @@ import type { MediaDetail } from '@/services/media-albums';
  * is resolved live; see `useMediaDetails`.
  *
  * The tag line copies the 사진첩 lightbox's `태그: …` wording rather than inventing
- * a second treatment. Captions sit **below** the media, not overlaid: the images
- * render `object-contain`, so a photo is letterboxed inside its box and an overlay
- * would frequently land on empty space instead of the picture.
+ * a second treatment. Captions sit **below** the media, not overlaid, so they never
+ * cover the picture.
+ *
+ * 🐛 **Fixed 2026-08-01 (owner-reported): photos rendered out of proportion with the
+ * video beside them.** Two causes, both in the `compact` path: the two-column grid
+ * gave a lone photo half the width of the full-width video, and `w-full` +
+ * `max-h-64` + `object-contain` pillarboxed it inside a bordered box, so a photo
+ * sat small between white bars. `compact` now sizes the `<img>` to the picture
+ * itself (`w-auto`, capped by `max-h-64`/`max-w-full`), and the 입양홍보 expanded
+ * card — a full-width page surface, not a dialog — moved to `layout="full"`.
  */
 
 interface PostMediaProps {
@@ -107,7 +114,7 @@ const PostMedia = ({ imageUrls, videoUrls, label, layout = 'compact' }: PostMedi
                   className={
                     layout === 'full'
                       ? 'h-auto w-full rounded-lg border object-contain'
-                      : 'h-auto max-h-64 w-full rounded-lg border object-contain'
+                      : 'mx-auto max-h-64 w-auto max-w-full rounded-lg border'
                   }
                 />
                 {/* Photos have no title by design — a `cat_images` record only
