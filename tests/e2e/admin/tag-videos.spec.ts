@@ -60,11 +60,14 @@ test.describe('동영상 태깅 — characterization', () => {
     await page.goto('/admin/tag-videos');
     await expect(page.getByRole('heading', { name: '동영상 태깅' })).toBeVisible();
 
+    // 3, not 2, since 2026-08-01: the CMS loads with `includeUnavailable`, so it
+    // also counts test-vid-03 (youtubeStatus 'missing'), which the public 영상첩
+    // hides. That is the point — this page is where such a record gets removed.
     await expect(
       page
         .locator('div.bg-white')
         .filter({ hasText: '전체 동영상' })
-        .getByText('2', { exact: true })
+        .getByText('3', { exact: true })
     ).toBeVisible({ timeout: 15_000 });
 
     // Card titles: test-vid-01 has no title → description fallback.

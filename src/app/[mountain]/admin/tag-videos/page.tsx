@@ -88,8 +88,10 @@ export default function TagVideosPage() {
   const dialog = useDialog();
 
   // Read side: shared media-list controller (load/selection/filter/sort/pagination)
+  // `includeUnavailable`: the CMS is where a video deleted on YouTube gets dealt
+  // with, so unlike the public 영상첩 it must still see those records (2026-08-01).
   const load = useCallback(async () => {
-    const allVideos = await videoService.getAllVideos();
+    const allVideos = await videoService.getAllVideos({ includeUnavailable: true });
     return allVideos.map((video) => ({ ...video, processingStatus: null }) as AdminVideo);
   }, [videoService]);
 
@@ -110,6 +112,30 @@ export default function TagVideosPage() {
     videoService,
     dialog,
   });
+
+  // Records whose video is gone from YouTube, or is private — labelled by the
+  // 동기화 flow's availability check (2026-08-01). Deleting is deliberate: the
+  // record carries cat tags and 설명 that exist nowhere else.
+  const missingVideos = c.items.filter((v) => v.youtubeStatus === 'missing');
+  const privateVideos = c.items.filter((v) => v.youtubeStatus === 'private');
+  const [deletingMissing, setDeletingMissing] = useState(false);
+
+  const handleDeleteMissing = async () => {
+    if (missingVideos.length === 0) return;
+    if (!(await dialog.confirm(t.availability.deleteConfirm(missingVideos.length)))) return;
+
+    try {
+      setDeletingMissing(true);
+      await videoService.batchDeleteVideos(missingVideos.map((v) => v.id));
+      await c.reload();
+      await dialog.alert(t.availability.deleted(missingVideos.length));
+    } catch (err: any) {
+      console.error('Error deleting missing video records:', err);
+      await dialog.alert(t.availability.deleteFailed(err.message));
+    } finally {
+      setDeletingMissing(false);
+    }
+  };
 
   // Cat selector states (selection itself lives inside the shared CatSelectorModal;
   // the dead 'youtube-batch' context — never set by any trigger — was dropped)
@@ -613,6 +639,40 @@ export default function TagVideosPage() {
           </Button>
         </div>
       </div>
+
+      {/* Videos that vanished from YouTube. Only rendered once the availability
+          check has actually found some, so this is invisible in the normal case. */}
+      {(missingVideos.length > 0 || privateVideos.length > 0) && (
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+          {missingVideos.length > 0 && (
+            <>
+              <h3 className="font-semibold text-amber-900">
+                ⚠️ {t.availability.missingHeading(missingVideos.length)}
+              </h3>
+              <p className="mt-1 text-sm text-amber-800">{t.availability.missingExplain}</p>
+              <ul className="mt-2 list-inside list-disc text-sm text-amber-800">
+                {missingVideos.map((v) => (
+                  <li key={v.id}>{v.title || v.youtubeId}</li>
+                ))}
+              </ul>
+              <Button
+                size="sm"
+                variant="danger"
+                className="mt-3"
+                onClick={handleDeleteMissing}
+                disabled={deletingMissing}
+              >
+                🗑️ {deletingMissing ? t.availability.deleting : t.availability.deleteRecords}
+              </Button>
+            </>
+          )}
+          {privateVideos.length > 0 && (
+            <p className={`text-sm text-amber-800 ${missingVideos.length > 0 ? 'mt-3' : ''}`}>
+              {t.availability.privateNote(privateVideos.length)}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Statistics */}
       <MediaStatsCards

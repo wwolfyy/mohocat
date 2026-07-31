@@ -583,6 +583,27 @@ export function useYouTubeVideoMutations({
       const result = await response.json();
       console.log('Metadata refresh result:', result);
 
+      // Step 3: reconcile the other direction — records whose video no longer
+      // exists on YouTube. `syncVideos` only imports what YouTube has that we
+      // lack, so without this a deleted video keeps its record (and its tile in
+      // the public 영상첩) forever. This only labels; deleting is the operator's
+      // call, in the panel the label drives. A failure here must not fail the
+      // sync — the metadata refresh above already succeeded.
+      try {
+        const availability = await fetch('/api/admin/video-availability', {
+          method: 'POST',
+          headers: await jsonAuthHeaders(),
+        });
+        if (availability.ok) {
+          console.log('Availability check:', await availability.json());
+        } else {
+          const body = await availability.json().catch(() => ({}));
+          console.error('Availability check failed:', body);
+        }
+      } catch (availabilityError) {
+        console.error('Availability check failed:', availabilityError);
+      }
+
       // Reload videos to get the updated data
       await reloadVideos();
 

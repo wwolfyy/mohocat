@@ -561,6 +561,21 @@ export const adminStrings = {
       saveInModal: '✅ 모달에서 저장하기',
       cancel: '취소',
     },
+    // YouTube에서 사라진 영상 정리 — 동기화가 표시만 하고, 삭제는 사람이 결정해요.
+    availability: {
+      missingHeading: (n: number) => `YouTube에 없는 영상 ${n}개`,
+      missingExplain:
+        'YouTube에서 삭제된 것으로 확인했어요. 공개 영상첩에서는 이미 숨겼지만, 기록과 태그는 남아 있어요.',
+      privateNote: (n: number) =>
+        `비공개 영상 ${n}개도 공개 영상첩에서 숨겼어요. 다시 공개하면 저절로 돌아와요.`,
+      deleteRecords: '기록 삭제',
+      deleting: '삭제 중...',
+      deleteConfirm: (n: number) =>
+        `영상 ${n}개의 기록을 지울까요? 태그와 설명도 함께 사라지고 되돌릴 수 없어요. YouTube에는 이미 없는 영상이에요.`,
+      deleted: (n: number) => `기록 ${n}개를 지웠어요.`,
+      deleteFailed: (msg: string) => `기록을 지우지 못했어요: ${msg}`,
+      checkFailed: (msg: string) => `YouTube 확인에 실패했어요: ${msg}`,
+    },
     grid: {
       noMatch: '현재 필터 조건에 맞는 동영상이 없어요.',
       parsingDate: '📅 날짜 인식 중...',

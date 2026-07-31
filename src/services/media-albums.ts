@@ -91,6 +91,22 @@ export const getCatImages = async (catName: string, mountainId: string): Promise
   }
 };
 
+/**
+ * Drop videos the public cannot watch — deleted from YouTube (`missing`) or made
+ * private (`private`), as established by `POST /api/admin/video-availability`.
+ *
+ * 🐛 2026-08-01: deleted videos kept their `cat_videos` record and so kept a tile
+ * in the public 영상첩, showing YouTube's grey "unavailable" placeholder.
+ *
+ * ⚠️ **Filtered here in memory, not as a `where` clause.** Records that predate
+ * the availability check have no `youtubeStatus` field at all, and a Firestore
+ * inequality would exclude exactly those — i.e. every existing video. Absent is
+ * therefore treated as watchable: nothing vanishes until a check has actually
+ * judged it.
+ */
+const isWatchable = (videos: CatVideo[]): CatVideo[] =>
+  videos.filter((v) => v.youtubeStatus !== 'missing' && v.youtubeStatus !== 'private');
+
 // Get videos for a specific cat
 export const getCatVideos = async (catName: string, mountainId: string): Promise<CatVideo[]> => {
   try {
@@ -115,7 +131,7 @@ export const getCatVideos = async (catName: string, mountainId: string): Promise
     }) as CatVideo[];
 
     // Sort client-side by uploadDate descending
-    return videos.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
+    return isWatchable(videos).sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
   } catch (error) {
     console.error(`Error fetching videos for cat "${catName}":`, error);
     return [];
@@ -350,6 +366,12 @@ export const getAllVideos = async (
         updated: data.updated ? parseDate(data.updated) : undefined,
       };
     }) as CatVideo[];
+
+    // Public surfaces show only what a visitor can actually watch; the CMS opts
+    // in to the rest, since managing them is the whole point of /admin/tag-videos.
+    if (!options.includeUnavailable) {
+      results = isWatchable(results);
+    }
 
     // Sort client-side
     const orderField = options.orderBy || 'uploadDate';

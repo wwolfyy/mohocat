@@ -46,6 +46,18 @@ export interface CatVideo {
   videoType: 'storage' | 'youtube'; // Where the video is hosted
   youtubeId?: string; // YouTube video ID (for YouTube videos)
   allPlaylists?: Array<{ id: string; title: string }>; // All playlists the video belongs to
+  /**
+   * Whether the video still exists on YouTube, as of the last availability check
+   * (`POST /api/admin/video-availability`, run by the 동기화 flow).
+   *
+   * `missing` = YouTube no longer has it; `private` = it exists but the public
+   * cannot watch it. Both are hidden from public surfaces; only `missing` is
+   * offered for deletion in the CMS. **Absent** on records checked before this
+   * existed — treated as available, so nothing disappears until a check has run.
+   */
+  youtubeStatus?: 'available' | 'private' | 'missing';
+  /** When `youtubeStatus` was last established. */
+  youtubeCheckedAt?: Date;
 }
 
 export interface MediaCollection {
@@ -70,6 +82,12 @@ export interface MediaQueryOptions {
   limit?: number;
   orderBy?: 'uploadDate' | 'fileName';
   orderDirection?: 'asc' | 'desc';
+  /**
+   * Include videos the public cannot watch — `youtubeStatus` `missing` (deleted
+   * from YouTube) or `private`. Off by default so public surfaces never show a
+   * dead tile; the CMS passes it, since removing such records is its job.
+   */
+  includeUnavailable?: boolean;
 }
 
 export interface MediaUploadRequest {
