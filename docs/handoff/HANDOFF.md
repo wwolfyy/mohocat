@@ -1,39 +1,47 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-07-31 · **Branch:** `dev` (`bb181a6`) · **`main`:** promoted through PR #8
+**Last updated:** 2026-08-01 · **Branch:** `dev` (`7e8aa1b`) · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **The 2026-07-31 session rebuilt how posts take and show media.** Five commits, all pushed;
-> `origin/dev` = **`bb181a6`**. The tree is clean apart from a `.gitignore` hunk and two
-> untracked `code-graph-tooling-*` docs, which belong to a **different** workstream — do not
-> sweep them into a media commit.
+> **The 2026-08-01 session was four owner-reported bug fixes on the public post and video
+> surfaces.** Four commits, all pushed; `origin/dev` = **`7e8aa1b`**. The tree is clean apart
+> from a `.gitignore` hunk and two untracked `code-graph-tooling-*` docs, which belong to a
+> **different** workstream — do not sweep them into a commit.
 >
-> 🔑 **The one pattern to carry forward: three hand-rolled copies of the same thing had
-> drifted.** `AnnouncementModal`, the 입양홍보 feed card, and `/pages/announcements/[id]` each
-> rendered a post's media their own way, with different capabilities and different bugs. Every
-> defect reported this session was a symptom of that. They now share `PostMedia`. When a fourth
-> surface needs to show a post, use it — do not copy it.
+> 🔑 **The finding worth carrying forward: a 30-second wait that was a timeout, not slowness.**
+> Firestore's SDK probes whether anything on the network buffers its streamed connection, and
+> when the probe gets no answer it waits out the transport timeout — **capped at exactly 30 s** —
+> before falling back to polling and succeeding in 48 ms. Every "Safari is broken" symptom the
+> owner reported was that wait, made visible by surfaces that render their **failure state as
+> their loading state**. ⚠️ **Auto-detect long polling was already on** (the SDK defaults it to
+> `true`), so the standard advice for this is a **no-op here** — it was proposed and discarded
+> before shipping. The browser is now forced onto long polling. **No capability was lost:**
+> transport, not feature; `onSnapshot` still pushes live updates, and the app has **zero**
+> listeners. Revisit if listeners are ever added (PROJECT_PLAN §12).
 >
-> 🚨 **Two self-inflicted bugs, both worth reading before touching upload or shared components:**
+> 📌 **Firestore hangs; it does not throw.** The SDK retries network failures internally, so a
+> broken connection produces a _stall_, never a console error. That is why the owner's console
+> showed a clean run returning 4 documents while the page said there were none — and why an
+> error state is a safety net (permission-denied, missing-index) rather than the main fix.
 >
-> 1. **A one-header hardening silently killed every image upload** (`log/DEBUG_LOG.md`
->    2026-07-30). Signing the upload URL with `x-goog-if-generation-match` was correct in
->    principle and made the cross-origin PUT **preflighted**; the bucket's CORS allow-list has
->    only `Content-Type` and `Authorization`, so the browser refused to send it. Nothing logged
->    server-side — the request never left the browser. ⚠️ **Do not add a header to that PUT.**
->    A unit test now pins it. Reproduce a CORS answer in two seconds with a bare `OPTIONS`
->    against `storage.googleapis.com/<bucket>/<object>` — the **bucket** host, not our API.
-> 2. **Adopting a shared component downgraded the surface it landed on.** `PostMedia` carried
->    the modal's image sizing onto the detail page and shrank photos that had been full-width.
->    Caught before commit; it took a `layout` prop. Check what a surface looked like _before_
->    you generalise it.
+> 🔑 **The second pattern: "empty" was doing three jobs.** _Still loading_, _genuinely empty_ and
+> _the fetch failed_ were all rendered as 없어요 / 찾을 수 없습니다 — server-rendered into the
+> first paint, and permanent after a failure because nothing set state again. Three surfaces had
+> it (공지 list, 공지 detail, 입양홍보 feed); they now share `hooks/useAsyncData` +
+> `ui/AsyncStates`. Of the 23 client components that render an empty state, those three were the
+> **only** ones with no loading state — the rest were already correct.
 >
-> 📌 **A green test was covering a broken feature.** The adoption e2e asserted
-> `getByAltText('이미지')` and passed the whole time the expanded post was failing to show
-> images — the old markup emitted that alt on the one path the spec exercised, and **no fixture
-> in the repo carried any media**. If a spec has only ever seen the happy input, it is not a net.
+> ⚠️ **Deleting a video on YouTube is indistinguishable from making it private** — through the
+> public API key, which is what the channel listing uses. That is why the new
+> `/api/admin/video-availability` asks with the **owner's OAuth credential** (which _can_ tell
+> them apart) and why it only **labels**; deletion stays a human click. Auto-pruning would
+> destroy cat tags and 설명 on a privacy change. See PROJECT_PLAN §10g.
+>
+> 📌 **`PostMedia`'s default layout has now caused three defects.** `compact` is the _dialog_
+> treatment; any surface taking the default inherits dialog sizing. **Pick the layout explicitly
+> at every call site.**
 >
 > ✅ **e2e runs locally — the earlier "no JDK on this machine" claim was WRONG.** OpenJDK 26 is
 > at **`/usr/local/opt/openjdk/bin`** (Intel-prefix Homebrew). Bare `java` resolves to
@@ -41,30 +49,38 @@
 > report nothing installed — do not conclude "no JDK" from those. Run with
 > `export PATH=/usr/local/opt/openjdk/bin:$PATH` before `npm run test:e2e`.
 >
-> ⚠️ **Suite stability, measured not guessed.** Baseline (`HEAD`, clean tree) ran green twice
-> (158/13/0). With this session's work the suite reaches green (**162 passed / 13 skipped / 0
-> failed**) but several runs each lost **1–2 unrelated, timing-sensitive specs** — the 동참 pair
-> (`member/contact-submit` writes, `admin/members` reads it) most often, plus
-> `member/nav-permissions` and `auth/login-logout`. All pass on re-run and none touch media. If
-> CI goes red there, that is the fragile spot, not the feature.
+> ⚠️ **Suite stability, measured not guessed.** Full suite now **169 passed / 13 skipped**. Runs
+> lose **1–2 unrelated, timing-sensitive specs** that pass in isolation. Known set: the 동참 pair
+> (`member/contact-submit` writes, `admin/members` reads it), `member/nav-permissions`,
+> `auth/login-logout`, and — new on 2026-08-01, failing twice — **`api/tenant-isolation`'s cats
+> and points cases**. That pair was confirmed **pre-existing** by re-running the full suite with
+> the long-polling change temporarily disabled: the same two failed. Do not chase them as a
+> media regression.
 >
 > **Do these next, in this order:**
 >
-> 1. **Verify the 2026-07-31 work on `dev`** — most of it is browser-verified against
->    production data locally, but not on the deployed Preview. Specifically: the 입양홍보 popup
->    (needs a **fresh session** — `sessionStorage`, so a reload will not re-show it), and the
->    duplicate-filename **409** (`이미 "…"과 같은 이름의 파일이 있어요`), which is the one path
->    with **no automated coverage** — signing cannot run against the emulator.
-> 2. **Re-run the P5.4 manual YouTube pass from the top.** Still the gate on the next
->    `dev → main` promotion, and this session changed upload, tagging and playlist-adjacent code
->    under it.
-> 3. **Then the promotion itself.** `dev` now leads `main` by **274** commits — M6/M7/M8, the
->    GA4 guide, and the whole 2026-07-26 → 07-31 run are waiting behind that one manual pass.
+> 1. **Safari pass on the deployed Preview** — confirm the 30-second stall is gone. Whatever
+>    buffers that connection may be an ISP or proxy rather than Safari itself, so it may never
+>    have affected other visitors; the local dev server has no proxy to reproduce against.
+> 2. **Verify the 2026-07-31 work on `dev`** — the 입양홍보 popup (needs a **fresh session** —
+>    `sessionStorage`, so a reload will not re-show it), and the duplicate-filename **409**
+>    (`이미 "…"과 같은 이름의 파일이 있어요`), the one path with **no automated coverage** —
+>    signing cannot run against the emulator.
+> 3. **Re-run the P5.4 manual YouTube pass from the top.** Still the gate on the next
+>    `dev → main` promotion. 📌 Running **📺 YouTube와 동기화** now also exercises the new
+>    availability check, so it doubles as an early signal for that pass.
+> 4. **Then the promotion itself.** `dev` now leads `origin/main` by **51** commits — M6/M7/M8,
+>    the GA4 guide, and the whole 2026-07-26 → 08-01 run are waiting behind that one manual pass.
+>    ⚠️ **Measure against `origin/main`, not the local `main` ref** — this doc has been quoting
+>    ~274–279 for several sessions because the local `main` is stranded at `26b1879`
+>    (2026-03-16), four months and one PR-#8 merge behind. `origin/main` is `366425c`.
 >
-> 🆕 **Owner decisions waiting, neither blocking:** whether a video's 제목 should keep appearing
+> 🆕 **Owner decisions waiting, none blocking:** whether a video's 제목 should keep appearing
 > **twice** (YouTube's player overlay + our caption — correct, possibly redundant; one line to
-> drop), and whether an 입양홍보 popup may displace a 공지사항 one (today the most recently
-> updated wins, one popup per visit).
+> drop); whether an 입양홍보 popup may displace a 공지사항 one (today the most recently updated
+> wins, one popup per visit); and whether the CMS's new "YouTube에 없는 영상" panel should show
+> thumbnails rather than titles (**text-only is deliberate** — a deleted video's thumbnail _is_
+> the grey placeholder, so a grid would be a row of grey boxes).
 >
 > **Still not started, both specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN
 > §10d D2 — ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not
@@ -98,6 +114,35 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🐌 A 30-second Firestore timeout was making the public post pages look broken — fixed
+  (2026-08-01, `be36c9e`).** Reported on Safari as three bugs (tags arriving late or never, the
+  공지 list saying there are no posts, a post reporting itself missing, all cured by reloading).
+  Measured with `performance.now()` stamps: **30,048 ms** from issuing the query to receiving 4
+  documents, of which the query was the last **48 ms**. The SDK's buffering-proxy probe gets no
+  answer and waits out the transport timeout — this SDK caps it at exactly 30 s — then falls
+  back to polling and succeeds. ⚠️ **Auto-detect long polling was already the default**, so the
+  usual advice was a no-op; the browser is now **forced** onto long polling. 🔑 **Nothing was
+  lost** — transport, not feature; the app has **zero** `onSnapshot` listeners against ~47
+  one-shot reads. Underneath it, three surfaces rendered their **failure state as their loading
+  state** (server-rendered into the first paint, and permanent after a failure because nothing
+  set state again); they now share `useAsyncData` + `ui/AsyncStates`. Detail: PROJECT_PLAN
+  **§10f**, `log/DEBUG_LOG.md` 2026-08-01.
+- **🎞️ Videos deleted from YouTube kept their tile in the public 영상첩 — fixed (2026-08-01,
+  `7e8aa1b`).** `syncVideos` is import-only (YouTube minus Firestore), so a record outlives its
+  video forever. 🔑 **Auto-pruning was rejected:** the channel listing is read with the public
+  API key, in which a **private** video disappears identically to a deleted one — pruning would
+  destroy cat tags and 설명 on a privacy change. New `POST /api/admin/video-availability` asks
+  with the **owner's OAuth credential** (which distinguishes them), writes
+  `youtubeStatus: available|private|missing`, and **never deletes**; public reads drop
+  missing/private, and `/admin/tag-videos` lists the missing ones with a 기록 삭제 button.
+  Verified against prod after the owner ran 동기화: **20 videos, 18 available + 2 missing**, both
+  hidden publicly and listed in the CMS panel. Detail: PROJECT_PLAN **§10g**.
+- **🖼️ Two smaller owner-reported fixes (2026-08-01).** Photos in a post now render at the
+  video's width (`be8eb77` — `PostMedia`'s `compact` grid gave a lone photo half the width and
+  pillarboxed it inside its own border; **third defect from that default**, so pick `layout`
+  explicitly at every call site), and the 공지사항 detail page's standing "중요한 안내사항" banner
+  is gone (`6e55463` — static template markup that made every announcement read like an
+  advisory).
 - **📮 The three composers and the three post-display surfaces converged (2026-07-30/31, five
   commits `03ce4f2`…`bb181a6`, all pushed).** 공지사항 / 입양홍보 gained 집사톡's **per-file**
   media (each file its own 제목/설명), a **cat selector**, and framed sections with separators;
@@ -318,11 +363,15 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   should-fix · decided/won't-do · already-closed), with the console half carved into
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
   blocks the `dev → main` promotion.
-- **Tree:** clean through **`bb181a6`** (bar a `.gitignore` hunk + two untracked
+- **Tree:** clean through **`7e8aa1b`** (bar a `.gitignore` hunk + two untracked
   `code-graph-tooling-*` docs from a different workstream). The whole multi-tenant epic (M0–M8)
-  is committed on `dev`; `main` is an ancestor of `dev` (`dev` leads by **274**). M6/M7/M8 + the
-  GA4 guide + the 2026-07-26 → 07-31 sessions are on `dev` but **not yet promoted to prod** —
-  gated on the P5.4 YouTube pass.
+  is committed on `dev`; `dev` leads `origin/main` by **51** commits, and `origin/main` carries
+  **2** commits `dev` does not — the PR #7 (`65d2020`) and PR #8 (`366425c`) **merge commits**,
+  so neither branch is an ancestor of the other and the next promotion is again a merge.
+  ⚠️ **Use `origin/main` for this**: the local `main` ref is stale at `26b1879` (2026-03-16),
+  which is where this doc's long-running "~274–279 commits ahead" figure came from.
+  M6/M7/M8 + the GA4 guide + the 2026-07-26 → 08-01 sessions are on `dev` but **not yet
+  promoted to prod** — gated on the P5.4 YouTube pass.
 
 ---
 
@@ -726,6 +775,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- **`[ ]` Safari pass on the deployed Preview (2026-08-01)** — confirm the 30-second stall is
+  gone now that the browser is forced onto long polling. ⚠️ Whatever buffers that connection may
+  be the owner's ISP or a proxy rather than Safari itself, so other visitors may never have hit
+  it; the local dev server has no proxy in front of it to reproduce against. If it recurs, the
+  set-aside alternative is capping the probe's wait rather than skipping it
+  (`experimentalLongPollingOptions.timeoutSeconds`, minimum 5) — PROJECT_PLAN §12.
+- **`[ ]` One owner decision from 2026-08-01, not blocking:** whether the CMS's new
+  "YouTube에 없는 영상" panel should show thumbnails instead of a title list. **Text-only is
+  deliberate** — a deleted video's thumbnail _is_ YouTube's grey placeholder, the very image that
+  made these look broken, so a thumbnail grid would be a row of grey boxes.
+- 📌 **`youtubeStatus` is absent on any record never checked, and absent means watchable.** The
+  public filter runs **in memory, deliberately not as a Firestore `where`** — an inequality would
+  exclude exactly the unchecked records, i.e. every pre-existing video. Anything that later
+  queries on this field must keep that in mind.
 - **`[ ]` Two owner decisions from 2026-07-31, neither blocking:**
   - **A video's 제목 now appears twice** — once in YouTube's own player overlay, once as our
     caption under the embed. Correct, arguably redundant. Dropping the caption title for videos
@@ -734,14 +797,15 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - **An 입양홍보 popup can displace a 공지사항 one.** Today: **one popup per visit, most
     recently updated wins** across both kinds — the pre-existing rule extended, not a new one.
     The alternatives (both show, or announcements always win) are a product call.
-- **`[ ]` Suite stability is worth watching in CI (measured 2026-07-31).** Baseline on a clean
-  `HEAD` ran green **twice** (158/13/0); with this session's work the suite reaches green
-  (**162/13/0**) but several runs each lost **1–2 unrelated timing-sensitive specs** — the 동참
-  pair (`member/contact-submit` writes, `admin/members` reads it) most often, plus
-  `member/nav-permissions` and `auth/login-logout`. Each passes on re-run and none touch media.
-  Most likely just +4 tests of parallel load on a suite with marginal timeouts. **Do not chase
-  it as a media regression**; if it needs fixing, the 동참 pair's cross-spec dependency is the
-  place to start.
+- **`[ ]` Suite stability is worth watching in CI (re-measured 2026-08-01).** Full suite is
+  **169 passed / 13 skipped**, but runs lose **1–2 unrelated timing-sensitive specs** that pass
+  in isolation. Known set: the 동참 pair (`member/contact-submit` writes, `admin/members` reads
+  it) most often, plus `member/nav-permissions`, `auth/login-logout`, and — **new, and it failed
+  in two consecutive full runs** — `api/tenant-isolation`'s cats and points cases. 🔑 That pair
+  was **confirmed pre-existing**, not caused by the long-polling change, by re-running the whole
+  suite with that change temporarily disabled: the same two failed. **Do not chase any of these
+  as a media regression**; if it needs fixing, the 동참 pair's cross-spec dependency is the place
+  to start.
 - 📌 **`PostMedia` is now the single renderer for a post's media** (`AnnouncementModal` →
   `PostModal`, the 입양홍보 feed card, and `/pages/announcements/[id]`). A fourth surface should
   use it, not copy it — the three copies that existed had each drifted into different
@@ -1061,21 +1125,31 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`bb181a6`**.
+✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`7e8aa1b`**.
 
 The only things left in the tree are **not** from this workstream and must not be swept into a
-media commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) and two
+commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) and two
 untracked `docs/planning/pending/code-graph-tooling-*` docs. They belong together as their own
 change whenever the owner wants it.
 
-**Gate status at `bb181a6`:** tsc 0 · smoke 32/32 · unit 121/121 · **full e2e 162 passed / 13
-skipped / 0 failed**. ⚠️ Several full-suite runs also lost 1–2 unrelated timing-sensitive specs
-that pass on re-run — see _Open threads_ before reading a red CI as a media regression.
+**Gate status at `7e8aa1b`:** tsc 0 · smoke 33/33 · unit 122/122 · **full e2e 169 passed / 13
+skipped**. ⚠️ Full-suite runs lose 1–2 unrelated timing-sensitive specs that pass in isolation —
+see _Open threads_ before reading a red CI as a regression in this work.
 
-**This session (2026-07-30 → 07-31), newest first:**
+**This session (2026-08-01), newest first:**
+
+| Commit    | What                                                                                   |
+| --------- | -------------------------------------------------------------------------------------- |
+| `7e8aa1b` | **fix** — hide videos deleted from YouTube; offer their records for deliberate removal |
+| `be36c9e` | **fix** — end the 30 s Firestore stall, and stop the pages lying during it             |
+| `6e55463` | **feat** — drop the "중요한 안내사항" banner from the 공지사항 detail page             |
+| `be8eb77` | **fix** — render a post's photos at the same width as its video                        |
+
+**Previous session (2026-07-30 → 07-31), newest first:**
 
 | Commit    | What                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------ |
+| `7822b87` | **docs** — 2026-07-30/31 session close-out                                                 |
 | `bb181a6` | **feat** — each medium shows its 제목/설명/태그; the detail page joins the shared renderer |
 | `16b5237` | **feat** — show which cats are in a post's photos and videos                               |
 | `d7156a5` | **fix** — 입양홍보 expanded post shows the whole post; 팝업 toggle added                   |
@@ -1114,13 +1188,18 @@ that pass on re-run — see _Open threads_ before reading a red CI as a media re
 | `e929c39` | **feat** — `mountain_id` on every GA4 event                                                       |
 | `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                            |
 
-**Branch position:** `main` is an **ancestor** of `dev` (`git rev-list --left-right --count
-main...dev` = `0  274`). `dev` is **274 commits ahead**; M6 + M7 + M8 + the GA4 guide + the
-2026-07-26 YouTube fixes, the 2026-07-27 butler/playlist work, and the 2026-07-28 → 07-31
+**Branch position:** `git rev-list --left-right --count origin/main...origin/dev` = **`2  51`**.
+`dev` is **51 commits ahead**, and `origin/main` holds **2** that `dev` lacks — the PR #7 and
+PR #8 **merge commits** — so neither is an ancestor of the other. ⚠️ **Always measure against
+`origin/main`.** The "`0  279`" this line used to report came from the **local** `main` ref,
+stranded at `26b1879` (2026-03-16); `origin/main` is `366425c`. M6 + M7 + M8 + the GA4 guide + the
+2026-07-26 YouTube fixes, the 2026-07-27 butler/playlist work, and the 2026-07-28 → 08-01
 sessions are all on `dev` and **not yet in prod**. Promoting them (`dev → main`)
 is **gated on the owner's P5.4 scripted manual YouTube pass** — which must **restart from the
 top** (see the fresh-session box at the head of this doc), all the more so now that
-2026-07-30/31 changed the upload path, the tagging inputs and the post renderers underneath it.
+2026-07-30/31 changed the upload path, the tagging inputs and the post renderers underneath it,
+and 2026-08-01 changed **how the browser connects to Firestore at all** (forced long polling)
+plus the video sync (a new availability check runs inside 동기화).
 
 ⚠️ Untracked and intentionally so: `backups/firestore/2026-07-20T02-20-20-923Z/`
 — a real dump holding an OAuth refresh token + PII. Git-ignored; delete when no
@@ -1130,7 +1209,37 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-07-31 (latest)** — **The composers and the post-display surfaces converged, and two
+- **2026-08-01 (latest)** — **Four owner-reported bugs on the public post and video surfaces;
+  the interesting one was a timeout wearing slowness as a disguise.** (1) Photos in a post now
+  render at the video's width — `PostMedia`'s `compact` grid gave a lone photo half the width and
+  pillarboxed it inside its own border; **third defect from that default**, so pick `layout`
+  explicitly at every call site. (2) The 공지사항 detail page's standing "중요한 안내사항" banner
+  is gone — static template markup that made every announcement read like an advisory. (3) 🔑 A
+  **30-second** wait before every first Firestore read, measured at **30,048 ms** to receive 4
+  documents of which the query was the last **48 ms**: the SDK's buffering-proxy probe gets no
+  answer and waits out the transport timeout (capped at exactly 30 s) before falling back to
+  polling. ⚠️ **Auto-detect long polling was already the default**, so the standard advice was a
+  no-op — proposed and discarded before shipping; the browser is now **forced** onto long
+  polling, which costs nothing here because the app has **zero** `onSnapshot` listeners against
+  ~47 one-shot reads. Underneath it, three surfaces rendered their **failure state as their
+  loading state** — server-rendered into the first paint, and permanent after a failure because
+  nothing set state again — now sharing `useAsyncData` + `ui/AsyncStates`. 📌 Firestore **hangs
+  rather than throwing** on network failure, which is why the console stayed clean while the page
+  claimed there were no posts. (4) Videos deleted from YouTube kept their tile: `syncVideos` is
+  import-only, and **auto-pruning was rejected** because the public API key cannot distinguish a
+  deleted video from a private one — pruning would destroy cat tags on a privacy change. The new
+  `/api/admin/video-availability` asks with the **owner's OAuth credential**, labels
+  `available|private|missing`, and never deletes; the CMS lists the missing ones for a deliberate
+  삭제. Verified against prod: 20 videos, 18 available + 2 missing. Gates: tsc 0, smoke 33/33,
+  unit 122/122, full e2e 169 passed. 📌 `api/tenant-isolation`'s cats/points cases joined the
+  known flaky set — **confirmed pre-existing** by re-running the suite with the transport change
+  disabled. Detail: PROJECT_PLAN §10f/§10g, `log/DEBUG_LOG.md` + `log/FEATURE_MOD_LOG.md`
+  2026-08-01. 📌 **Correction, same date:** the "`dev` leads `main` by ~274–279" figure this doc
+  had carried for several sessions was measured against the **local** `main` ref, stale at
+  `26b1879` (2026-03-16). Against `origin/main` (`366425c`) the real gap is **51**, and
+  `origin/main` holds **2** merge commits `dev` lacks — so neither branch is an ancestor of the
+  other. Both places that quoted it are fixed.
+- **2026-07-31** — **The composers and the post-display surfaces converged, and two
   self-inflicted bugs got caught on the way.** 공지사항 / 입양홍보 gained 집사톡's per-file media
   (each file its own 제목/설명), a cat selector, framed sections with separators, and refusal of
   duplicate filenames; their images moved to the signed-URL path so a per-photo 설명 has

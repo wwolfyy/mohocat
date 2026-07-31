@@ -1239,6 +1239,99 @@ pass.
 
 ---
 
+## 10f. ✅ Post surfaces: proportion, tone, and the 30-second stall (DONE 2026-08-01)
+
+> **Ask (owner, one session):** photos in an 입양홍보 post rendered out of proportion with the
+> video beside them; the 공지사항 detail page's standing "중요한 안내사항" banner reads too
+> official; and — on Safari — 공지 pages showed "no posts" / "can't find the post", with a post's
+> tags arriving late or never, all cured by reloading.
+
+- [x] **F1 — photos render at the video's width** (`be8eb77`). Two causes, both from
+      `PostMedia`'s `compact` layout landing on a surface that is not a dialog: the two-column
+      grid gave a lone photo half the width of the full-width video, and `w-full` + `max-h-64` +
+      `object-contain` pillarboxed it inside its own border. The 입양홍보 card moved to
+      `layout="full"`; `compact` now sizes the `<img>` to the picture. 📌 **Third defect from the
+      same default** — 10e's E4 was its mirror image. **Pick the layout explicitly at every
+      `PostMedia` call site.**
+- [x] **F2 — the "중요한 안내사항" banner is gone** (`6e55463`). Static markup on the page
+      template, appended to every announcement regardless of content, so a note about a cat being
+      fed read as gravely as a real advisory. Removed whole (the text was the box's only
+      content). No per-post 중요 flag exists and none was added; if wanted, it belongs on the
+      post, not the template.
+- [x] **F3 — the 30-second stall, and pages that lied during it** (`be36c9e`). Two stacked
+      defects; the second made the first visible. - **Firestore waited out a timeout before every first read.** Measured on Safari with
+      `performance.now()` stamps: **30,048 ms** from issuing the query to receiving 4
+      documents, of which the query was the last **48 ms**. The SDK's `detectBufferingProxy`
+      probe gets no answer and waits out the transport timeout (this SDK caps it at exactly
+      30 s) before falling back to polling. ⚠️ **Auto-detect was already on** —
+      `@firebase/firestore` 4.7.3 defaults it to `true`, so the usual "enable auto-detect"
+      advice was a **no-op**, proposed and discarded before shipping. Now forced onto long
+      polling in the browser. 🔑 **No capability lost:** transport, not feature — `onSnapshot`
+      still pushes live updates; the trade is streaming efficiency for realtime listeners, of
+      which this app has **zero** (all ~47 reads are one-shot). **Revisit if live listeners
+      are ever added** — see §12. - **Every public post surface used its failure state as its loading state.** The
+      없어요/찾을 수 없습니다 branches rendered whenever the value was empty — including before
+      the first fetch, which the SSR HTML shipped as first paint. New `hooks/useAsyncData` +
+      `components/ui/AsyncStates` applied to the 공지사항 list, the 공지사항 detail page and the
+      입양홍보 feed (the same defect sat in all three): `loading | ready | error` are distinct,
+      so the empty message is unreachable until a fetch really returns nothing, and a failure
+      offers 다시 시도 instead of impersonating empty content.
+
+📌 **Why no error was ever logged.** Firestore retries network failures internally rather than
+rejecting, so a bad connection **hangs** and never throws. That is why the owner's console showed
+a clean run returning 4 documents — and why the new e2e delays the response instead of aborting
+it. The genuinely reachable error cases are permission-denied and missing-index, not offline.
+
+⏳ **Owner-owed:** a Safari pass on the deployed Preview to confirm the 30 s is gone. Whatever
+buffers that connection may be an ISP or proxy rather than Safari itself, so other visitors may
+never have hit it; the local dev server has no proxy to reproduce against.
+
+---
+
+## 10g. ✅ Videos deleted from YouTube (DONE 2026-08-01, `7e8aa1b`)
+
+> **Ask (owner):** a couple of videos were deleted on YouTube and still showed tiles in the
+> public 영상첩, filled with YouTube's grey "unavailable" placeholder.
+
+**Root cause:** `syncVideos` is **import-only** — it computes one set difference (YouTube minus
+Firestore) and imports it. Nothing computes the other direction, so a `cat_videos` record
+outlives its video indefinitely.
+
+🔑 **Why auto-pruning was rejected (owner chose label-then-confirm).** `fetchChannelVideos` reads
+the uploads playlist with the **public API key**, in which a video made **private** disappears
+identically to a deleted one. Pruning on absence would destroy the record — and the cat tags,
+설명 and playlist membership the tagging queue exists to produce — the moment somebody flips a
+video to private, which destroys nothing on YouTube's side. Same shape as the 2026-07-26
+"YouTube owns video data" rule, aimed at the one thing YouTube does **not** own: our tags.
+
+- [x] **G1 — `POST /api/admin/video-availability`** (gated `manage-video`) asks YouTube with the
+      **owner's OAuth credential**, which _can_ tell the two apart: a private video returns with
+      `privacyStatus: 'private'`, a deleted one does not return at all. Writes
+      `youtubeStatus: available | private | missing`; **never deletes**.
+      🚨 **Safety valve:** if YouTube acknowledges _zero_ of the submitted ids — a credential,
+      scope or quota failure rather than a vanished channel — it refuses and writes nothing,
+      instead of flagging everything and emptying the public album in one call.
+- [x] **G2 — public reads drop `missing`/`private`.** ⚠️ Filtered in memory, deliberately **not**
+      as a `where` clause: records predating the check have no `youtubeStatus` field and a
+      Firestore inequality would exclude exactly those — i.e. every existing video. Absent =
+      watchable, so nothing vanishes until a check has judged it.
+- [x] **G3 — the CMS keeps seeing them.** `/admin/tag-videos` loads with `includeUnavailable`
+      and grows a panel listing the missing ones with 기록 삭제 (the confirm spells out that tags
+      go too). Private ones get a one-line note — they return by themselves if re-published.
+      📌 **Text-only by design:** a thumbnail for a deleted video _is_ the grey placeholder that
+      made these look broken, so a thumbnail grid would be a row of grey boxes.
+- [x] **G4 — 동기화 runs the check** as a third step; a failure there is logged but never fails
+      the sync, since the metadata refresh before it has already succeeded.
+
+⏳ **Not testable here, and owner-owed:** the classification itself needs real YouTube OAuth,
+which the emulator harness has no credential for (the same reason P5.4 is manual). Existing
+records stay unlabelled until **📺 YouTube와 동기화** runs once on a deployed environment; the
+ghosts then appear in the panel for deletion. _(Verified against prod data 2026-08-01 after the
+owner ran it: 20 videos, 18 `available` + 2 `missing`, both hidden from the public album and
+listed in the CMS panel.)_
+
+---
+
 ## 11. 🔴 Functional gaps — broken / missing nav destinations
 
 > **Functional, not design** (flagged by the user). The nav menu links to
@@ -1314,6 +1407,15 @@ pass.
 - **Admin visual target** — ✅ **SETTLED (owner, 2026-06-30): admin adopts the public
   brand.** The "deliberately utilitarian" option is retired; admin re-skins to the brand as
   part of the cross-cutting design system (handoff-16 §4).
+- **Firestore transport if live listeners are ever added (2026-08-01).** §10f F3 forced the
+  browser onto long polling, which is free **only** because the app has zero `onSnapshot`
+  listeners. The natural candidates if that changes: replies appearing without a reload,
+  new 동참 submissions in the admin, a shared tagging queue two admins work at once, and a
+  "changed elsewhere" warning on concurrent edits. ⚠️ Listeners also bill per document read
+  **per change**, and the service layer returns plain promises — a listener needs a
+  subscribe/unsubscribe shape, so it is a real change to that layer. At that point revisit the
+  alternative that was set aside: keep the probe but cap its wait (`experimentalLongPolling
+Options.timeoutSeconds`, min 5) instead of skipping it.
 - **Mobile verification tooling** — real device vs un-maximized Chrome vs DevTools
   (the `resize_window` tool was flaky).
 - Whether the §7–§10 debt workstreams are scheduled now or parked until the

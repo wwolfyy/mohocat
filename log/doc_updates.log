@@ -1,2 +1,3 @@
 2026-05-09T19:26:43Z | explore-codebase | scope=repo (config+src+root) | docs_root=./docs/codebase/ | mode=first_run
 2026-07-11T00:16:07Z | explore-codebase | scope=repo | docs_root=./docs/codebase/ | mode=update
+2026-07-31T17:32:40Z | update-docs | scope=docs/handoff/HANDOFF.md,docs/planning/PROJECT_PLAN.md
