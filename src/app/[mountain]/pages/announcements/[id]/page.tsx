@@ -1,40 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { getAnnouncementService } from '@/services';
 import { useMountain } from '@/components/MountainProvider';
 import Button from '@/components/ui/Button';
 import PostMedia from '@/components/PostMedia';
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { ErrorNotice } from '@/components/ui/AsyncStates';
 
 const AnnouncementDetailsPage = () => {
   // Service references
   const mountainId = useMountain();
   const announcementService = getAnnouncementService(mountainId);
-  const [post, setPost] = useState<any | null>(null);
   const router = useRouter();
+  // `useParams`, not `window.location.pathname`: the id is route state, and
+  // reading it from the URL string meant the fetch could not react to it.
+  const { id } = useParams<{ id: string }>();
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      const id = window.location.pathname.split('/').pop();
-      if (!id) return;
+  // 🐛 2026-08-01: `post` was a single nullable value, so "공지사항을 찾을 수
+  // 없습니다" was the *initial* render of every visit — the reader saw it until
+  // the fetch resolved (30s on the affected Safari path), and a thrown fetch
+  // landed on the same screen, making a failure indistinguishable from a deleted
+  // post. Three states now: loading, error, and a genuine null result.
+  const fetchPost = useCallback(async () => {
+    if (!id) return null;
+    return announcementService.getPostById(id);
+  }, [announcementService, id]);
 
-      try {
-        // Use service layer instead of direct Firebase access
-        const postData = await announcementService.getPostById(id);
-        if (postData) {
-          setPost(postData);
-        } else {
-          setPost(null);
-        }
-      } catch (error) {
-        console.error('Error fetching announcement:', error);
-        setPost(null);
-      }
-    };
+  const { status, data: post, reload } = useAsyncData(fetchPost);
 
-    fetchPost();
-  }, []);
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-4xl p-6" aria-busy="true" aria-live="polite">
+          <span className="sr-only">불러오는 중이에요.</span>
+          <div className="mb-4 h-9 w-32 animate-pulse rounded-lg bg-gray-200" />
+          <div className="mb-2 h-9 w-2/3 animate-pulse rounded bg-gray-200" />
+          <div className="mb-6 h-4 w-48 animate-pulse rounded bg-gray-100" />
+          <div className="h-64 animate-pulse rounded-lg bg-white shadow-md" />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-4xl p-6">
+          <ErrorNotice message="공지사항을 불러오지 못했어요." onRetry={reload} />
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (

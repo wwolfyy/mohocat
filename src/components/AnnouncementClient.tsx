@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { getAnnouncementService } from '@/services';
 import { cn } from '@/utils/cn';
 import Link from 'next/link';
 import { useMountain } from '@/components/MountainProvider';
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { SkeletonList, ErrorNotice } from '@/components/ui/AsyncStates';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -85,69 +87,67 @@ const AnnouncementClient = () => {
   const mountainId = useMountain();
   const announcementService = getAnnouncementService(mountainId);
 
-  const [posts, setPosts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const postsPerPage = 20;
 
-  const fetchPosts = async (page = 1) => {
-    try {
-      console.log('Fetching announcements...');
-      // Use service layer for announcements
-      const allPosts = await announcementService.getAllPosts();
-      console.log('Raw announcements from service:', allPosts);
-      console.log('Number of announcements fetched:', allPosts.length);
+  // 🐛 2026-08-01: this used to keep only `posts`, so the "아직 등록된 공지사항이
+  // 없어요" branch below doubled as the loading state *and* the failure state —
+  // and since the fetch threw into a `catch` that only logged, a failed load sat
+  // on that message until the reader reloaded. `useAsyncData` keeps the three
+  // apart; the empty message is now unreachable until a fetch really returns [].
+  const fetchPosts = useCallback(async () => {
+    const allPosts = await announcementService.getAllPosts();
 
-      // Check if posts have date/time fields or use createdAt
-      const sortedPosts = allPosts.sort((a: any, b: any) => {
-        // Try to use date/time fields first, fallback to createdAt
-        let dateA, dateB;
+    // Check if posts have date/time fields or use createdAt
+    return allPosts.sort((a: any, b: any) => {
+      // Try to use date/time fields first, fallback to createdAt
+      let dateA, dateB;
 
-        if (a.date && a.time) {
-          // Parse as UTC time for consistent sorting
-          const dateTimeA = `${a.date}T${a.time}Z`;
-          dateA = new Date(dateTimeA);
-        } else if (a.createdAt) {
-          dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-        } else {
-          dateA = new Date(0); // Very old date for fallback
-        }
+      if (a.date && a.time) {
+        // Parse as UTC time for consistent sorting
+        const dateTimeA = `${a.date}T${a.time}Z`;
+        dateA = new Date(dateTimeA);
+      } else if (a.createdAt) {
+        dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      } else {
+        dateA = new Date(0); // Very old date for fallback
+      }
 
-        if (b.date && b.time) {
-          // Parse as UTC time for consistent sorting
-          const dateTimeB = `${b.date}T${b.time}Z`;
-          dateB = new Date(dateTimeB);
-        } else if (b.createdAt) {
-          dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-        } else {
-          dateB = new Date(0); // Very old date for fallback
-        }
+      if (b.date && b.time) {
+        // Parse as UTC time for consistent sorting
+        const dateTimeB = `${b.date}T${b.time}Z`;
+        dateB = new Date(dateTimeB);
+      } else if (b.createdAt) {
+        dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      } else {
+        dateB = new Date(0); // Very old date for fallback
+      }
 
-        // Sort newest first (reverse chronological order)
-        // Larger timestamp (newer date) should come first
-        return dateB.getTime() - dateA.getTime();
-      });
+      // Sort newest first (reverse chronological order)
+      // Larger timestamp (newer date) should come first
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [announcementService]);
 
-      console.log('Sorted announcements:', sortedPosts);
+  const { status, data, reload } = useAsyncData(fetchPosts);
 
-      const startIndex = (page - 1) * postsPerPage;
-      const paginatedPosts = sortedPosts.slice(startIndex, startIndex + postsPerPage);
-
-      console.log('Paginated announcements for display:', paginatedPosts);
-      setPosts(paginatedPosts);
-      setTotalPages(Math.ceil(sortedPosts.length / postsPerPage));
-    } catch (error) {
-      console.error('Error in fetchPosts:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchPosts(currentPage);
-  }, [currentPage]);
+  // Paginate the loaded list in memory — the fetch returns every announcement, so
+  // changing page must not refetch (it used to, which is why paging re-ran the
+  // whole query).
+  const allPosts = data ?? [];
+  const totalPages = Math.max(1, Math.ceil(allPosts.length / postsPerPage));
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const posts = allPosts.slice(startIndex, startIndex + postsPerPage);
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
   };
+
+  if (status === 'loading') return <SkeletonList />;
+
+  if (status === 'error') {
+    return <ErrorNotice message="공지사항을 불러오지 못했어요." onRetry={reload} />;
+  }
 
   return (
     <div>

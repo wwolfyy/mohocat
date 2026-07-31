@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
 import CatLinkedText from '@/components/CatLinkedText';
 import PostMedia from '@/components/PostMedia';
 import { useMountain } from '@/components/MountainProvider';
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { SkeletonList, ErrorNotice } from '@/components/ui/AsyncStates';
 
 /**
  * A single 입양홍보 post as an accordion card. Folded by default: title + a
@@ -121,30 +123,25 @@ const AdoptionPromotionClient = () => {
   const mountainId = useMountain();
   const adoptionService = getAdoptionService(mountainId);
 
-  const [allPosts, setAllPosts] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 20;
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const posts = await adoptionService.getAllPosts();
-        const sorted = posts.sort((a: any, b: any) => {
-          const dateA =
-            a.date && a.time ? new Date(`${a.date}T${a.time}Z`) : new Date(a.createdAt || 0);
-          const dateB =
-            b.date && b.time ? new Date(`${b.date}T${b.time}Z`) : new Date(b.createdAt || 0);
-          return dateB.getTime() - dateA.getTime();
-        });
-        setAllPosts(sorted);
-      } catch (error) {
-        console.error('Error fetching adoption posts:', error);
-      }
-    };
-    fetchPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Same three-state treatment as the 공지사항 list (2026-08-01): the empty
+  // message below is content, not a stand-in for "loading" or "failed".
+  const fetchPosts = useCallback(async () => {
+    const posts = await adoptionService.getAllPosts();
+    return posts.sort((a: any, b: any) => {
+      const dateA =
+        a.date && a.time ? new Date(`${a.date}T${a.time}Z`) : new Date(a.createdAt || 0);
+      const dateB =
+        b.date && b.time ? new Date(`${b.date}T${b.time}Z`) : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [adoptionService]);
+
+  const { status, data, reload } = useAsyncData(fetchPosts);
+  const allPosts = useMemo(() => data ?? [], [data]);
 
   // Filter by title + content (case-insensitive) before paginating.
   const normalizedQuery = query.trim().toLowerCase();
@@ -163,6 +160,12 @@ const AdoptionPromotionClient = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [normalizedQuery]);
+
+  if (status === 'loading') return <SkeletonList />;
+
+  if (status === 'error') {
+    return <ErrorNotice message="입양홍보 소식을 불러오지 못했어요." onRetry={reload} />;
+  }
 
   return (
     <div>

@@ -15,7 +15,7 @@ import {
   connectAuthEmulator,
   Auth,
 } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getFirebaseConfig } from '@/utils/config';
 
 // E2E test mode only: route the client SDK to the local Firebase Emulator Suite.
@@ -69,7 +69,44 @@ const auth: Auth = (() => {
   }
 })();
 
-const db = getFirestore(app);
+/**
+ * Firestore, forced onto the long-polling transport in the browser.
+ *
+ * 🐛 **Why (2026-08-01, owner-reported 30-second page loads on Safari).** By
+ * default the SDK first probes whether something on the network buffers its
+ * streamed connection (`detectBufferingProxy`, on unless told otherwise). When
+ * that probe gets no answer it does not fail fast — it waits out the transport's
+ * timeout, whose ceiling this SDK caps at **30 seconds**, then falls back to
+ * polling and completes the read. Measured on Safari: 30,048 ms from issuing the
+ * query to receiving 4 documents, of which the query itself was the last 48 ms.
+ * Forcing the fallback up front skips the probe, so the stall cannot happen.
+ * (Sibling precedent: the auth block above, where indexedDB persistence caused a
+ * comparable multi-second stall and was pinned to localStorage for the same
+ * reason.)
+ *
+ * 🔑 **This costs no functionality.** It changes the transport, not the feature —
+ * `onSnapshot` still delivers live updates, the server still answers the moment
+ * data exists, and the timeout above only bounds an *idle* connection. What it
+ * trades away is streaming efficiency for realtime listeners, of which this app
+ * has **zero**: every one of its ~47 read sites is a one-shot `getDoc`/`getDocs`.
+ * ⚠️ If live listeners are ever added, revisit this — the trade stops being free.
+ *
+ * Browser-only on purpose: the setting addresses a browser transport, and SSR
+ * evaluates this module too. `initializeFirestore` must run before anything
+ * touches Firestore and throws if the instance already exists, so a hot reload
+ * (module re-eval against a live app) falls back to the existing instance —
+ * the same shape as the auth `already-initialized` guard above.
+ */
+const db = (() => {
+  if (typeof window === 'undefined') return getFirestore(app);
+
+  try {
+    return initializeFirestore(app, { experimentalForceLongPolling: true });
+  } catch (e: any) {
+    if (e.code === 'failed-precondition') return getFirestore(app);
+    throw e;
+  }
+})();
 
 // E2E test mode: connect every client-SDK service to the local emulators. Guarded
 // against double-connect (Next hot reload / repeated module eval re-runs this file);

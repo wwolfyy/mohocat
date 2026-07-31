@@ -73,7 +73,26 @@ const youtubeIdFrom = (url: string): string | null => {
  * Renders nothing at all when the record has none of them, so an untagged,
  * uncaptioned photo keeps exactly the layout it had before captions existed.
  */
-const MediaCaption = ({ detail, showTitle }: { detail?: MediaDetail; showTitle?: boolean }) => {
+const MediaCaption = ({
+  detail,
+  showTitle,
+  loading,
+}: {
+  detail?: MediaDetail;
+  showTitle?: boolean;
+  loading?: boolean;
+}) => {
+  // A caption is resolved from the media record in a second round trip, so while
+  // that is in flight "no caption" is not yet a fact. A placeholder says so
+  // rather than showing a bare photo that looks permanently untagged.
+  if (loading) {
+    return (
+      <div className="mt-1" aria-busy="true">
+        <div className="h-4 w-40 animate-pulse rounded bg-gray-100" />
+      </div>
+    );
+  }
+
   if (!detail) return null;
   const { title, description, tags } = detail;
   const hasTitle = Boolean(showTitle && title);
@@ -94,7 +113,7 @@ const PostMedia = ({ imageUrls, videoUrls, label, layout = 'compact' }: PostMedi
 
   // Hooks must run unconditionally, so this sits above the early return.
   const videoIds = videos.map(youtubeIdFrom).filter((id): id is string => Boolean(id));
-  const { byImageUrl, byYoutubeId } = useMediaDetails(images, videoIds);
+  const { byImageUrl, byYoutubeId, loading: detailsLoading } = useMediaDetails(images, videoIds);
 
   if (images.length === 0 && videos.length === 0) return null;
 
@@ -119,7 +138,7 @@ const PostMedia = ({ imageUrls, videoUrls, label, layout = 'compact' }: PostMedi
                 />
                 {/* Photos have no title by design — a `cat_images` record only
                     carries `fileName`, which is not something to show a reader. */}
-                <MediaCaption detail={byImageUrl[url]} />
+                <MediaCaption detail={byImageUrl[url]} loading={detailsLoading} />
               </div>
             ))}
           </div>
@@ -144,7 +163,11 @@ const PostMedia = ({ imageUrls, videoUrls, label, layout = 'compact' }: PostMedi
                         allowFullScreen
                       />
                     </div>
-                    <MediaCaption detail={byYoutubeId[videoId]} showTitle />
+                    <MediaCaption
+                      detail={byYoutubeId[videoId]}
+                      showTitle
+                      loading={detailsLoading}
+                    />
                   </div>
                 );
               }

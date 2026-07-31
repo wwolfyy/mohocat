@@ -28,13 +28,20 @@ import { useMountain } from '@/components/MountainProvider';
  * which is exactly what a post with genuinely uncaptioned media looks like.
  */
 export interface MediaDetails {
-  /** By image URL. Missing key = nothing recorded (or not yet loaded). */
+  /** By image URL. Missing key = nothing recorded for that medium. */
   byImageUrl: Record<string, MediaDetail>;
   /** By YouTube video id. */
   byYoutubeId: Record<string, MediaDetail>;
+  /**
+   * Still resolving. Callers use this to distinguish "no caption yet" from "no
+   * caption at all" — before it existed the two were the same empty map, so a
+   * slow lookup was indistinguishable from an untagged photo (owner-reported
+   * 2026-08-01).
+   */
+  loading: boolean;
 }
 
-const EMPTY: MediaDetails = { byImageUrl: {}, byYoutubeId: {} };
+const EMPTY: MediaDetails = { byImageUrl: {}, byYoutubeId: {}, loading: false };
 
 export const useMediaDetails = (imageUrls: string[], youtubeIds: string[]): MediaDetails => {
   const mountainId = useMountain();
@@ -52,6 +59,7 @@ export const useMediaDetails = (imageUrls: string[], youtubeIds: string[]): Medi
     }
 
     let cancelled = false;
+    setDetails({ byImageUrl: {}, byYoutubeId: {}, loading: true });
 
     const load = async () => {
       const [byImageUrl, byYoutubeId] = await Promise.all([
@@ -59,7 +67,7 @@ export const useMediaDetails = (imageUrls: string[], youtubeIds: string[]): Medi
         getVideoDetailsByYoutubeIds(mountainId, videoKey ? videoKey.split('|') : []),
       ]);
       // The post can be collapsed (or the modal closed) mid-flight.
-      if (!cancelled) setDetails({ byImageUrl, byYoutubeId });
+      if (!cancelled) setDetails({ byImageUrl, byYoutubeId, loading: false });
     };
 
     load();

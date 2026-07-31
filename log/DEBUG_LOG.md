@@ -11,6 +11,79 @@
 
 ---
 
+## 2026-08-01 — 공지사항 was empty, missing, or untagged for 30 seconds: a Firestore transport probe waiting out its timeout
+
+**Symptom:** owner-reported on Safari, three faces of one problem. (1) Opening a post showed
+its tags and 설명 late or never. (2) Returning to the 공지 list said _아직 등록된 공지사항이
+없어요_ when there are four posts. (3) Clicking a post sometimes showed _공지사항을 찾을 수
+없습니다_. Reloading fixed all three, which made it look like data loss.
+
+**Root cause — two independent defects, stacked.** The second is why the first was visible.
+
+**A. Firestore waited out a 30-second timeout before every first read.** Measured on Safari
+with `console.log` wrapped to stamp `performance.now()`:
+
+```
+2208396ms  Fetching announcements...
+2208396ms  Starting to fetch announcements   ← 0 ms: adjacent statements, no code between
+2238444ms  Query snapshot size: 4            ← 30,048 ms later
+2238446ms  everything else                   ← 2 ms
+```
+
+The query itself was the last **48 ms**. The 30,000 before it was the SDK's
+`detectBufferingProxy` probe — it opens a connection to work out whether anything on the
+network buffers its stream, and when the probe gets no answer it does not fail fast, it waits
+out the transport timeout, then falls back to polling and succeeds. This SDK caps that
+timeout at exactly 30s (`timeoutSeconds > 30` → _maximum allowed value is 30_), matching the
+measurement to within 48 ms. ⚠️ **Auto-detect was already on** — `@firebase/firestore` 4.7.3
+defaults `experimentalAutoDetectLongPolling` to `true` when unset, so "enable auto-detect",
+the usual advice, was a no-op here and was proposed and discarded before shipping.
+
+**B. Every public post surface used its failure state as its loading state.** `posts` was a
+bare `any[]` and `post` a nullable value, so _없어요_ / _찾을 수 없습니다_ rendered whenever
+the value was empty — including **before the first fetch**, which the SSR HTML proved:
+`curl` of both pages returned the failure text in the first paint. During A's 30-second
+stall, that is what a reader sat looking at. Compounding it, `getAllPosts` throws and the
+caller's `catch` only logged, so `posts` stayed `[]` with nothing to set it again — hence
+"only refreshing helps".
+
+**Fix:**
+
+- `services/firebase.ts` — `getFirestore(app)` → `initializeFirestore(app, {
+experimentalForceLongPolling: true })` in the browser, skipping the probe entirely. 🔑 **No
+  functionality is lost**: this is transport, not feature. `onSnapshot` still pushes live
+  updates and the timeout only bounds an _idle_ connection. What it trades is streaming
+  efficiency for realtime listeners, of which this app has **zero** — all ~47 read sites are
+  one-shot `getDoc`/`getDocs`. ⚠️ Revisit if live listeners are ever added.
+- New `hooks/useAsyncData.ts` + `components/ui/AsyncStates.tsx` (`SkeletonList`,
+  `ErrorNotice`), applied to the 공지사항 list, the 공지사항 detail page and the 입양홍보 feed —
+  the same defect sat in all three. `loading | ready | error` are now distinct, so the empty
+  message is unreachable until a fetch really returns nothing, and a failure says
+  _불러오지 못했어요_ with 다시 시도 instead of impersonating empty content.
+- The detail page also moved from `window.location.pathname` to `useParams()`, and
+  `useMediaDetails` gained a `loading` flag so a caption still resolving renders a placeholder
+  rather than looking permanently untagged.
+
+**Verified:** the SSR first paint no longer contains either failure string (0 occurrences,
+was 1 each). New `tests/e2e/public/post-loading-states.spec.ts` — **3 pass on the fix and all
+3 fail when the source is stashed back to the pre-fix state**, which is the check that
+distinguishes a net from a decoration. Gates: tsc 0, smoke 32/32, unit 121/121. Browser pass
+over all three surfaces against production data.
+
+📌 **Why no error was ever logged, and why the error state is a safety net rather than the
+main fix.** Firestore retries network failures internally instead of rejecting, so a broken
+connection surfaces as a _hang_, never as a thrown error. That is why the owner's console
+showed a clean run with 4 documents returned and nothing red — and why the e2e delays the
+response rather than aborting it. The genuinely reachable error cases are permission-denied
+and missing-index, not offline.
+
+⚠️ **Still unconfirmed: whether the probe stalls for everyone or only on the owner's network.**
+Whatever buffers that connection may be an ISP or proxy rather than Safari itself, so other
+visitors may never have hit this. The fix is correct either way, but it wants a Safari pass on
+the deployed Preview — the local dev server has no proxy in front of it to reproduce against.
+
+---
+
 ## 2026-08-01 — an 입양홍보 post's photos rendered out of proportion with the video beside them
 
 **Symptom:** owner-reported, with a screenshot — in an expanded 입양홍보 card, the 이미지 section
