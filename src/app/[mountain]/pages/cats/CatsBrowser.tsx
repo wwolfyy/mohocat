@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { FiSearch, FiFilter } from 'react-icons/fi';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
@@ -28,10 +28,26 @@ import { thumbnailPreloader } from '@/services/thumbnailPreloader';
  * data table on desktop, one filter bar + data source), and the `CatInfo`
  * detail modal. Filtering / sorting reuse the shared `@/utils/cat-filters`
  * helpers so this view matches the admin Cat Management predicate exactly.
+ *
+ * A cat's modal is addressable as `?cat=<id>` (PROJECT_PLAN §10c), so one cat
+ * can be linked to directly — the modal had no URL of any kind before.
  */
 
 // Statuses hidden by default (revealed by "전체 보기").
 const HIDDEN_STATUSES = ['별냥이', '행방불명'];
+
+// Query param carrying the open cat's **id**. Deliberately not the name: the
+// in-content `[catmodal:이름]` token matches by name, so renaming a cat breaks
+// every link to it silently — a URL people paste into KakaoTalk and keep must
+// not inherit that (PROJECT_PLAN §10c C2).
+const CAT_PARAM = 'cat';
+
+/** Current location with `?cat=<id>` set, preserving any other query params. */
+function catUrl(id: string): string {
+  const params = new URLSearchParams(window.location.search);
+  params.set(CAT_PARAM, id);
+  return `${window.location.pathname}?${params.toString()}`;
+}
 
 // --- Display helpers (Korean-first) -----------------------------------------
 function sexLabel(sex?: string): string {
@@ -149,6 +165,75 @@ export default function CatsBrowser({
   const [sortKey, setSortKey] = useState<keyof Cat>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
+  const deepLinkHandled = useRef(false);
+
+  // Open the cat named by `?cat=<id>` on arrival (§10c C1).
+  //
+  // Read from `window.location` rather than `useSearchParams()` on purpose:
+  // this page is statically prerendered (`export const revalidate`), and
+  // `useSearchParams` in a client component would opt the whole route out of it.
+  //
+  // The param is *consumed* — stripped with `replaceState` before the modal
+  // opens. The modal's own history entry then re-adds it (`historyUrl` below),
+  // which is what makes closing pop back to a clean URL and back/forward behave.
+  // Runs once: re-stripping while the modal is open would eat that entry.
+  useEffect(() => {
+    if (deepLinkHandled.current) return;
+    deepLinkHandled.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const catId = params.get(CAT_PARAM);
+    if (!catId) return;
+
+    params.delete(CAT_PARAM);
+    const query = params.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+
+    // Matched against the full list, not the filtered view, so a link to a
+    // 별냥이 / 행방불명 cat still opens without the visitor toggling anything.
+    // A link to a cat that no longer exists just lands on the list.
+    const cat = cats.find((c) => c.id === catId);
+    if (!cat) return;
+
+    // ⚠️ Open on a later task, not here. Next's AppRouter re-asserts its own
+    // canonical URL onto history in an effect that runs after ours (verified in
+    // dev at next/dist/client/components/app-router.js). If the modal's history
+    // push lands in the same commit as the strip above, that re-assert runs last
+    // with a canonical URL it computed *before* the push and wipes `?cat=` right
+    // back off — closing the modal then has no entry to pop and the URL desyncs.
+    // Yielding once lets the router settle on the stripped URL first.
+    //
+    // `setTimeout`, not `requestAnimationFrame`: a shared link is very often
+    // opened into a *background* tab, where rAF never fires until the tab is
+    // looked at — the modal would simply not be there on arrival.
+    //
+    // Deliberately *not* cancelled on cleanup: this effect re-runs whenever the
+    // router hands down a fresh `cats` array, and cancelling would drop the
+    // pending open on the floor — the guard above then swallows the retry, so
+    // the deep link would silently do nothing.
+    setTimeout(() => setSelectedCat(cat), 0);
+  }, [cats]);
+
+  // Keep the open cat in step with the URL across browser back/forward.
+  // `useModalLayer`'s history entry already closes the modal on **back**; this
+  // covers the other direction, since only the URL knows which cat a **forward**
+  // navigation is returning to.
+  //
+  // 📌 In practice forward currently lands on a *clean* URL rather than
+  // `?cat=…`: Next's AppRouter re-asserts its canonical URL onto the entry while
+  // handling the back navigation, so there is nothing for this to restore. That
+  // is self-consistent (no modal, no param) and left alone deliberately — this
+  // listener is what keeps it correct if that ever changes, and pairs with the
+  // adopt branch in `useModalLayer` so a restore can't push a duplicate entry
+  // and trap the back button.
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const catId = new URLSearchParams(window.location.search).get(CAT_PARAM);
+      setSelectedCat(catId ? (cats.find((c) => c.id === catId) ?? null) : null);
+    };
+    window.addEventListener('popstate', syncFromUrl);
+    return () => window.removeEventListener('popstate', syncFromUrl);
+  }, [cats]);
 
   // Warm the thumbnail image files into cache (no Firestore).
   useEffect(() => {
@@ -395,7 +480,7 @@ export default function CatsBrowser({
       )}
 
       {selectedCat && (
-        <Modal onClose={() => setSelectedCat(null)} size="xl">
+        <Modal onClose={() => setSelectedCat(null)} size="xl" historyUrl={catUrl(selectedCat.id)}>
           <CatInfo cat={selectedCat} />
         </Modal>
       )}

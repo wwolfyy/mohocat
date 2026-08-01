@@ -82,9 +82,17 @@
 > thumbnails rather than titles (**text-only is deliberate** — a deleted video's thumbnail _is_
 > the grey placeholder, so a grid would be a row of grey boxes).
 >
-> **Still not started, both specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN
+> ✅ **The `?cat=<id>` deep link is DONE (§10c).** A cat's modal is now addressable, built by
+> giving the modal system's **existing** history entry a URL (`useModalLayer` gained an optional
+> `historyUrl`) rather than adding a second history mechanism beside it — so any modal worth
+> addressing can opt in the same way. ⚠️ **If you touch it, read §10c's 🐛 note first:** the
+> deep-link open is deferred one `setTimeout` on purpose (Next's AppRouter re-asserts its
+> canonical URL _after_ our effects and wipes `?cat=` off otherwise), and it must not be `rAF`
+> (shared links open in background tabs, where rAF never fires).
+>
+> **Still not started, specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN
 > §10d D2 — ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not
-> a CMS setting) and the **`?cat=<id>` deep link** (§10c).
+> a CMS setting).
 >
 > ⏸️ **Do NOT start the path-based tenancy migration (T0–T7).** Still gated behind the P5.4 pass
 > and the promotion. Decision + plan:
@@ -114,6 +122,16 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🔗 One cat is now linkable — `?cat=<id>` (2026-08-01, §10c DONE).** Clicking a cat sets the
+  param; arriving on such a link opens that cat; closing clears it; back closes the modal.
+  🔑 **Reused the modal system's existing history entry** — `useModalLayer` already pushed one
+  per overlay for the Android back gesture, so it just gained an optional **`historyUrl`** and
+  the `history.back()` it already issued restores the previous URL. Keyed on the cat **id**, not
+  the name (a rename must not break a pasted link) — note that in prod the two _look_ identical,
+  since legacy doc ids **are** Korean names; the id is nonetheless immutable, so old links hold.
+  🐛 Two non-obvious traps live in `log/DEBUG_LOG.md` 2026-08-01 — an unavoidable race with
+  Next's canonical-URL re-assert, and why the defer must be `setTimeout` and not `rAF`.
+  ⏳ Owner call, not blocking: the page now emits a GA4 `page_view` per modal open.
 - **🐌 A 30-second Firestore timeout was making the public post pages look broken — fixed
   (2026-08-01, `be36c9e`).** Reported on Safari as three bugs (tags arriving late or never, the
   공지 list saying there are no posts, a post reporting itself missing, all cured by reloading).

@@ -42,6 +42,11 @@ interface ModalProps {
   hideCloseButton?: boolean;
   /** Accessible label when no visible `title` is given. */
   ariaLabel?: string;
+  /**
+   * Optional URL for the modal's history entry (e.g. `/pages/cats?cat=<id>`),
+   * making this modal shareable and reload-proof. See `useModalLayer`.
+   */
+  historyUrl?: string;
 }
 
 // Module-level counter so nested modals don't fight over the body scroll-lock:
@@ -57,6 +62,7 @@ export default function Modal({
   className,
   hideCloseButton = false,
   ariaLabel,
+  historyUrl,
 }: ModalProps) {
   // Render through a portal to <body> so the modal escapes any ancestor that
   // establishes a containing block for `fixed` elements (e.g. the frosted
@@ -66,7 +72,7 @@ export default function Modal({
 
   // ESC closes only the topmost overlay, and the z-index is derived from this
   // modal's depth in the shared overlay stack so nested modals stack correctly.
-  const zIndex = useModalLayer(isOpen, { onEscape: onClose });
+  const zIndex = useModalLayer(isOpen, { onEscape: onClose, historyUrl });
 
   // Lock body scroll while any modal is open.
   useEffect(() => {

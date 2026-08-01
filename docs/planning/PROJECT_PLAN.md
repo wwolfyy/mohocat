@@ -1088,20 +1088,61 @@ only** — no credentials in the emulator.
 
 ---
 
-## 10c. `[ ]` Shareable link to one cat's modal (DECIDED 2026-07-29, not started)
+## 10c. ✅ Shareable link to one cat's modal (DECIDED 2026-07-29, DONE 2026-08-01)
 
 > **Ask:** "invite someone to view a particular cat." Today the only answer is _link to
 > `/pages/cats` and tell them the name_ — there is no URL that opens a specific cat.
 
 **Decision (owner, 2026-07-29): take the cheap option. The "real fix" is explicitly declined.**
 
-- [ ] **C1 — `?cat=<id>` on `/pages/cats`.** `CatsBrowser` reads the param on mount and opens
-      that cat's `CatInfo` modal; opening a modal pushes the param, closing it clears one.
-      Contained to a single client component. Gives a shareable link **and** working
-      back/forward + reload, which the modal has never had.
-- [ ] **C2 — key on the cat `id`, not the name.** The existing `[catmodal:이름]` token matches
-      by **name**, so renaming a cat silently breaks every link to it. Do not repeat that in a
-      URL, which people paste into KakaoTalk and keep.
+- [x] **C1 — `?cat=<id>` on `/pages/cats` (DONE).** `CatsBrowser` consumes the param on
+      arrival and opens that cat's `CatInfo` modal; opening a cat pushes the param, closing
+      clears it. 🔑 **Built on the modal system's existing history entry rather than beside
+      it.** `useModalLayer` already pushed a synthetic entry per overlay (so Android back
+      closes a modal); it now takes an optional **`historyUrl`** to put on that entry, and the
+      `history.back()` it already issues on close restores the previous URL. So the deep link
+      is ~10 lines of new history logic, not a second mechanism racing the first. Any modal
+      worth addressing can opt in the same way — pass `historyUrl` to `ui/Modal`.
+- [x] **C2 — keyed on the cat `id`, not the name (DONE).** Pinned by
+      `tests/e2e/public/cat-deep-link.spec.ts`, which is checkable precisely because the
+      fixtures separate the two (`test-cat-01` is named 테스트냥이일). 📌 **In production the
+      two look identical**: legacy cats' Firestore doc ids _are_ their Korean names (the Sheets
+      pipeline keyed docs by name), so a real link reads `?cat=개똥이`. Cosmetic — a rename does
+      not break it. ⚠️ **But know exactly why, because it is weaker than "doc ids are
+      immutable":** `cat-reads.ts` maps `{ id: doc.id, ...doc.data() }`, and all 32 prod cat docs
+      carry their **own `id` field** (a duplicate of the doc key, left by the Sheets import), so
+      the spread wins and `cat.id` is a **stored field**, not the document address. What actually
+      protects a link is that `CatFormData` has **no `id` member**, so a CMS rename writes `name`
+      and never touches it. 🔑 **Add `id` to that form — or re-run any name-keyed import — and
+      pasted links start breaking silently, with nothing to catch it.** The sturdy fix is to
+      spread first (`{ ...doc.data(), id: doc.id }`) so the address always wins; a no-op on
+      current data, deliberately not done here as it touches a shared read path.
+
+**Behaviour, as verified in a production build** (dev and prod were checked separately — see
+the ⚠️ below for why that mattered): arriving on `?cat=<id>` opens the modal; closing returns to
+a clean `/pages/cats` **without leaving the site**; opening a cat from the list sets the param;
+the browser **back** button closes the modal and clears it. An unknown id (deleted cat, mangled
+link) lands quietly on the full list. A link to a 별냥이 / 행방불명 cat opens too — the lookup
+runs against the full list, not the filtered view, so the visitor needs no toggle.
+
+⚠️ **Forward does not re-open the modal, deliberately left as-is.** Next's AppRouter re-asserts
+its own canonical URL onto the history entry while handling the back navigation, so going
+forward lands on a _clean_ URL with nothing to restore — self-consistent (no param, no modal),
+just not a restore. The `popstate` sync in `CatsBrowser` and the adopt branch in `useModalLayer`
+keep it correct if that ever changes, and make a restore unable to push a duplicate entry.
+
+🐛 **The one real trap, worth knowing before touching this.** The deep-link open is deferred by
+one `setTimeout(…, 0)`, and that is not a stylistic choice: Next's AppRouter re-asserts its
+canonical URL in an effect that runs **after** the page's own effects. Stripping the param and
+letting the modal push it back **in the same commit** means the re-assert runs last, with a
+canonical URL computed before the push — it wipes `?cat=` straight back off, and the modal then
+has no entry to pop. Symptom: the URL flicks to `?cat=…` and reverts a moment later. ⚠️ It must
+be `setTimeout`, **not** `requestAnimationFrame` — a shared link is often opened into a
+**background tab**, where rAF does not fire until the tab is looked at, and the modal simply
+would not be there on arrival. (Both failure modes were observed in the browser, not reasoned
+about.) The scheduled open is also **not** cancelled on effect cleanup: the effect re-runs when
+the router hands down a fresh `cats` array, and cancelling drops the open while the run-once
+guard swallows the retry — the deep link then silently does nothing.
 
 **What this deliberately does NOT do — recorded so it isn't re-litigated.** There is no
 `generateMetadata` / `openGraph` anywhere in the app, so a shared link renders whatever generic
@@ -1110,7 +1151,15 @@ on a client component **cannot change that**. Per-cat link previews would need a
 `/pages/cats/[id]` page; the owner weighed that and declined the cost (2026-07-29). ⚠️ If the
 motivating use case ever turns out to be **입양홍보** — persuading someone about a specific
 adoptable cat, where the preview card does the persuading — this decision is worth revisiting,
-because a faceless link wastes the share.
+because a faceless link wastes the share. **Still true as built** — this shipped unchanged.
+
+🆕 **One owner decision this raises, not blocking.** The cats page now emits a **GA4
+`page_view` per modal open**, because the URL genuinely changes and `AnalyticsTracker` fires on
+every `searchParams` change. That is standard SPA behaviour and arguably correct now that a cat
+_is_ an address — but it means `/pages/cats` view counts include modal opens, so the page will
+look busier than it did. `page_path` stays `/pages/cats` (only `page_location` carries the cat),
+so reports do not split per cat. Suppressing it would mean teaching `AnalyticsTracker` to ignore
+the `cat` param — a few lines, not done, since which behaviour is wanted is a product call.
 
 📌 **Sequencing note:** the path-based tenancy migration rewrites ~83 navigation sites, so new
 URL surface built now is touched again by it. Not a blocker at this size; it is the reason the
