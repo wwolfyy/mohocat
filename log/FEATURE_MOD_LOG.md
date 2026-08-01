@@ -24,8 +24,15 @@
 **What changed and why.** The `?cat=<id>` deep link shipped earlier the same day was only
 usable by someone willing to look a cat's id up in Firebase. The owner's framing settled it:
 the problem was never how the URL _looks_, it was how hard it is to _produce_. A third chip in
-the cat modal's existing action row now hands you the link — OS **share sheet** where available
-(one tap into a KakaoTalk chat, which is where these go), clipboard copy otherwise.
+the cat modal's existing action row now hands you the link — OS **share sheet on touch devices**
+(one tap into a KakaoTalk chat, which is where these go), **clipboard copy on desktop**.
+
+🐛 **Corrected same-day after an owner report** ("nothing happens when clicked" on desktop): the
+first cut chose the share sheet purely on `navigator.share` existing, which desktop Chrome
+satisfies and then refuses with `NotAllowedError`. Because a dismissed sheet legitimately
+produces a silent `AbortError`, the button had no visible failure path at all. Detail and the
+general lesson — feature detection is not affordance detection, and stubs cannot prove the
+platform runs your branches — in `DEBUG_LOG.md` 2026-08-01.
 
 🔑 **This dissolved an open design question rather than answering it.** Name-keying the URL, a
 per-mountain unique-name rule, and putting the mountain in the query had all been on the table

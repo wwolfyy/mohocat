@@ -11,6 +11,46 @@
 
 ---
 
+## 2026-08-01 — the 이 냥이 링크 chip did nothing at all on desktop
+
+**Symptom:** owner-reported, within minutes of the chip shipping — clicking it on desktop does
+nothing. No copy, no dialog, no error, no change to the button.
+
+**Root cause: the capability check asked the wrong question.** The chip gated on
+`typeof navigator.share === 'function'` — i.e. _"does this browser have a share sheet"_ — when
+the question that matters is _"is a share sheet the right and usable affordance here"_. Desktop
+Chrome answers yes to the first and no to the second. Measured in Chrome on macOS with a real
+(trusted) click, wrapping both APIs to record their outcome:
+
+| call                                 | outcome                                              |
+| ------------------------------------ | ---------------------------------------------------- |
+| `navigator.share({title, url})`      | **rejected — `NotAllowedError — Permission denied`** |
+| `navigator.clipboard.writeText(url)` | resolved                                             |
+
+🔑 **And the failure was engineered to be silent.** The handler deliberately swallows
+`AbortError`, because on a phone that means the visitor dismissed the share sheet — a decision,
+not a fault (see §10c C3). Where a desktop sheet opens and closes, the same `AbortError` arrives
+and the button correctly says nothing. Combined with a `navigator.share` that refuses to run at
+all, the result is a control that cannot fail _visibly_: exactly "nothing happens".
+
+**Fix:** gate the share sheet on `(pointer: coarse)` as well as its existence — touch devices,
+which is both where it works and where it earns its keep (one tap into a KakaoTalk chat instead
+of copy-switch-paste). Desktop copies to the clipboard, which measurably works. The label follows
+the same predicate, so it now reads 링크 복사 on desktop and 링크 공유 on a phone.
+
+**Verified** with a real trusted click on desktop (a scripted `.click()` cannot prove this — it
+grants no transient activation, which is the very thing in question): the label sequence recorded
+by a MutationObserver is `🔗 링크 복사 → ✅ 복사했어요 → 🔗 링크 복사`. A new e2e case pins the
+branch itself — share on a coarse pointer, clipboard otherwise — so this cannot regress quietly.
+
+📌 **The lesson worth keeping: feature detection is not affordance detection.** An API existing
+does not mean the platform will honour it, and a control whose only failure path is silent will
+present as broken rather than as failed. ⚠️ **Both of my earlier verifications missed this**
+because they stubbed `navigator.share` — the stub always resolved, so the real refusal never
+appeared. A stub proves your code's branches; it cannot prove the platform runs them.
+
+---
+
 ## 2026-08-01 — the new `?cat=` deep link kept erasing itself, then stopped opening at all
 
 **Context:** building the `?cat=<id>` cat deep link (PROJECT_PLAN §10c). Two stacked traps, both

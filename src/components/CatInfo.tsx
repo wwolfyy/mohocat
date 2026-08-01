@@ -63,9 +63,21 @@ function ShareCatButton({ cat }: { cat: Cat }) {
   const [feedback, setFeedback] = useState<'idle' | 'copied' | 'failed'>('idle');
   // Capability check runs after mount: `navigator` does not exist during SSR,
   // and branching the label during render would be a hydration mismatch.
-  const [canShare, setCanShare] = useState(false);
+  const [useShareSheet, setUseShareSheet] = useState(false);
   useEffect(() => {
-    setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function');
+    // ⚠️ Gate on "is a share sheet the right affordance here", NOT merely on
+    // "does navigator.share exist" — desktop Chrome exposes it and then refuses
+    // it. Measured on macOS Chrome: share rejects `NotAllowedError — Permission
+    // denied`, while clipboard writes resolve fine. And where the sheet does
+    // open on a desktop, dismissing it yields AbortError, which is silent by
+    // design (below) — so the button just looked dead. Touch devices are both
+    // where the sheet works and where it is worth having: one tap into a
+    // KakaoTalk chat instead of copy-switch-paste.
+    setUseShareSheet(
+      typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        window.matchMedia('(pointer: coarse)').matches
+    );
   }, []);
 
   useEffect(() => {
@@ -92,7 +104,7 @@ function ShareCatButton({ cat }: { cat: Cat }) {
     // ⚠️ `navigator.share` needs transient activation, so it must be called
     // synchronously in this handler — `await` anything first and iOS Safari
     // rejects with NotAllowedError.
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    if (useShareSheet && typeof navigator.share === 'function') {
       navigator.share({ title: cat.name, url }).catch((error: unknown) => {
         // 🔑 Dismissing the share sheet rejects with AbortError. That is the
         // visitor changing their mind, not a failure — it must not log or show
@@ -113,7 +125,7 @@ function ShareCatButton({ cat }: { cat: Cat }) {
       ? '복사했어요'
       : feedback === 'failed'
         ? '복사하지 못했어요'
-        : canShare
+        : useShareSheet
           ? '링크 공유'
           : '링크 복사';
 

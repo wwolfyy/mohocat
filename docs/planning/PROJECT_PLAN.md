@@ -1156,10 +1156,18 @@ because a faceless link wastes the share. **Still true as built** — this shipp
 - [x] **C3 — the 이 냥이 링크 chip (DONE 2026-08-01, owner-requested).** 🔑 **The deep link is
       only usable if a human can produce one**; looking an id up in Firebase is not a workflow.
       A third chip in `CatInfo`'s existing action row (beside 📸 사진 보기 / 🎬 동영상 보기,
-      reusing `AlbumButton`) opens the **OS share sheet** where available — one tap into a
-      KakaoTalk chat, which is where these links actually go — and copies to the clipboard
-      otherwise. Label follows the capability (링크 공유 / 링크 복사), detected after mount so it
-      is not a hydration mismatch.
+      reusing `AlbumButton`) opens the **OS share sheet on touch devices** — one tap into a
+      KakaoTalk chat, which is where these links actually go — and copies to the clipboard on
+      desktop. Label follows the same predicate (링크 공유 / 링크 복사), detected after mount so
+      it is not a hydration mismatch.
+  - 🐛 **Fixed same-day after an owner report: the chip did nothing on desktop.** The first cut
+    gated on `typeof navigator.share === 'function'`, which desktop Chrome satisfies and then
+    refuses (`NotAllowedError — Permission denied`, measured). Because a dismissed sheet
+    legitimately produces a **silent** `AbortError`, the button had no visible failure path at
+    all. Now gated on `(pointer: coarse)` too. 🔑 **Feature detection is not affordance
+    detection**, and both prior verification passes missed it because they **stubbed**
+    `navigator.share` — a stub proves your branches, never that the platform runs them.
+    `log/DEBUG_LOG.md` 2026-08-01.
   - ⚠️ **It builds the link (`utils/cat-link.ts`), it does not copy `location.href`.** `CatInfo`
     renders on **six** surfaces (냥이들, 입양홍보, 소개, `CatGallery`, and the inline
     `[catmodal:이름]` / media-link paths) and only 냥이들 carries `?cat=`. Copying the current

@@ -79,38 +79,60 @@ test.describe('냥이 deep link — ?cat=<id>', () => {
  * The share chip is what makes the deep link usable by a human — without it,
  * producing a link means looking an id up in Firebase.
  *
- * `navigator.share` is stubbed before page scripts run: a real call opens an OS
- * share sheet, which no automated run can dismiss. The stub records what the
- * button *would* have shared, which is the part under test.
+ * **Both** outbound channels are stubbed before page scripts run, because which
+ * one the chip uses is deliberately device-dependent: the OS share sheet on a
+ * touch device (the `mobile` project), a clipboard copy on desktop. Desktop
+ * Chrome exposes `navigator.share` and then refuses it with NotAllowedError, so
+ * gating on mere existence left the button dead — see DEBUG_LOG 2026-08-01.
+ *
+ * Stubbing also keeps the run alive: a real share sheet is an OS dialog no
+ * automated run can dismiss.
  */
+type ShareCapture = { __shared?: { title?: string; url?: string }; __copied?: string };
+
 test.describe('냥이 share chip', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
+      const w = window as unknown as ShareCapture;
       Object.defineProperty(navigator, 'share', {
         configurable: true,
         writable: true,
         value: (data: { title?: string; url?: string }) => {
-          (window as unknown as { __shared?: unknown }).__shared = data;
+          w.__shared = data;
           return Promise.resolve();
+        },
+      });
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        writable: true,
+        value: {
+          writeText: (text: string) => {
+            w.__copied = text;
+            return Promise.resolve();
+          },
         },
       });
     });
   });
 
-  test('shares a link to the cat currently open', async ({ page }) => {
+  /** The link the chip handed over, whichever channel this device uses. */
+  const handedOver = (page: Page) =>
+    page.evaluate(() => {
+      const w = window as unknown as ShareCapture;
+      return { url: w.__shared?.url ?? w.__copied, title: w.__shared?.title };
+    });
+
+  test('hands over a link to the cat currently open', async ({ page }) => {
     await page.goto('/pages/cats?cat=test-cat-01');
     await expect(page.getByRole('heading', { name: '테스트냥이일' })).toBeVisible();
 
     await page.getByRole('button', { name: /링크/ }).click();
 
-    const shared = await page.evaluate(
-      () => (window as unknown as { __shared?: { title?: string; url?: string } }).__shared
-    );
-    expect(shared?.title).toBe('테스트냥이일');
-    expect(shared?.url).toContain('/pages/cats?cat=test-cat-01');
+    const { url } = await handedOver(page);
+    expect(url).toContain('/pages/cats?cat=test-cat-01');
   });
 
-  test('shares the 냥이들 link even when opened from another surface', async ({ page }) => {
+  test('hands over the 냥이들 link even when opened from another surface', async ({ page }) => {
     // 🔑 The regression this guards: `CatInfo` renders on six surfaces and only
     // 냥이들 honours `?cat=`. Copying the current URL here would share a link to
     // /pages/adoption — a share button that quietly shares the wrong thing.
@@ -120,10 +142,33 @@ test.describe('냥이 share chip', () => {
 
     await page.getByRole('button', { name: /링크/ }).click();
 
-    const shared = await page.evaluate(
-      () => (window as unknown as { __shared?: { url?: string } }).__shared
-    );
-    expect(shared?.url).toContain('/pages/cats?cat=test-cat-03');
-    expect(shared?.url).not.toContain('/pages/adoption');
+    const { url } = await handedOver(page);
+    expect(url).toContain('/pages/cats?cat=test-cat-03');
+    expect(url).not.toContain('/pages/adoption');
+  });
+
+  test('desktop copies rather than opening a share sheet it cannot use', async ({ page }) => {
+    // Pins the actual fix: desktop must not take the share path even though
+    // `navigator.share` exists there. Touch devices keep the sheet.
+    await page.goto('/pages/cats?cat=test-cat-01');
+    await expect(page.getByRole('heading', { name: '테스트냥이일' })).toBeVisible();
+
+    const coarsePointer = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
+    await expect(
+      page.getByRole('button', { name: coarsePointer ? /링크 공유/ : /링크 복사/ })
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: /링크/ }).click();
+    const { url } = await handedOver(page);
+    const capture = await page.evaluate(() => {
+      const w = window as unknown as ShareCapture;
+      return { usedShare: w.__shared !== undefined, usedClipboard: w.__copied !== undefined };
+    });
+
+    expect(url).toContain('cat=test-cat-01');
+    expect(capture.usedShare).toBe(coarsePointer);
+    expect(capture.usedClipboard).toBe(!coarsePointer);
+    if (!coarsePointer)
+      await expect(page.getByRole('button', { name: /복사했어요/ })).toBeVisible();
   });
 });
