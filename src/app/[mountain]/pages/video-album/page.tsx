@@ -109,7 +109,12 @@ export default function VideoAlbumPage() {
                     layout="below"
                     tags={video.tags}
                     thumbnailUrl={video.thumbnailUrl}
-                    alt={video.description || 'Video thumbnail'}
+                    // The clip's own name on the footer shelf. Falls back to the
+                    // description only when a video has no title (older records
+                    // imported before titles were set); '' renders no line at all
+                    // rather than a 제목 없음 placeholder cluttering every tile.
+                    title={video.title || video.description || ''}
+                    alt={video.title || video.description || 'Video thumbnail'}
                     meta={
                       <div className="flex items-center justify-between">
                         <span>{dateLabel}</span>

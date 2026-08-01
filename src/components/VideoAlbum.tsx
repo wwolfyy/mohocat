@@ -166,11 +166,18 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
                   </div>
 
                   {/* Video info overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                    <p className="text-white text-xs truncate">
-                      {video.description || '제목 없음'}
-                    </p>
-                    <div className="flex justify-between items-center mt-1">
+                  <div className="absolute bottom-0 left-0 right-0 space-y-1 bg-gradient-to-t from-black to-transparent p-2">
+                    {/* No empty-state filler: this line held `|| '제목 없음'`, which
+                        labelled a *description* as a missing *title* — and a video
+                        with no description got a placeholder saying it had no title.
+                        Rendered only when there is something to show, matching the
+                        shared `album/MediaTile`, which drops the same filler. */}
+                    {video.description && (
+                      <p className="truncate text-xs text-white">{video.description}</p>
+                    )}
+                    {/* Spacing comes from the container's `space-y-1`, so the row sits
+                        correctly whether or not a description precedes it. */}
+                    <div className="flex items-center justify-between">
                       <p className="text-white text-xs opacity-75">
                         {(() => {
                           const createdDate = parseDate(video.createdTime);

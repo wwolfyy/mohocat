@@ -8,8 +8,24 @@ interface MediaTileProps {
   /** Fallback image swapped in if the thumbnail fails to load. */
   fallbackUrl?: string;
   alt: string;
-  /** Optional caption; the empty-state "설명 없음" filler is intentionally dropped. */
+  /**
+   * Optional caption drawn over the image — `'overlay'` layout only.
+   *
+   * ⚠️ The `'below'` layout deliberately does NOT render this. A caption over a
+   * photo is legible because the gradient sits on the image; a long video
+   * description on a footer shelf would dominate the card. Use `title` there.
+   */
   description?: string;
+  /**
+   * Short heading on the footer shelf — `'below'` layout only, clamped to 2 lines.
+   *
+   * Added 2026-08-02: video tiles had no text label at all. The photo grid shows a
+   * caption over the thumbnail, but the video grid uses `'below'`, which rendered
+   * only tags and meta — so a video was identifiable by its thumbnail alone
+   * (owner-reported). Titles, not descriptions, by the owner's call: a YouTube
+   * title identifies the clip, a description is prose.
+   */
+  title?: string;
   /** Bottom meta row (e.g. date, or date + duration for video). */
   meta?: ReactNode;
   /** Centered icon revealed on hover (magnifier for photo, play for video). */
@@ -44,6 +60,7 @@ export default function MediaTile({
   fallbackUrl,
   alt,
   description,
+  title,
   meta,
   overlayIcon,
   topRight,
@@ -95,8 +112,11 @@ export default function MediaTile({
       >
         <div className={`${aspectClass} relative overflow-hidden bg-gray-200`}>{media}</div>
 
-        {/* Caption shelf */}
+        {/* Caption shelf — title first, since it is what identifies the clip. */}
         <div className="space-y-1 p-2">
+          {title && (
+            <p className="line-clamp-2 text-xs font-medium leading-snug text-gray-800">{title}</p>
+          )}
           {tags && tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               {tags.slice(0, 2).map((tag) => (

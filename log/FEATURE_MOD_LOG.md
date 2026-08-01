@@ -15,6 +15,43 @@
 
 ---
 
+## 2026-08-02 — Video tiles name the clip; the mislabelled "제목 없음" filler is gone
+
+**Area:** `src/components/album/MediaTile.tsx`, `src/app/[mountain]/pages/video-album/page.tsx`,
+`src/components/VideoAlbum.tsx`, `src/components/ui/VideoPlayer.tsx`,
+`tests/e2e/public/albums.spec.ts`.
+**Type:** enhancement + small fix (owner-reported).
+
+**What changed and why.** The owner noticed the photo grid captions its thumbnails while the
+video grid does not. 🔑 **It was not a structural difficulty with video thumbnails, as assumed —
+the two grids pass different layouts to the same shared tile.** Photos use `MediaTile`'s default
+`layout="overlay"` and pass `description`, so the caption is drawn over the image; videos use
+`layout="below"`, whose footer shelf rendered **only tags and meta**. `description` was neither
+passed nor rendered there, so a video was identifiable by its thumbnail alone.
+
+`MediaTile` gained a **`title`** prop for the `below` shelf (clamped to 2 lines, above the tag
+chips); the video album passes `video.title`, falling back to `description` for older records
+and to `''` — which renders no line — rather than a placeholder on every tile. **Titles, not
+descriptions, by the owner's call:** a YouTube title identifies a clip, a description is prose,
+and prose on a white shelf would dominate the card. `description` stays overlay-only for photos,
+where the gradient sits on the image and keeps it legible.
+
+🗑️ **`video.description || '제목 없음'` removed (owner: "indeed odd").** The filler announced a
+missing **title** while rendering a **description**, so a video with no description was captioned
+"제목 없음". Two live instances, both dropped in favour of rendering nothing: the 냥이 modal's
+video album (`VideoAlbum`) and the player caption (`VideoPlayer` — where it sat under a player
+already showing the real title). The album tile's spacing moved to a container `space-y-1` so the
+date/duration row sits correctly with or without a description above it. ⚠️ `PhotoAlbum`'s
+`|| '설명 없음'` is **left alone** — that one is correctly labelled (설명 = description), so it is
+a styling choice rather than the same defect. The shared `MediaTile` already drops both fillers
+by design; these two files hand-roll their tiles and had drifted.
+
+**Verified.** Browser-checked via screenshots of the video grid (both fixture shapes: a real
+title, and the description fallback) and the open player. A new e2e case pins both title paths.
+tsc 0 · smoke 34 · e2e public+mobile **97 passed**.
+
+---
+
 ## 2026-08-02 — Signup consent recorded, a default role, and PII out of the auth logs
 
 **Area:** `src/services/auth-service.ts`, `src/components/SignupForm.tsx`,

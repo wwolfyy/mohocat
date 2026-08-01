@@ -150,7 +150,12 @@ export default function VideoPlayer({
 
         {!videoLoading && !videoError && (
           <div className="mt-4 text-center text-white">
-            <p className="text-lg font-semibold">{video.description || '제목 없음'}</p>
+            {/* Same mislabelled filler as the album tile once had (`|| '제목 없음'`):
+                it announced a missing *title* while rendering a *description*, so a
+                video with no description was captioned "제목 없음" under a player
+                already showing its real title. Dropped rather than replaced — the
+                caption is now simply absent when there is nothing to say. */}
+            {video.description && <p className="text-lg font-semibold">{video.description}</p>}
             <div className="mt-2 flex items-center justify-center gap-4 text-sm text-gray-300">
               <span>
                 {(() => {

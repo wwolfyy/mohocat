@@ -91,4 +91,21 @@ test.describe('video album + VideoPlayer', () => {
     await close.click();
     await expect(close).toHaveCount(0);
   });
+
+  /**
+   * The footer shelf carries the clip's name (2026-08-02, owner-reported). Video
+   * tiles use MediaTile's `layout="below"`, which rendered only tags + date/duration
+   * — so unlike the photo grid, which draws a caption over the thumbnail, a video was
+   * identifiable by its thumbnail alone. Titles, not descriptions, by the owner's
+   * call. Both fixture shapes are covered: test-vid-02 has a real `title`,
+   * test-vid-01 has none and falls back to its description.
+   */
+  test('each tile names the clip under its thumbnail', async ({ page }) => {
+    await page.goto('/pages/video-album');
+
+    // A video with its own title shows that title.
+    await expect(page.getByText('픽스처 영상 2 2024-03-16')).toBeVisible();
+    // One without falls back to its description rather than showing nothing.
+    await expect(page.getByText('픽스처 영상 1', { exact: true })).toBeVisible();
+  });
 });
