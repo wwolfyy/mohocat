@@ -50,6 +50,9 @@ const LABELS = {
     accept: 'image/*',
     descriptionPlaceholder: '이 사진에 대한 설명',
     descriptionHelp: '비어 있으면 설명 없이 저장돼요.',
+    // Written out per kind rather than built from `section`: the video section
+    // label carries a parenthetical, and 은/는 depends on the preceding syllable.
+    singleOnlyHint: '사진은 한 장만 올릴 수 있어요.',
   },
   video: {
     section: '동영상 (YouTube에 올라가요)',
@@ -57,6 +60,7 @@ const LABELS = {
     accept: 'video/*',
     descriptionPlaceholder: '이 동영상의 YouTube 설명',
     descriptionHelp: '비어 있으면 YouTube 설명 없이 올라가요.',
+    singleOnlyHint: '동영상은 하나만 올릴 수 있어요.',
   },
 } as const;
 
@@ -72,6 +76,14 @@ interface MediaItemListProps {
    * post body. The hint has to match, or it teaches the wrong thing.
    */
   descriptionHelp?: string;
+  /**
+   * Whether the section accepts more than one file. `false` hides the trailing
+   * picker once a file is present, so the list caps at one; the file can still be
+   * 삭제'd and replaced. Defaults to `true` — the admin composers
+   * (공지사항 / 입양홍보) are unrestricted by decision, and only 집사톡 passes this,
+   * from `config/media_control.json` (PROJECT_PLAN §10d).
+   */
+  allowMultiple?: boolean;
 }
 
 const MediaItemList = ({
@@ -80,8 +92,10 @@ const MediaItemList = ({
   onItemsChange,
   disabled = false,
   descriptionHelp,
+  allowMultiple = true,
 }: MediaItemListProps) => {
   const labels = LABELS[kind];
+  const canAddMore = allowMultiple || items.length === 0;
 
   const selectFile = (index: number, file: File | null) => {
     if (!file) return;
@@ -170,23 +184,28 @@ const MediaItemList = ({
         </ul>
       )}
 
-      {/* The trailing empty picker. Always present, so adding the next file is
-          one click and the list grows as the user goes. Tinted and ruled off from
-          the files above it so it reads as "add another", not as part of the last
-          file's fields. */}
-      <div className={cn('bg-gray-50 p-3', items.length > 0 && 'border-t-2 border-gray-400')}>
-        <label className="block text-xs font-medium text-gray-700 mb-1">{labels.addLabel}</label>
-        <input
-          type="file"
-          accept={labels.accept}
-          disabled={disabled}
-          // Remount after each pick so choosing the same filename twice still
-          // fires onChange (the input would otherwise hold the old value).
-          key={items.length}
-          onChange={(e) => selectFile(items.length, e.target.files?.[0] ?? null)}
-          className="w-full p-2 border border-gray-300 rounded-md bg-white"
-        />
-      </div>
+      {/* The trailing empty picker. Present whenever another file may be added, so
+          adding the next one is one click and the list grows as the user goes.
+          Tinted and ruled off from the files above it so it reads as "add
+          another", not as part of the last file's fields. When the section is
+          capped at one file it disappears after the first pick — leaving the
+          picker visible but inert would read as broken. */}
+      {canAddMore && (
+        <div className={cn('bg-gray-50 p-3', items.length > 0 && 'border-t-2 border-gray-400')}>
+          <label className="block text-xs font-medium text-gray-700 mb-1">{labels.addLabel}</label>
+          <input
+            type="file"
+            accept={labels.accept}
+            disabled={disabled}
+            // Remount after each pick so choosing the same filename twice still
+            // fires onChange (the input would otherwise hold the old value).
+            key={items.length}
+            onChange={(e) => selectFile(items.length, e.target.files?.[0] ?? null)}
+            className="w-full p-2 border border-gray-300 rounded-md bg-white"
+          />
+          {!allowMultiple && <p className="text-xs text-gray-500 mt-1">{labels.singleOnlyHint}</p>}
+        </div>
+      )}
     </section>
   );
 };

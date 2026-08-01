@@ -1420,12 +1420,29 @@ contained version won.
       one file's fields ended or which section a picker belonged to. `MediaItemList` is now a
       framed section with a header bar + count badge, numbered files, and a dashed rule
       between them. Browser-verified on 공지사항 and 집사톡.
-- [ ] **D2 — the CMS toggle (NOT STARTED).** ⚠️ **"CMS-controlled" rules out
-      `mountains.json`** — that is a static import and only changes on redeploy, so a toggle
-      there is not a CMS setting. It needs a Firestore-backed config (the `admin_config`
-      shape the YouTube credential already uses) plus a control on an admin page. Open
-      questions for whoever picks it up: which forms it governs (집사톡 only, or all three),
-      whether video and image toggle separately, and whether it is per-mountain.
+- [x] **D2 — the multiple-upload toggle (DONE 2026-08-02) — 🔄 shipped as _static config_,
+      not a CMS setting.** Owner's answers: **집사톡 only** (공지사항/입양홍보 stay
+      unrestricted per part 1 above), **video and image toggle separately**, and **one setting
+      for all mountains**. Lives in **`config/media_control.json`**, read through the
+      fail-loud `src/utils/mediaControl.ts`; `forms/MediaItemList` gained an `allowMultiple`
+      prop (defaults to `true`, so only 집사톡 passes it) which hides the trailing
+      "add another" picker once a file is present. **Both flags ship `false`** — 집사톡 is
+      one video + one photo per post as of this change.
+  - 🔑 **Why the "CMS-controlled" premise was dropped (owner, 2026-08-02).** The Firestore
+    design was drafted — `admin_config`-shaped doc, admin control, `manage-app` gate — and
+    then rejected on a consequence it exposed: the setting is **global by decision**, so a
+    Firestore toggle would let **any one mountain's admin silently reconfigure every other
+    mountain's composer**. Static config moves that authority from "any admin" to "whoever
+    can deploy". ⚠️ The redeploy cost is **accepted, not overlooked** — the owner said so
+    explicitly. Do not "improve" this back into a runtime setting without re-deciding who
+    may flip it.
+  - 📌 **Two things the drafted Firestore design got wrong, recorded so they aren't
+    repeated.** (1) `admin_config` is **not** a settings precedent — it has **no
+    `firestore.rules` entry at all** (default-deny, Admin-SDK only) because it stores the
+    YouTube **OAuth refresh token**; a client-readable flag there would have meant opening a
+    rules `match` beside a credential. (2) 앱 관리's old 게시물 컬렉션 설정 tab looked like a
+    settings precedent but saved to **`localStorage`** — per-browser, so it could never have
+    been a shared setting. Both are gone as of this change (see §10j).
 - [ ] **D3 — align the media-section order across composers** (proposed, **still not**
       decided). 집사톡 renders 동영상 → 사진; 공지사항 renders 사진 → 동영상. See the note below.
 
@@ -1656,6 +1673,43 @@ the caption is drawn over the image; videos use `layout="below"`, whose footer s
 **Verified.** Screenshots of both converged modals in a real browser (seeded with media matching
 the cat's name — fixtures tag by id, so the modals render empty otherwise), plus a new e2e case
 pinning both title paths. Full e2e 196 passed / 3 failed, all three green in isolation.
+
+---
+
+## 10j. ✅ A settings screen that configured nothing, deleted (DONE 2026-08-02)
+
+> **Found while siting §10d's D2 toggle**, not reported: 앱 관리's 게시물 컬렉션 설정 tab was
+> the natural home for it, and inspecting it showed it had never worked.
+
+**What it was.** A textarea in 앱 관리 where an admin typed Firestore collection names; it saved
+them to **`localStorage`** (`admin-posts-collections`) and the dashboard's 게시물 tile listed
+them back. Introduced 2025-06-27 (`3907ad7`), carried through the permissions and `[mountain]`
+refactors, never finished.
+
+**Why it was dead, precisely** — the distinction matters, because the value _was_ read:
+
+- The dashboard read the key, then passed it to a stub that pushed **`count: 0`** for every
+  name behind a `// TODO: Replace with post service…`. It never queried Firestore.
+- The tile's headline number was **`postsCollections.length`** — how many lines you had typed,
+  not how many posts exist.
+- 🔑 **The tell:** the default list shipped **`posts_main`**, a collection that **has never
+  existed** in this codebase, and omitted **`posts_adoption`** and **`posts_butler`**, which do.
+  A wrong name sat there for ~14 months with no symptom, because a wrong name and a right name
+  both rendered `0`.
+- Being `localStorage`, it was per-browser and per-admin regardless.
+
+**What replaced it.** The tile now counts the four real collections through the existing service
+getters (`getAllPosts()` is mountain-scoped and excludes replies), labelled by the surface each
+backs — 급식현황 / 집사톡 / 공지사항 / 입양홍보 — with a real total. **Which collections exist is
+a fact about the code** (each is a service's `COLLECTION_NAME`), not an operator choice, which is
+why the configurability was the wrong shape to begin with; the list lives in `POST_COLLECTIONS`
+in the dashboard, and a new post service adds a row. The 앱 관리 tab is gone (the page keeps
+소개페이지 관리 + the disabled FAQ).
+
+**Verified in a browser against live data:** 게시물 **14** = 급식현황 6 + 집사톡 2 + 공지사항 4 +
+입양홍보 2. ⚠️ The hydration mismatch logged on those admin pages is **pre-existing and unrelated**
+— it reproduces on untouched pages (`/admin/cats`) and comes from the auth-dependent header
+(server renders 로그인/등록, client renders the signed-in user).
 
 ---
 

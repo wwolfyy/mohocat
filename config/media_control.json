@@ -1,0 +1,7 @@
+{
+  "$comment": "Global media-upload rules. Deployment-wide (NOT per-mountain) and static — changing it needs a redeploy. Read via src/utils/mediaControl.ts. See config/README.md.",
+  "butlerTalk": {
+    "allowMultipleVideos": false,
+    "allowMultipleImages": false
+  }
+}

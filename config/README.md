@@ -15,6 +15,15 @@ This directory contains configuration files that don't need to be at the project
 
 - **`deployment/`** - Deployment-related configurations
 
+## Root-Level Files In This Directory
+
+- `permissions.json` - Role → permission matrix and per-mountain admin/default-role settings
+- `media_control.json` - Media-upload rules for the 집사톡 composer (one video / one photo per
+  post). **Deployment-wide, not per-mountain**, and **static** — changing it needs a redeploy.
+  That is deliberate: the setting spans every mountain, so a runtime CMS toggle would let one
+  mountain's admin reconfigure the others. Read via `src/utils/mediaControl.ts`, which validates
+  and throws on a malformed file. Rationale: `docs/planning/PROJECT_PLAN.md` §10d (D2).
+
 ## Root-Level Configuration Files
 
 The following configuration files remain at the project root because development tools expect them there:

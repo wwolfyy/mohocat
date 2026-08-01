@@ -15,6 +15,61 @@
 
 ---
 
+## 2026-08-02 — 집사톡 capped at one video + one photo, via static config
+
+**Area:** `config/media_control.json` (new), `src/utils/mediaControl.ts` (new),
+`src/components/forms/MediaItemList.tsx`, `src/components/NewButlerTalkForm.tsx`.
+**Type:** feature (owner-requested) — PROJECT_PLAN §10d **D2**, the last open item of that
+section.
+
+**What changed and why.** 집사톡's 동영상 and 사진 sections now accept **one file each**.
+`MediaItemList` gained an `allowMultiple` prop that hides the trailing "add another" picker once a
+file is present (with a Korean hint in the empty picker saying so); the file stays removable via
+삭제, so the cap is a replace, not a dead end. The two flags — video and image toggle
+**separately** — come from `config/media_control.json`, read through a fail-loud loader.
+
+🔄 **This reverses D2's "CMS-controlled" premise, deliberately (owner).** The Firestore design was
+drafted and rejected: the setting is **global across mountains** by decision, so a runtime toggle
+would have let **any one mountain's admin silently reconfigure every other mountain's composer**.
+Static config moves that authority to whoever can deploy. ⚠️ The redeploy cost is **accepted, not
+overlooked**.
+
+📌 **Scope is 집사톡 only.** 공지사항 and 입양홍보 are admin-only and stay unrestricted (§10d part
+1, owner 2026-07-30), which is why `allowMultiple` **defaults to `true`** and only 집사톡 passes
+it — a new call site inherits the permissive behaviour.
+
+**Verified in a real browser** (both forms driven, nothing submitted): in 집사톡, picking a photo
+removes the image picker while the video picker stays, the DOM drops to one file input, and 삭제
+brings it back; in 공지사항, picking a photo **keeps** its trailing picker. Gates: tsc 0, smoke
+34/34, unit 137/137.
+
+---
+
+## 2026-08-02 — 앱 관리's 게시물 컬렉션 설정 removed; the dashboard tile now counts for real
+
+**Area:** `src/app/[mountain]/admin/app-management/page.tsx`,
+`src/app/[mountain]/admin/page.tsx`.
+**Type:** removal + fix. Detail: PROJECT_PLAN **§10j**.
+
+**What changed and why.** The 게시물 컬렉션 설정 tab let an admin type Firestore collection names
+into a textarea, saved to **`localStorage`**, and the dashboard's 게시물 tile listed them back.
+🔑 **It configured nothing:** the dashboard read the value, then handed it to a stub that pushed
+`count: 0` per name behind a `// TODO`, and the tile's headline number was the **number of lines
+typed**, not a post count. **The tell** — the shipped default named **`posts_main`**, a collection
+that has never existed, and omitted `posts_adoption` and `posts_butler`, which do. It survived
+~14 months (since `3907ad7`, 2025-06-27) because a wrong name and a right name both render `0`.
+
+The tile now counts the four real collections through the existing service getters, labelled by
+surface (급식현황 / 집사톡 / 공지사항 / 입양홍보) with a real total. **Which collections exist is
+a fact about the code, not an operator choice** — that's why the configurability was the wrong
+shape. Found while siting the §10d D2 toggle, not reported.
+
+**Verified in a browser against live data:** 게시물 **14** = 6 + 2 + 4 + 2, and 앱 관리 now shows
+only 소개페이지 관리 + the disabled FAQ. ⚠️ The hydration warning on those pages is
+**pre-existing** — it reproduces on untouched admin pages and comes from the auth-dependent header.
+
+---
+
 ## 2026-08-02 — The modal albums converged onto the shared MediaTile
 
 **Area:** `src/components/PhotoAlbum.tsx`, `src/components/VideoAlbum.tsx`.

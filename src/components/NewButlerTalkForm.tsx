@@ -9,15 +9,22 @@ import { useMountain } from '@/components/MountainProvider';
 import MediaItemList from '@/components/forms/MediaItemList';
 import CatTagSelectField from '@/components/forms/CatTagSelectField';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
+import { getButlerTalkMediaRules } from '@/utils/mediaControl';
 
 /**
  * 집사톡(butler_talk) post composer. Submit/upload flow comes from the shared
  * rich-content primitives (complexity-retirement P3); no feeding-spots section.
  * Note: the stored-post title fallback is the undated '집사톡 글입니다' while the
  * YouTube title fallback is dated — preserved pre-refactor behavior.
+ *
+ * ⚠️ This is the **only** composer whose media sections are capped — 공지사항 and
+ * 입양홍보 are admin-only and stay unrestricted (PROJECT_PLAN §10d). The caps come
+ * from `config/media_control.json`, which is static: changing them is a redeploy,
+ * deliberately, so no single mountain's admin can reconfigure the others.
  */
 const NewButlerTalkForm = () => {
   const DEFAULT_TITLE = '집사톡 글입니다';
+  const mediaRules = getButlerTalkMediaRules();
 
   // Generate dynamic title based on current time
   const generateDynamicTitle = () => {
@@ -99,6 +106,7 @@ const NewButlerTalkForm = () => {
         items={form.videoItems}
         onItemsChange={form.handleVideoItemsChange}
         disabled={form.uploading}
+        allowMultiple={mediaRules.allowMultipleVideos}
       />
 
       {/* YouTube Metadata - only show if video files are selected */}
@@ -172,6 +180,7 @@ const NewButlerTalkForm = () => {
         items={form.imageItems}
         onItemsChange={form.handleImageItemsChange}
         disabled={form.uploading}
+        allowMultiple={mediaRules.allowMultipleImages}
       />
 
       {/* Image Cat Tags - only show if images are selected */}

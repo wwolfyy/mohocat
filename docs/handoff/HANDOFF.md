@@ -104,10 +104,27 @@
 > "YouTube에 없는 영상" panel should show thumbnails rather than titles (**text-only is
 > deliberate** — a deleted video's thumbnail _is_ the grey placeholder).
 >
-> **Still not started, specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN §10d D2 —
-> ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not a CMS
-> setting). It needs three owner answers first: which forms it governs, whether video and image
-> toggle separately, and whether it is per-mountain.
+> ✅ **§10d D2 is DONE (2026-08-02) — and it shipped as _static config_, not a CMS toggle.**
+> 집사톡 now takes **one video + one photo** per post, from `config/media_control.json`
+> (video/image flags separate, one setting for all mountains); 공지사항/입양홍보 stay
+> unrestricted. 🔑 **The Firestore design was drafted and rejected on a consequence it
+> exposed:** the setting is global by decision, so a runtime toggle would let **any one
+> mountain's admin silently reconfigure every other mountain's composer**. Static config moves
+> that authority to whoever can deploy; the redeploy cost is **accepted, not overlooked**
+> (owner). Do not "improve" this back into a runtime setting without re-deciding who may flip
+> it. ⚠️ **This changes 집사톡 for members on deploy** — the caps ship `false`, before anyone
+> touches a control.
+>
+> 🗑️ **A settings screen that configured nothing is gone (2026-08-02).** Found while siting D2,
+> not reported: 앱 관리's 게시물 컬렉션 설정 saved collection names to **`localStorage`** and the
+> dashboard listed them with a hard-coded **`0`** — the headline number was _how many lines you
+> typed_. 🔑 **The tell:** the shipped default named **`posts_main`**, which has never existed,
+> and omitted two collections that do; it survived ~14 months because a wrong name and a right
+> name both render `0`. The tile now counts the four real collections (verified live: **14** =
+> 급식현황 6 + 집사톡 2 + 공지사항 4 + 입양홍보 2). 📌 **Two false precedents recorded in
+> PROJECT_PLAN §10d/§10j:** `admin_config` is **not** a settings store (no rules entry at all —
+> it holds the YouTube OAuth token), and that tab was per-browser, so neither was the model it
+> looked like.
 >
 > ⏸️ **Do NOT start the path-based tenancy migration (T0–T7).** Still gated behind the P5.4 pass
 > and the promotion. Decision + plan:
@@ -1360,7 +1377,17 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-02 (latest)** — **An audit that became four pieces of work.** Started as "what's
+- **2026-08-02 (latest)** — **§10d D2 closed as static config, and a dead settings screen
+  deleted.** 집사톡 capped at one video + one photo via `config/media_control.json` +
+  `src/utils/mediaControl.ts`, with `MediaItemList` gaining `allowMultiple` (defaults `true`, so
+  only 집사톡 passes it). 🔄 The **CMS-toggle premise was reversed by the owner** once the
+  Firestore design exposed that a global runtime setting lets any one mountain's admin
+  reconfigure every other mountain. 🗑️ Alongside it, 앱 관리's 게시물 컬렉션 설정 tab — a
+  `localStorage` textarea feeding a `count: 0` stub whose default named a collection that never
+  existed — removed, and the dashboard 게시물 tile now counts the four real collections.
+  Browser-verified both ways; tsc 0 / smoke 34 / unit 137. Detail: PROJECT_PLAN §10d + §10j,
+  `log/FEATURE_MOD_LOG.md` 2026-08-02.
+- **2026-08-02** — **An audit that became four pieces of work.** Started as "what's
   left per the plan?", which required checking the plan against the code: **seven entries were
   wrong** (six done-but-unticked, one — 급식소 — flagged by the owner, whose neighbouring §7 note
   would have sent someone chasing a phantom permission-denied). 🔑 **A plan entry is a claim about
