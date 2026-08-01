@@ -9,6 +9,8 @@
  * before scaling membership.
  */
 
+import { POLICY_EFFECTIVE_DATE_KO } from '@/constants/policy';
+
 export const metadata = {
   title: '개인정보처리방침 | 산냥이집냥이',
 };
@@ -16,7 +18,9 @@ export const metadata = {
 // 개인정보 보호책임자 / 문의 창구.
 const CONTACT_EMAIL = 'rescuezoro@gmail.com';
 const PRIVACY_OFFICER = '산냥이집냥이 운영자';
-const EFFECTIVE_DATE = '2026년 7월 10일';
+// Single-sourced so the date shown here and the version stamped on a member's
+// consent record can never drift apart. See src/constants/policy.ts.
+const EFFECTIVE_DATE = POLICY_EFFECTIVE_DATE_KO;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

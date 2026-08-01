@@ -14,6 +14,7 @@ import { loadPermissionConfig, getPermissionMatrix } from '@/config/permission-c
 import type {
   UserPermissions,
   UserRole,
+  UserConsent,
   PermissionLog,
   PermissionConfig,
 } from '@/types/permissions';
@@ -239,7 +240,17 @@ export class PermissionService {
    * Ensure user exists in the Firestore users collection
    * Creates the user document if it doesn't exist, or updates it if it does.
    */
-  async ensureUserExists(user: any): Promise<void> {
+  /**
+   * Create-or-refresh the caller's own `users/{uid}` profile doc (client SDK —
+   * the self-write rule permits it; see firestore.rules `match /users/{userId}`).
+   *
+   * @param consent Signup consent, passed ONLY by the signup path. It is stamped
+   *   on **create** and never on update: an existing record is the original
+   *   agreement, and overwriting its timestamp would falsify when consent was
+   *   given. A later re-consent (e.g. a policy revision) needs its own flow, not
+   *   this one.
+   */
+  async ensureUserExists(user: any, consent?: UserConsent): Promise<void> {
     if (!user || !user.uid) return;
 
     try {
@@ -269,6 +280,7 @@ export class PermissionService {
           roles: {},
           roleHistory: [],
           createdAt: timestamp,
+          ...(consent ? { consent } : {}),
         };
 
         await setDoc(userRef, newUser);

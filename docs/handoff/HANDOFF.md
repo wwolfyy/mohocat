@@ -1,14 +1,17 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-01 · **Branch:** `dev` (`7e8aa1b`) · **`main`:** promoted through PR #8
+**Last updated:** 2026-08-01 · **Branch:** `dev` (`a96a62b`) · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **The 2026-08-01 session was four owner-reported bug fixes on the public post and video
-> surfaces.** Four commits, all pushed; `origin/dev` = **`7e8aa1b`**. The tree is clean apart
-> from a `.gitignore` hunk and two untracked `code-graph-tooling-*` docs, which belong to a
-> **different** workstream — do not sweep them into a commit.
+> **2026-08-01 ran in two halves.** First, four owner-reported bug fixes on the public post and
+> video surfaces (`6e55463`…`7e8aa1b`). Then a feature: **one cat is now linkable**
+> (`?cat=<id>`), with a **이 냥이 링크 chip** in the cat modal to hand you the link — plus a
+> same-day fix after the owner found that chip dead on desktop. Eight commits, all pushed;
+> `origin/dev` = **`a96a62b`**. The tree is clean apart from a `.gitignore` hunk and three
+> untracked code-graph files, which belong to a **different** workstream — do not sweep them
+> into a commit.
 >
 > 🔑 **The finding worth carrying forward: a 30-second wait that was a timeout, not slowness.**
 > Firestore's SDK probes whether anything on the network buffers its streamed connection, and
@@ -59,17 +62,21 @@
 >
 > **Do these next, in this order:**
 >
-> 1. **Safari pass on the deployed Preview** — confirm the 30-second stall is gone. Whatever
+> 1. **Tap the 이 냥이 링크 chip on a real phone** (Preview). The **mobile** half of it is the
+>    one part still proven only by stubs — which is exactly the weakness that shipped a dead
+>    button to desktop. Expected: the OS share sheet opens with the cat's name and a
+>    `/pages/cats?cat=<id>` link. Desktop is verified (copies, says 복사했어요).
+> 2. **Safari pass on the deployed Preview** — confirm the 30-second stall is gone. Whatever
 >    buffers that connection may be an ISP or proxy rather than Safari itself, so it may never
 >    have affected other visitors; the local dev server has no proxy to reproduce against.
-> 2. **Verify the 2026-07-31 work on `dev`** — the 입양홍보 popup (needs a **fresh session** —
+> 3. **Verify the 2026-07-31 work on `dev`** — the 입양홍보 popup (needs a **fresh session** —
 >    `sessionStorage`, so a reload will not re-show it), and the duplicate-filename **409**
 >    (`이미 "…"과 같은 이름의 파일이 있어요`), the one path with **no automated coverage** —
 >    signing cannot run against the emulator.
-> 3. **Re-run the P5.4 manual YouTube pass from the top.** Still the gate on the next
+> 4. **Re-run the P5.4 manual YouTube pass from the top.** Still the gate on the next
 >    `dev → main` promotion. 📌 Running **📺 YouTube와 동기화** now also exercises the new
 >    availability check, so it doubles as an early signal for that pass.
-> 4. **Then the promotion itself.** `dev` now leads `origin/main` by **51** commits — M6/M7/M8,
+> 5. **Then the promotion itself.** `dev` now leads `origin/main` by **55** commits — M6/M7/M8,
 >    the GA4 guide, and the whole 2026-07-26 → 08-01 run are waiting behind that one manual pass.
 >    ⚠️ **Measure against `origin/main`, not the local `main` ref** — this doc has been quoting
 >    ~274–279 for several sessions because the local `main` is stranded at `26b1879`
@@ -82,13 +89,24 @@
 > thumbnails rather than titles (**text-only is deliberate** — a deleted video's thumbnail _is_
 > the grey placeholder, so a grid would be a row of grey boxes).
 >
-> ✅ **The `?cat=<id>` deep link is DONE (§10c).** A cat's modal is now addressable, built by
-> giving the modal system's **existing** history entry a URL (`useModalLayer` gained an optional
-> `historyUrl`) rather than adding a second history mechanism beside it — so any modal worth
-> addressing can opt in the same way. ⚠️ **If you touch it, read §10c's 🐛 note first:** the
-> deep-link open is deferred one `setTimeout` on purpose (Next's AppRouter re-asserts its
-> canonical URL _after_ our effects and wipes `?cat=` off otherwise), and it must not be `rAF`
-> (shared links open in background tabs, where rAF never fires).
+> ✅ **The `?cat=<id>` deep link + its 이 냥이 링크 chip are DONE (§10c).** A cat's modal is
+> addressable, built by giving the modal system's **existing** history entry a URL
+> (`useModalLayer` gained an optional `historyUrl`) rather than adding a second history mechanism
+> beside it — so any modal worth addressing can opt in the same way.
+>
+> 🔑 **The lesson from the chip's day-one bug, and it generalises well past this feature:
+> feature detection is not affordance detection.** The chip chose the OS share sheet on
+> `navigator.share` merely _existing_ — which desktop Chrome satisfies and then refuses
+> (`NotAllowedError`, measured). And because a dismissed sheet legitimately produces a **silent**
+> `AbortError`, the button had **no visible failure path at all**: it just did nothing, which is
+> how the owner found it. ⚠️ **Both pre-ship verification passes missed it because they stubbed
+> `navigator.share`** — a stub proves your branches, never that the platform runs them. Now gated
+> on `(pointer: coarse)`: sheet on touch, clipboard on desktop.
+>
+> ⚠️ **Two more traps in that code, both in §10c / `DEBUG_LOG`:** the deep-link open is deferred
+> one `setTimeout` on purpose (Next's AppRouter re-asserts its canonical URL _after_ our effects
+> and wipes `?cat=` off otherwise), and it must not be `rAF` (shared links open in background
+> tabs, where rAF never fires).
 >
 > **Still not started, specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN
 > §10d D2 — ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not
@@ -124,8 +142,12 @@ the testing hand-off
 
 - **🔗 One cat is now linkable, and the modal hands you the link (2026-08-01, §10c DONE).**
   Clicking a cat sets `?cat=<id>`; arriving on such a link opens that cat; closing clears it;
-  back closes the modal. A **이 냥이 링크 chip** in the cat modal shares it — OS share sheet on a
-  phone (one tap to KakaoTalk), clipboard otherwise. 🔑 **The chip is what made the deep link
+  back closes the modal. A **이 냥이 링크 chip** in the cat modal hands it over — OS share sheet
+  on **touch** devices (one tap to KakaoTalk), **clipboard on desktop**. 🐛 That split is a
+  same-day fix: the chip first gated on `navigator.share` merely existing, which desktop Chrome
+  satisfies and then refuses, and since a dismissed sheet is silent by design the button did
+  **nothing at all** on desktop. 🔑 **Feature detection is not affordance detection** — and both
+  pre-ship passes missed it because they **stubbed** `navigator.share`. 🔑 **The chip is what made the deep link
   usable**, and it settled an open design question by removing it: name-keying, a per-mountain
   unique-name rule and a mountain-in-the-URL were all proposed to make links hand-constructible,
   and none are needed once the app produces them. ⚠️ The chip **builds** the link rather than
@@ -389,9 +411,9 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   should-fix · decided/won't-do · already-closed), with the console half carved into
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
   blocks the `dev → main` promotion.
-- **Tree:** clean through **`7e8aa1b`** (bar a `.gitignore` hunk + two untracked
-  `code-graph-tooling-*` docs from a different workstream). The whole multi-tenant epic (M0–M8)
-  is committed on `dev`; `dev` leads `origin/main` by **51** commits, and `origin/main` carries
+- **Tree:** clean through **`a96a62b`** (bar a `.gitignore` hunk + three untracked code-graph
+  files from a different workstream). The whole multi-tenant epic (M0–M8)
+  is committed on `dev`; `dev` leads `origin/main` by **55** commits, and `origin/main` carries
   **2** commits `dev` does not — the PR #7 (`65d2020`) and PR #8 (`366425c`) **merge commits**,
   so neither branch is an ancestor of the other and the next promotion is again a merge.
   ⚠️ **Use `origin/main` for this**: the local `main` ref is stale at `26b1879` (2026-03-16),
@@ -552,6 +574,12 @@ permission-service / `admin.ts` / the client hooks (via `useMountain()`) / butle
 pages / AdminAuth; `assign-role` deep-merges `roles[mountainId]`; the members roster
 route shows each user's role on the request mountain; **new signups get `roles: {}`**
 (no permissions until assigned — which also makes the self-write rule bulletproof).
+⚠️ **Amended 2026-08-01:** the client still creates the doc with `roles: {}` — the rule
+and the self-escalation guarantee are **unchanged** — but signup now follows it with
+`POST /api/account/default-role`, an Admin-SDK route that stamps the mountain's
+configured `defaultRole` (`viewer`). It reads the role from config (never the request),
+takes the uid from the verified token, and refuses if a role already exists, so it
+cannot grant anything else or overwrite an admin's assignment.
 `firestore.rules` rewritten mountain-aware (`hasPermissionFor` + `canWrite` gating on
 the doc's own `mountainId` and blocking cross-mountain moves + sensitive-read scoping
 
@@ -801,6 +829,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- **`[ ]` Tap the 이 냥이 링크 chip on a real phone (2026-08-01).** The **mobile** half is the
+  only part still proven by stubs alone, and that is precisely the gap that shipped a dead button
+  to desktop: both pre-ship passes stubbed `navigator.share`, so neither could see desktop Chrome
+  refusing it. Expected on a phone: the OS share sheet, carrying the cat's name and a
+  `/pages/cats?cat=<id>` link. Desktop is verified by a real click (copies, says 복사했어요).
+  ⚠️ If the sheet does **not** appear on iOS, suspect transient activation first — `navigator.share`
+  is called synchronously in the handler for exactly that reason, and any `await` added ahead of
+  it would break this without breaking anything a test can see.
+- **`[ ]` Owner call, not blocking: a GA4 `page_view` now fires per cat-modal open.** The URL
+  genuinely changes, and `AnalyticsTracker` fires on every `searchParams` change — standard SPA
+  behaviour, and arguably right now that a cat is an address. But `/pages/cats` view counts will
+  include modal opens, so the page will look busier than it did. `page_path` stays `/pages/cats`
+  (only `page_location` carries the cat), so reports do not split per cat. Suppressing it means
+  teaching `AnalyticsTracker` to ignore the `cat` param — a few lines, deliberately not done.
 - **`[ ]` Safari pass on the deployed Preview (2026-08-01)** — confirm the 30-second stall is
   gone now that the browser is forced onto long polling. ⚠️ Whatever buffers that connection may
   be the owner's ISP or a proxy rather than Safari itself, so other visitors may never have hit
@@ -855,18 +897,15 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
     wrong one, and `accept="image/*"` correctly disables videos. Both components resolve
     `accept` from the same `kind` prop and both pass it correctly. The external drive was a
     red herring. Aligning the section order is **proposed, not decided** (§10d D3).
-- **`[ ]` Shareable link to one cat's modal — DECIDED 2026-07-29, not started.** There is no
-  URL that opens a specific cat; the only mechanism is the in-content `[catmodal:이름]` token.
-  **Owner chose the cheap option** — a `?cat=<id>` param on `/pages/cats` that `CatsBrowser`
-  reads on mount — and **explicitly declined** the real fix (a `/pages/cats/[id]` page). Spec,
-  including what the cheap version cannot do: PROJECT_PLAN **§10c**.
-  - ⚠️ **Key the URL on the cat `id`, not the name.** `[catmodal:]` matches by name, so a
-    rename breaks every existing link silently — a URL people paste into KakaoTalk must not
-    inherit that.
-  - 📌 **It will not fix link previews.** The app has **no `generateMetadata`/`openGraph`
-    anywhere**, so a shared cat link renders the same generic card as the homepage. Worth
-    revisiting only if the use case turns out to be 입양홍보, where the preview does the
-    persuading.
+- ✅ **RESOLVED 2026-08-01 — shareable link to one cat's modal (decided 2026-07-29).** Shipped as
+  `?cat=<id>` (`ba224b7`) plus the 이 냥이 링크 chip (`541ef7d`, fixed for desktop in `a96a62b`).
+  Keyed on the cat **id** as required. Detail: PROJECT_PLAN **§10c**.
+  - 📌 **Still true, and still the reason to revisit `/pages/cats/[id]` one day: it does not fix
+    link previews.** The app has **no `generateMetadata`/`openGraph` anywhere**, so a shared cat
+    link renders the same generic card as the homepage — the preview card does not show the cat.
+    Now that sharing is one tap, this is the remaining half of "a good share", and it matters
+    most for **입양홍보**, where the card does the persuading. The owner declined the per-cat
+    page on cost (2026-07-29); nothing about the param work forecloses it.
 - 🔑 **Owner-owed, local only:** `.env` still sets
   `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=mountaincats-61543.firebasestorage.app` — the
   **pre-migration** bucket. Local uploads therefore succeed into a bucket nothing reads.
@@ -1158,14 +1197,19 @@ commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) 
 untracked `docs/planning/pending/code-graph-tooling-*` docs. They belong together as their own
 change whenever the owner wants it.
 
-**Gate status at `7e8aa1b`:** tsc 0 · smoke 33/33 · unit 122/122 · **full e2e 169 passed / 13
-skipped**. ⚠️ Full-suite runs lose 1–2 unrelated timing-sensitive specs that pass in isolation —
-see _Open threads_ before reading a red CI as a regression in this work.
+**Gate status at `a96a62b`:** tsc 0 · smoke 33/33 · unit **129/129** · targeted e2e 16/16 on the
+touched specs (the deep-link + share-chip suites, desktop and mobile). The last **full** e2e run
+was 169 passed / 13 skipped at `7e8aa1b`. ⚠️ Full-suite runs lose 1–2 unrelated timing-sensitive
+specs that pass in isolation — see _Open threads_ before reading a red CI as a regression here.
 
 **This session (2026-08-01), newest first:**
 
 | Commit    | What                                                                                   |
 | --------- | -------------------------------------------------------------------------------------- |
+| `a96a62b` | **fix** — the 이 냥이 링크 chip did nothing on desktop (share sheet → touch only)      |
+| `541ef7d` | **feat** — 이 냥이 링크 chip: the modal hands you the link                             |
+| `ba224b7` | **feat** — one cat is linkable with `?cat=<id>`                                        |
+| `f23bced` | **docs** — session record + a long-stale branch-position figure corrected              |
 | `7e8aa1b` | **fix** — hide videos deleted from YouTube; offer their records for deliberate removal |
 | `be36c9e` | **fix** — end the 30 s Firestore stall, and stop the pages lying during it             |
 | `6e55463` | **feat** — drop the "중요한 안내사항" banner from the 공지사항 detail page             |
@@ -1214,8 +1258,8 @@ see _Open threads_ before reading a red CI as a regression in this work.
 | `e929c39` | **feat** — `mountain_id` on every GA4 event                                                       |
 | `366425c` | **PR #8 merge** — multi-mountain M1–M5 promoted to `main` (2026-07-23)                            |
 
-**Branch position:** `git rev-list --left-right --count origin/main...origin/dev` = **`2  51`**.
-`dev` is **51 commits ahead**, and `origin/main` holds **2** that `dev` lacks — the PR #7 and
+**Branch position:** `git rev-list --left-right --count origin/main...origin/dev` = **`2  55`**.
+`dev` is **55 commits ahead**, and `origin/main` holds **2** that `dev` lacks — the PR #7 and
 PR #8 **merge commits** — so neither is an ancestor of the other. ⚠️ **Always measure against
 `origin/main`.** The "`0  279`" this line used to report came from the **local** `main` ref,
 stranded at `26b1879` (2026-03-16); `origin/main` is `366425c`. M6 + M7 + M8 + the GA4 guide + the
@@ -1235,7 +1279,30 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-01 (latest)** — **Four owner-reported bugs on the public post and video surfaces;
+- **2026-08-01 (latest, second half)** — **One cat is now linkable, and the modal hands you the
+  link.** `?cat=<id>` on `/pages/cats` (`ba224b7`): clicking a cat sets the param, arriving on
+  such a link opens that cat, closing clears it, back closes the modal. 🔑 Built by giving
+  `useModalLayer`'s **existing** synthetic history entry an optional `historyUrl` rather than
+  adding a second history mechanism beside it — the `history.back()` it already issued on close
+  restores the URL for free, and any modal worth addressing can now opt in. Keyed on the cat
+  **id**; §10c records why that survives a rename and why the mechanism is _not_ the one you
+  would assume (the app reads a stored `id` **field**, not the doc address). Then the **이 냥이
+  링크 chip** (`541ef7d`), because a deep link nobody can produce is not a feature: share sheet on
+  touch, clipboard on desktop. ⚠️ It **builds** the link rather than copying `location.href` —
+  `CatInfo` renders on six surfaces and only 냥이들 honours `?cat=` — and mirrors the tenant
+  prefix from the current path rather than resolving it from config, since geyang's configured
+  domain is not the apex it actually serves from. 🐛 **Shipped broken on desktop and fixed the
+  same day** (`a96a62b`, owner-reported): it gated on `navigator.share` merely existing, which
+  desktop Chrome satisfies and then refuses (`NotAllowedError`), and a dismissed sheet is
+  silent by design — so the button had no visible failure path at all. Now gated on
+  `(pointer: coarse)`. 🔑 **Feature detection is not affordance detection, and both pre-ship
+  passes missed it because they stubbed `navigator.share`** — a stub proves your branches, never
+  that the platform runs them. Two further traps live in `DEBUG_LOG`: the deep-link open is
+  deferred one `setTimeout` (Next's AppRouter re-asserts its canonical URL after our effects and
+  wipes `?cat=` off), and that defer must not be `rAF` (shared links open in background tabs).
+  Gates: tsc 0, smoke 33/33, unit 129/129, e2e 16/16 on the touched specs. Detail: PROJECT_PLAN
+  §10c, `log/FEATURE_MOD_LOG.md` + `log/DEBUG_LOG.md` 2026-08-01.
+- **2026-08-01** — **Four owner-reported bugs on the public post and video surfaces;
   the interesting one was a timeout wearing slowness as a disguise.** (1) Photos in a post now
   render at the video's width — `PostMedia`'s `compact` grid gave a lone photo half the width and
   pillarboxed it inside its own border; **third defect from that default**, so pick `layout`

@@ -15,6 +15,68 @@
 
 ---
 
+## 2026-08-02 — Signup consent recorded, a default role, and PII out of the auth logs
+
+**Area:** `src/services/auth-service.ts`, `src/components/SignupForm.tsx`,
+`src/components/LoginForm.tsx`, `src/services/permission-service.ts`,
+`src/types/permissions.ts`, `src/constants/policy.ts` (new),
+`src/lib/auth/deleteImplicitlyCreatedAccount.ts` (new),
+`src/app/api/account/default-role/route.ts` (new),
+`tests/e2e/api/default-role.spec.ts` (new), both policy pages.
+**Type:** enhancement + small fixes (PROJECT_PLAN §8 — 2 of 4 deferred compliance items).
+
+**What changed and why.** A review of the §8 deferred compliance items turned into four
+changes.
+
+1. **PII out of the auth logs (fix).** Every Kakao sign-in logged the user's `email` /
+   `displayName` / `photoURL` to the browser console, and the account-linking path also dumped
+   the whole `providerData` array — which carries `phoneNumber`. A sweep found a **third** site
+   the first report missed: `SignupForm` logged `user.email` when blocking a signup whose phone
+   already belonged to an account. All three now log `uid` (opaque) and provider ids only.
+
+2. **Orphaned Auth accounts deleted (fix).** Phone and Kakao sign-in mint a Firebase Auth
+   account as a side effect of authenticating, _before_ the login flow decides whether the
+   person may join. Refusing them left an Auth record holding PII with no consent, no profile
+   doc, and nothing to ever remove it. The bounce path now deletes it, reusing
+   `POST /api/account/delete`.
+
+3. **Consent is recorded (enhancement).** It never was — the email form gated the button and
+   stored nothing. `users/{uid}.consent` now holds `terms` + `privacy`, each with `agreedAt`
+   and a policy version, written on doc creation only. New `src/constants/policy.ts`
+   single-sources the version, which both policy pages now render as 시행일 so the shown date
+   and the stamped version cannot drift.
+
+4. **New members get a default role (enhancement, owner-requested).** They previously got
+   `roles: {}` and no role at all; the per-mountain `defaultRole: "viewer"` already in
+   `config/permissions.json` was read by nothing.
+
+🔑 **Two findings changed the shape of this work, both recorded so they are not re-derived.**
+First, the §8 item's premise was **wrong**: phone/Kakao users could not become members without
+consenting, because `LoginForm.handleCheckUser` already refuses implicit signup. A post-auth
+consent modal was designed and discarded on that finding; the real gap was the orphan in (2).
+Second, the exclusion of email from that deletion cannot rest on "the account predates the
+sign-in" — **signup is phone-first**, so a missing profile doc is usually an interrupted signup.
+The correct test is a **password credential** (`providerData` containing `'password'`), which
+proves they reached the linking step and therefore consented. Gating on the login _method_ — the
+first cut — would have deleted exactly those users whenever they signed in by phone.
+
+⚠️ **The default role could not be seeded client-side.** `firestore.rules` permits a self-create
+only with an **empty** `roles` map, and that is precisely what blocks self-escalation. So the
+client still creates with `roles: {}` (rule unchanged) and a new Admin-SDK route stamps the
+default: uid from the verified token, role from config rather than the request body, and a
+refusal when a role already exists. 📌 `viewer` is **not** permission-less — it carries
+`view-video` + `view-photo`, and is merely equivalent to no-role today — which is why relaxing
+the rule instead was rejected.
+
+**Verified.** tsc 0 · smoke 34 · unit 96 · e2e `api` project **39 passed**, including a new
+7-case suite for the route. Those tests were **mutation-checked**: injecting the two bugs the
+route guards against (honouring a body-supplied `role`; dropping the already-has-a-role guard)
+failed 3 of the 4 behavioural cases, so they are not passing incidentally. ⏳ **Still owner-owed
+— unreachable from the emulator:** a real Kakao sign-in, its linking fallback, and the
+orphan-delete path.
+
+---
+
 ## 2026-08-01 — 이 냥이 링크: a share chip in the cat modal
 
 **Area:** `src/components/CatInfo.tsx`, `src/utils/cat-link.ts` (new),

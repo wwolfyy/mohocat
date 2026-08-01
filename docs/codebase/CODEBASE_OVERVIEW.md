@@ -108,7 +108,9 @@ All ten areas have a Layer 2 deep-dive document in this folder:
   browser, and server-side (Admin SDK) cat reads baked into the ISR landing.
 - **[authentication](authentication.md)** — Firebase Auth + Kakao OIDC + phone/email login;
   `AuthProvider` context; account linking/unlinking; reauth, email change, idle-timeout, and
-  account-deletion flows.
+  account-deletion flows. **Read it before touching anything in this area**: it traces every
+  flow event-by-event and tabulates what each one writes, including the two facts that drive
+  the rest — signup is **phone-first**, and an **Auth account is not a membership**.
 - **[permissions-and-roles](permissions-and-roles.md)** — RBAC (`admin`, `butler-ground`,
   `butler-internet`, `viewer`); `PermissionService`, `RoleAssignmentService`,
   `permission-config`, `usePermissions`/`useResourceAccess`; `requireApiPermission` guard;
@@ -211,10 +213,13 @@ graph LR
 
 ## External Dependencies
 
-- **Firebase** (per mountain) — Firestore (database), Authentication, Storage. Configured via
+- **Firebase** — **one project serves every mountain** (Firestore, Authentication, Storage);
+  tenants are separated by a `mountainId` field on content docs, not by project. Configured via
   `NEXT_PUBLIC_FIREBASE_*` and `SERVICE_ACCOUNT_KEY` (Admin SDK) env vars.
-- **`mountain-cats-users` Firebase project** — Centralized authentication / user-management
-  project shared across mountains, declared in `mountains.json` `_meta.centralUserService`.
+  _(Corrected 2026-08-02: this previously read "per mountain", and listed a separate
+  **`mountain-cats-users`** central user-management project. That scaffolding — and its
+  `mountains.json` `_meta.centralUserService` entry — was **removed in the multi-tenant M2
+  phase**; neither exists in `src/` or `config/` today.)_
 - **Kakao OIDC** — Korean social login. Configured via `NEXT_PUBLIC_KAKAO_*` env vars.
 - **YouTube Data API v3** — Playlist management, video upload, metadata sync. Refresh-token
   OAuth flow (`YOUTUBE_*`, `NEXT_PUBLIC_YOUTUBE_API_KEY`).

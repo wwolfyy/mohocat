@@ -15,8 +15,32 @@ export interface UserPermissions {
   // Historical roles for audit purposes (each carries its own mountainId).
   roleHistory: UserRole[];
 
+  // Signup consent (PIPA). Recorded at account creation so the operator can
+  // demonstrate *what* was agreed to, not merely that a box was ticked — each
+  // item stores its own policy version (see src/constants/policy.ts).
+  //
+  // Optional because members created before consent recording shipped
+  // (2026-08-01) have no record. Absent ≠ refused: it means "predates the
+  // feature". Do not treat a missing value as a compliance signal for those
+  // accounts.
+  consent?: UserConsent;
+
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** One consent item: when it was given, and to which published version. */
+export interface ConsentRecord {
+  agreedAt: Date;
+  /** POLICY_VERSION at the time of consent, e.g. '2026-07-10'. */
+  version: string;
+}
+
+export interface UserConsent {
+  /** 이용약관 (필수) */
+  terms: ConsentRecord;
+  /** 개인정보 수집·이용 (필수) */
+  privacy: ConsentRecord;
 }
 
 export interface UserRole {
