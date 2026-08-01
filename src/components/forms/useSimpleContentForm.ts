@@ -7,6 +7,7 @@ import { uploadVideoItems, uploadImagesWithSignedUrls } from './uploadStrategies
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
 import { getYouTubePlaylistId } from '@/utils/config';
+import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
 import type { MediaItem } from './MediaItemList';
 
 /**
@@ -86,6 +87,15 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const [uploading, setUploading] = useState(false);
   /** 0 → 1 while video bytes are in flight; null when no video upload is running. */
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  /**
+   * 촬영일 — a calendar date (YYYY-MM-DD), empty when unknown. Added 2026-08-02:
+   * these two composers had no such field, so nothing was ever sent and both the
+   * video and image paths silently stamped the **upload moment** as the day the
+   * media was recorded (DEBUG_LOG 2026-08-02). Those fallbacks now store null, and
+   * this field is how a date gets supplied at all — matching 집사톡, which had it
+   * from the start and was the only family unaffected by that bug.
+   */
+  const [createdTime, setCreatedTime] = useState('');
 
   const router = useRouter();
   const { user } = useAuth();
@@ -125,9 +135,10 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
               // empty, which is what leaves `needsTagging` true and surfaces the
               // photo in the tagging queue.
               tags: selectedImageTags,
-              // No 촬영일 field on these composers; the strategy falls back to the
-              // upload moment, which is what the direct-storage path recorded too.
-              createdTime: '',
+              // Empty when the uploader neither typed a date nor picked a file whose
+              // name carries one — the strategy then stores null rather than inventing
+              // the upload moment (DEBUG_LOG 2026-08-02).
+              createdTime,
               uploadedBy: user.email,
               user,
             }
@@ -168,6 +179,10 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
               // `needsTagging: false` and hide the video from the queue that exists
               // to find untagged ones (owner, 2026-07-29).
               tags: selectedVideoTags.join(', '),
+              // Reaches YouTube as `recordingDetails.recordingDate` and Firestore as
+              // `createdTime`; omitted entirely when empty, so YouTube is not given a
+              // date we do not have.
+              createdTime: createdTime || undefined,
               playlistIds,
               user,
               onProgress: setUploadProgress,
@@ -209,6 +224,7 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
       // Reset form
       setTitle('');
       setMessage('');
+      setCreatedTime('');
       setImageItems([]);
       setVideoItems([]);
       setSelectedVideoTags([]);
@@ -231,15 +247,56 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   /** Both forms cancel back to the admin posts surface. */
   const cancel = () => router.push('/admin/posts');
 
+  /**
+   * Fill 촬영일 from a filename the first time one yields a date — same behaviour as
+   * 집사톡 (`useRichContentForm.autoParseCreatedTime`), including videos taking
+   * precedence over images. Only ever fills an EMPTY field, so a date the uploader
+   * typed is never overwritten by a later file pick.
+   *
+   * ⚠️ Filename-only by design, and its limits are the deferred item in the HANDOFF
+   * open threads: iPhone names (`IMG_1234.MOV`) carry no date and will not parse, so
+   * the field stays empty and the uploader types it. That is the point of having the
+   * field — before it existed, an unparseable name meant a fabricated date.
+   */
+  const autoParseCreatedTime = (items: MediaItem[]) => {
+    if (createdTime) return;
+    for (const item of items) {
+      const parsedDate = parseRecordingDateFromTitle(item.file.name);
+      if (parsedDate) {
+        setCreatedTime(formatDateForInput(parsedDate));
+        return;
+      }
+    }
+  };
+
+  const handleVideoItemsChange = (items: MediaItem[]) => {
+    setVideoItems(items);
+    autoParseCreatedTime(items);
+  };
+
+  const handleImageItemsChange = (items: MediaItem[]) => {
+    setImageItems(items);
+    // Videos take precedence for the date, matching 집사톡.
+    if (videoItems.length === 0) {
+      autoParseCreatedTime(items);
+    }
+  };
+
   return {
     title,
     setTitle,
     message,
     setMessage,
+    createdTime,
+    setCreatedTime,
     imageItems,
+    // Prefer the handlers below at call sites — they also drive the 촬영일
+    // auto-parse. The raw setters stay exported for resets.
     setImageItems,
+    handleImageItemsChange,
     videoItems,
     setVideoItems,
+    handleVideoItemsChange,
     selectedVideoTags,
     setSelectedVideoTags,
     selectedImageTags,

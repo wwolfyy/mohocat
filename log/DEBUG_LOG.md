@@ -11,6 +11,76 @@
 
 ---
 
+## 2026-08-02 — An uploaded video was recorded as having been filmed the day it was uploaded
+
+**Symptom:** owner-reported. Videos uploaded through the composers came out with a 촬영일
+equal to the **upload** date rather than the day they were actually filmed.
+
+**Root cause:** one fallback in `POST /api/upload-youtube/complete`, where the `cat_videos`
+record is written:
+
+```ts
+createdTime: createdTime ? calendarDateToInstant(createdTime) : new Date(),
+```
+
+`createdTime` is 촬영일, and the composers derive it by regex-matching the **filename**
+(`parseRecordingDateFromTitle`). When nothing parses they send `''`, which is falsy — so the
+route substituted the current instant, i.e. the moment of upload. Android and KakaoTalk names
+(`VID_20260315_101530.mp4`) parse, so the bug is invisible for roughly half of likely sources;
+**iPhone names never parse** (`IMG_1234.MOV` carries no date), and those were the reports.
+
+🔑 **Why this was worse than a cosmetic slip, and why it was hard to notice.** The same request
+sends YouTube **no `recordingDate` at all** in this case — the sibling route only sets
+`recordingDetails` when a date was supplied. So Firestore claimed a recording date that YouTube
+did not have, and since **YouTube is the source of truth for video data** (principle adopted
+2026-07-26), the next metadata sync overwrites `createdTime` with `null`
+(`refresh-video-metadata`). The wrong date therefore **disappears later**, which reads as a
+second, unrelated bug ("the date vanished") rather than as evidence of the first. Neither stage
+logs anything: both writes succeed, and a fabricated date is indistinguishable from a real one.
+
+🔑 **The owner's observation found a second site.** They noted the bug did **not** affect
+집사톡 — which turned out to be the whole explanation. The composers split across two hooks:
+집사톡 / 집사게시판 (`useRichContentForm`) have had a **촬영 날짜 field** from the start, so a
+date is nearly always supplied; 공지사항 / 입양홍보 (`useSimpleContentForm`) had **none**, so
+nothing was ever sent. Following that asymmetry turned up the **same fabrication in the image
+path** (`uploadStrategies.ts`, `createdTime: '' → new Date()`), hit by the same two composers.
+⚠️ **That one is worse:** `cat_images` has no upstream — Firestore **is** the source of truth
+for photos — so unlike videos, nothing ever corrects it and the wrong date simply stays.
+
+**Fix, three parts:**
+
+1. **Videos** — store `null` when no recording date is known, the same value the sync writes
+   for a video YouTube has no `recordingDate` for, so the upload path and the sync path now
+   agree instead of fighting.
+2. **Photos** — the identical change in the signed-URL image strategy.
+3. **The gap underneath both** — 공지사항 / 입양홍보 gained a **촬영 날짜 field**
+   (`forms/RecordingDateField.tsx`, new), auto-filled from the filename exactly as 집사톡 does,
+   with videos taking precedence over images and a typed value never overwritten. Without it
+   the fix alone would have left those two composers unable to record a date at all.
+
+The UI already renders the empty case honestly (`parseDate` → `날짜 없음`), which also prompts
+someone to set the date instead of hiding the gap behind a plausible-looking one.
+
+⏸️ **Deliberately not fixed here:** that 촬영일 is guessed from the _filename_ at all, when it
+should be read from the file's own metadata. That is a separate, **owner-deferred** item (see
+HANDOFF open threads) — this change only stops the fabrication. ⚠️ The neighbouring
+`uploadDate` / `publishedAt` fields are **correctly** `new Date()`: 게시일 genuinely is "now"
+for a fresh upload, and the album sorts on it (a null there caused a crash once —
+DEBUG_LOG 2026-07-26). The fix must not be over-applied to them.
+
+**Verified.** New `tests/unit/uploadYouTubeComplete.test.ts` (5 cases) asserts directly on the
+written document — null for a missing date, null for the `''` the composers actually send, UTC
+midnight for a supplied calendar date (no KST shift), that `uploadDate` still stamps the upload
+moment, and that the permission gate refuses before any write. Two more cases cover the image
+strategy in `uploadStrategies.test.ts`. **Both were mutation-checked:** restoring each
+`new Date()` fallback fails exactly the date cases and leaves the rest green, so they are not
+passing incidentally. The new field is driven in a **real browser** by 3 cases in
+`tests/e2e/admin/posts.spec.ts` (auto-fill from a dated filename; stays empty for
+`IMG_1234.MOV`; a typed value survives a later file pick). tsc 0, smoke 34, unit 103, e2e
+admin/posts 12 passed.
+
+---
+
 ## 2026-08-01 — the 이 냥이 링크 chip did nothing at all on desktop
 
 **Symptom:** owner-reported, within minutes of the chip shipping — clicking it on desktop does

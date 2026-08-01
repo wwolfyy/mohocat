@@ -105,10 +105,25 @@ export async function POST(request: NextRequest) {
         // Stamped here rather than by the service layer, which used to add it.
         mountainId,
         uploadDate: new Date(),
-        // The recorded day if given, else the upload moment. ⚠️ That fallback is a
-        // known gap: the date should come from the file's own metadata and only then
-        // from the filename (see HANDOFF open threads).
-        createdTime: createdTime ? calendarDateToInstant(createdTime) : new Date(),
+        // 촬영일 — the day the video was RECORDED, which is not the day it was
+        // uploaded. When we don't know it, store null rather than inventing one.
+        //
+        // This used to fall back to `new Date()`, so a video whose filename carries no
+        // parseable date (every iPhone `IMG_1234.MOV`) was recorded as having been
+        // filmed at the moment of upload. Two things made that worse than a cosmetic
+        // slip: the value contradicts YouTube, which was sent no `recordingDate` at all
+        // on this path — so the next metadata sync overwrites it with `null` (see
+        // refresh-video-metadata) and the date the operator saw silently disappears;
+        // and a wrong date is indistinguishable from a real one, whereas 날짜 없음 is
+        // honest and prompts someone to set it.
+        //
+        // `null` is the same value the sync writes for a video YouTube has no recording
+        // date for, so upload and sync now agree instead of fighting.
+        //
+        // ⏸️ Deliberately NOT fixed here: 촬영일 is guessed from the *filename* when it
+        // should be read from the file's own metadata. That is a separate, owner-deferred
+        // item (HANDOFF open threads) — this change only stops the fabrication.
+        createdTime: createdTime ? calendarDateToInstant(createdTime) : null,
         uploadedBy: 'user',
         description: description || '',
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,

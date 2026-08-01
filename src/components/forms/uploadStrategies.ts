@@ -426,11 +426,15 @@ export const uploadImagesWithSignedUrls = async (
           storagePath: publicUrl, // For direct uploads, this is the same as imageUrl
           tags: context.tags,
           uploadDate: new Date(),
-          // UTC midnight of the recorded calendar date, matching the video path
-          // and the admin editor. Falls back to the upload moment when unset.
-          createdTime: context.createdTime
-            ? calendarDateToInstant(context.createdTime)
-            : new Date(),
+          // UTC midnight of the recorded calendar date, matching the video path and
+          // the admin editor. When unknown, store null rather than the upload moment:
+          // 촬영일 is when the photo was TAKEN, and inventing it produces a wrong date
+          // indistinguishable from a real one. ⚠️ Unlike videos, `cat_images` has no
+          // upstream to correct it — Firestore IS the source of truth for photos — so a
+          // fabricated date here is never overwritten and simply stays wrong forever.
+          // Both readers null-guard (`tag-images`, and PhotoAlbum via `parseDate` →
+          // 날짜 없음). See DEBUG_LOG 2026-08-02.
+          createdTime: context.createdTime ? calendarDateToInstant(context.createdTime) : null,
           uploadedBy: context.uploadedBy,
           description,
           location: '',

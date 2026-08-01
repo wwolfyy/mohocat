@@ -530,6 +530,41 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     expect(entry.description).toBe('본문');
   });
 
+  // 촬영일 must never be invented. 공지사항 / 입양홍보 have no 촬영일 field at all and
+  // send '' (useSimpleContentForm), which used to fall through to the upload moment —
+  // recording every photo as having been taken the day it was uploaded. Worse than the
+  // video equivalent, because `cat_images` has no upstream to correct it: nothing ever
+  // overwrites a wrong date here. See DEBUG_LOG 2026-08-02.
+  it('stores no 촬영일 when none is known, rather than the upload moment', async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url === '/api/generate-signed-url' ? signedUrlResponse(1) : { ok: true }
+    );
+    createImageMock.mockResolvedValue('img-id');
+
+    await uploadImagesWithSignedUrls([{ file: file('IMG_1234.HEIC'), description: '' }], {
+      ...context,
+      createdTime: '', // exactly what the two composers without a date field send
+    });
+
+    expect(createImageMock.mock.calls[0][0].createdTime).toBeNull();
+  });
+
+  it('stores a supplied 촬영일 as UTC midnight of that calendar day', async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url === '/api/generate-signed-url' ? signedUrlResponse(1) : { ok: true }
+    );
+    createImageMock.mockResolvedValue('img-id');
+
+    await uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '' }], {
+      ...context,
+      createdTime: '2026-03-15',
+    });
+
+    // Calendar date in, calendar date out — no KST shift (DEBUG_LOG 2026-07-27).
+    const stored = createImageMock.mock.calls[0][0].createdTime as Date;
+    expect(stored.toISOString()).toBe('2026-03-15T00:00:00.000Z');
+  });
+
   it('gives each photo its OWN description, not one shared caption', async () => {
     // Uploads run in Promise.all, so both signed-URL requests fire before either
     // PUT — key the mock on the URL rather than on call order.

@@ -209,6 +209,71 @@ test.describe('게시물 관리', () => {
   });
 
   /**
+   * 촬영 날짜 (2026-08-02). These two composers had no such field, so nothing was ever
+   * sent and both upload paths stamped the UPLOAD MOMENT as the recording date — every
+   * iPhone `IMG_1234.MOV` looked as though it had been filmed the day it was posted
+   * (`log/DEBUG_LOG.md` 2026-08-02). 집사톡 was unaffected precisely because it had the
+   * field. These cases drive the field in a real browser: it exists, it auto-fills from
+   * a parseable filename, it stays empty for one that carries no date, and a typed value
+   * survives a later file pick.
+   */
+  test('공지사항: 촬영 날짜 auto-fills from a filename that carries a date', async ({ page }) => {
+    await page.goto('/admin/announcements/new');
+
+    const recordingDate = page.locator('input[type="date"]#createdTime');
+    await expect(recordingDate).toBeVisible();
+    await expect(recordingDate).toHaveValue('');
+
+    await page.locator('input[type="file"][accept="video/*"]').setInputFiles({
+      name: 'VID_20260315_101530.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('not a real video'),
+    });
+
+    await expect(recordingDate).toHaveValue('2026-03-15');
+  });
+
+  test('공지사항: 촬영 날짜 stays empty for a filename with no date, and keeps a typed value', async ({
+    page,
+  }) => {
+    await page.goto('/admin/announcements/new');
+    const recordingDate = page.locator('input[type="date"]#createdTime');
+
+    // The iPhone case — nothing to parse, so the field must stay empty rather than
+    // letting the old fallback invent the upload date downstream.
+    await page.locator('input[type="file"][accept="video/*"]').setInputFiles({
+      name: 'IMG_1234.MOV',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('not a real video'),
+    });
+    await expect(recordingDate).toHaveValue('');
+
+    // Typed by hand, then another file arrives: auto-parse must not overwrite it.
+    await recordingDate.fill('2026-01-02');
+    await page.locator('input[type="file"][accept="video/*"]').setInputFiles({
+      name: 'VID_20260315_101530.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('not a real video either'),
+    });
+    await expect(recordingDate).toHaveValue('2026-01-02');
+  });
+
+  test('입양홍보: 촬영 날짜 is present and auto-fills too', async ({ page }) => {
+    await page.goto('/admin/adoption/new');
+
+    const recordingDate = page.locator('input[type="date"]#createdTime');
+    await expect(recordingDate).toBeVisible();
+
+    await page.locator('input[type="file"][accept="image/*"]').setInputFiles({
+      name: '2026-03-15 photo.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('not a real image'),
+    });
+
+    await expect(recordingDate).toHaveValue('2026-03-15');
+  });
+
+  /**
    * The cat selector (owner, 2026-07-30) — 공지사항 / 입양홍보 can now tag the cats
    * in their media at upload time, as 집사톡 always could. It appears only once
    * there is media to tag.

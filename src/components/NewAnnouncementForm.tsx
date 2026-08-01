@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { getAnnouncementService } from '@/services';
 import { cn } from '@/utils/cn';
 import MediaItemList from '@/components/forms/MediaItemList';
+import RecordingDateField from '@/components/forms/RecordingDateField';
 import CatTagSelectField from '@/components/forms/CatTagSelectField';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import ShowInModalToggle from '@/components/forms/ShowInModalToggle';
@@ -73,7 +74,7 @@ const NewAnnouncementForm = () => {
         <MediaItemList
           kind="image"
           items={form.imageItems}
-          onItemsChange={form.setImageItems}
+          onItemsChange={form.handleImageItemsChange}
           disabled={form.uploading}
         />
         {form.imageItems.length > 0 && (
@@ -90,7 +91,7 @@ const NewAnnouncementForm = () => {
         <MediaItemList
           kind="video"
           items={form.videoItems}
-          onItemsChange={form.setVideoItems}
+          onItemsChange={form.handleVideoItemsChange}
           disabled={form.uploading}
           descriptionHelp="비어 있으면 글 내용이 사용돼요."
         />
@@ -103,6 +104,14 @@ const NewAnnouncementForm = () => {
           />
         )}
       </div>
+
+      {/* Sits after both media sections: it is auto-filled from whichever file
+          was picked, so it only makes sense once there is something to pick from. */}
+      <RecordingDateField
+        value={form.createdTime}
+        onChange={form.setCreatedTime}
+        disabled={form.uploading}
+      />
 
       <UploadProgressBar progress={form.uploadProgress} />
 
