@@ -41,11 +41,17 @@ test.describe('사용자 관리 — contacts', () => {
 
     // Admin is signed in → the members-only contact form is submittable.
     await page.goto('/pages/contact');
+    // Wait for 보내기 to enable BEFORE typing — the page's hydration mismatch
+    // re-renders the root client-side and wipes anything typed before it lands.
+    // See member/contact-submit.spec.ts for the diagnosis and the product caveat.
+    const submit = page.getByRole('button', { name: '보내기' });
+    await expect(submit).toBeEnabled({ timeout: 15_000 });
+
     await page.locator('input[name="name"]').fill(name);
     await page.locator('input[name="phone"]').fill('01077776666');
     await page.locator('textarea[name="message"]').fill('연락처 관리 e2e 확인용 문의입니다.');
-    const submit = page.getByRole('button', { name: '보내기' });
-    await expect(submit).toBeEnabled({ timeout: 15_000 });
+    await expect(page.locator('input[name="name"]')).toHaveValue(name);
+
     await submit.click();
     await expect(page.getByText('메시지가 전송되었습니다. 감사합니다!')).toBeVisible({
       timeout: 15_000,

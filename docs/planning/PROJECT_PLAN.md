@@ -1788,6 +1788,21 @@ in the dashboard, and a new post service adds a row. The 앱 관리 tab is gone 
 - **Admin visual target** — ✅ **SETTLED (owner, 2026-06-30): admin adopts the public
   brand.** The "deliberately utilitarian" option is retired; admin re-skins to the brand as
   part of the cross-cutting design system (handoff-16 §4).
+- **🔴 The hydration mismatch that wipes typed input (surfaced 2026-08-02, NOT fixed).** Every
+  page mismatches on hydration, so React discards the server-rendered DOM and re-renders the
+  whole root client-side — and **anything the visitor typed before that lands is lost**. The
+  cause is the auth-dependent header: the server renders 로그인/등록, the client renders the
+  signed-in user. Pre-existing and page-independent (reproduces on `/admin/cats`, which
+  nothing recent touched).
+  🔑 **It is a product bug, not a test artifact.** It was found because it made the 동참 e2e
+  pair flaky, and the evidence is unusually clean: the failure snapshot showed 이름 **empty**
+  while 전화번호 and 메시지 — filled a fraction of a second later — held their values. A real
+  visitor typing quickly on a slow connection loses input the same way; the contact form is
+  the worst place for it. ⚠️ **The specs now wait for the page to settle before typing, which
+  hides the symptom from CI** — do not read a green suite as evidence this is fixed. The
+  standard remedies are to render the header's auth-dependent part only after mount (or gate
+  it behind a `suppressHydrationWarning`-style boundary) so server and client agree. Detail:
+  `log/DEBUG_LOG.md` 2026-08-02.
 - **Firestore transport if live listeners are ever added (2026-08-01).** §10f F3 forced the
   browser onto long polling, which is free **only** because the app has zero `onSnapshot`
   listeners. The natural candidates if that changes: replies appearing without a reload,

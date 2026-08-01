@@ -96,8 +96,9 @@ test.describe('사진 태깅 — characterization', () => {
     // (heading, not getByText — the panel also echoes the filename as the Storage path)
     await expect(editPanel(page).getByRole('heading', { name: 'album-01.jpg' })).toBeVisible();
 
-    // Tag a cat through the selector, committing with 완료. (테스트냥이이, not
-    // 테스트냥이일 — cats.spec.ts renames the latter mid-run in the same project.)
+    // Tag a cat through the selector, committing with 완료. (테스트냥이이 is chosen
+    // because it is never mutated; cats.spec.ts used to rename 테스트냥이일 mid-run,
+    // and now only touches 이사한냥이 — see that spec's header.)
     await editPanel(page).getByText('🐱 고양이 선택').click();
     await expect(page.getByRole('heading', { name: '고양이 선택 (개별 사진)' })).toBeVisible();
     await catSelector(page).getByText('테스트냥이이').click();

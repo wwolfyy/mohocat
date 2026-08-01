@@ -108,15 +108,46 @@ const db = (() => {
   }
 })();
 
-// E2E test mode: connect every client-SDK service to the local emulators. Guarded
-// against double-connect (Next hot reload / repeated module eval re-runs this file);
-// the connect* calls throw if invoked after the instance is already in use, so the
-// flag makes them run exactly once per process.
-if (USE_EMULATORS && !(globalThis as any).__FIREBASE_EMULATORS_CONNECTED__) {
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, '127.0.0.1', 8088);
-  connectStorageEmulator(storage, '127.0.0.1', 9199);
-  (globalThis as any).__FIREBASE_EMULATORS_CONNECTED__ = true;
+/**
+ * E2E test mode: connect every client-SDK service to the local emulators.
+ *
+ * The connect* calls throw if invoked after their instance is already in use, so
+ * they must run at most once **per instance** — which is what this guards.
+ *
+ * 🐛 **It used to guard per _process_, and that was the bug (fixed 2026-08-02).**
+ * The flag was a single `globalThis` boolean. `globalThis` is shared across the
+ * whole process, but `getApps()` lives in the `firebase/app` module registry — so
+ * whenever the server ends up with a second copy of that registry, `getApps()` is
+ * empty there, a **new** `app`/`db` is built, and the already-`true` flag skips
+ * connecting it. That instance then talks to the **real** backend.
+ *
+ * 🔑 **The failure it produced is the nastiest possible shape: a silent empty
+ * read.** The SDK cannot reach the real project (`PERMISSION_DENIED` on
+ * `demo-mohocat`), so it goes offline — and an offline `getDocs` resolves from the
+ * **empty in-memory cache** instead of throwing. The route returns `200 []`, so
+ * `res.ok()` passes and only the content assertion fails. That is what made
+ * `api/tenant-isolation`'s cats and points cases fail under parallel load while
+ * passing in isolation: two different collections reading empty at the same
+ * moment is one unconnected `db`, not two missing fixtures.
+ *
+ * ⚠️ Inert in production — the whole block is gated on `USE_EMULATORS`, which is
+ * never set outside the e2e harness.
+ */
+const connectedEmulators: WeakSet<object> = ((globalThis as any).__FIREBASE_EMULATOR_INSTANCES__ ??=
+  new WeakSet<object>());
+
+const connectEmulatorOnce = <T extends object>(instance: T, connect: (i: T) => void): void => {
+  if (connectedEmulators.has(instance)) return;
+  connect(instance);
+  connectedEmulators.add(instance);
+};
+
+if (USE_EMULATORS) {
+  connectEmulatorOnce(auth, (i) =>
+    connectAuthEmulator(i, 'http://127.0.0.1:9099', { disableWarnings: true })
+  );
+  connectEmulatorOnce(db, (i) => connectFirestoreEmulator(i, '127.0.0.1', 8088));
+  connectEmulatorOnce(storage, (i) => connectStorageEmulator(i, '127.0.0.1', 9199));
 }
 
 // Analytics is no longer initialized here. It was decoupled from the Firebase app

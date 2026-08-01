@@ -96,17 +96,32 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
       .toBe('/pages/butler_stream');
   });
 
-  test('집사톡: each file gets its own section, its own 제목/설명, and its own 삭제', async ({
-    page,
-  }) => {
+  /**
+   * 집사톡 caps each media section at one file (PROJECT_PLAN §10d D2, 2026-08-02)
+   * — `config/media_control.json` → `MediaItemList`'s `allowMultiple`.
+   *
+   * 🔑 **This asserts the cap, not the per-file sections.** Until 2026-08-02 this
+   * test picked two videos here to pin the per-file 제목/설명/삭제 behaviour; that
+   * became unreachable in 집사톡 once the cap shipped. No coverage was lost —
+   * `admin/posts.spec.ts` ("공지사항: each picked video gets its own 제목/설명…")
+   * pins exactly that on 공지사항, which stays **unrestricted** by decision and is
+   * therefore the right place for it.
+   *
+   * ⚠️ The cap must be a *replace*, not a dead end: the assertion that 삭제 brings
+   * the picker back is the part that fails if the file ever becomes unremovable.
+   *
+   * Picking a file is local state only — no credentials, no upload, no submit.
+   */
+  test('집사톡: each media section takes one file, and 삭제 frees it again', async ({ page }) => {
     await page.goto('/pages/butler_talk/new');
     await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
       timeout: 15_000,
     });
 
     const videoPicker = () => page.locator('input[type="file"][accept="video/*"]');
-    // One picker to start; each pick appends a section AND a fresh empty picker.
+    const imagePicker = () => page.locator('input[type="file"][accept="image/*"]');
     await expect(videoPicker()).toHaveCount(1);
+    await expect(imagePicker()).toHaveCount(1);
 
     await videoPicker().setInputFiles({
       name: '첫번째.mp4',
@@ -115,27 +130,16 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
     });
     await expect(page.getByText('첫번째.mp4')).toBeVisible();
 
-    await videoPicker().setInputFiles({
-      name: '두번째.mp4',
-      mimeType: 'video/mp4',
-      buffer: Buffer.from('two'),
-    });
-    await expect(page.getByText('두번째.mp4')).toBeVisible();
+    // The trailing picker is gone, so there is no way to add a second video...
+    await expect(videoPicker()).toHaveCount(0);
+    // ...and the sections are independent: capping 동영상 leaves 사진 pickable.
+    await expect(imagePicker()).toHaveCount(1);
+    await expect(page.getByPlaceholder('이 동영상의 YouTube 제목')).toHaveCount(1);
 
-    // Per-file fields are independent — the whole point of the change.
-    const titles = page.getByPlaceholder('이 동영상의 YouTube 제목');
-    await expect(titles).toHaveCount(2);
-    await titles.nth(0).fill('산책하는 냥이');
-    await titles.nth(1).fill('밥 먹는 냥이');
-    await expect(titles.nth(0)).toHaveValue('산책하는 냥이');
-    await expect(titles.nth(1)).toHaveValue('밥 먹는 냥이');
-
-    // 삭제 removes the section it belongs to, not the first one.
-    await page.getByRole('button', { name: '삭제' }).nth(0).click();
+    // 삭제 removes the file and restores the picker — the cap is a replace.
+    await page.getByRole('button', { name: '삭제' }).click();
     await expect(page.getByText('첫번째.mp4')).toHaveCount(0);
-    await expect(page.getByText('두번째.mp4')).toBeVisible();
-    await expect(titles).toHaveCount(1);
-    await expect(titles.nth(0)).toHaveValue('밥 먹는 냥이');
+    await expect(videoPicker()).toHaveCount(1);
   });
 
   test('집사톡: 취소 confirms once files have been picked, even with no text', async ({ page }) => {

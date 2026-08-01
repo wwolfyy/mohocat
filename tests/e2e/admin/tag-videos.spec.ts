@@ -110,7 +110,8 @@ test.describe('동영상 태깅 — characterization', () => {
     await expect(
       page.getByRole('heading', { name: '고양이 선택 (YouTube 태그 - 개별)' })
     ).toBeVisible();
-    // 테스트냥이이, not 테스트냥이일 — cats.spec.ts renames the latter mid-run.
+    // 테스트냥이이 is never mutated by another spec (cats.spec.ts used to rename
+    // 테스트냥이일 mid-run; it now only touches 이사한냥이).
     await catSelector(page).getByText('테스트냥이이').click();
     await catSelector(page).getByRole('button', { name: /완료/ }).click();
     await expect(catSelector(page)).toHaveCount(0);

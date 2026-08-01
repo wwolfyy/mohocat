@@ -74,11 +74,21 @@
 > report nothing installed — do not conclude "no JDK" from those. Run with
 > `export PATH=/usr/local/opt/openjdk/bin:$PATH` before `npm run test:e2e`.
 >
-> ⚠️ **Suite stability, measured not guessed.** Full suite at `82d0f07` = **196 passed / 3
-> failed**, and **all three pass when re-run in isolation** (verified, not assumed). Known
-> timing-sensitive set: the 동참 pair (`member/contact-submit` writes, `admin/members` reads it),
-> `member/nav-permissions`, `auth/login-logout`, and **`api/tenant-isolation`'s cats and points
-> cases**. Do not read a red full-suite run as a regression without re-running the failures alone.
+> ✅ **The suite is GREEN and the "flake set" is gone — it was three real bugs (2026-08-02).**
+> Full e2e is now **3× consecutive 199 passed / 13 skipped / 0 failed**, up from 196/3.
+> ⚠️ **The old advice in this box — "don't read a red run as a regression, re-run the failures
+> alone" — is retired. A red run now means something.**
+> 🔑 **"Passes in isolation" meant _interference_, not slowness**, and reading it as slowness
+> is what kept this open for weeks: (1) `services/firebase.ts` guarded a **per-instance**
+> emulator connection with a **process-global** flag, so a second `firebase/app` module
+> registry got a `db` pointed at the real backend — and an offline `getDocs` **resolves from
+> the empty cache instead of throwing**, returning `200 []` (this is the app-code one, and the
+> tell was two different collections reading empty at the same moment); (2) `admin/cats.spec`
+> renamed a fixture cat **six other specs read**, surviving only because
+> `getByRole({name})` matches substrings; (3) three specs acted before async state resolved.
+> 🔴 **One product bug is left open and deliberately unfixed:** the hydration mismatch behind
+> (3) **wipes input a visitor has already typed** — the specs now wait for the page to settle,
+> which hides it from CI. PROJECT_PLAN §12 + `log/DEBUG_LOG.md` 2026-08-02.
 >
 > **Do these next, in this order:**
 >
@@ -949,15 +959,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   - **An 입양홍보 popup can displace a 공지사항 one.** Today: **one popup per visit, most
     recently updated wins** across both kinds — the pre-existing rule extended, not a new one.
     The alternatives (both show, or announcements always win) are a product call.
-- **`[ ]` Suite stability is worth watching in CI (re-measured 2026-08-01).** Full suite is
-  **169 passed / 13 skipped**, but runs lose **1–2 unrelated timing-sensitive specs** that pass
-  in isolation. Known set: the 동참 pair (`member/contact-submit` writes, `admin/members` reads
-  it) most often, plus `member/nav-permissions`, `auth/login-logout`, and — **new, and it failed
-  in two consecutive full runs** — `api/tenant-isolation`'s cats and points cases. 🔑 That pair
-  was **confirmed pre-existing**, not caused by the long-polling change, by re-running the whole
-  suite with that change temporarily disabled: the same two failed. **Do not chase any of these
-  as a media regression**; if it needs fixing, the 동참 pair's cross-spec dependency is the place
-  to start.
+- ✅ **RESOLVED 2026-08-02 — the suite is green (3× consecutive 199/13/0).** What this entry
+  used to call a "timing-sensitive set" was **three real bugs**, one of them in app code
+  (`services/firebase.ts`), one a spec mutating a fixture six others read, one a set of specs
+  acting before async state resolved. Full chain: `log/DEBUG_LOG.md` 2026-08-02.
+  🔑 **The lesson worth carrying: "passes in isolation" means _interference_, not slowness.**
+  This entry's own guess — that the 동참 pair had a cross-spec **data** dependency — was wrong
+  (`admin/members` submits its own contact with a unique name); what they actually shared was
+  the hydration race. Reading the symptom as "needs a longer timeout" is what kept it open.
+- **`[ ]` 🔴 The hydration mismatch is still open, and it is a product bug (2026-08-02).** It
+  wipes input a visitor has already typed — the 동참 failure snapshot showed 이름 empty while
+  the two fields filled just after it survived. Pre-existing, page-independent (reproduces on
+  `/admin/cats`), caused by the auth-dependent header rendering 로그인/등록 on the server and
+  the signed-in user on the client. ⚠️ **The specs now wait for the page to settle before
+  typing, so CI will stay green while this is still broken for real users.** PROJECT_PLAN §12.
 - 📌 **`PostMedia` is now the single renderer for a post's media** (`AnnouncementModal` →
   `PostModal`, the 입양홍보 feed card, and `/pages/announcements/[id]`). A fourth surface should
   use it, not copy it — the three copies that existed had each drifted into different
@@ -1377,7 +1392,18 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-02 (latest)** — **§10d D2 closed as static config, and a dead settings screen
+- **2026-08-02 (latest)** — **The e2e "flake set" was three real bugs; the suite is green.**
+  3× consecutive **199 passed / 13 skipped / 0 failed** (from 196/3). One was **app code** —
+  `services/firebase.ts` guarded a per-instance emulator connection with a process-global
+  flag, and the resulting unconnected `db` returned `200 []` from an offline read rather than
+  throwing. One was `admin/cats.spec` mutating a fixture six other specs read. One was three
+  specs acting before async state resolved. 🔴 **Left open on purpose:** the hydration
+  mismatch behind the third **wipes typed input for real visitors**, and the spec fixes hide
+  it from CI (PROJECT_PLAN §12). Also fixed here: the 집사톡 cap shipped earlier this session
+  broke `butler-create.spec`, which picked a second video — rewritten to pin the cap, with the
+  multi-file coverage it duplicated already living on 공지사항 in `posts.spec`.
+  Detail: `log/DEBUG_LOG.md` 2026-08-02.
+- **2026-08-02** — **§10d D2 closed as static config, and a dead settings screen
   deleted.** 집사톡 capped at one video + one photo via `config/media_control.json` +
   `src/utils/mediaControl.ts`, with `MediaItemList` gaining `allowMultiple` (defaults `true`, so
   only 집사톡 passes it). 🔄 The **CMS-toggle premise was reversed by the owner** once the
