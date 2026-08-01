@@ -1153,6 +1153,36 @@ motivating use case ever turns out to be **입양홍보** — persuading someone
 adoptable cat, where the preview card does the persuading — this decision is worth revisiting,
 because a faceless link wastes the share. **Still true as built** — this shipped unchanged.
 
+- [x] **C3 — the 이 냥이 링크 chip (DONE 2026-08-01, owner-requested).** 🔑 **The deep link is
+      only usable if a human can produce one**; looking an id up in Firebase is not a workflow.
+      A third chip in `CatInfo`'s existing action row (beside 📸 사진 보기 / 🎬 동영상 보기,
+      reusing `AlbumButton`) opens the **OS share sheet** where available — one tap into a
+      KakaoTalk chat, which is where these links actually go — and copies to the clipboard
+      otherwise. Label follows the capability (링크 공유 / 링크 복사), detected after mount so it
+      is not a hydration mismatch.
+  - ⚠️ **It builds the link (`utils/cat-link.ts`), it does not copy `location.href`.** `CatInfo`
+    renders on **six** surfaces (냥이들, 입양홍보, 소개, `CatGallery`, and the inline
+    `[catmodal:이름]` / media-link paths) and only 냥이들 carries `?cat=`. Copying the current
+    URL would share a link to `/pages/adoption` — quietly wrong, which is worse than no button.
+    Building it also means the chip works **everywhere a cat modal can appear**, which is more
+    reach than the deep link was originally scoped for.
+  - 🔑 **The tenant prefix is mirrored from the current path, not resolved from config.** The
+    config-driven answer is wrong _today_: geyang's `domains` lists `geyangsan.mohocats.org`,
+    but production serves from the **apex**, which is in no `domains` list and resolves through
+    the default-tenant fallback — so `findMountainIdByHost` returns null there and a
+    `MountainSelector`-style branch would emit `/geyang/pages/cats…`, re-prefixing exactly the
+    URLs the 2026-07-28 path decision keeps prefix-free. Mirroring the current path is correct
+    for apex, mapped subdomain, and `/{id}` alike, and needs no change when a real mountain #2
+    arrives. ⚠️ A dropped prefix would be a **silent** defect: the link resolves to the default
+    mountain, which has no cat with that id, so the visitor gets a cat list with nothing open —
+    and the bad links are already out in KakaoTalk, where they cannot be recalled.
+  - 📌 **A dismissed share sheet rejects with `AbortError`** — the visitor changing their mind,
+    not a failure. It must not log or show an error (the repo's log-and-re-raise convention,
+    applied naively here, would report a failure for the most common outcome). Every other
+    rejection is real: it logs **and** falls back to copying rather than appearing to succeed.
+    ⚠️ `navigator.share` needs transient activation, so it is called synchronously in the click
+    handler — `await` anything first and iOS Safari rejects with `NotAllowedError`.
+
 🆕 **One owner decision this raises, not blocking.** The cats page now emits a **GA4
 `page_view` per modal open**, because the URL genuinely changes and `AnalyticsTracker` fires on
 every `searchParams` change. That is standard SPA behaviour and arguably correct now that a cat

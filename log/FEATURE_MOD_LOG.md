@@ -15,6 +15,43 @@
 
 ---
 
+## 2026-08-01 — 이 냥이 링크: a share chip in the cat modal
+
+**Area:** `src/components/CatInfo.tsx`, `src/utils/cat-link.ts` (new),
+`tests/unit/catLink.test.ts` (new), `tests/e2e/public/cat-deep-link.spec.ts`.
+**Type:** enhancement (PROJECT_PLAN §10c C3, owner-requested).
+
+**What changed and why.** The `?cat=<id>` deep link shipped earlier the same day was only
+usable by someone willing to look a cat's id up in Firebase. The owner's framing settled it:
+the problem was never how the URL _looks_, it was how hard it is to _produce_. A third chip in
+the cat modal's existing action row now hands you the link — OS **share sheet** where available
+(one tap into a KakaoTalk chat, which is where these go), clipboard copy otherwise.
+
+🔑 **This dissolved an open design question rather than answering it.** Name-keying the URL, a
+per-mountain unique-name rule, and putting the mountain in the query had all been on the table
+to make links hand-constructible. With a share button none of them are needed, so the param
+stays keyed on the immutable id and the rename hazard never comes back.
+
+⚠️ **The chip builds the link; it does not copy `location.href`.** `CatInfo` renders on **six**
+surfaces and only 냥이들 carries `?cat=`, so copying the current URL would share a link to
+`/pages/adoption`. Building it (`utils/cat-link.ts`) also means the chip works from the adoption
+gallery, the map, 소개, and inline `[catmodal:이름]` mentions — wider reach than planned.
+
+📌 **The tenant prefix is mirrored from the current path, not read from config** — because the
+config answer is wrong today: geyang's `domains` says `geyangsan.mohocats.org` while production
+serves from the apex via the default-tenant fallback, so a config-driven branch would emit
+`/geyang/pages/cats…` and re-prefix URLs the path decision keeps clean. Full reasoning, and why
+a dropped prefix would fail silently and unrecallably, in PROJECT_PLAN §10c C3.
+
+**Verified in Chrome by stubbing each branch** (a real share sheet is an OS dialog no automated
+run can dismiss): share receives the constructed URL and the cat's name; a **dismissed** sheet
+(`AbortError`) logs nothing, copies nothing and leaves the label alone; a genuine share failure
+logs once and falls back to copying; a refused clipboard says 복사하지 못했어요; feedback reverts
+after 2 s. Round-tripped a shared link back to the open modal, and confirmed a `/geyang`-prefixed
+page keeps its prefix. Plus 7 unit tests, 2 e2e cases, tsc 0 / smoke 33 / unit 129.
+
+---
+
 ## 2026-08-01 — one cat is now linkable: `/pages/cats?cat=<id>`
 
 **Area:** `src/app/[mountain]/pages/cats/CatsBrowser.tsx`, `src/components/ui/useModalLayer.ts`,

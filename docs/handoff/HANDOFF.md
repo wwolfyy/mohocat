@@ -122,8 +122,16 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
-- **🔗 One cat is now linkable — `?cat=<id>` (2026-08-01, §10c DONE).** Clicking a cat sets the
-  param; arriving on such a link opens that cat; closing clears it; back closes the modal.
+- **🔗 One cat is now linkable, and the modal hands you the link (2026-08-01, §10c DONE).**
+  Clicking a cat sets `?cat=<id>`; arriving on such a link opens that cat; closing clears it;
+  back closes the modal. A **이 냥이 링크 chip** in the cat modal shares it — OS share sheet on a
+  phone (one tap to KakaoTalk), clipboard otherwise. 🔑 **The chip is what made the deep link
+  usable**, and it settled an open design question by removing it: name-keying, a per-mountain
+  unique-name rule and a mountain-in-the-URL were all proposed to make links hand-constructible,
+  and none are needed once the app produces them. ⚠️ The chip **builds** the link rather than
+  copying `location.href` — `CatInfo` renders on six surfaces and only 냥이들 honours `?cat=` —
+  and mirrors the tenant prefix from the current path rather than resolving it from config,
+  because geyang's configured domain is not the apex it actually serves from (§10c C3).
   🔑 **Reused the modal system's existing history entry** — `useModalLayer` already pushed one
   per overlay for the Android back gesture, so it just gained an optional **`historyUrl`** and
   the `history.back()` it already issued restores the previous URL. Keyed on the cat **id**, not

@@ -74,3 +74,56 @@ test.describe('냥이 deep link — ?cat=<id>', () => {
     await expect(page.getByText('테스트냥이일').filter({ visible: true }).first()).toBeVisible();
   });
 });
+
+/**
+ * The share chip is what makes the deep link usable by a human — without it,
+ * producing a link means looking an id up in Firebase.
+ *
+ * `navigator.share` is stubbed before page scripts run: a real call opens an OS
+ * share sheet, which no automated run can dismiss. The stub records what the
+ * button *would* have shared, which is the part under test.
+ */
+test.describe('냥이 share chip', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'share', {
+        configurable: true,
+        writable: true,
+        value: (data: { title?: string; url?: string }) => {
+          (window as unknown as { __shared?: unknown }).__shared = data;
+          return Promise.resolve();
+        },
+      });
+    });
+  });
+
+  test('shares a link to the cat currently open', async ({ page }) => {
+    await page.goto('/pages/cats?cat=test-cat-01');
+    await expect(page.getByRole('heading', { name: '테스트냥이일' })).toBeVisible();
+
+    await page.getByRole('button', { name: /링크/ }).click();
+
+    const shared = await page.evaluate(
+      () => (window as unknown as { __shared?: { title?: string; url?: string } }).__shared
+    );
+    expect(shared?.title).toBe('테스트냥이일');
+    expect(shared?.url).toContain('/pages/cats?cat=test-cat-01');
+  });
+
+  test('shares the 냥이들 link even when opened from another surface', async ({ page }) => {
+    // 🔑 The regression this guards: `CatInfo` renders on six surfaces and only
+    // 냥이들 honours `?cat=`. Copying the current URL here would share a link to
+    // /pages/adoption — a share button that quietly shares the wrong thing.
+    await page.goto('/pages/adoption');
+    await page.getByRole('button', { name: '입양이삼' }).click();
+    await expect(page.getByRole('heading', { name: '입양이삼' })).toBeVisible();
+
+    await page.getByRole('button', { name: /링크/ }).click();
+
+    const shared = await page.evaluate(
+      () => (window as unknown as { __shared?: { url?: string } }).__shared
+    );
+    expect(shared?.url).toContain('/pages/cats?cat=test-cat-03');
+    expect(shared?.url).not.toContain('/pages/adoption');
+  });
+});
