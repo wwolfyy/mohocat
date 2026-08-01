@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { FaPlay } from 'react-icons/fa';
 import { getVideoService } from '@/services';
 import { CatVideo } from '@/types/media';
 import { formatDuration } from '@/utils/duration';
 import { parseDate } from '@/utils/parse-date';
+import MediaTile from '@/components/album/MediaTile';
 import Modal from './ui/Modal';
 import VideoPlayer from './ui/VideoPlayer';
 import { useMountain } from '@/components/MountainProvider';
@@ -124,86 +126,48 @@ export default function VideoAlbum({ isOpen, onClose, catName }: VideoAlbumProps
           )}
 
           {!loading && !error && videos.length > 0 && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-              {videos.map((video, index) => (
-                <div
-                  key={video.id}
-                  className="group relative aspect-video cursor-pointer overflow-hidden rounded-xl bg-gray-200"
-                  onClick={() => openVideoPlayer(index)}
-                >
-                  {/* Video thumbnail */}
-                  {video.thumbnailUrl ? (
-                    <img
-                      src={video.thumbnailUrl}
-                      alt={video.description || '동영상 썸네일'}
-                      className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                      <svg
-                        className="w-12 h-12 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414a1 1 0 00.707.293H15a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4a2 2 0 012-2z"
-                        />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Play button overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-200 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Video info overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 space-y-1 bg-gradient-to-t from-black to-transparent p-2">
-                    {/* No empty-state filler: this line held `|| '제목 없음'`, which
-                        labelled a *description* as a missing *title* — and a video
-                        with no description got a placeholder saying it had no title.
-                        Rendered only when there is something to show, matching the
-                        shared `album/MediaTile`, which drops the same filler. */}
-                    {video.description && (
-                      <p className="truncate text-xs text-white">{video.description}</p>
-                    )}
-                    {/* Spacing comes from the container's `space-y-1`, so the row sits
-                        correctly whether or not a description precedes it. */}
-                    <div className="flex items-center justify-between">
-                      <p className="text-white text-xs opacity-75">
-                        {(() => {
-                          const createdDate = parseDate(video.createdTime);
-                          return createdDate
-                            ? createdDate.toLocaleDateString('ko-KR')
-                            : '날짜 없음';
-                        })()}
-                      </p>
-                      {video.duration && (
-                        <p className="text-white text-xs opacity-75">
-                          {formatDuration(video.duration)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Video type indicator */}
-                  <div className="absolute top-2 right-2">
-                    {video.videoType === 'youtube' ? (
-                      <div className="bg-red-600 text-white text-xs px-2 py-1 rounded">YouTube</div>
-                    ) : (
-                      <div className="bg-gray-700 text-white text-xs px-2 py-1 rounded">파일</div>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
+              {videos.map((video, index) => {
+                const createdDate = parseDate(video.createdTime);
+                const dateLabel = createdDate
+                  ? createdDate.toLocaleDateString('ko-KR')
+                  : '날짜 없음';
+                return (
+                  <MediaTile
+                    key={video.id}
+                    aspect="video"
+                    layout="below"
+                    tags={video.tags}
+                    thumbnailUrl={video.thumbnailUrl}
+                    title={video.title || video.description || ''}
+                    alt={video.title || video.description || '동영상 썸네일'}
+                    meta={
+                      <div className="flex items-center justify-between">
+                        <span>{dateLabel}</span>
+                        {video.duration && <span>{formatDuration(video.duration)}</span>}
+                      </div>
+                    }
+                    overlayIcon={<FaPlay className="h-6 w-6" />}
+                    topRight={
+                      video.videoType === 'youtube' ? (
+                        <span className="rounded bg-red-600 px-1 py-0.5 text-xs leading-tight text-white">
+                          YouTube
+                        </span>
+                      ) : (
+                        <span className="rounded bg-gray-700/90 px-1 py-0.5 text-xs leading-tight text-white">
+                          직접 업로드
+                        </span>
+                      )
+                    }
+                    placeholder={
+                      <div className="flex h-full w-full items-center justify-center bg-gray-300">
+                        <FaPlay className="h-7 w-7 text-gray-500" />
+                      </div>
+                    }
+                    onClick={() => openVideoPlayer(index)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

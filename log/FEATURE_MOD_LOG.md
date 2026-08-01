@@ -15,6 +15,45 @@
 
 ---
 
+## 2026-08-02 — The modal albums converged onto the shared MediaTile
+
+**Area:** `src/components/PhotoAlbum.tsx`, `src/components/VideoAlbum.tsx`.
+**Type:** refactor (owner-requested), no new behaviour intended.
+
+**What changed and why.** There were **two** album implementations: the album _pages_
+(`/pages/photo-album`, `/pages/video-album`), which use the shared `album/MediaTile`, and the
+_modal_ albums opened from a cat's card (`CatInfo` → 📸 사진 보기 / 🎬 동영상 보기), which
+hand-rolled their own tiles. 🔑 **That drift is what produced the previous entry's bug** — the
+mislabelled `제목 없음` filler survived in the hand-rolled copies long after the shared tile had
+dropped it, and the two families had quietly diverged on markup, hover treatment and spacing. Both
+modals now render `MediaTile`, mirroring their page counterparts: photos `layout="overlay"`,
+videos `layout="below"` with the clip's title.
+
+**Three deliberate consequences, none of them accidents:**
+
+1. **Tag chips appear on modal tiles for the first time.** `MediaTile` renders them and the
+   hand-rolled versions never did — a straight gain, and the reason a cat's own album now shows
+   which cats are in each item.
+2. **`PhotoAlbum`'s `|| '설명 없음'` filler is gone.** It was left alone in the previous change
+   because it is correctly labelled, unlike the video one; converging removes it anyway, since
+   the shared tile drops empty-state fillers by design. A photo with no description now simply
+   shows its date.
+3. **The photo modal moved from `next/image` to `MediaTile`'s raw `<img>`.** ⚠️ Not an
+   oversight: the shared tile documents that full-size Firebase URLs stall `next/image`, and the
+   photo album **page** — the higher-traffic surface — has served the same images that way all
+   along. This makes the two consistent rather than introducing something new.
+
+**Verified.** Browser-checked with screenshots of both converged modals, seeded with media
+matching the cat's name (fixtures tag by id, so the modals render empty otherwise): the photo
+grid shows tag chip + description overlay, and a second photo with no description correctly shows
+only its date; the video grid shows title + tag chip + date on the footer shelf. tsc 0 · lint
+clean (only the two pre-existing `exhaustive-deps` warnings) · smoke 34 · **full e2e 196 passed**.
+📌 Three specs failed in that full run — `api/tenant-isolation` (cats, points) and the 동참 pair in
+`admin/members` — and **all 10 pass when re-run in isolation**. They are the timing-sensitive set
+already documented in the hand-off, in unrelated areas; not a regression from this change.
+
+---
+
 ## 2026-08-02 — Video tiles name the clip; the mislabelled "제목 없음" filler is gone
 
 **Area:** `src/components/album/MediaTile.tsx`, `src/app/[mountain]/pages/video-album/page.tsx`,
