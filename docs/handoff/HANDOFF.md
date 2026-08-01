@@ -1,46 +1,68 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-01 · **Branch:** `dev` (`a96a62b`) · **`main`:** promoted through PR #8
+**Last updated:** 2026-08-02 · **Branch:** `dev` (`82d0f07`) · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-01 ran in two halves.** First, four owner-reported bug fixes on the public post and
-> video surfaces (`6e55463`…`7e8aa1b`). Then a feature: **one cat is now linkable**
-> (`?cat=<id>`), with a **이 냥이 링크 chip** in the cat modal to hand you the link — plus a
-> same-day fix after the owner found that chip dead on desktop. Eight commits, all pushed;
-> `origin/dev` = **`a96a62b`**. The tree is clean apart from a `.gitignore` hunk and three
+> **2026-08-02 was an audit that turned into four pieces of work.** It began as "what's left per
+> the project plan?", and answering that honestly meant checking the plan against the code —
+> which found **seven items already done but never ticked**, and **one whose stated premise was
+> wrong**. Fixing that premise produced the session's real work. Four commits, all pushed;
+> `origin/dev` = **`82d0f07`**. The tree is clean apart from a `.gitignore` hunk and three
 > untracked code-graph files, which belong to a **different** workstream — do not sweep them
 > into a commit.
 >
-> 🔑 **The finding worth carrying forward: a 30-second wait that was a timeout, not slowness.**
-> Firestore's SDK probes whether anything on the network buffers its streamed connection, and
-> when the probe gets no answer it waits out the transport timeout — **capped at exactly 30 s** —
-> before falling back to polling and succeeding in 48 ms. Every "Safari is broken" symptom the
-> owner reported was that wait, made visible by surfaces that render their **failure state as
-> their loading state**. ⚠️ **Auto-detect long polling was already on** (the SDK defaults it to
-> `true`), so the standard advice for this is a **no-op here** — it was proposed and discarded
-> before shipping. The browser is now forced onto long polling. **No capability was lost:**
-> transport, not feature; `onSnapshot` still pushes live updates, and the app has **zero**
-> listeners. Revisit if listeners are ever added (PROJECT_PLAN §12).
+> 🔑 **The lesson that generalises: a plan entry is a claim about the code, and claims rot.**
+> Six unticked boxes described work finished weeks earlier (API-route auth, RBAC drift, the
+> static-data seam, both config-consistency items, theme wiring), and `docs/codebase/` still
+> described a **`mountain-cats-users` "central user service" project** that M2 deleted. None of
+> it was load-bearing until someone acted on it. **Verify before scheduling, and tick the box in
+> the same change that does the work.**
+>
+> 🔴 **The premise that was wrong, because the same mistake is easy to repeat.** §8 said phone and
+> Kakao users could become members without consenting. They cannot: `LoginForm.handleCheckUser`
+> already refuses implicit signup and bounces them to 집사등록, which gates consent. The earlier
+> pass had checked that `PhoneLoginForm`/`SocialLoginButton` contain no consent code — true — and
+> **stopped before tracing their host**. A post-auth consent modal was designed on that false
+> premise and discarded. ⚠️ **The real gap it exposed was different and smaller:** phone/Kakao
+> sign-in _mints an Auth account_ before the app decides whether to admit the person, so refusing
+> them stranded an Auth record holding PII with no consent and nothing to ever remove it. That is
+> now deleted on the bounce path.
+>
+> 🔑 **Signup is phone-first — reason about every "who has an account" question from there.**
+> 집사등록 verifies the phone **first** (that call creates the Auth user) and links email/password
+> onto it afterwards; there is **no email-only registration**. This is why excluding email from
+> that deletion cannot rest on "the account predates the sign-in": a missing profile doc is
+> usually an _interrupted signup_. The correct test is a **password credential**
+> (`providerData` containing `'password'`), which proves the user reached the linking step and
+> therefore consented. Gating on the login _method_ — the first cut — would have deleted exactly
+> those people whenever they happened to sign in by phone. **The owner caught this.**
+>
+> 🐛 **Two owner-reported bugs, and both had a second instance the report did not mention.**
+> (1) Uploaded media was recorded as _filmed_ on the day it was _uploaded_ — a `new Date()`
+> fallback for 촬영일. The owner's observation that **집사톡 was unaffected** was the whole
+> explanation: it has a 촬영 날짜 field and the other two composers had none, so nothing was ever
+> sent. Following that asymmetry found **the same fabrication in the image path**, which is worse
+> because `cat_images` has no upstream to correct it. (2) Video tiles carried no text label; the
+> mislabelled `|| '제목 없음'` filler behind it existed in **two** places, the second under a
+> player already showing the real title.
+>
+> 🔑 **Both of those trace to one root cause, now closed: two implementations of the same tile.**
+> The album _pages_ use the shared `album/MediaTile`; the _modal_ albums hand-rolled their own and
+> drifted. The modals are now converged onto `MediaTile`, so the next divergence cannot happen
+> the same way.
 >
 > 📌 **Firestore hangs; it does not throw.** The SDK retries network failures internally, so a
 > broken connection produces a _stall_, never a console error. That is why the owner's console
 > showed a clean run returning 4 documents while the page said there were none — and why an
 > error state is a safety net (permission-denied, missing-index) rather than the main fix.
 >
-> 🔑 **The second pattern: "empty" was doing three jobs.** _Still loading_, _genuinely empty_ and
-> _the fetch failed_ were all rendered as 없어요 / 찾을 수 없습니다 — server-rendered into the
-> first paint, and permanent after a failure because nothing set state again. Three surfaces had
-> it (공지 list, 공지 detail, 입양홍보 feed); they now share `hooks/useAsyncData` +
-> `ui/AsyncStates`. Of the 23 client components that render an empty state, those three were the
-> **only** ones with no loading state — the rest were already correct.
->
-> ⚠️ **Deleting a video on YouTube is indistinguishable from making it private** — through the
-> public API key, which is what the channel listing uses. That is why the new
-> `/api/admin/video-availability` asks with the **owner's OAuth credential** (which _can_ tell
-> them apart) and why it only **labels**; deletion stays a human click. Auto-pruning would
-> destroy cat tags and 설명 on a privacy change. See PROJECT_PLAN §10g.
+> ⚠️ **Auto-detect long polling was already on** (the SDK defaults it to `true`), so the standard
+> advice for the 30 s Safari stall is a **no-op here** — it was proposed and discarded before
+> shipping. The browser is now forced onto long polling. **No capability was lost:** transport,
+> not feature; the app has **zero** `onSnapshot` listeners. Revisit if listeners are ever added
+> (PROJECT_PLAN §12).
 >
 > 📌 **`PostMedia`'s default layout has now caused three defects.** `compact` is the _dialog_
 > treatment; any surface taking the default inherits dialog sizing. **Pick the layout explicitly
@@ -52,65 +74,40 @@
 > report nothing installed — do not conclude "no JDK" from those. Run with
 > `export PATH=/usr/local/opt/openjdk/bin:$PATH` before `npm run test:e2e`.
 >
-> ⚠️ **Suite stability, measured not guessed.** Full suite now **169 passed / 13 skipped**. Runs
-> lose **1–2 unrelated, timing-sensitive specs** that pass in isolation. Known set: the 동참 pair
-> (`member/contact-submit` writes, `admin/members` reads it), `member/nav-permissions`,
-> `auth/login-logout`, and — new on 2026-08-01, failing twice — **`api/tenant-isolation`'s cats
-> and points cases**. That pair was confirmed **pre-existing** by re-running the full suite with
-> the long-polling change temporarily disabled: the same two failed. Do not chase them as a
-> media regression.
+> ⚠️ **Suite stability, measured not guessed.** Full suite at `82d0f07` = **196 passed / 3
+> failed**, and **all three pass when re-run in isolation** (verified, not assumed). Known
+> timing-sensitive set: the 동참 pair (`member/contact-submit` writes, `admin/members` reads it),
+> `member/nav-permissions`, `auth/login-logout`, and **`api/tenant-isolation`'s cats and points
+> cases**. Do not read a red full-suite run as a regression without re-running the failures alone.
 >
 > **Do these next, in this order:**
 >
-> 1. **Tap the 이 냥이 링크 chip on a real phone** (Preview). The **mobile** half of it is the
->    one part still proven only by stubs — which is exactly the weakness that shipped a dead
->    button to desktop. Expected: the OS share sheet opens with the cat's name and a
->    `/pages/cats?cat=<id>` link. Desktop is verified (copies, says 복사했어요).
-> 2. **Safari pass on the deployed Preview** — confirm the 30-second stall is gone. Whatever
->    buffers that connection may be an ISP or proxy rather than Safari itself, so it may never
->    have affected other visitors; the local dev server has no proxy to reproduce against.
-> 3. **Verify the 2026-07-31 work on `dev`** — the 입양홍보 popup (needs a **fresh session** —
->    `sessionStorage`, so a reload will not re-show it), and the duplicate-filename **409**
->    (`이미 "…"과 같은 이름의 파일이 있어요`), the one path with **no automated coverage** —
->    signing cannot run against the emulator.
-> 4. **Re-run the P5.4 manual YouTube pass from the top.** Still the gate on the next
->    `dev → main` promotion. 📌 Running **📺 YouTube와 동기화** now also exercises the new
->    availability check, so it doubles as an early signal for that pass.
-> 5. **Then the promotion itself.** `dev` now leads `origin/main` by **55** commits — M6/M7/M8,
->    the GA4 guide, and the whole 2026-07-26 → 08-01 run are waiting behind that one manual pass.
->    ⚠️ **Measure against `origin/main`, not the local `main` ref** — this doc has been quoting
->    ~274–279 for several sessions because the local `main` is stranded at `26b1879`
->    (2026-03-16), four months and one PR-#8 merge behind. `origin/main` is `366425c`.
+> 1. **Re-run the P5.4 manual YouTube pass from the top.** Still the only gate on the
+>    `dev → main` promotion. 📌 Running **📺 YouTube와 동기화** also exercises the video-
+>    availability check, so it doubles as an early signal for that.
+> 2. **The Preview verifications that piled up** — none blocking, all unreachable from the
+>    emulator: the **이 냥이 링크 chip on a real phone** (its mobile half is still proven only by
+>    stubs, which is exactly the weakness that shipped a dead button to desktop); a **Safari pass**
+>    confirming the 30 s stall is gone; a **real Kakao sign-in and its linking fallback** (the PII
+>    logging fix touched both); and the **orphan-delete path** (needs a genuinely new phone number
+>    or Kakao account); plus the 2026-07-31 입양홍보 popup (needs a **fresh session** —
+>    `sessionStorage`) and the duplicate-filename **409**.
+> 3. **Then the promotion itself.** `dev` now leads `origin/main` by **59** commits.
+>    ⚠️ **Measure against `origin/main`, not the local `main` ref** — the local one is stranded at
+>    `26b1879` (2026-03-16), four months and one PR-#8 merge behind.
 >
-> 🆕 **Owner decisions waiting, none blocking:** whether a video's 제목 should keep appearing
-> **twice** (YouTube's player overlay + our caption — correct, possibly redundant; one line to
-> drop); whether an 입양홍보 popup may displace a 공지사항 one (today the most recently updated
-> wins, one popup per visit); and whether the CMS's new "YouTube에 없는 영상" panel should show
-> thumbnails rather than titles (**text-only is deliberate** — a deleted video's thumbnail _is_
-> the grey placeholder, so a grid would be a row of grey boxes).
+> 🆕 **Owner decisions waiting, none blocking:** whether 공지사항/입양홍보 should keep the
+> **`설명 없음`** filler that converging onto `MediaTile` removed from the photo modal (the shared
+> tile drops empty-state fillers by design); whether a video's 제목 should keep appearing **twice**
+> (YouTube's player overlay + our caption); whether an 입양홍보 popup may displace a 공지사항 one
+> (today the most recently updated wins, one popup per visit); and whether the CMS's
+> "YouTube에 없는 영상" panel should show thumbnails rather than titles (**text-only is
+> deliberate** — a deleted video's thumbnail _is_ the grey placeholder).
 >
-> ✅ **The `?cat=<id>` deep link + its 이 냥이 링크 chip are DONE (§10c).** A cat's modal is
-> addressable, built by giving the modal system's **existing** history entry a URL
-> (`useModalLayer` gained an optional `historyUrl`) rather than adding a second history mechanism
-> beside it — so any modal worth addressing can opt in the same way.
->
-> 🔑 **The lesson from the chip's day-one bug, and it generalises well past this feature:
-> feature detection is not affordance detection.** The chip chose the OS share sheet on
-> `navigator.share` merely _existing_ — which desktop Chrome satisfies and then refuses
-> (`NotAllowedError`, measured). And because a dismissed sheet legitimately produces a **silent**
-> `AbortError`, the button had **no visible failure path at all**: it just did nothing, which is
-> how the owner found it. ⚠️ **Both pre-ship verification passes missed it because they stubbed
-> `navigator.share`** — a stub proves your branches, never that the platform runs them. Now gated
-> on `(pointer: coarse)`: sheet on touch, clipboard on desktop.
->
-> ⚠️ **Two more traps in that code, both in §10c / `DEBUG_LOG`:** the deep-link open is deferred
-> one `setTimeout` on purpose (Next's AppRouter re-asserts its canonical URL _after_ our effects
-> and wipes `?cat=` off otherwise), and it must not be `rAF` (shared links open in background
-> tabs, where rAF never fires).
->
-> **Still not started, specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN
-> §10d D2 — ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not
-> a CMS setting).
+> **Still not started, specced:** the **CMS toggle** for multiple upload (PROJECT_PLAN §10d D2 —
+> ⚠️ `mountains.json` cannot host it; it is a static import, so a toggle there is not a CMS
+> setting). It needs three owner answers first: which forms it governs, whether video and image
+> toggle separately, and whether it is per-mountain.
 >
 > ⏸️ **Do NOT start the path-based tenancy migration (T0–T7).** Still gated behind the P5.4 pass
 > and the promotion. Decision + plan:
@@ -140,6 +137,56 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🧹 The project plan was audited against the code, and seven entries were wrong
+  (2026-08-02).** Six unticked boxes described work finished weeks earlier — API-route auth
+  (all 10 `/api/admin/**` routes gate on `requireApiPermission`; the one exception,
+  `youtube-auth/callback`, is Google's redirect and documents why), RBAC collection drift (fixed
+  2026-06-28 as Bug 0 of the members chain, then rewritten mountain-aware in M5.2), the
+  static-data export seam, both config-consistency items, and theme wiring (M8). One more —
+  §5's "급식소 관리 is a disabled stub" — was **flagged by the owner** and had a sharper edge: the
+  neighbouring §7 note claimed `points` is `write: if false` with no live writer, which would
+  have sent someone chasing a phantom permission-denied on a page that works fine. All ticked
+  with a note on where each actually closed. 🔑 **A plan entry is a claim about the code, and
+  claims rot** — verify before scheduling, and tick the box in the change that does the work.
+- **🔐 Two of §8's four deferred compliance items are closed (2026-08-02, `8a50348`) — and the
+  premise of one was wrong.** §8 said phone/Kakao users could join without consenting; they
+  cannot, because `LoginForm.handleCheckUser` already refuses implicit signup and sends them to
+  집사등록, which gates consent. The earlier pass had confirmed those two components hold no
+  consent code — true — and **stopped before tracing their host**. A post-auth consent modal was
+  designed on that false premise and **discarded**. ⚠️ **The real gap was different:** phone and
+  Kakao sign-in mint an Auth account _before_ the app decides whether to admit anyone, so
+  refusing them stranded an Auth record holding PII (phone number, Kakao email) with no consent,
+  no profile doc and nothing to remove it. Now deleted on the bounce path, reusing
+  `POST /api/account/delete`. 🔑 **The test is a password credential, not the login method** —
+  signup is phone-first, so a missing profile doc is usually an interrupted signup, and gating on
+  method would have deleted exactly those consenting users whenever they signed in by phone
+  (**owner-caught**). Alongside it: **consent is now recorded** (`users/{uid}.consent`, with a
+  policy version single-sourced in `constants/policy.ts` that both policy pages render as 시행일),
+  **new members get their mountain's `defaultRole`** via a new Admin-SDK route — the client
+  cannot seed it, because the empty-`roles` create rule is what blocks self-escalation — and
+  **PII is out of the auth logs** (3 sites; a sweep found one more than the report). Detail:
+  PROJECT_PLAN **§7/§8**, `docs/codebase/authentication.md` (rewritten).
+- **📅 Uploaded media was recorded as filmed on the day it was uploaded — fixed (2026-08-02,
+  `6e2dc49`).** A `new Date()` fallback for 촬영일 when the filename yields no date, so every
+  iPhone `IMG_1234.MOV` looked filmed on the day it was posted. 🔑 **The owner's observation that
+  집사톡 was unaffected was the whole explanation** — it has a 촬영 날짜 field and the other two
+  composers had none, so nothing was ever sent — and following that asymmetry found **the same
+  fabrication in the image path**, which is worse because `cat_images` has no upstream to correct
+  it. Both now store `null`; 공지사항/입양홍보 **gained the field** so a date can be supplied at
+  all. ⚠️ Two-stage and easy to misread: for videos the wrong date **disappears later**, when the
+  next sync overwrites it from YouTube, which reads as a second unrelated bug. Detail:
+  `log/DEBUG_LOG.md` 2026-08-02.
+- **🖼️ Video tiles now name the clip, and the two album implementations became one (2026-08-02,
+  `b61216a` + `82d0f07`).** The photo grid captions its thumbnails and the video grid did not —
+  not a structural difficulty, but the two grids passing **different layouts to the same shared
+  tile**: videos use `MediaTile`'s `layout="below"`, whose footer shelf rendered only tags and
+  meta. It gained a `title` prop. 🗑️ The mislabelled `|| '제목 없음'` filler — which announced a
+  missing _title_ while rendering a _description_ — is gone from **both** places it lived, the
+  second under a player already showing the real title. 🔑 **Root cause of both: the modal albums
+  hand-rolled their own tiles and drifted from the shared one.** They are now converged onto
+  `MediaTile`, which also gives modal tiles **tag chips** for the first time. ⚠️ Converging
+  removed `PhotoAlbum`'s `설명 없음` filler as a side effect (the shared tile drops them by
+  design) — owner call if that should come back.
 - **🔗 One cat is now linkable, and the modal hands you the link (2026-08-01, §10c DONE).**
   Clicking a cat sets `?cat=<id>`; arriving on such a link opens that cat; closing clears it;
   back closes the modal. A **이 냥이 링크 chip** in the cat modal hands it over — OS share sheet
@@ -829,6 +876,26 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- **`[ ]` Live-verify the auth changes on Preview (2026-08-02).** ⏳ **Unreachable from the
+  emulator** — it has no Kakao and no SMS, so the automated suites stay green regardless. Three
+  things: a **real Kakao sign-in** and its **linking fallback** (the PII-logging fix touched both
+  code paths), and the **orphan-delete path**, which needs a genuinely new phone number or Kakao
+  account — sign in with one that has never registered, expect the "not found" modal, then
+  confirm in the Firebase console that **no Auth account is left behind**. ⚠️ Signing in with an
+  account that _has_ registered proves nothing here; the delete only runs for someone with no
+  profile doc and no password credential.
+- **`[ ]` Owner call: should `설명 없음` come back on the photo modal? (2026-08-02.)** Converging
+  the modal albums onto `MediaTile` removed it, because the shared tile drops empty-state fillers
+  by design and the two hand-rolled copies had simply never been updated. A photo with no
+  description now shows only its date. One line to restore if the filler is wanted — but then the
+  shared tile is the place to do it, so both grids agree.
+- **`[ ]` Existing photo records still carry fabricated 촬영일 (2026-08-02).** ✅ **The owner
+  fixed the affected photos by hand**, so this is recorded only for the general case: **videos
+  self-heal** (the next metadata sync overwrites `createdTime` from YouTube, which has none →
+  `null`), but **photos do not** — `cat_images` has no upstream, so any remaining wrong date stays
+  until someone edits it in `tag-images`. A one-off script could clear dates equal to their own
+  `uploadDate`, but that heuristic would also clear legitimately same-day photos; not obviously
+  worth it.
 - **`[ ]` Tap the 이 냥이 링크 chip on a real phone (2026-08-01).** The **mobile** half is the
   only part still proven by stubs alone, and that is precisely the gap that shipped a dead button
   to desktop: both pre-ship passes stubbed `navigator.share`, so neither could see desktop Chrome
@@ -1190,19 +1257,33 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`7e8aa1b`**.
+✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`82d0f07`**.
 
 The only things left in the tree are **not** from this workstream and must not be swept into a
-commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) and two
-untracked `docs/planning/pending/code-graph-tooling-*` docs. They belong together as their own
-change whenever the owner wants it.
+commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) and three
+untracked `docs/planning/pending/code-graph-tooling-*` / `docs/.doc-mapping.json` files. They
+belong together as their own change whenever the owner wants it.
 
-**Gate status at `a96a62b`:** tsc 0 · smoke 33/33 · unit **129/129** · targeted e2e 16/16 on the
-touched specs (the deep-link + share-chip suites, desktop and mobile). The last **full** e2e run
-was 169 passed / 13 skipped at `7e8aa1b`. ⚠️ Full-suite runs lose 1–2 unrelated timing-sensitive
-specs that pass in isolation — see _Open threads_ before reading a red CI as a regression here.
+**Position (measured 2026-08-02, `git rev-list`):** `dev` leads `origin/main` by **59** commits;
+`origin/main` carries **2** that `dev` does not — the PR #7 and PR #8 **merge commits** — so
+neither is an ancestor of the other and the next promotion is again a merge.
+⚠️ **Always measure against `origin/main`.** The local `main` ref is stranded at `26b1879`
+(2026-03-16), which is where this doc's long-running "~274–279 ahead" figure came from.
 
-**This session (2026-08-01), newest first:**
+**Gate status at `82d0f07`:** tsc 0 · smoke 34/34 · unit **103/103** · **full e2e 196 passed / 3
+failed**, and all three failures pass when re-run in isolation (verified this session, not
+assumed) — see the box's suite-stability note before reading a red run as a regression.
+
+**This session (2026-08-02), newest first:**
+
+| Commit    | What                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `82d0f07` | **refactor** — converge the modal albums onto the shared `MediaTile`                      |
+| `b61216a` | **feat** — name the clip on video tiles; drop the mislabelled `제목 없음` filler          |
+| `6e2dc49` | **fix** — stop recording uploaded media as filmed on the day it was uploaded              |
+| `8a50348` | **feat** — record signup consent, grant a default role, stop logging PII in the auth path |
+
+**Previous session (2026-08-01), newest first:**
 
 | Commit    | What                                                                                   |
 | --------- | -------------------------------------------------------------------------------------- |
@@ -1278,6 +1359,30 @@ longer wanted.
 ---
 
 ## Changelog (living-doc audit trail — newest first)
+
+- **2026-08-02 (latest)** — **An audit that became four pieces of work.** Started as "what's
+  left per the plan?", which required checking the plan against the code: **seven entries were
+  wrong** (six done-but-unticked, one — 급식소 — flagged by the owner, whose neighbouring §7 note
+  would have sent someone chasing a phantom permission-denied). 🔑 **A plan entry is a claim about
+  the code, and claims rot.** Then §8's compliance items, where **the stated premise was wrong**:
+  phone/Kakao users cannot join without consenting, because the login gate already refuses
+  implicit signup — the earlier pass checked the two components and **stopped before tracing
+  their host**. A post-auth consent modal was designed on that premise and discarded; the real
+  gap was an **orphaned Auth account** holding PII, now deleted on the bounce path (`8a50348`,
+  with consent recording, a default role via a new Admin-SDK route, and PII out of the auth logs
+  — 3 sites, one more than reported). ⚠️ **The owner corrected the exclusion rationale**: signup
+  is **phone-first**, so the test must be a password credential, not the login method — gating on
+  method would have deleted consenting users who signed in by phone. Then two owner-reported
+  bugs, **each with a second instance the report did not mention**: uploaded media recorded as
+  filmed on its upload day (`6e2dc49` — the owner's "집사톡 was fine" observation was the whole
+  explanation, and led to the same fabrication in the image path, worse there because
+  `cat_images` has no upstream), and video tiles carrying no label (`b61216a` — plus the
+  mislabelled `제목 없음` filler in **two** places). 🔑 **Both trace to one root cause, now
+  closed:** two implementations of the same tile. The modal albums are converged onto
+  `MediaTile` (`82d0f07`). Gates: tsc 0 · smoke 34 · unit 103 · full e2e 196 passed / 3 failed,
+  all three green in isolation. New tests were **mutation-checked** — each guard was removed to
+  confirm the test fails — and the UI changes were **screenshot-verified in a browser**, not
+  taken on trust from a passing compile.
 
 - **2026-08-01 (latest, second half)** — **One cat is now linkable, and the modal hands you the
   link.** `?cat=<id>` on `/pages/cats` (`ba224b7`): clicking a cat sets the param, arriving on
