@@ -1,23 +1,28 @@
 import EditPostForm from '@/components/EditPostForm';
 import NewAnnouncementForm from '@/components/NewAnnouncementForm';
 import NewAdoptionForm from '@/components/NewAdoptionForm';
+import NewButlerTalkForm from '@/components/NewButlerTalkForm';
 import { isPostType, type PostType } from '@/services/post-types';
 
 /**
  * Post editor.
  *
- * 🔑 **공지사항 and 입양홍보 are edited by their own composer** (2026-08-02,
- * owner) — the same component that creates them, in edit mode. Before this they
- * went through `EditPostForm`, which could only take media as a **pasted URL**:
- * changing a photo meant finding its Storage URL by hand. That restriction was a
- * leftover — those two forms moved onto the same signed-URL upload path 집사톡
- * uses on 2026-07-30, so the pipeline was already there to reuse.
+ * 🔑 **Every post type that can carry uploaded media is edited by its own
+ * composer** (2026-08-02, owner) — the same component that creates it, in edit
+ * mode. They all used to go through `EditPostForm`, which could only take media
+ * as a **pasted URL**: changing a photo meant finding its Storage URL by hand.
+ * That restriction was a leftover — the three composers had converged onto the
+ * same signed-URL upload path on 2026-07-30, so the pipeline was already there
+ * to reuse.
  *
- * 급식현황 / 집사톡 stay on `EditPostForm` for now: they are community posts
- * built on a different hook (`useRichContentForm`), and 급식현황's composer
- * deliberately does not upload media at all (2026-07-27 owner decision).
+ * ⚠️ **급식현황 is the one exception, and deliberately so.** Its composer
+ * (`NewPostForm`) does not upload media at all — that was removed by owner
+ * decision on 2026-07-27, since 집사톡 is the media surface and 급식현황 is a
+ * 급식소 check-in log. Sending its edit screen to that composer would offer no
+ * media controls, so legacy 급식현황 posts that still carry media would have no
+ * way to change it. It stays on `EditPostForm`'s URL list, which can.
  */
-const COMPOSER_EDITED: PostType[] = ['announcements', 'adoption_promotion'];
+const COMPOSER_EDITED: PostType[] = ['announcements', 'adoption_promotion', 'butler_talk'];
 
 const EditPostPage = ({ params }: { params: { postType: string; postId: string } }) => {
   const { postType, postId } = params;
@@ -44,6 +49,8 @@ const EditPostPage = ({ params }: { params: { postType: string; postId: string }
             <NewAnnouncementForm postId={postId} />
           ) : postType === 'adoption_promotion' ? (
             <NewAdoptionForm postId={postId} />
+          ) : postType === 'butler_talk' ? (
+            <NewButlerTalkForm postId={postId} />
           ) : (
             <EditPostForm postType={postType} postId={postId} />
           )}

@@ -9,6 +9,7 @@ import { useMountain } from '@/components/MountainProvider';
 import { getYouTubePlaylistId } from '@/utils/config';
 import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
 import type { ExistingMedia, MediaItem } from './MediaItemList';
+import { toExistingImages, toExistingVideos } from './existingMedia';
 
 /**
  * Shared submit/upload flow for the simple-content family (공지사항 + 입양홍보;
@@ -98,24 +99,6 @@ export interface SimpleContentFormConfig {
   };
 }
 
-/** Filename out of a Storage URL, for labelling media already on the post. */
-const labelForImageUrl = (url: string): string => {
-  try {
-    const path = decodeURIComponent(new URL(url).pathname);
-    return path.split('/').pop() || url;
-  } catch {
-    // Not an absolute URL (a seeded `/images/...` path, say) — the tail still
-    // names the file, and a label is cosmetic: never fail an edit over it.
-    return url.split('/').pop() || url;
-  }
-};
-
-/** `https://img.youtube.com/...` preview for a watch URL, when we can parse one. */
-const youtubeThumbnail = (url: string): string | undefined => {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-  return match ? `https://img.youtube.com/vi/${match[1]}/default.jpg` : undefined;
-};
-
 export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -178,20 +161,8 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
 
         setTitle(post.title || '');
         setMessage(post.message || '');
-        setExistingImages(
-          (Array.isArray(post.imageUrls) ? post.imageUrls : []).map((url: string) => ({
-            url,
-            label: labelForImageUrl(url),
-            thumbnailUrl: url,
-          }))
-        );
-        setExistingVideos(
-          (Array.isArray(post.videoUrls) ? post.videoUrls : []).map((url: string) => ({
-            url,
-            label: url,
-            thumbnailUrl: youtubeThumbnail(url),
-          }))
-        );
+        setExistingImages(toExistingImages(post.imageUrls));
+        setExistingVideos(toExistingVideos(post.videoUrls));
         onLoadExtras?.(post);
       } catch (error) {
         console.error('useSimpleContentForm: failed to load the post to edit', error);

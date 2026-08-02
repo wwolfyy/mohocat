@@ -10,6 +10,7 @@ import MediaItemList from '@/components/forms/MediaItemList';
 import CatTagSelectField from '@/components/forms/CatTagSelectField';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { getButlerTalkMediaRules } from '@/utils/mediaControl';
+import { FormLoadingState, FormNotFoundState } from '@/components/forms/FormStates';
 
 /**
  * 집사톡(butler_talk) post composer. Submit/upload flow comes from the shared
@@ -22,7 +23,17 @@ import { getButlerTalkMediaRules } from '@/utils/mediaControl';
  * from `config/media_control.json`, which is static: changing them is a redeploy,
  * deliberately, so no single mountain's admin can reconfigure the others.
  */
-const NewButlerTalkForm = () => {
+interface NewButlerTalkFormProps {
+  /**
+   * Present ⇒ **edit** that post instead of creating one (2026-08-02). 집사톡 was
+   * the last type still edited through the URL-only `EditPostForm`; editing now
+   * offers the same file pickers, per-file 제목/설명, cat selector and 촬영 날짜
+   * this form has always had for writing.
+   */
+  postId?: string;
+}
+
+const NewButlerTalkForm = ({ postId }: NewButlerTalkFormProps = {}) => {
   const DEFAULT_TITLE = '집사톡 글입니다';
   const mediaRules = getButlerTalkMediaRules();
 
@@ -49,13 +60,29 @@ const NewButlerTalkForm = () => {
     buildPostTitleFallback: () => DEFAULT_TITLE,
     createPost: (post) => butlerTalkService.createPost(post),
     resetAfterCreate: false,
-    successMessage: '글이 성공적으로 작성되었습니다!',
-    errorMessagePrefix: '글 작성 중 오류가 발생했습니다: ',
+    successMessage: postId ? '글이 수정되었습니다!' : '글이 성공적으로 작성되었습니다!',
+    errorMessagePrefix: postId
+      ? '글 수정 중 오류가 발생했습니다: '
+      : '글 작성 중 오류가 발생했습니다: ',
     redirectPath: '/pages/butler_talk',
+    ...(postId
+      ? {
+          edit: {
+            postId,
+            loadPost: () => butlerTalkService.getPostById(postId),
+            updatePost: (id: string, post: Record<string, unknown>) =>
+              butlerTalkService.updatePost(id, post),
+          },
+        }
+      : {}),
   });
 
-  if (form.loading) {
-    return <div className="p-4">로딩 중...</div>;
+  if (form.loading || form.loadingPost) {
+    return <FormLoadingState />;
+  }
+
+  if (form.postNotFound) {
+    return <FormNotFoundState />;
   }
 
   if (!form.isAuthenticated) {
@@ -107,6 +134,8 @@ const NewButlerTalkForm = () => {
         onItemsChange={form.handleVideoItemsChange}
         disabled={form.uploading}
         allowMultiple={mediaRules.allowMultipleVideos}
+        existing={form.existingVideos}
+        onExistingChange={form.setExistingVideos}
       />
 
       {/* YouTube Metadata - only show if video files are selected */}
@@ -181,6 +210,8 @@ const NewButlerTalkForm = () => {
         onItemsChange={form.handleImageItemsChange}
         disabled={form.uploading}
         allowMultiple={mediaRules.allowMultipleImages}
+        existing={form.existingImages}
+        onExistingChange={form.setExistingImages}
       />
 
       {/* Image Cat Tags - only show if images are selected */}
@@ -203,7 +234,13 @@ const NewButlerTalkForm = () => {
           className="flex-1"
           disabled={form.uploading}
         >
-          {form.uploading ? '업로드 중...' : '글 작성'}
+          {form.uploading
+            ? form.isEditing
+              ? '저장 중...'
+              : '업로드 중...'
+            : form.isEditing
+              ? '글 저장'
+              : '글 작성'}
         </Button>
         <Button
           type="button"

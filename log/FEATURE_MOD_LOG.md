@@ -15,6 +15,47 @@
 
 ---
 
+## 2026-08-02 — 집사톡 is edited by its create composer too
+
+**Area:** `src/components/forms/useRichContentForm.ts`, `NewButlerTalkForm`,
+`src/components/forms/existingMedia.ts` (new), the edit route, `tests/e2e/setup/test.ts`.
+**Type:** feature (owner-requested) — completes the same day's editor convergence.
+
+**What changed and why.** 집사톡 was the last type still on the URL-only `EditPostForm`, so
+changing a photo still meant hunting down its Storage URL. Its create composer runs on a
+_different_ hook (`useRichContentForm`) from 공지사항/입양홍보, which is why the earlier pass
+missed it. That hook gained the same `edit` block, and `NewButlerTalkForm` takes an optional
+`postId`.
+
+- **The 기존-media helpers moved to `forms/existingMedia.ts`**, shared by both hooks rather than
+  copied — the second copy would have been the start of the usual drift.
+- ⚠️ **Retained media counts against 집사톡's cap.** A post already holding one photo and one
+  video shows no pickers at all; removing the photo frees that slot and only that slot. Editing
+  must not be a way around a limit creation enforces.
+- ⚠️ **Post-level `tags` are omitted on an edit with no new files.** They mirror the cat selector,
+  which only applies to files being uploaded now — and since `updatePost` merges, sending an empty
+  array would have **erased the tags the post already carried**.
+- Authorship / 게시일 are not re-stamped, as with the other two composers.
+- **급식현황 stays on `EditPostForm`, deliberately.** Its composer uploads no media at all (owner,
+  2026-07-27), so sending its edit screen there would leave legacy 급식현황 posts that still carry
+  media with no way to change it. The URL list can.
+
+**Verified:** 2 more cases in `post-edit-composer.spec.ts` — the composer prefills, the cap holds
+against retained media and frees one slot on removal, and a text-only save keeps both media. Full
+e2e **2× consecutive 214 passed / 13 skipped / 0 failed**.
+
+🔬 **A test-harness bug found the hard way, worth keeping.** Adding a fixture video made an
+unrelated spec fail on a 404, so I allow-listed `img.youtube.com` **by host** — and two edit specs
+then failed on what looked like a 404 for a `_next/static` chunk. That chunk serves **200**
+(verified with curl); the real failure was YouTube returning a genuine 404 for the invented
+fixture id. 🔑 **When an `<img>` src is set by client JS, Chrome reports the failed-resource
+message's `location.url` as the initiating chunk, not the failing URL** — so a host-based
+allowance silently misses exactly the cases that need it and the failure reads as a bogus
+chunk 404. Replaced with an **auto fixture** that routes `img.youtube.com` for every spec: no real
+external request, nothing for a spec to forget, and no console allowance that could mask a real 404. It also removes the suite's accidental dependency on the public internet.
+
+---
+
 ## 2026-08-02 — the post detail page renders in the shared post shell
 
 **Area:** `src/app/[mountain]/pages/posts/[postType]/[id]/page.tsx`, `tests/e2e/setup/test.ts`.

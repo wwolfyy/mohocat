@@ -104,6 +104,23 @@
       "username": "집사회원",
       "date": "2026-01-06",
       "time": "14:00"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec. One photo + one video on purpose: that is exactly 집사톡's media_control cap, so the editor must show both as 기존 rows and offer no picker until one is removed.",
+      "id": "test-butler-edit-01",
+      "title": "수정 전용 집사톡",
+      "message": "편집 스펙 전용 집사톡 본문이에요.",
+      "username": "집사회원",
+      "date": "2026-01-10",
+      "time": "10:00",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg"
+      ],
+      "videoUrls": [
+        "https://www.youtube.com/watch?v=yt-vid-01"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "video"
     }
   ],
   "posts_feeding": [

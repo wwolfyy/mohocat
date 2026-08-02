@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
@@ -8,7 +8,8 @@ import { uploadVideoItems, uploadImagesWithSignedUrls } from './uploadStrategies
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
 import { getMountainName, getYouTubePlaylistId } from '@/utils/config';
-import type { MediaItem } from './MediaItemList';
+import type { ExistingMedia, MediaItem } from './MediaItemList';
+import { toExistingImages, toExistingVideos } from './existingMedia';
 
 /**
  * Shared submit/upload flow for the rich-content family (complexity-retirement
@@ -47,6 +48,23 @@ export interface RichContentFormConfig {
   successMessage: string;
   errorMessagePrefix: string;
   redirectPath: string;
+  /**
+   * Present ⇒ the form is **editing** an existing post rather than creating one
+   * (2026-08-02, owner). Mirrors `useSimpleContentForm.edit`: same fields, same
+   * pickers, same upload pipeline — only prefilling, appending to the media
+   * already attached, and `updatePost` instead of `createPost` differ.
+   *
+   * 🔑 집사톡 was the last post type still edited through the URL-only
+   * `EditPostForm`, which meant changing a photo required hunting down its
+   * Storage URL. Its create composer already did the job properly.
+   */
+  edit?: {
+    postId: string;
+    /** Loads the post to prefill from; `null` ⇒ render the not-found state. */
+    loadPost: () => Promise<Record<string, any> | null>;
+    /** Merging write (`updateDoc`), so fields this form never shows survive. */
+    updatePost: (postId: string, post: Record<string, unknown>) => Promise<unknown>;
+  };
 }
 
 export const useRichContentForm = (config: RichContentFormConfig) => {
@@ -64,6 +82,17 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   const [showVideoTagSelector, setShowVideoTagSelector] = useState(false);
   const [showImageTagSelector, setShowImageTagSelector] = useState(false);
 
+  /**
+   * Media already attached to the post being edited — stored URLs, not `File`s,
+   * so they never enter an upload strategy. They are carried back into the write
+   * unless the operator removes them.
+   */
+  const [existingImages, setExistingImages] = useState<ExistingMedia[]>([]);
+  const [existingVideos, setExistingVideos] = useState<ExistingMedia[]>([]);
+  /** Edit mode only: the prefill is a fetch, so it has the usual three states. */
+  const [loadingPost, setLoadingPost] = useState(Boolean(config.edit));
+  const [postNotFound, setPostNotFound] = useState(false);
+
   const router = useRouter();
   const dialog = useDialog();
   const { user, isAuthenticated, loading } = useAuth();
@@ -75,6 +104,45 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
   // deliberately has no playlist yet; the upload proceeds unfiled.
   const playlistId = getYouTubePlaylistId(mountainId);
   const playlistLabel = playlistId ? getMountainName(mountainId) : null;
+
+  // Prefill when editing. Keyed on the post id alone — `config` is rebuilt every
+  // render, so depending on it would refetch in a loop.
+  const editPostId = config.edit?.postId;
+  const loadPost = config.edit?.loadPost;
+
+  useEffect(() => {
+    if (!editPostId || !loadPost) return;
+    let active = true;
+
+    const run = async () => {
+      setLoadingPost(true);
+      try {
+        const post = await loadPost();
+        if (!active) return;
+
+        if (!post) {
+          setPostNotFound(true);
+          return;
+        }
+
+        setTitle(post.title || '');
+        setMessage(post.message || '');
+        setExistingImages(toExistingImages(post.imageUrls));
+        setExistingVideos(toExistingVideos(post.videoUrls));
+      } catch (error) {
+        console.error('useRichContentForm: failed to load the post to edit', error);
+        if (active) setPostNotFound(true);
+      } finally {
+        if (active) setLoadingPost(false);
+      }
+    };
+
+    run();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editPostId]);
 
   /**
    * Fill 촬영일 from a filename the first time one yields a date. Unchanged in
@@ -111,11 +179,14 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
    * the user would not want silently dropped.
    */
   const handleCancel = async () => {
-    const isDirty =
-      title.trim().length > 0 ||
-      message.trim().length > 0 ||
-      videoItems.length > 0 ||
-      imageItems.length > 0;
+    // ⚠️ When editing, title/message arrive prefilled — they are not evidence
+    // the operator typed anything, so only newly picked files count as work.
+    const isDirty = config.edit
+      ? videoItems.length > 0 || imageItems.length > 0
+      : title.trim().length > 0 ||
+        message.trim().length > 0 ||
+        videoItems.length > 0 ||
+        imageItems.length > 0;
 
     if (isDirty) {
       const confirmed = await dialog.confirm('작성 중인 내용이 사라져요. 그만 쓸까요?');
@@ -185,27 +256,55 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
         }
       }
 
-      const now = new Date();
-      const thumbnailUrl = videoThumb || (imageUrls.length > 0 ? imageUrls[0] : '');
-      const finalTitle =
-        title.trim() || (config.buildPostTitleFallback ?? config.buildDefaultTitle)();
-
-      const post = {
-        title: finalTitle,
-        username: user?.email || 'unknown',
-        date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
-        time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
-        thumbnailUrl,
-        mediaType,
-        videoUrls,
-        imageUrls,
-        message,
-        tags: mediaType === 'video' ? selectedVideoTags : selectedImageTags,
-      };
-
       // Validate that we have the expected content
       if (videoItems.length > 0 && videoUrls.length === 0) {
         throw new Error('Video files were selected but no video URLs were generated');
+      }
+
+      // Editing starts from whatever the operator kept; creating starts empty.
+      // Retained media leads, so newly picked files append in pick order.
+      const allVideoUrls = [...existingVideos.map((m) => m.url), ...videoUrls];
+      const allImageUrls = [...existingImages.map((m) => m.url), ...imageUrls];
+
+      const now = new Date();
+      const thumbnailUrl = videoThumb || (allImageUrls.length > 0 ? allImageUrls[0] : '');
+      const finalTitle =
+        title.trim() || (config.buildPostTitleFallback ?? config.buildDefaultTitle)();
+      // A post with any video reads as a video post, whether that video was just
+      // uploaded or was already attached.
+      const finalMediaType: 'video' | 'image' = allVideoUrls.length > 0 ? 'video' : mediaType;
+
+      const post = {
+        title: finalTitle,
+        thumbnailUrl,
+        mediaType: finalMediaType,
+        videoUrls: allVideoUrls,
+        imageUrls: allImageUrls,
+        message,
+        // ⚠️ Authorship and timestamp are set **once, at creation**. Re-stamping
+        // them on an edit would relabel someone else's post with the editor's
+        // address and jump it to the top of a list ordered by 게시일.
+        ...(config.edit
+          ? {}
+          : {
+              username: user?.email || 'unknown',
+              date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
+              time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
+            }),
+        // ⚠️ Post-level `tags` mirror the cat selector, which only ever applies to
+        // files being uploaded now. On an edit with no new files it would be
+        // empty — and since `updatePost` merges, sending it would ERASE the tags
+        // the post already carries. Omitted unless something was actually picked.
+        ...(config.edit && videoItems.length === 0 && imageItems.length === 0
+          ? {}
+          : { tags: finalMediaType === 'video' ? selectedVideoTags : selectedImageTags }),
+      };
+
+      if (config.edit) {
+        await config.edit.updatePost(config.edit.postId, post);
+        await dialog.alert(config.successMessage);
+        router.push('/admin/posts');
+        return;
       }
 
       await config.createPost(post);
@@ -263,6 +362,17 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     setShowImageTagSelector,
     handleSubmit,
     handleCancel,
+    /** Media already on the post — edit mode only; empty when creating. */
+    existingImages,
+    setExistingImages,
+    existingVideos,
+    setExistingVideos,
+    /** `true` while an edit's prefill is in flight; always `false` when creating. */
+    loadingPost,
+    /** The edited post could not be loaded — render the not-found state. */
+    postNotFound,
+    /** `true` when this form is editing rather than creating. */
+    isEditing: Boolean(config.edit),
     /** Render once inside the owning form (replaces native alert dialogs). */
     dialog: dialog.element,
   };
