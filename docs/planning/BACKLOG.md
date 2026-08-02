@@ -94,12 +94,19 @@ page.
   regression. Same for the two sections the pre-2026-08-02 config block declared
   (우리의 미션 / 활동 내용): also never displayed.
 
-  ⚠️ **The CMS actively advertises behaviour the page does not have.** The placeholder in every
-  섹션 content box (`adminStrings.ts` → `sectionContentPlaceholder`) reads
-  _"섹션 내용도 [링크](https://example.com)와 URL 자동 인식을 지원해요"_, and the 💡 링크 지원
-  help panel sits right above it. An operator who writes a section with links gets a save
-  confirmation and no output. **Whichever way Q1 goes, that string and the field must move
-  together** — leaving the promise in place is the worst of the three outcomes.
+  ⚠️ **The CMS advertises behaviour the page does not have — one click in.** The 섹션 block
+  shows only a heading and **섹션 추가** until a section exists (the fields live inside
+  `content.sections.map(...)`, and `about_content/geyang` holds `[]`), so the promise is not
+  on screen at rest. Press 섹션 추가 and the content textarea appears carrying
+  `adminStrings.ts` → `sectionContentPlaceholder`:
+  _"섹션 내용도 [링크](https://example.com)와 URL 자동 인식을 지원해요"_ — with the
+  💡 링크 지원 help panel above it. 📌 **That placement makes it worse, not better:** the
+  operator meets the promise at the exact moment they have decided to write a section, then
+  gets a save confirmation and no output. **Whichever way Q1 goes, that string and the field
+  must move together** — leaving the promise in place is the worst of the three outcomes.
+
+  💡 Minor, same block: each section's content field is labelled `t.fields.mainContent`
+  (**본문**), reusing the page-level body label rather than having its own.
 
   📌 **If the answer is "render them", the deleted implementation is a starting point, not a
   patch to re-apply.** It ran `section.content` through `processTextWithLinks` (so link tokens
