@@ -1,12 +1,60 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-02 · **Branch:** `dev` (`fa2f87b`) · **`main`:** promoted through PR #8
+**Last updated:** 2026-08-02 · **Branch:** `dev` (`a2d21f2`) · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-02, second session — one small feature that turned into two real bugs.** It began
-> as "close §10d D2, the CMS upload toggle." Siting the toggle meant looking at 앱 관리, which
+> **2026-08-02, third session — one owner-reported bug, and everything it was hiding.**
+> It began as "집사톡 posts show _Post not found._" That was a **routing** defect: a post is
+> addressed by **`(type, id)`**, not `id`, and the shared detail route hard-coded one of the
+> four collections. Fixing it made those posts **reachable for the first time**, which exposed
+> that the page had **never had a real layout**; and the owner, now able to use the CMS on
+> them, found the **edit form still took media as a pasted URL**. Six commits, all pushed;
+> `origin/dev` = **`a2d21f2`**, now **71** ahead of `origin/main`. Tree clean apart from the
+> `.gitignore` hunk, three untracked code-graph files (**different workstream — do not commit
+> them**), and a 2-line `config/mountains/mountains.json` edit that is **not mine**.
+>
+> 🔑 **The lesson that generalises: a bug report names the symptom the owner could see, not
+> the extent of the defect.** 집사톡 was reported; **공지사항 and 입양홍보 were broken
+> identically** in the admin CMS, which links to the same route — found by tracing the code,
+> not by re-reading the report. Then the same shape again: the edit-form ask named
+> 공지사항/입양홍보, and 집사톡 needed the same fix but runs on a **different hook**, so the
+> first pass did not reach it. **Ask what else shares the broken thing.**
+>
+> 🐛 **The routing bug, because the shape recurs.** Four post types, four Firestore
+> collections; `/pages/posts/[id]` hard-coded `getPostService` (`posts_feeding`) while both
+> list components linked **every** type there. 🔑 **A Firestore id is unique only within its
+> collection**, so a route taking an id alone cannot resolve a post. 📌 It was never a
+> regression — `posts_butler` arrived with the 집사톡 list months ago and this page was never
+> told. It survived because **the route had no e2e coverage at all**, the one place a wrong
+> collection is indistinguishable from a deleted post.
+>
+> ⚠️ **A fallback was written, and rejected on review — read this before adding one.** The
+> first cut put the type in `?type=` with a `butler_stream` default "so old links still work."
+> The owner pushed back. It protected nothing (the only type that route ever resolved is
+> admin-gated) and it **recreated the bug silently**: a param can go missing while the route
+> still matches, so the page must guess a collection. It is now a **path segment**
+> (`/pages/posts/{postType}/{id}`) with **no default** — an incomplete link resolves nothing.
+>
+> 🔬 **Three test-harness findings, all from refusing to re-run until green.**
+> (1) Two of my new specs edited the **same fixture**; `playwright.config` sets
+> `fullyParallel`, so the later save reverted the earlier one. Each test owns its fixture now.
+> (2) Adding two specs turned `auth/login-logout` red — bisected (HEAD green · HEAD+change+2
+> specs red · HEAD+change with those 2 skipped **green**), so the app change was innocent and
+> two more specs simply push the shared emulator past a load threshold.
+> (3) 🔑 **The one worth remembering: when an `<img>` src is set by client JS, Chrome reports
+> the failed-resource console message's `location.url` as the _initiating chunk_, not the
+> failing URL.** So an allow-list keyed on the host silently misses exactly the cases that need
+> it, and the failure reads as a bogus 404 on a `_next/static` chunk that in fact serves 200
+> (verified with `curl`, which is what settled it). Replaced by a **global auto fixture** that
+> routes `img.youtube.com` for every spec — the suite no longer touches the public internet.
+>
+> ---
+>
+> ### Earlier the same day (2026-08-02, second session) — one small feature, two real bugs
+>
+> **It began as "close §10d D2, the CMS upload toggle."** Siting the toggle meant looking at 앱 관리, which
 > turned out to hold **a settings screen that had never configured anything**; and shipping the
 > toggle broke an e2e spec, which meant running the full suite, which turned the long-standing
 > **"flake set" into three findable bugs — one of them in app code**. Chasing the last of those
@@ -149,13 +197,21 @@
 >    logging fix touched both); and the **orphan-delete path** (needs a genuinely new phone number
 >    or Kakao account); plus the 2026-07-31 입양홍보 popup (needs a **fresh session** —
 >    `sessionStorage`) and the duplicate-filename **409**.
-> 3. **Then the promotion itself.** `dev` now leads `origin/main` by **64** commits.
+>    🆕 **Add one from 2026-08-02:** edit a real 공지사항 / 집사톡 and **attach a photo**. The e2e
+>    image leg is **stubbed** — `generate-signed-url` signs with a service-account key the
+>    credential-less harness does not have, and the Storage emulator cannot sign either — so
+>    _uploading a new file during an edit_ is the one path with no automated cover at all.
+> 3. **Then the promotion itself.** `dev` now leads `origin/main` by **71** commits.
 >    ⚠️ **Measure against `origin/main`, not the local `main` ref** — the local one is stranded at
 >    `26b1879` (2026-03-16), four months and one PR-#8 merge behind.
->    🆕 **Two things in this bundle change behaviour on deploy, so mention them when promoting:**
+>    🆕 **Things in this bundle that change behaviour on deploy — mention them when promoting:**
 >    집사톡 becomes **one video + one photo** per post (the caps ship `false`, before anyone
->    touches a control), and a signed-in visitor now sees the **logged-out header for one tick**
->    on a full page load — the deliberate cost of the hydration fix.
+>    touches a control); a signed-in visitor sees the **logged-out header for one tick** on a
+>    full page load (the deliberate cost of the hydration fix); post detail URLs change shape to
+>    **`/pages/posts/{postType}/{id}`**, so any bookmarked old link stops resolving (only
+>    급식현황 ever worked, and it is admin-gated, so this should reach nobody); and the CMS
+>    **edit screens for 공지사항 / 입양홍보 / 집사톡 are now their create composers** — operators
+>    will see a different, better form, and 집사톡's cap applies to media already on a post.
 >
 > 🆕 **Owner decisions waiting, none blocking:** whether 공지사항/입양홍보 should keep the
 > **`설명 없음`** filler that converging onto `MediaTile` removed from the photo modal (the shared
@@ -215,8 +271,38 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🐛 집사톡 posts opened on "Post not found" — a post is addressed by `(type, id)`, not `id`
+  (2026-08-02, `c4789c5`).** The four post types live in four Firestore collections, but the
+  shared detail route hard-coded `getPostService` (`posts_feeding`) while both list components
+  linked **every** type there. 🔑 **A Firestore id is unique only within its collection**, so a
+  route taking an id alone cannot resolve a post. 📌 **The report named 집사톡; 공지사항 and
+  입양홍보 were broken identically** in the admin CMS, which links to the same route — found by
+  tracing, not by re-reading the report. Never a regression: `posts_butler` arrived with the
+  집사톡 list months ago and this page was never told; it survived because **the route had no
+  e2e coverage at all**. ⚠️ **A `?type=` fallback was written and rejected on review (owner):**
+  it protected nothing and recreated the bug silently. The type is now a **path segment** with
+  **no default**. Detail: PROJECT_PLAN **§10k**, `log/DEBUG_LOG.md` 2026-08-02.
+- **🎨 …and the page it opened had never had a layout (2026-08-02, `d7c601f`).** Full-bleed
+  images under English `Video:` / `Images:` headings, videos as a thumbnail **linking off to
+  youtube.com**. Only 급식현황 ever reached this route, so nobody had seen it. It now uses the
+  공지사항 detail shell + the shared `PostMedia` (`layout="full"`), so every surface renders a
+  post's media identically. ⚠️ **댓글 stays on the community types only** — 공지사항 / 입양홍보
+  have never had a reply thread, and this route is where the admin CMS links.
+- **✏️ Editing 공지사항 / 입양홍보 / 집사톡 now uses their create composers (2026-08-02,
+  `d71a101` + `219b0e5`).** The old editor took media as a **pasted URL**, so changing a photo
+  meant hunting down its Storage URL. 🔑 **The stated reason was stale:** `EditPostForm` said
+  "their upload paths differ", true when written and false since 2026-07-30, when all three
+  composers converged on the signed-URL strategy. Editing now has file pickers, per-file
+  제목/설명, the cat selector and 촬영 날짜. ⚠️ **Four things decided inside it:** `기존` media
+  carries no 제목/설명 editor (that lives on the medium's record, and YouTube owns a video's);
+  an edit does **not** re-stamp `username`/`date`/`time`; post-level `tags` are **omitted** on an
+  edit with no new files (`updatePost` merges, so an empty array would have **erased** them);
+  and **retained media counts against 집사톡's cap**. 📌 **급식현황 stays on the URL editor by
+  decision** — its composer uploads nothing, so routing it there would leave legacy posts with
+  media unable to change it. Detail: PROJECT_PLAN **§10l**.
 - **✅ The e2e suite is GREEN and the "flake set" is retired (2026-08-02, `4a5da2a`).**
-  **3× consecutive 199 passed / 13 skipped / 0 failed**, from a 196/3 baseline. 🔑 It was
+  **3× consecutive 199 passed / 13 skipped / 0 failed**, from a 196/3 baseline. _(Now
+  **214/13/0** — the same day's post work added 15 specs; see the top three bullets.)_ 🔑 It was
   **three real bugs, not flake** — and **"passes in isolation" meant _interference_, not
   slowness**, which is the reading that kept them open for weeks. (1) **App code:**
   `services/firebase.ts` guarded a **per-instance** emulator connection with a
@@ -581,9 +667,10 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   should-fix · decided/won't-do · already-closed), with the console half carved into
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
   blocks the `dev → main` promotion.
-- **Tree:** clean through **`fa2f87b`** (bar a `.gitignore` hunk + three untracked code-graph
-  files from a different workstream). The whole multi-tenant epic (M0–M8)
-  is committed on `dev`; `dev` leads `origin/main` by **64** commits, and `origin/main` carries
+- **Tree:** clean through **`a2d21f2`** (bar a `.gitignore` hunk, three untracked code-graph
+  files from a different workstream, and a 2-line `config/mountains/mountains.json` edit that
+  is not from this work). The whole multi-tenant epic (M0–M8)
+  is committed on `dev`; `dev` leads `origin/main` by **71** commits, and `origin/main` carries
   **2** commits `dev` does not — the PR #7 (`65d2020`) and PR #8 (`366425c`) **merge commits**,
   so neither branch is an ancestor of the other and the next promotion is again a merge.
   ⚠️ **Use `origin/main` for this**: the local `main` ref is stale at `26b1879` (2026-03-16),
@@ -1415,9 +1502,9 @@ neither is an ancestor of the other and the next promotion is again a merge.
 ⚠️ **Always measure against `origin/main`.** The local `main` ref is stranded at `26b1879`
 (2026-03-16), which is where this doc's long-running "~274–279 ahead" figure came from.
 
-**Gate status at `fa2f87b`:** tsc 0 · smoke 34/34 · unit **137/137** · **full e2e 199 passed /
-13 skipped / 0 failed**, ✅ **3× consecutive** (the repo's flake-audit bar), plus 2 further green
-runs after the `AuthProvider` fix. ⚠️ **The previous entry's advice — "a red run isn't
+**Gate status at `a2d21f2`:** tsc 0 · smoke 34/34 · unit **137/137** · **full e2e 214 passed /
+13 skipped / 0 failed**, ✅ **2× consecutive** (from 199/13/0 — the 2026-08-02 post work added 15
+specs). The 3× flake-audit bar was met at `fa2f87b` on the 199-spec suite. ⚠️ **The previous entry's advice — "a red run isn't
 necessarily a regression, re-run the failures alone" — is retired.** What it described was three
 real bugs, now fixed; a red run means something again.
 
@@ -1522,7 +1609,15 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-02 (latest)** — **The hydration mismatch is fixed.** `AuthProvider` seeded
+- **2026-08-02 (latest)** — **Post detail resolved the wrong collection; editing took pasted
+  URLs. Both closed.** `(type, id)` routing via a new `services/post-types.ts` and a
+  `{postType}/{id}` path segment (**no fallback** — the `?type=` default was rejected on
+  review); the page moved onto the 공지사항 shell + shared `PostMedia`; and 공지사항 / 입양홍보
+  / 집사톡 editing moved onto their **create composers**, with `기존` media rows, a cap that
+  counts retained files, and no re-stamping of authorship. 급식현황 keeps the URL editor by
+  decision. Six commits, `2368758`…`a2d21f2`. Full e2e **2× 214/13/0** (was 199/13/0).
+  Detail: PROJECT_PLAN **§10k/§10l**, `log/DEBUG_LOG.md` + `log/FEATURE_MOD_LOG.md` 2026-08-02.
+- **2026-08-02** — **The hydration mismatch is fixed.** `AuthProvider` seeded
   `useState` from `auth.currentUser` (browser-only, read during render), so the header
   disagreed with the server and React rebuilt the whole root — erasing input already typed.
   Now seeds from `null` and lets `onAuthStateChanged` update after hydration. Console error
