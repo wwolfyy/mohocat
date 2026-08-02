@@ -234,8 +234,15 @@ upload themselves.)_
     the next 📺 YouTube와 동기화.
   - The post keeps its **original author and 게시일**; editing does not move it to the top of
     the list or put your name on it.
-- **Edit (급식현황 / 집사톡)** — still the older editor: 제목 / 내용 plus add/remove media by
-  **URL**. Uploading a new file during an edit isn't supported for these two.
+- **Edit (집사톡)** — same story: opens 집사톡's own composer, prefilled, with file pickers
+  and the 기존 list. ⚠️ 집사톡 is capped at **one video + one photo**
+  ([§9](#9-configuration--operations-owner--developer)), and media already on the post
+  **counts against that cap** — so a post that already has both shows no file picker until
+  you 삭제 one.
+- **Edit (급식현황)** — still the older editor: 제목 / 내용 plus add/remove media by **URL**.
+  That's deliberate: the 급식현황 composer doesn't upload media at all any more, so its edit
+  screen keeps the URL list — otherwise older 급식현황 posts that still carry a photo would
+  have no way to change it.
 - **Delete** — removes the post (and its replies, for community posts). No undo.
 
 ---
