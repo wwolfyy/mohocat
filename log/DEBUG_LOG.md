@@ -11,6 +11,64 @@
 
 ---
 
+## 2026-08-02 — Every 집사톡 post opened on "Post not found."
+
+**Symptom (owner-reported):** clicking any post on `/pages/butler_talk` rendered
+**"Post not found."** instead of the post. The same on the **집사톡 tab of `/admin/posts`**.
+급식현황 was fine.
+
+**Root cause:** the four post types live in **four separate Firestore collections** —
+`posts_feeding` (급식현황), `posts_butler` (집사톡), `posts_announcements`, `posts_adoption` —
+but the shared detail route `/pages/posts/[id]` hard-coded **one** of them:
+
+```ts
+const postService = getPostService(mountainId); // → FirebasePostService → 'posts_feeding'
+```
+
+`PostList` and `AdminPostList` link **every** post, of every type, to `/pages/posts/${post.id}`.
+So a `posts_butler` document id was looked up in `posts_feeding`, `docSnap.exists()` was false,
+and the page reported the post missing. 급식현황 only worked because it genuinely _is_
+`posts_feeding`.
+
+🔑 **A post's address is `(type, id)`, not `id`.** Firestore ids are unique only _within_ a
+collection, so a route that takes an id alone cannot resolve a post — no amount of retrying or
+permission-fixing would have helped. 📌 The same defect silently covered **공지사항 and
+입양홍보 in the admin CMS**, which link to this route too; the report named only 집사톡.
+
+📌 **Not a regression — it never worked.** `posts_butler` arrived with the 집사톡 list
+(`9bb26d3`) and the detail page was never taught about it. It survived because
+**`/pages/posts/[id]` had no e2e coverage at all** — the one route where a wrong collection is
+indistinguishable from a deleted post.
+
+**Fix:**
+
+- New `src/services/post-types.ts` — one `PostType` union, `getServiceForPostType()`,
+  `isPostType()` and `postDetailPath()`. The type→service mapping had **three** copies
+  (`AdminPostList`, `EditPostForm`, and the detail page, which simply lacked it); all now share
+  this one. ⚠️ Import it directly, not through `@/services` — it depends on the factory getters
+  there to keep the per-tenant singleton cache, so re-exporting would close a cycle.
+- The type moved **into the path**: `/pages/posts/{postType}/{id}`, built by `postDetailPath()`.
+  🔑 **A segment, not a `?type=` query param, and no default.** The first cut used a param with a
+  `butler_stream` fallback for backward compatibility — **rejected on review (owner)**. A param
+  can go missing while the route still matches, so the page would have to guess a collection:
+  that is the original bug, reproduced silently. It also bought nothing — the route only ever
+  resolved 급식현황, which is admin-gated, so no shareable link to it exists. As a segment an
+  incomplete link does not resolve at all, and an unrecognised type reports the post missing
+  rather than reading some other collection.
+- `PostList` gained a **required** `postType` prop — the compiler now refuses a caller that
+  cannot say what it is listing.
+- While in there: the page kept `post` as a single nullable value, so **"Post not found." was
+  the first render of every visit** and a thrown fetch landed on the same screen. Moved onto the
+  shared `useAsyncData` + `ErrorNotice` (the 2026-08-01 treatment the 공지사항 detail page got),
+  and the message is Korean now.
+
+**Verified:** new `tests/e2e/admin/post-detail.spec.ts` (7 tests) — clicking 집사수다 1 from the
+집사톡 list (the exact reported path), all four types by direct URL, a genuine miss still saying
+so, and an unrecognised type resolving nothing rather than guessing. Full e2e **206 passed / 13
+skipped / 0 failed** (was 199/13/0); tsc clean, vitest 137/137, smoke 34/34.
+
+---
+
 ## 2026-08-02 — Hydration mismatch wiped input a visitor had already typed
 
 **Symptom:** every page logged _"Hydration failed because the initial UI does not match what

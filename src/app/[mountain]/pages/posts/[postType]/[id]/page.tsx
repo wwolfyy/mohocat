@@ -1,45 +1,63 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getPostService } from '@/services';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useMountain } from '@/components/MountainProvider';
+import { getServiceForPostType, isPostType } from '@/services/post-types';
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { ErrorNotice } from '@/components/ui/AsyncStates';
 import { Post } from '@/types';
 import ReplyButton from '@/components/ReplyButton';
 import ReplyForm from '@/components/ReplyForm';
 import ReplyList from '@/components/ReplyList';
 
+/**
+ * Detail view for a single post — `/pages/posts/{postType}/{id}`.
+ *
+ * 🐛 **The type is in the path because the id alone does not identify a post
+ * (2026-08-02).** Each type lives in its own Firestore collection
+ * (`posts_feeding` / `posts_butler` / `posts_announcements` / `posts_adoption`)
+ * and ids are unique only *within* one, so this page — which hard-coded
+ * `getPostService`, i.e. `posts_feeding` — could only ever answer
+ * "게시물을 찾을 수 없습니다." for a 집사톡, 공지사항 or 입양홍보 post.
+ *
+ * 🔑 **A segment, not a `?type=` query param, and no default.** A query param can
+ * go missing; the route then still matches and has to guess a collection, which
+ * reproduces the original bug silently. As a segment, a link that omits the type
+ * does not resolve at all. Build links with `postDetailPath()`.
+ */
 const PostDetailsPage = () => {
   // Service references
   const mountainId = useMountain();
-  const postService = getPostService(mountainId);
-  const [post, setPost] = useState<any | null>(null);
+  const router = useRouter();
+  // `useParams`, not `window.location.pathname`: both are route state, and
+  // reading them from the URL string meant the fetch could not react to them.
+  const { id, postType } = useParams<{ id: string; postType: string }>();
+
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyCount, setReplyCount] = useState(0);
-  const router = useRouter();
+
+  // 🐛 Same three-states fix the 공지사항 detail page got on 2026-08-01: `post`
+  // was a single nullable value, so "Post not found." was the *first* render of
+  // every visit and a thrown fetch landed on that same screen — a failure was
+  // indistinguishable from a deleted post, and nothing ever set state again.
+  const fetchPost = useCallback(async () => {
+    // An unrecognised type is a dead link, not a reason to guess a collection.
+    if (!id || !isPostType(postType)) return null;
+
+    // Use the service layer instead of direct Firebase access.
+    return getServiceForPostType(postType, mountainId).getPostById(id);
+  }, [id, postType, mountainId]);
+
+  const { status, data: post, reload } = useAsyncData(fetchPost);
+
+  // The replies below must read and write the same collection the post came
+  // from, so they take the service the post was actually resolved with.
+  const postService = isPostType(postType) ? getServiceForPostType(postType, mountainId) : null;
 
   useEffect(() => {
-    const fetchPost = async () => {
-      const id = window.location.pathname.split('/').pop();
-      if (!id) return;
-
-      try {
-        // Use service layer instead of direct Firebase access
-        const postData = await postService.getPostById(id);
-        if (postData) {
-          setPost(postData);
-          setReplyCount(postData.replyCount || 0);
-        } else {
-          setPost(null);
-        }
-      } catch (error) {
-        console.error('Error fetching post:', error);
-        setPost(null);
-      }
-    };
-
-    fetchPost();
-  }, []);
+    if (post) setReplyCount(post.replyCount || 0);
+  }, [post]);
 
   const handleReplySuccess = (reply: Post) => {
     setReplyCount((prev) => prev + 1);
@@ -50,10 +68,29 @@ const PostDetailsPage = () => {
     setReplyCount(count);
   };
 
-  if (!post) {
+  if (status === 'loading') {
+    return (
+      <div className="p-4" aria-busy="true" aria-live="polite">
+        <span className="sr-only">불러오는 중이에요.</span>
+        <div className="mb-4 h-8 w-2/3 animate-pulse rounded bg-gray-200" />
+        <div className="mb-2 h-4 w-full animate-pulse rounded bg-gray-100" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100" />
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="p-4">
+        <ErrorNotice message="게시물을 불러오지 못했어요." onRetry={reload} />
+      </div>
+    );
+  }
+
+  if (!post || !postService) {
     return (
       <div className="p-4" data-oid="gb28vk9">
-        Post not found.
+        게시물을 찾을 수 없습니다.
       </div>
     );
   }

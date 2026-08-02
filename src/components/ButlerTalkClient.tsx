@@ -117,6 +117,7 @@ const ButlerTalkClient = () => {
         totalPages={totalPages}
         onPageChange={handlePageClick}
         postService={butlerTalkService}
+        postType="butler_talk"
       />
     </>
   );

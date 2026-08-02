@@ -2,20 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  getPostService,
-  getButlerTalkService,
-  getAnnouncementService,
-  getAdoptionService,
-} from '@/services';
+import { getServiceForPostType, type PostType } from '@/services/post-types';
 import { cn } from '@/utils/cn';
 import { useMountain } from '@/components/MountainProvider';
 
-export type EditablePostType =
-  | 'butler_stream'
-  | 'butler_talk'
-  | 'announcements'
-  | 'adoption_promotion';
+/** @deprecated Alias kept for existing importers — use `PostType`. */
+export type EditablePostType = PostType;
 
 interface EditPostFormProps {
   postType: EditablePostType;
@@ -36,15 +28,9 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postType, postId }) => {
   const router = useRouter();
   const mountainId = useMountain();
 
-  // The service backing this post type (mirrors AdminPostList.serviceFor).
-  const serviceFor = (type: EditablePostType) =>
-    type === 'butler_stream'
-      ? getPostService(mountainId)
-      : type === 'butler_talk'
-        ? getButlerTalkService(mountainId)
-        : type === 'announcements'
-          ? getAnnouncementService(mountainId)
-          : getAdoptionService(mountainId);
+  // The service backing this post type — one shared mapping, see
+  // `@/services/post-types`.
+  const serviceFor = (type: PostType) => getServiceForPostType(type, mountainId);
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

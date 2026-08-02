@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  getAuthService,
-  getPostService,
-  getButlerTalkService,
-  getAnnouncementService,
-  getAdoptionService,
-} from '@/services';
+import { getAuthService } from '@/services';
+import { getServiceForPostType, postDetailPath, type PostType } from '@/services/post-types';
 import { User } from 'firebase/auth';
 import { cn } from '@/utils/cn';
 import Link from 'next/link';
@@ -107,27 +102,18 @@ interface Post {
 }
 
 interface AdminPostListProps {
-  postType: 'butler_stream' | 'butler_talk' | 'announcements' | 'adoption_promotion';
+  postType: PostType;
 }
 
 const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   // Service references
   const authService = getAuthService();
   const mountainId = useMountain();
-  const postService = getPostService(mountainId);
-  const butlerTalkService = getButlerTalkService(mountainId);
-  const announcementService = getAnnouncementService(mountainId);
-  const adoptionService = getAdoptionService(mountainId);
 
-  // The post service backing the active tab.
-  const serviceFor = (type: AdminPostListProps['postType']) =>
-    type === 'butler_stream'
-      ? postService
-      : type === 'butler_talk'
-        ? butlerTalkService
-        : type === 'announcements'
-          ? announcementService
-          : adoptionService;
+  // The post service backing the active tab. Shared with `EditPostForm` and the
+  // public detail page — three private copies of this mapping is what let the
+  // detail page miss it entirely and read every type out of `posts_feeding`.
+  const serviceFor = (type: PostType) => getServiceForPostType(type, mountainId);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -253,7 +239,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
       // toggle has to write through the owning collection's service — sending an
       // adoption id to the announcement service would update nothing and still
       // report success.
-      const service = postType === 'adoption_promotion' ? adoptionService : announcementService;
+      const service = serviceFor(postType);
       await (service as any).toggleModalDisplay(postId, !currentStatus);
 
       // Refresh the posts list
@@ -319,7 +305,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                       const videoCount = post.videoUrls?.length || 1;
                       return (
-                        <Link href={`/pages/posts/${post.id}`}>
+                        <Link href={postDetailPath(postType, post.id)}>
                           <div className="relative cursor-pointer">
                             <img
                               src={thumbnailUrl}
@@ -353,7 +339,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                 {/* Show image thumbnail only if no video exists */}
                 {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                   post.thumbnailUrl && (
-                    <Link href={`/pages/posts/${post.id}`}>
+                    <Link href={postDetailPath(postType, post.id)}>
                       <img
                         src={post.thumbnailUrl}
                         alt="Image thumbnail"
@@ -364,7 +350,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
               </div>
               <div className="flex-grow">
                 <Link
-                  href={`/pages/posts/${post.id}`}
+                  href={postDetailPath(postType, post.id)}
                   className="text-xl font-bold mb-2 block flex items-center space-x-2"
                 >
                   {post.title}

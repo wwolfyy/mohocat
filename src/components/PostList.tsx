@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils/cn';
-import { Post as PostType } from '@/types';
+// Aliased `PostEntity`, not `PostType`: `PostType` is the *kind* of post
+// (집사톡 / 급식현황 / …), imported below.
+import { Post as PostEntity } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import ReplyButton from './ReplyButton';
 import ReplyForm from './ReplyForm';
 import ReplyList, { ReplyListRef } from './ReplyList';
 import { IPostService } from '@/services';
+import { postDetailPath, type PostType } from '@/services/post-types';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -104,6 +107,13 @@ interface PostListProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   postService: IPostService;
+  /**
+   * Which of the four types these posts are. **Required** — it has to reach the
+   * detail link, because a post id only identifies a post within its own
+   * collection. Omitting it is what made every 집사톡 post open on
+   * "Post not found." (2026-08-02).
+   */
+  postType: PostType;
 }
 
 const PostList: React.FC<PostListProps> = ({
@@ -112,6 +122,7 @@ const PostList: React.FC<PostListProps> = ({
   totalPages,
   onPageChange,
   postService,
+  postType,
 }) => {
   const [postReplyCounts, setPostReplyCounts] = useState<Record<string, number>>({});
   const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>({});
@@ -132,7 +143,7 @@ const PostList: React.FC<PostListProps> = ({
     setShowReplyForms((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  const handleReplySuccess = (postId: string, reply: PostType) => {
+  const handleReplySuccess = (postId: string, reply: PostEntity) => {
     const currentCount =
       postReplyCounts[postId] || posts.find((p) => p.id === postId)?.replyCount || 0;
     handleReplyCountUpdate(postId, currentCount + 1);
@@ -179,7 +190,7 @@ const PostList: React.FC<PostListProps> = ({
                         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                         const videoCount = post.videoUrls?.length || 1;
                         return (
-                          <Link href={`/pages/posts/${post.id}`}>
+                          <Link href={postDetailPath(postType, post.id)}>
                             <div className="relative cursor-pointer">
                               <img
                                 src={thumbnailUrl}
@@ -218,7 +229,7 @@ const PostList: React.FC<PostListProps> = ({
                   {/* Show image thumbnail only if no video exists */}
                   {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                     post.thumbnailUrl && (
-                      <Link href={`/pages/posts/${post.id}`}>
+                      <Link href={postDetailPath(postType, post.id)}>
                         <img
                           src={post.thumbnailUrl}
                           alt="Image thumbnail"
@@ -229,7 +240,7 @@ const PostList: React.FC<PostListProps> = ({
                 </div>
                 <div className="flex-grow">
                   <Link
-                    href={`/pages/posts/${post.id}`}
+                    href={postDetailPath(postType, post.id)}
                     className="text-xl font-bold mb-2 block flex items-center space-x-2"
                   >
                     {post.title}

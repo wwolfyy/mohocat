@@ -117,6 +117,7 @@ const ButlerStreamClient = () => {
         totalPages={totalPages}
         onPageChange={handlePageClick}
         postService={postService}
+        postType="butler_stream"
       />
     </>
   );
