@@ -86,9 +86,14 @@
 > tell was two different collections reading empty at the same moment); (2) `admin/cats.spec`
 > renamed a fixture cat **six other specs read**, surviving only because
 > `getByRole({name})` matches substrings; (3) three specs acted before async state resolved.
-> 🔴 **One product bug is left open and deliberately unfixed:** the hydration mismatch behind
-> (3) **wipes input a visitor has already typed** — the specs now wait for the page to settle,
-> which hides it from CI. PROJECT_PLAN §12 + `log/DEBUG_LOG.md` 2026-08-02.
+> ✅ **And the product bug behind (3) is now fixed too.** `AuthProvider` seeded `useState`
+> from `auth.currentUser` — a **browser-only** value read **during render** — so the header
+> disagreed with the server, React rebuilt the entire root, and **text a visitor had already
+> typed was erased**. Seeded from `null` now, with `onAuthStateChanged` updating after
+> hydration. 🔑 **The rule worth keeping: nothing the server could not have known may affect
+> the _first_ client render** — `localStorage`, `window.*`, `Date.now()`, a restored session.
+> Read it in `useEffect`. 💡 Cost: one tick of logged-out header per full page load, which
+> `NavItem` and the contact form already tolerate.
 >
 > **Do these next, in this order:**
 >
@@ -967,12 +972,15 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   This entry's own guess — that the 동참 pair had a cross-spec **data** dependency — was wrong
   (`admin/members` submits its own contact with a unique name); what they actually shared was
   the hydration race. Reading the symptom as "needs a longer timeout" is what kept it open.
-- **`[ ]` 🔴 The hydration mismatch is still open, and it is a product bug (2026-08-02).** It
-  wipes input a visitor has already typed — the 동참 failure snapshot showed 이름 empty while
-  the two fields filled just after it survived. Pre-existing, page-independent (reproduces on
-  `/admin/cats`), caused by the auth-dependent header rendering 로그인/등록 on the server and
-  the signed-in user on the client. ⚠️ **The specs now wait for the page to settle before
-  typing, so CI will stay green while this is still broken for real users.** PROJECT_PLAN §12.
+- ✅ **RESOLVED 2026-08-02 — the hydration mismatch that wiped typed input.** `AuthProvider`
+  seeded `useState` from `auth.currentUser` — a browser-only value read during render — so the
+  header disagreed with the server and React rebuilt the whole root, remounting every
+  component and erasing text already typed. Now seeded from `null`, with `onAuthStateChanged`
+  updating after hydration. Verified: the console error is gone on `/pages/contact` **and** on
+  `/admin/cats` (the page that reproduced it most reliably), header still resolves to the
+  signed-in user, full e2e 2× 199/13/0.
+  🔑 **Rule to keep:** nothing the server could not have known may affect the **first** client
+  render — read it in `useEffect`. 💡 Cost: one tick of logged-out header per full page load.
 - 📌 **`PostMedia` is now the single renderer for a post's media** (`AnnouncementModal` →
   `PostModal`, the 입양홍보 feed card, and `/pages/announcements/[id]`). A fourth surface should
   use it, not copy it — the three copies that existed had each drifted into different
@@ -1392,7 +1400,13 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-02 (latest)** — **The e2e "flake set" was three real bugs; the suite is green.**
+- **2026-08-02 (latest)** — **The hydration mismatch is fixed.** `AuthProvider` seeded
+  `useState` from `auth.currentUser` (browser-only, read during render), so the header
+  disagreed with the server and React rebuilt the whole root — erasing input already typed.
+  Now seeds from `null` and lets `onAuthStateChanged` update after hydration. Console error
+  gone on `/pages/contact` and `/admin/cats`; full e2e 2× 199/13/0.
+  Detail: `log/DEBUG_LOG.md` 2026-08-02.
+- **2026-08-02** — **The e2e "flake set" was three real bugs; the suite is green.**
   3× consecutive **199 passed / 13 skipped / 0 failed** (from 196/3). One was **app code** —
   `services/firebase.ts` guarded a per-instance emulator connection with a process-global
   flag, and the resulting unconnected `db` returned `200 []` from an offline read rather than

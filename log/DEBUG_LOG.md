@@ -11,6 +11,54 @@
 
 ---
 
+## 2026-08-02 — Hydration mismatch wiped input a visitor had already typed
+
+**Symptom:** every page logged _"Hydration failed because the initial UI does not match what
+was rendered on the server"_ followed by _"the entire root will switch to client rendering"_.
+The visible consequence was **lost form input**: text typed in the first moment after a page
+load silently disappeared. Found via the 동참 e2e pair, where the snapshot showed 이름
+**empty** while 전화번호 and 메시지 — filled a fraction of a second later — held their values.
+
+**Root cause:** `AuthProvider` seeded its state from a **browser-only value, during render**:
+
+```ts
+const [user, setUser] = useState<User | null>(auth.currentUser);
+const [loading, setLoading] = useState(!auth.currentUser);
+```
+
+Firebase Auth persists the session to `localStorage` (`browserLocalPersistence`). On the
+**server** `auth.currentUser` is always `null`, so the header renders 로그인/등록; in the
+**browser**, once the session has been restored, the _first_ render already sees a `User` and
+renders the signed-in menu. React compares **rendered output**, finds a mismatch, and cannot
+patch it — so it discards the server DOM and rebuilds the root client-side. Every component
+remounts, every `useState` initializer re-runs, and anything already typed is gone.
+
+🔑 **Why it was intermittent (and looked like flake): it is a race.** The session restore is
+**asynchronous**, so the mismatch only occurs when the restore finishes _before_ hydration —
+usually, and more often under load. Three conditions must all hold: a persisted session (so
+**never** for logged-out visitors), a full page load (client-side navigation does not
+hydrate), and the restore winning that race. ⚠️ An earlier note in this session called the
+restore _synchronous_; that was wrong, and it is precisely what explains the intermittency.
+
+📌 **Corroboration:** the flaky specs were exactly the signed-in ones (`member/`, `admin/`).
+All **12** anonymous `public/` specs were never affected — condition 1.
+
+**Fix:** seed from `null` / `loading: true` — i.e. render what the server rendered — and let
+the existing `onAuthStateChanged` effect deliver the user as an ordinary post-hydration
+update. It always fires at least once after init, so `loading` still resolves.
+🔑 **The fix is not to win the race but to stop depending on it.**
+
+💡 **Accepted cost:** a signed-in visitor sees the logged-out header for one tick on a full
+page load. Consumers already tolerate it (`NavItem` treats `isLoading` as "no access yet";
+the contact form's 보내기 waits for `!authLoading`). Do not "optimize" it back.
+
+**Verified:** the console error is gone on `/pages/contact` and on `/admin/cats` — the page
+that reproduced it most reliably and that no recent change had touched — with the header
+still resolving to the signed-in user and 보내기 still enabling. Full e2e **2× 199 passed /
+13 skipped / 0 failed** after the change.
+
+---
+
 ## 2026-08-02 — The e2e "flake set" was three real bugs, one of them in app code
 
 **Symptom:** the full suite had sat at ~196 passed / 2–3 failed for weeks, with a rotating
