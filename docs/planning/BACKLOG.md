@@ -77,11 +77,33 @@ page.
 ## Open questions (owner decisions — not tasks until answered)
 
 - **Q1 — Should the about page render `sections`?** (2026-08-02) The CMS has a 섹션 editor that
-  saves to `about_content.{id}.sections`, and the public page **never renders it** — it shows
+  saves to `about_content/{id}.sections`, and the public page **never renders it** — it shows
   제목 / 부제 / 대표 사진 / 본문 only. Live `about_content/geyang` currently holds an empty
   `sections` array, so nothing is being hidden today — but the editor has been inviting input
   that goes nowhere. Either the page grows a section renderer, or the field and its editor
   come out.
-  📌 Whichever way it goes, note that the pre-2026-08-02 config block declared two sections
-  (우리의 미션 / 활동 내용) that were **never displayed either** — so "restore what was there"
-  is not the obvious answer; nobody has seen them.
+
+  🔑 **Verified against the full history (2026-08-02): a renderer was written but never
+  switched on.** JSX comments were stripped from all **16** historical versions of the about
+  page and searched for a live `.sections` reference; the only uncommented ones ever are the
+  fallback-object construction (`sections: jsonConfig.sections || []`). The block shipped
+  **already commented out** in `b436958`, the first commit that created the page; it was
+  rewritten (still commented) for the CMS move in `83db9cb`; and `4ef62cc` deleted it as dead
+  code during the Phase C design pass. **Nobody has ever seen a section on this page** — so
+  "restore what was there" is not the obvious answer, and neither is treating this as a
+  regression. Same for the two sections the pre-2026-08-02 config block declared
+  (우리의 미션 / 활동 내용): also never displayed.
+
+  ⚠️ **The CMS actively advertises behaviour the page does not have.** The placeholder in every
+  섹션 content box (`adminStrings.ts` → `sectionContentPlaceholder`) reads
+  _"섹션 내용도 [링크](https://example.com)와 URL 자동 인식을 지원해요"_, and the 💡 링크 지원
+  help panel sits right above it. An operator who writes a section with links gets a save
+  confirmation and no output. **Whichever way Q1 goes, that string and the field must move
+  together** — leaving the promise in place is the worst of the three outcomes.
+
+  📌 **If the answer is "render them", the deleted implementation is a starting point, not a
+  patch to re-apply.** It ran `section.content` through `processTextWithLinks` (so link tokens
+  were intended to work there — consistent with the placeholder above), but it coloured
+  headings with `style={{ color: theme.primaryColor }}`, the old inline-theming approach. The
+  current convention is the `--color-primary` CSS variable injected by the `[mountain]` layout,
+  so a verbatim restore would be off-pattern.
