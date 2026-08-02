@@ -15,6 +15,54 @@
 
 ---
 
+## 2026-08-02 — 공지사항 / 입양홍보 are edited by their create composer
+
+**Area:** `src/components/forms/useSimpleContentForm.ts`,
+`src/components/forms/MediaItemList.tsx`, `src/components/forms/FormStates.tsx` (new),
+`NewAnnouncementForm` / `NewAdoptionForm`, `admin/posts/edit/[postType]/[postId]`.
+**Type:** feature (owner-requested).
+
+**What changed and why.** Editing a 공지사항 or 입양홍보 used to open `EditPostForm`, whose
+media controls were **"이미지 URL" / "동영상 URL" text boxes** — to change a photo the operator
+had to go and find its Firebase Storage URL. Owner: _"It's going to be cumbersome to find the URL
+of an image. Is it possible to edit those posts with the creation form?"_
+
+It is, and the obstacle had already been removed. `EditPostForm` documented its own limit as
+_"their upload paths differ — signed URLs for feeding, direct Storage for announcements/adoption,
+YouTube for video"_ — true when written, **stale since 2026-07-30**, when both composers moved
+onto the same signed-URL image strategy 집사톡 uses. Nothing was left but the divergence.
+
+So `useSimpleContentForm` gained an **`edit` config block** (load, prefill, `updatePost`) and the
+two composers take an optional `postId`. Editing now has everything creating has: real file
+pickers, per-file 제목/설명, the cat selector, 촬영 날짜, the 팝업 toggle.
+
+- **Media already on the post** shows as `기존` rows inside the same section — thumbnail, name,
+  and its own 삭제 — with a note that removing detaches it from the post and does **not** delete
+  the file. `MediaItemList` gained `existing` / `onExistingChange` for this. Retained media counts
+  against `allowMultiple`, so editing is not a way around 집사톡's cap.
+- ⚠️ **Existing media carries no 제목/설명 editor, deliberately.** That metadata lives on the
+  medium's own record (`cat_images` / `cat_videos`), and for a video **YouTube is the source of
+  truth** — a caption typed here would be erased by the next 동기화. It is edited in
+  사진 관리 / 동영상 관리.
+- ⚠️ **An edit does not re-stamp `username` / `date` / `time`.** Only creation sets them;
+  re-stamping would relabel a post with whoever edited it and jump it up a list ordered by 게시일.
+- 급식현황 / 집사톡 stay on `EditPostForm`: different hook (`useRichContentForm`), and 급식현황's
+  composer deliberately uploads no media at all (2026-07-27).
+
+**Verified:** new `tests/e2e/admin/post-edit-composer.spec.ts` (4 tests) — the editor is the
+composer and arrives prefilled with real file pickers and no URL boxes; existing media is listed
+and **survives a text-only save**; removing one photo detaches only that one; authorship and 게시일
+are unchanged by an edit. Full e2e **210 passed / 13 skipped / 0 failed**; tsc clean, vitest
+137/137, smoke 34/34.
+
+📌 **Fixture note worth keeping.** These specs mutate their posts, so they got their **own**
+(`test-anno-edit-01`, `test-adopt-edit-01`, `test-adopt-edit-02`). Two early versions shared one
+post and raced — `playwright.config` sets `fullyParallel`, so the later save reverted the earlier
+one. Same shape as the 2026-08-02 `admin/cats.spec` interference; the fixtures carry a
+do-not-share comment.
+
+---
+
 ## 2026-08-02 — 집사톡 capped at one video + one photo, via static config
 
 **Area:** `config/media_control.json` (new), `src/utils/mediaControl.ts` (new),

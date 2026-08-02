@@ -43,6 +43,26 @@ export interface MediaItem {
   description: string;
 }
 
+/**
+ * A medium already attached to the post — only reachable when the form is
+ * editing (2026-08-02). It is a stored URL, not a `File`, so it never goes
+ * through an upload strategy; the form simply carries it back into `imageUrls` /
+ * `videoUrls` unless the operator removes it.
+ *
+ * ⚠️ **No 제목/설명 here, deliberately.** Those live on the medium's own record
+ * (`cat_images` / `cat_videos`), not on the post, and for a video **YouTube is
+ * the source of truth** — a caption edited here would be overwritten by the next
+ * 📺 YouTube와 동기화. Metadata is edited in 사진 관리 / 동영상 관리; this list is
+ * for deciding what stays attached.
+ */
+export interface ExistingMedia {
+  url: string;
+  /** What the operator sees — a filename, or a video title/id. */
+  label: string;
+  /** Preview image, so removal is a visual choice rather than a URL-matching one. */
+  thumbnailUrl?: string;
+}
+
 const LABELS = {
   image: {
     section: '사진',
@@ -84,6 +104,13 @@ interface MediaItemListProps {
    * from `config/media_control.json` (PROJECT_PLAN §10d).
    */
   allowMultiple?: boolean;
+  /**
+   * Media already on the post, shown above the pickers. Edit-mode only —
+   * omitted entirely by the create forms, which have nothing attached yet.
+   */
+  existing?: ExistingMedia[];
+  /** Required whenever `existing` is passed: receives the retained list. */
+  onExistingChange?: (existing: ExistingMedia[]) => void;
 }
 
 const MediaItemList = ({
@@ -93,9 +120,18 @@ const MediaItemList = ({
   disabled = false,
   descriptionHelp,
   allowMultiple = true,
+  existing = [],
+  onExistingChange,
 }: MediaItemListProps) => {
   const labels = LABELS[kind];
-  const canAddMore = allowMultiple || items.length === 0;
+  // A retained medium counts against the cap exactly as a new pick does —
+  // otherwise editing would be a way around 집사톡's one-video/one-photo limit.
+  const totalCount = existing.length + items.length;
+  const canAddMore = allowMultiple || totalCount === 0;
+
+  const removeExisting = (index: number) => {
+    onExistingChange?.(existing.filter((_, i) => i !== index));
+  };
 
   const selectFile = (index: number, file: File | null) => {
     if (!file) return;
@@ -120,12 +156,55 @@ const MediaItemList = ({
           two lists sit back to back. */}
       <header className="flex items-center justify-between gap-2 border-b-2 border-gray-400 bg-gray-100 px-3 py-2">
         <span className="text-sm font-semibold text-gray-800">{labels.section}</span>
-        {items.length > 0 && (
+        {totalCount > 0 && (
           <span className="shrink-0 rounded-full bg-gray-700 px-2 py-0.5 text-xs font-semibold text-white">
-            {items.length}개
+            {totalCount}개
           </span>
         )}
       </header>
+
+      {existing.length > 0 && (
+        <ul className="divide-y-2 divide-dashed divide-gray-400 border-b-2 border-gray-400">
+          {existing.map((medium, index) => (
+            <li key={medium.url} className="flex items-center justify-between gap-3 p-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 rounded bg-gray-200 px-1.5 text-xs font-semibold text-gray-700">
+                  {index + 1}
+                </span>
+                <span className="shrink-0 rounded bg-brand-100 px-1.5 py-0.5 text-xs font-semibold text-gray-700">
+                  기존
+                </span>
+                {medium.thumbnailUrl && (
+                  // A plain <img>: these are arbitrary Storage / YouTube URLs and
+                  // this is a 64px admin preview, not a surface worth routing
+                  // through the image optimizer.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={medium.thumbnailUrl}
+                    alt=""
+                    className="h-10 w-16 shrink-0 rounded object-cover"
+                    // A preview is a convenience; a broken-image glyph next to a
+                    // 삭제 button is worse than no preview. Removed videos and
+                    // moved objects both land here.
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+                <p className="truncate text-sm text-gray-800">{medium.label}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeExisting(index)}
+                disabled={disabled}
+                className="shrink-0 text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+              >
+                삭제
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {items.length > 0 && (
         <ul className="divide-y-2 divide-dashed divide-gray-400">
@@ -134,9 +213,10 @@ const MediaItemList = ({
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex min-w-0 items-start gap-2">
                   {/* The file's position in the list, so a stack of similarly-named
-                      files stays countable. */}
+                      files stays countable. Continues the numbering of any
+                      already-attached media above rather than restarting at 1. */}
                   <span className="mt-0.5 shrink-0 rounded bg-gray-200 px-1.5 text-xs font-semibold text-gray-700">
-                    {index + 1}
+                    {existing.length + index + 1}
                   </span>
                   <p className="text-sm text-gray-800 break-all">{item.file.name}</p>
                 </div>
@@ -191,7 +271,7 @@ const MediaItemList = ({
           capped at one file it disappears after the first pick — leaving the
           picker visible but inert would read as broken. */}
       {canAddMore && (
-        <div className={cn('bg-gray-50 p-3', items.length > 0 && 'border-t-2 border-gray-400')}>
+        <div className={cn('bg-gray-50 p-3', totalCount > 0 && 'border-t-2 border-gray-400')}>
           <label className="block text-xs font-medium text-gray-700 mb-1">{labels.addLabel}</label>
           <input
             type="file"
@@ -205,6 +285,17 @@ const MediaItemList = ({
           />
           {!allowMultiple && <p className="text-xs text-gray-500 mt-1">{labels.singleOnlyHint}</p>}
         </div>
+      )}
+
+      {/* Said plainly because the operator cannot see it: 삭제 detaches the medium
+          from this post. The file itself stays in Storage / on YouTube — which is
+          what makes the action safe to undo, and why it is not a delete button. */}
+      {existing.length > 0 && (
+        <p className="border-t-2 border-gray-400 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+          {kind === 'video'
+            ? '삭제하면 이 글에서만 빠져요. YouTube 영상은 지워지지 않아요.'
+            : '삭제하면 이 글에서만 빠져요. 사진 자체는 사진첩에 그대로 남아요.'}
+        </p>
       )}
     </section>
   );

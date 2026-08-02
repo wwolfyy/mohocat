@@ -10,7 +10,18 @@ import CatSelectorModal from '@/components/CatSelectorModal';
 import ShowInModalToggle from '@/components/forms/ShowInModalToggle';
 import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
+import { FormLoadingState, FormNotFoundState } from '@/components/forms/FormStates';
 import { useMountain } from '@/components/MountainProvider';
+
+interface NewAnnouncementFormProps {
+  /**
+   * Present ⇒ **edit** that announcement instead of creating one (2026-08-02).
+   * The same composer serves both, so editing gets file pickers, per-file
+   * 제목/설명, the cat selector and 촬영 날짜 — none of which the old URL-only
+   * `EditPostForm` could offer.
+   */
+  postId?: string;
+}
 
 /**
  * 공지사항 composer — admin-authored, publicly listed on /pages/announcements.
@@ -18,7 +29,7 @@ import { useMountain } from '@/components/MountainProvider';
  * primitives (complexity-retirement P2); the 팝업(모달) toggle is this form's
  * extra field and rides along via extraPostData.
  */
-const NewAnnouncementForm = () => {
+const NewAnnouncementForm = ({ postId }: NewAnnouncementFormProps = {}) => {
   const mountainId = useMountain();
   const [showInModal, setShowInModal] = useState(false);
   const announcementService = getAnnouncementService(mountainId);
@@ -31,10 +42,34 @@ const NewAnnouncementForm = () => {
     createPost: (postData) => announcementService.createPost(postData),
     extraPostData: () => ({ showInModal }),
     onResetExtras: () => setShowInModal(false),
-    successMessage: '공지사항이 성공적으로 작성되었습니다!',
-    errorMessagePrefix: '공지사항 작성 중 오류가 발생했습니다: ',
+    successMessage: postId ? '공지사항이 수정되었습니다!' : '공지사항이 성공적으로 작성되었습니다!',
+    errorMessagePrefix: postId
+      ? '공지사항 수정 중 오류가 발생했습니다: '
+      : '공지사항 작성 중 오류가 발생했습니다: ',
     redirectPath: '/pages/announcements',
+    ...(postId
+      ? {
+          edit: {
+            postId,
+            loadPost: () => announcementService.getPostById(postId),
+            updatePost: (id: string, postData: Record<string, unknown>) =>
+              announcementService.updatePost(id, postData),
+            // The 팝업 toggle is this form's own field, so the hook cannot
+            // prefill it — an edit that skipped this would silently switch the
+            // popup off on every save.
+            onLoadExtras: (post) => setShowInModal(Boolean(post.showInModal)),
+          },
+        }
+      : {}),
   });
+
+  if (form.loadingPost) {
+    return <FormLoadingState />;
+  }
+
+  if (form.postNotFound) {
+    return <FormNotFoundState />;
+  }
 
   return (
     <form onSubmit={form.handleSubmit} className="space-y-4">
@@ -76,7 +111,12 @@ const NewAnnouncementForm = () => {
           items={form.imageItems}
           onItemsChange={form.handleImageItemsChange}
           disabled={form.uploading}
+          existing={form.existingImages}
+          onExistingChange={form.setExistingImages}
         />
+        {/* Keyed on NEW picks only: these tags are applied by the upload
+            strategy, so they reach the files being uploaded now. Media already
+            on the post is re-tagged in 사진 관리, not here. */}
         {form.imageItems.length > 0 && (
           <CatTagSelectField
             id="imageTags"
@@ -94,7 +134,10 @@ const NewAnnouncementForm = () => {
           onItemsChange={form.handleVideoItemsChange}
           disabled={form.uploading}
           descriptionHelp="비어 있으면 글 내용이 사용돼요."
+          existing={form.existingVideos}
+          onExistingChange={form.setExistingVideos}
         />
+        {/* New picks only — see the note on the image selector above. */}
         {form.videoItems.length > 0 && (
           <CatTagSelectField
             id="videoTags"
@@ -125,7 +168,13 @@ const NewAnnouncementForm = () => {
             form.uploading && 'opacity-50 cursor-not-allowed'
           )}
         >
-          {form.uploading ? '작성 중...' : '공지사항 작성'}
+          {form.uploading
+            ? form.isEditing
+              ? '저장 중...'
+              : '작성 중...'
+            : form.isEditing
+              ? '공지사항 저장'
+              : '공지사항 작성'}
         </button>
         <button
           type="button"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { uploadVideoItems, uploadImagesWithSignedUrls } from './uploadStrategies';
@@ -8,7 +8,7 @@ import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
 import { getYouTubePlaylistId } from '@/utils/config';
 import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
-import type { MediaItem } from './MediaItemList';
+import type { ExistingMedia, MediaItem } from './MediaItemList';
 
 /**
  * Shared submit/upload flow for the simple-content family (공지사항 + 입양홍보;
@@ -73,7 +73,48 @@ export interface SimpleContentFormConfig {
   errorMessagePrefix: string;
   /** Public surface to redirect to after a successful submit. */
   redirectPath: string;
+  /**
+   * Present ⇒ the form is **editing** an existing post rather than creating one
+   * (2026-08-02, owner). Same fields, same pickers, same upload pipeline — the
+   * only differences are prefilling, appending to the media already attached,
+   * and `updatePost` instead of `createPost`.
+   *
+   * 🔑 **Why one hook and not a second form:** the separate `EditPostForm` could
+   * only take media as **pasted URLs**, because when it was written the three
+   * composers uploaded images by three different routes. That stopped being true
+   * on 2026-07-30, when 공지사항 / 입양홍보 moved onto the same signed-URL
+   * strategy 집사톡 uses — so the obstacle was gone and only the divergence was
+   * left. Two implementations of one job is exactly what produced the
+   * 2026-07-31 media defects.
+   */
+  edit?: {
+    postId: string;
+    /** Loads the post to prefill from; `null` ⇒ render the not-found state. */
+    loadPost: () => Promise<Record<string, any> | null>;
+    /** Merging write (`updateDoc`), so fields this form never shows survive. */
+    updatePost: (postId: string, postData: Record<string, unknown>) => Promise<unknown>;
+    /** Prefill form-specific extras from the loaded post (e.g. showInModal). */
+    onLoadExtras?: (post: Record<string, any>) => void;
+  };
 }
+
+/** Filename out of a Storage URL, for labelling media already on the post. */
+const labelForImageUrl = (url: string): string => {
+  try {
+    const path = decodeURIComponent(new URL(url).pathname);
+    return path.split('/').pop() || url;
+  } catch {
+    // Not an absolute URL (a seeded `/images/...` path, say) — the tail still
+    // names the file, and a label is cosmetic: never fail an edit over it.
+    return url.split('/').pop() || url;
+  }
+};
+
+/** `https://img.youtube.com/...` preview for a watch URL, when we can parse one. */
+const youtubeThumbnail = (url: string): string | undefined => {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+  return match ? `https://img.youtube.com/vi/${match[1]}/default.jpg` : undefined;
+};
 
 export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
   const [title, setTitle] = useState('');
@@ -97,10 +138,75 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
    */
   const [createdTime, setCreatedTime] = useState('');
 
+  /**
+   * Media already attached to the post being edited. Kept apart from
+   * `imageItems`/`videoItems` because these are stored URLs, not `File`s: they
+   * never enter an upload strategy, they are simply carried back into the write
+   * unless the operator removes them.
+   */
+  const [existingImages, setExistingImages] = useState<ExistingMedia[]>([]);
+  const [existingVideos, setExistingVideos] = useState<ExistingMedia[]>([]);
+  /** Edit mode only: the prefill is a fetch, so it has the usual three states. */
+  const [loadingPost, setLoadingPost] = useState(Boolean(config.edit));
+  const [postNotFound, setPostNotFound] = useState(false);
+
   const router = useRouter();
   const { user } = useAuth();
   const dialog = useDialog();
   const mountainId = useMountain();
+
+  // Prefill when editing. `loadPost` is called once per post id — the config
+  // object is rebuilt every render, so keying the effect on it would loop.
+  const editPostId = config.edit?.postId;
+  const loadPost = config.edit?.loadPost;
+  const onLoadExtras = config.edit?.onLoadExtras;
+
+  useEffect(() => {
+    if (!editPostId || !loadPost) return;
+    let active = true;
+
+    const run = async () => {
+      setLoadingPost(true);
+      try {
+        const post = await loadPost();
+        if (!active) return;
+
+        if (!post) {
+          setPostNotFound(true);
+          return;
+        }
+
+        setTitle(post.title || '');
+        setMessage(post.message || '');
+        setExistingImages(
+          (Array.isArray(post.imageUrls) ? post.imageUrls : []).map((url: string) => ({
+            url,
+            label: labelForImageUrl(url),
+            thumbnailUrl: url,
+          }))
+        );
+        setExistingVideos(
+          (Array.isArray(post.videoUrls) ? post.videoUrls : []).map((url: string) => ({
+            url,
+            label: url,
+            thumbnailUrl: youtubeThumbnail(url),
+          }))
+        );
+        onLoadExtras?.(post);
+      } catch (error) {
+        console.error('useSimpleContentForm: failed to load the post to edit', error);
+        if (active) setPostNotFound(true);
+      } finally {
+        if (active) setLoadingPost(false);
+      }
+    };
+
+    run();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editPostId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,8 +228,10 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
         return;
       }
 
-      let allImageUrls: string[] = [];
-      let allVideoUrls: string[] = [];
+      // Editing starts from whatever the operator kept; creating starts empty.
+      // Retained media leads, so newly added files append in pick order.
+      let allImageUrls: string[] = existingImages.map((medium) => medium.url);
+      let allVideoUrls: string[] = existingVideos.map((medium) => medium.url);
 
       if (imageItems.length > 0) {
         try {
@@ -204,20 +312,36 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
       const postData = {
         title: title.trim(),
         message: message.trim(),
-        username: user.email,
-        date: koreaTime.toISOString().split('T')[0], // YYYY-MM-DD
-        time: koreaTime.toLocaleTimeString('ko-KR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        }),
         imageUrls: allImageUrls,
         videoUrls: allVideoUrls,
         thumbnailUrl: allImageUrls.length > 0 ? allImageUrls[0] : null,
         mediaType: allVideoUrls.length > 0 ? 'video' : allImageUrls.length > 0 ? 'image' : null,
+        // ⚠️ Authorship and timestamp are set **once, at creation**. Re-stamping
+        // them on an edit would relabel someone else's post with the editor's
+        // address and jump it to the top of a list ordered by 게시일.
+        ...(config.edit
+          ? {}
+          : {
+              username: user.email,
+              date: koreaTime.toISOString().split('T')[0], // YYYY-MM-DD
+              time: koreaTime.toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+              }),
+            }),
         ...(config.extraPostData ? config.extraPostData() : {}),
       };
+
+      if (config.edit) {
+        await config.edit.updatePost(config.edit.postId, postData);
+        // No reset: the operator stays on a form that still shows the post they
+        // just saved, right up until the redirect below.
+        await dialog.alert(config.successMessage);
+        router.push('/admin/posts');
+        return;
+      }
 
       await config.createPost(postData);
 
@@ -309,6 +433,17 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
     uploadProgress,
     handleSubmit,
     cancel,
+    /** Media already on the post — edit mode only; empty when creating. */
+    existingImages,
+    setExistingImages,
+    existingVideos,
+    setExistingVideos,
+    /** `true` while an edit's prefill is in flight; always `false` when creating. */
+    loadingPost,
+    /** The edited post could not be loaded — render the not-found state. */
+    postNotFound,
+    /** `true` when this form is editing rather than creating. */
+    isEditing: Boolean(config.edit),
     /** Render once inside the owning form (replaces native alert dialogs). */
     dialog: dialog.element,
   };

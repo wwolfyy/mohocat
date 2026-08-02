@@ -16,6 +16,21 @@
       "username": "관리자",
       "date": "2026-01-03",
       "time": "11:00"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec: mutating a fixture other specs read is exactly how the 2026-08-02 'flake set' happened (DEBUG_LOG).",
+      "id": "test-anno-edit-01",
+      "title": "수정 전용 공지",
+      "message": "편집 스펙 전용 공지 본문이에요.",
+      "username": "관리자",
+      "date": "2026-01-08",
+      "time": "09:00",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg",
+        "/images/test-fixtures/album-02.jpg"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "image"
     }
   ],
   "posts_adoption": [
@@ -44,6 +59,33 @@
       ],
       "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
       "mediaType": "video"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec.",
+      "id": "test-adopt-edit-01",
+      "title": "수정 전용 입양홍보",
+      "message": "편집 스펙 전용 입양홍보 본문이에요.",
+      "username": "관리자",
+      "date": "2026-01-09",
+      "time": "09:30",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg",
+        "/images/test-fixtures/album-02.jpg"
+      ],
+      "videoUrls": [
+        "https://www.youtube.com/watch?v=yt-vid-01"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "video"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts (the authorship test), which EDITS it. ⚠️ Its own fixture on purpose: playwright.config sets fullyParallel, so two tests editing one post race and the later save reverts the earlier one. No media — that test is about username/date only.",
+      "id": "test-adopt-edit-02",
+      "title": "작성자 보존 확인용",
+      "message": "수정해도 작성자와 게시일이 그대로인지 확인하는 글이에요.",
+      "username": "관리자",
+      "date": "2026-01-09",
+      "time": "09:30"
     }
   ],
   "posts_butler": [

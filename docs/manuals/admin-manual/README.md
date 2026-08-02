@@ -205,8 +205,11 @@ Four tabs, two kinds:
 ### Create (공지사항 / 입양홍보)
 
 Click the create button → fill 제목 (title) + 내용 (body) → optionally attach images and
-videos (image files upload to storage; video files upload to YouTube; you can also paste
-image/YouTube URLs). Save.
+videos. Each file gets its own 제목/설명, and there's a 냥이 태그 selector and a 촬영 날짜
+field. Image files upload to Firebase Storage; video files upload to YouTube. Save.
+
+_(Pasting a media **URL** is no longer offered — these composers only attach files they
+upload themselves.)_
 
 - 공지사항 has a **팝업(모달) 토글** in the list — turn it on to show that announcement as a
   popup to visitors. Only one is shown (most recently updated).
@@ -218,9 +221,21 @@ image/YouTube URLs). Save.
 
 ### Edit / delete (any post type)
 
-- **Edit** — opens an editor for 제목 / 내용 and the **media links** (add/remove image &
-  video URLs). Note: uploading a brand-new media **file** during an edit is not supported
-  yet — do that via the create flow; edit is for fixing text and links.
+- **Edit (공지사항 / 입양홍보)** — opens **the same form you wrote the post with**, prefilled.
+  Everything creating has, editing has: file pickers for new photos/videos, per-file 제목/설명,
+  the 냥이 태그 selector, 촬영 날짜, and the 팝업 토글. You no longer need an image's URL to
+  change a picture.
+  - Media already on the post is listed at the top of its section, marked **기존**, each with
+    its own **삭제**. ⚠️ **삭제 only detaches it from this post** — the photo stays in the
+    사진첩 and the video stays on YouTube. That's why it's safe to undo by re-attaching.
+  - **기존 items have no 제목/설명 box on purpose.** That text belongs to the photo/video
+    itself, not to the post — edit it in [사진 관리 / 동영상 관리](#6-photos--videos--사진동영상-관리-admintag-images-admintag-videos).
+    For a video, YouTube is the source of truth, so anything typed elsewhere is overwritten by
+    the next 📺 YouTube와 동기화.
+  - The post keeps its **original author and 게시일**; editing does not move it to the top of
+    the list or put your name on it.
+- **Edit (급식현황 / 집사톡)** — still the older editor: 제목 / 내용 plus add/remove media by
+  **URL**. Uploading a new file during an edit isn't supported for these two.
 - **Delete** — removes the post (and its replies, for community posts). No undo.
 
 ---
