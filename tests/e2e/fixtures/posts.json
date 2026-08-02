@@ -95,7 +95,8 @@
       "message": "집사 수다 게시글 1이에요.",
       "username": "집사회원",
       "date": "2026-01-05",
-      "time": "13:00"
+      "time": "13:00",
+      "authorUid": "test-member-uid"
     },
     {
       "id": "test-butler-02",
@@ -103,7 +104,8 @@
       "message": "집사 수다 게시글 2예요.",
       "username": "집사회원",
       "date": "2026-01-06",
-      "time": "14:00"
+      "time": "14:00",
+      "authorUid": "test-admin-uid"
     },
     {
       "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec. One photo + one video on purpose: that is exactly 집사톡's media_control cap, so the editor must show both as 기존 rows and offer no picker until one is removed.",
@@ -120,7 +122,17 @@
         "https://www.youtube.com/watch?v=yt-vid-01"
       ],
       "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
-      "mediaType": "video"
+      "mediaType": "video",
+      "authorUid": "test-admin-uid"
+    },
+    {
+      "id": "test-butler-member-edit-01",
+      "title": "회원 수정 전용 집사톡",
+      "message": "회원이 자기 글을 수정하는 e2e 전용 픽스처예요. 다른 스펙은 읽지 않아요.",
+      "username": "집사회원",
+      "date": "2026-01-05",
+      "time": "13:00",
+      "authorUid": "test-member-uid"
     }
   ],
   "posts_feeding": [
@@ -130,7 +142,8 @@
       "message": "급식 스트림 게시글 1이에요.",
       "username": "집사회원",
       "date": "2026-01-07",
-      "time": "15:00"
+      "time": "15:00",
+      "authorUid": "test-member-uid"
     }
   ]
 }

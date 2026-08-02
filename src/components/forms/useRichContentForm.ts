@@ -64,6 +64,12 @@ export interface RichContentFormConfig {
     loadPost: () => Promise<Record<string, any> | null>;
     /** Merging write (`updateDoc`), so fields this form never shows survive. */
     updatePost: (postId: string, post: Record<string, unknown>) => Promise<unknown>;
+    /**
+     * Where to go after saving. Defaults to the admin post list, which is where
+     * the CMS edit screen lives — a **member** editing their own post must
+     * override it, or a successful save bounces them into `/admin` (2026-08-02).
+     */
+    redirectTo?: string;
   };
 }
 
@@ -288,6 +294,10 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
           ? {}
           : {
               username: user?.email || 'unknown',
+              // Authorization identity (2026-08-02) — the Firestore rules let an
+              // author edit their own post by matching this, never `username`.
+              // Set only here, so an edit can neither claim nor transfer authorship.
+              ...(user?.uid ? { authorUid: user.uid } : {}),
               date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
               time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
             }),
@@ -303,7 +313,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       if (config.edit) {
         await config.edit.updatePost(config.edit.postId, post);
         await dialog.alert(config.successMessage);
-        router.push('/admin/posts');
+        router.push(config.edit.redirectTo ?? '/admin/posts');
         return;
       }
 

@@ -87,16 +87,52 @@ service cloud.firestore {
     match /feeding_spots/{document} {
       allow read: if request.auth != null;
       allow write: if canWrite('manage-posts');
+
+      // Member check-in (2026-08-02). Creating a 급식현황 post stamps every spot
+      // the author ticked — that stamp IS the board's purpose, so a member who
+      // may post there must be able to write it, or their post lands and their
+      // check-in silently does not (the call is deliberately non-fatal).
+      // ⚠️ Narrower than it looks in one way and WIDER in another: only these two
+      // fields may change, but a feeding spot is **shared state with no owner**,
+      // so any holder may stamp any spot. That is the real-world action; it is
+      // not an oversight.
+      allow update: if canWrite('write-own-post-feeding') &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['last_attended', 'last_attended_by']);
     }
+
+    // ── 급식현황 / 집사톡: members author their own (2026-08-02) ────────────────
+    // These two boards are the only ones a non-admin may write. 공지사항 and
+    // 입양홍보 stay `manage-posts`-only above — do not copy this shape there
+    // without deciding that members should publish announcements.
+    //
+    // 🔑 Authorship is `authorUid`, never `username`. `username` is an email the
+    // UI shows as a label; authorizing on it would tie "may edit" to a mutable
+    // display field. Posts predating `authorUid` fall back to an email match —
+    // and the legacy `admin@mtcat.com` posts match no account, so they stay
+    // admin-only. That is correct, not a gap.
+    //
+    // ⚠️ `delete` is deliberately absent from the member paths (owner, 2026-08-02):
+    // a 집사톡 post can carry other people's replies.
 
     match /posts_feeding/{document} {
       allow read: if request.auth != null;
-      allow write: if canWrite('manage-posts');
+      allow create: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-feeding') && authoringAsSelf());
+      allow update: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-feeding') &&
+                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountBump()));
+      allow delete: if canWrite('manage-posts');
     }
 
     match /posts_butler/{document} {
       allow read: if request.auth != null;
-      allow write: if canWrite('manage-posts');
+      allow create: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-butler') && authoringAsSelf());
+      allow update: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-butler') &&
+                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountBump()));
+      allow delete: if canWrite('manage-posts');
     }
 
     // Permission system collections
@@ -179,6 +215,58 @@ service cloud.firestore {
       return request.resource != null
         ? request.resource.data.mountainId
         : resource.data.mountainId;
+    }
+
+    // ── Post authorship (2026-08-02, member authoring) ────────────────────────
+
+    /** The stored post's author uid, '' when the post predates the field. */
+    function storedAuthorUid() {
+      return resource.data.get('authorUid', '');
+    }
+
+    /**
+     * The signed-in user wrote this post.
+     *
+     * 🔑 Two eras. A post with `authorUid` matches on uid — the only durable
+     * identity. A post without one predates the field, so it falls back to the
+     * author's recorded email; the fallback is deliberately unreachable once
+     * `authorUid` is present, so a stale `username` can never re-open a post.
+     */
+    function isPostAuthor() {
+      return request.auth != null && (
+        storedAuthorUid() != ''
+          ? storedAuthorUid() == request.auth.uid
+          : resource.data.get('username', '') == request.auth.token.get('email', '')
+      );
+    }
+
+    /** A new post may only be attributed to the person writing it. */
+    function authoringAsSelf() {
+      return request.resource.data.get('authorUid', '') == request.auth.uid;
+    }
+
+    /**
+     * An edit may not rewrite who wrote the post or when.
+     *
+     * The composers already decline to re-stamp these; stating it here is what
+     * makes it true against a hand-crafted client, which is the point of a rule.
+     */
+    function provenanceUnchanged() {
+      return request.resource.data.get('authorUid', '') == storedAuthorUid() &&
+             request.resource.data.get('username', '') == resource.data.get('username', '') &&
+             request.resource.data.get('date', '') == resource.data.get('date', '') &&
+             request.resource.data.get('time', '') == resource.data.get('time', '');
+    }
+
+    /**
+     * Posting a reply increments `replyCount` on the PARENT — a document the
+     * replier usually does not own, so "authors may edit their own" alone would
+     * deny most replies. Bounded to exactly that one field moving up by one, so
+     * it cannot carry anything else through.
+     */
+    function isReplyCountBump() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']) &&
+             request.resource.data.replyCount == resource.data.get('replyCount', 0) + 1;
     }
 
     // A content write is allowed when the actor holds `permission` on the doc's

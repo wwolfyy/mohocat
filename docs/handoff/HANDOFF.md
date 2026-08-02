@@ -320,6 +320,19 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **👥 Members can now write on 집사톡 + 급식현황, and edit their own posts (2026-08-03,
+  uncommitted).** 🔑 **The ask rested on a premise that was false:** "let the author edit"
+  implied non-admin authors, but **members could not see or create on either board** — the
+  pages gated on `isAdmin()`, and the client-SDK write needs `manage-posts`, which only
+  `admin` holds. So the missing piece was never editing. 📌 **The model had anticipated this
+  and nothing used it:** `view-post-butler` / `view-post-feeding` were already granted to the
+  butler roles and already drove the **nav**, so a member saw the link and then met
+  관리자 권한이 필요합니다. Two new permissions (`write-own-post-butler` /
+  `write-own-post-feeding`) cover create **and** edit-own per board; `authorUid` is now
+  stamped at creation and is what the rules authorize against (`username` is an email, i.e.
+  display). Delete stays admin-only — a 집사톡 post carries other people's replies.
+  ⚠️ **NOT LIVE:** rules undeployed, both migrations dry-run only. Plan:
+  [`member-post-authoring-20260802.md`](../planning/pending/member-post-authoring-20260802.md).
 - **📝 The about page has one source of truth — the CMS (2026-08-02, uncommitted).** The
   `about` object is gone from `config/mountains/mountains.json`; `about_content/{mountainId}`
   is the only copy. It was stale for `title`/`subtitle`/`mainContent`/`sections` — 📌 the tell

@@ -32,7 +32,9 @@ export type Permission =
   | 'view-post-feeding'
   | 'view-post-butler'
   | 'view-photo'
-  | 'view-video';
+  | 'view-video'
+  | 'write-own-post-butler'
+  | 'write-own-post-feeding';
 
 /**
  * Load permission configuration from JSON file

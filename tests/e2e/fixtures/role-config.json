@@ -19,15 +19,30 @@
       "description": "Full administrative access"
     },
     "butler-ground": {
-      "permissions": ["view-video", "view-photo", "view-post-butler", "view-post-feeding"],
+      "permissions": [
+        "view-video",
+        "view-photo",
+        "view-post-butler",
+        "view-post-feeding",
+        "write-own-post-butler",
+        "write-own-post-feeding"
+      ],
       "description": "Physical cat care management"
     },
     "butler-internet": {
-      "permissions": ["view-video", "view-photo", "view-post-butler"],
+      "permissions": [
+        "view-video",
+        "view-photo",
+        "view-post-butler",
+        "write-own-post-butler"
+      ],
       "description": "Digital content management"
     },
     "viewer": {
-      "permissions": ["view-video", "view-photo"],
+      "permissions": [
+        "view-video",
+        "view-photo"
+      ],
       "description": "Read-only access to public content"
     }
   }

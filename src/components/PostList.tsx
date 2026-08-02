@@ -95,6 +95,8 @@ interface Post {
   videoUrl?: string; // Keep for backward compatibility
   imageUrls?: string[];
   username: string;
+  /** Author identity; absent on posts predating it (2026-08-02). */
+  authorUid?: string;
   date: string;
   time: string;
   createdAt?: any; // Can be Date, string, number, or Firestore timestamp
@@ -129,7 +131,21 @@ const PostList: React.FC<PostListProps> = ({
   const [replyListRefs, setReplyListRefs] = useState<Record<string, React.RefObject<ReplyListRef>>>(
     {}
   );
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
+  /**
+   * Whether the signed-in visitor wrote this post — the condition for offering
+   * 수정. Mirrors the Firestore rules' two-era author test: `authorUid` when the
+   * post has one, otherwise the email it was authored under.
+   *
+   * ⚠️ A UX check, not the security boundary. The rules refuse a non-author's
+   * update independently; this only decides whether to show the link.
+   */
+  const isOwnPost = (post: Post) =>
+    Boolean(user) &&
+    (post.authorUid
+      ? post.authorUid === user?.uid
+      : Boolean(user?.email) && post.username === user?.email);
 
   const handleReplyCountUpdate = (postId: string, count: number) => {
     setPostReplyCounts((prev) => ({ ...prev, [postId]: count }));
@@ -250,6 +266,14 @@ const PostList: React.FC<PostListProps> = ({
                 <div className="text-right text-sm text-gray-500 flex flex-col items-end">
                   <p>{post.username}</p>
                   <p>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</p>
+                  {isOwnPost(post) && (
+                    <Link
+                      href={`/pages/posts/${postType}/${post.id}/edit`}
+                      className="mt-1 font-medium text-brand-600 hover:text-brand-700"
+                    >
+                      수정
+                    </Link>
+                  )}
                 </div>
               </div>
 

@@ -31,9 +31,15 @@ interface NewButlerTalkFormProps {
    * this form has always had for writing.
    */
   postId?: string;
+  /**
+   * Where a successful edit lands. Defaults to the admin post list (the CMS edit
+   * screen's home); the member-facing editor passes the public board instead, so
+   * an author is not dropped into `/admin` after fixing their own post.
+   */
+  editRedirectTo?: string;
 }
 
-const NewButlerTalkForm = ({ postId }: NewButlerTalkFormProps = {}) => {
+const NewButlerTalkForm = ({ postId, editRedirectTo }: NewButlerTalkFormProps = {}) => {
   const DEFAULT_TITLE = '집사톡 글입니다';
   const mediaRules = getButlerTalkMediaRules();
 
@@ -72,6 +78,7 @@ const NewButlerTalkForm = ({ postId }: NewButlerTalkFormProps = {}) => {
             loadPost: () => butlerTalkService.getPostById(postId),
             updatePost: (id: string, post: Record<string, unknown>) =>
               butlerTalkService.updatePost(id, post),
+            ...(editRedirectTo ? { redirectTo: editRedirectTo } : {}),
           },
         }
       : {}),

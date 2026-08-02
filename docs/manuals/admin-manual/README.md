@@ -42,6 +42,27 @@ role; a role grants permissions. The permission a given action needs:
 | `manage-app`     | edit About-page content (`/admin/app-management`)                 |
 | `manage-users`   | view/assign roles, view 동참 submissions (`/admin/members`)       |
 
+**Member (non-admin) permissions.** These are the grants a 집사 role holds. Everything above
+is admin-shaped ("manage anything"); these are deliberately narrower:
+
+| Permission               | Lets you…                                                                    |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `view-post-butler`       | **read** 집사톡                                                              |
+| `view-post-feeding`      | **read** 급식현황                                                            |
+| `write-own-post-butler`  | write a 집사톡 post **and edit your own** (2026-08-02)                       |
+| `write-own-post-feeding` | write a 급식현황 post **and edit your own**, and stamp the 급식소 you ticked |
+
+🔑 **"Own" is enforced, not just hidden.** The 수정 link appears only on your own posts, and
+the database refuses an edit from anyone else even if the URL is typed by hand. An edit also
+cannot change who wrote a post or when — those are fixed at creation.
+
+⚠️ **Members cannot delete** (owner decision, 2026-08-02): a 집사톡 post can carry other
+people's replies, so removing one is an admin action.
+
+📌 **The two boards are separate grants.** `butler-internet` reads 집사톡 but not 급식현황 —
+that split is why these are per-board permissions rather than one "member" flag. 공지사항 and
+입양홍보 stay admin-only (`manage-posts`); nothing here opens them up.
+
 > The role→permission matrix itself is edited in 사용자 관리. Changing it takes effect
 > immediately (permissions are resolved from the role at runtime, not copied per user).
 

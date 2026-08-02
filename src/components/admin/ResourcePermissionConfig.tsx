@@ -14,6 +14,8 @@ const ALL_PERMISSIONS: Permission[] = [
   'view-post-butler',
   'view-photo',
   'view-video',
+  'write-own-post-butler',
+  'write-own-post-feeding',
 ];
 
 // Content Pages/Resources to protect

@@ -15,6 +15,12 @@ interface BasicFeedingSpot {
 
 interface NewPostFormProps {
   feedingSpots: BasicFeedingSpot[];
+  /**
+   * Edit an existing post instead of creating one (2026-08-02, member
+   * authoring). Only 제목 and 내용 are editable — see the note on the feeding-spot
+   * section below for why the check-in is not.
+   */
+  postId?: string;
 }
 
 /**
@@ -29,7 +35,8 @@ interface NewPostFormProps {
  * `PostList` renders them, and admins can still attach media by URL in
  * `EditPostForm`. Do not reintroduce uploads here.
  */
-const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
+const NewPostForm = ({ feedingSpots, postId }: NewPostFormProps) => {
+  const isEdit = Boolean(postId);
   const DEFAULT_TITLE = '급식소 챙기고 갑니다';
 
   // Helper function to format date for datetime-local input in Korea timezone
@@ -78,24 +85,57 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
   // Feeding spots states (this form's own subject matter)
   const [checkedSpots, setCheckedSpots] = useState<Set<number>>(new Set());
   const [feedingVisitTime, setFeedingVisitTime] = useState('');
+  const [loadingPost, setLoadingPost] = useState(isEdit);
 
   // Prepopulate the visit time with the current hour (Korea time) + initial title.
   useEffect(() => {
+    // ⚠️ Creation only. On an edit these would overwrite the post's own title
+    // with a freshly generated one before the load below could prefill it.
+    if (isEdit) return;
     const now = new Date();
     now.setMinutes(0, 0, 0);
     const timeString = formatKoreaTimeForInput(now);
     setFeedingVisitTime(timeString);
     setTitle(generateDynamicTitle(timeString));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isEdit]);
+
+  // Edit mode: prefill from the stored post.
+  useEffect(() => {
+    if (!postId) return;
+
+    const loadPost = async () => {
+      try {
+        setLoadingPost(true);
+        const post = await postService.getPostById(postId);
+        if (!post) {
+          await dialog.alert('게시물을 찾을 수 없어요.');
+          router.push('/pages/butler_stream');
+          return;
+        }
+        setTitle(post.title || '');
+        setMessage(post.message || '');
+      } catch (error) {
+        console.error('Error loading post for edit:', error);
+        await dialog.alert('게시물을 불러오지 못했어요.');
+        throw error;
+      } finally {
+        setLoadingPost(false);
+      }
+    };
+
+    loadPost();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId]);
 
   // Update title when visit time changes
   useEffect(() => {
+    if (isEdit) return; // the stored title is the author's, not a generated one
     if (feedingVisitTime) {
       setTitle(generateDynamicTitle(feedingVisitTime));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feedingVisitTime]);
+  }, [feedingVisitTime, isEdit]);
 
   const handleFeedingSpotToggle = (spotId: number) => {
     setCheckedSpots((prev) => {
@@ -122,10 +162,27 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
     setSubmitting(true);
 
     try {
+      // ⚠️ An edit changes ONLY 제목/내용. Authorship, 게시일 and the media fields
+      // are not resent: `updatePost` merges, so re-sending them would re-stamp
+      // provenance (which the Firestore rules now refuse anyway) and an empty
+      // media array would erase what a legacy post carries.
+      if (postId) {
+        await postService.updatePost(postId, {
+          title: title.trim() || DEFAULT_TITLE,
+          message,
+        });
+        await dialog.alert('수정했어요.');
+        router.push('/pages/butler_stream');
+        return;
+      }
+
       const now = new Date();
       const post = {
         title: title.trim() || generateDynamicTitle(feedingVisitTime),
         username: user?.email || 'unknown',
+        // Authorization identity (2026-08-02) — the Firestore rules let an author
+        // edit their own post by matching this, never `username`. Creation only.
+        ...(user?.uid ? { authorUid: user.uid } : {}),
         date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
         time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
         // No media is composed here; the fields keep the shape every reader
@@ -190,7 +247,7 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
     router.push('/pages/butler_stream');
   };
 
-  if (loading) {
+  if (loading || loadingPost) {
     return <div className="p-4">로딩 중...</div>;
   }
 
@@ -217,8 +274,14 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
         />
       </div>
 
-      {/* Feeding Spots Section */}
-      <div className="border-t pt-4 mt-4">
+      {/* Feeding Spots Section — creation only.
+          ⚠️ Ticking a spot stamps `last_attended`/`last_attended_by` on shared
+          state; it is a check-in, not a property of the post. Re-running it on
+          an edit would re-log a visit that already happened, and the data model
+          keeps only the latest stamp, so it could not be undone either.
+          Consequence, accepted: an author who ticked the wrong spot cannot
+          correct it here — an admin fixes the spot directly. */}
+      <div className={`border-t pt-4 mt-4 ${isEdit ? 'hidden' : ''}`}>
         <div className="flex items-center gap-4 mb-3">
           <h3 className="text-lg font-semibold text-gray-800">아래 급식소를 챙겼어요!</h3>
           {feedingSpots.length > 0 && (
@@ -304,7 +367,13 @@ const NewPostForm = ({ feedingSpots }: NewPostFormProps) => {
 
       <div className="flex gap-2">
         <Button type="submit" variant="primary" size="lg" className="flex-1" disabled={submitting}>
-          {submitting ? '새글 작성 중...' : '작성 완료'}
+          {submitting
+            ? isEdit
+              ? '수정 중...'
+              : '새글 작성 중...'
+            : isEdit
+              ? '수정 완료'
+              : '작성 완료'}
         </Button>
         <Button
           type="button"

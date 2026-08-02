@@ -1,5 +1,6 @@
 import { getAdminFeedingSpotsService } from '@/services/feeding-spots-admin-service';
 import NewPostForm from '@/components/NewPostForm';
+import PermissionGate from '@/components/PermissionGate';
 
 interface BasicFeedingSpot {
   id: number;
@@ -19,10 +20,15 @@ const NewPostPage = async () => {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-center text-2xl font-bold mb-4">새글 작성</h1>
-      <NewPostForm feedingSpots={feedingSpots} />
-    </div>
+    <PermissionGate
+      permissions={['manage-posts', 'write-own-post-feeding']}
+      deniedMessage="급식현황에 글을 쓰려면 현장 집사 권한이 필요해요."
+    >
+      <div className="p-4">
+        <h1 className="text-center text-2xl font-bold mb-4">새글 작성</h1>
+        <NewPostForm feedingSpots={feedingSpots} />
+      </div>
+    </PermissionGate>
   );
 };
 
