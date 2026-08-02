@@ -1,17 +1,59 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-02 · **Branch:** `dev` (`82d0f07`) · **`main`:** promoted through PR #8
+**Last updated:** 2026-08-02 · **Branch:** `dev` (`fa2f87b`) · **`main`:** promoted through PR #8
 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-02 was an audit that turned into four pieces of work.** It began as "what's left per
-> the project plan?", and answering that honestly meant checking the plan against the code —
-> which found **seven items already done but never ticked**, and **one whose stated premise was
-> wrong**. Fixing that premise produced the session's real work. Four commits, all pushed;
-> `origin/dev` = **`82d0f07`**. The tree is clean apart from a `.gitignore` hunk and three
-> untracked code-graph files, which belong to a **different** workstream — do not sweep them
-> into a commit.
+> **2026-08-02, second session — one small feature that turned into two real bugs.** It began
+> as "close §10d D2, the CMS upload toggle." Siting the toggle meant looking at 앱 관리, which
+> turned out to hold **a settings screen that had never configured anything**; and shipping the
+> toggle broke an e2e spec, which meant running the full suite, which turned the long-standing
+> **"flake set" into three findable bugs — one of them in app code**. Chasing the last of those
+> found a **product** bug: a hydration mismatch that **erased text a visitor had already
+> typed**. Four commits, all pushed; `origin/dev` = **`fa2f87b`**, now **64** ahead of
+> `origin/main`. The tree is clean apart from a `.gitignore` hunk and three untracked
+> code-graph files, which belong to a **different** workstream — do not sweep them into a
+> commit.
+>
+> 🔑 **The lesson that generalises: "passes in isolation" means _interference_, not slowness.**
+> The e2e failures had been filed for weeks as "timing-sensitive," with standing advice not to
+> read a red run as a regression. That reading is what kept them open — **no timeout could
+> have fixed any of the three**. The suite is now **green (3× consecutive 199/13/0)**, so that
+> advice is retired: ⚠️ **a red run now means something.**
+>
+> ⚠️ **The e2e suite is a gate that this session twice proved is not optional.** Shipping the
+> 집사톡 cap broke `butler-create.spec` and I did not notice, because tsc + smoke + unit were
+> green and I reported them as "the gates." They are not the gates. Run `npm run test:e2e`
+> before claiming a UI change is done — `export PATH=/usr/local/opt/openjdk/bin:$PATH` first.
+>
+> 🔬 **The three e2e bugs, because the shapes recur.** (1) `services/firebase.ts` guarded a
+> **per-instance** emulator connection with a **process-global** flag, so a second
+> `firebase/app` module registry produced a `db` pointed at the real backend — and an
+> **offline `getDocs` resolves from the empty cache instead of throwing**, returning `200 []`.
+> 📌 The tell was **two different collections reading empty at the same moment**: one
+> unconnected `db`, not two missing fixtures. (2) `admin/cats.spec` renamed a fixture cat
+> **six other specs read**, surviving as long as it did only because `getByRole({name})`
+> matches **substrings**. (3) Three specs acted before async state resolved — which is what
+> led to the hydration bug below.
+>
+> 🔴 **The product bug, and the rule it leaves behind.** `AuthProvider` seeded `useState` from
+> `auth.currentUser` — a **browser-only** value read **during render**. The server always has
+> `null`, so the header disagreed, and React's recovery is to **discard the server DOM and
+> rebuild the whole root**, remounting every component and **erasing input already typed**.
+> 🔑 **Nothing the server could not have known may affect the _first_ client render** —
+> `localStorage`, `window.*`, `Date.now()`, a restored session. Read it in `useEffect`.
+> ⚠️ It was intermittent because the restore is **async**: it only bites when the restore beats
+> hydration, on a full page load, for a signed-in visitor — which is why all **12** anonymous
+> `public/` specs were never affected.
+>
+> ---
+>
+> ### Earlier the same day (2026-08-02, first session) — the plan audit
+>
+> **It began as "what's left per the project plan?"**, and answering that honestly meant
+> checking the plan against the code — which found **seven items already done but never
+> ticked**, and **one whose stated premise was wrong**. That session ended at `82d0f07`.
 >
 > 🔑 **The lesson that generalises: a plan entry is a claim about the code, and claims rot.**
 > Six unticked boxes described work finished weeks earlier (API-route auth, RBAC drift, the
@@ -107,9 +149,13 @@
 >    logging fix touched both); and the **orphan-delete path** (needs a genuinely new phone number
 >    or Kakao account); plus the 2026-07-31 입양홍보 popup (needs a **fresh session** —
 >    `sessionStorage`) and the duplicate-filename **409**.
-> 3. **Then the promotion itself.** `dev` now leads `origin/main` by **59** commits.
+> 3. **Then the promotion itself.** `dev` now leads `origin/main` by **64** commits.
 >    ⚠️ **Measure against `origin/main`, not the local `main` ref** — the local one is stranded at
 >    `26b1879` (2026-03-16), four months and one PR-#8 merge behind.
+>    🆕 **Two things in this bundle change behaviour on deploy, so mention them when promoting:**
+>    집사톡 becomes **one video + one photo** per post (the caps ship `false`, before anyone
+>    touches a control), and a signed-in visitor now sees the **logged-out header for one tick**
+>    on a full page load — the deliberate cost of the hydration fix.
 >
 > 🆕 **Owner decisions waiting, none blocking:** whether 공지사항/입양홍보 should keep the
 > **`설명 없음`** filler that converging onto `MediaTile` removed from the photo modal (the shared
@@ -169,6 +215,51 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **✅ The e2e suite is GREEN and the "flake set" is retired (2026-08-02, `4a5da2a`).**
+  **3× consecutive 199 passed / 13 skipped / 0 failed**, from a 196/3 baseline. 🔑 It was
+  **three real bugs, not flake** — and **"passes in isolation" meant _interference_, not
+  slowness**, which is the reading that kept them open for weeks. (1) **App code:**
+  `services/firebase.ts` guarded a **per-instance** emulator connection with a
+  **process-global** flag, so a second `firebase/app` module registry got a `db` on the real
+  backend — and an **offline `getDocs` resolves from the empty cache instead of throwing**,
+  returning `200 []` so `res.ok()` passed and only the content assertion failed. 📌 The tell:
+  **two different collections empty at the same moment**. (2) `admin/cats.spec` renamed a
+  fixture cat **six other specs read**, surviving only because `getByRole({name})` matches
+  **substrings**; repointed at `이사한냥이`, which no spec reads. (3) Three specs acted before
+  async state resolved. ⚠️ **The old advice — "don't read a red run as a regression" — is
+  retired; a red run now means something.** Detail: `log/DEBUG_LOG.md` 2026-08-02.
+- **🔴 A hydration mismatch was erasing text visitors had already typed — fixed (2026-08-02,
+  `fa2f87b`).** `AuthProvider` seeded `useState` from `auth.currentUser`, a **browser-only**
+  value read **during render**. The server always has `null`, so the header disagreed, and
+  React's recovery is to **discard the server DOM and rebuild the whole root** — remounting
+  every component, re-running every `useState` initializer, and wiping in-progress input.
+  🔑 **The rule to keep: nothing the server could not have known may affect the _first_ client
+  render** (`localStorage`, `window.*`, `Date.now()`, a restored session) — read it in
+  `useEffect`. ⚠️ Intermittent because the restore is **async**: it only bites when the restore
+  beats hydration, on a full page load, for a signed-in visitor — which is why all **12**
+  anonymous `public/` specs never saw it, and why it surfaced as _test flake_ rather than as a
+  bug report. 💡 **Accepted cost:** one tick of logged-out header per full page load;
+  `NavItem` and the contact form already tolerate it. Verified gone on `/pages/contact` **and**
+  `/admin/cats` (the reliable reproducer, untouched by recent work).
+- **📤 집사톡 is capped at one video + one photo, from static config (2026-08-02, `faa2f38`).**
+  §10d **D2** closed — but **as `config/media_control.json`, not a CMS toggle**. 🔑 The
+  Firestore design was drafted and **rejected on a consequence it exposed**: the setting is
+  global by decision, so a runtime toggle would let **any one mountain's admin silently
+  reconfigure every other mountain's composer**. Static config moves that authority to whoever
+  can deploy; the redeploy cost is **accepted, not overlooked** (owner). 공지사항/입양홍보 stay
+  unrestricted, so `MediaItemList`'s `allowMultiple` **defaults to `true`** and only 집사톡
+  passes it. ⚠️ **This changes 집사톡 for members on deploy** — both flags ship `false`.
+  📌 Two false precedents recorded: `admin_config` is **not** a settings store (no
+  `firestore.rules` entry at all — it holds the YouTube OAuth token), and 앱 관리's old
+  collection tab only _looked_ like one (see below).
+- **🗑️ A settings screen that had never configured anything, deleted (2026-08-02, `1cada22`).**
+  앱 관리's 게시물 컬렉션 설정 saved collection names to **`localStorage`** and the dashboard
+  listed them with a hard-coded **`0`** — the headline number was _how many lines you typed_.
+  🔑 **The tell:** the shipped default named **`posts_main`**, which has never existed, and
+  omitted two collections that do; it survived ~14 months because a wrong name and a right name
+  both render `0`. The tile now counts the four real collections (verified live: **14** =
+  급식현황 6 + 집사톡 2 + 공지사항 4 + 입양홍보 2). **Which collections exist is a fact about
+  the code, not an operator choice** — that is why the configurability was the wrong shape.
 - **🧹 The project plan was audited against the code, and seven entries were wrong
   (2026-08-02).** Six unticked boxes described work finished weeks earlier — API-route auth
   (all 10 `/api/admin/**` routes gate on `requireApiPermission`; the one exception,
@@ -490,9 +581,9 @@ test:e2e` globs all of `tests/e2e/**`), so it needed no wiring. **The CI thread 
   should-fix · decided/won't-do · already-closed), with the console half carved into
   [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md). Nothing in either
   blocks the `dev → main` promotion.
-- **Tree:** clean through **`a96a62b`** (bar a `.gitignore` hunk + three untracked code-graph
+- **Tree:** clean through **`fa2f87b`** (bar a `.gitignore` hunk + three untracked code-graph
   files from a different workstream). The whole multi-tenant epic (M0–M8)
-  is committed on `dev`; `dev` leads `origin/main` by **55** commits, and `origin/main` carries
+  is committed on `dev`; `dev` leads `origin/main` by **64** commits, and `origin/main` carries
   **2** commits `dev` does not — the PR #7 (`65d2020`) and PR #8 (`366425c`) **merge commits**,
   so neither branch is an ancestor of the other and the next promotion is again a merge.
   ⚠️ **Use `origin/main` for this**: the local `main` ref is stale at `26b1879` (2026-03-16),
@@ -1297,24 +1388,41 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Commit state & branch position (as of this update)
 
-✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`82d0f07`**.
+✅ **The working tree is clean and everything is pushed.** `origin/dev` = **`fa2f87b`**.
 
 The only things left in the tree are **not** from this workstream and must not be swept into a
 commit: a `.gitignore` hunk (it ignores the code-graph tools' generated output) and three
 untracked `docs/planning/pending/code-graph-tooling-*` / `docs/.doc-mapping.json` files. They
 belong together as their own change whenever the owner wants it.
 
-**Position (measured 2026-08-02, `git rev-list`):** `dev` leads `origin/main` by **59** commits;
+**Position (measured 2026-08-02, `git rev-list`):** `dev` leads `origin/main` by **64** commits;
 `origin/main` carries **2** that `dev` does not — the PR #7 and PR #8 **merge commits** — so
 neither is an ancestor of the other and the next promotion is again a merge.
 ⚠️ **Always measure against `origin/main`.** The local `main` ref is stranded at `26b1879`
 (2026-03-16), which is where this doc's long-running "~274–279 ahead" figure came from.
 
-**Gate status at `82d0f07`:** tsc 0 · smoke 34/34 · unit **103/103** · **full e2e 196 passed / 3
-failed**, and all three failures pass when re-run in isolation (verified this session, not
-assumed) — see the box's suite-stability note before reading a red run as a regression.
+**Gate status at `fa2f87b`:** tsc 0 · smoke 34/34 · unit **137/137** · **full e2e 199 passed /
+13 skipped / 0 failed**, ✅ **3× consecutive** (the repo's flake-audit bar), plus 2 further green
+runs after the `AuthProvider` fix. ⚠️ **The previous entry's advice — "a red run isn't
+necessarily a regression, re-run the failures alone" — is retired.** What it described was three
+real bugs, now fixed; a red run means something again.
 
-**This session (2026-08-02), newest first:**
+📌 **`npm run test:e2e` is a gate, not an optional extra.** This session shipped a UI change on
+green tsc + smoke + unit and broke `butler-create.spec` without noticing. Those three are not
+"the gates." Run e2e before calling a UI change done —
+`export PATH=/usr/local/opt/openjdk/bin:$PATH` first (bare `java` is a macOS shim that reports
+no runtime; OpenJDK 26 is at that Intel-prefix Homebrew path).
+
+**This session (2026-08-02, second), newest first:**
+
+| Commit    | What                                                                                    |
+| --------- | --------------------------------------------------------------------------------------- |
+| `fa2f87b` | **fix(auth)** — stop the hydration mismatch that erased typed input                     |
+| `4a5da2a` | **fix(e2e)** — the flake set was three real bugs, one in app code (`services/firebase`) |
+| `faa2f38` | **feat(butler-talk)** — cap media at one video + one photo via static config (§10d D2)  |
+| `1cada22` | **refactor(admin)** — drop the localStorage collection config, count posts for real     |
+
+**Previous session (2026-08-02, first), newest first:**
 
 | Commit    | What                                                                                      |
 | --------- | ----------------------------------------------------------------------------------------- |
