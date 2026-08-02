@@ -195,12 +195,12 @@ per-mountain config in `mountains.json`, which needs a redeploy — see §9.)_
 
 Four tabs, two kinds:
 
-| Tab      | Kind               | Who writes it                        |
-| -------- | ------------------ | ------------------------------------ |
-| 급식현황 | community feed     | app users (feeding check-ins)        |
-| 집사톡   | community feed     | app users                            |
-| 공지사항 | **admin-authored** | admins (**새 공지사항 작성** button) |
-| 입양홍보 | **admin-authored** | admins (**새 입양홍보 작성** button) |
+| Tab      | Kind               | Who writes it                                                                                        |
+| -------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| 급식현황 | community feed     | app users (feeding check-ins)                                                                        |
+| 집사톡   | community feed     | app users (**one video + one photo** per post — [§9](#9-configuration--operations-owner--developer)) |
+| 공지사항 | **admin-authored** | admins (**새 공지사항 작성** button)                                                                 |
+| 입양홍보 | **admin-authored** | admins (**새 입양홍보 작성** button)                                                                 |
 
 ### Create (공지사항 / 입양홍보)
 
@@ -212,6 +212,9 @@ image/YouTube URLs). Save.
   popup to visitors. Only one is shown (most recently updated).
 - 입양홍보 posts appear in the public **새로운 입양 소식** feed on `/pages/adoption`, and
   their body supports the [link tokens](#2-rich-text--links-the-important-one).
+- **No file-count limit here.** These two admin composers accept as many videos and photos as
+  you attach — the one-video/one-photo cap applies to **집사톡 only**
+  ([§9](#9-configuration--operations-owner--developer)).
 
 ### Edit / delete (any post type)
 
@@ -373,6 +376,37 @@ Mostly one-time or infrequent setup. Details live in
   is required (no runtime toggle). Desktop is always un-clustered. Details:
   [`deployment/README.md`](../deployment/README.md#map-clustering--per-mountain-config-values).
 
+- **Media-upload limits — how many files a 집사톡 post may carry.** Lives in
+  **`config/media_control.json`** — **not** a `/admin` CMS setting, and **not** per-mountain.
+
+  ```json
+  {
+    "butlerTalk": {
+      "allowMultipleVideos": false,
+      "allowMultipleImages": false
+    }
+  }
+  ```
+
+  - **What it does.** `false` caps that medium at **one file per post**: once a file is
+    attached, the picker for adding another disappears. The member can still hit **삭제** and
+    pick a different file — it is a cap, not a lock. `true` restores an unlimited list. The two
+    flags are **independent**, so "one video but any number of photos" is a valid setting.
+  - **Currently shipped: both `false`** — 집사톡 takes **one video + one photo** per post.
+  - **집사톡 only.** 공지사항 / 입양홍보 are admin-authored and stay **unrestricted by
+    decision** (owner, 2026-07-30) — they ignore this file. Don't extend the flags to them
+    without a new decision.
+  - **Changing it needs a redeploy.** Edit the file and `git push` (`dev` = Preview,
+    `main` = production). ⚠️ **That is the design, not a limitation.** The setting is
+    deployment-wide by decision, so a runtime CMS toggle would let **any one mountain's admin
+    silently reconfigure every other mountain's composer**; a static file moves that authority
+    to whoever can deploy. Rationale recorded in
+    [`PROJECT_PLAN.md`](../../planning/PROJECT_PLAN.md) §10d (D2) so the rejected Firestore
+    design isn't re-derived later.
+  - ⚠️ **Fail-loud:** a missing key, a typo'd key, or a non-boolean value makes the 집사톡
+    composer **throw** rather than quietly pick a behaviour. Keep both keys present and keep
+    the values `true`/`false` (no quotes). Validation lives in `src/utils/mediaControl.ts`.
+
 ---
 
 ## 10. Backups & recovery (owner)
@@ -500,5 +534,7 @@ Enter                     → line break
 - New Firestore collection or rule change → owner runs
   `firebase deploy --only firestore:rules`.
 - Publish changes → `git push` (`main` = production, `dev` = preview).
+- 집사톡 = **one video + one photo** per post; 공지사항 / 입양홍보 = unlimited. Change it in
+  `config/media_control.json` + redeploy ([§9](#9-configuration--operations-owner--developer)).
 - "입양 가능" checkbox on a cat (with a photo) → shows in the 입양홍보 gallery.
 - **Before any production data migration → `npm run backup:firestore`** ([§10](#10-backups--recovery-owner)).
