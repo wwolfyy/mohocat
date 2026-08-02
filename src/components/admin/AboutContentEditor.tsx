@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { getAboutContentService } from '@/services';
 import { AboutContent } from '@/services/about-content-service';
-import { getMountainAbout } from '@/utils/config';
 import { useMountain } from '@/components/MountainProvider';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
@@ -11,6 +10,15 @@ import Input from '@/components/ui/Input';
 import Alert from '@/components/ui/Alert';
 
 const { aboutEditor: t } = adminStrings;
+
+/** Starting point for a mountain whose 소개 has never been written. */
+const EMPTY_CONTENT: AboutContent = {
+  title: '',
+  subtitle: '',
+  mainContent: '',
+  mainPhoto: { filename: '', caption: '', altText: '' },
+  sections: [],
+};
 
 export default function AboutContentEditor() {
   const mountainId = useMountain();
@@ -33,29 +41,10 @@ export default function AboutContentEditor() {
 
       const firestoreContent = await aboutContentService.getAboutContent();
 
-      if (firestoreContent) {
-        setContent(firestoreContent);
-      } else {
-        // Initialize with current JSON config if no Firestore data exists
-        const jsonConfig = getMountainAbout(mountainId);
-        const initialContent: AboutContent = {
-          title: jsonConfig.title,
-          subtitle: jsonConfig.subtitle,
-          mainContent: Array.isArray(jsonConfig.mainContent)
-            ? jsonConfig.mainContent.join('')
-            : jsonConfig.mainContent,
-          mainPhoto: {
-            filename: jsonConfig.mainPhoto?.filename || '',
-            caption: Array.isArray(jsonConfig.mainPhoto?.caption)
-              ? jsonConfig.mainPhoto.caption.join('')
-              : jsonConfig.mainPhoto?.caption || '',
-            altText: jsonConfig.mainPhoto?.altText || '',
-            localPath: jsonConfig.mainPhoto?.localPath,
-          },
-          sections: jsonConfig.sections || [],
-        };
-        setContent(initialContent);
-      }
+      // A mountain with no doc yet starts from a blank form, not from static
+      // config: this editor writes the only copy of the 소개 there is, so seeding
+      // it from elsewhere would silently re-publish text nobody chose here.
+      setContent(firestoreContent ?? EMPTY_CONTENT);
     } catch (err) {
       console.error('Error loading about content:', err);
       setError(t.loadFailed);

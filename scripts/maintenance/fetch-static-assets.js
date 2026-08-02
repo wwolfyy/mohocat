@@ -24,18 +24,22 @@ const FIREBASE_PROJECT_ID =
 const STORAGE_BUCKET =
   process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'mountaincats-61543.firebasestorage.app';
 const THUMBNAILS_FOLDER = 'thumbnails/'; // Folder in Firebase Storage where thumbnails are stored
-const ABOUT_PHOTOS_FOLDER = 'about-photos/'; // Folder in Firebase Storage where about photos are stored
 const CATS_COLLECTION = 'cats';
 const LOCAL_THUMBNAILS_DIR_RELATIVE = 'public/images/thumbnails'; // Relative to project root
-const LOCAL_ABOUT_PHOTOS_DIR_RELATIVE = 'public/images/about-photos'; // Relative to project root
-const MOUNTAINS_CONFIG_PATH_RELATIVE = 'config/mountains/mountains.json'; // Relative to project root
+
+// ⚠️ About photos are deliberately NOT fetched here any more (2026-08-02). They
+// are served live from `about-photos/{mountainId}/{filename}` in Storage, where
+// the filename comes from the CMS record (`about_content/{mountainId}`). This
+// script used to download them into `public/` and write the resulting path back
+// into `mountains.json`, which made static config — not the CMS — the real
+// source of the image: changing the photo in the CMS kept rendering the old one.
+// Do not reintroduce it; it also removes this script's only reason to write to
+// `mountains.json`.
 
 // Absolute paths resolved from project root
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..'); // Assuming script is in 'scripts/maintenance' directory
 const SERVICE_ACCOUNT_FULL_PATH = path.join(PROJECT_ROOT, SERVICE_ACCOUNT_KEY_PATH);
 const LOCAL_THUMBNAILS_DIR = path.join(PROJECT_ROOT, LOCAL_THUMBNAILS_DIR_RELATIVE);
-const LOCAL_ABOUT_PHOTOS_DIR = path.join(PROJECT_ROOT, LOCAL_ABOUT_PHOTOS_DIR_RELATIVE);
-const MOUNTAINS_CONFIG_PATH = path.join(PROJECT_ROOT, MOUNTAINS_CONFIG_PATH_RELATIVE);
 // ---
 
 async function initializeFirebase() {
@@ -189,67 +193,6 @@ async function fetchThumbnailsFromStorage(bucket) {
   }
 }
 
-async function fetchAboutPhotosFromStorage(bucket) {
-  console.log(`Fetching about photos from Firebase Storage folder: '${ABOUT_PHOTOS_FOLDER}'...`);
-  try {
-    const [files] = await bucket.getFiles({ prefix: ABOUT_PHOTOS_FOLDER });
-
-    // Filter out directories and get actual image files
-    const imageFiles = files.filter((file) => {
-      const fileName = file.name;
-      // Skip directories and non-image files
-      return (
-        !fileName.endsWith('/') &&
-        fileName !== ABOUT_PHOTOS_FOLDER.slice(0, -1) &&
-        /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName)
-      );
-    });
-
-    console.log(`Found ${imageFiles.length} about photo images in storage.`);
-
-    // Debug: Show some example filenames
-    if (imageFiles.length > 0) {
-      const exampleFiles = imageFiles.slice(0, 3).map((f) => path.basename(f.name));
-      console.log(
-        `Example about photo filenames: ${exampleFiles.join(', ')}${imageFiles.length > 3 ? '...' : ''}`
-      );
-    }
-
-    // Create a map of full path to a download source (File in emulator mode, signed
-    // URL in production — see downloadAsset()) for about photos.
-    const aboutPhotosMap = {};
-    for (const file of imageFiles) {
-      try {
-        const source = USE_EMULATORS
-          ? file
-          : (
-              await file.getSignedUrl({
-                action: 'read',
-                expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days
-              })
-            )[0];
-
-        // Keep the full path structure for about photos (e.g., about-photos/geyang/about-main-geyang.jpg)
-        aboutPhotosMap[file.name] = source;
-
-        // Debug: Show the paths for the first few files
-        if (Object.keys(aboutPhotosMap).length <= 3) {
-          console.log(`About photo: '${file.name}' -> URL ready`);
-        }
-      } catch (error) {
-        console.error(`Failed to get download URL for ${file.name}:`, error.message);
-      }
-    }
-
-    return aboutPhotosMap;
-  } catch (error) {
-    console.error('Error fetching about photos from storage:', error);
-    return {};
-  }
-}
-
-// Download one asset to disk from either a Storage File (emulator mode) or a
-// signed URL (production). Keeps the two source types out of the callers.
 async function downloadAsset(source, localPath) {
   if (USE_EMULATORS) {
     // `source` is a @google-cloud/storage File — download() streams bytes to disk.
@@ -381,162 +324,6 @@ async function downloadAndUpdateThumbnails(catsData, thumbnailMap) {
   return updatedCatsList;
 }
 
-async function downloadAndUpdateAboutPhotos(aboutPhotosMap, mountainsConfig) {
-  console.log(`Ensuring local about photos directory exists: '${LOCAL_ABOUT_PHOTOS_DIR}'`);
-  await fsPromises.mkdir(LOCAL_ABOUT_PHOTOS_DIR, { recursive: true });
-
-  const updatedMountainsConfig = { ...mountainsConfig };
-  // Collect failures and fail the build at the end — a configured about photo
-  // that can't be fetched must abort the build, never silently ship without it.
-  const failures = [];
-
-  for (const [mountainId, mountainConfig] of Object.entries(mountainsConfig)) {
-    if (!mountainConfig.about || !mountainConfig.about.mainPhoto) {
-      console.log(`No main photo configured for mountain: ${mountainId}`);
-      continue;
-    }
-
-    const mainPhoto = mountainConfig.about.mainPhoto;
-    const expectedStoragePath = `${ABOUT_PHOTOS_FOLDER}${mountainId}/${mainPhoto.filename}`;
-
-    console.log(
-      `Processing mountain: '${mountainId}', looking for photo: '${expectedStoragePath}'`
-    );
-
-    // Find the photo in storage
-    const downloadUrl = aboutPhotosMap[expectedStoragePath];
-
-    if (!downloadUrl) {
-      console.warn(
-        `WARNING: About photo not found in storage for mountain '${mountainId}': ${expectedStoragePath}`
-      );
-
-      // Debug: show available about photos
-      const availablePhotos = Object.keys(aboutPhotosMap).filter((path) =>
-        path.startsWith(`${ABOUT_PHOTOS_FOLDER}${mountainId}/`)
-      );
-      console.log(`Available photos for ${mountainId}:`, availablePhotos);
-      // A mountain that declares a mainPhoto filename but has no matching file
-      // in storage is a real failure (not merely "no photo configured").
-      if (mainPhoto.filename) {
-        failures.push(`${mountainId}: '${expectedStoragePath}' not found in storage`);
-      }
-      continue;
-    }
-
-    try {
-      // Create mountain-specific directory
-      const mountainAboutDir = path.join(LOCAL_ABOUT_PHOTOS_DIR, mountainId);
-      await fsPromises.mkdir(mountainAboutDir, { recursive: true });
-
-      const localImagePath = path.join(mountainAboutDir, mainPhoto.filename);
-      await downloadAsset(downloadUrl, localImagePath);
-
-      // Generate web-accessible path
-      const relativePath = path.relative(path.join(PROJECT_ROOT, 'public'), localImagePath);
-      const standardizedPath = relativePath.replace(/\\/g, '/'); // Ensure forward slashes for web
-      const webAccessiblePath = `/${standardizedPath}`;
-
-      console.log(
-        `Successfully downloaded about photo for '${mountainId}' to: '${localImagePath}'. Web path: '${webAccessiblePath}'`
-      );
-
-      // Update the mountain config with the local path
-      if (!updatedMountainsConfig[mountainId].about.mainPhoto.localPath) {
-        updatedMountainsConfig[mountainId] = {
-          ...updatedMountainsConfig[mountainId],
-          about: {
-            ...updatedMountainsConfig[mountainId].about,
-            mainPhoto: {
-              ...updatedMountainsConfig[mountainId].about.mainPhoto,
-              localPath: webAccessiblePath,
-            },
-          },
-        };
-      }
-    } catch (error) {
-      console.error(`Failed to download about photo for mountain '${mountainId}':`, error.message);
-      failures.push(`${mountainId}: ${error.message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `Required about photo(s) could not be fetched — failing the build:\n  - ${failures.join('\n  - ')}`
-    );
-  }
-
-  return updatedMountainsConfig;
-}
-
-async function loadMountainsConfig() {
-  try {
-    console.log(`Loading mountains configuration from: '${MOUNTAINS_CONFIG_PATH}'`);
-    const configData = await fsPromises.readFile(MOUNTAINS_CONFIG_PATH, 'utf-8');
-    const config = JSON.parse(configData);
-
-    // Extract mountains (excluding _meta)
-    const mountains = {};
-    for (const [key, value] of Object.entries(config)) {
-      if (key !== '_meta' && value && typeof value === 'object') {
-        mountains[key] = value;
-      }
-    }
-
-    console.log(`Loaded ${Object.keys(mountains).length} mountain configurations`);
-    return mountains;
-  } catch (error) {
-    console.error('Error loading mountains configuration:', error);
-    return {};
-  }
-}
-
-async function saveUpdatedMountainsConfig(updatedConfig) {
-  try {
-    // Read the original config to preserve _meta and structure
-    const originalConfigData = await fsPromises.readFile(MOUNTAINS_CONFIG_PATH, 'utf-8');
-    const originalConfig = JSON.parse(originalConfigData);
-
-    // Merge with updated mountain configs
-    const finalConfig = {
-      ...originalConfig,
-      ...updatedConfig,
-    };
-
-    const jsonData = JSON.stringify(finalConfig, null, 2);
-    await fsPromises.writeFile(MOUNTAINS_CONFIG_PATH, jsonData, 'utf-8');
-    console.log(`Successfully updated mountains configuration: '${MOUNTAINS_CONFIG_PATH}'`);
-  } catch (error) {
-    console.error(
-      `ERROR: Could not write updated mountains configuration to '${MOUNTAINS_CONFIG_PATH}':`,
-      error
-    );
-  }
-}
-
-// Final gate: after fetching, confirm every mountain that declares an about
-// photo actually has the file on disk. Belt-and-suspenders so a build can never
-// pass while the config points at an asset that isn't there.
-async function verifyAboutPhotosExist(mountainsConfig) {
-  const missing = [];
-  for (const [mountainId, mountainConfig] of Object.entries(mountainsConfig)) {
-    const filename = mountainConfig?.about?.mainPhoto?.filename;
-    if (!filename) continue; // no about photo configured for this mountain
-    const expectedPath = path.join(LOCAL_ABOUT_PHOTOS_DIR, mountainId, filename);
-    try {
-      await fsPromises.access(expectedPath, fs.constants.F_OK);
-    } catch {
-      missing.push(path.relative(PROJECT_ROOT, expectedPath));
-    }
-  }
-  if (missing.length > 0) {
-    console.error('ERROR: Expected about photo file(s) missing on disk after fetch:');
-    missing.forEach((m) => console.error(`  - ${m}`));
-    process.exit(1);
-  }
-  console.log('Verified: all configured about photos are present on disk.');
-}
-
 async function main() {
   console.log('--- Starting Static Asset Fetching Process (Node.js) ---');
 
@@ -570,19 +357,6 @@ async function main() {
   // (rewritten) cat data is intentionally discarded — the app reads cats live via the
   // Admin SDK (src/lib/server/cat-reads.ts), not from a static JSON export.
   await downloadAndUpdateThumbnails(rawCatsData, thumbnailMap);
-
-  const aboutPhotosMap = await fetchAboutPhotosFromStorage(storage);
-  if (Object.keys(aboutPhotosMap).length === 0) {
-    console.log('No about photos found in Firebase Storage. About images may not be available.');
-  }
-
-  const mountainsConfig = await loadMountainsConfig();
-  const updatedMountainsConfig = await downloadAndUpdateAboutPhotos(
-    aboutPhotosMap,
-    mountainsConfig
-  );
-  await saveUpdatedMountainsConfig(updatedMountainsConfig);
-  await verifyAboutPhotosExist(mountainsConfig);
 
   console.log('--- Static Asset Fetching Process (Node.js) Completed ---');
 }

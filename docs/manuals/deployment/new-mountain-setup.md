@@ -73,7 +73,7 @@ Add a tenant object (copy the `manisan` stub as a template). Fields:
 | `hidden`               | `true` = routable + prerendered but **excluded from the public `MountainSelector`**. Use it to stage a mountain (config + data in place) before announcing it, then flip to `false`/omit.                                                                                                                                                                                                                                                                                      |
 | `domains`              | production subdomains that resolve to this tenant by Host, e.g. `["<id>.mohocats.org"]`. This is what makes the clean visitor URL work.                                                                                                                                                                                                                                                                                                                                        |
 | `storagePrefix`        | upload namespace, e.g. `"mountains/<id>/"`. New uploads (signed-URL route + form image strategy) land under it automatically (M6), isolating this tenant's photos. `geyang` uses `""` (flat).                                                                                                                                                                                                                                                                                  |
-| `about`                | about-page copy (title/subtitle/mainContent/sections + `about.mainPhoto.localPath` for the baked photo).                                                                                                                                                                                                                                                                                                                                                                       |
+| _(no `about`)_         | ⚠️ **The about page is not configured here** (removed 2026-08-02). Its copy and 대표 사진 live in Firestore (`about_content/{id}`), written through the `/admin` CMS → 소개 편집. This block used to hold a second copy that shadowed the CMS for the photo; do not add it back. See §7.                                                                                                                                                                                       |
 | `theme.primaryColor`   | **the primary brand color** (M8) — a **6-digit hex** like `#0EA5E9`. Drives the signature CTA gradient (header 동참/입양홍보 button, shared action buttons, map cluster markers, adoption/FAQ CTAs). ⚠️ A malformed hex makes the mountain's pages fail to render (fail-loud). `secondaryColor`/`accentColor` are **not yet wired**, and the fixed `brand` ramp does not follow `primaryColor`, so non-CTA surfaces still read the default yellow until a fuller theming pass. |
 | `features`             | feature flags (`videoAlbum`, `photoAlbum`, `advancedFiltering`, `adminPanel`).                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `social`               | `youtubeChannelId` etc. ⚠️ The YouTube **OAuth credential is shared** (single `admin_config/youtube_auth`), so `youtubeChannelId` selects the channel but uploads still use the one shared account.                                                                                                                                                                                                                                                                            |
@@ -145,8 +145,9 @@ Phone/SMS and email/password need nothing per-subdomain.
   [`admin-manual/adding-a-mountain.md`](../admin-manual/adding-a-mountain.md) §6; a one-off
   Admin SDK script does the same thing if you'd rather not click. After that, further roles
   are granted normally through the CMS.
-- **Seed content** (points, cats, cat_images, about, announcements) either through the
+- **Seed content** (points, cats, cat_images, announcements) either through the
   `/admin` CMS while browsing the tenant, or with a seeding script that stamps `mountainId`.
+  The **about page is CMS-only** — see §7 for its two steps.
   Uploaded images auto-namespace under `storagePrefix` (§2a).
 - **Firestore rules & indexes need no per-mountain work** — the rules are already
   mountain-aware and deployed, and the composite indexes are global (they already exist).
@@ -163,12 +164,25 @@ new mountain gets traffic (GA4 does not backfill). See the admin manual §9 → 
 
 ---
 
-## 7. about-photos (the only baked media)
+## 7. The about page (CMS-authored, nothing baked)
 
-Cat thumbnails and album photos ride on live Storage URLs (nothing to build). Only
-**about-page photos** are baked: place the tenant's photo per its
-`config.about.mainPhoto.localPath` mapping into Storage, and `npm run fetch:assets` (run by
-`npm run build`) downloads it into `public/` at deploy. Full model:
+**Nothing about this page is built or configured** — it is entered in the CMS, and a new
+mountain therefore needs one manual step:
+
+1. Upload the 대표 사진 to Storage at **`about-photos/{id}/{filename}`** (any name; it is
+   matched by the filename you type next).
+2. Browse the tenant, open **`/admin` → 소개 편집**, and fill in 제목 / 부제 / 본문 plus the
+   photo's **파일 이름**, 설명 and 대체 텍스트. Saving writes `about_content/{id}`.
+
+Until step 2 the page renders **"아직 소개가 준비되지 않았어요."** — that is the intended
+not-set-up state, not a fault. ⚠️ The 파일 이름 is free text matched against Storage: a
+typo renders "사진을 불러오지 못했어요" with no other warning, so check the page after saving.
+
+📌 **Changed 2026-08-02.** About photos used to be the one baked medium — downloaded into
+`public/` by `npm run fetch:assets` and served from a path written back into
+`mountains.json`. That made static config, not the CMS, the real source of the image, so
+changing the photo in the CMS kept rendering the old one. They now ride live Storage URLs
+like cat thumbnails and album photos, and **no media is baked any more**. Full model:
 [`media-and-youtube.md`](../../codebase/media-and-youtube.md#image-storage--serving-strategy).
 
 ---
@@ -178,6 +192,8 @@ Cat thumbnails and album photos ride on live Storage URLs (nothing to build). On
 Browse the tenant (subdomain once DNS is live, or `/<id>` before then):
 
 - [ ] Home map renders with the tenant's markers; cat modal opens.
+- [ ] `/pages/about` shows the 소개 written in the CMS **and its photo loads** (§7) — not
+      "아직 소개가 준비되지 않았어요" and not "사진을 불러오지 못했어요".
 - [ ] Header shows the tenant's `name`; the CTA gradient uses its `theme.primaryColor`
       (and geyang is unchanged).
 - [ ] Photo/video galleries and 공지사항 show **only** this tenant's content (isolation).

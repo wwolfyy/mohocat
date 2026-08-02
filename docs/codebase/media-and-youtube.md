@@ -207,12 +207,12 @@ already has `cat_videos.mountainId`, stamped from the request Host.
 
 Two distinct mechanisms serve images — know which applies where:
 
-| Image                       | Stored as                                       | Served via            | Baked into build?             |
-| --------------------------- | ----------------------------------------------- | --------------------- | ----------------------------- |
-| Cat thumbnails              | Storage URL (`cats.thumbnailUrl`)               | Next `<Image>`, live  | baked but **UNUSED** (legacy) |
-| Album photos (`cat_images`) | Storage URL (`cat_images.imageUrl`)             | Next `<Image>`, live  | **never** baked               |
-| About-page photos           | local path (`config…about.mainPhoto.localPath`) | static `public/` file | **baked + used**              |
-| Map background              | config `url` → `public/`                        | static `public/` file | in-git design asset           |
+| Image                       | Stored as                                     | Served via            | Baked into build?             |
+| --------------------------- | --------------------------------------------- | --------------------- | ----------------------------- |
+| Cat thumbnails              | Storage URL (`cats.thumbnailUrl`)             | Next `<Image>`, live  | baked but **UNUSED** (legacy) |
+| Album photos (`cat_images`) | Storage URL (`cat_images.imageUrl`)           | Next `<Image>`, live  | **never** baked               |
+| About-page photos           | filename (`about_content…mainPhoto.filename`) | Next `<Image>`, live  | **never** baked (since 8/2)   |
+| Map background              | config `url` → `public/`                      | static `public/` file | in-git design asset           |
 
 - **Storage-URL + live optimizer (the dominant pattern).** Cat thumbnails and album photos
   store a **full Firebase Storage download URL**
@@ -221,10 +221,21 @@ Two distinct mechanisms serve images — know which applies where:
   from Storage at request time, optimizes to WebP/AVIF, and CDN-caches it (1-year TTL).
   `firebasestorage.googleapis.com` is whitelisted in `next.config.js` `remotePatterns`. No build
   step; ISR-fresh. Cost is negligible at this scale (per-transformation billing, long cache).
-- **Baked build artifact.** Only **about-page photos** are served from `public/` (baked by
-  `scripts/maintenance/fetch-static-assets.js` into `public/images/about-photos/{mountainId}/…`).
-  The **map background** (`map.landscapeImage/portraitImage`) is also served from `public/`, but
-  it's a static in-git design asset, not fetched from Firebase.
+  - **About-page photos joined this pattern on 2026-08-02**, with one difference: the CMS
+    record stores a bare **filename**, not a full URL, and `useAboutPhoto` resolves it at
+    render time via `getDownloadUrl('about-photos/{mountainId}/{filename}')`. ⚠️ That makes
+    the filename **free text matched against Storage** — a typo is a broken photo with no
+    other signal, which is the cost of the CMS owning the field. (Verified 2026-08-02 that
+    `about-photos/**` is anonymously readable in prod Storage, which this path requires.)
+- **Baked build artifact — none from Firebase any more.** `fetch-static-assets.js` downloads
+  only the legacy-and-unused cat thumbnails (see below). The **map background**
+  (`map.landscapeImage/portraitImage`) is served from `public/`, but it's a static in-git
+  design asset, not fetched from Firebase.
+  📌 **About photos used to be the exception here, and the reason they stopped is worth
+  keeping.** They were baked into `public/images/about-photos/{mountainId}/…` and served from
+  a path written back into `mountains.json` — so static config, not the CMS, was the real
+  source of the image, and `useAboutPhoto` short-circuited to it while the caption beside it
+  came from Firestore. Editing the photo in the CMS silently kept rendering the old one.
 
 ⚠️ **Cat-thumbnail baking is legacy/dead in prod.** `fetch-static-assets.js` still downloads the
 Storage `thumbnails/` folder into `public/images/thumbnails/…`, but **no prod cat references those

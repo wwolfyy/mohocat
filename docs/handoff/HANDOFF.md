@@ -1,11 +1,56 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-02 · **Branch:** `dev` (`a2d21f2`) · **`main`:** promoted through PR #8
-(2026-07-23 — the multi-mountain M1–M5 bundle; supersedes PR #7)
+**Last updated:** 2026-08-02 · **Branch:** `dev` (`1d25f05` + **uncommitted** about-page work)
+· **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
+PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-02, third session — one owner-reported bug, and everything it was hiding.**
+> **2026-08-02, fourth session — the about page got one source of truth.**
+> It began as _"the `about` object in `mountains.json` looks stale now that the about content
+> lives in Firestore — confirm."_ It was stale in the half you could see and **load-bearing in
+> the half you could not**, which is the whole story: Firestore won for the text, but the
+> **photo** came from a `localPath` baked into that config, and `useAboutPhoto` **ignored the
+> filename Firestore handed it**. 🔑 **Editing the 대표 사진 in the CMS did nothing** — a live
+> bug nobody had hit because both sources happened to name the same file. Removing the
+> short-circuit fixed it and unblocked the deletion in one move. `about` is now gone from
+> config; `about_content/{mountainId}` is the only copy.
+>
+> 🔑 **The lesson that generalises: "stale" is a claim about _every_ reader, and the readers
+> disagreed.** Four fields were dead weight and one was authoritative, in the same object. What
+> settled it was tracing each field to its consumer — `sections` was the tell (config declared
+> two, Firestore held zero, the page showed none), and the same tracing found the photo going
+> the other way. **Ask which reader wins, field by field, before calling a config block dead.**
+>
+> ⚠️ **No Firebase media is baked into the build any more.** About photos were the last;
+> `fetch-static-assets.js` also loses its only reason to **write to `mountains.json`**.
+> **Accepted cost:** a missing about photo used to _fail the build_ and is now a broken image on
+> a live page — the guard only worked while the filename sat in config the build could read.
+>
+> 🔬 **The e2e suite earned its keep again, and found a harness gap.** `nav.spec` went red on a
+> `next/image` **400**: `remotePatterns` allowed only `firebasestorage.googleapis.com` while the
+> emulator serves from `127.0.0.1:9199`. 🔑 **The harness had no remote-image coverage at all** —
+> every thumbnail/album fixture uses a local `public/` path, so the about photo was the **first**
+> e2e image to go through Storage. Fixed behind the emulator flag; production still allows
+> exactly one remote host.
+>
+> ✅ **The Firestore migration is APPLIED to prod** (snapshot
+> `backups/firestore/2026-08-02T13-15-25-299Z` taken first, 118 docs / 16 collections).
+> `about_content` now holds exactly **two** docs — `geyang` and a newly seeded `manisan` — both
+> with `mainPhoto.localPath` stripped, and the legacy `about_content/about` is gone. A re-run is
+> a clean no-op on all three phases. 📌 **manisan's seed carries an empty `mainPhoto`** — it
+> never declared one, and an invented filename would render as a broken image; an operator adds
+> it in the CMS.
+>
+> 🆕 **One decision waiting:** the CMS's 섹션 field is **stored, editable, and never rendered**
+> — the public page shows 제목 / 부제 / 대표 사진 / 본문 only. Render them, or drop the field?
+> Also: 파일 이름 is free text matched against Storage, so the CMS names the photo but cannot
+> upload it — a real upload control is the natural follow-up, deliberately not folded in.
+>
+> ---
+>
+> ### Earlier the same day (2026-08-02, third session) — one owner-reported bug, and everything it was hiding
+>
 > It began as "집사톡 posts show _Post not found._" That was a **routing** defect: a post is
 > addressed by **`(type, id)`**, not `id`, and the shared detail route hard-coded one of the
 > four collections. Fixing it made those posts **reachable for the first time**, which exposed
@@ -271,6 +316,20 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **📝 The about page has one source of truth — the CMS (2026-08-02, uncommitted).** The
+  `about` object is gone from `config/mountains/mountains.json`; `about_content/{mountainId}`
+  is the only copy. It was stale for `title`/`subtitle`/`mainContent`/`sections` — 📌 the tell
+  was `sections`: config declared two, Firestore held **zero**, the page showed none — but
+  **authoritative for the photo**, because `useAboutPhoto` short-circuited to a `localPath`
+  baked into that config and **ignored the filename Firestore gave it**. 🔑 **Editing the
+  대표 사진 in the CMS did nothing.** The photo now resolves live from
+  `about-photos/{mountainId}/{filename}`, which fixed the bug and unblocked the deletion at
+  once. ⚠️ **No Firebase media is baked into the build any more** — and a missing about photo
+  that used to _fail the build_ is now a broken image on a live page (accepted; the guard only
+  worked while the filename lived in config). ✅ **The Firestore migration is applied** (snapshot first):
+  `about_content` holds exactly `geyang` + a seeded `manisan`, `localPath` stripped from both,
+  legacy `about_content/about` deleted. Detail: PROJECT_PLAN **§10m**,
+  `log/FEATURE_MOD_LOG.md` 2026-08-02.
 - **🐛 집사톡 posts opened on "Post not found" — a post is addressed by `(type, id)`, not `id`
   (2026-08-02, `c4789c5`).** The four post types live in four Firestore collections, but the
   shared detail route hard-coded `getPostService` (`posts_feeding`) while both list components
@@ -1609,7 +1668,17 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-02 (latest)** — **Post detail resolved the wrong collection; editing took pasted
+- **2026-08-02 (latest)** — **The about page has one source of truth: the CMS.** `about` deleted
+  from `mountains.json` (plus `MountainAbout`/`getMountainAbout`); the page and the CMS editor
+  read Firestore only. 🔑 The photo was the load-bearing half — `useAboutPhoto` short-circuited
+  to a build-baked `localPath` and ignored the CMS's filename, so **changing the photo there did
+  nothing**; it serves live from Storage now. The build-time about-photo leg is retired (**no
+  Firebase media is baked any more**), and `next.config.js` allows the Storage emulator host
+  behind the emulator flag — the harness had **no remote-image coverage at all** before this.
+  The Firestore migration is **applied** (manisan seeded, `localPath` stripped, legacy doc
+  deleted; snapshot `2026-08-02T13-15-25-299Z`). Full e2e **214/13/0**.
+  Detail: PROJECT_PLAN **§10m**, `log/FEATURE_MOD_LOG.md` 2026-08-02.
+- **2026-08-02** — **Post detail resolved the wrong collection; editing took pasted
   URLs. Both closed.** `(type, id)` routing via a new `services/post-types.ts` and a
   `{postType}/{id}` path segment (**no fallback** — the `?type=` default was rejected on
   review); the page moved onto the 공지사항 shell + shared `PostMedia`; and 공지사항 / 입양홍보

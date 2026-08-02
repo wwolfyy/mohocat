@@ -71,7 +71,8 @@ google_svs_account.json
 
 # media — fetched at build time by scripts/maintenance/fetch-static-assets.js
 # (single strategy: the build is the source of truth for these, not git).
-public/images/about-photos/*
+# About photos are no longer among them (2026-08-02) — they serve live from
+# Storage, keyed on the filename in the CMS record.
 public/images/thumbnails/*
 
 # e2e album fixtures — public/-served (spike S3), copied from
@@ -89,3 +90,12 @@ _infra/_terraform/.terraform.lock.hcl
 
 # Firestore offline exports — contain OAuth tokens + PII, never commit
 /backups/
+
+# code-graph tooling evaluation (docs/planning/pending/code-graph-tooling-evaluation-20260728.md)
+# Generated indexes/graphs + the per-tool scoping configs. All reproducible; none belong in git.
+/graphify-out/
+/.codegraph/
+/codegraph-out/
+/.ua/
+/codegraph.json
+/.graphifyignore

@@ -11,7 +11,7 @@
 >    Start there. 🚨 Its §1.1 is a security defect (signing out of one mountain leaves you
 >    signed in on the others) that becomes real the day a second subdomain resolves.
 > 2. 📄 [`../deployment/new-mountain-setup.md`](../deployment/new-mountain-setup.md) — **the
->    developer half**: the two config files, storage prefix, about-photos, rules/indexes.
+>    developer half**: the two config files, storage prefix, rules/indexes.
 >    Someone with the repo does that part.
 > 3. 📋 **This doc** — the console half, which is yours.
 >
@@ -162,7 +162,14 @@ Deliberately, because none of it is console work:
 | Task                                          | Where it lives                                    |
 | --------------------------------------------- | ------------------------------------------------- |
 | `mountains.json` / `permissions.json` entries | developer runbook §2                              |
-| Storage prefix, about-photo baking            | developer runbook §2a, §7                         |
+| Storage prefix                                | developer runbook §2a                             |
 | Firestore rules & indexes                     | nothing to do — already global and mountain-aware |
 | Environment variables                         | nothing to do — all shared                        |
 | What must be fixed _before_ any of this       | prerequisites doc                                 |
+
+⚠️ **One thing that _is_ yours and is easy to miss: the 소개 page.** A new mountain's
+`/pages/about` reads **"아직 소개가 준비되지 않았어요."** until someone writes it in
+**앱관리 → About** — there is no longer any config-file copy standing in (changed
+2026-08-02). Two steps: upload the 대표 사진 to Storage under `about-photos/{mountainId}/`,
+then type its exact filename into the editor along with the copy. Detail:
+[`README.md` §7](./README.md#7-about-page-content--앱관리--about-adminapp-management).

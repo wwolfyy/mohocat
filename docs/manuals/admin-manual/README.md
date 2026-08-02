@@ -303,9 +303,23 @@ _⚠️ expand: step-by-step tagging workflow, bulk-tagging, and the YouTube aut
 
 ## 7. About page content — 앱관리 → About (`/admin/app-management`)
 
-Edit the public **소개(About)** page sections here. The section content supports the same
+Edit the public **소개(About)** page here. The content supports the same
 [link tokens](#2-rich-text--links-the-important-one); a **💡 링크 지원** help panel in this
 editor lists them.
+
+🔑 **This editor is the only place the 소개 exists (2026-08-02).** It used to share the job
+with a copy in `config/mountains/mountains.json`, which quietly won for the 대표 사진 — so a
+photo changed here kept showing the old one until someone redeployed. That copy is gone: what
+you save here is what the page renders, with no deploy needed.
+
+**The 대표 사진 takes a file _name_, not an upload.** Put the image in Firebase Storage at
+`about-photos/{mountainId}/`, then type its exact filename into **파일 이름**. ⚠️ The name is
+matched against Storage as free text — a typo shows **"사진을 불러오지 못했어요"** and nothing
+else, so open `/pages/about` after saving. Leave 파일 이름 blank for no photo.
+
+📌 **섹션 is stored but not displayed.** The public page renders 제목, 부제, 대표 사진 and
+본문 only — anything typed into 섹션 is saved and never shown. (Raised 2026-08-02; awaiting a
+decision on whether the page should render them or the field should go.)
 
 ---
 
@@ -357,14 +371,15 @@ Mostly one-time or infrequent setup. Details live in
   `firebase deploy --only firestore:rules`. Until then, reads/writes to the new collection
   fail against live Firestore. ⚠️ This is the most common "why doesn't the new thing work
   in production" cause.
-- **Build assets:** thumbnails / about-photos are fetched from Firebase Storage at build
-  time (`npm run fetch:assets`, run automatically by `npm run build`). They are **not** in
-  git — a fresh dev checkout needs `npm run fetch:assets` before pages with photos render.
-  - **How images are actually served (important mental model):** cat **thumbnails** and
-    **album photos** are **not** served from these baked files — they ride on live Firebase
-    **Storage URLs** stored in Firestore (`cats.thumbnailUrl` / `cat_images.imageUrl`),
-    optimized by Next `<Image>`. Only **about-page photos** are served from the baked
-    `public/` files. (The baked `thumbnails/` folder is legacy/unused in prod.) Full detail:
+- **Build assets:** cat thumbnails are fetched from Firebase Storage at build time
+  (`npm run fetch:assets`, run automatically by `npm run build`). They are **not** in git.
+  - **How images are actually served (important mental model):** **every** photo the site
+    shows now rides on live Firebase **Storage** — cat **thumbnails** and **album photos**
+    from URLs stored in Firestore (`cats.thumbnailUrl` / `cat_images.imageUrl`), and the
+    **about-page photo** from the filename in the CMS record — all optimized by Next
+    `<Image>`. **Nothing from Firebase is baked into the build any more** (2026-08-02: about
+    photos were the last, and their baking is what made the CMS's photo field not work).
+    The baked `thumbnails/` folder is legacy/unused in prod. Full detail:
     [`docs/codebase/media-and-youtube.md`](../../codebase/media-and-youtube.md#image-storage--serving-strategy).
   - **Per-mountain uploads (M6):** new image uploads (the signed-URL route + the form image
     upload) automatically land under the active mountain's `storagePrefix` in Storage, so a

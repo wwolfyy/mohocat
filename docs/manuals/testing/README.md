@@ -214,9 +214,11 @@ Key contract (enforced by the build):
 - A cat's thumbnail lives in Storage at `thumbnails/cat_<docId>.jpg`; the asset
   script matches the **doc id in the `_`-split filename**, so **doc ids must use
   hyphens, not underscores**. A cat with no thumbnail is legal (build warns).
-- The about photo must exist at
-  `about-photos/geyang/<mountains.json → about.mainPhoto.filename>` or the build
-  fails.
+- The about photo must exist in the Storage emulator at
+  `about-photos/geyang/<about-content.json → mainPhoto.filename>` (the seeder uploads
+  `tests/e2e/fixtures/images/about-photos/geyang/`). ⚠️ Since 2026-08-02 it is fetched
+  **live at render time**, not baked, so a mismatch no longer fails the build — it fails the
+  `/pages/about` spec instead, as a `next/image` error.
 - Users (`users.json`) create Auth users **and** matching `users/{uid}` docs whose
   `currentRole` drives `firestore.rules` `hasPermission()` — resolved against
   `role-config.json`.
@@ -250,7 +252,7 @@ To make CI a required gate, enable **branch protection** on `main` (GitHub → S
 | `port taken` on 3100                                            | A stale `next start` is running. Kill it (`lsof -nP -iTCP:3100 -sTCP:LISTEN`).                                                                                                                   |
 | Seed exits with _"REFUSING TO RUN"_                             | You ran `seed:emulators` outside `emulators:exec` (no `FIRESTORE_EMULATOR_HOST`), or the project isn't `demo-*`.                                                                                 |
 | Map/marker assertions flake or time out                         | The Leaflet map inits async; wait on `.leaflet-marker-icon` with a generous timeout (already done in the trivial spec). Heavy parallel load slows it — the spec allows 25s.                      |
-| `config/mountains/mountains.json` shows as modified after a run | Expected (F8) — any `npm run build` injects the about-photo `localPath`. **Do not commit** it.                                                                                                   |
+| `config/mountains/mountains.json` shows as modified after a run | **No longer expected** (F8 retired 2026-08-02): the build used to inject the about-photo `localPath`, but nothing writes to this file now. A diff here is a real edit of yours.                  |
 | Member/non-admin login setup fails                              | Known: the repo `users` write rule blocks non-admin self-writes in `ensureUserExists`. `global.setup.ts` sets up **admin only** pending an owner decision — see `log/DEBUG_LOG.md` (2026-07-11). |
 | `next/image` complains about a fixture image                    | Fixture album media is served from `public/`, not the emulator (spike S3). Check the URL points at a `public/` path.                                                                             |
 

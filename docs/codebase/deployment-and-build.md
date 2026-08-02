@@ -11,16 +11,16 @@ separately via the Firebase CLI. Terraform exists only as a parked future bluepr
 
 ## Key Components
 
-| Component               | File(s)                                                              | Responsibility                                                                                                             |
-| ----------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Build scripts           | `package.json` (`build`, `vercel-build`, `fetch:assets`)             | `fetch-static-assets.js` → `next build` (both `build` and `vercel-build`)                                                  |
-| Asset fetcher           | `scripts/maintenance/fetch-static-assets.js`                         | Downloads cat thumbnails + about-photos from Firebase Storage into `public/images/{thumbnails,about-photos}` at build time |
-| ISR cache config        | `src/lib/cache-config.ts`                                            | `REVALIDATE_SECONDS = 3600` — the time-based ISR backstop (hardcoded so Next can statically analyze it)                    |
-| Revalidate client/route | `src/lib/revalidate-client.ts`, `api/revalidate/route.ts`            | On-demand `revalidatePath` after admin cat edits                                                                           |
-| Next config             | `next.config.js`                                                     | Image optimization (WebP/AVIF), Storage `remotePatterns`, package-import opts                                              |
-| Firestore rules deploy  | `firebase.json`, `.firebaserc`, `config/firebase/firestore.rules`    | `firebase.json` trimmed to the `firestore` block; rules deploy via `firebase deploy --only firestore:rules`                |
-| Deployment manuals      | `docs/manuals/deployment/`                                           | README, pre-deployment checklist, new-mountain setup, Vercel/Terraform walkthroughs                                        |
-| Parked IaC              | `_infra/_terraform/` (`_main.tf`, `_outputs.tf`, `_variables.tf`, …) | Blueprint only (underscore = stale); **not** the live path                                                                 |
+| Component               | File(s)                                                              | Responsibility                                                                                                               |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Build scripts           | `package.json` (`build`, `vercel-build`, `fetch:assets`)             | `fetch-static-assets.js` → `next build` (both `build` and `vercel-build`)                                                    |
+| Asset fetcher           | `scripts/maintenance/fetch-static-assets.js`                         | Downloads cat thumbnails from Firebase Storage into `public/images/thumbnails` at build time (legacy — unreferenced in prod) |
+| ISR cache config        | `src/lib/cache-config.ts`                                            | `REVALIDATE_SECONDS = 3600` — the time-based ISR backstop (hardcoded so Next can statically analyze it)                      |
+| Revalidate client/route | `src/lib/revalidate-client.ts`, `api/revalidate/route.ts`            | On-demand `revalidatePath` after admin cat edits                                                                             |
+| Next config             | `next.config.js`                                                     | Image optimization (WebP/AVIF), Storage `remotePatterns`, package-import opts                                                |
+| Firestore rules deploy  | `firebase.json`, `.firebaserc`, `config/firebase/firestore.rules`    | `firebase.json` trimmed to the `firestore` block; rules deploy via `firebase deploy --only firestore:rules`                  |
+| Deployment manuals      | `docs/manuals/deployment/`                                           | README, pre-deployment checklist, new-mountain setup, Vercel/Terraform walkthroughs                                          |
+| Parked IaC              | `_infra/_terraform/` (`_main.tf`, `_outputs.tf`, `_variables.tf`, …) | Blueprint only (underscore = stale); **not** the live path                                                                   |
 
 ## Data Flow
 
@@ -30,7 +30,7 @@ flowchart TD
     Branch -->|main| Prod[Vercel Production]
     Branch -->|dev| Preview[Vercel Preview / staging]
     subgraph Build[Vercel build]
-        Fetch[fetch-static-assets.js] -->|thumbnails/about-photos| Public[public/images]
+        Fetch[fetch-static-assets.js] -->|thumbnails| Public[public/images]
         Fetch --> NextBuild[next build]
     end
     Prod --> Build
@@ -59,12 +59,14 @@ graph LR
 - **Deploy = `git push`**: Vercel Git integration builds and hosts. Production = `main`,
   Preview ("staging") = `dev`. No deploy command, no container.
 - **Env vars by hand**: managed in the Vercel dashboard (Production + Preview), not by IaC.
-- **Build pre-step pulls assets**: `fetch-static-assets.js` materializes thumbnails/about-photos
-  into `public/` (they are **not** committed to git). Run `npm run fetch:assets` in dev.
-  ⚠️ **Only about-photos are actually _served_ from these baked files.** Prod cat thumbnails
-  ride on live Firebase **Storage URLs** (`cats.thumbnailUrl`) rendered via Next `<Image>`, so
-  the baked `public/images/thumbnails/…` files are unreferenced in prod (legacy; still used by
-  the e2e fixtures). Full strategy:
+- **Build pre-step pulls assets**: `fetch-static-assets.js` materializes cat thumbnails into
+  `public/` (they are **not** committed to git). Run `npm run fetch:assets` in dev.
+  ⚠️ **Nothing it downloads is actually _served_ in prod.** Cat thumbnails ride on live Firebase
+  **Storage URLs** (`cats.thumbnailUrl`) rendered via Next `<Image>`, so the baked
+  `public/images/thumbnails/…` files are unreferenced in prod (legacy; still used by the e2e
+  fixtures). 📌 **About-photos were the one genuinely-served baked asset until 2026-08-02**;
+  they now serve live from Storage keyed on the CMS filename, which also means **the build no
+  longer writes to `mountains.json`**. Full strategy:
   [`media-and-youtube.md` → Image storage & serving strategy](media-and-youtube.md#image-storage--serving-strategy).
 - **Hybrid ISR freshness (§7a)**: `REVALIDATE_SECONDS` (1h) is the _backstop_; admin cat edits
   trigger instant `revalidatePath` via `/api/revalidate`. Point edits rely on the 1h backstop.

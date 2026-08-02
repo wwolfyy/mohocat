@@ -8,11 +8,16 @@ export interface AboutContent {
   title: string;
   subtitle: string;
   mainContent: string;
+  /**
+   * The 대표 사진, resolved live from `about-photos/{mountainId}/{filename}` in
+   * Firebase Storage. ⚠️ No `localPath`: the photo used to be downloaded into
+   * `public/` at build time and served from a path baked into `mountains.json`,
+   * which made static config — not this record — the real source of the image.
+   */
   mainPhoto: {
     filename: string;
     caption: string;
     altText: string;
-    localPath?: string;
   };
   sections: Array<{
     title: string;

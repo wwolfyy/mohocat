@@ -95,26 +95,14 @@ export interface OAuthProviderConfig {
   };
 }
 
-export interface AboutSection {
-  title: string;
-  content: string;
-}
-
-export interface AboutMainPhoto {
-  filename: string;
-  caption: string | string[]; // Support both string and array formats
-  altText: string;
-  localPath?: string; // Path to static local image (set during build time)
-}
-
-export interface MountainAbout {
-  title: string;
-  subtitle: string;
-  mainContent: string | string[]; // Support both string and array formats
-  mainPhoto?: AboutMainPhoto;
-  sections: AboutSection[];
-}
-
+/**
+ * ⚠️ There is deliberately **no `about`** here. A mountain's 소개 lives in
+ * Firestore (`about_content/{mountainId}`), written through the admin CMS, and
+ * that record is the only copy. This block used to hold a second one, which
+ * shadowed the CMS for the 대표 사진 and stood in for it before a mountain was
+ * filled in — so config and CMS could disagree about what the page said. Adding
+ * it back re-creates that split; provision a new mountain's 소개 in the CMS.
+ */
 export interface MountainConfig {
   id: string;
   name: string;
@@ -131,7 +119,6 @@ export interface MountainConfig {
    * every new mountain (plan §0 sub-decision 3).
    */
   storagePrefix: string;
-  about: MountainAbout;
   theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
@@ -262,14 +249,6 @@ export function getAdoptionPlaylistId(): string | null {
     );
   }
   return playlistId.trim() || null;
-}
-
-/**
- * Get about page configuration for a mountain
- */
-export function getMountainAbout(mountainId: string): MountainAbout {
-  const config = getMountainConfig(mountainId);
-  return config.about;
 }
 
 /**

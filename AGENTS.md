@@ -80,8 +80,11 @@ deep detail this file deliberately keeps out:
   - **Config knobs are a different mental model — still baked.** `mountains.json` (theme,
     features, `map.*`) is a static import, so those change **only on redeploy**; Firestore
     data (points/cats) is ISR-fresh per above.
-- **Build assets**: `scripts/maintenance/fetch-static-assets.js` downloads cat thumbnails /
-  about-photos from Firebase Storage into `public/` at build time.
+- **Build assets**: `scripts/maintenance/fetch-static-assets.js` downloads cat thumbnails
+  from Firebase Storage into `public/` at build time. ⚠️ **About photos are no longer baked**
+  (2026-08-02) — they serve live from Storage, keyed on the filename in the CMS record
+  (`about_content/{mountainId}`); the whole about page is CMS-authored, with **no** `about`
+  block in `mountains.json`.
 
 ### 2. Multi-Tenant Configuration System
 
@@ -116,7 +119,7 @@ deep detail this file deliberately keeps out:
 ### Build Process
 
 - `npm run build` (and `vercel-build`, what Vercel runs) is **not** a bare `next build` — it
-  runs `scripts/maintenance/fetch-static-assets.js` first to download about-photos from
+  runs `scripts/maintenance/fetch-static-assets.js` first to download cat thumbnails from
   Firebase Storage into `public/`. Other scripts are in `package.json`.
 
 ### Admin CMS Access

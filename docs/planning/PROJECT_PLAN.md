@@ -1810,6 +1810,70 @@ removal, and authorship / 게시일 unchanged. Full e2e **2× consecutive 214 / 
 
 ---
 
+## 10m. ✅ The about page has one source of truth — the CMS (DONE 2026-08-02)
+
+> **Ask (owner):** _"I want whatever's entered in the CMS page to be the source of truth, and
+> get rid of everything that gets in the way."_ Raised on noticing that `mountains.json` still
+> carried an `about` object that looked stale.
+
+**It was stale in the half that was visible, and load-bearing in the half that wasn't** — which
+is why "just delete it" needed the photo pipeline moved first.
+
+- Firestore won for `title` / `subtitle` / `mainContent` / `sections`: `about_content/geyang`
+  exists, so the JSON was pure fallback. 📌 The proof was `sections` — the JSON declared two,
+  Firestore held **zero**, and the live page showed none.
+- **The photo was the opposite.** `useAboutPhoto` short-circuited to a `localPath` baked into
+  `mountains.json` by `fetch-static-assets.js` and **ignored the filename it was handed from
+  Firestore**. So the image came from static config while the caption beside it came from the
+  CMS. 🔑 **Changing the photo in the CMS did nothing** — a latent bug, invisible only because
+  both sources happened to name the same file.
+
+- [x] **M1 — the photo serves live from Storage.** `useAboutPhoto` resolves
+      `about-photos/{mountainId}/{filename}` from the CMS-supplied filename; the `localPath`
+      short-circuit is gone, which fixed the bug and unblocked the deletion in one move.
+- [x] **M2 — no JSON fallback anywhere.** The page and `AboutContentEditor` read Firestore
+      only; a mountain with no doc gets a blank form and a **"아직 소개가 준비되지 않았어요"**
+      page, distinct from the read-failed state.
+- [x] **M3 — `about` deleted** from `mountains.json` (both mountains) along with
+      `MountainAbout` / `AboutMainPhoto` / `AboutSection` / `getMountainAbout` and
+      `MountainConfig.about`.
+- [x] **M4 — the build-time about-photo leg retired.** `fetch-static-assets.js` loses
+      `fetchAboutPhotosFromStorage`, `downloadAndUpdateAboutPhotos`, `verifyAboutPhotosExist`
+      and — with them — its only reason to **write to `mountains.json`**.
+      🔑 **No Firebase media is baked into the build any more**; about photos were the last.
+- [x] **M5 — `scripts/migration/migrate-about-content-to-cms.js`, APPLIED to prod
+      2026-08-02** (snapshot `backups/firestore/2026-08-02T13-15-25-299Z` first). Seeds
+      `about_content/manisan`, strips the `mainPhoto.localPath` build artifact from both docs,
+      and deletes the legacy `about_content/about` (M5.2a left it in place pending exactly this
+      verification). `about_content` now holds **two** docs; a re-run is a clean no-op.
+      📌 manisan's seed carries an **empty `mainPhoto`** — it never declared one, and an
+      invented filename would render as a broken image.
+- [x] **M6 — `next.config.js` allows the Storage emulator's host under the emulator flag.**
+      🔑 **The e2e harness had no remote-image coverage at all** — thumbnail and album fixtures
+      use local `public/` paths, so the about photo became the **first** e2e image served
+      through Storage, and `nav.spec` went red on a `next/image` **400**. Production still
+      resolves to exactly one allowed remote host.
+
+⚠️ **Two costs accepted on purpose, not overlooked:**
+
+1. **A missing about photo used to fail the build; now it is a broken image on a live page.**
+   The fail-loud guard was only possible because the filename sat in config the build could
+   read. Putting the CMS in charge means the check moves to the operator — hence the new
+   "check `/pages/about` after saving" step in both manuals.
+2. **The 파일 이름 field is free text matched against Storage.** The CMS names the photo but
+   cannot upload it, so a typo reads as "사진을 불러오지 못했어요". Making that a real upload
+   control (the signed-URL strategy the post composers use) is the natural follow-up —
+   **deliberately not folded into this change**.
+
+📌 **Found on the way, awaiting a decision: `sections` is stored, editable, and never
+rendered.** The public page shows 제목 / 부제 / 대표 사진 / 본문 only; the CMS has offered a
+섹션 editor the whole time. Either the page should render them or the field should go.
+
+**Verified:** `tsc` clean, smoke 34/34, unit 103/103, full e2e (below). Prod Storage confirmed
+to serve `about-photos/**` to an anonymous reader, which the new path requires.
+
+---
+
 ## 11. 🔴 Functional gaps — broken / missing nav destinations
 
 > **Functional, not design** (flagged by the user). The nav menu links to
