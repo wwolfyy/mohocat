@@ -105,6 +105,12 @@ those are the forward plan.
   historical record). A doc **moves from `pending/` to `completed/` when its
   own status line says it is done**, and links to it are updated in the same
   change.
+- **Known gaps that are _not_ scheduled live in [`BACKLOG.md`](./BACKLOG.md)** (added
+  2026-08-02) — real, deferred on purpose, no date — together with owner questions
+  awaiting an answer. 🔑 **An item belongs in exactly one of the two:** promoting a
+  backlog entry means moving it here (or into a `pending/` plan) and striking it there
+  **in the same change**. A duplicated entry is how the 2026-08-02 audit ended up with
+  seven claims that had rotted.
 - **Sequencing is not yet decided** — see §12. Mobile UX and admin cleanup are
   called out by the user as priorities; ordering among them and the debt items is
   open.
@@ -1862,12 +1868,14 @@ is why "just delete it" needed the photo pipeline moved first.
    "check `/pages/about` after saving" step in both manuals.
 2. **The 파일 이름 field is free text matched against Storage.** The CMS names the photo but
    cannot upload it, so a typo reads as "사진을 불러오지 못했어요". Making that a real upload
-   control (the signed-URL strategy the post composers use) is the natural follow-up —
-   **deliberately not folded into this change**.
+   control is the natural follow-up — **deliberately not folded into this change**, and now
+   tracked as [`BACKLOG.md`](./BACKLOG.md) **B1**, which records why it is not the drop-in
+   reuse of `generate-signed-url` it looks like.
 
 📌 **Found on the way, awaiting a decision: `sections` is stored, editable, and never
 rendered.** The public page shows 제목 / 부제 / 대표 사진 / 본문 only; the CMS has offered a
 섹션 editor the whole time. Either the page should render them or the field should go.
+Tracked as [`BACKLOG.md`](./BACKLOG.md) **Q1**.
 
 **Verified:** `tsc` clean, smoke 34/34, unit 103/103, full e2e (below). Prod Storage confirmed
 to serve `about-photos/**` to an anonymous reader, which the new path requires.

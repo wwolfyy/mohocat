@@ -312,10 +312,29 @@ with a copy in `config/mountains/mountains.json`, which quietly won for the 대�
 photo changed here kept showing the old one until someone redeployed. That copy is gone: what
 you save here is what the page renders, with no deploy needed.
 
-**The 대표 사진 takes a file _name_, not an upload.** Put the image in Firebase Storage at
-`about-photos/{mountainId}/`, then type its exact filename into **파일 이름**. ⚠️ The name is
-matched against Storage as free text — a typo shows **"사진을 불러오지 못했어요"** and nothing
-else, so open `/pages/about` after saving. Leave 파일 이름 blank for no photo.
+### ⚠️ Known limitation — the 대표 사진 takes a file _name_, not an upload
+
+The 대표 사진 block is **three text boxes** (파일명 · 대체 텍스트 · 사진 설명). There is no
+file picker, no upload button and no preview, so **this editor cannot put the image in
+Storage** — it only records the name of one that is already there.
+
+**To change the photo, two steps in two different tools:**
+
+1. Upload the image to **Firebase Storage** at `about-photos/{mountainId}/` (Firebase Console).
+2. Come back here and type that **exact** filename into **파일명**. Leave it blank for no photo.
+
+⚠️ **Nothing checks the name, in either direction.** Saving always reports
+**"소개 내용을 저장했어요!"** even when the file does not exist; the mistake only appears later
+on the public page as **"사진을 불러오지 못했어요"**, with no hint whether the cause was a
+typo, `.jpg` vs `.jpeg`, a rename in Storage, or the wrong mountain's folder. 👉 **Always open
+`/pages/about` after saving a photo change** — that habit is standing in for a check the
+software should be doing.
+
+📌 **This is a known gap, not the intended end state**, and it is the same shape as the
+pasted-URL post editor that was replaced on 2026-08-02: the create paths can upload, this one
+can only reference. Giving it a real upload control is tracked in
+[`docs/planning/BACKLOG.md`](../../planning/BACKLOG.md) → **B1**. Until then the two-step
+routine above is the supported way.
 
 📌 **섹션 is stored but not displayed.** The public page renders 제목, 부제, 대표 사진 and
 본문 only — anything typed into 섹션 is saved and never shown. (Raised 2026-08-02; awaiting a

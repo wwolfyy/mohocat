@@ -22,7 +22,10 @@ deep detail this file deliberately keeps out:
 - **`docs/handoff/`** — chronological engineering hand-offs. **Read the latest first** for
   current state and what's next (e.g. what feature is mid-flight).
 - **`docs/planning/PROJECT_PLAN.md`** — the cross-workstream status tracker (what's done,
-  in progress, deferred). Companion plans sit **one level down**, split by state:
+  in progress, deferred). Its sibling **`docs/planning/BACKLOG.md`** holds **known gaps that
+  are real but not urgent** — deferred on purpose, no date — plus owner questions awaiting an
+  answer. Check it before proposing "new" work; something may already be written up.
+  Companion plans sit **one level down**, split by state:
   **`docs/planning/pending/`** (open, in progress, or decided-but-not-executed — start
   here) and **`docs/planning/completed/`** (executed; historical record). A doc moves
   from `pending/` to `completed/` when its own status line says it's done, and the links

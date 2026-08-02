@@ -42,10 +42,14 @@ PR #7)
 > never declared one, and an invented filename would render as a broken image; an operator adds
 > it in the CMS.
 >
-> 🆕 **One decision waiting:** the CMS's 섹션 field is **stored, editable, and never rendered**
-> — the public page shows 제목 / 부제 / 대표 사진 / 본문 only. Render them, or drop the field?
-> Also: 파일 이름 is free text matched against Storage, so the CMS names the photo but cannot
-> upload it — a real upload control is the natural follow-up, deliberately not folded in.
+> 🆕 **Both loose ends are now written down** in the new
+> [`docs/planning/BACKLOG.md`](../planning/BACKLOG.md) — a standing register for known gaps
+> that are real but not urgent, created because a finding recorded only in the prose of a
+> hand-off reads as commentary rather than as work. **B1** = the 대표 사진 has no upload
+> control (파일 이름 is free text matched against Storage; the manual's two-step routine is the
+> workaround, and the entry records why reusing `generate-signed-url` is not a drop-in).
+> **Q1** = the CMS's 섹션 field is stored, editable and **never rendered** — render it or drop
+> it, owner's call.
 >
 > ---
 >
