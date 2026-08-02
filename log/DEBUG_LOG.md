@@ -11,6 +11,58 @@
 
 ---
 
+## 2026-08-03 — Deleted posts stayed in the collection, and no permission could remove them
+
+**Symptom (owner-reported):** posts deleted through the admin CMS were still present in
+`posts_feeding` / `posts_butler` in the Firebase console, while `posts_announcements` /
+`posts_adoption` deleted cleanly. The owner's first read was that documents with a **flat
+structure** (no `imageUrls` / `videoUrls` / `tags`) were the survivors — then found a
+nested-structure post that had also survived, which broke that theory.
+
+**Root cause: a missing `mountainId`, which makes a document undeletable by _everyone_.**
+`canWrite()` resolves the mountain a write targets:
+
+```
+function writeMountainId() {
+  return request.resource != null ? request.resource.data.mountainId
+                                  : resource.data.mountainId;   // ← delete takes this
+}
+```
+
+On a **delete** `request.resource` is null, so it reads the **stored** field, and
+`hasPermissionFor()` requires `mountainId != null`. No field ⇒ no mountain ⇒ denied — for
+admins too. 🔑 **There is no permission that grants past this**, which is why it did not look
+like a permission problem.
+
+📌 **Why the flat/nested correlation was a coincidence.** The flat documents are **replies**,
+and every reply in `posts_butler` was created **2025-07-09**, before multi-tenancy existed —
+so none had `mountainId` until the 2026-07-20 M4 backfill. They were unstamped at the moment
+deletion was attempted. The counter-example, `posts_feeding/brftRGjV7XWkPaZ91Gap`, was created
+**2026-07-21 — one day _after_ the backfill ran**, so nothing ever stamped it. It was the only
+such document among 98 across 11 content collections.
+
+⚠️ **The failure mode is silent by construction:** a one-shot backfill cannot catch documents
+written after it, and an unstamped document behaves normally until someone tries to write or
+delete it. Nothing reports it in between.
+
+**Fix:**
+
+- `scripts/migration/stamp-missing-mountain-id.js` — audits every content collection and
+  stamps what is missing (Admin SDK, which bypasses the very rule that blocks the client).
+  Applied to production 2026-08-03 after a snapshot: 1 document stamped, re-audit clean.
+  ⚠️ **Re-run it as an audit after any migration or bulk import** — that is the gap that
+  produced this.
+- `post-service.updateReplyCount` recounts instead of `increment(1)`. Found on the way:
+  `deleteReply()` calls it too, so deleting a 급식현황 reply _raised_ the parent's count.
+  집사톡's service had always recounted; the two now agree.
+
+**Verified:** the rule behaviour was proven, not inferred — `@firebase/rules-unit-testing`
+against the real `firestore.rules` in the emulator, deleting the same document twice as the
+same admin: **with `mountainId` → ALLOWED, without → DENIED**. Then the production audit
+re-run reports `missingMountainId: 0`, and full e2e stays green.
+
+---
+
 ## 2026-08-02 — Every 집사톡 post opened on "Post not found."
 
 **Symptom (owner-reported):** clicking any post on `/pages/butler_talk` rendered
