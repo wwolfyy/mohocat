@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useMountain } from '@/components/MountainProvider';
-import { getServiceForPostType, isPostType } from '@/services/post-types';
+import { getServiceForPostType, isPostType, type PostType } from '@/services/post-types';
 import { useAsyncData } from '@/hooks/useAsyncData';
 import { ErrorNotice } from '@/components/ui/AsyncStates';
+import PostMedia from '@/components/PostMedia';
 import { Post } from '@/types';
 import ReplyButton from '@/components/ReplyButton';
 import ReplyForm from '@/components/ReplyForm';
@@ -25,7 +26,33 @@ import ReplyList from '@/components/ReplyList';
  * go missing; the route then still matches and has to guess a collection, which
  * reproduces the original bug silently. As a segment, a link that omits the type
  * does not resolve at all. Build links with `postDetailPath()`.
+ *
+ * 🎨 **It renders like the 공지사항 detail page, because it is the same page for a
+ * different collection** (owner, 2026-08-02). It used to hand-roll its own
+ * markup: an unpadded full-bleed `<img>` under English `Video:` / `Images:`
+ * headings, with videos as a thumbnail linking off to youtube.com. Fixing the
+ * collection bug made that visible on 집사톡 and 급식현황 for the first time.
+ * Now: the same shell (back link · title · author • date · white card) and the
+ * same shared `PostMedia`, so every surface shows a post's media identically —
+ * one column, full width, each medium captioned with its own 제목/설명/태그.
  */
+
+/** Where each type's list lives, and what to call it in the UI. */
+const POST_TYPE_UI: Record<PostType, { label: string; listPath: string }> = {
+  butler_stream: { label: '급식현황', listPath: '/pages/butler_stream' },
+  butler_talk: { label: '집사톡', listPath: '/pages/butler_talk' },
+  announcements: { label: '공지사항', listPath: '/pages/announcements' },
+  adoption_promotion: { label: '입양홍보', listPath: '/pages/adoption' },
+};
+
+/**
+ * 급식현황 and 집사톡 are community feeds and carry replies. 공지사항 / 입양홍보
+ * are admin-authored announcements — they have never had a 댓글 thread, and
+ * reaching them through this route (the admin CMS links here) must not quietly
+ * become the place one appears.
+ */
+const REPLYABLE: PostType[] = ['butler_stream', 'butler_talk'];
+
 const PostDetailsPage = () => {
   // Service references
   const mountainId = useMountain();
@@ -54,6 +81,7 @@ const PostDetailsPage = () => {
   // The replies below must read and write the same collection the post came
   // from, so they take the service the post was actually resolved with.
   const postService = isPostType(postType) ? getServiceForPostType(postType, mountainId) : null;
+  const ui = isPostType(postType) ? POST_TYPE_UI[postType] : null;
 
   useEffect(() => {
     if (post) setReplyCount(post.replyCount || 0);
@@ -70,179 +98,110 @@ const PostDetailsPage = () => {
 
   if (status === 'loading') {
     return (
-      <div className="p-4" aria-busy="true" aria-live="polite">
-        <span className="sr-only">불러오는 중이에요.</span>
-        <div className="mb-4 h-8 w-2/3 animate-pulse rounded bg-gray-200" />
-        <div className="mb-2 h-4 w-full animate-pulse rounded bg-gray-100" />
-        <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100" />
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-4xl p-6" aria-busy="true" aria-live="polite">
+          <span className="sr-only">불러오는 중이에요.</span>
+          <div className="mb-4 h-9 w-32 animate-pulse rounded-lg bg-gray-200" />
+          <div className="mb-2 h-9 w-2/3 animate-pulse rounded bg-gray-200" />
+          <div className="mb-6 h-4 w-48 animate-pulse rounded bg-gray-100" />
+          <div className="h-64 animate-pulse rounded-lg bg-white shadow-md" />
+        </div>
       </div>
     );
   }
 
   if (status === 'error') {
     return (
-      <div className="p-4">
-        <ErrorNotice message="게시물을 불러오지 못했어요." onRetry={reload} />
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-4xl p-6">
+          <ErrorNotice message="게시물을 불러오지 못했어요." onRetry={reload} />
+        </div>
       </div>
     );
   }
 
-  if (!post || !postService) {
+  if (!post || !postService || !ui) {
     return (
-      <div className="p-4" data-oid="gb28vk9">
-        게시물을 찾을 수 없습니다.
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center" data-oid="gb28vk9">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">게시물을 찾을 수 없습니다.</h1>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4" data-oid="cqcgpeq">
-      <h1 className="text-2xl font-bold mb-4" data-oid="v2qhust">
-        {post.title}
-      </h1>
-      <p data-oid="l.1t25q">{post.message}</p> {/* Show videos if present */}
-      {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) && (
-        <div className="mt-4" data-oid="-lefipm">
-          <h2 className="text-xl font-semibold mb-2" data-oid="pdg-0.z">
-            {post.videoUrls?.length > 1 ? `Videos (${post.videoUrls.length}):` : 'Video:'}
-          </h2>
-          <div className="space-y-4" data-oid="kmf5wsd">
-            {(() => {
-              // Support both new videoUrls array and legacy videoUrl
-              const videoUrls = post.videoUrls || [post.videoUrl];
-              return videoUrls.map((videoUrl: string, index: number) => {
-                // Extract YouTube video ID from URL
-                const match = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-                const videoId = match ? match[1] : null;
-
-                if (videoId) {
-                  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-                  return (
-                    <div key={index} data-oid="jf:vmdm">
-                      {videoUrls.length > 1 && (
-                        <h3 className="text-lg font-medium mb-2" data-oid="sctacn8">
-                          Video {index + 1}
-                        </h3>
-                      )}
-                      <a
-                        href={videoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block relative group"
-                        data-oid="2jdmjk-"
-                      >
-                        <img
-                          src={thumbnailUrl}
-                          alt={`Video thumbnail ${index + 1}`}
-                          className="w-full max-w-2xl rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-                          onError={(e) => {
-                            // Fallback to medium quality thumbnail if maxres fails
-                            e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                          }}
-                          data-oid="8hlo15j"
-                        />
-
-                        {/* Play button overlay */}
-                        <div
-                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg"
-                          data-oid="pge1wr5"
-                        >
-                          <div
-                            className="bg-red-600 text-white rounded-full p-4 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300"
-                            data-oid="f40yn1v"
-                          >
-                            <svg
-                              width="32"
-                              height="32"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                              data-oid="rpd6ug3"
-                            >
-                              <path d="M8 5v14l11-7z" data-oid="8o90stx" />
-                            </svg>
-                          </div>
-                        </div>
-                      </a>
-                    </div>
-                  );
-                } else {
-                  // Fallback for non-YouTube videos or invalid URLs
-                  return (
-                    <div key={index} data-oid="wt09hvd">
-                      {videoUrls.length > 1 && (
-                        <h3 className="text-lg font-medium mb-2" data-oid="kg:sav:">
-                          Video {index + 1}
-                        </h3>
-                      )}
-                      <a
-                        href={videoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-brand-700 underline"
-                        data-oid="a1c-6ih"
-                      >
-                        Watch Video {index + 1}
-                      </a>
-                    </div>
-                  );
-                }
-              });
-            })()}
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="mb-6">
+          <button
+            onClick={() => router.push(ui.listPath)}
+            className="mb-4 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+          >
+            ← {ui.label} 목록으로
+          </button>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">{post.title}</h1>
+          <div className="text-sm text-gray-500 mb-4">
+            <span className="font-medium">{post.username}</span>
+            <span className="mx-2">•</span>
+            <span>
+              {post.date} {post.time}
+            </span>
           </div>
         </div>
-      )}
-      {/* Show images if present */}
-      {post.imageUrls && post.imageUrls.length > 0 && (
-        <div className="mt-4" data-oid="j..7qvf">
-          <h2 className="text-xl font-semibold mb-2" data-oid="1.mkqfc">
-            Images:
-          </h2>
-          <div className="space-y-2" data-oid="-icr5up">
-            {post.imageUrls.map((url: string, index: number) => (
-              <img
-                key={index}
-                src={url}
-                alt={`Image ${index + 1}`}
-                className="w-full rounded"
-                data-oid="mwcywrv"
-              />
-            ))}
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="mb-6">
+            <p className="whitespace-pre-wrap leading-relaxed text-gray-700">{post.message}</p>
           </div>
-        </div>
-      )}
-      {/* Reply section */}
-      <div className="mt-8 border-t pt-6" data-oid=":lorruy">
-        <h3 className="text-lg font-semibold mb-4" data-oid="8ds1dch">
-          댓글
-        </h3>
 
-        <ReplyButton
-          postId={post.id}
-          replyCount={replyCount}
-          onToggleReply={() => setShowReplyForm(!showReplyForm)}
-          showingReplies={false}
-          showingReplyForm={showReplyForm}
-          data-oid=".tzeqq4"
-        />
-
-        {showReplyForm && (
-          <ReplyForm
-            parentId={post.id}
-            parentUsername={post.username}
-            onReplySuccess={handleReplySuccess}
-            onCancel={() => setShowReplyForm(false)}
-            postService={postService}
-            data-oid="wr4xkv7"
+          {/* The shared renderer, so this page shows exactly what the 공지사항
+              detail page and the 입양홍보 feed show: every image and every video,
+              each with its own 제목/설명/태그. `videoUrl` is the legacy
+              single-value field some older posts still carry. */}
+          <PostMedia
+            imageUrls={post.imageUrls}
+            videoUrls={post.videoUrls?.length ? post.videoUrls : post.videoUrl && [post.videoUrl]}
+            label={ui.label}
+            layout="full"
           />
-        )}
 
-        <ReplyList
-          postId={post.id}
-          replyCount={replyCount}
-          onReplyCountUpdate={handleReplyCountUpdate}
-          postService={postService}
-          data-oid="1hxe0gs"
-        />
+          {REPLYABLE.includes(postType as PostType) && (
+            <div className="mt-8 border-t pt-6" data-oid=":lorruy">
+              <h3 className="text-lg font-semibold mb-4" data-oid="8ds1dch">
+                댓글
+              </h3>
+
+              <ReplyButton
+                postId={post.id}
+                replyCount={replyCount}
+                onToggleReply={() => setShowReplyForm(!showReplyForm)}
+                showingReplies={false}
+                showingReplyForm={showReplyForm}
+                data-oid=".tzeqq4"
+              />
+
+              {showReplyForm && (
+                <ReplyForm
+                  parentId={post.id}
+                  parentUsername={post.username}
+                  onReplySuccess={handleReplySuccess}
+                  onCancel={() => setShowReplyForm(false)}
+                  postService={postService}
+                  data-oid="wr4xkv7"
+                />
+              )}
+
+              <ReplyList
+                postId={post.id}
+                replyCount={replyCount}
+                onReplyCountUpdate={handleReplyCountUpdate}
+                postService={postService}
+                data-oid="1hxe0gs"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -999,6 +999,20 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
 
 ## Open threads / owner-owed
 
+- **`[ ]` Signing out logs a Firestore permission error, and the fallback swallows it
+  (found 2026-08-02, NOT fixed).** On sign-out a permission read lands unauthenticated and
+  `permission-service.ts:48` logs
+  `Failed to load permission config from Firestore: FirebaseError: false for 'get' @ L135` —
+  `firestore.rules:135` gates `role_permissions/role-config` on `request.auth != null`, and
+  `AuthProvider` holds a `getPermissionService()`. Cosmetic today (the `catch` falls back to the
+  local config), but it is a **real read that should never be issued**, and the catch **swallows
+  and substitutes defaults** rather than re-raising — against the repo's error convention, so a
+  genuine config failure would look the same. 🔑 **Deliberately not fixed in the post-layout
+  change:** the guard belongs in `AuthProvider`, which carries an explicit do-not-touch warning
+  after the 2026-08-02 hydration bug, and silencing it in the e2e watchdog would hide a genuine
+  app behaviour. ⚠️ **Do not "fix" this by allow-listing it** — only the neighbouring
+  `Could not reach Cloud Firestore backend` transport noise is allow-listed, and that one is
+  provably retried-and-recovered by the SDK.
 - **`[ ]` Live-verify the auth changes on Preview (2026-08-02).** ⏳ **Unreachable from the
   emulator** — it has no Kakao and no SMS, so the automated suites stay green regardless. Three
   things: a **real Kakao sign-in** and its **linking fallback** (the PII-logging fix touched both

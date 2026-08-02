@@ -25,6 +25,16 @@ const ALLOWED_ERROR_SUBSTRINGS: string[] = [
   // continues (playlists are optional there — source-verified in loadPlaylists()).
   // The P0 editor characterization specs pin that the page still works without it.
   'Error loading playlists',
+  // The Firestore SDK's own logger for a transport hiccup against the emulator —
+  // the same phenomenon as the EMULATOR_HOSTS allowance below, but logged by the
+  // SDK rather than by the browser's resource loader, so it carries no URL to
+  // match on. ⚠️ Benign **because the SDK retries internally and succeeds**: it
+  // is a stall, never a lost read (HANDOFF: "Firestore hangs; it does not
+  // throw"), which is why the assertions around it pass. Surfaces only under
+  // load — a full 8-worker run against one emulator. A genuine permission or
+  // index failure reports `code=permission-denied` / `failed-precondition`, not
+  // `unavailable`, and still fails the test.
+  'Could not reach Cloud Firestore backend',
 ];
 
 function isAllowed(text: string): boolean {

@@ -15,6 +15,44 @@
 
 ---
 
+## 2026-08-02 — the post detail page renders in the shared post shell
+
+**Area:** `src/app/[mountain]/pages/posts/[postType]/[id]/page.tsx`, `tests/e2e/setup/test.ts`.
+**Type:** fix (owner-reported), following the same day's `(type, id)` routing fix.
+
+**What changed and why.** Making 집사톡 / 공지사항 / 입양홍보 posts reachable exposed what this
+page had always looked like: its own hand-rolled markup — an unpadded full-bleed `<img>` under
+English `Video:` / `Images:` headings, with videos as a thumbnail **linking off to youtube.com**
+instead of an embedded player. Only 급식현황 had ever reached it, so nobody had seen it.
+Owner: it should look like the 공지사항 / 입양홍보 pages.
+
+It now uses the same shell as the 공지사항 detail page (back link · title · author • date · white
+card) and the same shared **`PostMedia`** with `layout="full"` — so every surface renders a post's
+media identically, one column, each medium captioned with its own 제목/설명/태그. Per-type back
+links (`← 집사톡 목록으로` …). 급식현황 gets the same treatment, as asked, even though its
+composer no longer uploads media.
+
+- **댓글 stays on the community types only** (급식현황 / 집사톡). 공지사항 / 입양홍보 have never
+  had a reply thread, and this route is where the admin CMS links — reaching them here must not
+  quietly grow one.
+
+**Verified:** 2 more cases in `post-detail.spec.ts` — the shared shell renders and the English
+`Images:` / `Video:` headings are gone; 댓글 appears on 집사톡 and not on 공지사항. Full e2e
+**2× consecutive 212 passed / 13 skipped / 0 failed**.
+
+🔬 **One test-harness finding, worth keeping.** Adding those two specs turned the suite red at
+`auth/login-logout` — twice, at the same spec, with **two different** console errors, while it
+passed 3/3 in isolation. Bisected properly rather than re-run: committed HEAD green, HEAD + the
+page rewrite + the 2 specs red, HEAD + the rewrite with those 2 specs skipped **green**. So the
+app change was innocent — two more specs on an 8-worker run push the shared emulator past a load
+threshold. One of the two errors (`Could not reach Cloud Firestore backend`, `code=unavailable`)
+is the SDK's own log for a transport hiccup it **retries internally and recovers from** — the same
+phenomenon the `EMULATOR_HOSTS` allowance already covers, minus a URL to match on. Allow-listed,
+narrowly: `permission-denied` / `failed-precondition` still fail.
+⚠️ **The other error was NOT silenced** — see the open thread below.
+
+---
+
 ## 2026-08-02 — 공지사항 / 입양홍보 are edited by their create composer
 
 **Area:** `src/components/forms/useSimpleContentForm.ts`,

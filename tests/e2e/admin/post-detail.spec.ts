@@ -47,6 +47,39 @@ test.describe('post detail resolves the right collection', () => {
     });
   }
 
+  /**
+   * 🎨 The page renders in the shared 공지사항-detail shell, not its own markup
+   * (owner, 2026-08-02). Fixing the collection bug made 집사톡 and 급식현황 posts
+   * reachable for the first time, which exposed this page's hand-rolled layout:
+   * full-bleed images under English `Video:` / `Images:` headings. Those strings
+   * are the regression signal — their absence is what this asserts.
+   */
+  test('renders in the shared post shell, not its own markup', async ({ page }) => {
+    await page.goto('/pages/posts/butler_talk/test-butler-01');
+
+    await expect(page.getByRole('button', { name: '← 집사톡 목록으로' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('heading', { name: '집사수다 1', level: 1 })).toBeVisible();
+    await expect(page.getByText('집사회원')).toBeVisible();
+
+    await expect(page.getByText('Images:')).toHaveCount(0);
+    await expect(page.getByText('Video:', { exact: false })).toHaveCount(0);
+  });
+
+  /** 공지사항 / 입양홍보 have never carried a 댓글 thread; reaching them through
+   *  this route (the admin CMS links here) must not quietly grow one. */
+  test('댓글 is offered on community posts only', async ({ page }) => {
+    await page.goto('/pages/posts/butler_talk/test-butler-01');
+    await expect(page.getByRole('heading', { name: '댓글' })).toBeVisible({ timeout: 15_000 });
+
+    await page.goto('/pages/posts/announcements/test-anno-01');
+    await expect(page.getByRole('heading', { name: '테스트 공지 1', level: 1 })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('heading', { name: '댓글' })).toHaveCount(0);
+  });
+
   test('a real miss still says so', async ({ page }) => {
     await page.goto('/pages/posts/butler_talk/no-such-post');
     await expect(page.getByText(NOT_FOUND)).toBeVisible({ timeout: 15_000 });
