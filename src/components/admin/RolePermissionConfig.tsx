@@ -3,28 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { authHeader } from '@/lib/auth/authHeader';
-import { Permission, Role as RoleType } from '@/types/permissions';
+import { ALL_PERMISSIONS, Permission, Role as RoleType } from '@/types/permissions';
 import Button from '@/components/ui/Button';
 import { adminStrings } from '@/constants/adminStrings';
 
 const { roleMatrix: t, roleLabels, common } = adminStrings;
 
-const ALL_PERMISSIONS: Permission[] = [
-  'manage-app',
-  'manage-cat',
-  'manage-canteen',
-  'manage-shelter',
-  'manage-photo',
-  'manage-video',
-  'manage-posts',
-  'manage-users',
-  'view-post-feeding',
-  'view-post-butler',
-  'view-photo',
-  'view-video',
-  'write-own-post-butler',
-  'write-own-post-feeding',
-];
+// The full catalogue, from its single source. ⚠️ Do NOT re-hardcode a copy here —
+// this matrix silently lost `upload-own-*` that way (§10p).
 
 interface RoleConfig {
   permissions: Permission[];

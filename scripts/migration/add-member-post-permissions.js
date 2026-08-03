@@ -9,11 +9,14 @@
  * permission in the repo does nothing until that document is updated too; this
  * script is the other half of the P2 task.
  *
- *   Phase 1 — grant the two new permissions:
- *     butler-ground   → write-own-post-butler, write-own-post-feeding
- *     butler-internet → write-own-post-butler  (it has no 급식현황 read grant,
- *                       so giving it a feeding write would contradict the
- *                       per-board split the roles already encode)
+ *   Phase 1 — grant the new permissions:
+ *     butler-ground   → write-own-post-butler, write-own-post-feeding,
+ *                       upload-own-photo, upload-own-video
+ *     butler-internet → write-own-post-butler, upload-own-photo,
+ *                       upload-own-video  (no 급식현황 write: it has no 급식현황
+ *                       read grant, so giving it one would contradict the
+ *                       per-board split the roles already encode — but it does
+ *                       write 집사톡, which is the board that uploads)
  *
  *   Phase 2 — backfill `authorUid` on existing posts, so their authors can edit
  *     them without relying on the rules' legacy email fallback. Maps
@@ -48,10 +51,23 @@ const SERVICE_ACCOUNT_PATH = path.resolve(
 
 const APPLY = process.env.APPLY === 'true';
 
-/** role → permissions to add. Additive; existing entries are untouched. */
+/**
+ * role → permissions to add. Additive; existing entries are untouched.
+ *
+ * The `upload-own-*` pair was added 2026-08-03, before this script had run: 집사톡
+ * is the only board that uploads, and every upload surface was gated on
+ * `manage-photo` / `manage-video` — which only `admin` holds — so a member who
+ * attached a file lost the whole post. Both butler roles may write 집사톡, so both
+ * get them. See docs/planning/pending/member-media-upload-permissions-20260803.md.
+ */
 const GRANTS = {
-  'butler-ground': ['write-own-post-butler', 'write-own-post-feeding'],
-  'butler-internet': ['write-own-post-butler'],
+  'butler-ground': [
+    'write-own-post-butler',
+    'write-own-post-feeding',
+    'upload-own-photo',
+    'upload-own-video',
+  ],
+  'butler-internet': ['write-own-post-butler', 'upload-own-photo', 'upload-own-video'],
 };
 
 const POST_COLLECTIONS = ['posts_butler', 'posts_feeding'];

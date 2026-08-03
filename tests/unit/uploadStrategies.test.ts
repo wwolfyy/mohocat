@@ -27,7 +27,10 @@ const file = (name: string) => new File(['x'], name, { type: 'application/octet-
  * YouTube-upload and signed-URL routes are permission-gated, so the strategies
  * attach this user's ID token. Only `getIdToken()` is exercised.
  */
-const testUser = { getIdToken: async () => 'test-id-token' } as unknown as User;
+const testUser = {
+  uid: 'test-uid',
+  getIdToken: async () => 'test-id-token',
+} as unknown as User;
 
 /**
  * Stand-in for the browser's XMLHttpRequest, which the byte leg uses (fetch cannot
@@ -528,6 +531,28 @@ describe('uploadImagesWithSignedUrls (signed-URL strategy, Family A)', () => {
     expect(entry.tags).toEqual(['테스트냥이이']);
     expect(entry.uploadedBy).toBe('admin@example.com');
     expect(entry.description).toBe('본문');
+    // The authorization identity the `cat_images` create rule checks. It comes from
+    // the same `user` that signs the request — never from `uploadedBy`, which is a
+    // display string holding emails and literals ('admin', 'system_sync').
+    expect(entry.uploadedByUid).toBe('test-uid');
+  });
+
+  // A member's record is authorized on `uploadedByUid` (firestore.rules
+  // `uploadingAsSelf`), so this must be the uid of whoever signed the request — not
+  // the caller-supplied `uploadedBy`. Deriving it inside the strategy is what makes
+  // the two impossible to disagree; pin that they are read from different places.
+  it('stamps uploadedByUid from the signed-in user, independently of uploadedBy', async () => {
+    fetchMock.mockResolvedValueOnce(signedUrlResponse(1)).mockResolvedValueOnce({ ok: true });
+    createImageMock.mockResolvedValue('img-id');
+
+    await uploadImagesWithSignedUrls([{ file: file('a.jpg'), description: '' }], {
+      ...context,
+      uploadedBy: 'somebody-else@example.com',
+    });
+
+    const entry = createImageMock.mock.calls[0][0];
+    expect(entry.uploadedByUid).toBe('test-uid');
+    expect(entry.uploadedBy).toBe('somebody-else@example.com');
   });
 
   // 촬영일 must never be invented. 공지사항 / 입양홍보 have no 촬영일 field at all and

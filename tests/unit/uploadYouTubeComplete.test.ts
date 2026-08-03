@@ -75,6 +75,32 @@ describe('POST /api/upload-youtube/complete — the cat_videos record', () => {
     getPlaylistIdMock.mockReturnValue('PL-geyang');
   });
 
+  // §10p: a 집사톡 member holds `upload-own-video`, an admin only `manage-video`, and
+  // this route is the ONLY gate on a member's video record (the write below goes
+  // through the Admin SDK, which bypasses firestore.rules). Both must stay accepted —
+  // dropping either locks out one of the two groups that legitimately upload.
+  it('accepts either the admin or the narrow member video permission', async () => {
+    await POST(makeRequest(BASE_BODY));
+
+    expect(requireApiPermissionMock).toHaveBeenCalledWith(expect.anything(), [
+      'manage-video',
+      'upload-own-video',
+    ]);
+  });
+
+  it('stamps uploadedByUid from the verified caller, not from the request body', async () => {
+    requireApiPermissionMock.mockResolvedValue({
+      ok: true,
+      uid: 'member-uid',
+      mountainId: 'geyang',
+    });
+
+    // A hand-crafted client sending its own uid must not be able to set it.
+    await POST(makeRequest({ ...BASE_BODY, uploadedByUid: 'someone-else' }));
+
+    expect(writtenDoc().uploadedByUid).toBe('member-uid');
+  });
+
   it('leaves 촬영일 empty when no recording date is known, rather than inventing one', async () => {
     const res = await POST(makeRequest(BASE_BODY));
 

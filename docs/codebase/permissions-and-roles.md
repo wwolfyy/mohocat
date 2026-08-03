@@ -104,4 +104,20 @@ graph LR
   Firestore rules, so forgetting the guard silently removes all protection.
 - Seed `config/permissions.json` is the _starting_ matrix; the _live_ authority is the
   Firestore `role_permissions/role-config` doc edited via the admin UI.
+  ⚠️ **This means a permission can go live without any deploy, and without the migration
+  script.** The admin UI's `POST /api/admin/role-permissions` writes the live doc directly,
+  and **Preview (branch `dev`) runs against the production database** — so saving the
+  Permission Matrix there changes production. (The `GET` auto-seed is _not_ a path: it fires
+  only when the doc is absent.) 🔑 **Discovered 2026-08-03**, when §10n's grants turned out to
+  be live while every doc said "not deployed". **Check the deployed artifact, not the branch.**
+- **Member ("own") grants are deliberately narrower than they look, and must stay that way.**
+  `write-own-post-*` (§10n) and `upload-own-photo` / `upload-own-video` (§10p) authorize
+  creating a thing attributed to yourself — never updating or deleting anyone's, your own
+  included. Authorization keys on a **uid** (`authorUid`, `uploadedByUid`), never on the
+  display fields beside them (`username`, `uploadedBy`), which hold emails and literals like
+  `'admin'` / `'system_sync'`.
+- **When a role gains a capability, walk its whole journey.** §10n granted the two post
+  permissions and shipped a member journey that still 403'd at the first upload — and because
+  the composer abandons the save on an upload failure, the member lost the entire post. 🔑
+  **The gap is never in the permission you just wrote**; it is in the step after it.
   </content>

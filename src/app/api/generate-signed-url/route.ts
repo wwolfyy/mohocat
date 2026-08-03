@@ -20,10 +20,17 @@ const storage = getStorage().bucket(storageBucket);
 
 // Gated: mints a 15-minute Storage *write* URL, so an ungated caller could upload
 // arbitrary objects into the bucket. Uploads made through this route are recorded as
-// `cat_images`, which firestore.rules gates on 'manage-photo' — requiring the same
-// permission here keeps the route exactly as permissive as the write it enables.
+// `cat_images`, and the accepted permissions mirror that collection's rule exactly —
+// keeping the route as permissive as the write it enables, and no more.
+//
+// 'upload-own-photo' joined 'manage-photo' on 2026-08-03 so a 집사톡 member can attach
+// a photo (§10p). ⚠️ Both must stay: an admin holds only the former, a member only the
+// latter. What bounds the widening is unchanged — the object path is server-chosen
+// under the Host-resolved tenant's prefix, a duplicate name is refused with 409, the
+// URL expires in 15 minutes, and contentType is pinned at signing. The caller picks
+// the filename, never the prefix.
 export async function POST(request: NextRequest) {
-  const authz = await requireApiPermission(request, 'manage-photo');
+  const authz = await requireApiPermission(request, ['manage-photo', 'upload-own-photo']);
   if (!authz.ok) {
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }

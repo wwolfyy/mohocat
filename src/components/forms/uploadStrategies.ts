@@ -337,11 +337,17 @@ export interface SignedUrlImageContext {
   tags: string[];
   /** Recorded calendar date `YYYY-MM-DD`; empty → the upload moment. */
   createdTime: string;
-  /** Uploader identity recorded on the entry (user email or 'unknown'). */
+  /**
+   * Uploader identity **for display** (user email or 'unknown'). ⚠️ Never authorize
+   * against this — see `CatImage.uploadedByUid`, which the strategy derives from
+   * `user` below rather than taking as a second caller-supplied field, so the two can
+   * never disagree.
+   */
   uploadedBy: string;
   /**
-   * Signed-in user, used to attach the `Authorization: Bearer <idToken>` header the
-   * gated signed-URL route requires ('manage-photo'). See YouTubeUploadOptions.user.
+   * Signed-in user. Supplies the `Authorization: Bearer <idToken>` header the gated
+   * signed-URL route requires, and the uid stamped as `uploadedByUid`. See
+   * YouTubeUploadOptions.user.
    */
   user: User | null;
 }
@@ -436,6 +442,10 @@ export const uploadImagesWithSignedUrls = async (
           // 날짜 없음). See DEBUG_LOG 2026-08-02.
           createdTime: context.createdTime ? calendarDateToInstant(context.createdTime) : null,
           uploadedBy: context.uploadedBy,
+          // The authorization identity the `cat_images` create rule checks
+          // (`uploadingAsSelf`). Derived from the same `user` that signs the request,
+          // so a member's record can only ever be attributed to themselves.
+          uploadedByUid: context.user?.uid ?? '',
           description,
           location: '',
           autoTagged: false,

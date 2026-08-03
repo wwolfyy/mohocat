@@ -20,11 +20,13 @@ import { calendarDateToInstant } from '@/utils/dateParser';
  * needs — and never receives — an OAuth token.
  *
  * Gated: uploading to the shared YouTube channel with the operator's OAuth credential
- * requires 'manage-video', the permission the `cat_videos` rule enforces. The
- * companion `/complete` route re-checks it before writing anything.
+ * requires 'manage-video' (what the `cat_videos` rule enforces) or, since 2026-08-03,
+ * the narrow 'upload-own-video' a 집사톡 member holds (§10p). ⚠️ Both must stay listed:
+ * an admin holds only the first, a member only the second. The companion `/complete`
+ * route re-checks the same pair before writing anything.
  */
 export async function POST(request: NextRequest) {
-  const authz = await requireApiPermission(request, 'manage-video');
+  const authz = await requireApiPermission(request, ['manage-video', 'upload-own-video']);
   if (!authz.ok) {
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }

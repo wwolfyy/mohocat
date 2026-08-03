@@ -51,6 +51,34 @@ is admin-shaped ("manage anything"); these are deliberately narrower:
 | `view-post-feeding`      | **read** 급식현황                                                            |
 | `write-own-post-butler`  | write a 집사톡 post **and edit your own** (2026-08-02)                       |
 | `write-own-post-feeding` | write a 급식현황 post **and edit your own**, and stamp the 급식소 you ticked |
+| `upload-own-photo`       | attach a **photo** to your 집사톡 post (2026-08-03)                          |
+| `upload-own-video`       | attach a **video** to your 집사톡 post (2026-08-03)                          |
+
+⚠️ **The two `upload-own-*` grants are not `manage-photo` / `manage-video`, and the difference
+matters.** They let a 집사 **add** a photo or video as part of their own post — nothing more.
+They do **not** allow editing or deleting any album entry (including one's own), retagging in
+`/admin/tag-images`, YouTube sync, or playlist management; all of that stays admin-only. A
+집사 who may add a photo must not thereby be able to reorganise the album.
+
+📌 **Why a 집사 needs these at all:** 집사톡 is the only member-writable board **that
+uploads**. Without them, attaching a file to a post fails at the upload — and the composer
+abandons the save, so the whole post is lost, not just the attachment (fixed 2026-08-03).
+
+### The two matrices on 사용자 관리, and which one you want
+
+| Tab      | Answers                                                          | Affects                                 |
+| -------- | ---------------------------------------------------------------- | --------------------------------------- |
+| **역할** | "which permissions does this **role** hold?"                     | everything — this is the real authority |
+| **권한** | "which permission does a visitor need to **see** this nav item?" | only whether the menu link is enabled   |
+
+🔑 **Grant a new capability in 역할.** 권한 is a _visibility_ map, which is why it offers only
+`view-*` permissions — gating a link on `write-own-post-butler` would hide it from people who
+may read but not post. ⚠️ **권한 does not enforce anything**: typing the URL still works, and
+the database is what refuses. Treat it as menu tidiness, not security.
+
+📌 Both tabs read their permission list from one place in the code now (2026-08-03). Before
+that each kept its own copy, which is how `upload-own-photo` / `upload-own-video` came to be
+active in the system while absent from the screen that manages them.
 
 🔑 **"Own" is enforced, not just hidden.** The 수정 link appears only on your own posts, and
 the database refuses an edit from anyone else even if the URL is typed by hand. An edit also

@@ -24,7 +24,9 @@
         "view-post-butler",
         "view-post-feeding",
         "write-own-post-butler",
-        "write-own-post-feeding"
+        "write-own-post-feeding",
+        "upload-own-photo",
+        "upload-own-video"
       ],
       "description": "Physical cat care management"
     },
@@ -33,7 +35,9 @@
         "view-video",
         "view-photo",
         "view-post-butler",
-        "write-own-post-butler"
+        "write-own-post-butler",
+        "upload-own-photo",
+        "upload-own-video"
       ],
       "description": "Digital content management"
     },

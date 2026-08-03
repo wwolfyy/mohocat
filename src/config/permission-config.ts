@@ -19,22 +19,14 @@ export interface PermissionConfig {
   >;
 }
 
-export type Role = 'admin' | 'butler-ground' | 'butler-internet' | 'viewer';
-export type Permission =
-  | 'manage-app'
-  | 'manage-cat'
-  | 'manage-canteen'
-  | 'manage-shelter'
-  | 'manage-photo'
-  | 'manage-video'
-  | 'manage-posts'
-  | 'manage-users'
-  | 'view-post-feeding'
-  | 'view-post-butler'
-  | 'view-photo'
-  | 'view-video'
-  | 'write-own-post-butler'
-  | 'write-own-post-feeding';
+/**
+ * Re-exported, not redefined. This module carried its own hand-maintained copies of
+ * both unions until 2026-08-03; nothing imported them (callers take only the
+ * functions below), and they had **already drifted** — `upload-own-photo` /
+ * `upload-own-video` were missing the day they shipped. A duplicate nobody reads is
+ * still a trap for whoever reads it next. Single source: `@/types/permissions`.
+ */
+export type { Role, Permission } from '@/types/permissions';
 
 /**
  * Load permission configuration from JSON file

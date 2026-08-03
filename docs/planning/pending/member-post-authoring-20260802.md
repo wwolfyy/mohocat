@@ -1,9 +1,21 @@
 # Member authoring on 집사톡 + 급식현황 — plan
 
 **Status:** P1–P6 built and green (full e2e **220 / 13 / 0**, up from 214 — six new member
-specs). ⚠️ **Not live:** the rules are **not deployed** and both prod migrations are
-**dry-run only**. Until those run, this is inert in production — which is the intended §5
-order, not an oversight.
+specs), **plus the direct rules suite** (`tests/rules/posts.rules.test.ts`, 43 tests,
+`npm run test:rules` = **54 passed** with `users.rules.test.ts`; §6).
+
+> 🔴 **CORRECTION 2026-08-03 — this is LIVE in production; the "not live" line below was
+> wrong.** The deployed ruleset (release **2026-08-02T16:00:12Z**) matches
+> `config/firebase/firestore.rules` ignoring comments, `role_permissions/role-config`
+> already grants `write-own-post-*` to both butler roles (the dry run skipped them as
+> "already held"), and **one active `butler-ground` member has authored two 급식현황
+> posts** on 2026-08-03. 🔑 **"Not on `main`" is not "not in production"** — Preview runs
+> `dev` against the **production** database, and rules + the matrix deploy by hand, out of
+> band. ⚠️ **Consequence:** the §10p media gap this shipped with is live too, not
+> theoretical — see
+> [`member-media-upload-permissions-20260803.md`](./member-media-upload-permissions-20260803.md).
+
+~~⚠️ **Not live:** the rules are not deployed and both prod migrations are dry-run only.~~
 
 🔬 **Three things the suite caught that review had not:**
 
@@ -144,6 +156,9 @@ write. See §5.
       own, **denied** on another author's post, **no** delete affordance; and butler-internet
       sees 집사톡 but not 급식현황. Update the admin manual (roles table), `docs/codebase/`
       permissions doc, PROJECT_PLAN, HANDOFF.
+- [x] **P7 — the rules suite (2026-08-03, added after P6).** `tests/rules/posts.rules.test.ts`
+      asserts the §4 rules directly, covering the refusals a UI-driven test cannot reach, and
+      was **mutation-tested** so its `assertFails` cases are known to discriminate. See §6.
 
 ---
 
@@ -190,14 +205,21 @@ match /posts_butler/{document} {
 
 ## 6. Risks
 
-- **Rules are the security boundary here, and the post rules are not directly tested yet.**
-  ⚠️ **Corrected 2026-08-03:** an earlier draft of this line claimed the repo has no rules
-  unit-test harness. It does — `tests/rules/users.rules.test.ts` (11 tests, `npm run
-test:rules`, CI-gated since M5.2b) asserts `firestore.rules` directly via
-  `@firebase/rules-unit-testing`. It simply does not cover the **post** rules. Today those are
-  exercised only through e2e driving the UI, which proves the paths a member is _offered_ and
-  not what a hand-crafted client is _refused_. 👉 `tests/rules/posts.rules.test.ts` is the
-  first item on the hand-off's to-do list, sequenced **before** the rules deploy.
+- ~~**Rules are the security boundary here, and the post rules are not directly tested yet.**~~
+  ✅ **CLOSED 2026-08-03 — `tests/rules/posts.rules.test.ts`, 43 tests, run before the deploy.**
+  It asserts `firestore.rules` directly via `@firebase/rules-unit-testing`, alongside the
+  existing `users.rules.test.ts`, and covers what e2e structurally cannot: a post attributed
+  to someone else's `authorUid`, an edit rewriting provenance, a `replyCount` that moves by
+  anything but +1 or carries a second field, a `feeding_spots` write outside the two allowed
+  keys, a delete on `write-own-*`, and `butler-internet` reaching 급식현황.
+  🔑 **The suite passed on the first run, which is not evidence — so it was mutation-tested:**
+  four holes were punched in the rules (drop `authoringAsSelf`, drop `provenanceUnchanged`,
+  `hasOnly`→`hasAny`, grant member delete) to prove the assertions fail when the rule does.
+  📌 **One of the four escaped, and it is the shape this plan's §4 invites:** the two boards
+  carry **separate, near-identical rule blocks**, and the provenance cases only ran against
+  `posts_butler` — so removing `provenanceUnchanged()` from `posts_feeding` alone was
+  invisible. Every ownership case now runs against **both** collections via `describe.each`.
+  ⚠️ **Keep that property**: a case added for one board without the other re-opens the gap.
 - **`isAdmin()` is looser than it reads** — it tests for `manage-cats` (no such permission;
   the real one is `manage-cat`) and `manage-settings` (does not exist), so it reduces to
   "holds `manage-posts` or `manage-users`". Not load-bearing for this plan, but do not copy it

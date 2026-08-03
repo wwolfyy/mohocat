@@ -96,40 +96,72 @@ export function isValidRole(
   return ['admin', 'butler-ground', 'butler-internet', 'viewer'].includes(role);
 }
 
+/**
+ * **The** permission catalogue — every other list is derived from this one.
+ *
+ * 🔑 It used to live in four places (this guard, the `Permission` union, and a
+ * hardcoded array in each of the two admin matrices), which is exactly how the
+ * 역할 tab came to be missing `upload-own-*` the day they were added: the code
+ * granted them, the rules enforced them, and the UI that manages them had never
+ * heard of them (2026-08-03, §10p). **Add a permission here and nowhere else.**
+ *
+ * ⚠️ `config/permissions.json` and the live `role_permissions/role-config` doc are
+ * a *different* axis — which role *holds* what. This is the vocabulary; that is the
+ * assignment.
+ */
+export const ALL_PERMISSIONS = [
+  'manage-app',
+  'manage-cat',
+  'manage-canteen',
+  'manage-shelter',
+  'manage-photo',
+  'manage-video',
+  'manage-posts',
+  'manage-users',
+  'view-post-feeding',
+  'view-post-butler',
+  'view-photo',
+  'view-video',
+  'write-own-post-butler',
+  'write-own-post-feeding',
+  // Narrow upload grants (2026-08-03): create a media record attributed to
+  // yourself, and nothing else. Deliberately NOT 'manage-photo'/'manage-video',
+  // which also authorize retagging and deleting anyone's album entries.
+  'upload-own-photo',
+  'upload-own-video',
+  /**
+   * Read the `permission_logs` audit trail. ⚠️ **Enforced by `firestore.rules` and held
+   * by no role** — catalogued here 2026-08-03 so it is at least *grantable* from the
+   * 역할 matrix; until someone ticks it, the audit log is readable by nobody.
+   *
+   * 📌 Found by the smoke guard below on its first run, which is the point of it: a
+   * rule can require a permission the vocabulary never defined, and that fails
+   * **closed and silently** — it presents as "the page shows nothing", never as an
+   * error. (The two client readers in `permission-service.ts` have no callers today,
+   * so nothing is visibly broken.) Granting it is an owner decision, not a default.
+   */
+  'view-analytics',
+] as const;
+
+/**
+ * The subset offerable as a **nav-visibility** gate (the 권한 / resource matrix).
+ *
+ * 🔑 Deliberately view-only. That matrix answers "which permission does a visitor
+ * need to *see* this nav item", so a **write** grant is a category error there —
+ * `write-own-post-*` was offered until 2026-08-03, was never selected in live
+ * config, and would have gated a link on the ability to post rather than to read.
+ */
+export const NAV_GATE_PERMISSIONS = [
+  'view-post-feeding',
+  'view-post-butler',
+  'view-photo',
+  'view-video',
+] as const satisfies readonly Permission[];
+
 export function isValidPermission(permission: string): boolean {
-  const validPermissions = [
-    'manage-app',
-    'manage-cat',
-    'manage-canteen',
-    'manage-shelter',
-    'manage-photo',
-    'manage-video',
-    'manage-posts',
-    'manage-users',
-    'view-post-feeding',
-    'view-post-butler',
-    'view-photo',
-    'view-video',
-    'write-own-post-butler',
-    'write-own-post-feeding',
-  ];
-  return validPermissions.includes(permission);
+  return (ALL_PERMISSIONS as readonly string[]).includes(permission);
 }
 
 // Utility types for convenience
 export type Role = 'admin' | 'butler-ground' | 'butler-internet' | 'viewer';
-export type Permission =
-  | 'manage-app'
-  | 'manage-cat'
-  | 'manage-canteen'
-  | 'manage-shelter'
-  | 'manage-photo'
-  | 'manage-video'
-  | 'manage-posts'
-  | 'manage-users'
-  | 'view-post-feeding'
-  | 'view-post-butler'
-  | 'view-photo'
-  | 'view-video'
-  | 'write-own-post-butler'
-  | 'write-own-post-feeding';
+export type Permission = (typeof ALL_PERMISSIONS)[number];

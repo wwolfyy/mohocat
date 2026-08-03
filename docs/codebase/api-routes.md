@@ -83,6 +83,13 @@ graph LR
   the route is exactly as permissive as the write it performs, and gating one doesn't quietly
   revoke a working flow. That's why `generate-signed-url` takes `manage-photo` (its uploads
   become `cat_images`) while every YouTube route takes `manage-video` (`cat_videos`).
+- **`requireApiPermission` accepts a list, meaning _any one of_** (2026-08-03, §10p). The three
+  **upload** routes take `['manage-photo','upload-own-photo']` / `['manage-video',
+'upload-own-video']`, because 집사톡 members hold only the narrow grant and admins only the
+  broad one. ⚠️ **Keep the admin permission in every list** — dropping it locks admins out,
+  the exact bug §10n shipped with `manage-posts` vs `write-own-*`. And do **not** add
+  `upload-own-*` to the tagging/album/sync routes: the narrow grant is only worth having
+  because nothing else accepts it, and `tests/unit/requireApiPermission.test.ts` pins that.
 - **Token → identity, never the body**: routes derive the caller's uid from the verified Bearer
   token (e.g. `account/delete`, `contact`), never from request parameters.
 - **No secret/PII logging**: contact/account routes explicitly avoid logging tokens or

@@ -74,6 +74,40 @@ page.
 
 ---
 
+## B2 — `view-analytics` is enforced by the rules and held by nobody
+
+**Found:** 2026-08-03, by the new `tests/smoke` permission-catalogue guard **on its first
+run** — which is exactly the class of drift it was written for (PROJECT_PLAN §10p).
+
+**The gap.** `firestore.rules` gates reads of `permission_logs` on `view-analytics`:
+
+```
+allow read: if request.auth != null &&
+  hasPermissionFor(request.auth.uid, 'view-analytics', resource.data.mountainId);
+```
+
+That permission appeared in **no** role, in neither `config/permissions.json` nor the live
+`role_permissions/role-config`, and was not in the `Permission` union either — so it could not
+be granted, and the audit trail is readable by **no one**. It is now catalogued in
+`ALL_PERMISSIONS` (2026-08-03), which makes it tickable in the 역할 matrix; it is still
+granted to nobody, because who may read an audit log is an owner decision.
+
+🔑 **A rule requiring an undefined permission fails closed and silently.** There is no error
+and no log — `hasPermissionFor` simply returns false, so the symptom is "the page is empty",
+indistinguishable from "there is nothing to show". That is why 14 months passed unnoticed.
+
+📌 **Nothing is visibly broken today**, which is why this is deferred rather than fixed:
+`permission-service.ts`'s two client readers (`getUserPermissionLogs`,
+`getAllPermissionLogs`) have **no callers**, and the writes go through the Admin SDK, which
+bypasses rules. The log is being written correctly and simply never read.
+
+**The decision it needs** is which way to close it: grant `view-analytics` to `admin` and
+build (or wire up) an audit-log view, or accept that the log is write-only forensics read from
+the Firebase Console and delete the two dead readers. Either is coherent; the current state —
+a rule, a permission, and two functions that can never succeed — is not.
+
+---
+
 ## Open questions (owner decisions — not tasks until answered)
 
 - **Q1 — Should the about page render `sections`?** (2026-08-02) The CMS has a 섹션 editor that

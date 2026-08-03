@@ -1,6 +1,7 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-03 · **Branch:** `dev` (`8754a3c`, **79** ahead of `origin/main`)
+**Last updated:** 2026-08-03 · **Branch:** `dev` (**81** ahead of `origin/main`, counting this
+commit; `origin/dev` is 3 behind local — the docs commits are unpushed)
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
@@ -34,13 +35,26 @@ PR #7)
 > `firestore.rules`: same admin, same document, deleted twice — **with `mountainId` ALLOWED,
 > without DENIED.** 📌 **Correction to an earlier draft of this box:** the repo _does_ have a
 > rules suite — `tests/rules/users.rules.test.ts` (11 tests, `npm run test:rules`, CI-gated
-> since M5.2b). It simply does not cover the post rules yet, which is to-do #1.
+> since M5.2b). It did not cover the post rules; `posts.rules.test.ts` now does (see below).
 >
-> 🔒 **Member authoring is BUILT BUT NOT LIVE, and the order matters.** Rules are **not
-> deployed** and `add-member-post-permissions.js` is **dry-run only**. Do them in this order:
-> (1) `firebase deploy --only firestore:rules` — inert on its own; (2) `APPLY=true node
-scripts/migration/add-member-post-permissions.js`; (3) push the code. ⚠️ **Reversing 1 and 3
-> gives members a visible composer whose save is denied.**
+> 🔴 **CORRECTION (2026-08-03, later): member authoring is LIVE in production. The
+> "built but not live" claim below was wrong, and it was wrong in this box, in
+> PROJECT_PLAN §10n and in the plan doc.** Verified three ways while dry-running the
+> migration: the deployed ruleset (release **2026-08-02T16:00:12Z**) is identical to the
+> repo's rules file ignoring comments; `role_permissions/role-config` **already grants**
+> `write-own-post-*` to both butler roles (the dry run skipped them as "already held");
+> and **one active `butler-ground` member has already authored two 급식현황 posts**
+> (2026-08-03, both carrying `authorUid`). 🔑 **"The code isn't on `main`" ≠ "the change
+> isn't in production."** Preview runs `dev` against the **production** database, and
+> rules + the permission matrix deploy out-of-band by hand — so a feature can be fully
+> live while its branch is 80 commits behind. **Check the deployed artifact, not the
+> branch.** (How the grants landed is not established; the auto-seed path is ruled out —
+> it only fires when the doc is absent — leaving an admin-UI save on Preview or an
+> unrecorded `APPLY=true` run.)
+>
+> ~~🔒 **Member authoring is BUILT BUT NOT LIVE, and the order matters.** Rules are not
+> deployed and `add-member-post-permissions.js` is dry-run only.~~ The remaining deploy
+> steps now belong to **§10p** (media upload) — see below.
 >
 > 🔬 **Three defects the e2e suite caught in the member work, all worth recognising again.**
 > (1) **The new gates locked admins out** — `manage-posts` and `write-own-*` are different
@@ -50,32 +64,66 @@ scripts/migration/add-member-post-permissions.js`; (3) push the code. ⚠️ **R
 > fixture. (3) Next refuses **two slug names at one path position** (`[id]` vs `[postId]`) — a
 > build error, not a runtime one.
 >
+> ✅ **The post rules are now tested directly — to-do #1 is DONE (2026-08-03).**
+> `tests/rules/posts.rules.test.ts`, **43 tests**; `npm run test:rules` = **54 passed** with
+> `users.rules.test.ts`, and CI's emulator-backed `rules` job picks it up with no wiring. It
+> covers every refusal the UI cannot exercise: a post attributed to **someone else's**
+> `authorUid`, an edit **rewriting** provenance, a `replyCount` moving by anything but **+1**
+> or carrying a second field, a `feeding_spots` write outside the two allowed keys, a
+> **delete** on `write-own-*`, and **butler-internet** reaching 급식현황.
+>
+> 🔑 **The lesson that generalises: a rules suite that passes on its first run has proved
+> nothing yet.** `assertFails` passes for _any_ denial, including a typo'd collection name, so
+> a green negative test and no test are indistinguishable until you make the rule wrong. Four
+> holes were punched in `firestore.rules` on purpose — drop `authoringAsSelf`, drop
+> `provenanceUnchanged`, `hasOnly`→`hasAny`, grant members `delete` — and **one of the four
+> escaped**: the two boards carry **separate, near-identical rule blocks**, and the provenance
+> cases only ran against `posts_butler`, so gutting `posts_feeding` alone was invisible. Every
+> ownership case now runs against **both** collections via `describe.each`. ⚠️ **Adding a case
+> for one board and not the other re-opens exactly that gap.**
+>
+> 🔴 **§10p — members can post on 집사톡 but cannot attach a photo, and it costs them the
+> whole post.** §10n granted the two **post** permissions and stopped; 집사톡 is the one
+> board that **uploads**, and every upload surface gates on `manage-photo`/`manage-video`,
+> which **only `admin` holds**. `useRichContentForm` alerts and **`return`s** on an upload
+> failure, so the save never runs — a member loses everything they typed, behind an
+> English `Failed to get signed URL: Forbidden`. ⚠️ **Live, per the correction above** —
+> `posts_butler` is empty today, which is the only reason nobody has hit it (급식현황
+> uploads nothing, so that member's two posts were safe). **Fixed in the working tree**
+> with narrow `upload-own-photo` / `upload-own-video` (owner's call over widening
+> `manage-*`, which would also authorize retagging and deleting anyone's album).
+> 📌 **Both nets missed it for mirror-image reasons:** the member e2e specs are text-only
+> by an exclusion **inherited from the admin specs, where it was harmless because an admin
+> holds every permission**; and my rules suite tested the permissions the feature _added_,
+> not the ones its user journey _depends on_.
+>
+> 🖥️ **…and the admin UI could not manage any of it** (owner: _"we need to update the 권한
+> tab"_). Both matrices on `/admin/members` **hardcoded their own copy** of the permission
+> list — so the new grants were live in config and rules and **invisible on the screen that
+> administers them**. Fixed at the root: **one exported `ALL_PERMISSIONS`**, everything else
+> derived, including a **fifth** copy in `src/config/permission-config.ts` that nothing
+> imported and had already drifted. The 권한 matrix also gained the missing **`cats`** row
+> (냥이들 is nav-gated and had no row, so it was unconfigurable) and lost `write-own-post-*`
+> — _write_ grants offered as _visibility_ gates.
+>
+> 🔴 **The new smoke guard found a second live gap on its first run:** `view-analytics` is
+> enforced on `permission_logs` reads and held by **no role**, so the audit trail is
+> readable by nobody. 🔑 **A rule requiring an undefined permission fails closed and
+> silently** — no error, no log, just an empty page indistinguishable from "nothing to
+> show". Catalogued so it _can_ be granted; granting it is an owner call (BACKLOG **B2**).
+>
 > **Do these next, in this order:**
 >
-> 1. 🔴 **Add `tests/rules/posts.rules.test.ts` for the §10n member-authoring rules — BEFORE
->    deploying them.** They are the security boundary for everything a non-admin can now
->    write, and today they are covered only **indirectly**, through e2e driving the UI. That
->    proves the happy paths a member is offered; it does not prove what a **hand-crafted
->    client** is refused, which is the half that matters.
->    ✅ **This is an extension, not new ground.** `tests/rules/users.rules.test.ts` (11 tests,
->    M5.2b) already asserts the rules file directly via `@firebase/rules-unit-testing`;
->    `npm run test:rules` runs the emulator for it, `vitest.rules.config.ts` picks up
->    `tests/rules/**/*.test.ts` automatically, and CI has an emulator-backed `rules` job. A new
->    file beside it is wired up by existing. Follow its shape: `withSecurityRulesDisabled` to
->    seed `role_permissions/role-config` + the actors' `users/{uid}` docs, then
->    `assertSucceeds` / `assertFails` per case.
->    **The cases to pin down, none of which the UI can exercise:** creating a post attributed
->    to **someone else's** `authorUid`; an update that **rewrites** `authorUid` / `username` /
->    `date` / `time`; a `replyCount` write that moves by anything other than **+1**, or that
->    carries a second field alongside it; a `feeding_spots` write touching a field other than
->    the two allowed; a **delete** attempted with only `write-own-*`; and `butler-internet`
->    reaching **급식현황** at all.
-> 2. **Deploy the member-authoring rules + run the permissions migration** (above), or
->    explicitly park them. Until then that whole commit is inert in production.
-> 3. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
+> 1. 🔴 **Ship §10p** — `firebase deploy --only firestore:rules`, then `APPLY=true node
+scripts/migration/add-member-post-permissions.js` (dry run reports
+>    `{added: 4, alreadyHeld: 3}`), then push. ⚠️ **Rules before the grant**: reversing
+>    those two lets a photo reach Storage while its `cat_images` record is **denied and
+>    swallowed** — the post saves and the photo never reaches the album, silently. Plan:
+>    [`member-media-upload-permissions-20260803.md`](../planning/pending/member-media-upload-permissions-20260803.md).
+> 2. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
 >    promotion.
-> 4. **The Preview verifications that piled up** — see the earlier session box below.
-> 5. **Then the promotion.** `dev` leads `origin/main` by **80**. ⚠️ Measure against
+> 3. **The Preview verifications that piled up** — see the earlier session box below.
+> 4. **Then the promotion.** `dev` leads `origin/main` by **80**. ⚠️ Measure against
 >    `origin/main`, not the local `main` ref (stranded at `26b1879`).
 >
 > 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the
@@ -418,7 +466,7 @@ the testing hand-off
   against the real `firestore.rules`: with `mountainId` ALLOWED, without DENIED. Detail:
   `log/DEBUG_LOG.md` 2026-08-03.
 - **👥 Members can now write on 집사톡 + 급식현황, and edit their own posts (2026-08-03,
-  uncommitted).** 🔑 **The ask rested on a premise that was false:** "let the author edit"
+  `8334c51`).** 🔑 **The ask rested on a premise that was false:** "let the author edit"
   implied non-admin authors, but **members could not see or create on either board** — the
   pages gated on `isAdmin()`, and the client-SDK write needs `manage-posts`, which only
   `admin` holds. So the missing piece was never editing. 📌 **The model had anticipated this
@@ -428,8 +476,13 @@ the testing hand-off
   `write-own-post-feeding`) cover create **and** edit-own per board; `authorUid` is now
   stamped at creation and is what the rules authorize against (`username` is an email, i.e.
   display). Delete stays admin-only — a 집사톡 post carries other people's replies.
-  ⚠️ **NOT LIVE:** rules undeployed, both migrations dry-run only. Plan:
-  [`member-post-authoring-20260802.md`](../planning/pending/member-post-authoring-20260802.md).
+  🔴 **CORRECTED 2026-08-03 — this is LIVE, not "not live":** the rules were deployed
+  2026-08-02T16:00Z, the live matrix already grants both permissions, and one
+  `butler-ground` member has authored two 급식현황 posts. See the correction box at the
+  top. ⚠️ **What is NOT live is §10p** — a member cannot attach a photo to a 집사톡 post
+  without losing the post. Plans:
+  [`member-post-authoring-20260802.md`](../planning/pending/member-post-authoring-20260802.md)
+  · [`member-media-upload-permissions-20260803.md`](../planning/pending/member-media-upload-permissions-20260803.md).
 - **📝 The about page has one source of truth — the CMS (2026-08-02, uncommitted).** The
   `about` object is gone from `config/mountains/mountains.json`; `about_content/{mountainId}`
   is the only copy. It was stale for `title`/`subtitle`/`mainContent`/`sections` — 📌 the tell
@@ -1782,7 +1835,16 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-03 (latest)** — **Member authoring, and a class of undeletable document.**
+- **2026-08-03 (latest)** — **The post rules are tested directly now, before they deploy.**
+  `tests/rules/posts.rules.test.ts` (43 tests; `npm run test:rules` = **54 passed** with
+  `users.rules.test.ts`) asserts the §10n member-authoring rules against the real
+  `firestore.rules` — the refusals a UI-driven e2e cannot reach. 🔑 It passed on the first
+  run, which proves nothing on its own, so it was **mutation-tested**: four deliberate holes
+  in the rules, and **one escaped** — the two boards have separate near-identical rule blocks
+  and the provenance cases only ran against `posts_butler`. Every ownership case now runs
+  against both via `describe.each`. Closes the plan's §6 risk; to-do #1 done, so the deploy is
+  now #1.
+- **2026-08-03** — **Member authoring, and a class of undeletable document.**
   Butler roles can now view / create / **edit their own** on 집사톡 + 급식현황 (`8334c51`);
   the ask's premise was false — members could not see or create at all, so "let the author
   edit" had no non-admin author to apply to. Two new per-board permissions, `authorUid` as the

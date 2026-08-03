@@ -13,6 +13,19 @@ export interface CatImage {
   createdTime?: Date; // When the image was originally taken/created
   updated?: Date; // When the image metadata was last updated
   uploadedBy: string; // User ID or name
+  /**
+   * Firebase Auth uid of the uploader — the **authorization** identity, stamped at
+   * creation and never rewritten (firestore.rules `uploadingAsSelf`, 2026-08-03).
+   *
+   * 🔑 Separate from `uploadedBy` because that field is free text: composers put an
+   * email in it, and the sync/admin paths put literals ('admin', 'system_sync',
+   * 'youtube_sync'). A display string cannot carry authorization — the same split
+   * `authorUid` / `username` makes on posts.
+   *
+   * Absent on every record created before that date; nothing reads it on an existing
+   * doc, because the member rule is create-only.
+   */
+  uploadedByUid?: string;
   description?: string; // Optional description
   location?: string; // Optional location where photo was taken
   thumbnailUrl?: string; // Optional smaller thumbnail version
@@ -37,6 +50,13 @@ export interface CatVideo {
   createdTime?: Date; // When the video was originally created/recorded
   updated?: Date; // When the video metadata was last updated
   uploadedBy: string; // User ID or name
+  /**
+   * Firebase Auth uid of the uploader — see `CatImage.uploadedByUid`. For videos this
+   * is **audit only**: the record is written by the Admin SDK in
+   * `/api/upload-youtube/complete`, which bypasses the rules, so nothing authorizes
+   * against it. It answers "which member uploaded this", now that non-admins can.
+   */
+  uploadedByUid?: string;
   description?: string; // Optional description
   location?: string; // Optional location where video was taken
   thumbnailUrl?: string; // Video thumbnail

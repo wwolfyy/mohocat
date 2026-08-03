@@ -15,6 +15,134 @@
 
 ---
 
+## 2026-08-03 — 집사톡 members can attach media (narrow `upload-own-*`), and §10n turned out to be live
+
+**Area:** `config/permissions.json`, `config/firebase/firestore.rules`,
+`src/types/permissions.ts`, `src/types/media.ts`, `src/lib/auth/requireApiPermission.ts`,
+`src/app/api/generate-signed-url/route.ts`, `src/app/api/upload-youtube/route.ts` +
+`/complete`, `src/components/forms/uploadStrategies.ts`,
+`scripts/migration/add-member-post-permissions.js`, `tests/rules/media.rules.test.ts` (new),
+`tests/unit/requireApiPermission.test.ts` (new).
+**Type:** enhancement + correction (owner-raised) — _"we only thought about permissions for
+posts, but if you upload images and/or videos you need image/video permissions as well."_
+
+**What changed and why.** The owner was right. §10n granted the two **post** permissions and
+stopped; 집사톡 is the only board a non-admin may write **and** the only one that uploads, and
+every upload surface gates on `manage-photo` / `manage-video`, which only `admin` holds.
+🔴 **The member did not get a degraded post — they lost the post**, because
+`useRichContentForm` alerts on an upload failure and `return`s before the save, behind an
+English `Failed to get signed URL: Forbidden`.
+
+Fixed with **narrow** `upload-own-photo` / `upload-own-video` (owner's call over widening
+`manage-*`): they authorize **creating** a media record attributed to yourself and nothing
+else — no update, no delete, no retagging, no sync, not even on your own record. Authorization
+keys on a new `uploadedByUid`, derived inside the upload strategy from the same `user` that
+signs the request, so it can never disagree with the free-text `uploadedBy` beside it (which
+holds emails **and** literals like `'admin'`, `'system_sync'`). `requireApiPermission` gained
+an **any-of** form so both the admin and member permissions are accepted at each gate.
+
+📌 **`cat_videos` deliberately got no rule clause.** A member's video record is written by the
+Admin SDK in `/api/upload-youtube/complete`, which bypasses rules entirely — the route is its
+gate, and a clause there would be dead surface guarding a write path that doesn't exist.
+
+🔴 **The bigger finding, from dry-running the migration: §10n was already LIVE**, while the
+hand-off, PROJECT_PLAN §10n and its plan doc all said "built but not live, rules undeployed,
+migration dry-run only." Verified three ways — the deployed ruleset (release
+**2026-08-02T16:00:12Z**) matches the repo's rules file ignoring comments; the live
+`role_permissions/role-config` already grants `write-own-post-*` to both butler roles; and one
+active `butler-ground` member had **already authored two 급식현황 posts that day**. 🔑 **"The
+code isn't on `main`" is not "the change isn't in production":** Preview runs `dev` against the
+**production** database, and rules + the permission matrix deploy by hand, out of band — so a
+feature can be fully live while its branch is 80 commits behind. **Check the deployed
+artifact, not the branch.** All three documents corrected.
+
+🔬 **Why both test nets missed the gap — mirror images of each other.** The member e2e specs
+are text-only by an exclusion **inherited from the admin specs, where it was harmless because
+an admin holds every permission**; carried into the member specs, it sat exactly on top of the
+one thing the new role could not do. And the §10n rules suite missed it because **it tested
+the permissions the feature added, not the ones its user journey depends on.** 🔑 **When a role
+gains a capability, walk its whole journey — the gap is never in the permission you just
+wrote.**
+
+**…and the admin UI could not manage any of it** (owner: _"we need to update the 권한 tab"_).
+Both matrices on `/admin/members` **hardcoded their own copy** of the permission list, so the
+new grants were live in config and rules and **invisible to the operator**. 📌 Saving was at
+least safe — the matrix posts the _fetched_ object, so unlisted permissions in Firestore are
+preserved rather than stripped. Fixed at the root: **one exported `ALL_PERMISSIONS`**, with
+the `Permission` union derived from it and all copies importing it — including a **fifth** in
+`src/config/permission-config.ts` that nothing imported and had already drifted. The 권한
+(nav-visibility) matrix also gained the missing **`cats`** row (냥이들 is gated in `Navigation`
+and had no row, so it could never be configured) and lost `write-own-post-*`, which are write
+grants offered as visibility gates. A never-read `PAGES` const went with them.
+
+🔴 **The new guard found a second live gap on its first run.** `tests/smoke` now compares the
+catalogue against what config grants, what `firestore.rules` enforces, and what `Navigation`
+gates — and `view-analytics` turned out to be enforced on `permission_logs` reads while held
+by **no role**, so the audit trail is readable by nobody. 🔑 **A rule requiring an undefined
+permission fails closed and silently** — no error, no log, just an empty page indistinguishable
+from "nothing to show". Catalogued so it can at least be granted; granting it is an owner call
+(BACKLOG **B2**).
+
+**Verified.** Gap reproduced at the rules layer _before_ any fix (both butler roles denied on
+`cat_images`/`cat_videos`, with admin-succeeds and member-post-succeeds controls in the same
+run, so the denials were specific rather than a broken fixture). After: `npx tsc --noEmit`
+clean · `npm test` **152** passed, from a 137 baseline (+10 unit: 7 gate, 1 stamp, 2 route;
++5 smoke) · `npm run test:smoke` **39** (34 + 5 catalogue guards) ·
+**e2e 224 / 13 / 0** (up from 220 —
+`admin/members-permissions.spec.ts` drives both tabs in a real browser) · `npm run test:rules`
+**69** passed (11 users + 43 posts + 15 media). **Mutation-tested**: dropping
+`uploadingAsSelf()`, widening `create`→`write`, adding the `cat_videos` clause, and turning
+any-of into all-of each produced exactly the expected failures.
+⚠️ **Not deployed** — rules, then the migration (`{added: 4, alreadyHeld: 3}`), then the push.
+
+---
+
+## 2026-08-03 — the dead deploy targets, swept a second time
+
+**Area:** `config/deployment/` (deleted), `scripts/deployment/` (deleted), `public/index.html`,
+`public/*.svg`, `README.md`, `config/README.md`, `next.config.js`, `package.json`,
+`test-kakaotalk-auth.js`, `tmp/rename.js`, `scripts/dev/get_doc_timestamps.ps1`.
+**Type:** removal (owner-requested) — _"`config/deployment/cloud-run-service.yaml` is a legacy
+config we abandoned long ago. Locate things of this sort and clean them up."_
+
+**What changed and why.** The 2026-06-27 cleanup (`f62816b`) declared Vercel the only deploy
+target and deleted the Cloud Run workflow, the Docker files and the `cloud-run:deploy-backup`
+npm script. It did not delete `config/deployment/cloud-run-service.yaml` or
+`scripts/deployment/deploy-cloud-run.{sh,bat}` — the owner found the first of those 14 months
+later. A sweep for the pattern turned up the rest:
+
+- **`public/index.html` — Firebase Hosting's "Setup Complete" welcome page, which Next was
+  serving publicly.** Verified, not assumed: `GET /index.html` on a local dev server returned
+  **200** with `<title>Welcome to Firebase Hosting</title>`. Anything under `public/` is served
+  at the site root, so this was reachable on the production domain the whole time. It was
+  invisible because `/` is an App Router page and wins — nobody types `/index.html`.
+- **`README.md`, the repo's front door, still documented Cloud Run as "Current
+  (Recommended)"** and told a new engineer to run `npm run cloud-run:deploy` — a script the
+  June pass had deleted. 8 of its 9 relative links were broken, and it advertised the
+  Cloud-Storage static-data pipeline (removed in the same cleanup, and an explicit
+  anti-pattern in `CLAUDE.md`) **three sections above** its own accurate "no Cloud Storage
+  data-serving path" note. Rewritten around what the repo actually does.
+- **Dead scaffolding of the same species:** `test-kakaotalk-auth.js` (root-level, checks a
+  component deleted since), `tmp/rename.js` (a one-shot rename over paths that no longer
+  exist), `scripts/dev/get_doc_timestamps.ps1` (**23 of its 30 paths** gone), the five
+  unreferenced create-next-app SVGs, a `package.json` script pointing at a missing file, a
+  `next.config.js` comment citing Cloud Run, and `config/README.md` still listing a
+  `firebase.json` the June pass deleted.
+
+🔑 **The lesson: a removal plan built as an inventory removes exactly what its author already
+knew about.** The cleanup plan's tables enumerated known files and said "verify each before
+deleting" — which reads as diligence while quietly bounding the work to the list. Nothing ever
+grepped `cloud-run` across the tree, so `deploy-cloud-run.sh` survived one directory away from
+the workflow that was deleted for the same reason. Its commit verified "no refs to deleted
+paths" — true, and not the same claim as "no refs to the dead target." **Sweep by pattern.**
+
+**Verified.** `npx tsc --noEmit` clean · `npm run test:smoke` 34/34 · `npm run test:rules`
+54/54 · production build succeeds and `GET /index.html` now **404**s while `/` is unchanged ·
+every relative link in the new `README.md` resolves · no reference anywhere outside
+`docs/archive/**` and `docs/planning/completed/**` (deliberate history) to any deleted path.
+
+---
+
 ## 2026-08-02 — the about page has one source of truth: the CMS
 
 **Area:** `src/hooks/useAboutPhoto.ts`, `src/app/[mountain]/pages/about/page.tsx`,

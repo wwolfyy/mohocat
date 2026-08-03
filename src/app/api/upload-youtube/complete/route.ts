@@ -19,12 +19,14 @@ import { calendarDateToInstant } from '@/utils/dateParser';
  * YouTube by the time this runs, which shapes the error handling below: a failure
  * here leaves an uploaded-but-unrecorded video, never a lost one.
  *
- * Gated on 'manage-video' independently of the session route — this is the half that
- * writes to Firestore via the Admin SDK, bypassing the rules that would otherwise
- * enforce it.
+ * Gated independently of the session route — this is the half that writes to Firestore
+ * via the Admin SDK, bypassing the rules that would otherwise enforce it. 🔑 **That
+ * bypass is why `cat_videos` has no member clause in firestore.rules**: this route,
+ * not the rules, is the gate for a member's video record. Accepts 'manage-video' or
+ * the narrow 'upload-own-video' (2026-08-03, §10p) — both must stay listed.
  */
 export async function POST(request: NextRequest) {
-  const authz = await requireApiPermission(request, 'manage-video');
+  const authz = await requireApiPermission(request, ['manage-video', 'upload-own-video']);
   if (!authz.ok) {
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }
@@ -125,6 +127,11 @@ export async function POST(request: NextRequest) {
         // item (HANDOFF open threads) — this change only stops the fabrication.
         createdTime: createdTime ? calendarDateToInstant(createdTime) : null,
         uploadedBy: 'user',
+        // Audit identity (2026-08-03). Nothing authorizes against it — this write goes
+        // through the Admin SDK and bypasses the rules — but non-admins can reach this
+        // route now, and `uploadedBy` is the literal 'user' above, so without this the
+        // record cannot say who uploaded it.
+        uploadedByUid: authz.uid,
         description: description || '',
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
         // `duration` is deliberately absent rather than undefined — YouTube doesn't
