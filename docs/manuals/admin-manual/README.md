@@ -566,6 +566,9 @@ OLD_NAME=아롱이 NEW_NAME=다롱이 node scripts/migration/rename-cat.js
 OLD_NAME=아롱이 NEW_NAME=다롱이 APPLY=true node scripts/migration/rename-cat.js
 ```
 
+- **Check the first line of the output.** Every run states its target — `TARGET: PRODUCTION
+Firestore (project 'mountaincats-61543')`. If it says `TARGET: Firestore EMULATOR` instead,
+  you have a test environment variable set and your changes are going nowhere real.
 - Use `CAT_ID=<document id>` instead of `OLD_NAME` when two cats share a name — the script
   **refuses** an ambiguous `OLD_NAME` rather than picking one.
 - Add `MOUNTAIN_ID=…` for any mountain other than `geyang`.

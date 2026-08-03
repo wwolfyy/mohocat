@@ -8,10 +8,12 @@ export default defineConfig({
   },
   test: {
     include: ['tests/**/*.test.ts'],
-    // Rules tests need the Firestore emulator (see `npm run test:rules`, which runs
-    // them via `firebase emulators:exec` against vitest.rules.config.ts). Keep them
-    // out of the default emulator-less run (`npm test` / `test:smoke`).
-    exclude: [...configDefaults.exclude, 'tests/rules/**'],
+    // Both of these need the Firestore emulator, so neither may run in the default
+    // emulator-less pass (`npm test` / `test:smoke`):
+    //   tests/rules/**   → `npm run test:rules`   (vitest.rules.config.ts)
+    //   tests/scripts/** → `npm run test:scripts` (vitest.scripts.config.ts)
+    // Each is run via `firebase emulators:exec` in its own CI job.
+    exclude: [...configDefaults.exclude, 'tests/rules/**', 'tests/scripts/**'],
     environment: 'node',
   },
 });

@@ -184,7 +184,11 @@ deep detail this file deliberately keeps out:
 
 - **Smoke suite**: `npm run test:smoke` (`tests/smoke/`) — structural regression net; keep
   it green when refactoring.
-- **Migration scripts**: `scripts/migration/` for one-shot data updates.
+- **Migration scripts**: `scripts/migration/` for one-shot data updates. Dry-run by default
+  (`APPLY=true` to write). Those with emulator coverage are tested by
+  `npm run test:scripts` (`tests/scripts/`, `vitest.scripts.config.ts`) — the third
+  emulator-backed suite alongside `test:rules` and `test:e2e`, and like them **excluded from
+  `npm test`**, so a script regression is caught only in its own CI job.
 - **Permission inspection**: `PermissionDebug.tsx` (dev-only) resolves a user's effective
   permissions.
 - **Debug log**: after fixing a bug whose root cause was non-obvious, add an entry to

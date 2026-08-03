@@ -40,7 +40,10 @@
  *   OLD_NAME=옛이름 NEW_NAME=새이름 node scripts/migration/rename-cat.js            # by name
  *   MOUNTAIN_ID=manisan OLD_NAME=… NEW_NAME=… node ...                          # target tenant
  *
- * Against the emulator, set FIRESTORE_EMULATOR_HOST first.
+ * Against the emulator (`firebase emulators:exec` sets FIRESTORE_EMULATOR_HOST)
+ * it connects credential-free and **refuses to run unless the project is
+ * `demo-*`** — see `initFirestore`. `npm run test:scripts` exercises the whole
+ * cascade that way; production runs need the real key and say so on every run.
  *
  * 📌 Snapshot before APPLY, as with every migration here. And re-run
  * `stamp-missing-mountain-id.js` afterwards if anything looks off — this script
@@ -89,8 +92,53 @@ const CAT_TEXT_FIELDS = [
 ];
 const ABOUT_TEXT_FIELDS = ['title', 'subtitle', 'mainContent'];
 
+/**
+ * Whether we are pointed at the Firebase Emulator Suite. `firebase emulators:exec`
+ * sets this for every child process, which is how the automated test drives this
+ * script for real instead of importing its parts.
+ */
+const EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || '';
+const USING_EMULATOR = EMULATOR_HOST !== '';
+
+/**
+ * Connect, and **say out loud which database**.
+ *
+ * 🔑 **The guard runs in both directions, because both mistakes are possible.**
+ *
+ *  - *Test → production.* Against an emulator the SDK needs no credentials at all,
+ *    so this takes the credential-less path (the same one `seed-emulators.mjs` and
+ *    the asset script use) and then **refuses to proceed unless the project id is
+ *    `demo-*`** — a namespace the Firebase SDKs can never route to a real project.
+ *    That is what lets CI run this against live data-shaped fixtures without a
+ *    service-account secret, and what makes "the test accidentally renamed a
+ *    production cat" unreachable rather than merely unlikely.
+ *  - *Production → emulator.* The reverse is quieter and so worth naming: a stray
+ *    `FIRESTORE_EMULATOR_HOST` left in an operator's shell would send an `APPLY`
+ *    run to a throwaway database, report a tidy success, and leave production
+ *    untouched. Hence the banner — the target is stated before any work, every run.
+ */
 function initFirestore() {
   if (admin.apps.length > 0) {
+    return admin.firestore();
+  }
+
+  if (USING_EMULATOR) {
+    const projectId =
+      process.env.FIREBASE_PROJECT_ID_OVERRIDE ||
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      'demo-mohocat';
+
+    if (!projectId.startsWith('demo-')) {
+      throw new Error(
+        `REFUSING TO RUN: FIRESTORE_EMULATOR_HOST is set (${EMULATOR_HOST}) but the project id ` +
+          `is '${projectId}', not a demo-* project. Emulator runs must use a demo-* namespace ` +
+          `so they can never reach real data; unset FIRESTORE_EMULATOR_HOST to target production.`
+      );
+    }
+
+    console.log(`TARGET: Firestore EMULATOR at ${EMULATOR_HOST} (project '${projectId}').`);
+    console.log('        Production is not being touched.');
+    admin.initializeApp({ projectId });
     return admin.firestore();
   }
 
@@ -107,6 +155,7 @@ function initFirestore() {
     serviceAccount = require(SERVICE_ACCOUNT_PATH);
   }
 
+  console.log(`TARGET: PRODUCTION Firestore (project '${serviceAccount.project_id}').`);
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     projectId: serviceAccount.project_id,

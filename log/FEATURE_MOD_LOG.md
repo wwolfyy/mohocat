@@ -15,6 +15,47 @@
 
 ---
 
+## 2026-08-04 — migration scripts get an emulator-backed test suite, and `rename-cat.js` gets a guard
+
+**Area:** `scripts/migration/rename-cat.js`, `tests/scripts/renameCat.emulator.test.ts` (new),
+`vitest.scripts.config.ts` (new), `vitest.config.ts`, `package.json`,
+`.github/workflows/ci.yml`, `AGENTS.md`, `docs/manuals/admin-manual/README.md`.
+**Type:** enhancement — landing the verification harness written alongside the rename script
+(entry below) as a real, CI-gated suite.
+
+**What changed.** A third emulator-backed category, `tests/scripts/**`, run by
+`npm run test:scripts` and gated by its own CI job. It mirrors `tests/rules/**` exactly:
+excluded from the default `npm test` (which must stay runnable with no emulator and no JVM),
+its own vitest config, and a CI job that is a near-copy of the `rules` one.
+
+🔑 **The real work was not the plumbing — it was the script's credential path.**
+`rename-cat.js` could only start from a real service-account key, which is why the harness had
+to be run by hand against the production project id. CI is deliberately hermetic (the e2e job:
+_"a demo-\* Firebase project with fake keys means NO GitHub secrets are required"_), so making
+this testable meant giving the script the credential-less emulator path
+`seed-emulators.mjs` already uses — **plus a refusal to run unless the project is `demo-*`**.
+
+📌 **The guard is the point, not a side effect.** It turns "the test won't touch production"
+from a property of how we happen to invoke it into one the script enforces itself. It also runs
+the other way: every run now prints `TARGET: PRODUCTION Firestore …` or `TARGET: Firestore
+EMULATOR …` first, because a stray `FIRESTORE_EMULATOR_HOST` in an operator's shell would
+otherwise send an `APPLY` run to a throwaway database and report a tidy success.
+
+⚠️ **Each case spawns the script as a child process**, because it reads `APPLY` / `OLD_NAME` /
+`NEW_NAME` at module load and an imported copy could not vary them. Slower (~14s for 20 cases),
+and a better test: it exercises the real entry point and exit codes. `fileParallelism: false`
+in the config — the cases reseed shared collections, which is the interference shape that cost
+this repo weeks in the e2e suite.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **182** (unchanged — the new suite is
+correctly invisible to it) · `npm run lint` clean · `npm run test:scripts` **20 passed**.
+✅ **Re-run with the service-account key moved aside and `SERVICE_ACCOUNT_KEY` unset** —
+still green, which is the actual claim the CI job depends on and not one worth taking on
+faith. **Mutation-tested:** neutering the `demo-*` check failed exactly one case, the one
+that asserts it.
+
+---
+
 ## 2026-08-04 — renaming a cat is a cascade, and now there is a script for it
 
 **Area:** `scripts/migration/rename-cat.js` (new), `tests/unit/renameCat.test.ts` (new),
