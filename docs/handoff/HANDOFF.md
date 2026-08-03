@@ -1,7 +1,7 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-03 · **Branch:** `dev` (**81** ahead of `origin/main`, counting this
-commit; `origin/dev` is 3 behind local — the docs commits are unpushed)
+**Last updated:** 2026-08-04 · **Branch:** `dev` — `origin/dev` = **`01d02d7`**, **84** ahead
+of `origin/main`, everything pushed
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
@@ -82,8 +82,9 @@ PR #7)
 > ownership case now runs against **both** collections via `describe.each`. ⚠️ **Adding a case
 > for one board and not the other re-opens exactly that gap.**
 >
-> 🔴 **§10p — members can post on 집사톡 but cannot attach a photo, and it costs them the
-> whole post.** §10n granted the two **post** permissions and stopped; 집사톡 is the one
+> ✅ **§10p — DEPLOYED 2026-08-03, verified live.** Members can attach photos and videos to
+> 집사톡 posts. What it fixed:
+> 🔴 **members could post but not attach a photo, and it cost them the whole post.** §10n granted the two **post** permissions and stopped; 집사톡 is the one
 > board that **uploads**, and every upload surface gates on `manage-photo`/`manage-video`,
 > which **only `admin` holds**. `useRichContentForm` alerts and **`return`s** on an upload
 > failure, so the save never runs — a member loses everything they typed, behind an
@@ -125,23 +126,49 @@ PR #7)
 > because the services _recount_ rather than increment, so a delete lands on `old − 1`.
 > ✅ **"Media survives" needed no code** — verified in both services: the delete path never
 > touches `cat_images` / `cat_videos` / Storage.
+> ✅ **DEPLOYED 2026-08-04 and verified live.** ⚠️ It spent a few hours in the half-state the
+> deploy order exists to prevent — code pushed, rules not — during which the 삭제 button
+> rendered and the database refused it. Recorded because the shape recurs, not because
+> anything was done wrong: the rules deploy simply predated the work.
+>
+> ## ✅ Everything in this bundle is now LIVE in production
+>
+> **Verified against production 2026-08-04, not taken on trust** — the same check that caught
+> the §10n mistake, and it earned its keep twice more this session. The deployed ruleset
+> (release **2026-08-03T15:55:38Z**) is now **identical to `config/firebase/firestore.rules`**
+> ignoring comments, and the live matrix carries every grant:
+>
+> |                           | Rules                                                 | Permissions                                        | State    |
+> | ------------------------- | ----------------------------------------------------- | -------------------------------------------------- | -------- |
+> | **§10n** member authoring | ✅ deployed                                           | ✅ `write-own-post-*` on both butler roles         | **LIVE** |
+> | **§10p** media upload     | ✅ `uploadingAsSelf` + the `cat_images` create clause | ✅ `upload-own-photo` + `upload-own-video` on both | **LIVE** |
+> | **§10q** author delete    | ✅ `isParentAuthor` + `isReplyCountAdjustment`        | n/a — rides on the existing grants                 | **LIVE** |
+>
+> 🔑 **The habit worth keeping: read the deployed artifact, not the branch.** It caught §10n
+> being live while three documents said it wasn't (2026-08-03), and then caught §10q's rules
+> _not_ being live while its code was already pushed — a state in which members saw a 삭제
+> button the database refused. Both were invisible from the repo. A `git log` cannot tell you
+> what Firestore is enforcing; rules and the permission matrix ship through their own
+> channels, and Preview runs `dev` against the **production** database.
+>
+> ⚠️ **So the deploy order is a live hazard, not a formality.** Code reaches production on
+> `git push`; rules and permissions do not. Ship rules first, then the migration, then the
+> code — and when code lands first, the gap is user-visible immediately.
 >
 > **Do these next, in this order:**
 >
-> 1. 🔴 **Ship §10p and §10q together** — same rules file, one deploy:
->    `firebase deploy --only firestore:rules`, then `APPLY=true node
-scripts/migration/add-member-post-permissions.js` (dry run reports
->    `{added: 4, alreadyHeld: 3}`), then push. ⚠️ **Rules before the grant**: reversing
->    those two lets a photo reach Storage while its `cat_images` record is **denied and
->    swallowed** — the post saves and the photo never reaches the album, silently.
->    📌 §10q needs **no migration** — it rides on the existing `write-own-post-*` grants.
->    Plan: [`member-media-upload-permissions-20260803.md`](../planning/pending/member-media-upload-permissions-20260803.md)
->    · PROJECT_PLAN **§10q**.
-> 2. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
+> 1. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
 >    promotion.
-> 3. **The Preview verifications that piled up** — see the earlier session box below.
-> 4. **Then the promotion.** `dev` leads `origin/main` by **83**. ⚠️ Measure against
+> 2. **The Preview verifications that piled up** — see the earlier session box below.
+>    🆕 **Add two from this bundle**, both now live and neither covered by the emulator:
+>    a member **attaching a photo to a 집사톡 post** (§10p — the e2e image leg is stubbed),
+>    and a member **deleting a post that has someone else's 댓글 on it** (§10q — the cascade,
+>    which is the one path that needs `isParentAuthor` and a real second account).
+> 3. **Then the promotion.** `dev` leads `origin/main` by **84**. ⚠️ Measure against
 >    `origin/main`, not the local `main` ref (stranded at `26b1879`).
+>    🆕 **Add to the "changes behaviour on deploy" list when promoting:** 집사톡 members can
+>    now attach one photo + one video; authors can **delete** their own posts, which
+>    **cascades to other people's 댓글**; and reply authors can edit/delete their own 댓글.
 >
 > 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the
 > owner's `description` / `theme.secondaryColor` / `accentColor` edits. Also three untracked
@@ -498,8 +525,8 @@ the testing hand-off
   `butler-ground` member has authored two 급식현황 posts. See the correction box at the
   top. ⚠️ **What is NOT live is §10p** — a member cannot attach a photo to a 집사톡 post
   without losing the post. Plans:
-  [`member-post-authoring-20260802.md`](../planning/pending/member-post-authoring-20260802.md)
-  · [`member-media-upload-permissions-20260803.md`](../planning/pending/member-media-upload-permissions-20260803.md).
+  [`member-post-authoring-20260802.md`](../planning/completed/member-post-authoring-20260802.md)
+  · [`member-media-upload-permissions-20260803.md`](../planning/completed/member-media-upload-permissions-20260803.md).
 - **📝 The about page has one source of truth — the CMS (2026-08-02, uncommitted).** The
   `about` object is gone from `config/mountains/mountains.json`; `about_content/{mountainId}`
   is the only copy. It was stale for `title`/`subtitle`/`mainContent`/`sections` — 📌 the tell
@@ -1852,7 +1879,23 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-03 (latest)** — **The post rules are tested directly now, before they deploy.**
+- **2026-08-04 (latest)** — **Author delete + reply edit/delete (§10q), and a deploy-state
+  check that paid off.** Authors may now remove their own posts and reply authors their own
+  댓글 — reversing §10n's withholding, on the owner's call. 🔑 A reply is a document in the
+  **same collection**, so one rule governs both and "the reply's author, not the post's"
+  needed **no new permission and no new rule**; the ask was almost entirely a UI gap. Two
+  things did need rules: the **cascade** (`deletePost` removes every reply first, so without
+  `isParentAuthor()` an author cannot delete a post anyone replied to) and **`replyCount` ±1**
+  (the services recount, so a delete lands on `old − 1`). "Media survives" needed no code —
+  verified in both services. Rules **86**, e2e **228/13/0**.
+  ✅ **All of §10n / §10p / §10q are now LIVE and verified** — the deployed ruleset is
+  identical to the repo's and the matrix carries every grant. 🔑 **Checking the deployed
+  artifact rather than the branch is what made that statement worth anything**: the same
+  check caught §10n being live while three docs said it wasn't, and then caught §10q's rules
+  _not_ being live while its code was already pushed — members briefly saw a 삭제 button the
+  database refused. ⚠️ **The deploy order is a live hazard, not a formality**: code ships on
+  `git push`, rules and permissions do not.
+- **2026-08-03** — **The post rules are tested directly now, before they deploy.**
   `tests/rules/posts.rules.test.ts` (43 tests; `npm run test:rules` = **54 passed** with
   `users.rules.test.ts`) asserts the §10n member-authoring rules against the real
   `firestore.rules` — the refusals a UI-driven e2e cannot reach. 🔑 It passed on the first
@@ -1865,8 +1908,9 @@ longer wanted.
   Butler roles can now view / create / **edit their own** on 집사톡 + 급식현황 (`8334c51`);
   the ask's premise was false — members could not see or create at all, so "let the author
   edit" had no non-admin author to apply to. Two new per-board permissions, `authorUid` as the
-  authorization identity, and rules that refuse an edit which rewrites authorship. ⚠️ **Not
-  live** — rules undeployed, migration dry-run only. Then (`8754a3c`) the owner's
+  authorization identity, and rules that refuse an edit which rewrites authorship.
+  ⚠️ ~~**Not live** — rules undeployed, migration dry-run only.~~ **That was wrong and was
+  corrected on 2026-08-04: it was already live.** Then (`8754a3c`) the owner's
   "deleted posts are still there": a doc with **no `mountainId`** is undeletable by everyone,
   because `canWrite()` reads the field off the stored doc on a delete. One doc of 98; fixed in
   prod with a standing audit script. 🔑 The flat-structure correlation was a decoy — the

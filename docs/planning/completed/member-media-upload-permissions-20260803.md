@@ -1,6 +1,6 @@
 # Member media upload on 집사톡 — narrow `upload-own-*` permissions — plan
 
-**Created:** 2026-08-03 · **Status:** built, awaiting the rules deploy + migration ·
+**Created:** 2026-08-03 · **Status:** ✅ **DONE — deployed 2026-08-03, verified live 2026-08-04** ·
 **Follows:** [`member-post-authoring-20260802.md`](./member-post-authoring-20260802.md) (§10n)
 **Tracker:** PROJECT_PLAN §10p
 
@@ -134,7 +134,17 @@ prefix.
 - [ ] **M6 — docs.** Admin manual roles table, `docs/codebase/permissions-and-roles.md` +
       `api-routes.md`, PROJECT_PLAN §10p, HANDOFF, `log/FEATURE_MOD_LOG.md`.
 
-## 4. Deploy order
+## 4. Deploy order — ✅ COMPLETE
+
+> ✅ **Done 2026-08-03 (owner), verified against production 2026-08-04.** The deployed
+> ruleset (release **2026-08-03T12:03:36Z**) carries the `cat_images` create clause and
+> `uploadingAsSelf`, and the live `role_permissions/role-config` grants `upload-own-photo`
+>
+> - `upload-own-video` to **both** butler roles. 🔑 Verified by reading the deployed
+>   artifact, not by trusting the branch — the §10n lesson, and the check that caught §10q
+>   still being undeployed.
+>
+> ✅ **Moved to `completed/` 2026-08-04**, when §10q shipped on the same rules file.
 
 📌 **§10n's steps 1 and 2 are already done** (see the box at the top) — these are the
 remaining ones, for this change only:

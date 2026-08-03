@@ -1,6 +1,7 @@
 # Member authoring on 집사톡 + 급식현황 — plan
 
-**Status:** P1–P6 built and green (full e2e **220 / 13 / 0**, up from 214 — six new member
+**Status:** ✅ **DONE — live in production** (rules deployed, permissions granted, verified
+2026-08-04). P1–P7 built and green (full e2e **220 / 13 / 0**, up from 214 — six new member
 specs), **plus the direct rules suite** (`tests/rules/posts.rules.test.ts`, 43 tests,
 `npm run test:rules` = **54 passed** with `users.rules.test.ts`; §6).
 

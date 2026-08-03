@@ -68,8 +68,16 @@ must not match an account with no email.
 **Mutation-tested:** removing the author term, the −1 branch, or the parent check each failed
 exactly the right cases — and M1 run _in isolation_ confirmed the **positive** author-delete
 test is not vacuous, which the combined run had masked.
-⚠️ **Not deployed** — ships with §10p on the same `firebase deploy --only firestore:rules`. No
-migration: these ride on the existing `write-own-post-*` grants.
+✅ **Deployed 2026-08-04** (owner) and **verified against production**: the deployed ruleset is
+now **identical to `config/firebase/firestore.rules`** ignoring comments. No migration — these
+ride on the existing `write-own-post-*` grants.
+⚠️ **It spent a few hours code-shipped-but-rules-not**, during which `PostList` rendered 삭제
+while the live rules still said `allow delete: if canWrite('manage-posts')` — the button and
+its confirm appeared, and the write was refused. (Reply 수정 worked throughout; editing never
+needed a rule change.) 🔑 **Recorded because the shape recurs, not because anything was done
+wrong:** code reaches production on `git push` while rules and the permission matrix ship
+through their own channels, so a deploy done before the work exists cannot cover it. **Check
+the deployed artifact, not the branch.**
 
 ---
 
@@ -151,7 +159,9 @@ clean · `npm test` **152** passed, from a 137 baseline (+10 unit: 7 gate, 1 sta
 **69** passed (11 users + 43 posts + 15 media). **Mutation-tested**: dropping
 `uploadingAsSelf()`, widening `create`→`write`, adding the `cat_videos` clause, and turning
 any-of into all-of each produced exactly the expected failures.
-⚠️ **Not deployed** — rules, then the migration (`{added: 4, alreadyHeld: 3}`), then the push.
+✅ **Deployed 2026-08-03** (owner), in the correct order, and **verified against production
+2026-08-04** rather than trusted: the live ruleset carries the `cat_images` create clause and
+`uploadingAsSelf`, and the matrix grants both `upload-own-*` to both butler roles.
 
 ---
 
