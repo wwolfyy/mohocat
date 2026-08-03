@@ -1,12 +1,71 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-02 · **Branch:** `dev` (`1d25f05` + **uncommitted** about-page work)
+**Last updated:** 2026-08-03 · **Branch:** `dev` (`8754a3c`, **79** ahead of `origin/main`)
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-02, fourth session — the about page got one source of truth.**
+> **2026-08-03 — members can post, and a class of document turned out to be undeletable.**
+> Two pieces of work, both owner-asked. First: _"allow the author of 집사톡 and 급식현황 posts
+> to edit the post."_ 🔑 **The premise was false** — members could not **see or create** on
+> either board (the pages gated on `isAdmin()`, and the client write needs `manage-posts`,
+> which only `admin` holds), so "the author" was always an admin, who could already edit
+> everything. The missing piece was never editing. Second: _"deleted posts are still in the
+> collection."_ That one had a single cause with a general lesson, below.
+>
+> 🔑 **The lesson that generalises: a correlation across the survivors is a lead; the one
+> exception is the evidence.** The owner's first read was that **flat-structured** documents
+> survived deletion (no `imageUrls`/`videoUrls`/`tags`) — a real pattern, since those are the
+> **replies**, all written in 2025 before multi-tenancy. Then they produced a _nested_ post
+> that had also survived, which broke the pattern and pointed at the actual cause. **Chase the
+> counter-example, not the correlation.**
+>
+> 🐛 **A document with no `mountainId` can never be deleted — by anyone.** `canWrite()` reads
+> the mountain off the **stored** doc on a delete (`request.resource` is null then), and
+> `hasPermissionFor()` requires it to be non-null. ⚠️ **No permission grants past this**, which
+> is why it never looked like a permission problem. 📌 The offender was created **one day after
+> the M4 backfill ran** — a one-shot backfill cannot catch what is written later, and an
+> unstamped doc behaves normally until someone tries to write it, so the gap is **silent by
+> construction**. Fixed in prod (1 doc of 98); `scripts/migration/stamp-missing-mountain-id.js`
+> is now the standing audit — **re-run it after any migration or bulk import**.
+>
+> ✅ **Rules were tested, not read.** `@firebase/rules-unit-testing` against the real
+> `firestore.rules`: same admin, same document, deleted twice — **with `mountainId` ALLOWED,
+> without DENIED.** Worth reusing; the repo had no rules-level test before this.
+>
+> 🔒 **Member authoring is BUILT BUT NOT LIVE, and the order matters.** Rules are **not
+> deployed** and `add-member-post-permissions.js` is **dry-run only**. Do them in this order:
+> (1) `firebase deploy --only firestore:rules` — inert on its own; (2) `APPLY=true node
+scripts/migration/add-member-post-permissions.js`; (3) push the code. ⚠️ **Reversing 1 and 3
+> gives members a visible composer whose save is denied.**
+>
+> 🔬 **Three defects the e2e suite caught in the member work, all worth recognising again.**
+> (1) **The new gates locked admins out** — `manage-posts` and `write-own-*` are different
+> permissions and an admin holds only the former, so a single-permission gate denied the people
+> who could already post. (2) **A new spec renamed a fixture another spec reads by title** —
+> the same `admin/cats.spec` shape as 2026-08-02, one week later. Mutating tests must own their
+> fixture. (3) Next refuses **two slug names at one path position** (`[id]` vs `[postId]`) — a
+> build error, not a runtime one.
+>
+> **Do these next, in this order:**
+>
+> 1. **Deploy the member-authoring rules + run the permissions migration** (above), or
+>    explicitly park them. Until then that whole commit is inert in production.
+> 2. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
+>    promotion.
+> 3. **The Preview verifications that piled up** — see the earlier session box below.
+> 4. **Then the promotion.** `dev` leads `origin/main` by **79**. ⚠️ Measure against
+>    `origin/main`, not the local `main` ref (stranded at `26b1879`).
+>
+> 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the
+> owner's `description` / `theme.secondaryColor` / `accentColor` edits. Also three untracked
+> code-graph files — **different workstream, do not commit them**.
+>
+> ---
+>
+> ### Earlier (2026-08-02, fourth session) — the about page got one source of truth
+>
 > It began as _"the `about` object in `mountains.json` looks stale now that the about content
 > lives in Firestore — confirm."_ It was stale in the half you could see and **load-bearing in
 > the half you could not**, which is the whole story: Firestore won for the text, but the
@@ -320,6 +379,24 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🐛 A document with no `mountainId` can never be deleted — by anyone (2026-08-03,
+  `8754a3c`).** Owner-reported: posts deleted through the CMS were still in `posts_feeding` /
+  `posts_butler`, while 공지사항 / 입양홍보 deleted cleanly. 🔑 `canWrite()` reads the mountain
+  off the **stored** doc on a delete (`request.resource` is null then) and `hasPermissionFor()`
+  requires it non-null — so **no permission grants past a missing field**, which is why it did
+  not present as a permission problem. 📌 **The correlation was a decoy:** the survivors did
+  share a flat shape, because those are the **replies** (all written 2025, pre-multi-tenancy) —
+  but the owner's _nested_ counter-example is what identified the real cause. It was created
+  **one day after the M4 backfill**, and was the only unstamped doc among **98** across 11
+  collections. ⚠️ **Silent by construction:** a one-shot backfill cannot catch later writes, and
+  an unstamped doc looks fine until someone writes to it.
+  `scripts/migration/stamp-missing-mountain-id.js` is the standing audit — **re-run after any
+  migration or bulk import**. Applied to prod (snapshot first), re-audit clean. Also fixed:
+  `post-service.updateReplyCount` used `increment(1)` and `deleteReply` calls it, so deleting a
+  급식현황 reply **raised** the parent's count; it recounts now, matching 집사톡's service.
+  ✅ **Verified by testing the rules, not reading them** — `@firebase/rules-unit-testing`
+  against the real `firestore.rules`: with `mountainId` ALLOWED, without DENIED. Detail:
+  `log/DEBUG_LOG.md` 2026-08-03.
 - **👥 Members can now write on 집사톡 + 급식현황, and edit their own posts (2026-08-03,
   uncommitted).** 🔑 **The ask rested on a premise that was false:** "let the author edit"
   implied non-admin authors, but **members could not see or create on either board** — the
@@ -1685,7 +1762,18 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-02 (latest)** — **The about page has one source of truth: the CMS.** `about` deleted
+- **2026-08-03 (latest)** — **Member authoring, and a class of undeletable document.**
+  Butler roles can now view / create / **edit their own** on 집사톡 + 급식현황 (`8334c51`);
+  the ask's premise was false — members could not see or create at all, so "let the author
+  edit" had no non-admin author to apply to. Two new per-board permissions, `authorUid` as the
+  authorization identity, and rules that refuse an edit which rewrites authorship. ⚠️ **Not
+  live** — rules undeployed, migration dry-run only. Then (`8754a3c`) the owner's
+  "deleted posts are still there": a doc with **no `mountainId`** is undeletable by everyone,
+  because `canWrite()` reads the field off the stored doc on a delete. One doc of 98; fixed in
+  prod with a standing audit script. 🔑 The flat-structure correlation was a decoy — the
+  nested counter-example found the cause. Full e2e **220/13/0**.
+  Detail: PROJECT_PLAN **§10n/§10o**, `log/DEBUG_LOG.md` 2026-08-03.
+- **2026-08-02** — **The about page has one source of truth: the CMS.** `about` deleted
   from `mountains.json` (plus `MountainAbout`/`getMountainAbout`); the page and the CMS editor
   read Firestore only. 🔑 The photo was the load-bearing half — `useAboutPhoto` short-circuited
   to a build-baked `localPath` and ignored the CMS's filename, so **changing the photo there did
