@@ -37,6 +37,25 @@ cloud-run scripts + the `functions` tsconfig exclude removed. Verified: `tsc` cl
 `npm run test:smoke` green (24), no refs to deleted paths. Phase 2/3 pending the
 open questions at the bottom.
 
+> ⚠️ **Phase 1 was incomplete, and the tables below are why — corrected 2026-08-03.**
+> Owner-reported (`config/deployment/cloud-run-service.yaml` "is still here"), and a sweep
+> found more: `scripts/deployment/deploy-cloud-run.{sh,bat}` and `public/index.html` —
+> Firebase Hosting's "Setup Complete" welcome page, which Next was **serving publicly at
+> `/index.html`** on the production domain. All now deleted.
+>
+> 🔑 **The plan's own shape caused the miss.** These tables enumerate _files someone already
+> knew about_ — the workflows, the `package.json` scripts — and "verify each before deleting"
+> reads as thoroughness while scoping the work to that list. Nothing ever grepped for
+> `cloud-run` across the tree. §1b deleted `.github/workflows/deploy-cloud-run.yml` and the
+> `cloud-run:deploy-backup` npm script while `scripts/deployment/deploy-cloud-run.sh` sat
+> untouched one directory away. **A removal plan needs a pattern sweep, not an inventory** —
+> and the check that would have caught it is the one the commit message claimed to have run:
+> "no refs to deleted paths" was true; "no refs to the dead _target_" was not.
+>
+> 📌 The `README.md` fallout outlived the code by 14 months: it still told a new engineer to
+> deploy with `npm run cloud-run:deploy` — a script **this very phase deleted** — and linked
+> four root-level architecture docs that no longer exist. Rewritten 2026-08-03.
+
 Grouped by the dead target. Verify each before deleting.
 
 ### 1a. Firebase Hosting (retired — was the static era)

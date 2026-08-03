@@ -22,7 +22,6 @@
     "test:e2e:debug": "dotenv -e .env.test -- firebase emulators:exec --project demo-mohocat --only auth,firestore,storage \"npm run seed:emulators && npm run build && playwright test --debug --project=chromium-desktop\"",
     "script:add-updated-field": "node scripts/migration/add_updated_field.js",
     "script:add-updated-field-admin": "node scripts/migration/add_updated_field_admin.js",
-    "script:remove-thumbnailUrl": "node scripts/remove_thumbnailUrl_field.js",
     "prepare": "husky"
   },
   "dependencies": {

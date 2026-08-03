@@ -85,6 +85,13 @@ graph LR
   removed in the deployment cleanup (`Dockerfile`, `docker-compose.yml`, `deploy-cloud-run.yml`,
   `deploy-home-server.yml`, `firebase-hosting-*.yml` are all gone). This is an explicit
   anti-pattern in `CLAUDE.md`.
+  ⚠️ **That cleanup missed a second tier, removed 2026-08-03** — `config/deployment/cloud-run-service.yaml`,
+  `scripts/deployment/deploy-cloud-run.{sh,bat}`, and `public/index.html` (Firebase Hosting's
+  "Setup Complete" welcome page, which Next was **serving publicly at `/index.html`**). 🔑 The
+  2026-06-27 pass enumerated files it already knew about — workflows and `package.json` scripts —
+  instead of sweeping for the pattern, so anything not on the list survived. The README also
+  still told a new engineer to run `npm run cloud-run:deploy`, a script that pass had deleted.
+  **Sweep by pattern, not by list.**
 - **No static-data export step remains.** The old `export_all_to_cloud_storage.js` /
   Cloud-Storage JSON pipeline is gone — the app reads Firestore live. The build only fetches
   _image assets_.

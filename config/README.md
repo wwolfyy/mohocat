@@ -4,16 +4,16 @@ This directory contains configuration files that don't need to be at the project
 
 ## Subdirectories
 
-- **`firebase/`** - Firebase and Google Cloud configurations
-  - `firebase.json` - Firebase project configuration
-  - `firestore.rules` - Firestore security rules
+- **`firebase/`** - Firebase configuration
+  - `firestore.rules` - Firestore security rules (the live copy; `firebase.json` at the repo
+    root points here, and `firebase deploy --only firestore:rules` ships it)
+  - `firestore.indexes.json` - Firestore composite indexes
+  - `storage.rules` - Firebase Storage security rules
   - `cors_fbstorage.json` - Firebase Storage CORS configuration
   - `mountaincats-61543-7329e795c352.json` - Service account key (gitignored)
 
 - **`mountains/`** - Mountain-specific configurations for multi-tenancy
   - `mountains.json` - Mountain metadata and configuration
-
-- **`deployment/`** - Deployment-related configurations
 
 ## Root-Level Files In This Directory
 

@@ -13,9 +13,8 @@ const EMULATOR_IMAGE_PATTERNS = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // For optimized images (ENABLED - 70% faster performance)
-  // Note: Static export is disabled to enable Next.js image optimization
-  // and server-side features required for Cloud Run deployment
+  // Static export is disabled so Next.js image optimization and the server-side
+  // features (SSR, API routes, ISR) the app relies on stay available on Vercel.
   images: {
     unoptimized: false, // Enable Next.js image optimization
 
