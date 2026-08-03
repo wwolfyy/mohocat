@@ -32,7 +32,9 @@ PR #7)
 >
 > ✅ **Rules were tested, not read.** `@firebase/rules-unit-testing` against the real
 > `firestore.rules`: same admin, same document, deleted twice — **with `mountainId` ALLOWED,
-> without DENIED.** Worth reusing; the repo had no rules-level test before this.
+> without DENIED.** 📌 **Correction to an earlier draft of this box:** the repo _does_ have a
+> rules suite — `tests/rules/users.rules.test.ts` (11 tests, `npm run test:rules`, CI-gated
+> since M5.2b). It simply does not cover the post rules yet, which is to-do #1.
 >
 > 🔒 **Member authoring is BUILT BUT NOT LIVE, and the order matters.** Rules are **not
 > deployed** and `add-member-post-permissions.js` is **dry-run only**. Do them in this order:
@@ -50,12 +52,30 @@ scripts/migration/add-member-post-permissions.js`; (3) push the code. ⚠️ **R
 >
 > **Do these next, in this order:**
 >
-> 1. **Deploy the member-authoring rules + run the permissions migration** (above), or
+> 1. 🔴 **Add `tests/rules/posts.rules.test.ts` for the §10n member-authoring rules — BEFORE
+>    deploying them.** They are the security boundary for everything a non-admin can now
+>    write, and today they are covered only **indirectly**, through e2e driving the UI. That
+>    proves the happy paths a member is offered; it does not prove what a **hand-crafted
+>    client** is refused, which is the half that matters.
+>    ✅ **This is an extension, not new ground.** `tests/rules/users.rules.test.ts` (11 tests,
+>    M5.2b) already asserts the rules file directly via `@firebase/rules-unit-testing`;
+>    `npm run test:rules` runs the emulator for it, `vitest.rules.config.ts` picks up
+>    `tests/rules/**/*.test.ts` automatically, and CI has an emulator-backed `rules` job. A new
+>    file beside it is wired up by existing. Follow its shape: `withSecurityRulesDisabled` to
+>    seed `role_permissions/role-config` + the actors' `users/{uid}` docs, then
+>    `assertSucceeds` / `assertFails` per case.
+>    **The cases to pin down, none of which the UI can exercise:** creating a post attributed
+>    to **someone else's** `authorUid`; an update that **rewrites** `authorUid` / `username` /
+>    `date` / `time`; a `replyCount` write that moves by anything other than **+1**, or that
+>    carries a second field alongside it; a `feeding_spots` write touching a field other than
+>    the two allowed; a **delete** attempted with only `write-own-*`; and `butler-internet`
+>    reaching **급식현황** at all.
+> 2. **Deploy the member-authoring rules + run the permissions migration** (above), or
 >    explicitly park them. Until then that whole commit is inert in production.
-> 2. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
+> 3. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
 >    promotion.
-> 3. **The Preview verifications that piled up** — see the earlier session box below.
-> 4. **Then the promotion.** `dev` leads `origin/main` by **79**. ⚠️ Measure against
+> 4. **The Preview verifications that piled up** — see the earlier session box below.
+> 5. **Then the promotion.** `dev` leads `origin/main` by **80**. ⚠️ Measure against
 >    `origin/main`, not the local `main` ref (stranded at `26b1879`).
 >
 > 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the

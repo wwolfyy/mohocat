@@ -190,9 +190,14 @@ match /posts_butler/{document} {
 
 ## 6. Risks
 
-- **Rules are the security boundary here, and they are hand-tested.** The repo has no rules
-  unit-test harness; P6's e2e coverage runs against the emulator with the real rules file,
-  which is the closest available check. Treat a rules edit as production-affecting.
+- **Rules are the security boundary here, and the post rules are not directly tested yet.**
+  ⚠️ **Corrected 2026-08-03:** an earlier draft of this line claimed the repo has no rules
+  unit-test harness. It does — `tests/rules/users.rules.test.ts` (11 tests, `npm run
+test:rules`, CI-gated since M5.2b) asserts `firestore.rules` directly via
+  `@firebase/rules-unit-testing`. It simply does not cover the **post** rules. Today those are
+  exercised only through e2e driving the UI, which proves the paths a member is _offered_ and
+  not what a hand-crafted client is _refused_. 👉 `tests/rules/posts.rules.test.ts` is the
+  first item on the hand-off's to-do list, sequenced **before** the rules deploy.
 - **`isAdmin()` is looser than it reads** — it tests for `manage-cats` (no such permission;
   the real one is `manage-cat`) and `manage-settings` (does not exist), so it reduces to
   "holds `manage-posts` or `manage-users`". Not load-bearing for this plan, but do not copy it

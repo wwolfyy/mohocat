@@ -1960,8 +1960,9 @@ after it, and an unstamped document behaves normally until someone tries to writ
 
 ✅ **Verified by testing the rules rather than reading them** — `@firebase/rules-unit-testing`
 against the real `firestore.rules`, same admin deleting the same doc twice: **with
-`mountainId` ALLOWED, without DENIED**. 💡 The repo had no rules-level test before this; the
-harness is worth reusing for the §10n rules.
+`mountainId` ALLOWED, without DENIED**. 💡 The same harness backs the existing
+`tests/rules/users.rules.test.ts` (M5.2b, `npm run test:rules`) — extending it to the §10n
+post rules is the next to-do.
 
 ---
 
