@@ -46,6 +46,15 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
 
     await page.getByRole('button', { name: '작성 완료' }).click();
 
+    // Publishing is gated on a check-in confirmation (2026-08-04): the post
+    // stamps every ticked 급식소 with an unrecoverable "last visited". Nothing is
+    // ticked here — the emulator seeds no `feeding_spots` — so this is the
+    // empty branch, which says so rather than warning about a write that is not
+    // about to happen. The listing branch is unit-tested
+    // (tests/unit/feedingCheckIn.test.ts), being unreachable from here.
+    await expect(confirmDialog(page).getByText('선택한 급식소가 없어요')).toBeVisible();
+    await confirmDialog(page).getByRole('button', { name: '확인' }).click();
+
     // Success dialog (shared ui/Modal since P6.1); redirect happens after 확인.
     await expect(alertDialog(page).getByText('Post created successfully!')).toBeVisible({
       timeout: 20_000,
@@ -55,6 +64,37 @@ test.describe('집사게시판/집사톡 create flows (Family A)', () => {
       .poll(() => new URL(page.url()).pathname, { timeout: 20_000 })
       .toBe('/pages/butler_stream');
     await expect(page.getByText(title)).toBeVisible({ timeout: 15_000 });
+  });
+
+  /**
+   * The gate is only a gate if dismissing it stops the write. ⚠️ This is the
+   * assertion that fails if the confirm is ever reduced to an advisory dialog
+   * that publishes anyway — which would be worse than no dialog, since the
+   * 급식소 stamp it warns about cannot be undone afterwards.
+   */
+  test('집사게시판: dismissing the check-in confirmation publishes nothing', async ({ page }) => {
+    const title = `E2E 안올린글 ${Date.now() % 100000}`;
+
+    await page.goto('/pages/butler_stream/new');
+    await expect(page.getByRole('heading', { name: '새글 작성' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByPlaceholder(/급식소 챙기고 갑니다/).fill(title);
+    await page.getByRole('button', { name: '작성 완료' }).click();
+
+    await expect(confirmDialog(page)).toBeVisible();
+    await confirmDialog(page).getByRole('button', { name: '취소' }).click();
+
+    // Still on the form, with the draft intact and no success dialog.
+    expect(new URL(page.url()).pathname).toBe('/pages/butler_stream/new');
+    await expect(page.getByPlaceholder(/급식소 챙기고 갑니다/)).toHaveValue(title);
+    await expect(alertDialog(page)).toHaveCount(0);
+
+    // ...and nothing reached the stream.
+    await page.goto('/pages/butler_stream');
+    await expect(page.getByRole('heading', { name: '급식현황' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(title)).toHaveCount(0);
   });
 
   test('집사게시판: 취소 leaves immediately when nothing was typed', async ({ page }) => {

@@ -15,6 +15,44 @@
 
 ---
 
+## 2026-08-04 — 급식현황 publishing is gated on a confirmation that names the 급식소 it will stamp
+
+**Area:** `src/utils/feedingCheckIn.ts` (new), `src/components/NewPostForm.tsx`,
+`tests/unit/feedingCheckIn.test.ts` (new), `tests/e2e/admin/butler-create.spec.ts`.
+**Type:** enhancement (owner-requested) — _"let's gate the 급식현황 post with confirmation. Once
+the post is posted, the status of the feeding spots change and there's no way you can take it
+back. We should at least give the list of updated feeding spots and have the user confirm."_
+
+**What changed and why.** 작성 완료 now opens a 확인 listing every ticked 급식소 by name, with the
+방문 시간 and the warning that it cannot be undone; 취소 publishes nothing.
+
+🔑 **The irreversibility is real and asymmetric with the rest of the composer.** Publishing
+writes `last_attended` / `last_attended_by` onto shared `feeding_spots` documents, and a spot
+keeps only its **latest** visit — the previous stamp is overwritten, not versioned. So unlike
+the post itself (which its author may now edit, and since §10q delete), the check-in has no
+correction path at all: `deletePost` never touches `feeding_spots`, and the edit form hides the
+급식소 section for exactly this reason (the comment there has said since §10n that a mis-tick is
+an admin fix). The dialog is the only correction opportunity the flow has.
+
+📌 **The empty branch says something different rather than nothing.** With no spot ticked the
+dialog reads 선택한 급식소가 없어요 — no warning about a write that is not about to happen, and
+it catches the opposite mistake, the author who meant to tick something and did not.
+
+⚠️ **The message builder is a pure module, not a closure in the form, because the listing is
+unreachable from e2e.** `scripts/test/seed-emulators.mjs` seeds no `feeding_spots`, so the
+harness only ever exercises the empty branch — the spot list, its ordering and its count are
+pinned by `tests/unit/feedingCheckIn.test.ts` instead. The time is formatted from the
+`datetime-local` string's own components: a `Date` round-trip would reinterpret a zoneless
+value in the browser's zone and could show an hour other than the one in the input beside it.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **133** (+11) · `npm run test:smoke` **39**
+· **e2e 229 / 13 / 0** (+1: dismissing the confirm leaves the form intact and puts nothing on
+the stream). **Mutation-tested** — dropping the `checkedSpotIds` filter so the dialog lists
+every spot failed exactly the four cases that assert the listing, which is what distinguishes
+them from assertions that would pass against any string.
+
+---
+
 ## 2026-08-04 — authors may delete their own posts; reply authors may edit and delete their replies
 
 **Area:** `config/firebase/firestore.rules`, `src/utils/postAuthor.ts` (new),

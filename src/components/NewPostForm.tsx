@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/useDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useMountain } from '@/components/MountainProvider';
+import { buildFeedingCheckInConfirmMessage } from '@/utils/feedingCheckIn';
 
 interface BasicFeedingSpot {
   id: number;
@@ -159,6 +160,17 @@ const NewPostForm = ({ feedingSpots, postId }: NewPostFormProps) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Creation only: an edit touches 제목/내용 and never the 급식소 records, so
+    // there is nothing irreversible to confirm. Ask *before* `setSubmitting`, so
+    // the buttons stay live while the dialog is open.
+    if (!postId) {
+      const confirmed = await dialog.confirm(
+        buildFeedingCheckInConfirmMessage(feedingSpots, checkedSpots, feedingVisitTime)
+      );
+      if (!confirmed) return;
+    }
+
     setSubmitting(true);
 
     try {
