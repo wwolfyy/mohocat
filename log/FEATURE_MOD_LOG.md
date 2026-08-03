@@ -15,6 +15,57 @@
 
 ---
 
+## 2026-08-04 — renaming a cat is a cascade, and now there is a script for it
+
+**Area:** `scripts/migration/rename-cat.js` (new), `tests/unit/renameCat.test.ts` (new),
+`docs/manuals/admin-manual/README.md`.
+**Type:** enhancement (owner-requested) — _"can you write a script to 'refactor' a cat name?"_,
+after asking what a rename breaks.
+
+**What a bare rename breaks.** A cat's identity is its **document id**, and `updateCat` patches
+in place — so `?cat=<id>` links people have pasted into KakaoTalk survive a rename untouched
+(the reason the param is the id and not the name, §10c C2). But three things store the **name
+string**, and editing the cat updates none of them:
+
+1. **The albums empty out.** `PhotoAlbum` / `VideoAlbum` are handed `catName={cat.name}` and
+   query `where('tags', 'array-contains', catName)` (`media-albums.ts:69,116`). The media is
+   still there, still tagged with the old name — just unreachable from the cat.
+2. **Every `[catmodal:이름]` link to it goes dead.** Resolved by `getCatByName()` at click time
+   (`CatLinkedText:42`, `CatInfo:179`); after a rename the click produces a `console.warn` and
+   nothing else, while the text keeps its link styling.
+3. **Other cats' prose** carries the same tokens (작명 사유 / 특이사항 / 설명 …).
+
+🔑 **All three fail silently, which is why a script beats a checklist.** No error, no log —
+the damage surfaces later as an empty 사진첩 that nobody can date.
+
+⚠️⚠️ **The one part the script cannot make stick: YouTube owns video tags.**
+`/api/refresh-video-metadata` overwrites `cat_videos.tags` from `snippet.tags` on every
+📺 YouTube와 동기화 run — the route says so in as many words
+(`// YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)`). So the Firestore re-tag is correct **and
+temporary** for videos: the next sync reverts it. Writing to YouTube needs the OAuth path the
+CMS already owns, so the script instead **prints the affected YouTube ids and the exact CMS
+step** (동영상 태깅 → 일괄 태그 저장, which writes through). 📌 Recorded here because a fix that
+silently un-fixes itself is the failure mode this repo keeps re-learning.
+
+**Guards, each of which refuses rather than guessing:** renaming onto a name another cat in the
+tenant already holds (that ambiguity is what makes `getCatByName`'s first-match-wins
+unreliable); an `OLD_NAME` matching two cats; a `CAT_ID` from a different mountain than
+`MOUNTAIN_ID` (the cascade would search the wrong tenant's content); a no-op rename. Token
+rewriting matches `[catmodal:NAME]` **only** — never the bare name, so a cat called 별이 does
+not turn every 별이 in a post body into the new name — and the name is regex-escaped, so
+`아롱(2)` cannot compile into a capture group that matches another cat's token.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **143** (+10, the two pure functions).
+**Run end-to-end against the Firestore emulator** on purpose-built name-keyed data (the e2e
+fixtures tag by **id**, so they do not exercise the real shape): audit wrote nothing, APPLY
+gave **17/17** assertions — tags rewritten in place, no duplicate when a doc already carried
+both names, bare names and another cat's `[catmodal:아롱이몬]` untouched, `about_content.sections[]`
+rewritten inside the array, and a second tenant's identically-named cat and its media left
+alone — plus **5/5** guards refusing. **Mutation-tested:** matching the bare name instead of
+the token failed 5 cases; dropping the regex escape failed the metacharacter case.
+
+---
+
 ## 2026-08-04 — 급식현황 publishing is gated on a confirmation that names the 급식소 it will stamp
 
 **Area:** `src/utils/feedingCheckIn.ts` (new), `src/components/NewPostForm.tsx`,

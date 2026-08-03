@@ -189,6 +189,19 @@ Two views of the same data (toggle at the top):
 > **Modal order:** description → facts panel (출생연도 · 성별 · 거주지 · 중성화 · 부모/자식)
 > → prose sections (입양정보 · 작명 사유 · 성격 · 건강상태 · 특이사항) → 사진/동영상 buttons.
 
+> ⚠️ **Do not rename a cat by just editing 이름.** The name is stored in three other places,
+> and none of them follows: the cat's **사진첩 and 영상첩 go empty** (albums match photos by
+> the name in their tags), and **every `[catmodal:이름]` link to that cat stops working** — it
+> still looks like a link and does nothing. All of it fails **silently**; there is no error and
+> nothing to notice until someone opens the album.
+>
+> Use `scripts/migration/rename-cat.js` instead, which renames the cat and carries the name
+> everywhere it is stored. It is dry-run by default. **Full runbook:**
+> [§9 → Renaming a cat](#renaming-a-cat--use-the-script-not-the-이름-field).
+>
+> 📌 Links people have already shared are safe either way: `?cat=…` addresses the cat's
+> record, not its name, so a pasted link keeps working under the new name.
+
 Editing a cat re-bakes the public pages automatically (home + adoption revalidate), so
 changes appear without a redeploy.
 
@@ -523,6 +536,49 @@ Mostly one-time or infrequent setup. Details live in
     composer **throw** rather than quietly pick a behaviour. Keep both keys present and keep
     the values `true`/`false` (no quotes). Validation lives in `src/utils/mediaControl.ts`.
 
+### Renaming a cat — use the script, not the 이름 field
+
+⛔ **Editing 이름 in `/admin/cats` renames the cat and nothing else.** The name is also stored
+in three other places, and none of them follows:
+
+| What                                   | What happens after a bare rename                                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| The cat's **사진첩 / 영상첩**          | **Goes empty.** Albums find media by the cat's name in its tags, and the tags still say the old name. |
+| Every **`[catmodal:이름]`** link to it | **Stops working.** The link still renders and still looks clickable; clicking it does nothing.        |
+| Other cats' **작명 사유 / 특이사항 …** | Same dead links, in any prose that mentions the renamed cat.                                          |
+
+⚠️ **All of it fails silently** — no error, no warning, nothing to notice until someone opens
+the album and finds it empty.
+
+✅ **Links already shared are safe either way.** A `?cat=…` link addresses the cat's _record_,
+not its name, so anything pasted into KakaoTalk keeps working under the new name.
+
+**How to do it.** From the repo, with the service-account key available:
+
+```bash
+# 1. Back up first — this writes to production data.
+npm run backup:firestore
+
+# 2. See exactly what would change. Writes nothing.
+OLD_NAME=아롱이 NEW_NAME=다롱이 node scripts/migration/rename-cat.js
+
+# 3. Do it.
+OLD_NAME=아롱이 NEW_NAME=다롱이 APPLY=true node scripts/migration/rename-cat.js
+```
+
+- Use `CAT_ID=<document id>` instead of `OLD_NAME` when two cats share a name — the script
+  **refuses** an ambiguous `OLD_NAME` rather than picking one.
+- Add `MOUNTAIN_ID=…` for any mountain other than `geyang`.
+- It also **refuses** to rename a cat onto a name another cat already holds: two cats with one
+  name makes every `[catmodal:그이름]` link resolve to whichever one the lookup happens to
+  return first.
+
+⚠️⚠️ **One step the script cannot finish for you — YouTube.** YouTube owns its videos' tags and
+overwrites ours from them every time anyone presses **📺 YouTube와 동기화**. So for videos the
+script's fix is correct but **temporary**: the next sync silently puts the old name back and the
+영상첩 empties again. The script prints the affected videos at the end of its run — re-tag those
+in **동영상 태깅 → 일괄 태그 저장**, which writes through to YouTube. Do it in the same sitting.
+
 ---
 
 ## 10. Backups & recovery (owner)
@@ -653,4 +709,7 @@ Enter                     → line break
 - 집사톡 = **one video + one photo** per post; 공지사항 / 입양홍보 = unlimited. Change it in
   `config/media_control.json` + redeploy ([§9](#9-configuration--operations-owner--developer)).
 - "입양 가능" checkbox on a cat (with a photo) → shows in the 입양홍보 gallery.
+- ⛔ **Renaming a cat → `scripts/migration/rename-cat.js`, never the 이름 field alone** — a bare
+  rename silently empties that cat's 사진첩/영상첩 and kills every `[catmodal:]` link to it
+  ([§9](#renaming-a-cat--use-the-script-not-the-이름-field)).
 - **Before any production data migration → `npm run backup:firestore`** ([§10](#10-backups--recovery-owner)).
