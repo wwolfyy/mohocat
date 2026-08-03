@@ -127,8 +127,16 @@ service cloud.firestore {
     // and the legacy `admin@mtcat.com` posts match no account, so they stay
     // admin-only. That is correct, not a gap.
     //
-    // ⚠️ `delete` is deliberately absent from the member paths (owner, 2026-08-02):
-    // a 집사톡 post can carry other people's replies.
+    // 🗑️ **Delete: authors may now remove their own (owner, 2026-08-04).** This
+    // reverses the 2026-08-02 decision to withhold it. The reason it was withheld is
+    // real and unchanged — a post can carry other people's replies, and deleting the
+    // post **cascades to those replies** (`deletePost` removes them first). That is
+    // the accepted cost of letting an author retract their own post.
+    // 📌 **Media survives a delete**, by design: `cat_images` / `cat_videos` records
+    // and the Storage objects are untouched, so a deleted post's photos stay in the
+    // 사진첩. Nothing here needed changing for that — the delete never reached them.
+    // ⚠️ A **reply** is a document in this same collection, so these rules govern it
+    // too: its author may edit and delete it via the identical author test.
 
     match /posts_feeding/{document} {
       allow read: if request.auth != null;
@@ -136,8 +144,11 @@ service cloud.firestore {
                        (canWrite('write-own-post-feeding') && authoringAsSelf());
       allow update: if canWrite('manage-posts') ||
                        (canWrite('write-own-post-feeding') &&
-                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountBump()));
-      allow delete: if canWrite('manage-posts');
+                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountAdjustment()));
+      allow delete: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-feeding') &&
+                        (isPostAuthor() ||
+                         isParentAuthor(/databases/$(database)/documents/posts_feeding/$(resource.data.get('parentId', '__none__')))));
     }
 
     match /posts_butler/{document} {
@@ -146,8 +157,11 @@ service cloud.firestore {
                        (canWrite('write-own-post-butler') && authoringAsSelf());
       allow update: if canWrite('manage-posts') ||
                        (canWrite('write-own-post-butler') &&
-                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountBump()));
-      allow delete: if canWrite('manage-posts');
+                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountAdjustment()));
+      allow delete: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-butler') &&
+                        (isPostAuthor() ||
+                         isParentAuthor(/databases/$(database)/documents/posts_butler/$(resource.data.get('parentId', '__none__')))));
     }
 
     // Permission system collections
@@ -286,14 +300,42 @@ service cloud.firestore {
     }
 
     /**
-     * Posting a reply increments `replyCount` on the PARENT — a document the
-     * replier usually does not own, so "authors may edit their own" alone would
-     * deny most replies. Bounded to exactly that one field moving up by one, so
-     * it cannot carry anything else through.
+     * Posting or removing a reply changes `replyCount` on the PARENT — a document
+     * the replier usually does not own, so "authors may edit their own" alone would
+     * deny most replies. Bounded to exactly that one field moving by exactly one,
+     * in either direction, so it cannot carry anything else through.
+     *
+     * 📌 **Why ±1 and not "any value".** The services *recount* (`replies.length`)
+     * rather than increment, so the write lands on the true total — which moves by
+     * one per reply added or deleted. Anything further apart means the stored count
+     * had already drifted, and correcting drift is an admin action (`manage-posts`
+     * writes freely). Allowing arbitrary values here would let any member set any
+     * post's reply count to anything.
      */
-    function isReplyCountBump() {
+    function isReplyCountAdjustment() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']) &&
-             request.resource.data.replyCount == resource.data.get('replyCount', 0) + 1;
+             (request.resource.data.replyCount == resource.data.get('replyCount', 0) + 1 ||
+              request.resource.data.replyCount == resource.data.get('replyCount', 0) - 1);
+    }
+
+    /**
+     * The signed-in user wrote the POST this reply hangs under.
+     *
+     * 🔑 Deleting a post **cascades**: `deletePost` removes every reply first, and
+     * those replies belong to other people. Without this the cascade is denied
+     * partway and the post itself is never deleted — the author would see a failure
+     * on their own post because somebody else had replied to it.
+     *
+     * ⚠️ Costs a document read, so it is deliberately the *last* term of the delete
+     * rule — `isPostAuthor()` short-circuits the common case. A stamped
+     * `parentAuthorUid` field would avoid the read, and was rejected: a reply is
+     * client-written, so a crafted one could name the wrong parent author and make a
+     * post **undeletable by its own author**.
+     */
+    function isParentAuthor(parentPath) {
+      return request.auth != null &&
+             exists(parentPath) &&
+             get(parentPath).data.get('authorUid', '') == request.auth.uid;
     }
 
     // A content write is allowed when the actor holds `permission` on the doc's

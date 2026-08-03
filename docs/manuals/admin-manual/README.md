@@ -45,14 +45,14 @@ role; a role grants permissions. The permission a given action needs:
 **Member (non-admin) permissions.** These are the grants a 집사 role holds. Everything above
 is admin-shaped ("manage anything"); these are deliberately narrower:
 
-| Permission               | Lets you…                                                                    |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `view-post-butler`       | **read** 집사톡                                                              |
-| `view-post-feeding`      | **read** 급식현황                                                            |
-| `write-own-post-butler`  | write a 집사톡 post **and edit your own** (2026-08-02)                       |
-| `write-own-post-feeding` | write a 급식현황 post **and edit your own**, and stamp the 급식소 you ticked |
-| `upload-own-photo`       | attach a **photo** to your 집사톡 post (2026-08-03)                          |
-| `upload-own-video`       | attach a **video** to your 집사톡 post (2026-08-03)                          |
+| Permission               | Lets you…                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `view-post-butler`       | **read** 집사톡                                                                  |
+| `view-post-feeding`      | **read** 급식현황                                                                |
+| `write-own-post-butler`  | write a 집사톡 post, **edit and delete your own**, and edit/delete your own 댓글 |
+| `write-own-post-feeding` | the same on 급식현황, plus stamping the 급식소 you ticked                        |
+| `upload-own-photo`       | attach a **photo** to your 집사톡 post (2026-08-03)                              |
+| `upload-own-video`       | attach a **video** to your 집사톡 post (2026-08-03)                              |
 
 ⚠️ **The two `upload-own-*` grants are not `manage-photo` / `manage-video`, and the difference
 matters.** They let a 집사 **add** a photo or video as part of their own post — nothing more.
@@ -84,8 +84,19 @@ active in the system while absent from the screen that manages them.
 the database refuses an edit from anyone else even if the URL is typed by hand. An edit also
 cannot change who wrote a post or when — those are fixed at creation.
 
-⚠️ **Members cannot delete** (owner decision, 2026-08-02): a 집사톡 post can carry other
-people's replies, so removing one is an admin action.
+🗑️ **Members can delete their own** (owner decision, 2026-08-04 — this reverses the
+2026-08-02 rule that made deleting an admin-only action).
+
+- **A post**: only its author, or an admin. ⚠️ **Deleting a post also deletes the 댓글 people
+  left on it** — that is why it was withheld at first, and the confirmation box says so
+  ("댓글 N개가 함께 지워져요"). It is the accepted cost of letting someone retract their own
+  post.
+- **A 댓글**: only **the person who wrote that 댓글** — not the author of the post it hangs
+  under. The one exception is the cascade above: removing a post takes its 댓글 with it,
+  whoever wrote them.
+- 📌 **사진과 영상은 남아요.** Deleting a post never removes its media — the photos stay in the
+  사진첩 and the videos on YouTube, with their records intact. If you also want the media gone,
+  remove it from 사진첩 / 영상첩 separately.
 
 📌 **The two boards are separate grants.** `butler-internet` reads 집사톡 but not 급식현황 —
 that split is why these are per-board permissions rather than one "member" flag. 공지사항 and

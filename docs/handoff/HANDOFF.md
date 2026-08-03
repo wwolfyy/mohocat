@@ -112,18 +112,35 @@ PR #7)
 > silently** — no error, no log, just an empty page indistinguishable from "nothing to
 > show". Catalogued so it _can_ be granted; granting it is an owner call (BACKLOG **B2**).
 >
+> 🗑️ **§10q — authors may now delete their own posts, and a _reply's_ author may edit and
+> delete that reply (owner, 2026-08-04).** This reverses §10n's withholding of delete; the
+> reason it was withheld — a post carries other people's replies — is unchanged, and the
+> owner weighed it. 🔑 **A reply is a document in the same collection as the post**, so one
+> rule governs both and "the author of the reply, not of the post" needed **no new permission
+> and no new rule** — the existing author test already resolves to the replier, and
+> `ReplyForm` has stamped `authorUid` since §10n. The ask was almost entirely a **UI** gap.
+> ⚠️ **Two things did need rule changes, both non-obvious:** (1) `deletePost` **cascades** —
+> it removes every reply first, so without an `isParentAuthor()` clause **an author cannot
+> delete their own post the moment anyone replies**; (2) `replyCount` may now move **±1**,
+> because the services _recount_ rather than increment, so a delete lands on `old − 1`.
+> ✅ **"Media survives" needed no code** — verified in both services: the delete path never
+> touches `cat_images` / `cat_videos` / Storage.
+>
 > **Do these next, in this order:**
 >
-> 1. 🔴 **Ship §10p** — `firebase deploy --only firestore:rules`, then `APPLY=true node
+> 1. 🔴 **Ship §10p and §10q together** — same rules file, one deploy:
+>    `firebase deploy --only firestore:rules`, then `APPLY=true node
 scripts/migration/add-member-post-permissions.js` (dry run reports
 >    `{added: 4, alreadyHeld: 3}`), then push. ⚠️ **Rules before the grant**: reversing
 >    those two lets a photo reach Storage while its `cat_images` record is **denied and
->    swallowed** — the post saves and the photo never reaches the album, silently. Plan:
->    [`member-media-upload-permissions-20260803.md`](../planning/pending/member-media-upload-permissions-20260803.md).
+>    swallowed** — the post saves and the photo never reaches the album, silently.
+>    📌 §10q needs **no migration** — it rides on the existing `write-own-post-*` grants.
+>    Plan: [`member-media-upload-permissions-20260803.md`](../planning/pending/member-media-upload-permissions-20260803.md)
+>    · PROJECT_PLAN **§10q**.
 > 2. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
 >    promotion.
 > 3. **The Preview verifications that piled up** — see the earlier session box below.
-> 4. **Then the promotion.** `dev` leads `origin/main` by **80**. ⚠️ Measure against
+> 4. **Then the promotion.** `dev` leads `origin/main` by **83**. ⚠️ Measure against
 >    `origin/main`, not the local `main` ref (stranded at `26b1879`).
 >
 > 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the

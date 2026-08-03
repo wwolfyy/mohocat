@@ -1,5 +1,6 @@
 /**
- * Firestore security-rules tests — member post authoring (§10n, 2026-08-02).
+ * Firestore security-rules tests — member post authoring (§10n, 2026-08-02;
+ * author delete + reply edit/delete added §10q, 2026-08-04).
  *
  * `posts_butler` (집사톡) and `posts_feeding` (급식현황) are the only boards a
  * non-admin may write. The e2e suite covers them *indirectly*, by driving the
@@ -14,8 +15,11 @@
  *    (`authorUid` / `username` / `date` / `time`).
  *  - the legacy pre-`authorUid` era: authorship falls back to the recorded
  *    email, and the fallback closes for good once `authorUid` is present.
- *  - `replyCount`: a non-author may move it, but ONLY by +1 and ONLY alone.
- *  - delete: never granted by `write-own-*` — only `manage-posts`.
+ *  - `replyCount`: a non-author may move it, but ONLY by one step (either
+ *    direction, since the services recount) and ONLY alone.
+ *  - delete (2026-08-04, §10q): the author may remove their own post or reply, and
+ *    a POST's author may remove other people's replies to it — `deletePost`
+ *    cascades, so without that the author cannot delete a post anyone replied to.
  *  - the per-board split: `butler-internet` may write 집사톡 and must not reach
  *    급식현황 at all.
  *  - `feeding_spots` member check-in: only `last_attended` /
@@ -251,10 +255,20 @@ describe('posts_butler / posts_feeding — the replyCount bump', () => {
     await assertSucceeds(updateDoc(doc(db, 'posts_feeding', 'parent'), { replyCount: 3 }));
   });
 
-  it('BLOCKS a replyCount that moves by anything other than +1', async () => {
+  it("lets a NON-author LOWER the parent's replyCount by one (a reply was deleted)", async () => {
+    // The services recount rather than increment, so removing a reply lands on
+    // old - 1. Allowed since 2026-08-04, when reply authors gained delete.
+    const db = dbFor(OTHER_GROUND_UID);
+    await assertSucceeds(updateDoc(doc(db, 'posts_butler', 'parent'), { replyCount: 1 }));
+    await assertSucceeds(updateDoc(doc(db, 'posts_feeding', 'parent'), { replyCount: 1 }));
+  });
+
+  it('BLOCKS a replyCount that moves by more than one, in either direction', async () => {
     const db = dbFor(OTHER_GROUND_UID);
     await assertFails(updateDoc(doc(db, 'posts_butler', 'parent'), { replyCount: 4 }));
-    await assertFails(updateDoc(doc(db, 'posts_butler', 'parent'), { replyCount: 1 }));
+    await assertFails(updateDoc(doc(db, 'posts_butler', 'parent'), { replyCount: 0 }));
+    // Unchanged is not an adjustment either — it would be a no-op write slipping
+    // through the bounded clause.
     await assertFails(updateDoc(doc(db, 'posts_butler', 'parent'), { replyCount: 2 }));
   });
 
@@ -277,22 +291,79 @@ describe('posts_butler / posts_feeding — the replyCount bump', () => {
   });
 });
 
-describe('posts_butler / posts_feeding — delete stays admin-only', () => {
+// Delete was withheld from members until 2026-08-04 (owner reversed it). A reply is a
+// document in the SAME collection, so one rule governs both — and the two boards carry
+// separate copies of it, hence describe.each.
+describe.each(['posts_butler', 'posts_feeding'])('%s — delete by the author', (collection) => {
+  /** A reply as ReplyForm writes it: same collection, `isReply` + `parentId`. */
+  const reply = (overrides: Record<string, unknown> = {}) =>
+    post({
+      isReply: true,
+      parentId: 'own',
+      message: '댓글',
+      title: 'Re: ...',
+      replyCount: 0,
+      ...overrides,
+    });
+
   beforeEach(async () => {
-    await seed('posts_butler', 'own', post());
-    await seed('posts_feeding', 'own', post());
+    await seed(collection, 'own', post());
   });
 
-  it('BLOCKS the author deleting their OWN post (replies belong to other people)', async () => {
+  it('lets the author delete their OWN post', async () => {
     const db = dbFor(GROUND_UID, GROUND_EMAIL);
-    await assertFails(deleteDoc(doc(db, 'posts_butler', 'own')));
-    await assertFails(deleteDoc(doc(db, 'posts_feeding', 'own')));
+    await assertSucceeds(deleteDoc(doc(db, collection, 'own')));
   });
 
-  it('lets an admin delete a post (manage-posts)', async () => {
+  it("BLOCKS a member deleting SOMEONE ELSE's post", async () => {
+    const db = dbFor(OTHER_GROUND_UID);
+    await assertFails(deleteDoc(doc(db, collection, 'own')));
+  });
+
+  it('BLOCKS a viewer deleting anything', async () => {
+    const db = dbFor(VIEWER_UID);
+    await assertFails(deleteDoc(doc(db, collection, 'own')));
+  });
+
+  it('lets a REPLY author delete their own reply', async () => {
+    await seed(collection, 'r1', reply({ authorUid: OTHER_GROUND_UID }));
+    const db = dbFor(OTHER_GROUND_UID);
+    await assertSucceeds(deleteDoc(doc(db, collection, 'r1')));
+  });
+
+  it("BLOCKS deleting someone else's reply when you own neither it nor the post", async () => {
+    await seed(collection, 'r2', reply({ authorUid: OTHER_GROUND_UID }));
+    const db = dbFor(INTERNET_UID); // holds write-own-post-butler, authored neither
+    await assertFails(deleteDoc(doc(db, collection, 'r2')));
+  });
+
+  it("lets the POST author delete another member's reply — the cascade needs it", async () => {
+    // deletePost removes every reply first. Without this the cascade is denied
+    // partway and the author cannot delete their own post once anyone has replied.
+    await seed(collection, 'r3', reply({ authorUid: OTHER_GROUND_UID }));
+    const db = dbFor(GROUND_UID, GROUND_EMAIL); // wrote 'own', not 'r3'
+    await assertSucceeds(deleteDoc(doc(db, collection, 'r3')));
+  });
+
+  it('does NOT extend that to a reply under someone else’s post', async () => {
+    await seed(collection, 'other-post', post({ authorUid: OTHER_GROUND_UID }));
+    await seed(collection, 'r4', reply({ authorUid: INTERNET_UID, parentId: 'other-post' }));
+    const db = dbFor(GROUND_UID, GROUND_EMAIL); // owns neither the reply nor its parent
+    await assertFails(deleteDoc(doc(db, collection, 'r4')));
+  });
+
+  it('BLOCKS a reply whose parentId points at a missing post from being deleted by a non-author', async () => {
+    // The parent lookup must fail closed when the path resolves to nothing.
+    await seed(collection, 'orphan', reply({ authorUid: OTHER_GROUND_UID, parentId: 'gone' }));
+    const db = dbFor(GROUND_UID, GROUND_EMAIL);
+    await assertFails(deleteDoc(doc(db, collection, 'orphan')));
+  });
+
+  it('lets an admin delete anything (manage-posts)', async () => {
+    await seed(collection, 'r5', reply({ authorUid: OTHER_GROUND_UID }));
     const db = dbFor(ADMIN_UID);
-    await assertSucceeds(deleteDoc(doc(db, 'posts_butler', 'own')));
-    await assertSucceeds(deleteDoc(doc(db, 'posts_feeding', 'own')));
+    await assertSucceeds(deleteDoc(doc(db, collection, 'r5')));
+    await assertSucceeds(deleteDoc(doc(db, collection, 'own')));
   });
 });
 

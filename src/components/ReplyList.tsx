@@ -58,6 +58,16 @@ const ReplyList = forwardRef<ReplyListRef, ReplyListProps>(
       onReplyCountUpdate(replyCount + 1);
     };
 
+    /**
+     * A reply was deleted (2026-08-04). Drop the row and lower the count the parent
+     * shows — `deleteReply` has already recounted the post in Firestore, so this is
+     * the local view catching up, not a second write.
+     */
+    const handleReplyDeleted = (deletedId: string) => {
+      setReplies((prev) => prev.filter((r) => r.id !== deletedId));
+      onReplyCountUpdate(Math.max(0, replyCount - 1));
+    };
+
     const addReply = (reply: Post) => {
       handleReplySuccess(reply);
     };
@@ -95,6 +105,7 @@ const ReplyList = forwardRef<ReplyListRef, ReplyListProps>(
                 reply={reply}
                 onReplySuccess={handleReplySuccess}
                 postService={postService}
+                onReplyDeleted={handleReplyDeleted}
               />
             ))}
 
