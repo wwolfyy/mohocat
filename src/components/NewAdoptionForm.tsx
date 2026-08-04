@@ -37,7 +37,6 @@ const NewAdoptionForm = ({ postId }: NewAdoptionFormProps = {}) => {
   const form = useSimpleContentForm({
     youtubeDefaults: {
       title: '입양홍보 동영상',
-      description: '입양홍보 동영상',
     },
     createPost: (postData) => adoptionService.createPost(postData),
     extraPostData: () => ({ showInModal }),
@@ -139,7 +138,6 @@ const NewAdoptionForm = ({ postId }: NewAdoptionFormProps = {}) => {
           items={form.videoItems}
           onItemsChange={form.handleVideoItemsChange}
           disabled={form.uploading}
-          descriptionHelp="비어 있으면 글 내용이 사용돼요."
           existing={form.existingVideos}
           onExistingChange={form.setExistingVideos}
         />

@@ -37,7 +37,6 @@ const NewAnnouncementForm = ({ postId }: NewAnnouncementFormProps = {}) => {
   const form = useSimpleContentForm({
     youtubeDefaults: {
       title: '공지사항 동영상',
-      description: '공지사항 동영상',
     },
     createPost: (postData) => announcementService.createPost(postData),
     extraPostData: () => ({ showInModal }),
@@ -133,7 +132,6 @@ const NewAnnouncementForm = ({ postId }: NewAnnouncementFormProps = {}) => {
           items={form.videoItems}
           onItemsChange={form.handleVideoItemsChange}
           disabled={form.uploading}
-          descriptionHelp="비어 있으면 글 내용이 사용돼요."
           existing={form.existingVideos}
           onExistingChange={form.setExistingVideos}
         />

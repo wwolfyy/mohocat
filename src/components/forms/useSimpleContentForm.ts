@@ -47,8 +47,13 @@ import { toExistingImages, toExistingVideos } from './existingMedia';
 
 export interface SimpleContentFormConfig {
   /**
-   * YouTube metadata fallbacks, used when a video's own 제목/설명 and the post's
-   * title/message are all empty.
+   * YouTube **title** fallback, used when a video's own 제목 and the post's title
+   * are both empty. Title inheritance is kept by decision (owner, 2026-08-05):
+   * an untitled video on YouTube is worse than one carrying its post's title.
+   *
+   * ⚠️ **No `description` here since 2026-08-05** — a video's 설명 is now taken
+   * verbatim, empty included, so there is no fallback left to configure. See the
+   * upload call below.
    *
    * ⚠️ **No `tags` here, deliberately.** These composers offer the uploader no cat
    * selection, and they used to attach a fixed `공지사항` / `입양홍보` tag regardless —
@@ -56,7 +61,7 @@ export interface SimpleContentFormConfig {
    * tagging queue that exists to find untagged ones. Untagged now stays untagged
    * (owner, 2026-07-29); don't reintroduce a default here.
    */
-  youtubeDefaults: { title: string; description: string };
+  youtubeDefaults: { title: string };
   /**
    * Playlists to file uploaded videos into, beyond the owning mountain's own
    * (which this hook always adds). 입양홍보 passes the cross-mountain adoption
@@ -243,15 +248,14 @@ export const useSimpleContentForm = (config: SimpleContentFormConfig) => {
 
           setUploadProgress(0);
           const uploadedVideoUrls = await uploadVideoItems(
-            // A video left without its own 설명 keeps inheriting the post body, as
-            // it did when one description covered the whole batch. Unlike 집사톡
-            // (where empty means empty), dropping this would silently blank the
-            // description on every announcement video that doesn't type one.
-            videoItems.map((item) => ({
-              ...item,
-              description:
-                item.description.trim() || message.trim() || config.youtubeDefaults.description,
-            })),
+            // ⚠️ **A video's 설명 is taken verbatim — empty stays empty** (owner,
+            // 2026-08-05). This REVERSES the earlier behaviour, where a video
+            // without its own 설명 inherited the post body (a holdover from when
+            // one description covered the whole batch). Do not restore it: the
+            // 설명 field is the uploader's statement about the video, and an
+            // empty one is an answer, not a gap to fill. 집사톡 has worked this
+            // way since the per-file refactor; this is the other two catching up.
+            videoItems,
             {
               fallbackTitle: title.trim() || config.youtubeDefaults.title,
               // Untagged stays untagged when nothing is picked — a default would set

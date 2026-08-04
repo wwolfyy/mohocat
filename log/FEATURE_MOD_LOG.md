@@ -15,6 +15,51 @@
 
 ---
 
+## 2026-08-05 — a video's YouTube 설명 is taken verbatim on every composer; 공지/입양홍보 stop inheriting the post body
+
+**Area:** `src/components/forms/useSimpleContentForm.ts`,
+`src/components/NewAnnouncementForm.tsx`, `src/components/NewAdoptionForm.tsx`,
+`src/components/forms/MediaItemList.tsx`.
+**Type:** small fix (owner-requested) — _"there is a distinct video description input field. We
+need to take what's in that input field verbatim - empty if empty."_
+
+**What changed.** 공지사항 / 입양홍보 uploaded a video with `item.description || message ||
+'공지사항 동영상'`, so a blank 설명 silently became the **post body**. It is now `item.description`,
+unchanged. 🔑 **This REVERSES an explicit earlier decision**, which the code recorded in as many
+words — _"a video left without its own 설명 keeps inheriting the post body… dropping this would
+silently blank the description on every announcement video that doesn't type one"_ — so the
+comment now records the reversal instead, to stop the old behaviour being restored from it.
+**Title inheritance is untouched by decision** (owner): an untitled video still falls back to
+the post title, because an untitled video on YouTube is worse than one carrying its post's name.
+
+📌 **집사톡 needed no change and never appeared in the diff.** The report named it, and it was
+accurate — but about **production**, which runs `main`: there `useRichContentForm` still does
+`description: message || config.youtubeDescriptionDefault`. `dev` has taken the 설명 verbatim
+since the per-file refactor. 🔑 **A behaviour report is about the deployed artifact, not the
+branch** — the same lesson as §10n, arriving from the opposite direction: last time the repo
+looked behind and production was ahead; here the repo is ahead and production is behind. The
+fix ships with the promotion.
+
+⚠️ **The UI was honest before this and had to change with it.** Both composers passed
+`descriptionHelp="비어 있으면 글 내용이 사용돼요."` — true then, a lie after. The override is
+**deleted** rather than reworded, so both now inherit `MediaItemList`'s own
+"비어 있으면 YouTube 설명 없이 올라가요." — the string 집사톡 already showed. That left the
+`descriptionHelp` prop with no callers at all, so it is gone too: a prop whose only purpose was
+to state a difference that no longer exists is exactly the kind of leftover that drifts back
+into use (cf. the fifth copy of `ALL_PERMISSIONS`, §10p).
+
+📌 **Photo descriptions were already verbatim** in these forms; only the video path inherited.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **189** · `npm run lint` no errors ·
+full e2e green. ⚠️ **The upload leg itself is NOT automatically covered** — `generate-signed-url`
+signs with a service-account key the harness has no access to, and YouTube upload is
+manual-parity (P5.4), so no test can observe what description reaches YouTube. Confirming that
+is a manual pass: upload a video to a 공지사항 with the 설명 box left empty and check the video
+on YouTube has none. 📌 **Existing videos keep their inherited descriptions** — 동기화 reads
+description _from_ YouTube, so correcting an old one means editing it there.
+
+---
+
 ## 2026-08-04 — the rename cascade reaches 엄마/애 too, found by dry-running it on real data
 
 **Area:** `scripts/migration/rename-cat.js`, `tests/unit/renameCat.test.ts`,

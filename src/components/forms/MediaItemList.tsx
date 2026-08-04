@@ -91,12 +91,6 @@ interface MediaItemListProps {
   /** Disables every control while a submit is in flight. */
   disabled?: boolean;
   /**
-   * Overrides the hint under 설명. Needed because what an empty 설명 *does* differs
-   * by form: in 집사톡 it stays empty, while 공지사항 / 입양홍보 fall back to the
-   * post body. The hint has to match, or it teaches the wrong thing.
-   */
-  descriptionHelp?: string;
-  /**
    * Whether the section accepts more than one file. `false` hides the trailing
    * picker once a file is present, so the list caps at one; the file can still be
    * 삭제'd and replaced. Defaults to `true` — the admin composers
@@ -118,7 +112,6 @@ const MediaItemList = ({
   items,
   onItemsChange,
   disabled = false,
-  descriptionHelp,
   allowMultiple = true,
   existing = [],
   onExistingChange,
@@ -255,9 +248,7 @@ const MediaItemList = ({
                   placeholder={labels.descriptionPlaceholder}
                   className="w-full p-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  {descriptionHelp ?? labels.descriptionHelp}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">{labels.descriptionHelp}</p>
               </div>
             </li>
           ))}
