@@ -83,13 +83,28 @@ async function seed() {
     dwelling: 'point-3',
     name_origin: '무늬가 아롱아롱해서요.',
   });
-  // A second cat whose prose links to the one being renamed.
+  // A second cat whose prose links to the one being renamed — AND whose 애 row
+  // names it. Modelled on the real cats/엄마조로, which carries both; it is the
+  // document that proves the two passes merge into one patch.
   await db.collection('cats').doc('cat-b').set({
     mountainId: M,
     name: '까미',
     thumbnailUrl: '',
     note: '[catmodal:아롱이]와 자주 다녀요. 아롱이 얘기가 많아요.',
+    offspring: OLD,
   });
+  // A list, and a name that merely *starts with* the one being renamed — the
+  // shape of cats/예쁜이엄마 (offspring="순돌이,예쁜이,블타").
+  await db
+    .collection('cats')
+    .doc('cat-list')
+    .set({
+      mountainId: M,
+      name: '보리',
+      thumbnailUrl: '',
+      offspring: `까미,${OLD},아롱이몬`,
+      parents: '아롱이몬',
+    });
   // Another tenant's cat with the SAME name — the cascade must not reach it.
   await db.collection('cats').doc('cat-other').set({
     mountainId: OTHER_M,
@@ -248,6 +263,34 @@ describe('rename-cat.js — APPLY', () => {
     expect((await dataOf('cats', 'cat-b')).note).toBe(
       '[catmodal:다롱이]와 자주 다녀요. 아롱이 얘기가 많아요.'
     );
+  });
+
+  it('updates the 엄마/애 rows that name the renamed cat', async () => {
+    apply();
+    expect((await dataOf('cats', 'cat-b')).offspring).toBe(NEW);
+  });
+
+  it('rewrites one member of a family list and leaves near-miss names alone', async () => {
+    apply();
+    const cat = await dataOf('cats', 'cat-list');
+
+    // 아롱이몬 merely starts with 아롱이 — a replace would have eaten it.
+    expect(cat.offspring).toBe(`까미,${NEW},아롱이몬`);
+    expect(cat.parents).toBe('아롱이몬');
+  });
+
+  it('writes a cat touched by BOTH the prose and family passes exactly once', async () => {
+    // cat-b has a [catmodal:] token in `note` and the name in `offspring`.
+    // Firestore rejects two writes to one document in a single commit, so the
+    // patches must merge — this fails loudly if they ever stop merging.
+    const output = apply();
+    const cat = await dataOf('cats', 'cat-b');
+
+    expect(cat.note).toContain('[catmodal:다롱이]');
+    expect(cat.offspring).toBe(NEW);
+    // Reported in both passes, counted once.
+    expect(output).toContain('가족 관계 updated');
+    expect(output).toContain('"familyDocs":2');
   });
 
   it('leaves another tenant’s identically-named cat and its media untouched', async () => {

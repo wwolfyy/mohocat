@@ -541,11 +541,12 @@ Mostly one-time or infrequent setup. Details live in
 ⛔ **Editing 이름 in `/admin/cats` renames the cat and nothing else.** The name is also stored
 in three other places, and none of them follows:
 
-| What                                   | What happens after a bare rename                                                                      |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| The cat's **사진첩 / 영상첩**          | **Goes empty.** Albums find media by the cat's name in its tags, and the tags still say the old name. |
-| Every **`[catmodal:이름]`** link to it | **Stops working.** The link still renders and still looks clickable; clicking it does nothing.        |
-| Other cats' **작명 사유 / 특이사항 …** | Same dead links, in any prose that mentions the renamed cat.                                          |
+| What                                   | What happens after a bare rename                                                                            |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| The cat's **사진첩 / 영상첩**          | **Goes empty.** Albums find media by the cat's name in its tags, and the tags still say the old name.       |
+| Every **`[catmodal:이름]`** link to it | **Stops working.** The link still renders and still looks clickable; clicking it does nothing.              |
+| Other cats' **작명 사유 / 특이사항 …** | Same dead links, in any prose that mentions the renamed cat.                                                |
+| Other cats' **엄마 / 애** rows         | Keep naming the old name — a cat that no longer exists. Plain text, so nothing breaks; it just reads wrong. |
 
 ⚠️ **All of it fails silently** — no error, no warning, nothing to notice until someone opens
 the album and finds it empty.

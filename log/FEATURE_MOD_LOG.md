@@ -15,6 +15,44 @@
 
 ---
 
+## 2026-08-04 — the rename cascade reaches 엄마/애 too, found by dry-running it on real data
+
+**Area:** `scripts/migration/rename-cat.js`, `tests/unit/renameCat.test.ts`,
+`tests/scripts/renameCat.emulator.test.ts`, `docs/manuals/admin-manual/README.md`.
+**Type:** small fix — a gap in the cascade shipped hours earlier.
+
+**What was missing.** `cats.parents` / `cats.offspring` hold **other cats' names as free
+text** — the 엄마 / 애 rows `CatInfo` prints verbatim. The cascade skipped them, so a rename
+left them naming a cat that no longer exists. Nothing resolves these fields, so nothing
+_breaks_; the family panel just reads wrong, which is the quietest failure of the four.
+
+🔑 **The owner's dry run is what found it, and only because it ran against production.** The
+audit listed `cats/엄마조로` among the token rewrites; the owner queried whether a different
+cat should be touched at all. It should — 엄마조로's description links to the cat being
+renamed — but checking that turned up `cats/엄마조로 → offspring: "아들조로"`, sitting one
+field away and untouched. 📌 **The emulator fixtures could not have caught this**: I wrote
+them, and I only model the fields I already know matter.
+
+⚠️⚠️ **Whole-member matching, never a replace — and the live rename is the proof.**
+아들조로 → 조로 makes the **new** name a substring of **two** existing cats (아들조로,
+엄마조로), and one cat stores a list (`cats/예쁜이엄마 → offspring: "순돌이,예쁜이,블타"`).
+A `String.replace` would have corrupted neighbours on the very first run. Members are
+compared with `===` after trimming; separators and spacing round-trip untouched.
+
+📌 **Patches now merge per document before committing.** A cat can appear in both the prose
+and family passes — 엄마조로 does — and Firestore rejects two writes to one document in a
+single commit. Reported separately (an operator wants prose and family as distinct things),
+committed as one patch.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **189** (+7) · lint clean ·
+`npm run test:scripts` **23** (+3, incl. a cat in both passes and a near-miss name in a list).
+**Dry-run against production**: the new pass reports exactly `cats/엄마조로  offspring:
+"아들조로" → "조로"` and nothing else. **Mutation-tested** with a naive
+`split(old).join(new)`: 2 unit cases and 1 emulator case failed — the 조로 substring trap
+among them.
+
+---
+
 ## 2026-08-04 — migration scripts get an emulator-backed test suite, and `rename-cat.js` gets a guard
 
 **Area:** `scripts/migration/rename-cat.js`, `tests/scripts/renameCat.emulator.test.ts` (new),

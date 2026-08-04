@@ -4,7 +4,7 @@
  * 🔑 **Why a rename needs a script at all.** A cat's *identity* is its Firestore
  * document id, and `updateCat` patches the doc in place — so `?cat=<id>` share
  * links survive a rename untouched (a deliberate choice, PROJECT_PLAN §10c C2).
- * But three other things store the **name string**, and none of them is updated
+ * But four other things store the **name string**, and none of them is updated
  * by editing the cat:
  *
  *   1. `cat_images[].tags` / `cat_videos[].tags` — the album queries are
@@ -16,6 +16,10 @@
  *      rename the link still renders, still looks clickable, and does nothing
  *      but `console.warn`.
  *   3. Other cats' prose — the same tokens can sit in any cat's 작명 사유 / 특이사항.
+ *   4. `cats[].parents` / `cats[].offspring` — free-text **names** printed in the
+ *      modal's 엄마 / 애 rows (added 2026-08-04, after a dry run showed
+ *      `엄마조로` holding `offspring: "아들조로"`). Nothing resolves these, so a
+ *      stale one does not break; it just names a cat that no longer exists.
  *
  * ⚠️ **Every one of those failures is silent.** That is the whole reason this
  * exists: an operator who renames a cat in the CMS gets no error, and the damage
@@ -91,6 +95,13 @@ const CAT_TEXT_FIELDS = [
   'name_origin',
 ];
 const ABOUT_TEXT_FIELDS = ['title', 'subtitle', 'mainContent'];
+
+/**
+ * Cat fields holding **other cats' names** as free text — the 엄마 / 애 rows in
+ * the modal. Not link tokens and not tags; see `rewriteNameList` for why they
+ * need whole-member matching rather than a replace.
+ */
+const FAMILY_FIELDS = ['parents', 'offspring'];
 
 /**
  * Whether we are pointed at the Firebase Emulator Suite. `firebase emulators:exec`
@@ -201,6 +212,35 @@ function rewriteTags(tags, oldName, newName) {
   return rewritten;
 }
 
+/**
+ * Rewrite `oldName` inside a family field (`parents` / `offspring`).
+ *
+ * These hold **cat names as free text**, one name or a comma-separated list
+ * (`offspring: "순돌이,예쁜이,블타"`), and `CatInfo` prints them verbatim in the
+ * 엄마 / 애 rows. Nothing resolves them, so a stale entry does not break — it just
+ * names a cat that no longer goes by that name.
+ *
+ * ⚠️⚠️ **Whole members only, never a substring, and this is not hypothetical.**
+ * The rename that prompted this field being added at all was 아들조로 → 조로, and
+ * the new name is a substring of **two** existing cats (아들조로, 엄마조로). A
+ * substring replace would have turned `엄마조로` into `엄마조로`'s corruption on
+ * the first run. Members are compared with `===` after trimming, and the original
+ * separators and spacing are preserved so an untouched field round-trips exactly.
+ */
+function rewriteNameList(value, oldName, newName) {
+  if (typeof value !== 'string' || value.trim() === '') return null;
+
+  let changed = false;
+  const rewritten = value.split(',').map((member) => {
+    const [, leading, name, trailing] = member.match(/^(\s*)(.*?)(\s*)$/);
+    if (name !== oldName) return member;
+    changed = true;
+    return `${leading}${newName}${trailing}`;
+  });
+
+  return changed ? rewritten.join(',') : null;
+}
+
 /** Resolve the cat to rename, refusing anything ambiguous. */
 async function resolveCat(db) {
   if (CAT_ID) {
@@ -289,6 +329,35 @@ async function collectTagWrites(db, collectionName, oldName, newName) {
   return writes;
 }
 
+/** Cats whose 엄마 / 애 rows name the cat being renamed. */
+async function collectFamilyWrites(db, oldName, newName) {
+  const snapshot = await db.collection('cats').where('mountainId', '==', MOUNTAIN_ID).get();
+
+  const writes = [];
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    const update = {};
+    const changes = [];
+
+    for (const field of FAMILY_FIELDS) {
+      const rewritten = rewriteNameList(data[field], oldName, newName);
+      if (rewritten === null) continue;
+      update[field] = rewritten;
+      changes.push(`${field}: "${data[field]}" → "${rewritten}"`);
+    }
+
+    if (changes.length > 0) {
+      writes.push({
+        ref: doc.ref,
+        update,
+        label: `cats/${doc.id}`,
+        detail: changes.join('; '),
+      });
+    }
+  }
+  return writes;
+}
+
 /** `[catmodal:…]` token rewrites across every collection that stores prose. */
 async function collectTokenWrites(db, oldName, newName) {
   const writes = [];
@@ -349,14 +418,37 @@ async function collectTokenWrites(db, oldName, newName) {
   return writes;
 }
 
+/**
+ * Commit every patch, **merged per document**.
+ *
+ * ⚠️ One cat can legitimately appear in two passes — 엄마조로 carries both a
+ * `[catmodal:아들조로]` link in its description and `offspring: "아들조로"`. The
+ * passes are reported separately (an operator wants to see prose and family
+ * fields as different things) but must reach Firestore as **one** patch per
+ * document: two `batch.update()` calls on the same ref in a single commit is a
+ * shape Firestore rejects. The field sets are disjoint, so merging is lossless.
+ */
 async function commit(db, writes) {
-  for (let i = 0; i < writes.length; i += BATCH_LIMIT) {
+  const merged = new Map();
+  for (const write of writes) {
+    const key = write.ref.path;
+    const existing = merged.get(key);
+    if (existing) {
+      Object.assign(existing.update, write.update);
+    } else {
+      merged.set(key, { ref: write.ref, update: { ...write.update } });
+    }
+  }
+
+  const patches = [...merged.values()];
+  for (let i = 0; i < patches.length; i += BATCH_LIMIT) {
     const batch = db.batch();
-    for (const write of writes.slice(i, i + BATCH_LIMIT)) {
-      batch.update(write.ref, write.update);
+    for (const patch of patches.slice(i, i + BATCH_LIMIT)) {
+      batch.update(patch.ref, patch.update);
     }
     await batch.commit();
   }
+  return patches.length;
 }
 
 function report(heading, writes) {
@@ -397,12 +489,14 @@ async function main() {
   const imageWrites = await collectTagWrites(db, 'cat_images', oldName, NEW_NAME);
   const videoWrites = await collectTagWrites(db, 'cat_videos', oldName, NEW_NAME);
   const tokenWrites = await collectTokenWrites(db, oldName, NEW_NAME);
+  const familyWrites = await collectFamilyWrites(db, oldName, NEW_NAME);
 
   report('사진 re-tagged (cat_images)', imageWrites);
   report('동영상 re-tagged (cat_videos)', videoWrites);
   report('[catmodal:…] tokens rewritten', tokenWrites);
+  report('가족 관계 updated (엄마/애)', familyWrites);
 
-  const allWrites = [...imageWrites, ...videoWrites, ...tokenWrites];
+  const allWrites = [...imageWrites, ...videoWrites, ...tokenWrites, ...familyWrites];
 
   console.log(
     `\n→ ${JSON.stringify({
@@ -410,16 +504,17 @@ async function main() {
       images: imageWrites.length,
       videos: videoWrites.length,
       textDocs: tokenWrites.length,
-      totalWrites: allWrites.length + 1,
+      familyDocs: familyWrites.length,
+      // A cat can appear in both the prose and family passes, so this counts
+      // documents, not patches.
+      totalDocs: new Set([...allWrites.map((w) => w.ref.path), cat.ref.path]).size,
     })}`
   );
 
   if (APPLY) {
-    await commit(db, allWrites);
+    const patched = await commit(db, allWrites);
     await cat.ref.update({ name: NEW_NAME });
-    console.log(
-      `\n✅ Renamed '${oldName}' → '${NEW_NAME}' and updated ${allWrites.length} doc(s).`
-    );
+    console.log(`\n✅ Renamed '${oldName}' → '${NEW_NAME}' and updated ${patched} doc(s).`);
     console.log('   Existing ?cat= links still resolve — they address the document id.');
   } else {
     console.log('\nRe-run with APPLY=true to write (snapshot first).');
@@ -453,4 +548,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { rewriteTokens, rewriteTags };
+module.exports = { rewriteTokens, rewriteTags, rewriteNameList };

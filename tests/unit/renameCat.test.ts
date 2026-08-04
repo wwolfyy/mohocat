@@ -12,7 +12,11 @@
 import { describe, it, expect } from 'vitest';
 
 // The script is a CommonJS migration script, not a module of the app.
-const { rewriteTokens, rewriteTags } = require('../../scripts/migration/rename-cat.js');
+const {
+  rewriteTokens,
+  rewriteTags,
+  rewriteNameList,
+} = require('../../scripts/migration/rename-cat.js');
 
 describe('rewriteTokens', () => {
   it('rewrites the token and reports how many it changed', () => {
@@ -86,5 +90,56 @@ describe('rewriteTags', () => {
 
   it('does not rewrite a tag that merely contains the name', () => {
     expect(rewriteTags(['아롱이몬'], '아롱이', '다롱이')).toBeNull();
+  });
+});
+
+/**
+ * `parents` / `offspring` — free-text cat names shown in the modal's 엄마 / 애
+ * rows. Added 2026-08-04 after a production dry run of 아들조로 → 조로 showed
+ * `cats/엄마조로` holding `offspring: "아들조로"`, which the cascade was leaving
+ * behind.
+ */
+describe('rewriteNameList', () => {
+  it('rewrites a field holding exactly the old name', () => {
+    expect(rewriteNameList('아들조로', '아들조로', '조로')).toBe('조로');
+  });
+
+  it('returns null when the name is absent, so the doc is not written', () => {
+    expect(rewriteNameList('엄마조로', '아들조로', '조로')).toBeNull();
+    expect(rewriteNameList('', '아들조로', '조로')).toBeNull();
+    expect(rewriteNameList(undefined, '아들조로', '조로')).toBeNull();
+  });
+
+  /**
+   * ⚠️⚠️ The case that makes this a whole-member match rather than a replace.
+   * The real rename is 아들조로 → 조로, and the NEW name is a substring of two
+   * existing cats. A `String.replace` here would corrupt both.
+   */
+  it('never matches a substring — the 조로 trap', () => {
+    expect(rewriteNameList('엄마조로', '조로', '깡패')).toBeNull();
+    expect(rewriteNameList('아들조로', '조로', '깡패')).toBeNull();
+    // And renaming 아들조로 must leave a sibling 엄마조로 entry untouched.
+    expect(rewriteNameList('엄마조로,아들조로', '아들조로', '조로')).toBe('엄마조로,조로');
+  });
+
+  it('rewrites one member of a comma-separated list and leaves the others', () => {
+    // Real shape: cats/예쁜이엄마 → offspring="순돌이,예쁜이,블타".
+    expect(rewriteNameList('순돌이,예쁜이,블타', '예쁜이', '이쁜이')).toBe('순돌이,이쁜이,블타');
+  });
+
+  it('does not match a longer name that starts with the old one', () => {
+    expect(rewriteNameList('예쁜이엄마', '예쁜이', '이쁜이')).toBeNull();
+    expect(rewriteNameList('순돌이,예쁜이엄마', '예쁜이', '이쁜이')).toBeNull();
+  });
+
+  it('preserves the original separators and spacing', () => {
+    expect(rewriteNameList('순돌이, 예쁜이, 블타', '예쁜이', '이쁜이')).toBe(
+      '순돌이, 이쁜이, 블타'
+    );
+    expect(rewriteNameList('  아들조로  ', '아들조로', '조로')).toBe('  조로  ');
+  });
+
+  it('rewrites every occurrence when a name is listed twice', () => {
+    expect(rewriteNameList('아들조로,깡패,아들조로', '아들조로', '조로')).toBe('조로,깡패,조로');
   });
 });
