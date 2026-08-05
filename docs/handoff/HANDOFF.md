@@ -122,8 +122,33 @@ PR #7)
 >   `emailDelivered: false` and **nothing consumes that field**; and `.env.test` sets no SMTP
 >   vars, so **e2e always takes the "not configured" branch and cannot catch this**. The visitor
 >   is reassured, the operator gets nothing, the suite stays green, and the only signal anywhere
->   is one line in the Vercel function log. ⚠️ **Surfacing `emailDelivered` in the UI is an open
->   product decision** — offered, not done.
+>   is one line in the Vercel function log.
+> - **🆕 …and that silence is now closed (owner-asked, same day).** `emailDelivered` reaches
+>   **both** audiences, which need different things. The **visitor** gets expectation-setting on
+>   the non-error styling — _"메시지가 접수되었습니다. 다만 알림 전달에 문제가 있어 답변이
+>   늦어질 수 있어요."_ ⚠️ **It must never read as a failed submission**: the contact is already
+>   in Firestore, so inviting a resubmit duplicates the record. The **operator** gets a durable
+>   flag, because the API response dies with the visitor's tab — the route writes
+>   `notified: false` on create and promotes it to `true` only after the send succeeds, and
+>   `ContactManagement` shows an **⚠️ 미전송** badge in a new 알림 column. 🔑 **Three states, not
+>   two: `undefined` is _unknown_, not failed** — every contact in the collection today predates
+>   the field, and rendering those as failures would invent history. 📌 **No rules change** —
+>   `contacts` denies all client writes and the route uses the Admin SDK, so this ships as app
+>   code alone. ✅ **Both e2e specs now assert it** (the harness has no SMTP, so `false` is the
+>   only branch it can reach); the **delivered** branch still has no automated cover anywhere —
+>   `npm run smtp:verify` is the check for that half.
+> - 🔴 **…and building that found the e2e suite SENDING REAL EMAIL to the production
+>   `adminEmail` — two per full run.** `next start` runs Next's own env loader, which backfills
+>   any key `.env.test` leaves **undefined** from `.env` on disk, so the developer's real Gmail
+>   credentials reached `/api/contact`. 🔑 **It hid because the tell was suppressed on both
+>   sides:** the route swallows send failures by design and the page showed one unconditional
+>   success message, so a sent mail and a failed mail looked identical — and the credentials had
+>   been failing anyway. It surfaced only when both flipped the same day. **Fixed:** `.env.test`
+>   declares the five SMTP keys **empty** (defined-but-blank beats Next's backfill, which only
+>   fills `undefined`). ⚠️ **Blank is load-bearing — deleting those lines silently restores live
+>   sending.** 📌 **Generalises:** any secret in `.env` that `.env.test` does not explicitly
+>   blank is reachable from the harness; the demo-project guarantee covers Firebase only.
+>   Full write-up in `log/DEBUG_LOG.md`.
 > - ⚠️ **A `.env` trap worth knowing: dotenv strips an inline `# comment`, the Vercel dashboard
 >   does not.** A password line carrying a trailing note parses to a clean 16 chars locally and
 >   authenticates as the whole 73-character string once pasted into Vercel — failing identically
@@ -2146,7 +2171,17 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-06 (latest)** — **`npm run smtp:verify`, from a live 동참 email failure.** Two real
+- **2026-08-06 (latest)** — **`emailDelivered` now reaches both audiences, and the work found
+  the e2e suite emailing production.** The visitor gets expectation-setting on the non-error
+  styling (never a resubmit prompt — the contact is already recorded); the operator gets a
+  durable `notified` flag rendered as an ⚠️ 미전송 badge in the admin 동참 table, with
+  `undefined` kept distinct as "unknown" so pre-existing records are not painted as failures.
+  🔴 Building it surfaced that **`next start` backfills `.env` for any key `.env.test` leaves
+  undefined**, so the harness had been sending **two real emails per run** to the production
+  `adminEmail`. `.env.test` now blanks the SMTP keys; blank is load-bearing. Gates: tsc 0 ·
+  smoke 39 · unit 196 · **e2e 233/13/0**.
+
+- **2026-08-06** — **`npm run smtp:verify`, from a live 동참 email failure.** Two real
   submissions reported success and sent nothing; Gmail was answering `535-5.7.8`. The App
   Password was regenerated and now authenticates. 🔑 The lasting finding is not the credential
   but that the failure was **invisible from three directions** — the route returns `success` by

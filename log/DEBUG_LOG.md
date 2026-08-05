@@ -11,6 +11,55 @@
 
 ---
 
+## 2026-08-06 — The e2e suite was sending real email to the production admin, two per run
+
+**Symptom:** two new specs asserting the "notification did not send" copy failed, and the
+screenshot showed the page rendering the **delivered** copy — 메시지가 전송되었습니다.
+감사합니다! So `/api/contact` inside the hermetic Playwright harness was reporting
+`emailDelivered: true`, which should have been impossible.
+
+**Root cause: `next start` runs Next's own env loader, which backfills from `.env` on disk.**
+`.env.test` (applied via `dotenv -e .env.test`) declares no SMTP keys, so they arrived at the
+server as `undefined` — and `loadEnvConfig` fills exactly the keys that are `undefined`. It
+therefore handed the route the developer's **real Gmail credentials** from `.env`. Proven
+directly rather than inferred:
+
+```
+before loadEnvConfig — SMTP_HOST: (unset)
+after  loadEnvConfig — SMTP_HOST: smtp.gmail.com
+after  loadEnvConfig — SMTP_PASSWORD set: true
+```
+
+Two specs submit a 동참 form, so **every full `npm run test:e2e` delivered two live emails to
+the mountain's `adminEmail`.**
+
+🔑 **Why it hid for so long — the tell was suppressed on both sides.** The route swallows a
+send failure by design and the page rendered one unconditional success message, so a _sent_
+mail and a _failed_ mail looked identical from the test's point of view; and the SMTP
+credentials in `.env` had been **failing** (`535-5.7.8`), so nothing actually went out. It
+became visible only when both changed on the same day: the owner fixed the credentials, and
+the page started rendering `emailDelivered`.
+
+📌 **"Not configured" was an assumption, never a check.** The old spec header asserted "SMTP
+is unset in test" as settled fact and the new one inherited it. Nothing tested the claim —
+and the claim was false.
+
+**Fix:** `.env.test` now declares the five SMTP keys **empty**. `dotenv` puts them in
+`process.env`, and Next only fills keys that are `undefined` — an empty string is defined, so
+`.env` can no longer win. `/api/contact`'s own guard then reports "SMTP not configured".
+⚠️ **Blank is load-bearing; deleting those lines silently restores live sending.**
+
+**Verified:** the guard `(!host||!user||!pass)` evaluates `true` under
+`dotenv -e .env.test` + `loadEnvConfig`, and the full suite returned to **233 passed / 13
+skipped / 0 failed** with both specs now asserting the un-sent path.
+
+📌 **Generalises beyond SMTP:** any secret in `.env` that `.env.test` does not explicitly
+blank is reachable by `next start` in the harness. `.env.test`'s header says the demo project
+id means the SDKs "can NEVER reach a real project" — true for Firebase, and it does not
+extend to anything else the app talks to.
+
+---
+
 ## 2026-08-03 — Deleted posts stayed in the collection, and no permission could remove them
 
 **Symptom (owner-reported):** posts deleted through the admin CMS were still present in

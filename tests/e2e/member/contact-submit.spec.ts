@@ -4,8 +4,19 @@
  *
  * The form is members-only: with a session the 보내기 button enables, and the POST
  * /api/contact route records the contact via the Admin SDK. Email delivery is a
- * best-effort side-effect (SMTP is unset in test → the route still returns
- * success), so the observable outcome is the green success message.
+ * best-effort side-effect: SMTP is unset in test, so the route still returns
+ * `success` — but now also `emailDelivered: false`, which the page renders.
+ *
+ * 🔑 **So this spec DOES observe the notification outcome now, where it used to be
+ * blind to it.** It asserts the "recorded, but the notification did not send" copy,
+ * because that is the truth in this environment — SMTP is deliberately unconfigured.
+ * ⚠️ **The delivered branch has no automated cover and cannot get one here:** proving
+ * it needs a real SMTP session, which the hermetic harness has no credentials for.
+ * `npm run smtp:verify` is the check for that half.
+ *
+ * ⚠️ **A failed notification must never read as a failed submission.** The contact is
+ * already in Firestore, and telling the visitor otherwise would invite a resubmit and
+ * duplicate the record — so this asserts the non-error copy, not an error state.
  */
 import { test, expect } from '../setup/test';
 
@@ -43,8 +54,16 @@ test.describe('동참 (contact) submit', () => {
 
     await submit.click();
 
-    await expect(page.getByText('메시지가 전송되었습니다. 감사합니다!')).toBeVisible({
-      timeout: 15_000,
-    });
+    // SMTP is unset in the test env, so the route reports `emailDelivered: false` and
+    // the page sets expectations about the reply rather than claiming the mail went out.
+    await expect(
+      page.getByText(
+        '메시지가 접수되었습니다. 다만 알림 전달에 문제가 있어 답변이 늦어질 수 있어요.'
+      )
+    ).toBeVisible({ timeout: 15_000 });
+
+    // 🔑 The submission still succeeded — assert the failure copy is NOT shown, so a
+    // future change that turns a missing notification into a visible error fails here.
+    await expect(page.getByText('죄송합니다. 다시 시도해 주세요.')).toHaveCount(0);
   });
 });

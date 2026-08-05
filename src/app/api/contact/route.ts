@@ -128,10 +128,17 @@ export async function POST(request: NextRequest) {
     const contact = parsed.data;
 
     // 3. Write via the Admin SDK (bypasses client rules).
-    await db.collection(COLLECTION_NAME).add({
+    //
+    // `notified` starts FALSE and is promoted only after the email actually sends. The
+    // order is deliberate: the record must exist before anything that can fail, and if
+    // the process dies mid-send the document is left saying "not notified" — the
+    // fail-safe direction. A doc that predates this field has `notified: undefined`,
+    // which is "unknown", NOT a failure; the admin UI distinguishes the two.
+    const docRef = await db.collection(COLLECTION_NAME).add({
       ...contact,
       mountainId: getRequestMountainId(request),
       createdAt: FieldValue.serverTimestamp(),
+      notified: false,
     });
 
     // 4. Notify the admin. The contact is already recorded, so an email failure must not
@@ -144,6 +151,25 @@ export async function POST(request: NextRequest) {
       console.error('Contact recorded but admin notification failed:', error);
     }
 
+    // Promote the flag in its OWN try, so the two failures stay distinguishable. If the
+    // mail sent and only this write failed, the email was still delivered — folding it
+    // into the block above would tell the visitor a delivered message was not delivered,
+    // and blame the mail for a Firestore fault. The doc is then stale at `false`, which
+    // is the safe direction: the operator sees 미전송, checks, and finds the mail.
+    //
+    // Neither catch re-raises, for the reason the block above documents: the contact is
+    // already recorded, and failing the request would prompt a resubmit.
+    if (emailDelivered) {
+      try {
+        await docRef.update({ notified: true });
+      } catch (error) {
+        console.error('Contact notification sent but marking it notified failed:', error);
+      }
+    }
+
+    // `emailDelivered` tells the submitter's page whether to promise a prompt reply;
+    // `notified` on the document is the operator's copy, because this response is gone
+    // the moment the visitor closes the tab.
     return NextResponse.json({ success: true, emailDelivered });
   } catch (error) {
     console.error('Error processing contact submission:', error);

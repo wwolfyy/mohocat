@@ -56,6 +56,14 @@ export interface Contact {
   message: string;
   // Firestore Timestamp; kept loosely-typed to avoid a firebase import in the shared types module.
   createdAt?: { seconds: number; nanoseconds: number } | Date;
+  /**
+   * Whether the admin notification email actually sent. Written by `/api/contact`:
+   * `false` on create, promoted to `true` only after the send succeeds.
+   *
+   * ⚠️ **`undefined` is "unknown", not "failed".** Contacts recorded before this field
+   * existed carry no value, and rendering those as failures would be a fabrication.
+   */
+  notified?: boolean;
 }
 
 // Post and Reply interfaces

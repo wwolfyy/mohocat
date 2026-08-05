@@ -728,6 +728,15 @@ export const adminStrings = {
       phone: '전화번호',
       email: '이메일',
       message: '메시지',
+      notified: '알림',
+    },
+    /** 알림 column. `unknown` is for records that predate the field — not a failure. */
+    notified: {
+      failed: '⚠️ 미전송',
+      failedHint: '알림 메일이 전송되지 않았어요. 이 신청은 저장되어 있어요.',
+      sent: '전송됨',
+      unknown: '—',
+      unknownHint: '이 항목이 만들어질 때는 알림 기록이 없었어요.',
     },
   },
 

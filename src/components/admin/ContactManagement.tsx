@@ -23,6 +23,41 @@ function formatCreatedAt(createdAt: Contact['createdAt']): string {
   return date.toLocaleString('ko-KR');
 }
 
+/**
+ * The 알림 cell — whether the admin notification email for this contact actually sent.
+ *
+ * 🔑 **Three states, not two.** `false` is a known failure and is the only one worth
+ * shouting about; `true` is the ordinary case and stays quiet; `undefined` means the
+ * record predates the field, and rendering that as a failure would invent history —
+ * every contact in the collection today is `undefined`.
+ *
+ * ⚠️ **`false` never means the submission was lost.** `/api/contact` writes the contact
+ * before it attempts the email, so a failed notification is a missing *ping*, not a
+ * missing record — hence 저장되어 있어요 in the hint.
+ *
+ * Status hue, not brand: `design.md` §Colors keeps warning distinct from `brand`.
+ */
+function NotifiedCell({ notified }: { notified?: boolean }) {
+  if (notified === false) {
+    return (
+      <span
+        className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-200"
+        title={t.notified.failedHint}
+      >
+        {t.notified.failed}
+      </span>
+    );
+  }
+  if (notified === true) {
+    return <span className="text-xs text-gray-500">{t.notified.sent}</span>;
+  }
+  return (
+    <span className="text-xs text-gray-400" title={t.notified.unknownHint}>
+      {t.notified.unknown}
+    </span>
+  );
+}
+
 export default function ContactManagement() {
   const mountainId = useMountain();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -71,6 +106,7 @@ export default function ContactManagement() {
                 <th className="py-2 pr-4 font-medium">{t.columns.name}</th>
                 <th className="py-2 pr-4 font-medium">{t.columns.phone}</th>
                 <th className="py-2 pr-4 font-medium">{t.columns.email}</th>
+                <th className="py-2 pr-4 font-medium">{t.columns.notified}</th>
                 <th className="py-2 font-medium">{t.columns.message}</th>
               </tr>
             </thead>
@@ -83,6 +119,9 @@ export default function ContactManagement() {
                   <td className="py-3 pr-4 whitespace-nowrap text-gray-900">{c.name}</td>
                   <td className="py-3 pr-4 whitespace-nowrap text-gray-700">{c.phone}</td>
                   <td className="py-3 pr-4 whitespace-nowrap text-gray-700">{c.email || '-'}</td>
+                  <td className="py-3 pr-4 whitespace-nowrap">
+                    <NotifiedCell notified={c.notified} />
+                  </td>
                   <td className="py-3 text-gray-700 whitespace-pre-wrap">{c.message}</td>
                 </tr>
               ))}
