@@ -1,14 +1,26 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-05 · **Branch:** `dev` — local `dev` = **`61b1904`**, **91** ahead
-of `origin/main`; ⚠️ **the last commit is NOT pushed** (owner is holding it)
+**Last updated:** 2026-08-05 · **Branch:** `dev` — local `dev` = **`6618c8b`**, **97** ahead
+of `origin/main`; ⚠️ **the last SIX commits are NOT pushed** (`61b1904` was held deliberately;
+the five colour-workstream commits landed on top of it)
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-05 — three small owner-asked fixes, and a rename that was a cascade.**
-> Nothing here needed a rules or permission deploy; it is all app code and one new script.
+> **2026-08-05 — three small owner-asked fixes, a rename that was a cascade, and then a
+> colour workstream that removed a feature instead of adding one.** Nothing here needed a
+> rules or permission deploy; it is all app code, one new script, and config.
+>
+> 🎨 **The colour half, in one paragraph** (five commits, `165df61` … `6618c8b`; detail in
+> **§10u** and the [plan](../planning/pending/color-token-centralization-plan-20260805.md)).
+> Asked to control colour "in one central place by a config file", the answer was that the
+> repo **already designates one** — `design.md:9` names `tailwind.config.js` and `:292`
+> explicitly forbids a `tokens.json` — so **nothing was created**; the existing file was
+> adopted. 🔑 **The decision that shaped everything: a mountain may not differ in colour**
+> (owner), which **withdraws M8** rather than extending it. Also closed BACKLOG **B3**
+> (`/api/revalidate` omitted `/pages/cats`). ⚠️ **Only one user-visible change**: 급식현황's
+> freshness scale is now blue→red.
 >
 > ✅ **급식현황 publishing is gated on a confirmation that names the 급식소 it will stamp**
 > (`c515058`). 🔑 **Why a gate and not a notice:** publishing writes `last_attended` /
@@ -112,27 +124,46 @@ PR #7)
 >
 > **Do these next, in this order:**
 >
-> 1. **Push `61b1904`** — the owner is holding it deliberately.
+> 1. **Push the six held commits** (`61b1904` … `6618c8b`). `61b1904` was held deliberately;
+>    the five colour commits sit on top of it, so pushing releases all six together.
 > 2. **Re-tag those two YouTube videos** (above). Time-sensitive: any 동기화 undoes the rename
 >    for 조로's 영상첩.
-> 3. **Finish the SMTP change** and verify the From header.
-> 4. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
->    promotion. 🆕 Fold in the one thing this session cannot test: **upload a video to a
+> 3. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
+>    colour, 작성 CTAs) and 냥이들' grid header. 🔑 **The only unverified part of the colour
+>    work**: `/admin/*` is behind `AdminAuth` and the session that did it had no credentials, so
+>    those screens are proven by compiled-CSS equality, not by looking. Everything is
+>    pixel-identical by construction, so this is a confirmation, not a hunt.
+> 4. **Finish the SMTP change** and verify the From header.
+> 5. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
+>    promotion. 🆕 Fold in the one thing the harness cannot test: **upload a video to a
 >    공지사항 with 설명 left blank** and confirm YouTube shows no description. The upload leg
 >    has **no** automated cover (`generate-signed-url` needs a service-account key the harness
 >    lacks; YouTube upload is manual-parity).
-> 5. **The Preview verifications that piled up** — see the earlier session boxes below.
-> 6. **Then the promotion.** `dev` leads `origin/main` by **91**. ⚠️ Measure against
+> 6. **The Preview verifications that piled up** — see the earlier session boxes below.
+> 7. **Then the promotion.** `dev` leads `origin/main` by **97**. ⚠️ Measure against
 >    `origin/main`, not the local `main` ref (stranded at `26b1879`).
 >    🆕 **Add to the "changes behaviour on deploy" list:** 급식현황 now asks for confirmation
 >    before publishing; 공지사항/입양홍보 videos stop inheriting the post body as their YouTube
->    description (and the help text under the field changes to match); and **집사톡's
+>    description (and the help text under the field changes to match); **집사톡's
 >    already-fixed verbatim 설명 finally reaches production** — that one is a fix users have
->    been waiting on without knowing it.
+>    been waiting on without knowing it; and **급식현황's freshness scale changes colour**
+>    (green→red ⇒ blue→red, deeper endpoints) — the one visible change in the colour work, and
+>    the one an operator will notice.
 >
-> 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the
-> owner's `theme.secondaryColor` / `accentColor` edits. Also two untracked code-graph files —
-> **different workstream, do not commit them.**
+> 🎨 **Picked up next session — colour plan Phases 4 and 5** (§6 of
+> [the plan](../planning/pending/color-token-centralization-plan-20260805.md); **not** its §4/§5,
+> which are analysis and are done). Phase 4 is three small hygiene edits —
+> `YouTubeAuthPanelNew:114-127`'s raw status hexes, `LeafletMountainMap:302` + `Compass:33,35`,
+> and recording in `design.md` §Colors that the palette is global. ⚠️ **4.3 is the one that
+> matters:** the "no per-tenant colour" decision currently lives in `AGENTS.md`, PROJECT_PLAN
+> and the plan — **but not in the design reference**, which is where a designer would look
+> before proposing per-tenant theming again. Phase 5 is the audit **D5** opened and is
+> deliberately **unsized**.
+>
+> 📌 **The tree is clean** apart from two untracked code-graph files — **different workstream,
+> do not commit them.** _(The owner's `theme.secondaryColor`/`accentColor` edits noted here
+> earlier were superseded: **D2 deleted those fields**, so that edit is gone rather than
+> committed.)_
 >
 > ---
 >
@@ -2078,7 +2109,8 @@ longer wanted.
   `cat-reads` consumers audited, no other missing. The rename runbook now states the script's
   own bypass (Admin SDK writes fire no revalidation — save any cat in the CMS to re-bake).
   Gates: tsc · smoke **39**.
-  **Then the colour workstream (P1–P3, uncommitted).** Owner asked for central colour control;
+  **Then the colour workstream (Phases 1–3, §10u, five commits `165df61`…`6618c8b`).**
+  Owner asked for central colour control;
   the repo already had it (`design.md:9`) and it was simply under-adopted, so **no new token
   file** was created. Per-tenant theming **removed** (M8 superseded — a tenant choosing colours
   is admin burden with no preview and no contrast check, and the config is baked so each try is
@@ -2088,7 +2120,11 @@ longer wanted.
   inside the component** — extracting it was the precondition for the check, and the contrast
   rule is now a test with a negative control. `feeding_spots` is seeded at last, so the table
   has e2e cover for the first time. Gates: tsc · unit **196** · smoke **39** · **e2e
-  233/13/0**.
+  233/13/0**. **Open, deferred to a fresh session:** plan **Phase 4** (hygiene — incl.
+  recording the global-palette decision in `design.md` §Colors, the one place it is _not_
+  written) and **Phase 5** (the unsized admin-vs-`design.md` audit D5 opened). ⚠️ Also
+  outstanding: **the `/admin/*` screens were never seen rendered** — auth-gated, no
+  credentials — so they are proven by compiled-CSS equality, not by looking.
 - **2026-08-04** — **Author delete + reply edit/delete (§10q), and a deploy-state
   check that paid off.** Authors may now remove their own posts and reply authors their own
   댓글 — reversing §10n's withholding, on the owner's call. 🔑 A reply is a document in the
