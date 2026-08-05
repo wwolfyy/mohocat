@@ -55,9 +55,64 @@ SMTP_PASSWORD=<gmail App Password, no spaces>
 SMTP_FROM=<same gmail address>
 ```
 
-(Gmail App Password setup is in the walkthroughs, §7/§8.) Everything else the route needs —
-`SERVICE_ACCOUNT_KEY`, the recipient `adminEmail` (from `config/mountains/mountains.json`) —
-is already in place.
+Everything else the route needs — `SERVICE_ACCOUNT_KEY`, the recipient `adminEmail` (from
+`config/mountains/mountains.json`) — is already in place. ⚠️ **`adminEmail` is the
+_recipient_**; the five vars above are the _sender_. They are unrelated settings that both
+look like "the contact email".
+
+#### Check the credential before it goes near Vercel
+
+```
+npm run smtp:verify
+```
+
+It mirrors the route's own configuration, authenticates, and disconnects — **it never sends
+mail**, so it is safe to run against production credentials. It also flags the mistakes that
+actually happen (see the traps below). Confirm `✅ AUTH OK` locally first, so you are only ever
+debugging one environment at a time.
+
+#### Creating the Gmail App Password
+
+`SMTP_USER` and `SMTP_FROM` are both **just the Gmail address**, and they must be the **same**
+one. `SMTP_PASSWORD` is **not** the account password — it is a 16-character **App Password**:
+
+1. Sign in **as the exact address in `SMTP_USER`**, not another account that happens to be
+   logged in. This is the mistake that yields a well-formed password that is still rejected.
+2. Go to **https://myaccount.google.com/apppasswords**.
+3. If that page says the setting is unavailable, **that is the answer**: App Passwords require
+   **2-Step Verification** (https://myaccount.google.com/signinoptions/two-step-verification).
+   They are also unavailable under Advanced Protection, or if a Workspace admin disabled them.
+4. Name it something recognisable (e.g. `mohocat-vercel`) and create it.
+5. Google shows **16 characters in four groups of four**. The spaces are display formatting —
+   copy it as one unbroken 16-character string. It is shown **once**.
+6. **Revoke the old one** on the same page. Creating a new App Password does not invalidate
+   the previous one.
+
+#### Traps, each of which has actually bitten
+
+- ⚠️ **`SMTP_FROM` must equal `SMTP_USER`.** Gmail silently **rewrites** a From address the
+  authenticated account does not own — not an error, just a no-op that still reports success.
+  Re-check the pairing after changing **either** var; changing one and forgetting the other is
+  exactly how this happened (2026-08-06).
+- ⚠️ **Turning 2-Step Verification off revokes every App Password already issued**, and a
+  Google account password change does the same.
+- ⚠️ **Do not paste a value with a trailing `# comment` into the Vercel dashboard.** A `.env`
+  file strips inline comments; the dashboard stores values **verbatim**, so the password
+  becomes the whole string and fails exactly like a wrong one.
+- ⚠️ **Env vars are injected at build time — redeploy after changing them.** Production and
+  Preview are separate deployments and both need it.
+- 📌 **Gmail SMTP caveats:** host `smtp.gmail.com`, port `587` (STARTTLS). Sending is
+  rate-limited (~500 recipients/day on consumer Gmail) and deliverability is weaker than a
+  transactional provider — fine for low-volume admin notifications; revisit (SendGrid/SES) if
+  volume grows.
+
+#### If a submission records but no email arrives
+
+That is the designed behaviour, not a lost submission: `/api/contact` writes the contact
+**first** and treats the email as best-effort, so a failure never costs the visitor their
+message. Since 2026-08-06 it is visible rather than silent — the admin 동참 table shows an
+**⚠️ 미전송** badge on that row, and the visitor is told the reply may be slow. Run
+`npm run smtp:verify` to find out why; the raw error is also in the Vercel function log.
 
 ## ISR revalidation — the `revalidate` (N) value is hardcoded in the codebase
 

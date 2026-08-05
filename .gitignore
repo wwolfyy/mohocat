@@ -35,6 +35,16 @@ yarn-error.log*
 # ...but .env.test holds only fake emulator values and IS committed (see it +
 # tests/e2e/README.md). Keep this exception below the broad ignore above.
 !.env.test
+# ...and .env.example is the setup template CLAUDE.md points readers at, so it has
+# to exist in a fresh clone. The broad `.env*` above had been swallowing it, which
+# made that link resolve to nothing (found 2026-08-06).
+#
+# ⚠️ It must stay SECRET-FREE. Every populated value is either NEXT_PUBLIC_* (already
+# in the client bundle) or an OAuth CLIENT ID (the public half); SERVICE_ACCOUNT_KEY,
+# YOUTUBE_CLIENT_SECRET, SMTP_PASSWORD and the Kakao secret are left EMPTY on purpose,
+# and addresses are placeholders. Git history is hard to scrub — check before adding
+# a line, not after.
+!.env.example
 
 # vercel
 .vercel

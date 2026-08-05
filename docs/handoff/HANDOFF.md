@@ -1,8 +1,9 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-06 · **Branch:** `dev` — ⚠️ **one commit is ahead of `origin/dev`**
-(the 2026-08-05 doc commit that marked the push done — it could not push itself), plus this
-session's Phase 4 work. **~99** ahead of `origin/main`. 📌 **Don't trust that count — run
+**Last updated:** 2026-08-06 · **Branch:** `dev` — ⚠️ **several commits are ahead of
+`origin/dev`** (the 2026-08-05 doc commit that marked the push done — it could not push itself
+— plus this session's colour Phase 4, the SMTP tooling, and the `emailDelivered` work).
+**~102** ahead of `origin/main`. 📌 **Don't trust that count — run
 `git rev-list --count origin/main..dev`.** This line cannot count the commit that writes it, so
 a tip hash here is stale the moment it is committed; that is why one is no longer quoted.
 🔑 **The same applies to the "everything is pushed" claim** — a header that says so is, by
@@ -82,15 +83,19 @@ PR #7)
 > 집사톡 never appeared in the diff. 📌 Same lesson as §10n, inverted: there the repo looked
 > behind and production was ahead; here the repo is ahead and production is behind.
 >
-> ### 🐈 The 아들조로 → 조로 rename is APPLIED to production
+> ### 🐈 The 아들조로 → 조로 rename is APPLIED to production — and now COMPLETE
 >
 > Run by the owner 2026-08-05. Verified after the fact: `cats/아들조로.name = "조로"`,
 > `cats/엄마조로.offspring = "조로"`, `cats/깡패.adoption_info = "[catmodal:조로]와 …"`.
 >
-> ⚠️ **One step is outstanding and it is time-sensitive:** two videos still carry `아들조로`
-> in their **YouTube** tags, and the next 동기화 will overwrite Firestore back and empty
-> 조로's 영상첩. Re-tag in /admin → 동영상 태깅 → 일괄 태그 저장:
-> `HG-SA4gyVAE` (급식소 챙기고 갑니다 (2026.07.27)) · `XnIEN2chwww` (깡패 궁둥이 검사중인 조로…).
+> ✅ **The YouTube half is closed too (2026-08-06).** Two videos still carried `아들조로` in
+> their **YouTube** tags — `HG-SA4gyVAE` (급식소 챙기고 갑니다 (2026.07.27)) and `XnIEN2chwww`
+> (깡패 궁둥이 검사중인 조로…) — which meant the next 동기화 would overwrite Firestore back and
+> empty 조로's 영상첩. The owner **re-tagged them on YouTube directly**, so the rename now
+> survives a sync. 🔑 **The rule this leaves behind: YouTube owns `cat_videos.tags`.** Any
+> rename touching a tagged video must be finished **on YouTube**, not in Firestore —
+> `/api/refresh-video-metadata` overwrites that field on every sync, so a Firestore-only fix
+> reverts silently and the album quietly empties.
 >
 > 📌 **`cats/아들조로` now holds a cat named 조로, and that is fine.** Every one of the 32
 > legacy cat docs is keyed by its name, but `createCat` uses `addDoc`, so **every cat added
@@ -102,27 +107,41 @@ PR #7)
 >
 > ### 📮 In flight with the owner (not blocking, no code pending)
 >
-> - **The outgoing SMTP address change — IN PROGRESS 2026-08-06, and it bit.** Two real 동참
->   submissions sent no email while telling the visitor they had. Cause: Gmail was answering
->   **`535-5.7.8 Username and Password not accepted`**. The owner regenerated the App Password
->   and the credentials now **authenticate**; a Vercel redeploy was in flight at the end of the
->   session. **Still to confirm:** the **From header** on a real submission from the deployed
->   app. ⚠️ **`SMTP_FROM` must equal `SMTP_USER`** — Gmail silently **rewrites** a From it does
->   not own, so an unverified alias is a no-op that still reports success; the regeneration
->   moved `SMTP_USER` and left `SMTP_FROM` on the old address, so **check this after any change
->   to either**. 📌 Env vars are injected at **build** time — a dashboard edit does not reach a
->   running deployment until you redeploy, and **Production and Preview are separate**.
->   📌 `/api/contact` reads it all from env, so **no app-code change**. 📌 Not to be confused
->   with `adminEmail` in `mountains.json` — that is the **recipient**.
+> - ### ✅ The outgoing SMTP address change is DONE and verified live (2026-08-06)
+>
+>   The owner confirmed the **From header** on a real 동참 submission from the deployed app —
+>   it shows the intended address, so Gmail is **not** rewriting it. That was the last open
+>   step; 동참 notifications work end to end on the new account.
+>
+>   **How it went wrong first, because the shape recurs.** Two real submissions sent no email
+>   while telling the visitor they had — Gmail was answering **`535-5.7.8 Username and Password
+not accepted`**. Regenerating the App Password fixed the auth, and that same edit then
+>   introduced a **second** fault: it moved `SMTP_USER` to the new address and left `SMTP_FROM`
+>   on the old one. ⚠️ **`SMTP_FROM` must equal `SMTP_USER`** — Gmail silently **rewrites** a
+>   From it does not own, so an unverified alias is a no-op that still reports success.
+>   🔑 **Re-check that pairing after any change to either var**; `npm run smtp:verify` warns on
+>   the mismatch, which is how this one was caught before it shipped.
+>   📌 Env vars are injected at **build** time — a dashboard edit does not reach a running
+>   deployment until you redeploy, and **Production and Preview are separate**.
+>   📌 `/api/contact` reads it all from env, so **no app-code change** was ever needed.
+>   📌 Not to be confused with `adminEmail` in `mountains.json` — that is the **recipient**.
+>
 > - **🆕 `npm run smtp:verify` exists now** (`scripts/maintenance/smtp-verify.js`) — it mirrors
 >   `sendNotification()` and authenticates **without sending mail**, so a credential can be
->   checked before it goes near Vercel. 🔑 **Why it had to exist: a dead SMTP config is
->   invisible from three directions at once.** `/api/contact` records the contact first and
->   returns `success` regardless (right call — failing would duplicate the record); it computes
->   `emailDelivered: false` and **nothing consumes that field**; and `.env.test` sets no SMTP
->   vars, so **e2e always takes the "not configured" branch and cannot catch this**. The visitor
->   is reassured, the operator gets nothing, the suite stays green, and the only signal anywhere
->   is one line in the Vercel function log.
+>   checked before it goes near Vercel. It also warns on the `SMTP_FROM != SMTP_USER` rewrite
+>   trap and on a `#` in the password value.
+>   🔑 **Why it had to exist: a dead SMTP config was invisible from three directions at once.**
+>   `/api/contact` records the contact first and returns `success` regardless (right call —
+>   failing would duplicate the record); it computed `emailDelivered: false` and **nothing
+>   consumed that field**; and the harness could not observe the notification at all. The
+>   visitor was reassured, the operator got nothing, the suite stayed green, and the only signal
+>   anywhere was one line in the Vercel function log.
+>   ✅ **Two of those three are now closed** by the work in the next two bullets — the flag is
+>   surfaced, and both e2e specs assert the un-sent path. The **first** is unchanged and
+>   deliberate: the route still returns `success` on a send failure, because the contact really
+>   is recorded. ⚠️ **The delivered branch still has no automated cover anywhere** — proving it
+>   needs a real SMTP session the hermetic harness has no credentials for, so `smtp:verify`
+>   remains the only check for that half.
 > - **🆕 …and that silence is now closed (owner-asked, same day).** `emailDelivered` reaches
 >   **both** audiences, which need different things. The **visitor** gets expectation-setting on
 >   the non-error styling — _"메시지가 접수되었습니다. 다만 알림 전달에 문제가 있어 답변이
@@ -134,9 +153,10 @@ PR #7)
 >   two: `undefined` is _unknown_, not failed** — every contact in the collection today predates
 >   the field, and rendering those as failures would invent history. 📌 **No rules change** —
 >   `contacts` denies all client writes and the route uses the Admin SDK, so this ships as app
->   code alone. ✅ **Both e2e specs now assert it** (the harness has no SMTP, so `false` is the
->   only branch it can reach); the **delivered** branch still has no automated cover anywhere —
->   `npm run smtp:verify` is the check for that half.
+>   code alone. ✅ **Both e2e specs now assert it** — `contact-submit` checks the new copy **and**
+>   that the error copy is absent; `members.spec` round-trips a real submission into the admin
+>   table and asserts the **⚠️ 미전송** badge. The harness has blank SMTP, so `false` is the only
+>   branch it can reach.
 > - 🔴 **…and building that found the e2e suite SENDING REAL EMAIL to the production
 >   `adminEmail` — two per full run.** `next start` runs Next's own env loader, which backfills
 >   any key `.env.test` leaves **undefined** from `.env` on disk, so the developer's real Gmail
@@ -153,11 +173,30 @@ PR #7)
 >   does not.** A password line carrying a trailing note parses to a clean 16 chars locally and
 >   authenticates as the whole 73-character string once pasted into Vercel — failing identically
 >   to a wrong password. `smtp:verify` now warns on `#` in the value for exactly this reason.
-> - **Two doc fixes offered and not done:** `.env.example` still hardcodes
->   `mohocats.org@gmail.com` (should become a placeholder, not the new address); and the Gmail
->   App Password steps live in `vercel-terraform-walkthrough.md` §8 — inside the **parked**
->   Terraform workstream, referencing the pre-rename `infra/terraform` path — rather than
->   beside the SMTP block in `docs/manuals/deployment/README.md`.
+> - ✅ **Both long-offered doc fixes are DONE (2026-08-06) — and one had a false premise.**
+>   The **Gmail App Password procedure moved out of the parked Terraform walkthrough** into
+>   `docs/manuals/deployment/README.md`, beside the env vars it configures; §8 there is now a
+>   pointer and the two internal "see §8" links were repointed. 🔑 **It was the only live,
+>   routinely-needed instruction inside a document whose own banner says it is NOT the current
+>   process.** The README copy is fuller: the `smtp:verify` pre-check, and the four traps that
+>   have actually bitten (the From rewrite, 2SV revocation, a `#` comment pasted into the Vercel
+>   dashboard, and needing a redeploy).
+> - 🔴 **The `.env.example` item was described wrong, and the real defect was bigger.** It was
+>   filed as "still hardcodes `mohocats.org@gmail.com`" — but **the file was not in the repo at
+>   all**: `.gitignore`'s broad `.env*` swallowed it, and only `.env.test` carried a negation.
+>   So it leaked nothing to anyone — while **`CLAUDE.md` pointed readers at it**
+>   (_"See `.env.example` for the full set"_), a link that **resolved to nothing in a fresh
+>   clone**. Anyone setting the project up had no env template. **Fixed both halves:** the
+>   address is now a `<gmail address>` placeholder (with the `SMTP_FROM == SMTP_USER` rule and a
+>   `smtp:verify` pointer), and `!.env.example` is added to `.gitignore` so the template is
+>   actually committed (owner's call, after reading the whole file). ⚠️ **It must stay
+>   secret-free** — every populated value is `NEXT_PUBLIC_*` or an OAuth **client id**, and
+>   `SERVICE_ACCOUNT_KEY` / `YOUTUBE_CLIENT_SECRET` / `SMTP_PASSWORD` / the Kakao secret are
+>   empty on purpose. 📌 **Verified the negation is surgical:** `.env`, `.env.local` and
+>   `.env.production` are all still ignored.
+>   🔑 **The lesson, and it is the plan-audit one again: a to-do is a claim about the repo, and
+>   claims rot.** This one named the wrong file property, and acting on it as written would have
+>   "fixed" a leak that did not exist while leaving the broken link in place.
 >
 > ⏸️ **Renaming the Firestore database was investigated and dropped (owner, 2026-08-05).**
 > `(default)` **cannot be renamed** — ids are immutable — so it would mean create-new,
@@ -171,24 +210,23 @@ PR #7)
 >
 > **Do these next, in this order:**
 >
-> 1. **Re-tag those two YouTube videos** (above). Time-sensitive: any 동기화 undoes the rename
->    for 조로's 영상첩. _(The push that used to head this list is **done** — 2026-08-05.)_
-> 2. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
+> _(Two items left this list on 2026-08-06: the **YouTube re-tags** — the owner fixed the tags
+> on YouTube directly, so the 조로 rename now survives a 동기화 — and the **SMTP change**, whose
+> From header the owner verified live. The push that used to head the list went on 2026-08-05.)_
+>
+> 1. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
 >    colour, 작성 CTAs), 냥이들' grid header, and 🆕 **앱 관리's YouTube 토큰 관리 panel** (the
 >    status chip's text + border colour, Phase 4). 🔑 **The only unverified part of the colour
 >    work**: `/admin/*` is behind `AdminAuth` and neither session had credentials, so those
 >    screens are proven by compiled-CSS equality, not by looking. Everything is pixel-identical
 >    by construction, so this is a confirmation, not a hunt.
-> 3. **Finish the SMTP change** — the App Password now authenticates (`npm run smtp:verify`);
->    what is left is confirming `SMTP_FROM` == `SMTP_USER` everywhere, that the redeploy landed,
->    and the **From header** on a real submission from the deployed app.
-> 4. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
+> 2. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
 >    promotion. 🆕 Fold in the one thing the harness cannot test: **upload a video to a
 >    공지사항 with 설명 left blank** and confirm YouTube shows no description. The upload leg
 >    has **no** automated cover (`generate-signed-url` needs a service-account key the harness
 >    lacks; YouTube upload is manual-parity).
-> 5. **The Preview verifications that piled up** — see the earlier session boxes below.
-> 6. **Then the promotion.** ⚠️ **Count it yourself**
+> 3. **The Preview verifications that piled up** — see the earlier session boxes below.
+> 4. **Then the promotion.** ⚠️ **Count it yourself**
 >    (`git rev-list --count origin/main..dev`) and measure against **`origin/main`**, not the
 >    local `main` ref — that one is stranded at `26b1879` (2026-03-16).
 >    🆕 **Add to the "changes behaviour on deploy" list:** 급식현황 now asks for confirmation
@@ -2171,7 +2209,14 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-06 (latest)** — **`emailDelivered` now reaches both audiences, and the work found
+- **2026-08-06 (latest, end of session)** — **Two owner-side workstreams closed out.** The
+  **SMTP address change is DONE and verified live** — the owner confirmed the From header on a
+  real 동참 submission from the deployed app, so Gmail is not rewriting it. The **조로 rename is
+  complete** — the owner re-tagged the two videos on YouTube directly, which is the only place
+  that fix survives a 동기화. Both left the hand-off's to-do list, which is now four items:
+  the admin colour glance, P5.4, the Preview verifications, and the promotion.
+
+- **2026-08-06** — **`emailDelivered` now reaches both audiences, and the work found
   the e2e suite emailing production.** The visitor gets expectation-setting on the non-error
   styling (never a resubmit prompt — the contact is already recorded); the operator gets a
   durable `notified` flag rendered as an ⚠️ 미전송 badge in the admin 동참 table, with
