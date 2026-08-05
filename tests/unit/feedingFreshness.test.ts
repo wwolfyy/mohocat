@@ -7,8 +7,10 @@
  * colour was computed inline in the component and had no test at all. Encoding
  * WCAG AA here means a future "brighter" ramp fails the suite instead of shipping.
  *
- * 📌 Still not covered by e2e: `scripts/test/seed-emulators.mjs` seeds no
- * `feeding_spots`, so the harness only ever renders the empty branch.
+ * 📌 The rendered table is covered separately by
+ * `tests/e2e/member/feeding-spots-list.spec.ts` — `seed-emulators.mjs` seeds four
+ * spots spanning the ramp as of the same change. The exact colours and the
+ * contrast rule stay here, where they can be asserted per hour.
  */
 import { describe, it, expect } from 'vitest';
 import { freshnessColor, FRESHNESS_RAMP, FRESHNESS_SCALE_HOURS } from '@/utils/feedingFreshness';

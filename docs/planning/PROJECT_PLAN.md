@@ -1026,6 +1026,25 @@ _Needs an outside professional — cannot be closed in-repo:_
 > stay static (a real 2nd mountain reads yellow there until a fuller pass). **The
 > multi-tenant hardening track is complete.**
 >
+> 🔄 **M8 SUPERSEDED 2026-08-05 (owner): the palette is GLOBAL — per-tenant theming is
+> removed, not extended.** Asked to centralize color control, the owner decided a mountain may
+> **not** differ in color: choosing colors per tenant is an administrative burden with no
+> preview and no contrast check, and `mountains.json` is baked, so "trying a color" queues a
+> redeploy. The `theme` block is **deleted from `mountains.json`** (both mountains), along with
+> `MountainTheme` and the `[mountain]` layout's injection (a `dangerouslySetInnerHTML`, now
+> gone with the hex validation that guarded it).
+>
+> 🔑 **What survives is the indirection, and deliberately so.** `--color-primary` remains,
+> declared once in `globals.css` as `theme('colors.brand.DEFAULT')` — resolved at **build**
+> time, so it is not a copy. The variable exists because a Tailwind token cannot reach
+> `<style jsx global>` blocks or third-party CSS (`.dsg-*`, Leaflet), which read variables
+> only. Net effect: the **three** hand-copied `#FACC15`s (`tailwind.config.js:29`, `:44`,
+> `globals.css:14`) collapse to **one**, and the 7 `from-primary` CTA sites need no edits.
+> ✅ Zero visual change — every tenant already resolved to yellow except hidden `manisan`.
+> 📌 M8's other half (geyang-as-one-of-many, provisioning proof) is untouched; only the
+> per-tenant color knob is withdrawn. Plan:
+> [`color-token-centralization-plan-20260805.md`](./pending/color-token-centralization-plan-20260805.md).
+>
 > 📁 **Everything still gated on a real mountain #2 lives in one doc** (created 2026-07-28):
 > [`mountain-2-prerequisites.md`](./pending/mountain-2-prerequisites.md) — the blocking code items,
 > the owner-run provisioning externalities, the should-fixes, and the decided/won't-fix
@@ -1105,6 +1124,11 @@ What M5 accounts for (verified benign):
       color only"** — the `brand` ramp and the admin-only `from-brand` CTAs stay static
       deliberately, so a real mountain #2 would still read yellow there. That fuller pass is
       a separate, unscheduled piece of work, **not** a leftover of this item.
+      🔄 **SUPERSEDED 2026-08-05:** the "fuller pass" was answered by **removing** per-tenant
+      theming rather than extending it — the palette is now global and `config.theme` is
+      deleted. 📌 **The irony is worth keeping:** this item closed because `config.theme` "was
+      read by nothing," and the resolution three weeks later was that it should not have been
+      read by anything. See §9's M8 supersession note.
 - [~] Per-mountain DB isolation at the service-factory seam. **Seam parameterized
   by M4 (`b83a112`)** — the getters take a required `mountainId` and cache
   per-tenant instances, and every write stamps it. **Isolation itself is M5**
@@ -2142,6 +2166,182 @@ against the real `firestore.rules`, same admin deleting the same doc twice: **wi
 `mountainId` ALLOWED, without DENIED**. 💡 The same harness backs the existing
 `tests/rules/users.rules.test.ts` (M5.2b, `npm run test:rules`) — and, since 2026-08-03,
 `tests/rules/posts.rules.test.ts` for the §10n post rules (below).
+
+---
+
+## 10r. ✅ 급식현황 publishing is gated on a check-in confirmation (DONE 2026-08-05, `c515058`)
+
+> **Owner:** _"let's gate the 급식현황 post with confirmation. Once the post is posted, the
+> status of the feeding spots change and there's no way you can take it back. We should at
+> least give the list of updated feeding spots and have the user confirm."_
+
+🔑 **The irreversibility is real and asymmetric with the rest of the composer.** Publishing
+writes `last_attended` / `last_attended_by` onto shared `feeding_spots` documents, and a spot
+keeps only its **latest** visit — the previous stamp is overwritten, not versioned. So unlike
+the post itself (which its author may edit, and since §10q delete), the check-in has **no**
+correction path: `deletePost` never touches `feeding_spots`, and `NewPostForm` has hidden the
+급식소 section on edits since §10n for exactly this reason. The dialog is the only correction
+opportunity the flow has.
+
+- [x] **R1 — 확인 before any write**, listing every ticked 급식소 by name plus the 방문 시간 and
+      the warning that it cannot be undone. Asked **before** `setSubmitting`, so the buttons stay
+      live under the modal. Creation only — an edit touches 제목/내용 and re-stamps nothing.
+- [x] **R2 — the empty branch says something different.** With no spot ticked the dialog reads
+      선택한 급식소가 없어요 rather than warning about a write that is not about to happen. It
+      also catches the opposite mistake: the author who meant to tick and did not.
+- [x] **R3 — the message builder is a pure module** (`src/utils/feedingCheckIn.ts`), not a
+      closure in the form. The spot list, its ordering and its count are pinned by
+      `tests/unit/feedingCheckIn.test.ts` (11); e2e covers the gate itself (dismissing
+      publishes nothing and leaves the draft intact).
+      🔄 **Amended 2026-08-05:** this item used to say the listing was "unreachable from e2e"
+      because `seed-emulators.mjs` seeded no `feeding_spots`. **It is seeded now** (4 spots
+      spanning the freshness ramp), so the 급식소 현황 **table** has e2e cover —
+      `tests/e2e/member/feeding-spots-list.spec.ts`. 📌 The **composer's** picker remains
+      unit-only; the seeding closed the table, not the form.
+- [x] **R4 — time formatting reads the `datetime-local` components literally.** A `Date`
+      round-trip would reinterpret a zoneless value in the browser's zone and could show an hour
+      other than the one in the input beside the dialog.
+
+**Verified.** tsc · unit **133** (+11) · smoke **39** · e2e **229/13/0** (+1). Mutation-tested:
+dropping the `checkedSpotIds` filter failed exactly the four cases that assert the listing.
+
+📌 **Not done, deliberately out of scope:** the 급식소 write is still non-fatal
+(`NewPostForm.tsx` logs and swallows — "the post is already created"). The dialog now _promises_
+those spots will change, so a failed write leaves the author told the post succeeded with the
+spots unstamped. Flagged to the owner; also collides with the repo's log-and-re-raise convention.
+
+---
+
+## 10s. ✅ Renaming a cat is a cascade, and there is a script for it (DONE 2026-08-05, APPLIED to prod)
+
+> **Owner:** _"what happens when I change a cat's name? Will the cat modal and urls to the cat
+> modal break?"_ → _"can you write a script to 'refactor' a cat name?"_
+
+🔑 **A cat's identity is its document id.** `updateCat` patches in place, so `?cat=<id>` links
+already pasted into KakaoTalk survive a rename untouched — the reason §10c C2 made that param
+the id and not the name. **But four things store the name as a string, and editing the cat
+updates none of them. All four fail silently.**
+
+| Stored where                              | What a bare rename does                                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `cat_images[].tags` / `cat_videos[].tags` | 사진첩/영상첩 come back **empty** — the albums query `array-contains cat.name`. Media is not deleted, just unreachable. |
+| `[catmodal:이름]` in CMS text             | The link still renders and still looks clickable; clicking it produces a `console.warn` and nothing else.               |
+| Other cats' prose                         | The same tokens sit in any cat's 작명 사유 / 특이사항 / 설명.                                                           |
+| `cats.parents` / `cats.offspring`         | The modal's 엄마/애 rows keep naming a cat that no longer exists. Plain text, so nothing breaks — it just reads wrong.  |
+
+- [x] **S1 — `scripts/migration/rename-cat.js`**, dry-run by default (`APPLY=true` to write),
+      matching the other migration scripts. Refuses rather than guesses: a name another cat in
+      the tenant holds (that ambiguity is what makes `getCatByName`'s first-match-wins
+      unreliable), an `OLD_NAME` matching two cats, a `CAT_ID` from a different mountain than
+      `MOUNTAIN_ID`, a no-op rename.
+- [x] **S2 — token rewriting matches `[catmodal:NAME]` only**, never the bare name (a cat called
+      별이 must not rewrite every 별이 in a post body), with the name regex-escaped so `아롱(2)`
+      cannot compile into a capture group matching another cat's token.
+- [x] **S3 — `parents`/`offspring` added after the owner's dry run (`70e2c60`).** ⚠️⚠️ **Whole
+      members only, never a replace, and the live rename is the proof:** 아들조로 → 조로 makes the
+      **new** name a substring of **two** existing cats, and one cat stores a list
+      (`cats/예쁜이엄마 → "순돌이,예쁜이,블타"`). Separators and spacing round-trip untouched.
+- [x] **S4 — patches merge per document before committing.** A cat can appear in both the prose
+      and family passes (`cats/엄마조로` does), and Firestore rejects two writes to one document
+      in a single commit. Reported separately, written once.
+- [x] **S5 — emulator coverage + a `demo-*` guard** — see §10s-bis below.
+
+⚠️⚠️ **The video half of the cascade does not stick, and this is not fixable here.**
+`/api/refresh-video-metadata` overwrites `cat_videos.tags` from `snippet.tags` on every
+📺 YouTube와 동기화 run — the route says `// YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)`. Writing
+to YouTube needs the OAuth path the CMS owns, so the script instead **prints the affected
+YouTube ids and the exact CMS step** (동영상 태깅 → 일괄 태그 저장, which writes through). A fix
+that silently un-fixes itself would be worse than none.
+
+🔑 **The lesson that generalises: fixtures only model the fields you already know matter.**
+`parents`/`offspring` were missing from the first cut and **no test could have caught it** — the
+emulator fixtures were written by the same person who missed the field. What found it was the
+**owner dry-running the script against production** and querying a listed document that looked
+wrong. It was in fact correct (`cats/엄마조로`'s description links to the renamed cat), but
+checking it exposed `offspring: "아들조로"` sitting one field away. **Dry-run destructive tooling
+on real data before trusting its coverage.**
+
+✅ **APPLIED to production 2026-08-05** (owner): 아들조로 → 조로. Verified after the fact —
+`cats/아들조로.name = "조로"`, `cats/엄마조로.offspring = "조로"`, `cats/깡패.adoption_info` token
+repointed. ⚠️ **Two YouTube re-tags outstanding** (`HG-SA4gyVAE`, `XnIEN2chwww`).
+
+📌 **On cat document ids, since this surfaced it.** All **32** legacy cat docs are keyed by name,
+but `createCat` uses `addDoc`, so every cat added through the CMS already has a random id —
+`id ≠ name` is the normal state going forward, not an inconsistency to repair. **Changing an id
+is not possible**: Firestore ids are immutable, so it means create-copy-delete, which breaks
+every `?cat=` link in circulation **silently** (the page renders with no modal open). Verified
+across 8 collections that **nothing else in the database references a cat id**.
+
+---
+
+## 10s-bis. ✅ Migration scripts get an emulator-backed suite + a demo-only guard (DONE 2026-08-05, `de4efe2`)
+
+A **third** emulator-backed test category, `tests/scripts/**`, run by `npm run test:scripts`
+with its own CI job — mirroring `tests/rules/**` exactly, and excluded from the default
+`npm test` for the same reason (that run must stay usable with no emulator and no JVM).
+
+🔑 **The plumbing was mechanical; the real change was the script's credential path.**
+`rename-cat.js` could only start from a real service-account key, so the harness had to be
+pointed at the production project id by hand. CI is deliberately hermetic — the e2e job's
+comment: _"a demo-\* Firebase project with fake keys means NO GitHub secrets are required"_ — so
+the script now takes the credential-less emulator path `seed-emulators.mjs` already uses, **and
+refuses to run unless the project is `demo-*`**.
+
+📌 **The guard is the point, not a side effect.** It makes "the test cannot touch production" a
+property the script enforces rather than a property of how it happens to be invoked. It runs the
+other way too: every run prints `TARGET: PRODUCTION Firestore …` or `TARGET: … EMULATOR …`
+first, because a stray `FIRESTORE_EMULATOR_HOST` in an operator's shell would otherwise send an
+`APPLY` run to a throwaway database and report a tidy success.
+
+⚠️ **Each case spawns the script as a child process** — it reads `APPLY` / `OLD_NAME` /
+`NEW_NAME` at module load, so an imported copy could not vary them. `fileParallelism: false`,
+since the cases reseed shared collections.
+
+**Verified.** **23** cases. ✅ **Re-run with the service-account key moved aside and
+`SERVICE_ACCOUNT_KEY` unset** — still green, which is the claim the CI job actually depends on.
+Mutation-tested: neutering the `demo-*` check failed exactly the one case asserting it.
+⚠️ **The CI job has never run on a runner** — it is a near-copy of the `rules` job, but the
+first PR is its proof.
+
+---
+
+## 10t. ✅ A video's YouTube 설명 is taken verbatim, empty included (DONE 2026-08-05, `551049f`)
+
+> **Owner:** _"there is a distinct video description input field. We need to take what's in that
+> input field verbatim - empty if empty. […] I might have said something inconsistent with this
+> in the past."_
+
+They had, and the code recorded it. 공지사항/입양홍보 uploaded a video with
+`item.description || message || '공지사항 동영상'`, so a blank 설명 silently published the **post
+body** as the YouTube description.
+
+- [x] **T1 — `useSimpleContentForm` passes `videoItems` through unchanged.** The comment that
+      argued _for_ the old behaviour is replaced by one recording the **reversal**, so it cannot
+      be restored from the rationale that used to sit there.
+- [x] **T2 — `youtubeDefaults.description` removed** from both composers and from the config
+      type; it had no remaining consumer. **`youtubeDefaults.title` stays by decision (owner):**
+      an untitled video on YouTube is worse than one carrying its post's title.
+- [x] **T3 — the UI changed with the behaviour.** Both forms passed
+      `descriptionHelp="비어 있으면 글 내용이 사용돼요."` — true before, a lie after. The override
+      is **deleted** rather than reworded, so both inherit `MediaItemList`'s own
+      "비어 있으면 YouTube 설명 없이 올라가요." — the string 집사톡 already showed. That left the
+      `descriptionHelp` prop with no callers, so it is gone too.
+
+📌 **집사톡 needed no change and never appeared in the diff.** The report named it and was
+accurate — about **production**, which runs `main`, where the old shared hook still does
+`description: message || config.youtubeDescriptionDefault`. `dev` has taken the 설명 verbatim
+since the per-file refactor (§10d). 🔑 **A behaviour report is about the deployed artifact, not
+the branch** — the §10n lesson arriving from the opposite direction: there the repo looked behind
+and production was ahead; here the repo is ahead and production is behind.
+
+📌 Photo descriptions in these forms were already verbatim; only the video path inherited.
+
+**Verified.** tsc · unit **189** · lint · full e2e **229/13/0**, unchanged. ⚠️ **The upload leg
+has no automated cover** — `generate-signed-url` signs with a service-account key the harness
+lacks, and YouTube upload is manual-parity (P5.4) — so what description actually reaches YouTube
+is a **manual** check: upload a video to a 공지사항 with 설명 blank and confirm YouTube shows
+none. 📌 **Existing videos keep their inherited descriptions**; 동기화 reads description _from_
+YouTube, so correcting an old one means editing it there.
 
 ---
 

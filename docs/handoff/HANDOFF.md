@@ -1,13 +1,143 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-04 · **Branch:** `dev` — `origin/dev` = **`01d02d7`**, **84** ahead
-of `origin/main`, everything pushed
+**Last updated:** 2026-08-05 · **Branch:** `dev` — local `dev` = **`61b1904`**, **91** ahead
+of `origin/main`; ⚠️ **the last commit is NOT pushed** (owner is holding it)
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> **2026-08-03 — members can post, and a class of document turned out to be undeletable.**
+> **2026-08-05 — three small owner-asked fixes, and a rename that was a cascade.**
+> Nothing here needed a rules or permission deploy; it is all app code and one new script.
+>
+> ✅ **급식현황 publishing is gated on a confirmation that names the 급식소 it will stamp**
+> (`c515058`). 🔑 **Why a gate and not a notice:** publishing writes `last_attended` /
+> `last_attended_by` onto shared `feeding_spots` docs, and a spot keeps only its **latest**
+> visit. There is no correction path — `deletePost` never touches `feeding_spots`, so even
+> §10q's author-delete does not put the previous stamp back, and the edit form hides the
+> 급식소 section for exactly this reason. With nothing ticked the dialog says so instead of
+> warning about a write that is not about to happen. 📌 **The spot list was unit-tested and not
+> e2e-tested** — `seed-emulators.mjs` seeded no `feeding_spots`, so the harness only ever
+> reached the empty branch. 🔄 **Fixed later the same day** (colour plan Phase 3): four spots
+> are seeded and `tests/e2e/member/feeding-spots-list.spec.ts` covers the rendered table. The
+> **composer's** picker is still unit-only.
+>
+> 🐈 **Renaming a cat is a cascade, and there is now a script for it**
+> (`scripts/migration/rename-cat.js`, `350a995` + `70e2c60`). A cat's **identity is its
+> document id**, so `?cat=<id>` links survive a rename untouched — but **four** things store
+> the **name string** and none follows: media `tags` (the 사진첩/영상첩 go **empty**),
+> `[catmodal:이름]` tokens (the link still renders and does nothing), other cats' prose, and
+> `cats.parents` / `cats.offspring` (the 엄마/애 rows). ⚠️ **All four fail silently.**
+>
+> 🔑 **The lesson that generalises: fixtures only model the fields you already know matter.**
+> `parents`/`offspring` were missing from the first cut and **no test could have caught it** —
+> I wrote the fixtures. What found it was the **owner dry-running the script against
+> production** and querying a line that looked wrong (`cats/엄마조로`, which was correct — its
+> description links to the renamed cat — but checking it exposed `offspring: "아들조로"` one
+> field away). **Dry-run destructive tooling on real data before trusting its coverage.**
+>
+> ⚠️⚠️ **One part of that cascade does not stick: YouTube owns video tags.**
+> `/api/refresh-video-metadata` overwrites `cat_videos.tags` from `snippet.tags` on every
+> 📺 YouTube와 동기화 (`// YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)`), so the Firestore re-tag
+> is **reverted** by the next sync — silently, and the album empties again. The script prints
+> the affected YouTube ids and the CMS step that writes through.
+>
+> 🧪 **A third emulator-backed test category exists now** (`de4efe2`): `tests/scripts/**` via
+> `npm run test:scripts`, with its own CI job, mirroring `tests/rules/**`. 🔑 **The plumbing
+> was mechanical; the real change was the script's credential path.** It could only start from
+> a real service-account key, and CI is deliberately hermetic — so `rename-cat.js` now takes a
+> credential-less path when `FIRESTORE_EMULATOR_HOST` is set and **refuses to run unless the
+> project is `demo-*`**, and prints `TARGET: PRODUCTION …` / `TARGET: … EMULATOR …` first on
+> every run. ⚠️ **That CI job has never actually run on a runner** — it is a near-copy of the
+> `rules` job, but the first PR is its proof.
+>
+> ✅ **A video's YouTube 설명 is taken verbatim on every composer, empty included**
+> (`551049f`). 공지사항/입양홍보 used `item.description || message || '공지사항 동영상'`, so a
+> blank 설명 silently published the **post body**. 🔑 **This REVERSES an explicit earlier
+> decision** the code argued for in a comment; the comment now records the reversal so the old
+> behaviour cannot be restored from it. **Title inheritance is kept** (owner). ⚠️ The
+> `descriptionHelp` override that promised the old behaviour is **deleted**, not reworded —
+> both forms now show `MediaItemList`'s own string, and the prop is gone for want of callers.
+>
+> 🔑 **The lesson that generalises (again, from the other direction): a behaviour report is
+> about the deployed artifact, not the branch.** The report named **집사톡**, and it was
+> accurate — about **production**, which runs `main`, where the old shared hook still
+> substitutes the post body. `dev` has taken the 설명 verbatim since the per-file refactor, so
+> 집사톡 never appeared in the diff. 📌 Same lesson as §10n, inverted: there the repo looked
+> behind and production was ahead; here the repo is ahead and production is behind.
+>
+> ### 🐈 The 아들조로 → 조로 rename is APPLIED to production
+>
+> Run by the owner 2026-08-05. Verified after the fact: `cats/아들조로.name = "조로"`,
+> `cats/엄마조로.offspring = "조로"`, `cats/깡패.adoption_info = "[catmodal:조로]와 …"`.
+>
+> ⚠️ **One step is outstanding and it is time-sensitive:** two videos still carry `아들조로`
+> in their **YouTube** tags, and the next 동기화 will overwrite Firestore back and empty
+> 조로's 영상첩. Re-tag in /admin → 동영상 태깅 → 일괄 태그 저장:
+> `HG-SA4gyVAE` (급식소 챙기고 갑니다 (2026.07.27)) · `XnIEN2chwww` (깡패 궁둥이 검사중인 조로…).
+>
+> 📌 **`cats/아들조로` now holds a cat named 조로, and that is fine.** Every one of the 32
+> legacy cat docs is keyed by its name, but `createCat` uses `addDoc`, so **every cat added
+> through the CMS already has a random id** — id ≠ name is the normal state going forward.
+> **Do not "fix" it**: Firestore ids are immutable, so changing one means create-copy-delete,
+> which breaks every `?cat=` link already pasted into KakaoTalk — silently (the page renders
+> with no modal open). Nothing else in the database references a cat id; verified across 8
+> collections.
+>
+> ### 📮 In flight with the owner (not blocking, no code pending)
+>
+> - **The outgoing SMTP address is changing.** A new Gmail account exists; the owner is
+>   creating the App Password. Then: set `SMTP_USER` + `SMTP_PASSWORD` + `SMTP_FROM` in Vercel
+>   **Production and Preview**, redeploy (env changes do not reach a running deployment), and
+>   verify the **From header** on a real 동참 submission. ⚠️ **Set `SMTP_FROM` equal to
+>   `SMTP_USER`** — Gmail silently **rewrites** a From it does not own, so an unverified alias
+>   is a no-op that still reports success. 📌 `/api/contact` is the only thing that sends mail
+>   and reads it all from env, so **no code change**. 📌 Not to be confused with `adminEmail`
+>   in `mountains.json` — that is the **recipient**.
+> - **Two doc fixes offered and not done:** `.env.example` still hardcodes
+>   `mohocats.org@gmail.com` (should become a placeholder, not the new address); and the Gmail
+>   App Password steps live in `vercel-terraform-walkthrough.md` §8 — inside the **parked**
+>   Terraform workstream, referencing the pre-rename `infra/terraform` path — rather than
+>   beside the SMTP block in `docs/manuals/deployment/README.md`.
+>
+> ⏸️ **Renaming the Firestore database was investigated and dropped (owner, 2026-08-05).**
+> `(default)` **cannot be renamed** — ids are immutable — so it would mean create-new,
+> copy every collection, repoint everything, delete the old. App-side cost is trivial (two
+> handles: `src/services/firebase.ts`, `src/lib/firebase-admin.ts:52`), but **22 scripts build
+> their own handle** and any left pointing at `(default)` keep working **silently against the
+> stale database**; `firebase.json`'s `firestore` block must become an array or rules keep
+> deploying to the old db; and the copy needs a write freeze. 🔑 **If the goal ever returns,
+> the useful version is _adding_ a database** (Preview currently runs `dev` against the
+> **production** database), which is additive, reversible, and needs no freeze.
+>
+> **Do these next, in this order:**
+>
+> 1. **Push `61b1904`** — the owner is holding it deliberately.
+> 2. **Re-tag those two YouTube videos** (above). Time-sensitive: any 동기화 undoes the rename
+>    for 조로's 영상첩.
+> 3. **Finish the SMTP change** and verify the From header.
+> 4. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
+>    promotion. 🆕 Fold in the one thing this session cannot test: **upload a video to a
+>    공지사항 with 설명 left blank** and confirm YouTube shows no description. The upload leg
+>    has **no** automated cover (`generate-signed-url` needs a service-account key the harness
+>    lacks; YouTube upload is manual-parity).
+> 5. **The Preview verifications that piled up** — see the earlier session boxes below.
+> 6. **Then the promotion.** `dev` leads `origin/main` by **91**. ⚠️ Measure against
+>    `origin/main`, not the local `main` ref (stranded at `26b1879`).
+>    🆕 **Add to the "changes behaviour on deploy" list:** 급식현황 now asks for confirmation
+>    before publishing; 공지사항/입양홍보 videos stop inheriting the post body as their YouTube
+>    description (and the help text under the field changes to match); and **집사톡's
+>    already-fixed verbatim 설명 finally reaches production** — that one is a fix users have
+>    been waiting on without knowing it.
+>
+> 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the
+> owner's `theme.secondaryColor` / `accentColor` edits. Also two untracked code-graph files —
+> **different workstream, do not commit them.**
+>
+> ---
+>
+> ### Earlier (2026-08-03/04) — members can post, and a class of document turned out to be undeletable.
+>
 > Two pieces of work, both owner-asked. First: _"allow the author of 집사톡 and 급식현황 posts
 > to edit the post."_ 🔑 **The premise was false** — members could not **see or create** on
 > either board (the pages gated on `isAdmin()`, and the client write needs `manage-posts`,
@@ -155,24 +285,16 @@ PR #7)
 > `git push`; rules and permissions do not. Ship rules first, then the migration, then the
 > code — and when code lands first, the gap is user-visible immediately.
 >
-> **Do these next, in this order:**
+> **Outstanding from this bundle** _(folded into the current list at the top — kept here for
+> the reasoning behind each):_
 >
-> 1. **Re-run the P5.4 manual YouTube pass.** Still the only gate on the `dev → main`
->    promotion.
-> 2. **The Preview verifications that piled up** — see the earlier session box below.
->    🆕 **Add two from this bundle**, both now live and neither covered by the emulator:
->    a member **attaching a photo to a 집사톡 post** (§10p — the e2e image leg is stubbed),
->    and a member **deleting a post that has someone else's 댓글 on it** (§10q — the cascade,
->    which is the one path that needs `isParentAuthor` and a real second account).
-> 3. **Then the promotion.** `dev` leads `origin/main` by **84**. ⚠️ Measure against
->    `origin/main`, not the local `main` ref (stranded at `26b1879`).
->    🆕 **Add to the "changes behaviour on deploy" list when promoting:** 집사톡 members can
->    now attach one photo + one video; authors can **delete** their own posts, which
->    **cascades to other people's 댓글**; and reply authors can edit/delete their own 댓글.
->
-> 📌 **Uncommitted in the tree, and not mine:** `config/mountains/mountains.json` carries the
-> owner's `description` / `theme.secondaryColor` / `accentColor` edits. Also three untracked
-> code-graph files — **different workstream, do not commit them**.
+> - **Preview verifications**, both live and neither covered by the emulator: a member
+>   **attaching a photo to a 집사톡 post** (§10p — the e2e image leg is stubbed), and a member
+>   **deleting a post that has someone else's 댓글 on it** (§10q — the cascade, the one path
+>   that needs `isParentAuthor` and a real second account).
+> - **On promoting**, this bundle changes behaviour: 집사톡 members can attach one photo + one
+>   video; authors can **delete** their own posts, which **cascades to other people's 댓글**;
+>   and reply authors can edit/delete their own 댓글.
 >
 > ---
 >
@@ -491,6 +613,62 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **🎨 Colour now has ONE source of truth, and per-tenant theming is gone (2026-08-05,
+  uncommitted).** Asked to centralize colour "in one config file", the answer was that the repo
+  **already designates one** — `design.md:9` names `tailwind.config.js` and `:292` explicitly
+  forbids a `tokens.json`. So nothing was created; the existing file was **adopted**. Three
+  phases, all done, all gated: **P1** deleted `mountains.json`'s `theme` block, `MountainTheme`
+  and the `[mountain]` layout's injection (a `dangerouslySetInnerHTML`), collapsing **three**
+  hand-copied `#FACC15`s into one via `theme('colors.brand.DEFAULT')` in `globals.css`
+  — **M8 is superseded**, tenants may not differ in colour (owner). **P2** migrated ~30
+  `yellow`/`orange` utilities to `brand`/`accent` across 9 files, admin included. **P3** is the
+  only user-visible change: 급식현황's freshness scale goes **green→red ⇒ blue→red**.
+  🔑 **The classification mattered more than the renaming** — of 75 yellow-ish utilities only
+  ~30 are brand; the rest are **status** (`design.md:75`: warning is _"distinct from brand"_)
+  or **Kakao vendor**. ⚠️ A blanket migration would have shipped warning notices in the brand
+  hue and a non-Kakao-yellow Kakao button. Plan + full reasoning:
+  [`color-token-centralization-plan-20260805.md`](../planning/pending/color-token-centralization-plan-20260805.md).
+  ⚠️ **Not verified in a browser: the `/admin/*` screens** — auth-gated, no credentials this
+  session. Someone with admin access should glance at 게시물 / 집사들 / 앱 관리 and 냥이들' grid
+  header. Phases 4–5 (hygiene; the admin-vs-`design.md` audit D5 opened) are **not started**.
+- **✅ 급식현황 publishing confirms the 급식소 it will stamp (2026-08-05, `c515058`).** 작성 완료
+  opens a 확인 listing every ticked 급식소 by name plus the 방문 시간; 취소 publishes nothing.
+  🔑 **The write is unrecoverable and asymmetric with the rest of the composer:** a 급식소 keeps
+  only its **latest** visit, and `deletePost` never touches `feeding_spots` — so unlike the post
+  itself (editable, and deletable by its author since §10q) the check-in has no correction path,
+  which is also why the edit form hides that section. With nothing ticked the dialog says so
+  rather than warning about a write that is not about to happen. 🔄 **The "no e2e cover" caveat
+  originally recorded here is resolved** — `feeding_spots` is seeded now and the table has its
+  own spec (colour plan Phase 3); the composer's picker remains unit-only. Detail:
+  PROJECT_PLAN **§10r**.
+- **🐈 Renaming a cat is a cascade, and `scripts/migration/rename-cat.js` performs it
+  (2026-08-05, `350a995` + `70e2c60`; APPLIED to prod for 아들조로 → 조로).** A cat's identity is
+  its **document id**, so `?cat=<id>` links survive untouched — but **four** things store the
+  **name string** and none follows: media `tags` (the albums go **empty**), `[catmodal:이름]`
+  tokens (the link renders and does nothing), other cats' prose, and `cats.parents` /
+  `cats.offspring`. ⚠️ **All four fail silently.** 🔑 **`parents`/`offspring` were missing from
+  the first cut and no test could have caught it — I wrote the fixtures.** The owner's **dry run
+  against production** found it. ⚠️⚠️ **The video half does not stick:**
+  `/api/refresh-video-metadata` overwrites `cat_videos.tags` from YouTube on every 동기화, so the
+  script prints the affected ids and the CMS step that writes through — **two are still
+  outstanding for 조로** (see the box at the top). Detail: PROJECT_PLAN **§10s**.
+- **🧪 A third emulator-backed test category, and a script that cannot be aimed at production by
+  accident (2026-08-05, `de4efe2`).** `tests/scripts/**` via `npm run test:scripts`, its own CI
+  job, mirroring `tests/rules/**` — and excluded from `npm test` for the same reason. 🔑 **The
+  plumbing was mechanical; the real change was `rename-cat.js`'s credential path.** It could
+  only start from a real service-account key, and CI is hermetic by design, so it now connects
+  credential-free when `FIRESTORE_EMULATOR_HOST` is set and **refuses unless the project is
+  `demo-*`**, printing its target on every run. Proven by moving the key aside and re-running.
+  ⚠️ **The CI job has never run on a runner** — the first PR is its proof.
+- **✅ A video's YouTube 설명 is verbatim on every composer, empty included (2026-08-05,
+  `551049f`).** 공지사항/입양홍보 used `item.description || message || '공지사항 동영상'`, so a
+  blank 설명 silently published the **post body**. 🔑 **This reverses an explicit earlier
+  decision** the code argued for in a comment — the comment now records the reversal so the old
+  behaviour cannot be restored from it. Title inheritance kept (owner). 📌 **집사톡 needed no
+  change:** the report was accurate about **production** (`main`), while `dev` has been verbatim
+  since the per-file refactor — **a behaviour report is about the deployed artifact, not the
+  branch**. ⚠️ The upload leg has **no** automated cover; confirming it is a manual pass.
+  Detail: PROJECT_PLAN **§10t**.
 - **🐛 A document with no `mountainId` can never be deleted — by anyone (2026-08-03,
   `8754a3c`).** Owner-reported: posts deleted through the CMS were still in `posts_feeding` /
   `posts_butler`, while 공지사항 / 입양홍보 deleted cleanly. 🔑 `canWrite()` reads the mountain
@@ -1879,7 +2057,39 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-04 (latest)** — **Author delete + reply edit/delete (§10q), and a deploy-state
+- **2026-08-05 (latest)** — **Three owner-asked fixes, and a rename that was a cascade
+  (§10r/§10s/§10t).** 급식현황 publishing now **confirms**, naming the 급식소 it will stamp — the
+  one write in that composer with no correction path. `scripts/migration/rename-cat.js` carries
+  a cat's name across the **four** places that store it as a string (media tags, `[catmodal:]`
+  tokens, other cats' prose, `parents`/`offspring`) while `?cat=` links survive untouched,
+  because identity is the **document id**. 🔑 The `parents`/`offspring` gap was invisible to my
+  own fixtures and surfaced only from the owner's **dry run against production** — dry-run
+  destructive tooling on real data before trusting its coverage. Landed the harness as a third
+  emulator-backed suite (`tests/scripts/**`, own CI job) and gave the script a **`demo-*` guard**
+  so it cannot be aimed at production by accident. Video 설명 is now **verbatim** on
+  공지사항/입양홍보 too, reversing an earlier decision the code argued for; 집사톡 needed no
+  change — that report was about **production**, not the branch. The **아들조로 → 조로** rename is
+  applied to prod, with two YouTube re-tags still outstanding. Also decided: **do not rename the
+  Firestore database** (`(default)` is immutable; the useful version would be _adding_ one).
+  Gates: tsc · unit **189** · smoke **39** · rules **86** · scripts **23** · e2e **229/13/0**.
+  ⚠️ `61b1904` is committed and **not pushed** (owner holding it).
+  **Then closed BACKLOG B3** — `/api/revalidate` omitted `/pages/cats`, so 냥이들 served stale
+  cat data for up to an hour after every edit while 홈/입양홍보 refreshed at once; all three
+  `cat-reads` consumers audited, no other missing. The rename runbook now states the script's
+  own bypass (Admin SDK writes fire no revalidation — save any cat in the CMS to re-bake).
+  Gates: tsc · smoke **39**.
+  **Then the colour workstream (P1–P3, uncommitted).** Owner asked for central colour control;
+  the repo already had it (`design.md:9`) and it was simply under-adopted, so **no new token
+  file** was created. Per-tenant theming **removed** (M8 superseded — a tenant choosing colours
+  is admin burden with no preview and no contrast check, and the config is baked so each try is
+  a redeploy); ~30 brand utilities adopted `brand`/`accent`; 급식현황's freshness ramp goes
+  **green→red ⇒ blue→red**, which lifted its worst contrast from **1.37:1 to 6.47:1** and
+  dropped the colour-blindness-hostile pair. 🔑 **The ramp had no test because it was a closure
+  inside the component** — extracting it was the precondition for the check, and the contrast
+  rule is now a test with a negative control. `feeding_spots` is seeded at last, so the table
+  has e2e cover for the first time. Gates: tsc · unit **196** · smoke **39** · **e2e
+  233/13/0**.
+- **2026-08-04** — **Author delete + reply edit/delete (§10q), and a deploy-state
   check that paid off.** Authors may now remove their own posts and reply authors their own
   댓글 — reversing §10n's withholding, on the owner's call. 🔑 A reply is a document in the
   **same collection**, so one rule governs both and "the reply's author, not the post's"

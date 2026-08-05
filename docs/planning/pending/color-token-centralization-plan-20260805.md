@@ -1,7 +1,8 @@
 # Color token centralization — plan — 20260805
 
-> **Status:** 🟢 **DECIDED, not started.** All five open questions were answered by the owner
-> on 2026-08-05 (§2). §6's checklist is actionable as written.
+> **Status:** 🟢 **Phases 1–3 DONE (2026-08-05); Phases 4–5 not started.** All five open
+> questions were answered by the owner the same day (§2). What remains is hygiene (§6 Phase 4)
+> and the unscoped audit **D5** opened (§6 Phase 5).
 >
 > **Origin.** The owner asked to control colors "in one central place by a config file,"
 > suggesting a new design-token file, and raised that per-mountain color freedom would be an

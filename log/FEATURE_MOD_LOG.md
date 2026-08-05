@@ -15,6 +15,174 @@
 
 ---
 
+## 2026-08-05 — 급식현황's freshness scale goes green→red ⇒ blue→red, and becomes readable
+
+**Area:** `src/utils/feedingFreshness.ts` (new), `src/components/FeedingSpotsList.tsx`,
+`scripts/test/seed-emulators.mjs`, `tests/e2e/fixtures/feeding-spots.json` (new),
+`tests/e2e/member/feeding-spots-list.spec.ts` (new), `tests/unit/feedingFreshness.test.ts` (new).
+**Type:** small fix + accessibility (owner-requested) — Phase 3 of the colour-token plan.
+**⚠️ The only user-visible change in that plan.**
+
+**What changed.** The 급식소 현황 table's "how long since last fed" colour ran a computed
+green→red gradient; it now runs blue→red, anchored on Tailwind's `blue-700`/`red-700`.
+
+🔑 **The owner asked for blue→red on preference, and it fixed three defects at once.**
+(1) **Readability:** the old fresh end was `rgb(0,255,0)` on a white row — **1.37:1** contrast
+against WCAG AA's 4.5:1, i.e. effectively invisible, and **worst exactly where the news was
+good**. The new ramp's worst point is **6.47:1**. (2) **Colour blindness:** green↔red is the
+pair most likely to be indistinguishable, which is the wrong choice for a scale whose ends
+carry opposite meanings. (3) **A discontinuity:** `0h` and `≥60h` were special-cased with
+Tailwind classes that did not match the ramp they bookended, so the scale jumped at exactly the
+two thresholds an operator watches. The ratio is now clamped and both endpoints fall out of the
+same interpolation.
+
+📌 **The midpoint reads purple.** That is ordinary RGB interpolation between the endpoints, not
+a bug — 파랑 = 방금, 보라 = 중간, 빨강 = 오래됨.
+
+🔑 **Why it went undetected: the logic was a closure inside the component, so nothing could
+test it.** Extracting it to a util was the precondition for the contrast check, not tidiness.
+That check is now **encoded as a test** that walks every hour 0→60 and fails under 4.5:1 —
+with a **negative control** asserting the old `rgb(0,255,0)` fails, so the assertion cannot
+quietly stop measuring.
+
+✅ **The table has e2e cover for the first time.** `seed-emulators.mjs` seeded no
+`feeding_spots`, so every run hit the empty branch and the whole ramp was unexercised. Four
+spots are now seeded (1h / 30h / 70h / none). ⚠️ It needed a dedicated writer: `seedCollection`
+turns a fixture's `id` into the document id and strips it, but this collection reads `data.id`
+as a numeric field and orders by it. Offsets convert to Timestamps **relative to the seed run**
+— a fixed date would drift past the clamp and stop exercising the scale.
+
+**Verified.** `tsc` **0** · unit **196** · smoke **39** · **full e2e 233 passed / 13 skipped /
+0 failed**. ✅ **Both nets proven to have teeth:** inverting the ramp endpoints made the unit
+hue test _and_ the e2e colour assertion fail, while hue-agnostic tests stayed green.
+
+---
+
+## 2026-08-05 — brand yellows adopt the `brand`/`accent` tokens (Phase 2)
+
+**Area:** 3 admin pages, `AdminPostList`, `LoginForm`, `PhoneLoginForm`, `ShowInModalToggle`,
+`CatGrid`, `globals.css`.
+**Type:** refactor, zero visual change — Phase 2 of the colour-token plan.
+
+**What changed.** ~30 hardcoded `yellow-*`/`orange-*` utility classes became `brand-*`/`accent`
+tokens, so the brand colour has one definition instead of being spelled out across 9 files.
+Admin screens are included (the design reference's "admin out of scope" line was stale and was
+corrected the same day).
+
+🔑 **The classification mattered far more than the renaming.** Of the 75 yellow/amber/orange
+utilities, only ~30 are brand. The rest are **status** (`design.md:75` is explicit that warning
+is _"distinct from `brand`"_) or **vendor** (Kakao). ⚠️ **A blanket migration would have shipped
+two defects**: warning notices adopting the brand hue, and a Kakao button that stops being
+Kakao yellow. Five orange sites were examined individually and **all five left** — the stat
+values and badges pair with `text-green-600`/`bg-green-500` (status), and `RoleManagement`'s
+orange panel is one of four role colours (categorical).
+
+📌 **`theme()` does not work inside `<style jsx global>`** — styled-jsx never passes through
+Tailwind's PostCSS pipeline. `CatGrid`'s header hexes therefore became `var(--color-brand-100)`
+/ `var(--color-brand-300)`, declared once in `globals.css` from the ramp. 🔑 That file's comment
+had said _"(brand-100)"_ next to a hardcoded `#fef9c3` since it was written — **the author knew
+the token and had no way to use it.** The variable is the mechanism, not a preference.
+
+**Verified.** `tsc` **0** · unit **189** · smoke **39** · `next build` green (81/81).
+Equivalence proven three ways rather than assumed: every `brand`/`accent` ramp stop is
+**byte-identical** to Tailwind's `yellow`/`orange` (checked against `tailwindcss/colors`); each
+migrated class compiles to the same declaration as its predecessor (`.border-brand-500` and
+`.border-yellow-500` both emit `rgb(234 179 8)`); and old vs new rendered side-by-side in the
+browser.
+
+✅ **An unplanned completeness proof:** in that side-by-side the OLD classes rendered
+**unstyled**, because Tailwind had purged `from-yellow-400`/`to-orange-300`/`bg-yellow-500`
+from the bundle — which only happens when **no source file references them**. Stronger than the
+grep that drove the migration.
+
+⚠️ **Browser coverage is partial and this is the known gap:** `/admin/*` is behind `AdminAuth`
+and this session had no credentials, so the admin screens were **never seen rendered**. The
+login page (both rings), the header CTA and the CSS variables were verified live. Someone with
+admin access should glance at 게시물 / 집사들 / 앱 관리 and 냥이들' grid header once.
+
+---
+
+## 2026-08-05 — the colour palette becomes global; per-tenant theming (M8) is withdrawn
+
+**Area:** `config/mountains/mountains.json`, `src/utils/config.ts`,
+`src/app/[mountain]/layout.tsx`, `src/app/globals.css`, `tailwind.config.js`, + 6 docs.
+**Type:** removal (owner decision) — Phase 1 of
+[`color-token-centralization-plan-20260805.md`](../docs/planning/pending/color-token-centralization-plan-20260805.md).
+
+**What changed.** A mountain can no longer set its own colours. The `theme` block is gone from
+`mountains.json` (both mountains), `MountainTheme` is deleted, and the `[mountain]` layout no
+longer injects `:root{--color-primary:…}`.
+
+🔑 **Why removal rather than the "fuller theming pass" M8 anticipated.** The owner asked to
+control colour "in one central place" and identified the cost themselves: a mountain owner
+choosing colours has **no preview and no contrast check**, and `mountains.json` is a static
+import — so "trying a colour" queues a redeploy each time. `secondaryColor`/`accentColor` had
+additionally **never been wired to anything**, so editing them did nothing at all; that is how
+this started (the owner edited them and asked why nothing changed).
+
+🔑 **The indirection survives on purpose, and this is the part worth remembering.**
+`--color-primary` stays, declared once in `globals.css` as `theme('colors.brand.DEFAULT')` —
+**resolved at build time, so it is not a copy of the value.** The variable exists because a
+Tailwind token cannot reach `<style jsx global>` blocks or third-party CSS (`.dsg-*`, Leaflet),
+which consume variables only. ⚠️ **Deleting the variable would have looked tidier and been
+wrong.** Net: the **three** hand-copied `#FACC15`s (`tailwind.config.js:29`, `:44`,
+`globals.css:14`) collapse to **one**, and the 7 `from-primary` CTA sites needed no edits.
+
+✅ **A `dangerouslySetInnerHTML` went with it** (`layout.tsx:58`), along with the hex validation
+that existed to guard it.
+
+📌 **Docs corrected in the same change, and the list was bigger than planned:** the plan named
+two guides; the real set was `deployment/new-mountain-setup.md`, `admin-manual/README.md`,
+`codebase/multi-tenant-config.md`, `PROJECT_PLAN` (§9 M8 + the §12 checklist item),
+`mountain-2-prerequisites.md` §3.2 (**dissolved** — it described a gap against a field that no
+longer exists), and **`AGENTS.md`/`CLAUDE.md` itself**, which documented the per-tenant model
+to every future agent. 🔑 **A doc grep beats a remembered list.**
+
+**Verified.** `npx tsc --noEmit` **0** · unit **189** · smoke **39** · **`next build` green**,
+both tenants prerendered. Built CSS contains `--color-primary:#facc15` (proving `theme()`
+resolved), and **no** prerendered HTML contains `color-primary` (proving the injection is
+gone). ✅ **Zero visual change** — every tenant already resolved to yellow except hidden
+`manisan`, whose `#0ea5e9` only ever coloured a CTA on an otherwise all-yellow site.
+
+---
+
+## 2026-08-05 — 냥이들 re-bakes on a cat edit (closes BACKLOG **B3**)
+
+**Area:** `src/app/api/revalidate/route.ts`, `docs/manuals/admin-manual/README.md` (§3, §9).
+**Type:** small fix — closing a gap recorded as BACKLOG **B3** the same day.
+
+**What changed.** `BAKED_SUBPATHS` was `['', '/pages/adoption']`; it is now
+`['', '/pages/cats', '/pages/adoption']`. An admin cat edit refreshed the home map and 입양홍보
+immediately while **냥이들 kept serving the old data for up to an hour**, because that page also
+reads cats server-side and carries its own `export const revalidate` (**3600s**) but was absent
+from the list.
+
+🔑 **This was drift against an invariant the route's own header comment states** — _"Keep this
+list in sync with the route segments that read cats server-side (`src/lib/server/cat-reads.ts`
+consumers)"_ — not an oversight nobody could have caught. **Audited all three consumers** while
+here: `[mountain]/page.tsx`, `[mountain]/pages/cats/page.tsx`, `[mountain]/pages/adoption/page.tsx`.
+All three carry an ISR segment; `/pages/cats` was the only one missing. No other gap.
+
+📌 **Nothing was visibly broken**, which is why it was deferred rather than hot-fixed: the hourly
+backstop means the page is never wrong for long, and it surfaces as _"I edited the cat and the
+list still shows the old name"_ — reported as flakiness rather than as a bug.
+
+⚠️ **The script half is unchanged and is now documented instead.** `rename-cat.js` writes with
+the Admin SDK, bypassing the app, so it fires **no** revalidation at all — after a rename every
+baked surface waits its full hour. Giving a script a revalidation token was considered and **not
+done** (it would need a credential to hold, for a path an operator can trigger in one click), so
+§9's runbook now says what to do instead: save any cat in `/admin/cats` and all three pages
+re-bake. §3's "home + adoption revalidate" line was true before this change and false after it,
+so it now reads "home + 냥이들 + adoption".
+
+**Verified.** `npx tsc --noEmit` clean · `npm run test:smoke` **39 passed**. 📌 **No automated
+test observes the path list** — the only e2e touching this route checks its auth, not its
+payload, so the audit above is the evidence. A drift guard asserting every `cat-reads` consumer
+appears in `BAKED_SUBPATHS` is the obvious follow-up and was **not** written here (not asked for);
+it is the thing that would have caught this.
+
+---
+
 ## 2026-08-05 — a video's YouTube 설명 is taken verbatim on every composer; 공지/입양홍보 stop inheriting the post body
 
 **Area:** `src/components/forms/useSimpleContentForm.ts`,
