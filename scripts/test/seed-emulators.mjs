@@ -11,7 +11,7 @@
  * id is `demo-*` — belt-and-suspenders so this can never touch a real project.
  */
 import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getStorage } from 'firebase-admin/storage';
 import { readFile } from 'node:fs/promises';
@@ -90,6 +90,45 @@ async function seedCollection(collection, docs, mountainId) {
     await db.collection(collection).doc(id).set(withTenant(collection, data, mountainId));
   }
   console.log(`[seed] ${collection}: ${docs.length} doc(s) [${mountainId}]`);
+}
+
+/**
+ * Seed `feeding_spots` (the 급식소 현황 table on 집사톡).
+ *
+ * Needs its own writer rather than `seedCollection`: that helper turns the
+ * fixture's `id` into the *document* id and strips it from the data, but this
+ * collection reads `data.id` as a numeric field and orders by it — so the id has
+ * to survive into the document body.
+ *
+ * `hoursAgo` is converted to a `last_attended` Timestamp **relative to the seed
+ * run**, because the freshness ramp is a function of "how long ago" — a fixed
+ * date would drift into the clamped red end and stop exercising the scale.
+ */
+async function seedFeedingSpots(spots, mountainId) {
+  for (const { id, name, hoursAgo, last_attended_by } of spots) {
+    const docId = `test-feeding-spot-${id}`;
+    await db
+      .collection('feeding_spots')
+      .doc(docId)
+      .delete()
+      .catch(() => {});
+    await db.collection('feeding_spots').doc(docId).set(
+      withTenant(
+        'feeding_spots',
+        {
+          id,
+          name,
+          last_attended_by,
+          last_attended:
+            hoursAgo === null
+              ? null
+              : Timestamp.fromDate(new Date(Date.now() - hoursAgo * 60 * 60 * 1000)),
+        },
+        mountainId
+      )
+    );
+  }
+  console.log(`[seed] feeding_spots: ${spots.length} doc(s) [${mountainId}]`);
 }
 
 /** Delete-then-write a single fixed-id doc (stamped `mountainId` if the collection is tenant-scoped). */
@@ -203,17 +242,27 @@ async function main() {
   console.log(`[seed] firestore=${process.env.FIRESTORE_EMULATOR_HOST}`);
   console.log(`[seed] mountainId=${SEED_MOUNTAIN_ID}`);
 
-  const [points, cats, posts, media, aboutContent, roleConfig, resourceConfig, users] =
-    await Promise.all([
-      readJson('points.json'),
-      readJson('cats.json'),
-      readJson('posts.json'),
-      readJson('media.json'),
-      readJson('about-content.json'),
-      readJson('role-config.json'),
-      readJson('resource-config.json'),
-      readJson('users.json'),
-    ]);
+  const [
+    points,
+    cats,
+    posts,
+    media,
+    aboutContent,
+    roleConfig,
+    resourceConfig,
+    users,
+    feedingSpots,
+  ] = await Promise.all([
+    readJson('points.json'),
+    readJson('cats.json'),
+    readJson('posts.json'),
+    readJson('media.json'),
+    readJson('about-content.json'),
+    readJson('role-config.json'),
+    readJson('resource-config.json'),
+    readJson('users.json'),
+    readJson('feeding-spots.json'),
+  ]);
 
   // --- Default tenant (geyang) pass ---
   await seedCollection('points', points, SEED_MOUNTAIN_ID);
@@ -227,6 +276,8 @@ async function main() {
     if (collection.startsWith('_')) continue;
     await seedCollection(collection, docs, SEED_MOUNTAIN_ID);
   }
+
+  await seedFeedingSpots(feedingSpots.spots, SEED_MOUNTAIN_ID);
 
   await seedDoc('about_content', SEED_MOUNTAIN_ID, aboutContent, SEED_MOUNTAIN_ID);
   // role_permissions is central (not tenant-scoped) — mountainId arg is ignored.

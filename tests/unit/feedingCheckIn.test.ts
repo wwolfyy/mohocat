@@ -1,11 +1,15 @@
 /**
  * Unit coverage for the 급식현황 check-in confirmation (2026-08-04).
  *
- * 🔑 This is the only automated cover the spot list has. The e2e harness cannot
- * reach it: `scripts/test/seed-emulators.mjs` seeds no `feeding_spots`, so the
- * composer always renders 급식소 정보가 없습니다 there and the dialog always takes
- * the empty branch. The listing — the part that lets an author catch a mis-tick
- * before an unrecoverable write — is asserted here.
+ * The listing — the part that lets an author catch a mis-tick before an
+ * unrecoverable write — is asserted here.
+ *
+ * 🔄 **Updated 2026-08-05.** This header used to say the e2e harness "cannot
+ * reach" the spot list because `scripts/test/seed-emulators.mjs` seeded no
+ * `feeding_spots`. It does now: see `tests/e2e/member/feeding-spots-list.spec.ts`
+ * for the rendered table and `tests/unit/feedingFreshness.test.ts` for the
+ * freshness ramp. 📌 The **composer's** 급식소 picker is still unit-only cover —
+ * these tests are about the confirmation message, not the table.
  */
 import { describe, it, expect } from 'vitest';
 import {

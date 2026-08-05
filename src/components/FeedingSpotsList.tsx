@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getFeedingSpotsService, FeedingSpot } from '@/services';
 import { useMountain } from '@/components/MountainProvider';
+import { freshnessColor, FRESHNESS_URGENT_HOURS } from '@/utils/feedingFreshness';
 
 const FeedingSpotsList = () => {
   const [feedingSpots, setFeedingSpots] = useState<FeedingSpot[]>([]);
@@ -12,34 +13,26 @@ const FeedingSpotsList = () => {
   const mountainId = useMountain();
   const feedingSpotsService = getFeedingSpotsService(mountainId);
 
-  // Calculate color based on hours ago (0 hours = green, 60+ hours = red)
+  // Freshness colour: blue (just fed) → red (long overdue). The ramp itself lives
+  // in `@/utils/feedingFreshness` so it can be contrast-tested; here we only decide
+  // how to apply it. `null` = no visit on record, rendered muted rather than as a
+  // point on the scale.
   const getColorForHours = (
     hoursAgo: number | null
   ): { className: string; style?: React.CSSProperties } => {
-    if (hoursAgo === null) return { className: 'text-gray-500' };
-
-    if (hoursAgo >= 60) return { className: 'text-red-600' };
-    if (hoursAgo === 0) return { className: 'text-green-600' };
-
-    // Calculate gradient from green to red (0-60 hours)
-    const ratio = hoursAgo / 60;
-    const red = Math.round(255 * ratio);
-    const green = Math.round(255 * (1 - ratio));
-
-    return {
-      className: '',
-      style: { color: `rgb(${red}, ${green}, 0)` },
-    };
+    const color = freshnessColor(hoursAgo);
+    return color ? { className: '', style: { color } } : { className: 'text-gray-500' };
   };
 
-  // Format hours ago text
+  // Format hours ago text. The `!` is the non-colour urgency channel — it is what
+  // a colour-blind operator reads, so it stays regardless of the ramp.
   const formatHoursAgo = (hoursAgo: number | null): string => {
     if (hoursAgo === null) return '';
     if (hoursAgo === 0) return '(방금 전)';
     if (hoursAgo === 1) return '(1시간 전)';
 
     const baseText = `(${hoursAgo}시간 전)`;
-    const urgentMarker = hoursAgo >= 48 ? ' !' : '';
+    const urgentMarker = hoursAgo >= FRESHNESS_URGENT_HOURS ? ' !' : '';
 
     return baseText + urgentMarker;
   };

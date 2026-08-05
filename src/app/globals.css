@@ -20,6 +20,14 @@
      2026-08-05). This was previously overridden per tenant by the `[mountain]`
      layout from `mountains.json`'s `theme` block; both are gone. */
   --color-primary: theme('colors.brand.DEFAULT');
+
+  /* Escape hatch for CSS that Tailwind utilities cannot reach: `<style jsx global>`
+     blocks and third-party stylesheets (react-datasheet-grid's `.dsg-*`, Leaflet).
+     styled-jsx does NOT run through Tailwind's PostCSS pipeline, so `theme()` is
+     unavailable there — but `var()` works. Add a stop here only when such a rule
+     actually needs it; component markup must use the `brand-*` utilities instead. */
+  --color-brand-100: theme('colors.brand.100');
+  --color-brand-300: theme('colors.brand.300');
 }
 
 body {

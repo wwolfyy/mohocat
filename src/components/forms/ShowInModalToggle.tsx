@@ -44,7 +44,7 @@ const ShowInModalToggle = ({
           onClick={() => !disabled && onChange(!checked)}
           className={cn(
             'relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full transition-colors duration-200',
-            checked ? 'bg-yellow-500' : 'bg-gray-300',
+            checked ? 'bg-brand-500' : 'bg-gray-300',
             disabled && 'cursor-not-allowed opacity-50'
           )}
           role="switch"

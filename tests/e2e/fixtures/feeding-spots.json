@@ -1,0 +1,29 @@
+{
+  "_comment": "급식소 fixtures for the 급식소 현황 table on 집사톡. `hoursAgo` is converted to a real `last_attended` Timestamp at seed time (relative to the seed run), so the freshness ramp renders an actual spread instead of one colour. `null` = no visit on record, which the table renders muted rather than as a point on the scale. Values are chosen to hit each region: fresh (blue), mid (purple), past the 48h urgency marker AND past the 60h clamp (red), and unknown.",
+  "spots": [
+    {
+      "id": 1,
+      "name": "정상 급식소",
+      "hoursAgo": 1,
+      "last_attended_by": "테스트관리자"
+    },
+    {
+      "id": 2,
+      "name": "약수터 급식소",
+      "hoursAgo": 30,
+      "last_attended_by": "테스트집사"
+    },
+    {
+      "id": 3,
+      "name": "주차장 급식소",
+      "hoursAgo": 70,
+      "last_attended_by": "테스트집사"
+    },
+    {
+      "id": 4,
+      "name": "능선 급식소",
+      "hoursAgo": null,
+      "last_attended_by": ""
+    }
+  ]
+}
