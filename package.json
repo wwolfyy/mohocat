@@ -14,6 +14,7 @@
     "fetch:assets": "node scripts/maintenance/fetch-static-assets.js",
     "backup:firestore": "node scripts/maintenance/export-firestore.js",
     "storage:cors": "dotenv -e .env.local -e .env -- node scripts/maintenance/set-storage-cors.js",
+    "smtp:verify": "dotenv -e .env.local -e .env -- node scripts/maintenance/smtp-verify.js",
     "seed:emulators": "node scripts/test/seed-emulators.mjs",
     "test:rules": "dotenv -e .env.test -- firebase emulators:exec --project demo-mohocat --only firestore \"vitest run --config vitest.rules.config.ts\"",
     "test:scripts": "dotenv -e .env.test -- firebase emulators:exec --project demo-mohocat --only firestore \"vitest run --config vitest.scripts.config.ts\"",

@@ -102,14 +102,32 @@ PR #7)
 >
 > ### 📮 In flight with the owner (not blocking, no code pending)
 >
-> - **The outgoing SMTP address is changing.** A new Gmail account exists; the owner is
->   creating the App Password. Then: set `SMTP_USER` + `SMTP_PASSWORD` + `SMTP_FROM` in Vercel
->   **Production and Preview**, redeploy (env changes do not reach a running deployment), and
->   verify the **From header** on a real 동참 submission. ⚠️ **Set `SMTP_FROM` equal to
->   `SMTP_USER`** — Gmail silently **rewrites** a From it does not own, so an unverified alias
->   is a no-op that still reports success. 📌 `/api/contact` is the only thing that sends mail
->   and reads it all from env, so **no code change**. 📌 Not to be confused with `adminEmail`
->   in `mountains.json` — that is the **recipient**.
+> - **The outgoing SMTP address change — IN PROGRESS 2026-08-06, and it bit.** Two real 동참
+>   submissions sent no email while telling the visitor they had. Cause: Gmail was answering
+>   **`535-5.7.8 Username and Password not accepted`**. The owner regenerated the App Password
+>   and the credentials now **authenticate**; a Vercel redeploy was in flight at the end of the
+>   session. **Still to confirm:** the **From header** on a real submission from the deployed
+>   app. ⚠️ **`SMTP_FROM` must equal `SMTP_USER`** — Gmail silently **rewrites** a From it does
+>   not own, so an unverified alias is a no-op that still reports success; the regeneration
+>   moved `SMTP_USER` and left `SMTP_FROM` on the old address, so **check this after any change
+>   to either**. 📌 Env vars are injected at **build** time — a dashboard edit does not reach a
+>   running deployment until you redeploy, and **Production and Preview are separate**.
+>   📌 `/api/contact` reads it all from env, so **no app-code change**. 📌 Not to be confused
+>   with `adminEmail` in `mountains.json` — that is the **recipient**.
+> - **🆕 `npm run smtp:verify` exists now** (`scripts/maintenance/smtp-verify.js`) — it mirrors
+>   `sendNotification()` and authenticates **without sending mail**, so a credential can be
+>   checked before it goes near Vercel. 🔑 **Why it had to exist: a dead SMTP config is
+>   invisible from three directions at once.** `/api/contact` records the contact first and
+>   returns `success` regardless (right call — failing would duplicate the record); it computes
+>   `emailDelivered: false` and **nothing consumes that field**; and `.env.test` sets no SMTP
+>   vars, so **e2e always takes the "not configured" branch and cannot catch this**. The visitor
+>   is reassured, the operator gets nothing, the suite stays green, and the only signal anywhere
+>   is one line in the Vercel function log. ⚠️ **Surfacing `emailDelivered` in the UI is an open
+>   product decision** — offered, not done.
+> - ⚠️ **A `.env` trap worth knowing: dotenv strips an inline `# comment`, the Vercel dashboard
+>   does not.** A password line carrying a trailing note parses to a clean 16 chars locally and
+>   authenticates as the whole 73-character string once pasted into Vercel — failing identically
+>   to a wrong password. `smtp:verify` now warns on `#` in the value for exactly this reason.
 > - **Two doc fixes offered and not done:** `.env.example` still hardcodes
 >   `mohocats.org@gmail.com` (should become a placeholder, not the new address); and the Gmail
 >   App Password steps live in `vercel-terraform-walkthrough.md` §8 — inside the **parked**
@@ -136,7 +154,9 @@ PR #7)
 >    work**: `/admin/*` is behind `AdminAuth` and neither session had credentials, so those
 >    screens are proven by compiled-CSS equality, not by looking. Everything is pixel-identical
 >    by construction, so this is a confirmation, not a hunt.
-> 3. **Finish the SMTP change** and verify the From header.
+> 3. **Finish the SMTP change** — the App Password now authenticates (`npm run smtp:verify`);
+>    what is left is confirming `SMTP_FROM` == `SMTP_USER` everywhere, that the redeploy landed,
+>    and the **From header** on a real submission from the deployed app.
 > 4. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
 >    promotion. 🆕 Fold in the one thing the harness cannot test: **upload a video to a
 >    공지사항 with 설명 left blank** and confirm YouTube shows no description. The upload leg
@@ -2126,7 +2146,16 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-06 (latest)** — **Colour plan Phase 4 (§10u U6) — the last raw hexes, and the
+- **2026-08-06 (latest)** — **`npm run smtp:verify`, from a live 동참 email failure.** Two real
+  submissions reported success and sent nothing; Gmail was answering `535-5.7.8`. The App
+  Password was regenerated and now authenticates. 🔑 The lasting finding is not the credential
+  but that the failure was **invisible from three directions** — the route returns `success` by
+  design, its `emailDelivered` flag is **consumed by nothing**, and `.env.test` sets no SMTP
+  vars so e2e always takes the "not configured" branch. New script authenticates without
+  sending mail and warns on the `SMTP_FROM != SMTP_USER` rewrite trap and on a `#` in the
+  value (dotenv strips an inline comment; the Vercel dashboard does not).
+
+- **2026-08-06** — **Colour plan Phase 4 (§10u U6) — the last raw hexes, and the
   decision finally lands in the design reference.** `YouTubeAuthPanelNew`'s four status hexes
   became Tailwind utility pairs (`text-emerald-500` + `border-emerald-500/20`; the `/20` is
   exact — `0x33 = 51/255`), `Compass` took `fill-red-500` / `fill-gray-100`, and
