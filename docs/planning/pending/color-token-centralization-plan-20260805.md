@@ -238,6 +238,11 @@ so the e2e harness only ever reaches the empty branch (PROJECT_PLAN §10r). Phas
 
 ## 6. Task checklist
 
+> ⚠️ **"Phase 4" ≠ "§4".** This doc numbers two different things: **§1–§8** are analysis
+> sections (all written), while **Phase 1–5** below are units of _work_. §4 and §5 are the
+> colour survey and the 급식현황 analysis — both complete, and §5 was **executed by Phase 3**.
+> **Phase 4 and Phase 5 are the unstarted ones.** Say "Phase N" when you mean work.
+
 ### Phase 1 — collapse the theme to one global value (D1 + D2) — ✅ **DONE 2026-08-05**
 
 > **Gates:** `tsc` **0** · unit **189** · smoke **39** · **`next build` green** (both tenants
