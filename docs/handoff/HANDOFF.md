@@ -1,8 +1,10 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-05 · **Branch:** `dev` — local `dev` = **`6618c8b`**, **97** ahead
-of `origin/main`; ⚠️ **the last SIX commits are NOT pushed** (`61b1904` was held deliberately;
-the five colour-workstream commits landed on top of it)
+**Last updated:** 2026-08-05 · **Branch:** `dev` — ✅ **everything is pushed** (`origin/dev`
+current, incl. the held `61b1904` and the colour workstream), **~98** ahead of `origin/main`.
+📌 **Don't trust that count — run `git rev-list --count origin/main..dev`.** This line cannot
+count the commit that writes it, so a tip hash here is stale the moment it is committed; that
+is why one is no longer quoted.
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
@@ -124,24 +126,23 @@ PR #7)
 >
 > **Do these next, in this order:**
 >
-> 1. **Push the six held commits** (`61b1904` … `6618c8b`). `61b1904` was held deliberately;
->    the five colour commits sit on top of it, so pushing releases all six together.
-> 2. **Re-tag those two YouTube videos** (above). Time-sensitive: any 동기화 undoes the rename
->    for 조로's 영상첩.
-> 3. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
+> 1. **Re-tag those two YouTube videos** (above). Time-sensitive: any 동기화 undoes the rename
+>    for 조로's 영상첩. _(The push that used to head this list is **done** — 2026-08-05.)_
+> 2. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
 >    colour, 작성 CTAs) and 냥이들' grid header. 🔑 **The only unverified part of the colour
 >    work**: `/admin/*` is behind `AdminAuth` and the session that did it had no credentials, so
 >    those screens are proven by compiled-CSS equality, not by looking. Everything is
 >    pixel-identical by construction, so this is a confirmation, not a hunt.
-> 4. **Finish the SMTP change** and verify the From header.
-> 5. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
+> 3. **Finish the SMTP change** and verify the From header.
+> 4. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
 >    promotion. 🆕 Fold in the one thing the harness cannot test: **upload a video to a
 >    공지사항 with 설명 left blank** and confirm YouTube shows no description. The upload leg
 >    has **no** automated cover (`generate-signed-url` needs a service-account key the harness
 >    lacks; YouTube upload is manual-parity).
-> 6. **The Preview verifications that piled up** — see the earlier session boxes below.
-> 7. **Then the promotion.** `dev` leads `origin/main` by **97**. ⚠️ Measure against
->    `origin/main`, not the local `main` ref (stranded at `26b1879`).
+> 5. **The Preview verifications that piled up** — see the earlier session boxes below.
+> 6. **Then the promotion.** ⚠️ **Count it yourself**
+>    (`git rev-list --count origin/main..dev`) and measure against **`origin/main`**, not the
+>    local `main` ref — that one is stranded at `26b1879` (2026-03-16).
 >    🆕 **Add to the "changes behaviour on deploy" list:** 급식현황 now asks for confirmation
 >    before publishing; 공지사항/입양홍보 videos stop inheriting the post body as their YouTube
 >    description (and the help text under the field changes to match); **집사톡's
