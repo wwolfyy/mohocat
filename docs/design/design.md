@@ -12,9 +12,13 @@
 > defines **no color/spacing values of its own** — that would create a second
 > source of truth that drifts. If you need an exact hex, read the config.
 >
-> **Scope:** the user-facing landing experience (see
-> [`mohocat-landing-redesign-plan.md`](./mohocat-landing-redesign-plan.md)).
-> Admin (`react-admin`) screens are out of scope.
+> **Scope:** the whole product — the user-facing landing experience (see
+> [`mohocat-landing-redesign-plan.md`](./mohocat-landing-redesign-plan.md)) **and** the
+> `/admin` CMS. _(Corrected 2026-08-05, owner. This line previously read "Admin
+> (`react-admin`) screens are out of scope" — it outlived what it described: the
+> react-admin subsystem was deleted in `d963d30`, 2026-06-29, and the CMS has been
+> custom-built since. The design workstream has since taken unified public + admin
+> primitives as its direction.)_
 
 ---
 
