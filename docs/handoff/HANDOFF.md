@@ -1,9 +1,9 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-06 · **Branch:** `dev` — ⚠️ **several commits are ahead of
-`origin/dev`** (the 2026-08-05 doc commit that marked the push done — it could not push itself
-— plus this session's colour Phase 4, the SMTP tooling, and the `emailDelivered` work).
-**~102** ahead of `origin/main`. 📌 **Don't trust that count — run
+**Last updated:** 2026-08-06 · **Branch:** `dev` — ⚠️ **~5 commits are ahead of `origin/dev`**
+(the 2026-08-05 doc commit that marked the push done — it could not push itself — plus this
+session's colour Phase 4, the SMTP tooling, the `emailDelivered` work, and this doc pass).
+**~103** ahead of `origin/main`. 📌 **Don't trust that count — run
 `git rev-list --count origin/main..dev`.** This line cannot count the commit that writes it, so
 a tip hash here is stale the moment it is committed; that is why one is no longer quoted.
 🔑 **The same applies to the "everything is pushed" claim** — a header that says so is, by
@@ -236,6 +236,12 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 >    been waiting on without knowing it; and **급식현황's freshness scale changes colour**
 >    (green→red ⇒ blue→red, deeper endpoints) — the one visible change in the colour work, and
 >    the one an operator will notice.
+>    🆕 **2026-08-06 adds two more, both in 동참:** the contact page now shows a **different
+>    success message when the notification email fails** (접수되었습니다 + "답변이 늦어질 수
+>    있어요", on the non-error styling — the submission is still recorded); and the admin 동참
+>    table gains an **알림 column** with an **⚠️ 미전송** badge. 📌 **Every existing contact will
+>    read `—` (unknown), not 전송됨** — the `notified` flag only exists from this deploy
+>    forward, and that is deliberate rather than a bug to "fix" by backfilling a guess.
 >
 > ### 🎨 2026-08-06 — colour plan **Phase 4 is done**; only Phase 5 is left
 >
@@ -760,6 +766,31 @@ the testing hand-off
 
 ## Current state (TL;DR)
 
+- **📮 The 동참 notification email works again, and the silence around it is closed
+  (2026-08-06, `91ca7a3` + `28b4f7f` + `a040f66`).** The outgoing address moved to a new Gmail
+  account; ✅ **verified live** — the owner confirmed the **From header** on a real submission
+  from the deployed app. 🔑 **It failed twice first, and both failures were silent by
+  construction:** the App Password was rejected (`535-5.7.8`) so two real submissions recorded a
+  contact, told the visitor it sent, and sent nothing; then regenerating it moved `SMTP_USER`
+  and left `SMTP_FROM` on the old address, which Gmail would have "fixed" by **rewriting** the
+  header while still reporting success. ⚠️ **Re-check `SMTP_FROM == SMTP_USER` after changing
+  either.**
+  - 🆕 **`npm run smtp:verify`** authenticates **without sending mail** (safe against production
+    credentials) and warns on the From-rewrite trap, on whitespace, and on a **`#`** in the
+    value — dotenv strips an inline comment, the **Vercel dashboard stores values verbatim**.
+  - 🆕 **`emailDelivered` is surfaced** — it used to be computed and consumed by nobody. The
+    **visitor** gets expectation-setting on the **non-error** styling (⚠️ never a resubmit
+    prompt — the contact is already recorded, so a retry duplicates it); the **operator** gets a
+    persisted `notified` flag shown as an **⚠️ 미전송** badge in the admin 동참 table.
+    🔑 **Three states: `undefined` is _unknown_, not failed** — every pre-existing contact
+    predates the field.
+  - 🔴 **And building that found the e2e suite sending REAL email to the production
+    `adminEmail`, two per run.** `next start` backfills any key `.env.test` leaves **undefined**
+    from `.env` on disk. `.env.test` now blanks the five SMTP keys — ⚠️ **blank is
+    load-bearing.** 📌 **Generalises: any secret in `.env` that `.env.test` does not explicitly
+    blank is reachable from the harness**; the demo-project guarantee covers Firebase only.
+  - 📌 **The delivered branch still has no automated cover anywhere** — it needs a real SMTP
+    session the hermetic harness has no credentials for. `smtp:verify` is that check.
 - **🎨 Colour now has ONE source of truth, and per-tenant theming is gone (2026-08-05,
   committed; Phase 4 followed 2026-08-06).** Asked to centralize colour "in one config file", the answer was that the repo
   **already designates one** — `design.md:9` names `tailwind.config.js` and `:292` explicitly
@@ -802,8 +833,11 @@ the testing hand-off
   the first cut and no test could have caught it — I wrote the fixtures.** The owner's **dry run
   against production** found it. ⚠️⚠️ **The video half does not stick:**
   `/api/refresh-video-metadata` overwrites `cat_videos.tags` from YouTube on every 동기화, so the
-  script prints the affected ids and the CMS step that writes through — **two are still
-  outstanding for 조로** (see the box at the top). Detail: PROJECT_PLAN **§10s**.
+  script prints the affected ids and the CMS step that writes through. ✅ **조로's two were
+  re-tagged on YouTube by the owner (2026-08-06), so that rename is complete.** 🔑 **The rule
+  it leaves behind: YouTube owns `cat_videos.tags`** — finish any such rename **on YouTube**, or
+  the Firestore fix reverts on the next sync and the album quietly empties. Detail: PROJECT_PLAN
+  **§10s**.
 - **🧪 A third emulator-backed test category, and a script that cannot be aimed at production by
   accident (2026-08-05, `de4efe2`).** `tests/scripts/**` via `npm run test:scripts`, its own CI
   job, mirroring `tests/rules/**` — and excluded from `npm test` for the same reason. 🔑 **The
@@ -857,7 +891,7 @@ the testing hand-off
   without losing the post. Plans:
   [`member-post-authoring-20260802.md`](../planning/completed/member-post-authoring-20260802.md)
   · [`member-media-upload-permissions-20260803.md`](../planning/completed/member-media-upload-permissions-20260803.md).
-- **📝 The about page has one source of truth — the CMS (2026-08-02, uncommitted).** The
+- **📝 The about page has one source of truth — the CMS (2026-08-02, committed).** The
   `about` object is gone from `config/mountains/mountains.json`; `about_content/{mountainId}`
   is the only copy. It was stale for `title`/`subtitle`/`mainContent`/`sections` — 📌 the tell
   was `sections`: config declared two, Firestore held **zero**, the page showed none — but
@@ -902,7 +936,11 @@ the testing hand-off
   media unable to change it. Detail: PROJECT_PLAN **§10l**.
 - **✅ The e2e suite is GREEN and the "flake set" is retired (2026-08-02, `4a5da2a`).**
   **3× consecutive 199 passed / 13 skipped / 0 failed**, from a 196/3 baseline. _(Now
-  **214/13/0** — the same day's post work added 15 specs; see the top three bullets.)_ 🔑 It was
+  **233/13/0** as of 2026-08-06 — later sessions added specs; see the top bullets.)_
+  ⚠️ **The suite is hermetic, and that is maintained, not automatic:** as of 2026-08-06
+  `.env.test` must **blank** the SMTP keys, because `next start` backfills anything it leaves
+  undefined from `.env` — which had it sending **real email to production**. See the contact
+  bullet above. 🔑 It was
   **three real bugs, not flake** — and **"passes in isolation" meant _interference_, not
   slowness**, which is the reading that kept them open for weeks. (1) **App code:**
   `services/firebase.ts` guarded a **per-instance** emulator connection with a
