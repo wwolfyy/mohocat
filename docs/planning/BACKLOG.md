@@ -108,6 +108,17 @@ a rule, a permission, and two functions that can never succeed — is not.
 
 ---
 
+## ~~B3 — `/api/revalidate` never refreshes 냥이들, so cat edits take up to an hour there~~ ✅ DONE 2026-08-05
+
+**Resolved the day it was filed**, before it was ever committed as deferred work. `/pages/cats`
+is in `BAKED_SUBPATHS`; all three `cat-reads` consumers were audited and no other was missing;
+the rename runbook now covers the script's own bypass (it writes with the Admin SDK, so it fires
+no revalidation — save any cat in the CMS to re-bake). Full entry, including what was
+deliberately **not** built: [`log/FEATURE_MOD_LOG.md`](../../log/FEATURE_MOD_LOG.md) →
+_2026-08-05 — 냥이들 re-bakes on a cat edit_.
+
+---
+
 ## Open questions (owner decisions — not tasks until answered)
 
 - **Q1 — Should the about page render `sections`?** (2026-08-02) The CMS has a 섹션 editor that

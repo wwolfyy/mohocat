@@ -202,7 +202,7 @@ Two views of the same data (toggle at the top):
 > 📌 Links people have already shared are safe either way: `?cat=…` addresses the cat's
 > record, not its name, so a pasted link keeps working under the new name.
 
-Editing a cat re-bakes the public pages automatically (home + adoption revalidate), so
+Editing a cat re-bakes the public pages automatically (home + 냥이들 + adoption revalidate), so
 changes appear without a redeploy.
 
 ---
@@ -582,6 +582,12 @@ overwrites ours from them every time anyone presses **📺 YouTube와 동기화*
 script's fix is correct but **temporary**: the next sync silently puts the old name back and the
 영상첩 empties again. The script prints the affected videos at the end of its run — re-tag those
 in **동영상 태깅 → 일괄 태그 저장**, which writes through to YouTube. Do it in the same sitting.
+
+📌 **The public pages can lag by up to an hour after a script rename — this is expected.** The
+script writes to Firestore directly, so it never tells the site to re-bake the way a CMS save
+does. 홈 / 냥이들 / 입양홍보 keep serving the old name until the hourly refresh catches up. To
+see it immediately, open any cat in `/admin/cats` and press 저장 — that one save re-bakes all
+three pages.
 
 ---
 
