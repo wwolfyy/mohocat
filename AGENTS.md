@@ -103,9 +103,14 @@ deep detail this file deliberately keeps out:
   `getDefaultMountainId()`, `getPublicMountains()`, `isFeatureEnabled()`, etc.; tenant
   resolution helpers live in `src/lib/tenant.ts`. Import mountain context from here — never read
   `process.env.MOUNTAIN_ID` directly.
-- **Per-tenant theme (M8)**: `theme.primaryColor` drives the primary-CTA brand color via a
-  `--color-primary` CSS variable the `[mountain]` layout injects on `:root` (geyang `#FACC15` =
-  unchanged). Only `primaryColor` is wired; the `brand` ramp stays static.
+- **Theme is GLOBAL, not per-tenant (owner decision 2026-08-05 — supersedes M8).** Every
+  mountain uses the same colors; `mountains.json` has **no `theme` block** and there is no
+  per-tenant color knob. Values live in **`tailwind.config.js` only** (`docs/design/design.md`
+  is intent-and-usage, and defines no values). `globals.css` declares
+  `--color-primary: theme('colors.brand.DEFAULT')`, resolved at **build** time — the variable
+  exists so non-Tailwind CSS (`<style jsx global>`, `.dsg-*`, Leaflet) can reach the same
+  value, not as a second definition. ⚠️ **Never inline a brand hex** in a component, in
+  `globals.css`, or as a `var()` fallback.
 - **Default**: an unmapped host or missing env falls back to `'geyang'`.
 
 ### 3. Service Layer Abstraction

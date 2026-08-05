@@ -20,13 +20,20 @@ module.exports = {
       // adopting these tokens causes no visual regression.
       // ─────────────────────────────────────────────────────────────────────
       colors: {
-        // Per-tenant primary brand color (multi-mountain plan M8). Resolves to the
-        // `--color-primary` CSS variable that the `[mountain]` layout sets per
-        // tenant; the fallback == geyang's shipped `brand.DEFAULT`, so surfaces
-        // adopting `primary` are unchanged for geyang. Flat (no ramp) by design —
-        // the minimal theming pass themes the signature CTA only; the `brand`
-        // ramp below stays the static source of truth for everything else.
-        primary: 'var(--color-primary, #FACC15)',
+        // Primary brand color, indirected through the `--color-primary` CSS
+        // variable that `globals.css` declares as `theme('colors.brand.DEFAULT')`.
+        // The indirection exists so non-Tailwind CSS (`<style jsx global>`,
+        // `.dsg-*`, Leaflet) can reach the same value; it is NOT a second
+        // definition — the variable resolves to `brand.DEFAULT` at build time.
+        //
+        // No fallback: the variable is always declared in globals.css, and a
+        // fallback here would be a hand-copied hex, i.e. the drift this comment
+        // block exists to prevent.
+        //
+        // The palette is GLOBAL — every mountain uses the same colors (owner
+        // decision, 2026-08-05). M8's per-tenant override is removed; `primary`
+        // is now an alias of `brand.DEFAULT` reachable from plain CSS.
+        primary: 'var(--color-primary)',
         // Brand yellow — the warm, playful core of the identity.
         // `brand.DEFAULT` == deployed yellow-400; the ramp is Tailwind's
         // yellow scale so tints/shades stay coherent.

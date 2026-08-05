@@ -17,11 +17,6 @@
       "geyangsan.mohocats.org"
     ],
     "storagePrefix": "",
-    "theme": {
-      "primaryColor": "#FACC15",
-      "secondaryColor": "#059669",
-      "accentColor": "#0D38E4"
-    },
     "features": {
       "videoAlbum": true,
       "photoAlbum": true,
@@ -73,11 +68,6 @@
       "manisan.mohocats.org"
     ],
     "storagePrefix": "mountains/manisan/",
-    "theme": {
-      "primaryColor": "#0ea5e9",
-      "secondaryColor": "#0369a1",
-      "accentColor": "#38bdf8"
-    },
     "features": {
       "videoAlbum": true,
       "photoAlbum": true,

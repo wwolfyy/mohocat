@@ -480,16 +480,15 @@ Mostly one-time or infrequent setup. Details live in
     non-empty prefix (e.g. `mountains/<id>/`).
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
-  - **Per-mountain brand color (theme).** Each mountain's `theme.primaryColor` now drives
-    the **primary brand color** — the signature CTA gradient (the header 입양홍보 button, the
-    shared action buttons, the map cluster-count markers, and the adoption / FAQ page CTAs)
-    recolors to it per tenant. `geyang` is `#FACC15` (the shipped brand yellow — unchanged).
-    The value **must be a 6-digit hex** like `#0EA5E9`; a malformed value makes that
-    mountain's pages fail to render (fail-loud, by design). ⚠️ Only `primaryColor` is wired
-    today — `secondaryColor` / `accentColor` in the same block are **not** yet used, and the
-    rest of the palette (the fixed `brand` color ramp) does **not** follow `primaryColor`, so
-    a new mountain's non-CTA surfaces still read the default yellow until a fuller theming
-    pass. **Baked at build** — edit the file and `git push` (no runtime toggle).
+  - **Brand color is platform-wide, not per-mountain** _(changed 2026-08-05, owner
+    decision)_. Every mountain renders the same brand yellow; `mountains.json` no longer has a
+    `theme` block and there is **no color setting to configure per tenant**. 🔑 **Why it was
+    removed:** letting each mountain pick its own colors is an administrative burden — there
+    is no preview and no contrast check, and because the file is baked at build, "trying a
+    color" means queuing a redeploy each time. (`secondaryColor` / `accentColor` had also
+    never been wired to anything, so editing them silently did nothing.) To change the brand
+    color for **the whole platform**, edit `brand` in `tailwind.config.js` and `git push` — a
+    developer task, not a CMS one.
 - **Map clustering (mobile):** the **whole-mountain** lever for cluttered pins (option 3 in
   [§4 → Three ways to fix cluttered pins](#three-ways-to-fix-cluttered--overlapping-pins); the
   other two — label position and coordinates — are per-pin CMS edits). Two per-mountain knobs in

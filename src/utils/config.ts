@@ -17,12 +17,6 @@
 
 import mountainsConfig from '../../config/mountains/mountains.json';
 
-export interface MountainTheme {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-}
-
 export interface MountainFeatures {
   videoAlbum: boolean;
   photoAlbum: boolean;
@@ -119,7 +113,6 @@ export interface MountainConfig {
    * every new mountain (plan §0 sub-decision 3).
    */
   storagePrefix: string;
-  theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
   map?: MountainMapConfig;

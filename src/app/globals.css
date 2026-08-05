@@ -7,11 +7,19 @@
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 
-  /* Per-tenant primary brand color (multi-mountain plan M8). Default = the
-     shipped geyang brand yellow (== tailwind `brand.DEFAULT`), so surfaces using
-     the `primary` token are visually identical to today. The `[mountain]` layout
-     overrides this at `:root` for the active tenant. */
-  --color-primary: #facc15;
+  /* Primary brand color, as a CSS variable so it also reaches surfaces Tailwind
+     utilities cannot style — `<style jsx global>` blocks and third-party CSS
+     (`.dsg-*`, Leaflet). Declared on `:root` so it reaches modals that portal to
+     `document.body`.
+
+     `theme()` resolves at BUILD time, so this is not a copy of the value — it IS
+     `brand.DEFAULT` from tailwind.config.js, which stays the single source of
+     truth per docs/design/design.md. Do not inline a hex here.
+
+     The palette is GLOBAL: every mountain uses the same colors (owner decision,
+     2026-08-05). This was previously overridden per tenant by the `[mountain]`
+     layout from `mountains.json`'s `theme` block; both are gone. */
+  --color-primary: theme('colors.brand.DEFAULT');
 }
 
 body {

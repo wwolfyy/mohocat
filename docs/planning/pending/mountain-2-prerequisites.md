@@ -234,12 +234,18 @@ plausible operator error rather than a contrived one.
 **Fix shape:** render the tenant name in the admin header. Small; `useMountain()` +
 `getMountainName()` are already there.
 
-### 3.2 The `brand` ramp is still geyang-yellow in the admin UI
+### 3.2 ~~The `brand` ramp is still geyang-yellow in the admin UI~~ ✅ **DISSOLVED 2026-08-05**
 
-M8 wired **`theme.primaryColor` only** (owner-chosen minimal scope). The `brand` 10-stop
-ramp and the **admin-only** `from-brand` CTAs (content-form submits, `IntroCard` badge)
-stay static, so a non-geyang tenant reads yellow on those surfaces. Public CTAs are
-correctly themed.
+**No longer a gap — the premise was removed rather than the symptom fixed.** This item said
+the `brand` ramp did not follow `theme.primaryColor`. There is now **no per-tenant
+`primaryColor`**: the owner decided every mountain uses the same palette, and the `theme`
+block is gone from `mountains.json` entirely.
+
+🔑 **So "a non-geyang tenant reads yellow on those surfaces" is now the intended behaviour,
+not a defect** — every tenant reads the same yellow on every surface, admin and public alike.
+Nothing here blocks mountain #2.
+
+Detail: [`color-token-centralization-plan-20260805.md`](./color-token-centralization-plan-20260805.md) §3.
 
 ### 3.3 The selector cannot reach hidden tenants
 

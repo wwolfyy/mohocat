@@ -9,25 +9,7 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 import { MountainProvider } from '@/components/MountainProvider';
 import { resolveMountainIdOrNull } from '@/lib/tenant';
-import { getAllMountains, getMountainConfig } from '@/utils/config';
-
-/**
- * Per-tenant primary brand color as a `:root` CSS-variable override (multi-mountain
- * plan M8). Set on `:root` (not the wrapper `<div>`) so it also reaches modals that
- * portal to `document.body`. geyang's value == the globals default, so it's a no-op
- * for geyang; a differently-themed tenant recolors every `primary`-token surface.
- * The value is trusted (bundled config), but we validate its shape and fail loud on
- * a malformed hex rather than emit broken/injectable CSS.
- */
-function tenantPrimaryColorStyle(mountainId: string): string {
-  const { primaryColor } = getMountainConfig(mountainId).theme;
-  if (!/^#[0-9a-fA-F]{6}$/.test(primaryColor)) {
-    throw new Error(
-      `Invalid theme.primaryColor "${primaryColor}" for mountain "${mountainId}" — expected a 6-digit hex like "#FACC15".`
-    );
-  }
-  return `:root{--color-primary:${primaryColor}}`;
-}
+import { getAllMountains } from '@/utils/config';
 
 /**
  * Tenant layout (multi-mountain plan M3). Every page lives under this
@@ -55,7 +37,6 @@ export default function MountainLayout({
 
   return (
     <MountainProvider mountainId={mountainId}>
-      <style dangerouslySetInnerHTML={{ __html: tenantPrimaryColorStyle(mountainId) }} />
       <AnnouncementModalProvider>
         <AuthProvider>
           <AnalyticsTracker />

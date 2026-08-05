@@ -68,9 +68,11 @@ graph LR
   `MOUNTAIN_ID` is the default, **not** a selector.
 - **Feature flags gate UI**: `features` (e.g. `videoAlbum`, `photoAlbum`, `advancedFiltering`,
   `adminPanel`) are checked via `isFeatureEnabled` before rendering optional surfaces.
-- **Per-tenant theme (M8)**: `theme.primaryColor` drives the primary-CTA brand color via a
-  `--color-primary` CSS variable injected on `:root` by the `[mountain]` layout (default =
-  geyang's `#FACC15`). Only `primaryColor` is wired; the `brand` ramp stays static.
+- **Theme is global, not per-tenant** _(2026-08-05 — supersedes M8)_: `mountains.json` has no
+  `theme` block and the `[mountain]` layout injects nothing. Color values live only in
+  `tailwind.config.js`; `globals.css` declares
+  `--color-primary: theme('colors.brand.DEFAULT')`, resolved at build time so non-Tailwind CSS
+  can reach the same value without a second definition.
 - **Centralized auth**: `authentication.type = "centralized"` means email/password, phone
   (SMS), and Kakao OIDC are shared across all mountains on the single Firebase project (no
   per-mountain provider setup). `roles`, `defaultRole`, `smsRegions`, and `requireApproval` are
