@@ -337,11 +337,38 @@ them any more**. That is a stronger check than the grep that drove the migration
 run has proved nothing). Inverting `FRESHNESS_RAMP` made the unit hue test **and** the e2e
 colour assertion fail, while the hue-agnostic tests correctly stayed green. Ramp restored.
 
-### Phase 4 — hygiene
+### Phase 4 — hygiene — ✅ **DONE 2026-08-06**
 
-- [ ] 4.1 `YouTubeAuthPanelNew:114-127` — the status hex map duplicates emerald/amber/red/gray-500 as raw hex.
-- [ ] 4.2 `LeafletMountainMap:302` (`#6b7280` = gray-500) · `Compass:33,35`.
-- [ ] 4.3 Record in `design.md` §Colors that the palette is global (not per-tenant) — **prose only, no values** (`design.md:12`).
+> **Gates:** `tsc` **0** · smoke **39** · unit **196** · **full e2e 233 passed / 13 skipped /
+> 0 failed** — unchanged from Phase 3, as a no-behaviour-change phase should be.
+> Browser pass done on the **public** map; `/admin` remains proven by compiled CSS only
+> (still auth-gated, still no credentials — the same gap as Phase 2).
+
+- [x] 4.1 `YouTubeAuthPanelNew` — the four raw hexes are gone. The status map now returns
+      **Tailwind utility pairs** (`text-emerald-500` + `border-emerald-500/20`, …) applied as
+      classes instead of two inline `style` props. 🔑 **The `/20` is not an approximation:**
+      the old border was `${hex}33`, and `0x33 = 51/255 = 0.2` exactly — the compiled rule is
+      `rgba(16,185,129,0.2)`. Verified in the browser that all four text **and** all four border
+      rules emit with the previously deployed values, so this is pixel-identical.
+      ⚠️ **Kept as status hues, deliberately** (§4.3): tokenizing them to `brand` is the one way
+      this edit could ship a regression. 📌 The map is **module-scope with full literal class
+      strings** — a computed `text-${hue}-500` is invisible to Tailwind's scanner and would be
+      purged, i.e. the failure mode is an unstyled panel, not a wrong colour.
+- [x] 4.2 `Compass:33,35` → `fill-red-500` / `fill-gray-100`. It is an **inline SVG in our own
+      JSX**, so Tailwind's `fill-*` utilities reach it. Verified rendered: `rgb(239,68,68)` and
+      `rgb(243,244,246)` — the same values the hexes carried.
+      **`LeafletMountainMap:302` keeps its hex, by decision.** Leaflet writes `color` into the
+      SVG `stroke` **presentation attribute**, which accepts neither a class nor `var(--…)`;
+      the hex now carries a comment naming `gray-500` and the reason, the same treatment
+      `CatGrid:561` gets in §8. 📌 It is a **neutral**, so §4.1's "leave `gray-*` alone" applies
+      anyway — the hygiene here is the missing explanation, not the value.
+- [x] 4.3 `design.md` §Colors now opens with the **global-palette** callout: a mountain may not
+      differ in colour, M8 is **withdrawn** (not deferred), `mountains.json` has no `theme`
+      block, and `--color-primary` is an escape hatch rather than a second definition.
+      🔑 **This was the one that mattered.** The decision already lived in `AGENTS.md`,
+      PROJECT_PLAN and this plan — but **not in the design reference**, which is the one document
+      a designer reads before proposing per-tenant theming again. Prose only, no values
+      (`design.md:12`).
 
 ### Phase 5 — unscoped follow-up from D5
 

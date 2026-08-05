@@ -27,6 +27,30 @@ interface YouTubeAuthStatus {
   };
 }
 
+/**
+ * Status colors as Tailwind utilities rather than raw hex. These are STATUS hues,
+ * not brand ones — `docs/design/design.md` §Colors keeps warning/error/success
+ * "distinct from `brand`", so they must never adopt the brand token; the hygiene
+ * here is only about the hex duplication, not the hue.
+ *
+ * Full literal class strings so Tailwind's content scanner sees them (a template
+ * like `text-${hue}-500` is invisible to it and gets purged).
+ *
+ * The border uses the `/20` opacity modifier, which is what the previous
+ * `${hex}33` suffix meant (0x33 = 51/255 = 0.2) — pixel-identical.
+ */
+const STATUS_CLASSES: Record<string, { text: string; border: string }> = {
+  valid: { text: 'text-emerald-500', border: 'border-emerald-500/20' },
+  expired: { text: 'text-amber-500', border: 'border-amber-500/20' },
+  error: { text: 'text-red-500', border: 'border-red-500/20' },
+  not_configured: { text: 'text-gray-500', border: 'border-gray-500/20' },
+};
+
+// `missing` has no entry of its own and falls through to the neutral default,
+// exactly as the previous hex map did.
+const getStatusClasses = (status: string) =>
+  STATUS_CLASSES[status] ?? STATUS_CLASSES.not_configured;
+
 export default function YouTubeAuthPanel() {
   const { user } = useAuth();
   const [authStatus, setAuthStatus] = useState<YouTubeAuthStatus | null>(null);
@@ -111,21 +135,6 @@ export default function YouTubeAuthPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'valid':
-        return '#10b981';
-      case 'expired':
-        return '#f59e0b';
-      case 'error':
-        return '#ef4444';
-      case 'not_configured':
-        return '#6b7280';
-      default:
-        return '#6b7280';
-    }
-  };
-
   const getStatusEmoji = (status: string) => {
     switch (status) {
       case 'valid':
@@ -179,12 +188,11 @@ export default function YouTubeAuthPanel() {
       ) : authStatus ? (
         <div>
           <div
-            className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-md border"
-            style={{ borderColor: `${getStatusColor(authStatus.status)}33` }}
+            className={`flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-md border ${getStatusClasses(authStatus.status).border}`}
           >
             <span className="text-xl">{getStatusEmoji(authStatus.status)}</span>
             <div className="flex-1">
-              <div className="font-medium" style={{ color: getStatusColor(authStatus.status) }}>
+              <div className={`font-medium ${getStatusClasses(authStatus.status).text}`}>
                 {authStatus.status === 'valid'
                   ? 'YouTube API 토큰이 유효합니다'
                   : authStatus.status === 'expired'

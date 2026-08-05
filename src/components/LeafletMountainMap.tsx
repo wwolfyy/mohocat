@@ -299,6 +299,10 @@ function PointMarkersLayer({
         const spokeLatLng = map.layerPointToLatLng(pt);
         const leg = L.polyline([centerLatLng, spokeLatLng], {
           weight: 1.5,
+          // gray-500. Kept as a hex on purpose: Leaflet writes this into the
+          // SVG `stroke` PRESENTATION ATTRIBUTE, which accepts neither a
+          // Tailwind class nor a `var(--…)` reference — the same tooling limit
+          // globals.css's escape-hatch comment describes. A neutral, not brand.
           color: '#6b7280',
           opacity: 0.5,
           interactive: false,

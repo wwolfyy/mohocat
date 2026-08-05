@@ -43,6 +43,20 @@ Two guiding rules for anyone touching the UI:
 All values live in `tailwind.config.js`. Use the **token name**, not a raw hex,
 in components.
 
+> ⚠️ **The palette is GLOBAL — a mountain may not differ in colour** (owner
+> decision, 2026-08-05). Every tenant renders the same brand yellow, and there is
+> **no per-tenant colour knob**: `mountains.json` has no `theme` block, and the
+> `MountainTheme` component that injected one is deleted. This **withdraws M8**
+> (per-tenant theming) rather than deferring it — do not propose per-mountain
+> palettes, a `theme` block, or a runtime colour override without re-deciding
+> this with the owner first.
+>
+> 📌 `globals.css` declares `--color-primary: theme('colors.brand.DEFAULT')`,
+> which resolves at **build** time. That variable is **not** a second definition —
+> it exists so CSS that Tailwind utilities cannot reach (`<style jsx global>`,
+> third-party `.dsg-*` and Leaflet rules) can consume the same value. Never inline
+> a brand hex in a component, in `globals.css`, or as a `var()` fallback.
+
 ### Brand & accent (defined in `tailwind.config.js → theme.extend.colors`)
 
 | Token                     | Role                                                                            |

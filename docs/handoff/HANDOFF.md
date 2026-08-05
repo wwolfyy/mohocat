@@ -1,10 +1,12 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-05 · **Branch:** `dev` — ✅ **everything is pushed** (`origin/dev`
-current, incl. the held `61b1904` and the colour workstream), **~98** ahead of `origin/main`.
-📌 **Don't trust that count — run `git rev-list --count origin/main..dev`.** This line cannot
-count the commit that writes it, so a tip hash here is stale the moment it is committed; that
-is why one is no longer quoted.
+**Last updated:** 2026-08-06 · **Branch:** `dev` — ⚠️ **one commit is ahead of `origin/dev`**
+(the 2026-08-05 doc commit that marked the push done — it could not push itself), plus this
+session's Phase 4 work. **~99** ahead of `origin/main`. 📌 **Don't trust that count — run
+`git rev-list --count origin/main..dev`.** This line cannot count the commit that writes it, so
+a tip hash here is stale the moment it is committed; that is why one is no longer quoted.
+🔑 **The same applies to the "everything is pushed" claim** — a header that says so is, by
+construction, describing the state _before_ the commit carrying it. **Run `git status -sb`.**
 · **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
 PR #7)
 
@@ -129,10 +131,11 @@ PR #7)
 > 1. **Re-tag those two YouTube videos** (above). Time-sensitive: any 동기화 undoes the rename
 >    for 조로's 영상첩. _(The push that used to head this list is **done** — 2026-08-05.)_
 > 2. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
->    colour, 작성 CTAs) and 냥이들' grid header. 🔑 **The only unverified part of the colour
->    work**: `/admin/*` is behind `AdminAuth` and the session that did it had no credentials, so
->    those screens are proven by compiled-CSS equality, not by looking. Everything is
->    pixel-identical by construction, so this is a confirmation, not a hunt.
+>    colour, 작성 CTAs), 냥이들' grid header, and 🆕 **앱 관리's YouTube 토큰 관리 panel** (the
+>    status chip's text + border colour, Phase 4). 🔑 **The only unverified part of the colour
+>    work**: `/admin/*` is behind `AdminAuth` and neither session had credentials, so those
+>    screens are proven by compiled-CSS equality, not by looking. Everything is pixel-identical
+>    by construction, so this is a confirmation, not a hunt.
 > 3. **Finish the SMTP change** and verify the From header.
 > 4. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
 >    promotion. 🆕 Fold in the one thing the harness cannot test: **upload a video to a
@@ -151,15 +154,44 @@ PR #7)
 >    (green→red ⇒ blue→red, deeper endpoints) — the one visible change in the colour work, and
 >    the one an operator will notice.
 >
-> 🎨 **Picked up next session — colour plan Phases 4 and 5** (§6 of
+> ### 🎨 2026-08-06 — colour plan **Phase 4 is done**; only Phase 5 is left
+>
+> Three hygiene edits, no user-visible change, nothing to deploy out-of-band (app code + docs).
+> **`YouTubeAuthPanelNew`**'s four raw status hexes became Tailwind utility pairs
+> (`text-emerald-500` + `border-emerald-500/20`, …) applied as classes rather than two inline
+> `style` props — and the `/20` is **exact, not a rounding**: the old suffix was `${hex}33`, and
+> `0x33 = 51/255 = 0.2`. **`Compass`** took `fill-red-500` / `fill-gray-100`.
+> ⚠️ **`LeafletMountainMap:302` keeps its `#6b7280` deliberately** — Leaflet writes the polyline
+> colour into the SVG **`stroke` presentation attribute**, which accepts neither a Tailwind class
+> nor `var(--…)`; it now carries a comment saying so, the same treatment `CatGrid:561` has. **Do
+> not "finish" this one** — a class there is not reachable, and it is a neutral anyway.
+>
+> 🔑 **4.3 was the point of the phase, and it is done: `design.md` §Colors now carries the
+> global-palette decision.** A mountain may not differ in colour; **M8 is withdrawn, not
+> deferred**; `--color-primary` is a build-time escape hatch, not a second definition. The
+> decision had been recorded in `AGENTS.md`, PROJECT_PLAN and the plan — i.e. everywhere except
+> the one document someone reads before proposing per-tenant theming again.
+>
+> ⚠️ **These four status hues stayed status hues on purpose.** Tokenizing them to `brand` was the
+> single way this edit could have shipped a regression — `design.md` keeps warning/error/success
+> _"distinct from `brand`"_, so the rename would make a caution notice adopt the brand hue.
+> 📌 The map is **module-scope with full literal class strings**: a computed `text-${hue}-500` is
+> invisible to Tailwind's scanner and gets purged, so that mistake shows up as an **unstyled
+> panel**, not a wrong colour.
+>
+> ✅ **Gates:** `tsc` 0 · smoke **39** · unit **196** · **full e2e 233 / 13 skipped / 0 failed**
+> — identical to Phase 3's run, which is the expected result for a phase that changes no
+> behaviour. **Verified in the browser** (public map): the compass renders `rgb(239,68,68)` /
+> `rgb(243,244,246)` — the values the hexes carried — and all four `text-*` **plus** all four
+> `border-*/20` rules were confirmed present in the compiled stylesheet at the previously
+> deployed values. ⚠️ **`/admin` is still unseen** (auth-gated, no credentials again), so the
+> YouTube panel joins the Phase 2 screens in to-do #2 below.
+>
+> 🎨 **Left for a fresh session — Phase 5 only** (§6 of
 > [the plan](../planning/pending/color-token-centralization-plan-20260805.md); **not** its §4/§5,
-> which are analysis and are done). Phase 4 is three small hygiene edits —
-> `YouTubeAuthPanelNew:114-127`'s raw status hexes, `LeafletMountainMap:302` + `Compass:33,35`,
-> and recording in `design.md` §Colors that the palette is global. ⚠️ **4.3 is the one that
-> matters:** the "no per-tenant colour" decision currently lives in `AGENTS.md`, PROJECT_PLAN
-> and the plan — **but not in the design reference**, which is where a designer would look
-> before proposing per-tenant theming again. Phase 5 is the audit **D5** opened and is
-> deliberately **unsized**.
+> which are analysis and are done). It is the audit **D5** opened — admin screens against the
+> **non-colour** halves of `design.md` (typography, spacing, elevation, shapes, the modal spec),
+> never checked against any of it — and it is deliberately **unsized**.
 >
 > 📌 **The tree is clean** apart from two untracked code-graph files — **different workstream,
 > do not commit them.** _(The owner's `theme.secondaryColor`/`accentColor` edits noted here
@@ -646,7 +678,7 @@ the testing hand-off
 ## Current state (TL;DR)
 
 - **🎨 Colour now has ONE source of truth, and per-tenant theming is gone (2026-08-05,
-  uncommitted).** Asked to centralize colour "in one config file", the answer was that the repo
+  committed; Phase 4 followed 2026-08-06).** Asked to centralize colour "in one config file", the answer was that the repo
   **already designates one** — `design.md:9` names `tailwind.config.js` and `:292` explicitly
   forbids a `tokens.json`. So nothing was created; the existing file was **adopted**. Three
   phases, all done, all gated: **P1** deleted `mountains.json`'s `theme` block, `MountainTheme`
@@ -660,9 +692,14 @@ the testing hand-off
   or **Kakao vendor**. ⚠️ A blanket migration would have shipped warning notices in the brand
   hue and a non-Kakao-yellow Kakao button. Plan + full reasoning:
   [`color-token-centralization-plan-20260805.md`](../planning/pending/color-token-centralization-plan-20260805.md).
-  ⚠️ **Not verified in a browser: the `/admin/*` screens** — auth-gated, no credentials this
-  session. Someone with admin access should glance at 게시물 / 집사들 / 앱 관리 and 냥이들' grid
-  header. Phases 4–5 (hygiene; the admin-vs-`design.md` audit D5 opened) are **not started**.
+  **P4 (2026-08-06)** cleared the last raw hexes from `YouTubeAuthPanelNew` and `Compass` —
+  `LeafletMountainMap:302` keeps its by decision, since Leaflet writes an SVG **presentation
+  attribute** that takes neither a class nor `var()` — and put the **global-palette decision
+  into `design.md` §Colors**, the one place it was missing.
+  ⚠️ **Not verified in a browser: the `/admin/*` screens** — auth-gated, no credentials in
+  either session. Someone with admin access should glance at 게시물 / 집사들 / 앱 관리, 냥이들'
+  grid header, and 앱 관리's YouTube 토큰 관리 status chip. **Only Phase 5 is left** — the
+  unsized admin-vs-`design.md` audit D5 opened.
 - **✅ 급식현황 publishing confirms the 급식소 it will stamp (2026-08-05, `c515058`).** 작성 완료
   opens a 확인 listing every ticked 급식소 by name plus the 방문 시간; 취소 publishes nothing.
   🔑 **The write is unrecoverable and asymmetric with the rest of the composer:** a 급식소 keeps
@@ -2089,7 +2126,19 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-05 (latest)** — **Three owner-asked fixes, and a rename that was a cascade
+- **2026-08-06 (latest)** — **Colour plan Phase 4 (§10u U6) — the last raw hexes, and the
+  decision finally lands in the design reference.** `YouTubeAuthPanelNew`'s four status hexes
+  became Tailwind utility pairs (`text-emerald-500` + `border-emerald-500/20`; the `/20` is
+  exact — `0x33 = 51/255`), `Compass` took `fill-red-500` / `fill-gray-100`, and
+  `LeafletMountainMap:302` **keeps** its `#6b7280` with a comment saying why (Leaflet writes an
+  SVG **presentation attribute**, which takes neither a class nor `var()`). 🔑 The phase's real
+  deliverable was 4.3: `design.md` §Colors now states the palette is **global** and that **M8 is
+  withdrawn, not deferred** — previously recorded everywhere except the document a designer
+  reads first. ⚠️ Status hues stayed status hues by design; tokenizing them to `brand` was the
+  one available regression. Gates: `tsc` 0 · smoke 39 · unit 196 · **e2e 233/13/0** (unchanged).
+  Browser pass on the public map; `/admin` still unseen. **Only Phase 5 remains.**
+
+- **2026-08-05** — **Three owner-asked fixes, and a rename that was a cascade
   (§10r/§10s/§10t).** 급식현황 publishing now **confirms**, naming the 급식소 it will stamp — the
   one write in that composer with no correction path. `scripts/migration/rename-cat.js` carries
   a cat's name across the **four** places that store it as a string (media tags, `[catmodal:]`
