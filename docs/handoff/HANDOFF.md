@@ -210,23 +210,31 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 >
 > **Do these next, in this order:**
 >
-> _(Two items left this list on 2026-08-06: the **YouTube re-tags** — the owner fixed the tags
-> on YouTube directly, so the 조로 rename now survives a 동기화 — and the **SMTP change**, whose
-> From header the owner verified live. The push that used to head the list went on 2026-08-05.)_
+> _(Items that left this list: **2026-08-06** — the **YouTube re-tags** (the owner fixed the tags
+> on YouTube directly, so the 조로 rename now survives a 동기화) and the **SMTP change** (From
+> header verified live). **2026-08-07** — the **P5.4 manual YouTube pass**, done and verified
+> working by the owner; it had been the standing gate on the promotion since 2026-07-26. The push
+> that used to head the list went on 2026-08-05.)_
+>
+> ### 🚀 The promotion is OPEN — `dev` is pushed and **PR #9** is up
+>
+> <https://github.com/wwolfyy/mohocats/pull/9> — `dev` → `main`, **104** commits, 295 files,
+> since PR #8 (2026-07-23). Every gate is clear: `tsc` 0 · smoke 39 · unit 196 · e2e 233/13/0 ·
+> rules 54 · **P5.4 passed**. ⚠️ **Read the PR's deploy notes before merging** — the
+> behaviour-change list below is reproduced there, and **rules + permissions do NOT ship with the
+> merge** (they are already live in production, so the member features become reachable the
+> moment the code lands).
 >
 > 1. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
 >    colour, 작성 CTAs), 냥이들' grid header, and 🆕 **앱 관리's YouTube 토큰 관리 panel** (the
 >    status chip's text + border colour, Phase 4). 🔑 **The only unverified part of the colour
 >    work**: `/admin/*` is behind `AdminAuth` and neither session had credentials, so those
 >    screens are proven by compiled-CSS equality, not by looking. Everything is pixel-identical
->    by construction, so this is a confirmation, not a hunt.
-> 2. **Re-run the P5.4 manual YouTube pass** — still the only gate on the `dev → main`
->    promotion. 🆕 Fold in the one thing the harness cannot test: **upload a video to a
->    공지사항 with 설명 left blank** and confirm YouTube shows no description. The upload leg
->    has **no** automated cover (`generate-signed-url` needs a service-account key the harness
->    lacks; YouTube upload is manual-parity).
-> 3. **The Preview verifications that piled up** — see the earlier session boxes below.
-> 4. **Then the promotion.** ⚠️ **Count it yourself**
+>    by construction, so this is a confirmation, not a hunt. 📌 **Not a merge blocker.**
+> 2. **The Preview verifications that piled up** — see the earlier session boxes below.
+>    📌 **Not a merge blocker either**, but they are the cheapest to do while Preview still runs
+>    the same code.
+> 3. **Merge PR #9.** ⚠️ **Count it yourself**
 >    (`git rev-list --count origin/main..dev`) and measure against **`origin/main`**, not the
 >    local `main` ref — that one is stranded at `26b1879` (2026-03-16).
 >    🆕 **Add to the "changes behaviour on deploy" list:** 급식현황 now asks for confirmation
@@ -738,8 +746,9 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 > it holds the YouTube OAuth token), and that tab was per-browser, so neither was the model it
 > looked like.
 >
-> ⏸️ **Do NOT start the path-based tenancy migration (T0–T7).** Still gated behind the P5.4 pass
-> and the promotion. Decision + plan:
+> ⏸️ **Do NOT start the path-based tenancy migration (T0–T7) until PR #9 is merged.** 🆕 **Its
+> first gate is now clear** — P5.4 passed 2026-08-07 — so **the promotion is the only thing left
+> in front of it.** Decision + plan:
 > [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md).
 >
 > **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
@@ -2247,7 +2256,16 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-06 (latest, end of session)** — **Two owner-side workstreams closed out.** The
+- **2026-08-07 (latest)** — **The promotion gate is clear and PR #9 is open.** The owner ran the
+  **P5.4 manual YouTube pass** and verified it works — that had been the standing gate on
+  `dev → main` since 2026-07-26, and it is the only cover the upload leg has (no automated
+  equivalent exists: `generate-signed-url` needs a service-account key the harness lacks).
+  `dev` pushed; [PR #9](https://github.com/wwolfyy/mohocats/pull/9) opened — 104 commits, 295
+  files. ⚠️ Its body carries the deploy notes: **rules + permissions do not ship with the merge**
+  (already live) and the full behaviour-change list. The remaining to-dos (admin colour glance,
+  Preview verifications) are **not** merge blockers.
+
+- **2026-08-06 (end of session)** — **Two owner-side workstreams closed out.** The
   **SMTP address change is DONE and verified live** — the owner confirmed the From header on a
   real 동참 submission from the deployed app, so Gmail is not rewriting it. The **조로 rename is
   complete** — the owner re-tagged the two videos on YouTube directly, which is the only place

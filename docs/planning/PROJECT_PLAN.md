@@ -406,14 +406,19 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
     shared `CatSelectorModal` (commit-on-done — the one accepted intentional behavior change).
   - **P6 follow-up**: all `alert()/confirm()` (editors + the four public forms) converted to
     the shared `ui/Modal` system via the new `useDialog` primitive.
-  - ⚠️ Owner-owed before the next `dev → main` promotion: the scripted **manual pass over the
-    YouTube surfaces** (P5.4 — sync, playlists, real creds). 🐛 **Started 2026-07-26 on Preview
-    and became a bug hunt: six pre-existing defects found and fixed** (credential source, OAuth
-    scopes, channel-ID env var, `자동 날짜 인식` writing Firestore, batch playlist save ignoring
-    the selection, and the sync resetting 게시일). All ✅ fixed and pushed; **the pass must
-    restart from the top**, since the credential source, the scopes and three write paths all
-    changed under it. **Not one of the six was reachable by an automated test** — the emulator
-    has no YouTube credentials, which is precisely the case for keeping P5.4 as a manual gate.
+  - ✅ **P5.4 — the scripted manual pass over the YouTube surfaces (sync, playlists, real creds)
+    is DONE and verified working (owner, 2026-08-07).** This was the standing gate on the
+    `dev → main` promotion; with it clear, **[PR #9](https://github.com/wwolfyy/mohocats/pull/9)
+    is open** and the promotion is unblocked.
+    🐛 **It earned its keep twice over.** The first attempt (2026-07-26, on Preview) became a bug
+    hunt: **six pre-existing defects** — credential source, OAuth scopes, channel-ID env var,
+    `자동 날짜 인식` writing Firestore, batch playlist save ignoring the selection, and the sync
+    resetting 게시일. All were fixed and pushed, which forced the pass to **restart from the
+    top**, since the credential source, the scopes and three write paths had all changed under
+    it. That restart is the run that has now passed.
+    🔑 **Not one of the six was reachable by an automated test** — the emulator has no YouTube
+    credentials. ⚠️ **So keep P5.4 as a manual gate on every future promotion**; the case for it
+    is stronger after this, not weaker.
 - [x] ✅ **YouTube credential source unified — the admin "re-authorize" button now fixes
       everything (found + FIXED 2026-07-26).** `/api/admin/youtube-auth/callback` writes the fresh
       refresh token to **Firestore** (`admin_config/youtube_auth`), but every route read it from
