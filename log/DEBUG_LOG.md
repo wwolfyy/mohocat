@@ -11,6 +11,55 @@
 
 ---
 
+## 2026-08-07 — CI's e2e job was red on a test defect, and the retries were doomed by design
+
+**Symptom:** CI run 31017908440 (`9a552cf`, 2026-08-05) failed the **`e2e`** job — the one status
+check `main`'s branch protection requires, so it blocked the promotion PR.
+`post-edit-composer.spec.ts` → _"existing media is listed and survives a text-only save"_ failed
+**three times** (attempt + 2 retries). The same test passed locally on every run.
+
+**Root cause — one flake, two artifacts, and they had different errors.**
+
+_Attempt 1_ timed out waiting for the URL to become `/admin/posts` after a save. But the save had
+**already committed**: `useSimpleContentForm.ts:313-317` awaits `updatePost`, _then_ alerts, _then_
+`router.push`. So the fixture was mutated by an attempt that reported failure. 🔑 The wait itself
+was the flaw — the App Router updates the URL only once the transition **commits** (it must fetch
+the destination's payload), so on a loaded runner **a slow navigation is indistinguishable from a
+failed one** when you poll `page.url()`.
+
+_Retries 1–2_ then failed on something else entirely: the spec asserted the **seeded** body, which
+attempt 1 had overwritten. `retries: CI ? 2 : 0` and the seed runs **once per job**, so both
+retries were guaranteed to fail before they started.
+
+⚠️ **The failure mode cannot occur locally at all** — `retries: 0` on a dev machine. That is why
+three red attempts in CI coexisted with a clean local suite, and why "it passes here" proved
+nothing.
+
+**Fix.** `confirmSave` now waits on the destination's own `게시물 관리` heading instead of polling
+the pathname. Every spec that overwrites its fixture writes a **unique** value and asserts that,
+never the seeded one (`not.toHaveValue('')` where all it needs is "the form loaded"). Two more
+specs carried the same latent defect and were fixed with it. The photo-removal spec **cannot** be
+made idempotent — detaching is one-way — so it performs the removal only when there is something
+to remove and asserts the end-state invariant either way; 📌 recorded honestly in the file: on a
+retry that verifies the outcome rather than re-exercising the removal.
+
+🔴 **A second, independent defect surfaced during verification, and it was never about retries.**
+`test-butler-edit-01` is shared by **two specs in the same file** — the cap spec _reads_ its body,
+the text-only-save spec _rewrites_ it — and `fullyParallel` leaves their order arbitrary, so a
+plain CI run could hit it on unlucky scheduling. 🔑 **The file's "each spec owns its fixture" rule
+was necessary but not sufficient:** it was written about collisions _across_ files and silently
+did not hold _within_ one.
+
+**Verified.** Seed once, run the file twice: `--repeat-each=2 --workers=1` → **14 passed**. Then
+the full suite. ⚠️ **`--workers=1` is required**: without it the two repeats run **concurrently**
+against one document and collide, which a real (sequential) retry never does — the first attempt
+at this proof failed that way and the failure was manufactured by the check, not by the code.
+
+📌 **Generalises: verify a retry defect by re-running against the mutated state, not by re-running
+the suite.** A green suite cannot see this class of bug, because the bug only exists on attempt 2.
+
+---
+
 ## 2026-08-06 — The e2e suite was sending real email to the production admin, two per run
 
 **Symptom:** two new specs asserting the "notification did not send" copy failed, and the

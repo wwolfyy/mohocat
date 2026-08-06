@@ -23,16 +23,60 @@
  * `test-butler-edit-01` exist for this file alone. Editing a fixture another spec
  * reads is precisely how the 2026-08-02 "flake set" was built (DEBUG_LOG) — do not
  * repoint these at the shared posts.
+ *
+ * ⚠️⚠️ **…and each spec must also own its fixture across RETRIES OF ITSELF.**
+ * `playwright.config.ts` sets `retries: CI ? 2 : 0`, and the seed runs **once per
+ * job**, not per test — so a retry re-runs against the post the failed attempt
+ * already wrote. 🔑 **Never assert the value a fixture was SEEDED with in a spec
+ * that overwrites it**; write a unique value and assert *that*. Assert
+ * `not.toHaveValue('')` if all you need is "the form loaded".
+ *
+ * 📌 **This is not hypothetical, and it is invisible locally.** With `retries: 0`
+ * on a dev machine the failure mode cannot occur at all. On CI run 31017908440
+ * (2026-08-05) one slow post-save navigation failed attempt 1 — after its write had
+ * already committed — and both retries then failed on the seeded value they could
+ * no longer find. Three red attempts, one real cause. A destructive step that
+ * cannot be made idempotent must instead be guarded (see the photo-removal spec).
+ *
+ * ⚠️⚠️ **`test-butler-edit-01` is shared by TWO specs in this file, and
+ * `fullyParallel` leaves their order arbitrary.** The cap spec reads its body while
+ * the text-only-save spec rewrites it — so the reader asserts only that the field is
+ * prefilled, never *what* it holds. 🔑 **The per-file fixture rule above is
+ * necessary but not sufficient**: two specs sharing one fixture inside this file
+ * reproduce the same defect a spec-vs-spec collision does. Found 2026-08-07 by
+ * seeding once and running the file twice, which is the check worth repeating after
+ * touching anything here:
+ *   `npx playwright test tests/e2e/admin/post-edit-composer.spec.ts \
+ *      --project=admin --repeat-each=2 --workers=1`
+ * ⚠️ **`--workers=1` matters**: without it the two repeats run *concurrently* against
+ * one document and collide, which a real (sequential) retry never does.
  */
 import { test, expect } from '../setup/test';
 import type { Page } from '@playwright/test';
 
 const alertDialog = (page: Page) => page.getByRole('dialog', { name: '알림' });
 
+/**
+ * Dismiss the success 알림 and wait for the composer to hand back to the list.
+ *
+ * 🔑 **Waits on the destination's own content, not on `page.url()`.** The App
+ * Router updates the URL only once the transition to `/admin/posts` has committed,
+ * which means fetching that route's payload — so on a loaded runner a *slow* nav is
+ * indistinguishable from a *failed* one when you poll the pathname. That is exactly
+ * how CI run 31017908440 failed on 2026-08-05 (20s poll exceeded) while the same
+ * test passed locally.
+ *
+ * 📌 **The save is already committed before this is called** —
+ * `useSimpleContentForm` awaits `updatePost` *then* alerts *then* pushes, so a
+ * failure here means the navigation was slow, never that the write was lost. Which
+ * is why every test in this file must be retry-safe; see the header.
+ */
 const confirmSave = async (page: Page) => {
   await expect(alertDialog(page)).toBeVisible({ timeout: 20_000 });
   await alertDialog(page).getByRole('button', { name: '확인' }).click();
-  await expect.poll(() => new URL(page.url()).pathname, { timeout: 20_000 }).toBe('/admin/posts');
+  await expect(page.getByRole('heading', { name: '게시물 관리' })).toBeVisible({
+    timeout: 30_000,
+  });
 };
 
 test.describe('post editing uses the create composer', () => {
@@ -67,47 +111,73 @@ test.describe('post editing uses the create composer', () => {
     // test-adopt-edit-01 carries two photos and one video.
     await page.goto('/admin/posts/edit/adoption_promotion/test-adopt-edit-01');
 
+    // ⚠️ A unique value, and NO assertion on the value it starts at — this test
+    // writes to its fixture, so a retry re-runs against the post it already
+    // edited. Asserting the seeded body made attempt 1's flake unrecoverable:
+    // the write commits before the navigation this test used to fail on, so
+    // both retries then asserted a value that no longer existed. (CI run
+    // 31017908440, 2026-08-05 — one slow nav, two doomed retries.)
+    const edited = `입양홍보 본문만 고쳤어요 ${Date.now() % 100000}`;
     const message = page.getByPlaceholder('입양홍보 내용을 입력하세요');
-    await expect(message).toHaveValue('편집 스펙 전용 입양홍보 본문이에요.', { timeout: 15_000 });
+    // Settle on the loaded form before touching it: a non-empty body means the
+    // post has been fetched and prefilled, whatever a previous run left in it.
+    await expect(message).not.toHaveValue('', { timeout: 15_000 });
 
     // Two photos and one video, each shown as a 기존 row with its own 삭제.
+    // 🔑 The media count is the actual subject of this test and is retry-safe on
+    // purpose: a text-only save must never change it, so it reads 3 on every run.
     await expect(page.getByText('기존')).toHaveCount(3);
     await expect(page.getByText('album-01.jpg')).toBeVisible();
     await expect(page.getByText('album-02.jpg')).toBeVisible();
 
-    await message.fill('본문만 고쳤어요.');
+    await message.fill(edited);
     await page.getByRole('button', { name: '입양홍보 저장' }).click();
     await confirmSave(page);
 
     // Reopen: the edit must not have dropped the media it never touched.
     await page.goto('/admin/posts/edit/adoption_promotion/test-adopt-edit-01');
-    await expect(page.getByPlaceholder('입양홍보 내용을 입력하세요')).toHaveValue(
-      '본문만 고쳤어요.',
-      { timeout: 15_000 }
-    );
+    await expect(page.getByPlaceholder('입양홍보 내용을 입력하세요')).toHaveValue(edited, {
+      timeout: 15_000,
+    });
     await expect(page.getByText('기존')).toHaveCount(3);
   });
 
+  /**
+   * ⚠️ **The one destructive test here, and the only one that cannot be made
+   * idempotent by writing a unique value.** Detaching a photo is one-way, and the
+   * seed runs once per job — so on a Playwright retry the photo is already gone.
+   *
+   * It therefore performs the removal **only when there is something to remove**,
+   * and asserts the end state either way. 📌 **Honest about the trade-off:** on a
+   * retry this verifies the *outcome* rather than re-exercising the removal, so a
+   * retry-green is weaker evidence than a first-attempt-green. That is still far
+   * better than the alternative it replaces — a guaranteed failure that masks
+   * whatever made attempt 1 fail.
+   */
   test('removing one photo detaches only that photo', async ({ page }) => {
     await page.goto('/admin/posts/edit/announcements/test-anno-edit-01');
-    await expect(page.getByPlaceholder('공지사항 제목을 입력하세요')).toHaveValue(
-      '수정 전용 공지',
-      {
-        timeout: 15_000,
-      }
-    );
+    // Not the seeded title — only that the post loaded and prefilled.
+    await expect(page.getByPlaceholder('공지사항 제목을 입력하세요')).not.toHaveValue('', {
+      timeout: 15_000,
+    });
 
-    await expect(page.getByText('기존')).toHaveCount(2);
-    await page
-      .locator('li', { has: page.getByText('album-01.jpg') })
-      .getByRole('button', { name: '삭제' })
-      .click();
-    await expect(page.getByText('기존')).toHaveCount(1);
+    const existingRows = page.getByText('기존');
+    await expect(existingRows).not.toHaveCount(0, { timeout: 15_000 });
 
-    await page.getByRole('button', { name: '공지사항 저장' }).click();
-    await confirmSave(page);
+    if ((await existingRows.count()) === 2) {
+      await page
+        .locator('li', { has: page.getByText('album-01.jpg') })
+        .getByRole('button', { name: '삭제' })
+        .click();
+      await expect(existingRows).toHaveCount(1);
 
-    await page.goto('/admin/posts/edit/announcements/test-anno-edit-01');
+      await page.getByRole('button', { name: '공지사항 저장' }).click();
+      await confirmSave(page);
+
+      await page.goto('/admin/posts/edit/announcements/test-anno-edit-01');
+    }
+
+    // The invariant, asserted on every run: exactly the removed photo is gone.
     await expect(page.getByText('기존')).toHaveCount(1, { timeout: 15_000 });
     await expect(page.getByText('album-02.jpg')).toBeVisible();
     await expect(page.getByText('album-01.jpg')).toHaveCount(0);
@@ -124,8 +194,13 @@ test.describe('post editing uses the create composer', () => {
   }) => {
     await page.goto('/admin/posts/edit/butler_talk/test-butler-edit-01');
 
+    // 제목 is safe to assert: nothing overwrites it. ⚠️ **내용 is NOT** — the
+    // '집사톡 text-only save' spec below rewrites this same fixture's body, and
+    // `fullyParallel` leaves the order between them arbitrary. Asserting the seeded
+    // body here reads another spec's write as a failure. Prefill is all this test
+    // needs from that field; its subject is the media cap.
     await expect(page.getByLabel('제목')).toHaveValue('수정 전용 집사톡', { timeout: 15_000 });
-    await expect(page.getByLabel('내용')).toHaveValue('편집 스펙 전용 집사톡 본문이에요.');
+    await expect(page.getByLabel('내용')).not.toHaveValue('');
     await expect(page.getByRole('button', { name: '글 저장' })).toBeVisible();
 
     // The old editor's URL boxes must be gone.
@@ -182,14 +257,18 @@ test.describe('post editing uses the create composer', () => {
 
     await page.goto('/admin/posts/edit/adoption_promotion/test-adopt-edit-02');
     const title = page.getByPlaceholder('입양홍보 제목을 입력하세요');
-    await expect(title).toHaveValue('작성자 보존 확인용', { timeout: 15_000 });
-    await title.fill('작성자 보존 확인용 (수정됨)');
+    // ⚠️ Unique, and no assertion on the starting title — a retry re-runs against
+    // the post this test already renamed. `cardFor` matches on substring, so the
+    // pre-edit lookup above finds the card whatever suffix a previous run left.
+    const editedTitle = `작성자 보존 확인용 (수정됨 ${Date.now() % 100000})`;
+    await expect(title).not.toHaveValue('', { timeout: 15_000 });
+    await title.fill(editedTitle);
 
     await page.getByRole('button', { name: '입양홍보 저장' }).click();
     await confirmSave(page);
 
     await page.getByRole('button', { name: '입양홍보' }).click();
-    const after = cardFor('작성자 보존 확인용 (수정됨)');
+    const after = cardFor(editedTitle);
     await expect(after).toBeVisible({ timeout: 15_000 });
     await expect(after.getByText('관리자')).toBeVisible();
     await expect(after.locator('p').last()).toHaveText(originalDate);
