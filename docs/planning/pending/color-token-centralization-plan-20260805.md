@@ -1,8 +1,14 @@
 # Color token centralization — plan — 20260805
 
-> **Status:** 🟢 **Phases 1–3 DONE (2026-08-05); Phases 4–5 not started.** All five open
-> questions were answered by the owner the same day (§2). What remains is hygiene (§6 Phase 4)
-> and the unscoped audit **D5** opened (§6 Phase 5).
+> **Status:** 🟢 **Phases 1–4 DONE (P1–P3 2026-08-05, P4 2026-08-06); only Phase 5 remains.**
+> All five open questions were answered by the owner on 2026-08-05 (§2). ✅ **Shipped to
+> production in PR #9** (`f570bcc`, 2026-08-07) — 급식현황's blue→red freshness scale is the one
+> user-visible change and is now live. What remains is the unscoped audit **D5** opened
+> (§6 Phase 5): admin screens against the **non-colour** halves of `design.md`.
+>
+> ⚠️ **One verification is still outstanding and is not a Phase:** the `/admin/*` screens were
+> never seen rendered (auth-gated, no credentials in either session), so they are proven by
+> compiled-CSS equality only. Now checkable in **production**, not just Preview.
 >
 > **Origin.** The owner asked to control colors "in one central place by a config file,"
 > suggesting a new design-token file, and raised that per-mountain color freedom would be an

@@ -108,6 +108,40 @@ a rule, a permission, and two functions that can never succeed — is not.
 
 ---
 
+## B4 — `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken
+
+**Found:** 2026-08-06, while linting a new maintenance script.
+
+**The gap.** Running ESLint directly on a path fails before it reads any code:
+
+```
+ESLint couldn't find the config "next/typescript" to extend from.
+```
+
+📌 **It is not about the new file.** The same command fails identically on files untouched for
+weeks (verified against `scripts/maintenance/set-storage-cors.js`), so this is the shared
+config, not any one target.
+
+**Why it is deferred rather than urgent — the paths that gate merges all work.**
+`npm run lint` (`next lint`) resolves the config correctly, and so does the **pre-commit hook**,
+which invokes `next lint --fix --file <path>` rather than bare `eslint`. So every commit and
+every CI run is still linted; nothing ships unchecked. What is broken is the **ad-hoc** form a
+person or agent reaches for when checking one file in isolation.
+
+🔑 **The risk is a false negative, not a false positive.** The failure is loud when you run it
+yourself — but an agent that treats a non-zero exit as "lint unavailable" and moves on has
+silently skipped a gate it believed it ran. That is the reason to record it rather than leave
+it as folklore.
+
+**Likely cause to check first:** `next lint` injects Next's own resolution for the `next/*`
+shareable configs; a bare `eslint` invocation does not, which usually means the plugin package
+providing `next/typescript` is not resolvable from the config's location — an ESLint 8 flat-vs-
+legacy config resolution difference, not a missing dependency. **Check before assuming:** the
+repo is on ESLint 8.57.1, so an unconsidered bump to flat config would be a larger change than
+this warrants.
+
+---
+
 ## ~~B3 — `/api/revalidate` never refreshes 냥이들, so cat edits take up to an hour there~~ ✅ DONE 2026-08-05
 
 **Resolved the day it was filed**, before it was ever committed as deferred work. `/pages/cats`

@@ -1,8 +1,18 @@
 # Subdomain → path-based tenancy — execution plan — 20260728
 
-> **Status:** 🟢 **DECIDED, not started.** The owner chose **path-based** on 2026-07-28 and
-> answered the one question that could have reversed it (§4.2 of the decision doc): a second
-> mountain's owner does **not** need their own hostname.
+> **Status:** ▶️ **DECIDED and UNBLOCKED (2026-08-07) — still not started.** The owner chose
+> **path-based** on 2026-07-28 and answered the one question that could have reversed it (§4.2 of
+> the decision doc): a second mountain's owner does **not** need their own hostname.
+>
+> 🆕 **Both gates that held this are now clear** — the P5.4 manual YouTube pass passed
+> 2026-08-07, and the `dev → main` promotion landed the same day (PR #9, `f570bcc`). Nothing
+> sequenced ahead of it remains, so this is the next large workstream whenever it is picked up.
+>
+> ⚠️ **Start at T2, and read why before scheduling anything else.** Every `/api/*` route resolves
+> the tenant from the **Host header**, so path-based tenancy resolves every API call to geyang —
+> including `requireApiPermission`. That is an **authorization inversion** (a geyang-only admin
+> allowed on manisan; a manisan-only admin denied on their own mountain), not a cosmetic routing
+> bug, and it is why T2 is sequenced first rather than with the other plumbing.
 >
 > **Decision record:** [`tenancy-url-model-decision-20260728.md`](./tenancy-url-model-decision-20260728.md)
 > — the _why_. This doc is the _how_, and follows the phase shape its §7 sketched.
