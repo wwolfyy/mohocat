@@ -59,6 +59,37 @@ jobs:
       - name: Run Firestore rules tests (emulator)
         run: npm run test:rules
 
+  # Emulator-backed tests for the migration scripts under scripts/migration/.
+  # Same shape and cost as the rules job (Firestore emulator + JVM, no browser,
+  # no secrets) and excluded from `npm test` for the same reason.
+  #
+  # 🔑 Hermetic without a service-account key: rename-cat.js takes a
+  # credential-less path when FIRESTORE_EMULATOR_HOST is set, and refuses to run
+  # unless the project is demo-*. That guard is itself one of the assertions here
+  # — it is what keeps a CI secret from ever being the price of this coverage.
+  scripts:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # Firebase emulators are JVM processes.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Cache Firebase emulators
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}
+      - name: Run migration-script tests (emulator)
+        run: npm run test:scripts
+
   # Emulator-backed Playwright e2e. Hermetic: a demo-* Firebase project with fake
   # keys means NO GitHub secrets are required. Also covers the two-tenant isolation
   # specs (tests/e2e/**/tenant-isolation.spec.ts) — no extra wiring needed.

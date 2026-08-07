@@ -22,7 +22,11 @@
         "view-video",
         "view-photo",
         "view-post-butler",
-        "view-post-feeding"
+        "view-post-feeding",
+        "write-own-post-butler",
+        "write-own-post-feeding",
+        "upload-own-photo",
+        "upload-own-video"
       ],
       "description": "Physical cat care management"
     },
@@ -30,7 +34,10 @@
       "permissions": [
         "view-video",
         "view-photo",
-        "view-post-butler"
+        "view-post-butler",
+        "write-own-post-butler",
+        "upload-own-photo",
+        "upload-own-video"
       ],
       "description": "Digital content management"
     },

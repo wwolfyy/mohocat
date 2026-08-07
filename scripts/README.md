@@ -23,12 +23,11 @@ This directory contains utility scripts for various project operations, organize
   - `_fetch_static_assets.py` - Python version of asset fetcher
   - `firebase_ops.js` - General Firebase operations
 
-- **`auth/`** - Authentication and authorization scripts
-  - `exchange_code.js` - OAuth code exchange
-  - `generate_refresh_token.js` - Generates refresh tokens
-  - `generate_youtube_refresh_token.js` - YouTube-specific refresh token generation
-  - `get_auth_url.js` - Generates authentication URLs
-  - `simple_auth.js` - Simple authentication utility
+- **`auth/`** - _Removed 2026-07-26._ These were the manual YouTube OAuth workflow
+  (generate a refresh token on the command line, paste it into `.env`, redeploy). The
+  admin panel's 「토큰 갱신」 button now runs the whole flow and stores the token in Firestore
+  (`admin_config/youtube_auth`) — there is no `YOUTUBE_REFRESH_TOKEN` env var any more.
+  See `src/lib/youtube/credentials.ts`.
 
 - **`deployment/`** - Deployment and build scripts (empty - for future use)
 

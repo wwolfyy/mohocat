@@ -1,8 +1,16 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeOAuthConfig } from '@/utils/config';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
 
+// Gated: writes video metadata to the shared YouTube channel via the operator's OAuth
+// credential — require 'manage-video', mirroring the cat_videos rule.
 export async function PUT(request: NextRequest) {
+  const authz = await requireApiPermission(request, 'manage-video');
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
+
   try {
     const { videoId, updates } = await request.json();
 
@@ -14,8 +22,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
 
-    // Get YouTube OAuth configuration from centralized config
-    const youtubeOAuth = getYouTubeOAuthConfig();
+    // Client identity from env + the freshest refresh token (Firestore first)
+    const youtubeOAuth = await getYouTubeOAuthCredentials();
     if (!youtubeOAuth) {
       return NextResponse.json(
         {

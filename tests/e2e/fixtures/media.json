@@ -1,11 +1,13 @@
 {
-  "_comment": "Album media. Per spike S3 (prerequisite plan §3), image/video URLs point at public/-served fixture files, NOT emulator Storage — so next/image needs no localhost remotePattern. Storage-served fixtures for these would only add flake. test-img-03/04 + test-vid-02 exist for the P0 editor characterization specs (admin/tag-images, admin/tag-videos): untagged, no createdTime, with date-pattern filenames/description so date auto-parse has real targets; their older uploadDate keeps album-01/02 first in the public albums (uploadDate-desc sort).",
+  "_comment": "Album media. Per spike S3 (prerequisite plan §3), image/video URLs point at public/-served fixture files, NOT emulator Storage — so next/image needs no localhost remotePattern. Storage-served fixtures for these would only add flake. test-img-03/04 + test-vid-02 exist for the P0 editor characterization specs (admin/tag-images, admin/tag-videos): untagged, no createdTime, with date-pattern filenames/description so date auto-parse has real targets; their older uploadDate keeps album-01/02 first in the public albums (uploadDate-desc sort). test-vid-03 carries youtubeStatus:'missing' (the label POST /api/admin/video-availability writes when a video is gone from YouTube): it must stay OUT of the public 영상첩 and appear in the CMS cleanup panel — see tests/e2e/public/video-availability.spec.ts. It is why /admin/tag-videos counts 3 videos while the public album shows 2.",
   "cat_images": [
     {
       "id": "test-img-01",
       "imageUrl": "/images/test-fixtures/album-01.jpg",
       "fileName": "album-01.jpg",
-      "tags": ["test-cat-01"],
+      "tags": [
+        "test-cat-01"
+      ],
       "uploadDate": "2026-01-02",
       "uploadedBy": "admin",
       "description": "픽스처 사진 1"
@@ -14,7 +16,9 @@
       "id": "test-img-02",
       "imageUrl": "/images/test-fixtures/album-02.jpg",
       "fileName": "album-02.jpg",
-      "tags": ["test-cat-03"],
+      "tags": [
+        "test-cat-03"
+      ],
       "uploadDate": "2026-01-03",
       "uploadedBy": "admin",
       "description": "픽스처 사진 2"
@@ -43,11 +47,14 @@
       "id": "test-vid-01",
       "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "videoType": "youtube",
-      "tags": ["test-cat-01"],
+      "tags": [
+        "test-cat-01"
+      ],
       "uploadDate": "2026-01-04",
       "uploadedBy": "admin",
       "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
-      "description": "픽스처 영상 1"
+      "description": "픽스처 영상 1",
+      "youtubeId": "yt-vid-01"
     },
     {
       "id": "test-vid-02",
@@ -58,7 +65,21 @@
       "uploadDate": "2025-12-03",
       "uploadedBy": "admin",
       "thumbnailUrl": "/images/test-fixtures/album-02.jpg",
-      "description": "픽스처 영상 둘 20240315"
+      "description": "픽스처 영상 둘 20240315",
+      "youtubeId": "yt-vid-02"
+    },
+    {
+      "id": "test-vid-03",
+      "videoUrl": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "videoType": "youtube",
+      "title": "삭제된 픽스처 영상 3",
+      "tags": [],
+      "uploadDate": "2025-12-04",
+      "uploadedBy": "admin",
+      "thumbnailUrl": "/images/test-fixtures/album-02.jpg",
+      "description": "YouTube에서 삭제된 영상 — 공개 영상첩에 보이면 안 돼요",
+      "youtubeId": "yt-vid-03",
+      "youtubeStatus": "missing"
     }
   ]
 }

@@ -561,6 +561,21 @@ export const adminStrings = {
       saveInModal: '✅ 모달에서 저장하기',
       cancel: '취소',
     },
+    // YouTube에서 사라진 영상 정리 — 동기화가 표시만 하고, 삭제는 사람이 결정해요.
+    availability: {
+      missingHeading: (n: number) => `YouTube에 없는 영상 ${n}개`,
+      missingExplain:
+        'YouTube에서 삭제된 것으로 확인했어요. 공개 영상첩에서는 이미 숨겼지만, 기록과 태그는 남아 있어요.',
+      privateNote: (n: number) =>
+        `비공개 영상 ${n}개도 공개 영상첩에서 숨겼어요. 다시 공개하면 저절로 돌아와요.`,
+      deleteRecords: '기록 삭제',
+      deleting: '삭제 중...',
+      deleteConfirm: (n: number) =>
+        `영상 ${n}개의 기록을 지울까요? 태그와 설명도 함께 사라지고 되돌릴 수 없어요. YouTube에는 이미 없는 영상이에요.`,
+      deleted: (n: number) => `기록 ${n}개를 지웠어요.`,
+      deleteFailed: (msg: string) => `기록을 지우지 못했어요: ${msg}`,
+      checkFailed: (msg: string) => `YouTube 확인에 실패했어요: ${msg}`,
+    },
     grid: {
       noMatch: '현재 필터 조건에 맞는 동영상이 없어요.',
       parsingDate: '📅 날짜 인식 중...',
@@ -675,7 +690,7 @@ export const adminStrings = {
       noVideosNeedParsing:
         '❌ 날짜 인식이 필요한 동영상이 없어요.\n\n모든 동영상에 이미 촬영일이 있거나, 설명/ID에 인식 가능한 날짜 패턴이 없어요.',
       autoParseConfirm: (n: number) =>
-        `🤖 자동 날짜 인식\n\n동영상 설명/ID에서 촬영일을 인식해 업데이트해요.\n\n인식 가능한 동영상 ${n}개를 찾았어요.\n\n⚠️ 데이터베이스가 변경되고 시간이 걸릴 수 있어요.\n\n계속할까요?`,
+        `🤖 자동 날짜 인식\n\n동영상 설명/ID에서 촬영일을 인식해 업데이트해요.\n\n인식 가능한 동영상 ${n}개를 찾았어요.\n\n⚠️ YouTube에 바로 반영돼요 (되돌릴 수 없어요). 동영상 수만큼 시간이 걸려요.\n\n계속할까요?`,
       doneHeader: '🎉 자동 날짜 인식 완료!',
       successLine: (n: number) => `✅ 성공: ${n}개`,
       failLine: (n: number) => `❌ 실패: ${n}개`,
@@ -683,6 +698,17 @@ export const adminStrings = {
       parseFailed: (msg: string) => `날짜를 인식하지 못했어요: ${msg}`,
       parsedFromTitle: (d: string) => `✅ 제목에서 날짜를 인식했어요: ${d}`,
       parseFromTitleFailed: '❌ 제목에서 날짜를 인식하지 못했어요',
+      firestoreSyncFailed:
+        '\n\n⚠️ YouTube에는 반영됐지만 사이트 정보 동기화에 실패했어요.\n"📺 YouTube와 동기화"를 눌러 주세요.',
+      noYoutubeSelectedForPlaylists: '선택한 동영상 중 YouTube 동영상이 없어요.',
+      batchPlaylistConfirm: (videoCount: number, playlistCount: number) =>
+        `🎬 재생목록 일괄 변경\n\n선택한 동영상 ${videoCount}개를 재생목록 ${playlistCount}개에 정확히 맞춰요.\n\n⚠️ 선택하지 않은 재생목록에서는 제거돼요. YouTube에 바로 반영되고 되돌릴 수 없어요.\n\n계속할까요?`,
+      batchPlaylistDone: (success: number, fail: number) => {
+        let m = '재생목록 일괄 변경을 완료했어요!';
+        if (success > 0) m += `\n✅ 성공: ${success}개`;
+        if (fail > 0) m += `\n❌ 실패: ${fail}개`;
+        return m;
+      },
       playlistSaved: (added: number, removed: number) =>
         `재생목록을 업데이트했어요! ${added}개 추가, ${removed}개 제거.`,
       playlistSavedFailures: (failed: number) =>
@@ -702,6 +728,15 @@ export const adminStrings = {
       phone: '전화번호',
       email: '이메일',
       message: '메시지',
+      notified: '알림',
+    },
+    /** 알림 column. `unknown` is for records that predate the field — not a failure. */
+    notified: {
+      failed: '⚠️ 미전송',
+      failedHint: '알림 메일이 전송되지 않았어요. 이 신청은 저장되어 있어요.',
+      sent: '전송됨',
+      unknown: '—',
+      unknownHint: '이 항목이 만들어질 때는 알림 기록이 없었어요.',
     },
   },
 

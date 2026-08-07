@@ -3,22 +3,32 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { authHeader } from '@/lib/auth/authHeader';
-import { Permission } from '@/types/permissions';
+import { NAV_GATE_PERMISSIONS, Permission } from '@/types/permissions';
 import Button from '@/components/ui/Button';
 import { adminStrings } from '@/constants/adminStrings';
 
 const { resourceMatrix: t, common } = adminStrings;
 
-const ALL_PERMISSIONS: Permission[] = [
-  'view-post-feeding',
-  'view-post-butler',
-  'view-photo',
-  'view-video',
-];
+/**
+ * Only the **view** permissions, from their single source.
+ *
+ * 🔑 This matrix answers "which permission does a visitor need to *see* this nav
+ * item", so a write grant is a category error here. `write-own-post-butler` /
+ * `write-own-post-feeding` were offered until 2026-08-03 — never selected in live
+ * config, and they would have gated a link on the ability to **post** rather than
+ * to **read**. The `upload-own-*` pair is absent for the same reason.
+ */
+const ALL_PERMISSIONS: readonly Permission[] = NAV_GATE_PERMISSIONS;
 
-// Content Pages/Resources to protect
+/**
+ * The nav resources this matrix can gate. ⚠️ **Must track the `resourceId` props in
+ * `Navigation.tsx`** — a nav item with no row here can never be configured, which is
+ * how `cats` (냥이들) went unmanageable until 2026-08-03. An unlisted resource has no
+ * key in the config, and `useResourceAccess` treats a missing/empty list as public.
+ */
 const RESOURCES = [
   { id: 'about', label: '소개' },
+  { id: 'cats', label: '냥이들' },
   { id: 'contact', label: '동참' },
   { id: 'photo_album', label: '사진첩' },
   { id: 'video_album', label: '동영상' },

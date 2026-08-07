@@ -25,6 +25,16 @@ const ALLOWED_ERROR_SUBSTRINGS: string[] = [
   // continues (playlists are optional there — source-verified in loadPlaylists()).
   // The P0 editor characterization specs pin that the page still works without it.
   'Error loading playlists',
+  // The Firestore SDK's own logger for a transport hiccup against the emulator —
+  // the same phenomenon as the EMULATOR_HOSTS allowance below, but logged by the
+  // SDK rather than by the browser's resource loader, so it carries no URL to
+  // match on. ⚠️ Benign **because the SDK retries internally and succeeds**: it
+  // is a stall, never a lost read (HANDOFF: "Firestore hangs; it does not
+  // throw"), which is why the assertions around it pass. Surfaces only under
+  // load — a full 8-worker run against one emulator. A genuine permission or
+  // index failure reports `code=permission-denied` / `failed-precondition`, not
+  // `unavailable`, and still fails the test.
+  'Could not reach Cloud Firestore backend',
 ];
 
 function isAllowed(text: string): boolean {
@@ -69,7 +79,37 @@ function isRecoverableHydrationError(message: string): boolean {
   );
 }
 
-export const test = base.extend<{ consoleWatchdog: void }>({
+export const test = base.extend<{ youtubeThumbnails: void; consoleWatchdog: void }>({
+  /**
+   * Serve YouTube's thumbnail CDN locally, for every spec.
+   *
+   * ⚠️ **Required, and deliberately global.** Every seeded video carries an
+   * INVENTED YouTube id (`yt-vid-01`), so `img.youtube.com` returns a real 404 —
+   * verified with curl, not assumed. Anything rendering a fixture video hits it:
+   * the 집사톡 / 급식현황 lists, the admin post tabs, the edit composer's 기존
+   * rows. It is a property of the fixtures, never a signal (with no real id
+   * anywhere, a 200 was impossible), and it also makes the suite depend on the
+   * public internet.
+   *
+   * 🔑 **Why a stub and not a console allow-list.** That was tried and does not
+   * work: when the `<img>` src is set by client JS, Chrome reports the failed
+   * resource message's `location.url` as the **initiating chunk**, not the
+   * YouTube URL — so a host-based allowance silently misses exactly the cases
+   * that need it, and the failure reads as a bogus 404 on a `_next/static` chunk
+   * that is in fact served 200.
+   *
+   * 📌 It replaced a `page.route` three specs each installed by hand; the fourth
+   * spec to render a fixture video failed because it had not.
+   */
+  youtubeThumbnails: [
+    async ({ page }, use) => {
+      await page.route('https://img.youtube.com/**', (route) =>
+        route.fulfill({ status: 200, contentType: 'image/gif', body: '' })
+      );
+      await use();
+    },
+    { auto: true },
+  ],
   consoleWatchdog: [
     async ({ page }, use, testInfo) => {
       const errors: string[] = [];

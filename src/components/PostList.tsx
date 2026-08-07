@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils/cn';
-import { Post as PostType } from '@/types';
+// Aliased `PostEntity`, not `PostType`: `PostType` is the *kind* of post
+// (집사톡 / 급식현황 / …), imported below.
+import { Post as PostEntity } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import ReplyButton from './ReplyButton';
 import ReplyForm from './ReplyForm';
 import ReplyList, { ReplyListRef } from './ReplyList';
 import { IPostService } from '@/services';
+import { postDetailPath, type PostType } from '@/services/post-types';
+import { isAuthoredBy } from '@/utils/postAuthor';
+import { useDialog } from '@/components/ui/useDialog';
 
 // Utility function to convert any timestamp format to Korea timezone display
 const formatKoreaDateTime = (date: string, time: string, createdAt?: any) => {
@@ -92,6 +97,8 @@ interface Post {
   videoUrl?: string; // Keep for backward compatibility
   imageUrls?: string[];
   username: string;
+  /** Author identity; absent on posts predating it (2026-08-02). */
+  authorUid?: string;
   date: string;
   time: string;
   createdAt?: any; // Can be Date, string, number, or Firestore timestamp
@@ -104,6 +111,13 @@ interface PostListProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   postService: IPostService;
+  /**
+   * Which of the four types these posts are. **Required** — it has to reach the
+   * detail link, because a post id only identifies a post within its own
+   * collection. Omitting it is what made every 집사톡 post open on
+   * "Post not found." (2026-08-02).
+   */
+  postType: PostType;
 }
 
 const PostList: React.FC<PostListProps> = ({
@@ -112,13 +126,57 @@ const PostList: React.FC<PostListProps> = ({
   totalPages,
   onPageChange,
   postService,
+  postType,
 }) => {
   const [postReplyCounts, setPostReplyCounts] = useState<Record<string, number>>({});
   const [showReplyForms, setShowReplyForms] = useState<Record<string, boolean>>({});
   const [replyListRefs, setReplyListRefs] = useState<Record<string, React.RefObject<ReplyListRef>>>(
     {}
   );
-  const { isAuthenticated } = useAuth();
+  // Deleted posts are hidden locally rather than refetched: the list is paginated by
+  // the parent, and dropping a row is the whole visible effect of a delete.
+  const [deletedPostIds, setDeletedPostIds] = useState<string[]>([]);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const { user, isAuthenticated } = useAuth();
+  const dialog = useDialog();
+
+  /**
+   * Whether the signed-in visitor wrote this post — the condition for offering
+   * 수정 / 삭제. The two-era test lives in `@/utils/postAuthor` so this and
+   * `ReplyItem` cannot drift apart, or from the rules they mirror.
+   */
+  const isOwnPost = (post: Post) => isAuthoredBy(post, user);
+
+  /**
+   * Delete a post the visitor wrote (owner, 2026-08-04).
+   *
+   * ⚠️ **This cascades.** `deletePost` removes every reply first — including other
+   * people's — which is why the confirm names it. That consequence is the reason
+   * delete was withheld from members in §10n; the owner reversed the call.
+   * 📌 **Media survives**: the `cat_images` / `cat_videos` records and the Storage
+   * objects are untouched, so the photos stay in the 사진첩.
+   */
+  const handleDeletePost = async (post: Post) => {
+    const replies = postReplyCounts[post.id] ?? post.replyCount ?? 0;
+    const confirmed = await dialog.confirm(
+      replies > 0
+        ? `이 글과 달린 댓글 ${replies}개가 함께 지워져요. 사진과 영상은 남아요. 정말 지울까요?`
+        : '이 글을 지울까요? 사진과 영상은 남아요.',
+      '글 삭제'
+    );
+    if (!confirmed) return;
+
+    setDeletingPostId(post.id);
+    try {
+      await postService.deletePost(post.id);
+      setDeletedPostIds((prev) => [...prev, post.id]);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      await dialog.alert('글을 지우지 못했어요. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
 
   const handleReplyCountUpdate = (postId: string, count: number) => {
     setPostReplyCounts((prev) => ({ ...prev, [postId]: count }));
@@ -132,7 +190,7 @@ const PostList: React.FC<PostListProps> = ({
     setShowReplyForms((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  const handleReplySuccess = (postId: string, reply: PostType) => {
+  const handleReplySuccess = (postId: string, reply: PostEntity) => {
     const currentCount =
       postReplyCounts[postId] || posts.find((p) => p.id === postId)?.replyCount || 0;
     handleReplyCountUpdate(postId, currentCount + 1);
@@ -153,126 +211,146 @@ const PostList: React.FC<PostListProps> = ({
             아직 등록된 글이 없어요.
           </div>
         )}{' '}
-        {posts.map((post) => {
-          const currentReplyCount = postReplyCounts[post.id] ?? post.replyCount ?? 0;
-          const showingReplyForm = showReplyForms[post.id] || false;
+        {posts
+          .filter((post) => !deletedPostIds.includes(post.id))
+          .map((post) => {
+            const currentReplyCount = postReplyCounts[post.id] ?? post.replyCount ?? 0;
+            const showingReplyForm = showReplyForms[post.id] || false;
 
-          // Create a ref for this post's ReplyList if it doesn't exist
-          if (!replyListRefs[post.id]) {
-            replyListRefs[post.id] = React.createRef<ReplyListRef>();
-          }
+            // Create a ref for this post's ReplyList if it doesn't exist
+            if (!replyListRefs[post.id]) {
+              replyListRefs[post.id] = React.createRef<ReplyListRef>();
+            }
 
-          return (
-            <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  {/* Show video thumbnail if video exists */}
-                  {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
-                    (() => {
-                      // Support both new videoUrls array and legacy videoUrl
-                      const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
-                      const match = firstVideoUrl?.match(
-                        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
-                      );
-                      const videoId = match ? match[1] : null;
-                      if (videoId) {
-                        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                        const videoCount = post.videoUrls?.length || 1;
-                        return (
-                          <Link href={`/pages/posts/${post.id}`}>
-                            <div className="relative cursor-pointer">
-                              <img
-                                src={thumbnailUrl}
-                                alt="Video thumbnail"
-                                className="w-20 h-15 object-cover rounded"
-                                onError={(e) => {
-                                  e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
-                                }}
-                              />
-
-                              {/* Play button overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="bg-red-600 text-white rounded-full p-1">
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                  >
-                                    <path d="M8 5v14l11-7z" />
-                                  </svg>
-                                </div>
-                              </div>
-                              {/* Video count indicator for multiple videos */}
-                              {videoCount > 1 && (
-                                <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
-                                  {videoCount}
-                                </div>
-                              )}
-                            </div>
-                          </Link>
+            return (
+              <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    {/* Show video thumbnail if video exists */}
+                    {((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
+                      (() => {
+                        // Support both new videoUrls array and legacy videoUrl
+                        const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
+                        const match = firstVideoUrl?.match(
+                          /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
                         );
-                      }
-                      return null;
-                    })()}
-                  {/* Show image thumbnail only if no video exists */}
-                  {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
-                    post.thumbnailUrl && (
-                      <Link href={`/pages/posts/${post.id}`}>
-                        <img
-                          src={post.thumbnailUrl}
-                          alt="Image thumbnail"
-                          className="w-20 h-15 object-cover rounded cursor-pointer"
-                        />
-                      </Link>
+                        const videoId = match ? match[1] : null;
+                        if (videoId) {
+                          const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                          const videoCount = post.videoUrls?.length || 1;
+                          return (
+                            <Link href={postDetailPath(postType, post.id)}>
+                              <div className="relative cursor-pointer">
+                                <img
+                                  src={thumbnailUrl}
+                                  alt="Video thumbnail"
+                                  className="w-20 h-15 object-cover rounded"
+                                  onError={(e) => {
+                                    e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
+                                  }}
+                                />
+
+                                {/* Play button overlay */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="bg-red-600 text-white rounded-full p-1">
+                                    <svg
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 24 24"
+                                      fill="currentColor"
+                                    >
+                                      <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                  </div>
+                                </div>
+                                {/* Video count indicator for multiple videos */}
+                                {videoCount > 1 && (
+                                  <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
+                                    {videoCount}
+                                  </div>
+                                )}
+                              </div>
+                            </Link>
+                          );
+                        }
+                        return null;
+                      })()}
+                    {/* Show image thumbnail only if no video exists */}
+                    {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
+                      post.thumbnailUrl && (
+                        <Link href={postDetailPath(postType, post.id)}>
+                          <img
+                            src={post.thumbnailUrl}
+                            alt="Image thumbnail"
+                            className="w-20 h-15 object-cover rounded cursor-pointer"
+                          />
+                        </Link>
+                      )}
+                  </div>
+                  <div className="flex-grow">
+                    <Link
+                      href={postDetailPath(postType, post.id)}
+                      className="text-xl font-bold mb-2 block flex items-center space-x-2"
+                    >
+                      {post.title}
+                    </Link>
+                    <p className="text-gray-700 mb-2">{post.message}</p>
+                  </div>
+                  <div className="text-right text-sm text-gray-500 flex flex-col items-end">
+                    <p>{post.username}</p>
+                    <p>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</p>
+                    {isOwnPost(post) && (
+                      <div className="mt-1 flex items-center space-x-3">
+                        <Link
+                          href={`/pages/posts/${postType}/${post.id}/edit`}
+                          className="font-medium text-brand-600 hover:text-brand-700"
+                        >
+                          수정
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePost(post)}
+                          disabled={deletingPostId === post.id}
+                          className="font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                        >
+                          {deletingPostId === post.id ? '삭제 중...' : '삭제'}
+                        </button>
+                      </div>
                     )}
+                  </div>
                 </div>
-                <div className="flex-grow">
-                  <Link
-                    href={`/pages/posts/${post.id}`}
-                    className="text-xl font-bold mb-2 block flex items-center space-x-2"
-                  >
-                    {post.title}
-                  </Link>
-                  <p className="text-gray-700 mb-2">{post.message}</p>
-                </div>
-                <div className="text-right text-sm text-gray-500 flex flex-col items-end">
-                  <p>{post.username}</p>
-                  <p>{formatKoreaDateTime(post.date, post.time, post.createdAt)}</p>
-                </div>
-              </div>
 
-              {/* Reply functionality */}
-              <div className="border-t pt-3">
-                <ReplyButton
-                  postId={post.id}
-                  replyCount={currentReplyCount}
-                  onToggleReply={() => handleToggleReplyForm(post.id)}
-                  showingReplies={false}
-                  showingReplyForm={showingReplyForm}
-                />
+                {/* Reply functionality */}
+                <div className="border-t pt-3">
+                  <ReplyButton
+                    postId={post.id}
+                    replyCount={currentReplyCount}
+                    onToggleReply={() => handleToggleReplyForm(post.id)}
+                    showingReplies={false}
+                    showingReplyForm={showingReplyForm}
+                  />
 
-                {showingReplyForm && (
-                  <ReplyForm
-                    parentId={post.id}
-                    parentUsername={post.username}
-                    onReplySuccess={(reply) => handleReplySuccess(post.id, reply)}
-                    onCancel={() => handleToggleReplyForm(post.id)}
+                  {showingReplyForm && (
+                    <ReplyForm
+                      parentId={post.id}
+                      parentUsername={post.username}
+                      onReplySuccess={(reply) => handleReplySuccess(post.id, reply)}
+                      onCancel={() => handleToggleReplyForm(post.id)}
+                      postService={postService}
+                    />
+                  )}
+
+                  <ReplyList
+                    ref={replyListRefs[post.id]}
+                    postId={post.id}
+                    replyCount={currentReplyCount}
+                    onReplyCountUpdate={(count) => handleReplyCountUpdate(post.id, count)}
                     postService={postService}
                   />
-                )}
-
-                <ReplyList
-                  ref={replyListRefs[post.id]}
-                  postId={post.id}
-                  replyCount={currentReplyCount}
-                  onReplyCountUpdate={(count) => handleReplyCountUpdate(post.id, count)}
-                  postService={postService}
-                />
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
       <div className="flex justify-center mt-4 space-x-2">
         {Array.from({ length: totalPages }, (_, index) => {
@@ -332,6 +410,7 @@ const PostList: React.FC<PostListProps> = ({
           )}
         </div>
       </div>
+      {dialog.element}
     </div>
   );
 };

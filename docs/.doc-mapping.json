@@ -1,0 +1,30 @@
+{
+  "docs/handoff/HANDOFF.md": [
+    { "file": "src/services/firebase.ts", "mapped": "2026-08-01" },
+    { "file": "src/hooks/useAsyncData.ts", "mapped": "2026-08-01" },
+    { "file": "src/components/ui/AsyncStates.tsx", "mapped": "2026-08-01" },
+    { "file": "src/components/AnnouncementClient.tsx", "mapped": "2026-08-01" },
+    { "file": "src/components/AdoptionPromotionClient.tsx", "mapped": "2026-08-01" },
+    { "file": "src/components/PostMedia.tsx", "mapped": "2026-08-01" },
+    { "file": "src/app/[mountain]/pages/announcements/[id]/page.tsx", "mapped": "2026-08-01" },
+    { "file": "src/app/api/admin/video-availability/route.ts", "mapped": "2026-08-01" },
+    { "file": "src/services/media-albums.ts", "mapped": "2026-08-01" },
+    { "file": "src/app/[mountain]/admin/tag-videos/page.tsx", "mapped": "2026-08-01" }
+  ],
+  "docs/planning/PROJECT_PLAN.md": [
+    { "file": "src/services/firebase.ts", "mapped": "2026-08-01" },
+    { "file": "src/hooks/useAsyncData.ts", "mapped": "2026-08-01" },
+    { "file": "src/hooks/useMediaDetails.ts", "mapped": "2026-08-01" },
+    { "file": "src/components/ui/AsyncStates.tsx", "mapped": "2026-08-01" },
+    { "file": "src/components/AnnouncementClient.tsx", "mapped": "2026-08-01" },
+    { "file": "src/components/AdoptionPromotionClient.tsx", "mapped": "2026-08-01" },
+    { "file": "src/components/PostMedia.tsx", "mapped": "2026-08-01" },
+    { "file": "src/app/[mountain]/pages/announcements/[id]/page.tsx", "mapped": "2026-08-01" },
+    { "file": "src/app/api/admin/video-availability/route.ts", "mapped": "2026-08-01" },
+    { "file": "src/app/[mountain]/admin/tag-videos/page.tsx", "mapped": "2026-08-01" },
+    { "file": "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts", "mapped": "2026-08-01" },
+    { "file": "src/services/media-albums.ts", "mapped": "2026-08-01" },
+    { "file": "src/types/media.ts", "mapped": "2026-08-01" },
+    { "file": "src/constants/adminStrings.ts", "mapped": "2026-08-01" }
+  ]
+}

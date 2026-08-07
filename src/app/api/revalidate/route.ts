@@ -19,7 +19,7 @@ export const runtime = 'nodejs';
  * M5 an admin edit still only concerns its own tenant, and revalidating the
  * others is merely a no-op refresh — a handful of paths either way).
  */
-const BAKED_SUBPATHS = ['', '/pages/adoption'];
+const BAKED_SUBPATHS = ['', '/pages/cats', '/pages/adoption'];
 const bakedPaths = () =>
   getAllMountains().flatMap((mountain) =>
     BAKED_SUBPATHS.map((subpath) => `/${mountain.id}${subpath}`)

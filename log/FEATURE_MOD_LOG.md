@@ -15,6 +15,1933 @@
 
 ---
 
+## 2026-08-06 — a 동참 notification that never sent is now visible to the visitor and to the operator
+
+**Area:** `src/app/api/contact/route.ts`, `src/app/[mountain]/pages/contact/page.tsx`,
+`src/components/admin/ContactManagement.tsx`, `src/types/index.ts`,
+`src/constants/adminStrings.ts`, `tests/e2e/member/contact-submit.spec.ts`,
+`tests/e2e/admin/members.spec.ts`.
+**Type:** feature enhancement (owner-asked), closing the open decision the
+`smtp:verify` entry below left behind.
+
+**What changed.** `emailDelivered` was computed by the route and consumed by nobody. Now it
+reaches both audiences, which need **different** things:
+
+- **The visitor** gets expectation-setting, not an error. On failure the copy becomes
+  _"메시지가 접수되었습니다. 다만 알림 전달에 문제가 있어 답변이 늦어질 수 있어요."_ on the
+  **non-error** styling. 🔑 **It must not read as a failure and must not invite a resubmit** —
+  the contact is already in Firestore, so a retry duplicates the record, which is the exact
+  thing the route's best-effort email design exists to prevent.
+- **The operator** gets a durable flag, because the API response dies with the visitor's tab.
+  The route writes `notified: false` on create and promotes it to `true` only after the send
+  succeeds; `ContactManagement` renders an ⚠️ 미전송 badge in a new 알림 column.
+
+🔑 **Three states, not two — `undefined` is "unknown", not "failed".** Every contact already in
+the collection predates the field, and rendering those as failures would invent history. The
+badge distinguishes `false` (known failure, amber), `true` (quiet 전송됨) and `undefined` (a
+grey — with a tooltip saying the record predates the flag).
+
+🔑 **The write order is deliberate:** the record is created **before** anything that can fail,
+so a crash mid-send leaves the doc saying "not notified" — the fail-safe direction.
+
+⚠️ **The promotion write gets its own `try`, and that is a correctness point, not tidiness.**
+Folding `update({notified:true})` into the send's `catch` would report a **delivered** email as
+undelivered whenever Firestore hiccupped, blaming the mail for a database fault. Kept separate,
+a failed promotion leaves the doc stale at `false` — the operator sees 미전송, checks, and finds
+the mail. Neither catch re-raises, for the reason the route already documents.
+
+🔴 **Building this exposed a live harness bug: the e2e suite was sending REAL email to the
+production `adminEmail`, two per run.** `next start` backfills any env key `.env.test` leaves
+undefined from `.env` on disk, so the real Gmail credentials reached the route. `.env.test` now
+declares the five SMTP keys **empty** — full write-up in `log/DEBUG_LOG.md`. ⚠️ **Blank is
+load-bearing; deleting those lines restores live sending.**
+
+✅ **This is now the one thing e2e CAN observe about notifications, and both specs assert it.**
+SMTP is blank in the harness, so `emailDelivered` is `false` on every run: `contact-submit.spec`
+asserts the new copy **and** that the error copy is absent, and `members.spec` round-trips a real
+submission into the admin table and asserts the **⚠️ 미전송 badge**. ⚠️ **The delivered branch
+still has no automated cover** and cannot get one here — it needs a real SMTP session the
+hermetic harness has no credentials for. `npm run smtp:verify` is the check for that half.
+
+📌 **No rules change.** `contacts` denies all client writes (`create/update/delete: if false`);
+the route writes through the Admin SDK, and the admin read already required `manage-users`. So
+this deploys as app code alone — no out-of-band rules step.
+
+---
+
+## 2026-08-06 — `npm run smtp:verify`, because a broken 동참 email is invisible from every direction
+
+**Area:** `scripts/maintenance/smtp-verify.js` (new), `package.json`.
+**Type:** tooling (owner-asked, from a live failure). **No app-code change.**
+
+**What happened.** Two real 동참 submissions were made and no email arrived. Both had
+reported success to the visitor.
+
+🔑 **The root cause was ordinary — Gmail was answering `535-5.7.8 Username and Password not
+accepted` — but nothing in the system could tell anyone that.** The failure is invisible from
+**three** directions at once, and each one is deliberate:
+
+1. `/api/contact` records the contact **first** and treats the email as best-effort
+   (`route.ts:137-145`). That is correct — failing the request would prompt a resubmit and
+   duplicate the record — but it means a dead SMTP config returns `200 success`.
+2. The route computes `emailDelivered: false` and **nothing consumes that field.** Grepping
+   `src/` and `tests/` finds it only inside the route itself; the contact page checks
+   `result.success` alone and shows 메시지가 전송되었습니다 either way.
+3. `.env.test` sets **no** SMTP vars, so every e2e run takes the "not configured" branch.
+   `contact-submit.spec.ts` asserts the green message and its own header documents this.
+
+So the visitor is reassured, the operator gets nothing, and the suite stays green. **The only
+signal anywhere is one line in the Vercel function log.**
+
+**What changed.** `npm run smtp:verify` mirrors `sendNotification()` — same env vars, same
+guard, same transport options — then calls `transporter.verify()`, which authenticates and
+disconnects. ⚠️ **It never calls `sendMail`**, so it is safe against production credentials.
+It never prints the password, only a length plus the shape checks that catch the mistakes that
+actually occur: `SMTP_FROM !== SMTP_USER` (Gmail **rewrites** a From it does not own — a no-op
+that still reports success), whitespace in the value (Gmail's 4×4 grouping is presentation),
+a length that is not 16, and **`#` in the value**.
+
+📌 **That last check exists because of a real near-miss.** The `.env` line carried a trailing
+`# comment`; dotenv v16 strips it, so it parses to a clean 16 chars **locally** — but the
+**Vercel dashboard stores values verbatim**, so the same string pasted there authenticates as
+all 73 characters and fails identically to a wrong password. One bug hiding behind another.
+
+✅ It also reports a missing `adminEmail`, the _other_ throw in `sendNotification` — without
+it a script that only checked auth would still leave you guessing.
+
+**Verified.** Every branch was exercised rather than trusting one green path: the unset branch
+names the three vars; the `FROM`/whitespace/`#` warnings all fire on a synthetic config; and
+the `adminEmail` check is proven by staying **silent** — true only because the `_`-prefix
+filter excludes `_meta`/`_shared`, which genuinely lack the field. Against the live config it
+went `EAUTH` → (owner regenerated the App Password) → `AUTH OK`, catching a **new**
+`SMTP_FROM !== SMTP_USER` mismatch introduced by that same edit.
+
+---
+
+## 2026-08-06 — the last raw colour hexes leave two components, and the design reference finally says the palette is global
+
+**Area:** `src/components/admin/YouTubeAuthPanelNew.tsx`, `src/components/Compass.tsx`,
+`src/components/LeafletMountainMap.tsx` (comment only), `docs/design/design.md`.
+**Type:** hygiene + doc — Phase 4 of the colour-token plan. **No user-visible change.**
+
+**What changed.** Three sites that held raw hex are resolved, and the global-palette decision
+is recorded where a designer will actually meet it.
+
+- **`YouTubeAuthPanelNew`** returned `#10b981` / `#f59e0b` / `#ef4444` / `#6b7280` from a
+  `getStatusColor` switch and applied them through two inline `style` props. It now returns
+  **Tailwind utility pairs** (`text-emerald-500` + `border-emerald-500/20`, …) applied as
+  classes. 🔑 **The `/20` is exact, not an approximation:** the old border was `${hex}33`, and
+  `0x33 = 51/255 = 0.2`, so the compiled rule `rgba(16,185,129,0.2)` is the same colour.
+- **`Compass`** used `fill="#ef4444"` / `fill="#f3f4f6"` on its needle. It is an **inline SVG
+  in our own JSX**, so Tailwind's `fill-*` utilities reach it: now `fill-red-500` /
+  `fill-gray-100`.
+- **`LeafletMountainMap:302` keeps `#6b7280`, deliberately**, and gains a comment saying why.
+  Leaflet writes the polyline `color` into the SVG **`stroke` presentation attribute**, which
+  accepts neither a Tailwind class nor `var(--…)`. Same tooling limit `CatGrid:561` records.
+- **`design.md` §Colors** now opens with the callout that the palette is **GLOBAL — a mountain
+  may not differ in colour** (owner, 2026-08-05), that this **withdraws M8** rather than
+  deferring it, and that `--color-primary` is a build-time escape hatch, not a second
+  definition. Prose only, no values, per that document's own rule.
+
+🔑 **The doc edit is the one that mattered.** The decision was already in `AGENTS.md`,
+`PROJECT_PLAN` and the plan doc — but **not in the design reference**, the one place someone
+looks before proposing per-tenant theming again. A decision recorded only where implementers
+read it does not stop the proposal from coming back.
+
+⚠️ **These stay status hues on purpose.** Tokenizing them to `brand` was the single way this
+edit could have shipped a regression: `design.md` keeps warning/error/success _"distinct from
+`brand`"_, so a token rename would make a caution notice adopt the brand hue and stop reading
+as a caution. The hygiene here is the hex duplication, never the colour.
+
+📌 **The status map is module-scope with full literal class strings.** A computed
+`text-${hue}-500` is invisible to Tailwind's content scanner and gets purged — the failure mode
+would be an unstyled panel, not a wrong colour.
+
+**Verified.** `tsc` **0** · smoke **39** · unit **196** · **full e2e 233 passed / 13 skipped /
+0 failed** (identical to Phase 3's run — the expected result for a phase that changes no
+behaviour). ✅ **In the browser** (public map):
+the compass renders `rgb(239,68,68)` / `rgb(243,244,246)` — the values the hexes carried — and
+all four `text-*` **and** all four `border-*/20` rules were confirmed present in the compiled
+stylesheet with the previously deployed values. ⚠️ **`/admin` was not looked at** — auth-gated,
+no credentials in this session — so the YouTube panel is proven by compiled-CSS equality, the
+same gap Phase 2 left.
+
+---
+
+## 2026-08-05 — 급식현황's freshness scale goes green→red ⇒ blue→red, and becomes readable
+
+**Area:** `src/utils/feedingFreshness.ts` (new), `src/components/FeedingSpotsList.tsx`,
+`scripts/test/seed-emulators.mjs`, `tests/e2e/fixtures/feeding-spots.json` (new),
+`tests/e2e/member/feeding-spots-list.spec.ts` (new), `tests/unit/feedingFreshness.test.ts` (new).
+**Type:** small fix + accessibility (owner-requested) — Phase 3 of the colour-token plan.
+**⚠️ The only user-visible change in that plan.**
+
+**What changed.** The 급식소 현황 table's "how long since last fed" colour ran a computed
+green→red gradient; it now runs blue→red, anchored on Tailwind's `blue-700`/`red-700`.
+
+🔑 **The owner asked for blue→red on preference, and it fixed three defects at once.**
+(1) **Readability:** the old fresh end was `rgb(0,255,0)` on a white row — **1.37:1** contrast
+against WCAG AA's 4.5:1, i.e. effectively invisible, and **worst exactly where the news was
+good**. The new ramp's worst point is **6.47:1**. (2) **Colour blindness:** green↔red is the
+pair most likely to be indistinguishable, which is the wrong choice for a scale whose ends
+carry opposite meanings. (3) **A discontinuity:** `0h` and `≥60h` were special-cased with
+Tailwind classes that did not match the ramp they bookended, so the scale jumped at exactly the
+two thresholds an operator watches. The ratio is now clamped and both endpoints fall out of the
+same interpolation.
+
+📌 **The midpoint reads purple.** That is ordinary RGB interpolation between the endpoints, not
+a bug — 파랑 = 방금, 보라 = 중간, 빨강 = 오래됨.
+
+🔑 **Why it went undetected: the logic was a closure inside the component, so nothing could
+test it.** Extracting it to a util was the precondition for the contrast check, not tidiness.
+That check is now **encoded as a test** that walks every hour 0→60 and fails under 4.5:1 —
+with a **negative control** asserting the old `rgb(0,255,0)` fails, so the assertion cannot
+quietly stop measuring.
+
+✅ **The table has e2e cover for the first time.** `seed-emulators.mjs` seeded no
+`feeding_spots`, so every run hit the empty branch and the whole ramp was unexercised. Four
+spots are now seeded (1h / 30h / 70h / none). ⚠️ It needed a dedicated writer: `seedCollection`
+turns a fixture's `id` into the document id and strips it, but this collection reads `data.id`
+as a numeric field and orders by it. Offsets convert to Timestamps **relative to the seed run**
+— a fixed date would drift past the clamp and stop exercising the scale.
+
+**Verified.** `tsc` **0** · unit **196** · smoke **39** · **full e2e 233 passed / 13 skipped /
+0 failed**. ✅ **Both nets proven to have teeth:** inverting the ramp endpoints made the unit
+hue test _and_ the e2e colour assertion fail, while hue-agnostic tests stayed green.
+
+---
+
+## 2026-08-05 — brand yellows adopt the `brand`/`accent` tokens (Phase 2)
+
+**Area:** 3 admin pages, `AdminPostList`, `LoginForm`, `PhoneLoginForm`, `ShowInModalToggle`,
+`CatGrid`, `globals.css`.
+**Type:** refactor, zero visual change — Phase 2 of the colour-token plan.
+
+**What changed.** ~30 hardcoded `yellow-*`/`orange-*` utility classes became `brand-*`/`accent`
+tokens, so the brand colour has one definition instead of being spelled out across 9 files.
+Admin screens are included (the design reference's "admin out of scope" line was stale and was
+corrected the same day).
+
+🔑 **The classification mattered far more than the renaming.** Of the 75 yellow/amber/orange
+utilities, only ~30 are brand. The rest are **status** (`design.md:75` is explicit that warning
+is _"distinct from `brand`"_) or **vendor** (Kakao). ⚠️ **A blanket migration would have shipped
+two defects**: warning notices adopting the brand hue, and a Kakao button that stops being
+Kakao yellow. Five orange sites were examined individually and **all five left** — the stat
+values and badges pair with `text-green-600`/`bg-green-500` (status), and `RoleManagement`'s
+orange panel is one of four role colours (categorical).
+
+📌 **`theme()` does not work inside `<style jsx global>`** — styled-jsx never passes through
+Tailwind's PostCSS pipeline. `CatGrid`'s header hexes therefore became `var(--color-brand-100)`
+/ `var(--color-brand-300)`, declared once in `globals.css` from the ramp. 🔑 That file's comment
+had said _"(brand-100)"_ next to a hardcoded `#fef9c3` since it was written — **the author knew
+the token and had no way to use it.** The variable is the mechanism, not a preference.
+
+**Verified.** `tsc` **0** · unit **189** · smoke **39** · `next build` green (81/81).
+Equivalence proven three ways rather than assumed: every `brand`/`accent` ramp stop is
+**byte-identical** to Tailwind's `yellow`/`orange` (checked against `tailwindcss/colors`); each
+migrated class compiles to the same declaration as its predecessor (`.border-brand-500` and
+`.border-yellow-500` both emit `rgb(234 179 8)`); and old vs new rendered side-by-side in the
+browser.
+
+✅ **An unplanned completeness proof:** in that side-by-side the OLD classes rendered
+**unstyled**, because Tailwind had purged `from-yellow-400`/`to-orange-300`/`bg-yellow-500`
+from the bundle — which only happens when **no source file references them**. Stronger than the
+grep that drove the migration.
+
+⚠️ **Browser coverage is partial and this is the known gap:** `/admin/*` is behind `AdminAuth`
+and this session had no credentials, so the admin screens were **never seen rendered**. The
+login page (both rings), the header CTA and the CSS variables were verified live. Someone with
+admin access should glance at 게시물 / 집사들 / 앱 관리 and 냥이들' grid header once.
+
+---
+
+## 2026-08-05 — the colour palette becomes global; per-tenant theming (M8) is withdrawn
+
+**Area:** `config/mountains/mountains.json`, `src/utils/config.ts`,
+`src/app/[mountain]/layout.tsx`, `src/app/globals.css`, `tailwind.config.js`, + 6 docs.
+**Type:** removal (owner decision) — Phase 1 of
+[`color-token-centralization-plan-20260805.md`](../docs/planning/pending/color-token-centralization-plan-20260805.md).
+
+**What changed.** A mountain can no longer set its own colours. The `theme` block is gone from
+`mountains.json` (both mountains), `MountainTheme` is deleted, and the `[mountain]` layout no
+longer injects `:root{--color-primary:…}`.
+
+🔑 **Why removal rather than the "fuller theming pass" M8 anticipated.** The owner asked to
+control colour "in one central place" and identified the cost themselves: a mountain owner
+choosing colours has **no preview and no contrast check**, and `mountains.json` is a static
+import — so "trying a colour" queues a redeploy each time. `secondaryColor`/`accentColor` had
+additionally **never been wired to anything**, so editing them did nothing at all; that is how
+this started (the owner edited them and asked why nothing changed).
+
+🔑 **The indirection survives on purpose, and this is the part worth remembering.**
+`--color-primary` stays, declared once in `globals.css` as `theme('colors.brand.DEFAULT')` —
+**resolved at build time, so it is not a copy of the value.** The variable exists because a
+Tailwind token cannot reach `<style jsx global>` blocks or third-party CSS (`.dsg-*`, Leaflet),
+which consume variables only. ⚠️ **Deleting the variable would have looked tidier and been
+wrong.** Net: the **three** hand-copied `#FACC15`s (`tailwind.config.js:29`, `:44`,
+`globals.css:14`) collapse to **one**, and the 7 `from-primary` CTA sites needed no edits.
+
+✅ **A `dangerouslySetInnerHTML` went with it** (`layout.tsx:58`), along with the hex validation
+that existed to guard it.
+
+📌 **Docs corrected in the same change, and the list was bigger than planned:** the plan named
+two guides; the real set was `deployment/new-mountain-setup.md`, `admin-manual/README.md`,
+`codebase/multi-tenant-config.md`, `PROJECT_PLAN` (§9 M8 + the §12 checklist item),
+`mountain-2-prerequisites.md` §3.2 (**dissolved** — it described a gap against a field that no
+longer exists), and **`AGENTS.md`/`CLAUDE.md` itself**, which documented the per-tenant model
+to every future agent. 🔑 **A doc grep beats a remembered list.**
+
+**Verified.** `npx tsc --noEmit` **0** · unit **189** · smoke **39** · **`next build` green**,
+both tenants prerendered. Built CSS contains `--color-primary:#facc15` (proving `theme()`
+resolved), and **no** prerendered HTML contains `color-primary` (proving the injection is
+gone). ✅ **Zero visual change** — every tenant already resolved to yellow except hidden
+`manisan`, whose `#0ea5e9` only ever coloured a CTA on an otherwise all-yellow site.
+
+---
+
+## 2026-08-05 — 냥이들 re-bakes on a cat edit (closes BACKLOG **B3**)
+
+**Area:** `src/app/api/revalidate/route.ts`, `docs/manuals/admin-manual/README.md` (§3, §9).
+**Type:** small fix — closing a gap recorded as BACKLOG **B3** the same day.
+
+**What changed.** `BAKED_SUBPATHS` was `['', '/pages/adoption']`; it is now
+`['', '/pages/cats', '/pages/adoption']`. An admin cat edit refreshed the home map and 입양홍보
+immediately while **냥이들 kept serving the old data for up to an hour**, because that page also
+reads cats server-side and carries its own `export const revalidate` (**3600s**) but was absent
+from the list.
+
+🔑 **This was drift against an invariant the route's own header comment states** — _"Keep this
+list in sync with the route segments that read cats server-side (`src/lib/server/cat-reads.ts`
+consumers)"_ — not an oversight nobody could have caught. **Audited all three consumers** while
+here: `[mountain]/page.tsx`, `[mountain]/pages/cats/page.tsx`, `[mountain]/pages/adoption/page.tsx`.
+All three carry an ISR segment; `/pages/cats` was the only one missing. No other gap.
+
+📌 **Nothing was visibly broken**, which is why it was deferred rather than hot-fixed: the hourly
+backstop means the page is never wrong for long, and it surfaces as _"I edited the cat and the
+list still shows the old name"_ — reported as flakiness rather than as a bug.
+
+⚠️ **The script half is unchanged and is now documented instead.** `rename-cat.js` writes with
+the Admin SDK, bypassing the app, so it fires **no** revalidation at all — after a rename every
+baked surface waits its full hour. Giving a script a revalidation token was considered and **not
+done** (it would need a credential to hold, for a path an operator can trigger in one click), so
+§9's runbook now says what to do instead: save any cat in `/admin/cats` and all three pages
+re-bake. §3's "home + adoption revalidate" line was true before this change and false after it,
+so it now reads "home + 냥이들 + adoption".
+
+**Verified.** `npx tsc --noEmit` clean · `npm run test:smoke` **39 passed**. 📌 **No automated
+test observes the path list** — the only e2e touching this route checks its auth, not its
+payload, so the audit above is the evidence. A drift guard asserting every `cat-reads` consumer
+appears in `BAKED_SUBPATHS` is the obvious follow-up and was **not** written here (not asked for);
+it is the thing that would have caught this.
+
+---
+
+## 2026-08-05 — a video's YouTube 설명 is taken verbatim on every composer; 공지/입양홍보 stop inheriting the post body
+
+**Area:** `src/components/forms/useSimpleContentForm.ts`,
+`src/components/NewAnnouncementForm.tsx`, `src/components/NewAdoptionForm.tsx`,
+`src/components/forms/MediaItemList.tsx`.
+**Type:** small fix (owner-requested) — _"there is a distinct video description input field. We
+need to take what's in that input field verbatim - empty if empty."_
+
+**What changed.** 공지사항 / 입양홍보 uploaded a video with `item.description || message ||
+'공지사항 동영상'`, so a blank 설명 silently became the **post body**. It is now `item.description`,
+unchanged. 🔑 **This REVERSES an explicit earlier decision**, which the code recorded in as many
+words — _"a video left without its own 설명 keeps inheriting the post body… dropping this would
+silently blank the description on every announcement video that doesn't type one"_ — so the
+comment now records the reversal instead, to stop the old behaviour being restored from it.
+**Title inheritance is untouched by decision** (owner): an untitled video still falls back to
+the post title, because an untitled video on YouTube is worse than one carrying its post's name.
+
+📌 **집사톡 needed no change and never appeared in the diff.** The report named it, and it was
+accurate — but about **production**, which runs `main`: there `useRichContentForm` still does
+`description: message || config.youtubeDescriptionDefault`. `dev` has taken the 설명 verbatim
+since the per-file refactor. 🔑 **A behaviour report is about the deployed artifact, not the
+branch** — the same lesson as §10n, arriving from the opposite direction: last time the repo
+looked behind and production was ahead; here the repo is ahead and production is behind. The
+fix ships with the promotion.
+
+⚠️ **The UI was honest before this and had to change with it.** Both composers passed
+`descriptionHelp="비어 있으면 글 내용이 사용돼요."` — true then, a lie after. The override is
+**deleted** rather than reworded, so both now inherit `MediaItemList`'s own
+"비어 있으면 YouTube 설명 없이 올라가요." — the string 집사톡 already showed. That left the
+`descriptionHelp` prop with no callers at all, so it is gone too: a prop whose only purpose was
+to state a difference that no longer exists is exactly the kind of leftover that drifts back
+into use (cf. the fifth copy of `ALL_PERMISSIONS`, §10p).
+
+📌 **Photo descriptions were already verbatim** in these forms; only the video path inherited.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **189** · `npm run lint` no errors ·
+full e2e green. ⚠️ **The upload leg itself is NOT automatically covered** — `generate-signed-url`
+signs with a service-account key the harness has no access to, and YouTube upload is
+manual-parity (P5.4), so no test can observe what description reaches YouTube. Confirming that
+is a manual pass: upload a video to a 공지사항 with the 설명 box left empty and check the video
+on YouTube has none. 📌 **Existing videos keep their inherited descriptions** — 동기화 reads
+description _from_ YouTube, so correcting an old one means editing it there.
+
+---
+
+## 2026-08-04 — the rename cascade reaches 엄마/애 too, found by dry-running it on real data
+
+**Area:** `scripts/migration/rename-cat.js`, `tests/unit/renameCat.test.ts`,
+`tests/scripts/renameCat.emulator.test.ts`, `docs/manuals/admin-manual/README.md`.
+**Type:** small fix — a gap in the cascade shipped hours earlier.
+
+**What was missing.** `cats.parents` / `cats.offspring` hold **other cats' names as free
+text** — the 엄마 / 애 rows `CatInfo` prints verbatim. The cascade skipped them, so a rename
+left them naming a cat that no longer exists. Nothing resolves these fields, so nothing
+_breaks_; the family panel just reads wrong, which is the quietest failure of the four.
+
+🔑 **The owner's dry run is what found it, and only because it ran against production.** The
+audit listed `cats/엄마조로` among the token rewrites; the owner queried whether a different
+cat should be touched at all. It should — 엄마조로's description links to the cat being
+renamed — but checking that turned up `cats/엄마조로 → offspring: "아들조로"`, sitting one
+field away and untouched. 📌 **The emulator fixtures could not have caught this**: I wrote
+them, and I only model the fields I already know matter.
+
+⚠️⚠️ **Whole-member matching, never a replace — and the live rename is the proof.**
+아들조로 → 조로 makes the **new** name a substring of **two** existing cats (아들조로,
+엄마조로), and one cat stores a list (`cats/예쁜이엄마 → offspring: "순돌이,예쁜이,블타"`).
+A `String.replace` would have corrupted neighbours on the very first run. Members are
+compared with `===` after trimming; separators and spacing round-trip untouched.
+
+📌 **Patches now merge per document before committing.** A cat can appear in both the prose
+and family passes — 엄마조로 does — and Firestore rejects two writes to one document in a
+single commit. Reported separately (an operator wants prose and family as distinct things),
+committed as one patch.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **189** (+7) · lint clean ·
+`npm run test:scripts` **23** (+3, incl. a cat in both passes and a near-miss name in a list).
+**Dry-run against production**: the new pass reports exactly `cats/엄마조로  offspring:
+"아들조로" → "조로"` and nothing else. **Mutation-tested** with a naive
+`split(old).join(new)`: 2 unit cases and 1 emulator case failed — the 조로 substring trap
+among them.
+
+---
+
+## 2026-08-04 — migration scripts get an emulator-backed test suite, and `rename-cat.js` gets a guard
+
+**Area:** `scripts/migration/rename-cat.js`, `tests/scripts/renameCat.emulator.test.ts` (new),
+`vitest.scripts.config.ts` (new), `vitest.config.ts`, `package.json`,
+`.github/workflows/ci.yml`, `AGENTS.md`, `docs/manuals/admin-manual/README.md`.
+**Type:** enhancement — landing the verification harness written alongside the rename script
+(entry below) as a real, CI-gated suite.
+
+**What changed.** A third emulator-backed category, `tests/scripts/**`, run by
+`npm run test:scripts` and gated by its own CI job. It mirrors `tests/rules/**` exactly:
+excluded from the default `npm test` (which must stay runnable with no emulator and no JVM),
+its own vitest config, and a CI job that is a near-copy of the `rules` one.
+
+🔑 **The real work was not the plumbing — it was the script's credential path.**
+`rename-cat.js` could only start from a real service-account key, which is why the harness had
+to be run by hand against the production project id. CI is deliberately hermetic (the e2e job:
+_"a demo-\* Firebase project with fake keys means NO GitHub secrets are required"_), so making
+this testable meant giving the script the credential-less emulator path
+`seed-emulators.mjs` already uses — **plus a refusal to run unless the project is `demo-*`**.
+
+📌 **The guard is the point, not a side effect.** It turns "the test won't touch production"
+from a property of how we happen to invoke it into one the script enforces itself. It also runs
+the other way: every run now prints `TARGET: PRODUCTION Firestore …` or `TARGET: Firestore
+EMULATOR …` first, because a stray `FIRESTORE_EMULATOR_HOST` in an operator's shell would
+otherwise send an `APPLY` run to a throwaway database and report a tidy success.
+
+⚠️ **Each case spawns the script as a child process**, because it reads `APPLY` / `OLD_NAME` /
+`NEW_NAME` at module load and an imported copy could not vary them. Slower (~14s for 20 cases),
+and a better test: it exercises the real entry point and exit codes. `fileParallelism: false`
+in the config — the cases reseed shared collections, which is the interference shape that cost
+this repo weeks in the e2e suite.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **182** (unchanged — the new suite is
+correctly invisible to it) · `npm run lint` clean · `npm run test:scripts` **20 passed**.
+✅ **Re-run with the service-account key moved aside and `SERVICE_ACCOUNT_KEY` unset** —
+still green, which is the actual claim the CI job depends on and not one worth taking on
+faith. **Mutation-tested:** neutering the `demo-*` check failed exactly one case, the one
+that asserts it.
+
+---
+
+## 2026-08-04 — renaming a cat is a cascade, and now there is a script for it
+
+**Area:** `scripts/migration/rename-cat.js` (new), `tests/unit/renameCat.test.ts` (new),
+`docs/manuals/admin-manual/README.md`.
+**Type:** enhancement (owner-requested) — _"can you write a script to 'refactor' a cat name?"_,
+after asking what a rename breaks.
+
+**What a bare rename breaks.** A cat's identity is its **document id**, and `updateCat` patches
+in place — so `?cat=<id>` links people have pasted into KakaoTalk survive a rename untouched
+(the reason the param is the id and not the name, §10c C2). But three things store the **name
+string**, and editing the cat updates none of them:
+
+1. **The albums empty out.** `PhotoAlbum` / `VideoAlbum` are handed `catName={cat.name}` and
+   query `where('tags', 'array-contains', catName)` (`media-albums.ts:69,116`). The media is
+   still there, still tagged with the old name — just unreachable from the cat.
+2. **Every `[catmodal:이름]` link to it goes dead.** Resolved by `getCatByName()` at click time
+   (`CatLinkedText:42`, `CatInfo:179`); after a rename the click produces a `console.warn` and
+   nothing else, while the text keeps its link styling.
+3. **Other cats' prose** carries the same tokens (작명 사유 / 특이사항 / 설명 …).
+
+🔑 **All three fail silently, which is why a script beats a checklist.** No error, no log —
+the damage surfaces later as an empty 사진첩 that nobody can date.
+
+⚠️⚠️ **The one part the script cannot make stick: YouTube owns video tags.**
+`/api/refresh-video-metadata` overwrites `cat_videos.tags` from `snippet.tags` on every
+📺 YouTube와 동기화 run — the route says so in as many words
+(`// YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)`). So the Firestore re-tag is correct **and
+temporary** for videos: the next sync reverts it. Writing to YouTube needs the OAuth path the
+CMS already owns, so the script instead **prints the affected YouTube ids and the exact CMS
+step** (동영상 태깅 → 일괄 태그 저장, which writes through). 📌 Recorded here because a fix that
+silently un-fixes itself is the failure mode this repo keeps re-learning.
+
+**Guards, each of which refuses rather than guessing:** renaming onto a name another cat in the
+tenant already holds (that ambiguity is what makes `getCatByName`'s first-match-wins
+unreliable); an `OLD_NAME` matching two cats; a `CAT_ID` from a different mountain than
+`MOUNTAIN_ID` (the cascade would search the wrong tenant's content); a no-op rename. Token
+rewriting matches `[catmodal:NAME]` **only** — never the bare name, so a cat called 별이 does
+not turn every 별이 in a post body into the new name — and the name is regex-escaped, so
+`아롱(2)` cannot compile into a capture group that matches another cat's token.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **143** (+10, the two pure functions).
+**Run end-to-end against the Firestore emulator** on purpose-built name-keyed data (the e2e
+fixtures tag by **id**, so they do not exercise the real shape): audit wrote nothing, APPLY
+gave **17/17** assertions — tags rewritten in place, no duplicate when a doc already carried
+both names, bare names and another cat's `[catmodal:아롱이몬]` untouched, `about_content.sections[]`
+rewritten inside the array, and a second tenant's identically-named cat and its media left
+alone — plus **5/5** guards refusing. **Mutation-tested:** matching the bare name instead of
+the token failed 5 cases; dropping the regex escape failed the metacharacter case.
+
+---
+
+## 2026-08-04 — 급식현황 publishing is gated on a confirmation that names the 급식소 it will stamp
+
+**Area:** `src/utils/feedingCheckIn.ts` (new), `src/components/NewPostForm.tsx`,
+`tests/unit/feedingCheckIn.test.ts` (new), `tests/e2e/admin/butler-create.spec.ts`.
+**Type:** enhancement (owner-requested) — _"let's gate the 급식현황 post with confirmation. Once
+the post is posted, the status of the feeding spots change and there's no way you can take it
+back. We should at least give the list of updated feeding spots and have the user confirm."_
+
+**What changed and why.** 작성 완료 now opens a 확인 listing every ticked 급식소 by name, with the
+방문 시간 and the warning that it cannot be undone; 취소 publishes nothing.
+
+🔑 **The irreversibility is real and asymmetric with the rest of the composer.** Publishing
+writes `last_attended` / `last_attended_by` onto shared `feeding_spots` documents, and a spot
+keeps only its **latest** visit — the previous stamp is overwritten, not versioned. So unlike
+the post itself (which its author may now edit, and since §10q delete), the check-in has no
+correction path at all: `deletePost` never touches `feeding_spots`, and the edit form hides the
+급식소 section for exactly this reason (the comment there has said since §10n that a mis-tick is
+an admin fix). The dialog is the only correction opportunity the flow has.
+
+📌 **The empty branch says something different rather than nothing.** With no spot ticked the
+dialog reads 선택한 급식소가 없어요 — no warning about a write that is not about to happen, and
+it catches the opposite mistake, the author who meant to tick something and did not.
+
+⚠️ **The message builder is a pure module, not a closure in the form, because the listing is
+unreachable from e2e.** `scripts/test/seed-emulators.mjs` seeds no `feeding_spots`, so the
+harness only ever exercises the empty branch — the spot list, its ordering and its count are
+pinned by `tests/unit/feedingCheckIn.test.ts` instead. The time is formatted from the
+`datetime-local` string's own components: a `Date` round-trip would reinterpret a zoneless
+value in the browser's zone and could show an hour other than the one in the input beside it.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **133** (+11) · `npm run test:smoke` **39**
+· **e2e 229 / 13 / 0** (+1: dismissing the confirm leaves the form intact and puts nothing on
+the stream). **Mutation-tested** — dropping the `checkedSpotIds` filter so the dialog lists
+every spot failed exactly the four cases that assert the listing, which is what distinguishes
+them from assertions that would pass against any string.
+
+---
+
+## 2026-08-04 — authors may delete their own posts; reply authors may edit and delete their replies
+
+**Area:** `config/firebase/firestore.rules`, `src/utils/postAuthor.ts` (new),
+`src/components/PostList.tsx`, `src/components/ReplyItem.tsx`, `src/components/ReplyList.tsx`,
+`tests/rules/posts.rules.test.ts`, `tests/unit/postAuthor.test.ts` (new),
+`tests/e2e/member/butler-delete.spec.ts` (new).
+**Type:** enhancement (owner-requested) — _"give the authors the permission to delete the post
+they created. The media can survive. Also… for replies, I do not mean the author of the post,
+but the author of the reply."_
+
+**What changed and why.** §10n deliberately withheld delete from members because _"a 집사톡
+post can carry other people's replies."_ That reason is real and unchanged; the owner weighed
+it and chose to let authors retract their own work anyway. So `delete` now admits the author
+on both boards.
+
+🔑 **A reply is a document in the SAME collection as the post** (`isReply` + `parentId`), so
+one rule governs both — and "the author of the reply, not of the post" needed **no new
+permission and no new rule**: the existing author test already resolves to the replier for a
+reply document, and `ReplyForm` has stamped `authorUid` since §10n. Editing a reply likewise
+already satisfied `isPostAuthor() && provenanceUnchanged()`. The ask was almost entirely a
+**UI** gap.
+
+⚠️ **Two things did need rule changes, and both were non-obvious:**
+
+1. **The cascade.** `deletePost` removes **every reply first**, and those belong to other
+   people — so without a new `isParentAuthor()` clause the cascade is denied partway and **an
+   author cannot delete their own post the moment anyone replies to it**. It costs a document
+   read, so it sits last, after `isPostAuthor()` short-circuits the common case. 📌 A stamped
+   `parentAuthorUid` field would avoid the read and was **rejected**: a reply is
+   client-written, so a crafted one could name the wrong parent author and make a post
+   **undeletable by its own author**.
+2. **`replyCount` may now move ±1, not just +1.** The services **recount** (`replies.length`)
+   rather than increment, so removing a reply lands on `old − 1` and the old bound denied it.
+   Still exactly one step: further apart means the count had already drifted, and correcting
+   drift stays an admin action. Arbitrary values would let any member set any post's count to
+   anything.
+
+✅ **"The media can survive" needed no code.** Verified in both services: `deletePost` /
+`deleteReply` touch only reply documents and the post document — never `cat_images`,
+`cat_videos`, or Storage. A deleted post's photos stay in the 사진첩; the code already did
+this, so the claim is now pinned by an e2e assertion on the confirm text rather than left to
+drift.
+
+📌 **The two-era author test moved to `@/utils/postAuthor`.** `PostList` had its own copy and
+`ReplyItem` needed the same logic — a second copy is how the permission catalogue drifted the
+day before (§10p). One helper, and a unit test for the trap it hides: an author-less document
+must not match an account with no email.
+
+**Verified.** `npx tsc --noEmit` clean · `npm test` **161** · `npm run test:rules` **86**
+(+17) · **e2e 228 / 13 / 0** (+4, each spec creating the fixture it destroys).
+**Mutation-tested:** removing the author term, the −1 branch, or the parent check each failed
+exactly the right cases — and M1 run _in isolation_ confirmed the **positive** author-delete
+test is not vacuous, which the combined run had masked.
+✅ **Deployed 2026-08-04** (owner) and **verified against production**: the deployed ruleset is
+now **identical to `config/firebase/firestore.rules`** ignoring comments. No migration — these
+ride on the existing `write-own-post-*` grants.
+⚠️ **It spent a few hours code-shipped-but-rules-not**, during which `PostList` rendered 삭제
+while the live rules still said `allow delete: if canWrite('manage-posts')` — the button and
+its confirm appeared, and the write was refused. (Reply 수정 worked throughout; editing never
+needed a rule change.) 🔑 **Recorded because the shape recurs, not because anything was done
+wrong:** code reaches production on `git push` while rules and the permission matrix ship
+through their own channels, so a deploy done before the work exists cannot cover it. **Check
+the deployed artifact, not the branch.**
+
+---
+
+## 2026-08-03 — 집사톡 members can attach media (narrow `upload-own-*`), and §10n turned out to be live
+
+**Area:** `config/permissions.json`, `config/firebase/firestore.rules`,
+`src/types/permissions.ts`, `src/types/media.ts`, `src/lib/auth/requireApiPermission.ts`,
+`src/app/api/generate-signed-url/route.ts`, `src/app/api/upload-youtube/route.ts` +
+`/complete`, `src/components/forms/uploadStrategies.ts`,
+`scripts/migration/add-member-post-permissions.js`, `tests/rules/media.rules.test.ts` (new),
+`tests/unit/requireApiPermission.test.ts` (new).
+**Type:** enhancement + correction (owner-raised) — _"we only thought about permissions for
+posts, but if you upload images and/or videos you need image/video permissions as well."_
+
+**What changed and why.** The owner was right. §10n granted the two **post** permissions and
+stopped; 집사톡 is the only board a non-admin may write **and** the only one that uploads, and
+every upload surface gates on `manage-photo` / `manage-video`, which only `admin` holds.
+🔴 **The member did not get a degraded post — they lost the post**, because
+`useRichContentForm` alerts on an upload failure and `return`s before the save, behind an
+English `Failed to get signed URL: Forbidden`.
+
+Fixed with **narrow** `upload-own-photo` / `upload-own-video` (owner's call over widening
+`manage-*`): they authorize **creating** a media record attributed to yourself and nothing
+else — no update, no delete, no retagging, no sync, not even on your own record. Authorization
+keys on a new `uploadedByUid`, derived inside the upload strategy from the same `user` that
+signs the request, so it can never disagree with the free-text `uploadedBy` beside it (which
+holds emails **and** literals like `'admin'`, `'system_sync'`). `requireApiPermission` gained
+an **any-of** form so both the admin and member permissions are accepted at each gate.
+
+📌 **`cat_videos` deliberately got no rule clause.** A member's video record is written by the
+Admin SDK in `/api/upload-youtube/complete`, which bypasses rules entirely — the route is its
+gate, and a clause there would be dead surface guarding a write path that doesn't exist.
+
+🔴 **The bigger finding, from dry-running the migration: §10n was already LIVE**, while the
+hand-off, PROJECT_PLAN §10n and its plan doc all said "built but not live, rules undeployed,
+migration dry-run only." Verified three ways — the deployed ruleset (release
+**2026-08-02T16:00:12Z**) matches the repo's rules file ignoring comments; the live
+`role_permissions/role-config` already grants `write-own-post-*` to both butler roles; and one
+active `butler-ground` member had **already authored two 급식현황 posts that day**. 🔑 **"The
+code isn't on `main`" is not "the change isn't in production":** Preview runs `dev` against the
+**production** database, and rules + the permission matrix deploy by hand, out of band — so a
+feature can be fully live while its branch is 80 commits behind. **Check the deployed
+artifact, not the branch.** All three documents corrected.
+
+🔬 **Why both test nets missed the gap — mirror images of each other.** The member e2e specs
+are text-only by an exclusion **inherited from the admin specs, where it was harmless because
+an admin holds every permission**; carried into the member specs, it sat exactly on top of the
+one thing the new role could not do. And the §10n rules suite missed it because **it tested
+the permissions the feature added, not the ones its user journey depends on.** 🔑 **When a role
+gains a capability, walk its whole journey — the gap is never in the permission you just
+wrote.**
+
+**…and the admin UI could not manage any of it** (owner: _"we need to update the 권한 tab"_).
+Both matrices on `/admin/members` **hardcoded their own copy** of the permission list, so the
+new grants were live in config and rules and **invisible to the operator**. 📌 Saving was at
+least safe — the matrix posts the _fetched_ object, so unlisted permissions in Firestore are
+preserved rather than stripped. Fixed at the root: **one exported `ALL_PERMISSIONS`**, with
+the `Permission` union derived from it and all copies importing it — including a **fifth** in
+`src/config/permission-config.ts` that nothing imported and had already drifted. The 권한
+(nav-visibility) matrix also gained the missing **`cats`** row (냥이들 is gated in `Navigation`
+and had no row, so it could never be configured) and lost `write-own-post-*`, which are write
+grants offered as visibility gates. A never-read `PAGES` const went with them.
+
+🔴 **The new guard found a second live gap on its first run.** `tests/smoke` now compares the
+catalogue against what config grants, what `firestore.rules` enforces, and what `Navigation`
+gates — and `view-analytics` turned out to be enforced on `permission_logs` reads while held
+by **no role**, so the audit trail is readable by nobody. 🔑 **A rule requiring an undefined
+permission fails closed and silently** — no error, no log, just an empty page indistinguishable
+from "nothing to show". Catalogued so it can at least be granted; granting it is an owner call
+(BACKLOG **B2**).
+
+**Verified.** Gap reproduced at the rules layer _before_ any fix (both butler roles denied on
+`cat_images`/`cat_videos`, with admin-succeeds and member-post-succeeds controls in the same
+run, so the denials were specific rather than a broken fixture). After: `npx tsc --noEmit`
+clean · `npm test` **152** passed, from a 137 baseline (+10 unit: 7 gate, 1 stamp, 2 route;
++5 smoke) · `npm run test:smoke` **39** (34 + 5 catalogue guards) ·
+**e2e 224 / 13 / 0** (up from 220 —
+`admin/members-permissions.spec.ts` drives both tabs in a real browser) · `npm run test:rules`
+**69** passed (11 users + 43 posts + 15 media). **Mutation-tested**: dropping
+`uploadingAsSelf()`, widening `create`→`write`, adding the `cat_videos` clause, and turning
+any-of into all-of each produced exactly the expected failures.
+✅ **Deployed 2026-08-03** (owner), in the correct order, and **verified against production
+2026-08-04** rather than trusted: the live ruleset carries the `cat_images` create clause and
+`uploadingAsSelf`, and the matrix grants both `upload-own-*` to both butler roles.
+
+---
+
+## 2026-08-03 — the dead deploy targets, swept a second time
+
+**Area:** `config/deployment/` (deleted), `scripts/deployment/` (deleted), `public/index.html`,
+`public/*.svg`, `README.md`, `config/README.md`, `next.config.js`, `package.json`,
+`test-kakaotalk-auth.js`, `tmp/rename.js`, `scripts/dev/get_doc_timestamps.ps1`.
+**Type:** removal (owner-requested) — _"`config/deployment/cloud-run-service.yaml` is a legacy
+config we abandoned long ago. Locate things of this sort and clean them up."_
+
+**What changed and why.** The 2026-06-27 cleanup (`f62816b`) declared Vercel the only deploy
+target and deleted the Cloud Run workflow, the Docker files and the `cloud-run:deploy-backup`
+npm script. It did not delete `config/deployment/cloud-run-service.yaml` or
+`scripts/deployment/deploy-cloud-run.{sh,bat}` — the owner found the first of those 14 months
+later. A sweep for the pattern turned up the rest:
+
+- **`public/index.html` — Firebase Hosting's "Setup Complete" welcome page, which Next was
+  serving publicly.** Verified, not assumed: `GET /index.html` on a local dev server returned
+  **200** with `<title>Welcome to Firebase Hosting</title>`. Anything under `public/` is served
+  at the site root, so this was reachable on the production domain the whole time. It was
+  invisible because `/` is an App Router page and wins — nobody types `/index.html`.
+- **`README.md`, the repo's front door, still documented Cloud Run as "Current
+  (Recommended)"** and told a new engineer to run `npm run cloud-run:deploy` — a script the
+  June pass had deleted. 8 of its 9 relative links were broken, and it advertised the
+  Cloud-Storage static-data pipeline (removed in the same cleanup, and an explicit
+  anti-pattern in `CLAUDE.md`) **three sections above** its own accurate "no Cloud Storage
+  data-serving path" note. Rewritten around what the repo actually does.
+- **Dead scaffolding of the same species:** `test-kakaotalk-auth.js` (root-level, checks a
+  component deleted since), `tmp/rename.js` (a one-shot rename over paths that no longer
+  exist), `scripts/dev/get_doc_timestamps.ps1` (**23 of its 30 paths** gone), the five
+  unreferenced create-next-app SVGs, a `package.json` script pointing at a missing file, a
+  `next.config.js` comment citing Cloud Run, and `config/README.md` still listing a
+  `firebase.json` the June pass deleted.
+
+🔑 **The lesson: a removal plan built as an inventory removes exactly what its author already
+knew about.** The cleanup plan's tables enumerated known files and said "verify each before
+deleting" — which reads as diligence while quietly bounding the work to the list. Nothing ever
+grepped `cloud-run` across the tree, so `deploy-cloud-run.sh` survived one directory away from
+the workflow that was deleted for the same reason. Its commit verified "no refs to deleted
+paths" — true, and not the same claim as "no refs to the dead target." **Sweep by pattern.**
+
+**Verified.** `npx tsc --noEmit` clean · `npm run test:smoke` 34/34 · `npm run test:rules`
+54/54 · production build succeeds and `GET /index.html` now **404**s while `/` is unchanged ·
+every relative link in the new `README.md` resolves · no reference anywhere outside
+`docs/archive/**` and `docs/planning/completed/**` (deliberate history) to any deleted path.
+
+---
+
+## 2026-08-02 — the about page has one source of truth: the CMS
+
+**Area:** `src/hooks/useAboutPhoto.ts`, `src/app/[mountain]/pages/about/page.tsx`,
+`src/components/admin/AboutContentEditor.tsx`, `src/services/about-content-service.ts`,
+`src/utils/config.ts`, `config/mountains/mountains.json`,
+`scripts/maintenance/fetch-static-assets.js`,
+`scripts/migration/migrate-about-content-to-cms.js` (new).
+**Type:** removal + fix (owner-requested) — _"whatever's entered in the CMS should be the
+source of truth; get rid of everything that gets in the way."_
+
+**What changed and why.** `mountains.json` carried an `about` object that was a second copy of
+the 소개. It looked stale, and for the text it was — `about_content/geyang` exists, so the JSON
+was pure fallback. 📌 The proof was `sections`: the JSON declared two, Firestore held **zero**,
+and the live page showed none.
+
+🔑 **The photo was the reverse, and this is the part worth remembering.** `useAboutPhoto`
+short-circuited to a `localPath` that `fetch-static-assets.js` baked into `mountains.json` at
+build time, and **ignored the filename it was handed from Firestore**. The image came from
+static config while the caption beside it came from the CMS — so **editing the photo in the CMS
+did nothing at all**. It was invisible because both sources happened to name the same file.
+Removing the short-circuit fixed that and unblocked the deletion in one move.
+
+- **`about` is gone** from both mountains, along with `MountainAbout` / `AboutMainPhoto` /
+  `AboutSection` / `getMountainAbout` / `MountainConfig.about`. The page and the CMS editor read
+  Firestore only; a mountain with no doc gets a blank form and **"아직 소개가 준비되지
+  않았어요"** — deliberately distinct from the read-failed state, because telling a visitor
+  "불러올 수 없어요" about a page nobody has written reports a fault that isn't there.
+- **No Firebase media is baked into the build any more.** About photos were the last; the
+  script also loses its only reason to write to `mountains.json`.
+- **A one-shot migration, applied to prod** (snapshot `2026-08-02T13-15-25-299Z` first) seeds
+  `about_content/manisan` (it had no doc, so it rendered entirely from the config block), strips
+  the `localPath` build artifact out of the content records, and deletes the legacy
+  `about_content/about` that M5.2a left pending verification. `about_content` now holds exactly
+  two docs; re-running is a clean no-op. Phase 3 refuses to delete unless the successor doc
+  exists, so a mis-ordered run cannot remove the only copy of anyone's 소개.
+- ⚠️ **Accepted cost:** a missing about photo used to **fail the build**; now it is a broken
+  image on a live page. The guard was only possible while the filename sat in config the build
+  could read — putting the CMS in charge moves the check to the operator, hence the new "open
+  `/pages/about` after saving" step in both manuals.
+- ⚠️ **Still only nominally end-to-end:** 파일 이름 is free text matched against Storage, so the
+  CMS names the photo but cannot upload it. A real upload control is the follow-up, deliberately
+  not folded in here.
+- 📌 **Found on the way, not fixed:** `sections` is stored and editable but **never rendered** —
+  the public page shows 제목 / 부제 / 대표 사진 / 본문 only. Awaiting an owner decision.
+
+🔬 **The e2e suite caught this, and what it caught is worth knowing.** `nav.spec` went red on a
+`next/image` **400** for the emulator's Storage URL: `remotePatterns` allows only
+`firebasestorage.googleapis.com`, and the emulator serves from `127.0.0.1:9199`. 🔑 **The
+harness had no remote-image coverage at all** — thumbnail and album fixtures use local
+`public/` paths, so the about photo became the **first** image in e2e to go through Storage,
+and the first to need the host allowed. `next.config.js` now adds the emulator patterns behind
+the `NEXT_PUBLIC_USE_FIREBASE_EMULATORS` flag `.env.test` sets; production still resolves to
+exactly one allowed host (verified by evaluating the config both ways).
+
+**Verified.** `tsc` clean · smoke 34/34 · unit 103/103 · full e2e green. Prod Storage confirmed
+to serve `about-photos/**` to an anonymous reader (unauthenticated `200` + metadata), which the
+live path requires and the baked path never exercised.
+
+---
+
+## 2026-08-02 — 집사톡 is edited by its create composer too
+
+**Area:** `src/components/forms/useRichContentForm.ts`, `NewButlerTalkForm`,
+`src/components/forms/existingMedia.ts` (new), the edit route, `tests/e2e/setup/test.ts`.
+**Type:** feature (owner-requested) — completes the same day's editor convergence.
+
+**What changed and why.** 집사톡 was the last type still on the URL-only `EditPostForm`, so
+changing a photo still meant hunting down its Storage URL. Its create composer runs on a
+_different_ hook (`useRichContentForm`) from 공지사항/입양홍보, which is why the earlier pass
+missed it. That hook gained the same `edit` block, and `NewButlerTalkForm` takes an optional
+`postId`.
+
+- **The 기존-media helpers moved to `forms/existingMedia.ts`**, shared by both hooks rather than
+  copied — the second copy would have been the start of the usual drift.
+- ⚠️ **Retained media counts against 집사톡's cap.** A post already holding one photo and one
+  video shows no pickers at all; removing the photo frees that slot and only that slot. Editing
+  must not be a way around a limit creation enforces.
+- ⚠️ **Post-level `tags` are omitted on an edit with no new files.** They mirror the cat selector,
+  which only applies to files being uploaded now — and since `updatePost` merges, sending an empty
+  array would have **erased the tags the post already carried**.
+- Authorship / 게시일 are not re-stamped, as with the other two composers.
+- **급식현황 stays on `EditPostForm`, deliberately.** Its composer uploads no media at all (owner,
+  2026-07-27), so sending its edit screen there would leave legacy 급식현황 posts that still carry
+  media with no way to change it. The URL list can.
+
+**Verified:** 2 more cases in `post-edit-composer.spec.ts` — the composer prefills, the cap holds
+against retained media and frees one slot on removal, and a text-only save keeps both media. Full
+e2e **2× consecutive 214 passed / 13 skipped / 0 failed**.
+
+🔬 **A test-harness bug found the hard way, worth keeping.** Adding a fixture video made an
+unrelated spec fail on a 404, so I allow-listed `img.youtube.com` **by host** — and two edit specs
+then failed on what looked like a 404 for a `_next/static` chunk. That chunk serves **200**
+(verified with curl); the real failure was YouTube returning a genuine 404 for the invented
+fixture id. 🔑 **When an `<img>` src is set by client JS, Chrome reports the failed-resource
+message's `location.url` as the initiating chunk, not the failing URL** — so a host-based
+allowance silently misses exactly the cases that need it and the failure reads as a bogus
+chunk 404. Replaced with an **auto fixture** that routes `img.youtube.com` for every spec: no real
+external request, nothing for a spec to forget, and no console allowance that could mask a real 404. It also removes the suite's accidental dependency on the public internet.
+
+---
+
+## 2026-08-02 — the post detail page renders in the shared post shell
+
+**Area:** `src/app/[mountain]/pages/posts/[postType]/[id]/page.tsx`, `tests/e2e/setup/test.ts`.
+**Type:** fix (owner-reported), following the same day's `(type, id)` routing fix.
+
+**What changed and why.** Making 집사톡 / 공지사항 / 입양홍보 posts reachable exposed what this
+page had always looked like: its own hand-rolled markup — an unpadded full-bleed `<img>` under
+English `Video:` / `Images:` headings, with videos as a thumbnail **linking off to youtube.com**
+instead of an embedded player. Only 급식현황 had ever reached it, so nobody had seen it.
+Owner: it should look like the 공지사항 / 입양홍보 pages.
+
+It now uses the same shell as the 공지사항 detail page (back link · title · author • date · white
+card) and the same shared **`PostMedia`** with `layout="full"` — so every surface renders a post's
+media identically, one column, each medium captioned with its own 제목/설명/태그. Per-type back
+links (`← 집사톡 목록으로` …). 급식현황 gets the same treatment, as asked, even though its
+composer no longer uploads media.
+
+- **댓글 stays on the community types only** (급식현황 / 집사톡). 공지사항 / 입양홍보 have never
+  had a reply thread, and this route is where the admin CMS links — reaching them here must not
+  quietly grow one.
+
+**Verified:** 2 more cases in `post-detail.spec.ts` — the shared shell renders and the English
+`Images:` / `Video:` headings are gone; 댓글 appears on 집사톡 and not on 공지사항. Full e2e
+**2× consecutive 212 passed / 13 skipped / 0 failed**.
+
+🔬 **One test-harness finding, worth keeping.** Adding those two specs turned the suite red at
+`auth/login-logout` — twice, at the same spec, with **two different** console errors, while it
+passed 3/3 in isolation. Bisected properly rather than re-run: committed HEAD green, HEAD + the
+page rewrite + the 2 specs red, HEAD + the rewrite with those 2 specs skipped **green**. So the
+app change was innocent — two more specs on an 8-worker run push the shared emulator past a load
+threshold. One of the two errors (`Could not reach Cloud Firestore backend`, `code=unavailable`)
+is the SDK's own log for a transport hiccup it **retries internally and recovers from** — the same
+phenomenon the `EMULATOR_HOSTS` allowance already covers, minus a URL to match on. Allow-listed,
+narrowly: `permission-denied` / `failed-precondition` still fail.
+⚠️ **The other error was NOT silenced** — see the open thread below.
+
+---
+
+## 2026-08-02 — 공지사항 / 입양홍보 are edited by their create composer
+
+**Area:** `src/components/forms/useSimpleContentForm.ts`,
+`src/components/forms/MediaItemList.tsx`, `src/components/forms/FormStates.tsx` (new),
+`NewAnnouncementForm` / `NewAdoptionForm`, `admin/posts/edit/[postType]/[postId]`.
+**Type:** feature (owner-requested).
+
+**What changed and why.** Editing a 공지사항 or 입양홍보 used to open `EditPostForm`, whose
+media controls were **"이미지 URL" / "동영상 URL" text boxes** — to change a photo the operator
+had to go and find its Firebase Storage URL. Owner: _"It's going to be cumbersome to find the URL
+of an image. Is it possible to edit those posts with the creation form?"_
+
+It is, and the obstacle had already been removed. `EditPostForm` documented its own limit as
+_"their upload paths differ — signed URLs for feeding, direct Storage for announcements/adoption,
+YouTube for video"_ — true when written, **stale since 2026-07-30**, when both composers moved
+onto the same signed-URL image strategy 집사톡 uses. Nothing was left but the divergence.
+
+So `useSimpleContentForm` gained an **`edit` config block** (load, prefill, `updatePost`) and the
+two composers take an optional `postId`. Editing now has everything creating has: real file
+pickers, per-file 제목/설명, the cat selector, 촬영 날짜, the 팝업 toggle.
+
+- **Media already on the post** shows as `기존` rows inside the same section — thumbnail, name,
+  and its own 삭제 — with a note that removing detaches it from the post and does **not** delete
+  the file. `MediaItemList` gained `existing` / `onExistingChange` for this. Retained media counts
+  against `allowMultiple`, so editing is not a way around 집사톡's cap.
+- ⚠️ **Existing media carries no 제목/설명 editor, deliberately.** That metadata lives on the
+  medium's own record (`cat_images` / `cat_videos`), and for a video **YouTube is the source of
+  truth** — a caption typed here would be erased by the next 동기화. It is edited in
+  사진 관리 / 동영상 관리.
+- ⚠️ **An edit does not re-stamp `username` / `date` / `time`.** Only creation sets them;
+  re-stamping would relabel a post with whoever edited it and jump it up a list ordered by 게시일.
+- 급식현황 / 집사톡 stay on `EditPostForm`: different hook (`useRichContentForm`), and 급식현황's
+  composer deliberately uploads no media at all (2026-07-27).
+
+**Verified:** new `tests/e2e/admin/post-edit-composer.spec.ts` (4 tests) — the editor is the
+composer and arrives prefilled with real file pickers and no URL boxes; existing media is listed
+and **survives a text-only save**; removing one photo detaches only that one; authorship and 게시일
+are unchanged by an edit. Full e2e **210 passed / 13 skipped / 0 failed**; tsc clean, vitest
+137/137, smoke 34/34.
+
+📌 **Fixture note worth keeping.** These specs mutate their posts, so they got their **own**
+(`test-anno-edit-01`, `test-adopt-edit-01`, `test-adopt-edit-02`). Two early versions shared one
+post and raced — `playwright.config` sets `fullyParallel`, so the later save reverted the earlier
+one. Same shape as the 2026-08-02 `admin/cats.spec` interference; the fixtures carry a
+do-not-share comment.
+
+---
+
+## 2026-08-02 — 집사톡 capped at one video + one photo, via static config
+
+**Area:** `config/media_control.json` (new), `src/utils/mediaControl.ts` (new),
+`src/components/forms/MediaItemList.tsx`, `src/components/NewButlerTalkForm.tsx`.
+**Type:** feature (owner-requested) — PROJECT_PLAN §10d **D2**, the last open item of that
+section.
+
+**What changed and why.** 집사톡's 동영상 and 사진 sections now accept **one file each**.
+`MediaItemList` gained an `allowMultiple` prop that hides the trailing "add another" picker once a
+file is present (with a Korean hint in the empty picker saying so); the file stays removable via
+삭제, so the cap is a replace, not a dead end. The two flags — video and image toggle
+**separately** — come from `config/media_control.json`, read through a fail-loud loader.
+
+🔄 **This reverses D2's "CMS-controlled" premise, deliberately (owner).** The Firestore design was
+drafted and rejected: the setting is **global across mountains** by decision, so a runtime toggle
+would have let **any one mountain's admin silently reconfigure every other mountain's composer**.
+Static config moves that authority to whoever can deploy. ⚠️ The redeploy cost is **accepted, not
+overlooked**.
+
+📌 **Scope is 집사톡 only.** 공지사항 and 입양홍보 are admin-only and stay unrestricted (§10d part
+1, owner 2026-07-30), which is why `allowMultiple` **defaults to `true`** and only 집사톡 passes
+it — a new call site inherits the permissive behaviour.
+
+**Verified in a real browser** (both forms driven, nothing submitted): in 집사톡, picking a photo
+removes the image picker while the video picker stays, the DOM drops to one file input, and 삭제
+brings it back; in 공지사항, picking a photo **keeps** its trailing picker. Gates: tsc 0, smoke
+34/34, unit 137/137.
+
+---
+
+## 2026-08-02 — 앱 관리's 게시물 컬렉션 설정 removed; the dashboard tile now counts for real
+
+**Area:** `src/app/[mountain]/admin/app-management/page.tsx`,
+`src/app/[mountain]/admin/page.tsx`.
+**Type:** removal + fix. Detail: PROJECT_PLAN **§10j**.
+
+**What changed and why.** The 게시물 컬렉션 설정 tab let an admin type Firestore collection names
+into a textarea, saved to **`localStorage`**, and the dashboard's 게시물 tile listed them back.
+🔑 **It configured nothing:** the dashboard read the value, then handed it to a stub that pushed
+`count: 0` per name behind a `// TODO`, and the tile's headline number was the **number of lines
+typed**, not a post count. **The tell** — the shipped default named **`posts_main`**, a collection
+that has never existed, and omitted `posts_adoption` and `posts_butler`, which do. It survived
+~14 months (since `3907ad7`, 2025-06-27) because a wrong name and a right name both render `0`.
+
+The tile now counts the four real collections through the existing service getters, labelled by
+surface (급식현황 / 집사톡 / 공지사항 / 입양홍보) with a real total. **Which collections exist is
+a fact about the code, not an operator choice** — that's why the configurability was the wrong
+shape. Found while siting the §10d D2 toggle, not reported.
+
+**Verified in a browser against live data:** 게시물 **14** = 6 + 2 + 4 + 2, and 앱 관리 now shows
+only 소개페이지 관리 + the disabled FAQ. ⚠️ The hydration warning on those pages is
+**pre-existing** — it reproduces on untouched admin pages and comes from the auth-dependent header.
+
+---
+
+## 2026-08-02 — The modal albums converged onto the shared MediaTile
+
+**Area:** `src/components/PhotoAlbum.tsx`, `src/components/VideoAlbum.tsx`.
+**Type:** refactor (owner-requested), no new behaviour intended.
+
+**What changed and why.** There were **two** album implementations: the album _pages_
+(`/pages/photo-album`, `/pages/video-album`), which use the shared `album/MediaTile`, and the
+_modal_ albums opened from a cat's card (`CatInfo` → 📸 사진 보기 / 🎬 동영상 보기), which
+hand-rolled their own tiles. 🔑 **That drift is what produced the previous entry's bug** — the
+mislabelled `제목 없음` filler survived in the hand-rolled copies long after the shared tile had
+dropped it, and the two families had quietly diverged on markup, hover treatment and spacing. Both
+modals now render `MediaTile`, mirroring their page counterparts: photos `layout="overlay"`,
+videos `layout="below"` with the clip's title.
+
+**Three deliberate consequences, none of them accidents:**
+
+1. **Tag chips appear on modal tiles for the first time.** `MediaTile` renders them and the
+   hand-rolled versions never did — a straight gain, and the reason a cat's own album now shows
+   which cats are in each item.
+2. **`PhotoAlbum`'s `|| '설명 없음'` filler is gone.** It was left alone in the previous change
+   because it is correctly labelled, unlike the video one; converging removes it anyway, since
+   the shared tile drops empty-state fillers by design. A photo with no description now simply
+   shows its date.
+3. **The photo modal moved from `next/image` to `MediaTile`'s raw `<img>`.** ⚠️ Not an
+   oversight: the shared tile documents that full-size Firebase URLs stall `next/image`, and the
+   photo album **page** — the higher-traffic surface — has served the same images that way all
+   along. This makes the two consistent rather than introducing something new.
+
+**Verified.** Browser-checked with screenshots of both converged modals, seeded with media
+matching the cat's name (fixtures tag by id, so the modals render empty otherwise): the photo
+grid shows tag chip + description overlay, and a second photo with no description correctly shows
+only its date; the video grid shows title + tag chip + date on the footer shelf. tsc 0 · lint
+clean (only the two pre-existing `exhaustive-deps` warnings) · smoke 34 · **full e2e 196 passed**.
+📌 Three specs failed in that full run — `api/tenant-isolation` (cats, points) and the 동참 pair in
+`admin/members` — and **all 10 pass when re-run in isolation**. They are the timing-sensitive set
+already documented in the hand-off, in unrelated areas; not a regression from this change.
+
+---
+
+## 2026-08-02 — Video tiles name the clip; the mislabelled "제목 없음" filler is gone
+
+**Area:** `src/components/album/MediaTile.tsx`, `src/app/[mountain]/pages/video-album/page.tsx`,
+`src/components/VideoAlbum.tsx`, `src/components/ui/VideoPlayer.tsx`,
+`tests/e2e/public/albums.spec.ts`.
+**Type:** enhancement + small fix (owner-reported).
+
+**What changed and why.** The owner noticed the photo grid captions its thumbnails while the
+video grid does not. 🔑 **It was not a structural difficulty with video thumbnails, as assumed —
+the two grids pass different layouts to the same shared tile.** Photos use `MediaTile`'s default
+`layout="overlay"` and pass `description`, so the caption is drawn over the image; videos use
+`layout="below"`, whose footer shelf rendered **only tags and meta**. `description` was neither
+passed nor rendered there, so a video was identifiable by its thumbnail alone.
+
+`MediaTile` gained a **`title`** prop for the `below` shelf (clamped to 2 lines, above the tag
+chips); the video album passes `video.title`, falling back to `description` for older records
+and to `''` — which renders no line — rather than a placeholder on every tile. **Titles, not
+descriptions, by the owner's call:** a YouTube title identifies a clip, a description is prose,
+and prose on a white shelf would dominate the card. `description` stays overlay-only for photos,
+where the gradient sits on the image and keeps it legible.
+
+🗑️ **`video.description || '제목 없음'` removed (owner: "indeed odd").** The filler announced a
+missing **title** while rendering a **description**, so a video with no description was captioned
+"제목 없음". Two live instances, both dropped in favour of rendering nothing: the 냥이 modal's
+video album (`VideoAlbum`) and the player caption (`VideoPlayer` — where it sat under a player
+already showing the real title). The album tile's spacing moved to a container `space-y-1` so the
+date/duration row sits correctly with or without a description above it. ⚠️ `PhotoAlbum`'s
+`|| '설명 없음'` is **left alone** — that one is correctly labelled (설명 = description), so it is
+a styling choice rather than the same defect. The shared `MediaTile` already drops both fillers
+by design; these two files hand-roll their tiles and had drifted.
+
+**Verified.** Browser-checked via screenshots of the video grid (both fixture shapes: a real
+title, and the description fallback) and the open player. A new e2e case pins both title paths.
+tsc 0 · smoke 34 · e2e public+mobile **97 passed**.
+
+---
+
+## 2026-08-02 — Signup consent recorded, a default role, and PII out of the auth logs
+
+**Area:** `src/services/auth-service.ts`, `src/components/SignupForm.tsx`,
+`src/components/LoginForm.tsx`, `src/services/permission-service.ts`,
+`src/types/permissions.ts`, `src/constants/policy.ts` (new),
+`src/lib/auth/deleteImplicitlyCreatedAccount.ts` (new),
+`src/app/api/account/default-role/route.ts` (new),
+`tests/e2e/api/default-role.spec.ts` (new), both policy pages.
+**Type:** enhancement + small fixes (PROJECT_PLAN §8 — 2 of 4 deferred compliance items).
+
+**What changed and why.** A review of the §8 deferred compliance items turned into four
+changes.
+
+1. **PII out of the auth logs (fix).** Every Kakao sign-in logged the user's `email` /
+   `displayName` / `photoURL` to the browser console, and the account-linking path also dumped
+   the whole `providerData` array — which carries `phoneNumber`. A sweep found a **third** site
+   the first report missed: `SignupForm` logged `user.email` when blocking a signup whose phone
+   already belonged to an account. All three now log `uid` (opaque) and provider ids only.
+
+2. **Orphaned Auth accounts deleted (fix).** Phone and Kakao sign-in mint a Firebase Auth
+   account as a side effect of authenticating, _before_ the login flow decides whether the
+   person may join. Refusing them left an Auth record holding PII with no consent, no profile
+   doc, and nothing to ever remove it. The bounce path now deletes it, reusing
+   `POST /api/account/delete`.
+
+3. **Consent is recorded (enhancement).** It never was — the email form gated the button and
+   stored nothing. `users/{uid}.consent` now holds `terms` + `privacy`, each with `agreedAt`
+   and a policy version, written on doc creation only. New `src/constants/policy.ts`
+   single-sources the version, which both policy pages now render as 시행일 so the shown date
+   and the stamped version cannot drift.
+
+4. **New members get a default role (enhancement, owner-requested).** They previously got
+   `roles: {}` and no role at all; the per-mountain `defaultRole: "viewer"` already in
+   `config/permissions.json` was read by nothing.
+
+🔑 **Two findings changed the shape of this work, both recorded so they are not re-derived.**
+First, the §8 item's premise was **wrong**: phone/Kakao users could not become members without
+consenting, because `LoginForm.handleCheckUser` already refuses implicit signup. A post-auth
+consent modal was designed and discarded on that finding; the real gap was the orphan in (2).
+Second, the exclusion of email from that deletion cannot rest on "the account predates the
+sign-in" — **signup is phone-first**, so a missing profile doc is usually an interrupted signup.
+The correct test is a **password credential** (`providerData` containing `'password'`), which
+proves they reached the linking step and therefore consented. Gating on the login _method_ — the
+first cut — would have deleted exactly those users whenever they signed in by phone.
+
+⚠️ **The default role could not be seeded client-side.** `firestore.rules` permits a self-create
+only with an **empty** `roles` map, and that is precisely what blocks self-escalation. So the
+client still creates with `roles: {}` (rule unchanged) and a new Admin-SDK route stamps the
+default: uid from the verified token, role from config rather than the request body, and a
+refusal when a role already exists. 📌 `viewer` is **not** permission-less — it carries
+`view-video` + `view-photo`, and is merely equivalent to no-role today — which is why relaxing
+the rule instead was rejected.
+
+**Verified.** tsc 0 · smoke 34 · unit 96 · e2e `api` project **39 passed**, including a new
+7-case suite for the route. Those tests were **mutation-checked**: injecting the two bugs the
+route guards against (honouring a body-supplied `role`; dropping the already-has-a-role guard)
+failed 3 of the 4 behavioural cases, so they are not passing incidentally. ⏳ **Still owner-owed
+— unreachable from the emulator:** a real Kakao sign-in, its linking fallback, and the
+orphan-delete path.
+
+---
+
+## 2026-08-01 — 이 냥이 링크: a share chip in the cat modal
+
+**Area:** `src/components/CatInfo.tsx`, `src/utils/cat-link.ts` (new),
+`tests/unit/catLink.test.ts` (new), `tests/e2e/public/cat-deep-link.spec.ts`.
+**Type:** enhancement (PROJECT_PLAN §10c C3, owner-requested).
+
+**What changed and why.** The `?cat=<id>` deep link shipped earlier the same day was only
+usable by someone willing to look a cat's id up in Firebase. The owner's framing settled it:
+the problem was never how the URL _looks_, it was how hard it is to _produce_. A third chip in
+the cat modal's existing action row now hands you the link — OS **share sheet on touch devices**
+(one tap into a KakaoTalk chat, which is where these go), **clipboard copy on desktop**.
+
+🐛 **Corrected same-day after an owner report** ("nothing happens when clicked" on desktop): the
+first cut chose the share sheet purely on `navigator.share` existing, which desktop Chrome
+satisfies and then refuses with `NotAllowedError`. Because a dismissed sheet legitimately
+produces a silent `AbortError`, the button had no visible failure path at all. Detail and the
+general lesson — feature detection is not affordance detection, and stubs cannot prove the
+platform runs your branches — in `DEBUG_LOG.md` 2026-08-01.
+
+🔑 **This dissolved an open design question rather than answering it.** Name-keying the URL, a
+per-mountain unique-name rule, and putting the mountain in the query had all been on the table
+to make links hand-constructible. With a share button none of them are needed, so the param
+stays keyed on the immutable id and the rename hazard never comes back.
+
+⚠️ **The chip builds the link; it does not copy `location.href`.** `CatInfo` renders on **six**
+surfaces and only 냥이들 carries `?cat=`, so copying the current URL would share a link to
+`/pages/adoption`. Building it (`utils/cat-link.ts`) also means the chip works from the adoption
+gallery, the map, 소개, and inline `[catmodal:이름]` mentions — wider reach than planned.
+
+📌 **The tenant prefix is mirrored from the current path, not read from config** — because the
+config answer is wrong today: geyang's `domains` says `geyangsan.mohocats.org` while production
+serves from the apex via the default-tenant fallback, so a config-driven branch would emit
+`/geyang/pages/cats…` and re-prefix URLs the path decision keeps clean. Full reasoning, and why
+a dropped prefix would fail silently and unrecallably, in PROJECT_PLAN §10c C3.
+
+**Verified in Chrome by stubbing each branch** (a real share sheet is an OS dialog no automated
+run can dismiss): share receives the constructed URL and the cat's name; a **dismissed** sheet
+(`AbortError`) logs nothing, copies nothing and leaves the label alone; a genuine share failure
+logs once and falls back to copying; a refused clipboard says 복사하지 못했어요; feedback reverts
+after 2 s. Round-tripped a shared link back to the open modal, and confirmed a `/geyang`-prefixed
+page keeps its prefix. Plus 7 unit tests, 2 e2e cases, tsc 0 / smoke 33 / unit 129.
+
+---
+
+## 2026-08-01 — one cat is now linkable: `/pages/cats?cat=<id>`
+
+**Area:** `src/app/[mountain]/pages/cats/CatsBrowser.tsx`, `src/components/ui/useModalLayer.ts`,
+`src/components/ui/Modal.tsx`, `tests/e2e/public/cat-deep-link.spec.ts` (new).
+**Type:** enhancement (PROJECT_PLAN §10c, decided 2026-07-29).
+
+**What changed and why.** There was no URL that opened a specific cat — the only way to point
+someone at 아롱이 was "open 냥이들 and search the name". Clicking a cat now sets `?cat=<id>`,
+and arriving on such a link opens that cat's `CatInfo` modal. Closing returns to a clean
+`/pages/cats`, and the browser back button closes the modal, as it already did.
+
+🔑 **Built on the modal system's existing history entry rather than beside it.**
+`useModalLayer` already pushed a synthetic history entry per overlay (that is how Android's back
+gesture closes a modal) and already popped it on close. It now accepts an optional
+**`historyUrl`** to hang on that entry, so the URL comes along for free and the existing
+`history.back()` restores it. No second history mechanism to keep in step with the first — and
+any modal worth addressing can opt in by passing `historyUrl` to `ui/Modal`.
+
+📌 **Keyed on the cat `id`, never the name** — the `[catmodal:이름]` token matches by name, so a
+rename silently breaks every link to it, and a URL people paste into KakaoTalk outlives any
+rename. In production the two currently _look_ the same: legacy docs are keyed by Korean name
+(the Sheets pipeline), so a real link reads `?cat=개똥이`. Cosmetic — old links survive a rename.
+
+⚠️ **The survival mechanism is not the one you'd assume.** `cat-reads.ts` maps
+`{ id: doc.id, ...doc.data() }`, and every prod cat doc carries its **own `id` field** (a
+duplicate of the doc key from the Sheets import) — so the spread wins and `cat.id` is a _stored
+field_, not the immutable document address. A rename survives because `CatFormData` has **no
+`id` member**, so the CMS write never touches it. That is a convention, not an enforcement: add
+`id` to that form and pasted links break silently. Spreading first
+(`{ ...doc.data(), id: doc.id }`) would make it structural — a no-op on today's data, left
+alone here because it changes a shared read path.
+
+**Verified in Chrome against a production build** — not just dev, because the two diverged
+during this work. Arrival opens the modal and holds the param (measured to 3.5 s, since the
+first attempt reverted it after ~1 s); closing clears the param and stays on the page; clicking
+a row sets it; back closes and clears, releasing the scroll lock. Unknown id → the plain list.
+Plus 5 new e2e cases and tsc 0 / smoke 33 / unit 122.
+
+🐛 **Two traps, both found by looking rather than reasoning** (full chain in `DEBUG_LOG.md`):
+the deep-link open must be deferred one task past the strip, or Next's AppRouter re-assert wipes
+`?cat=` back off; and that defer must be `setTimeout`, **not** `requestAnimationFrame`, because
+shared links get opened into background tabs where rAF never fires.
+
+🆕 **Owner decision this raises, not blocking:** the cats page now emits a GA4 `page_view` per
+modal open (the URL really changes, and `AnalyticsTracker` fires on `searchParams`). Defensible
+now that a cat is an address, but `/pages/cats` view counts will include modal opens. Suppressing
+it means teaching `AnalyticsTracker` to ignore the `cat` param — a few lines, not done.
+
+---
+
+## 2026-08-01 — the 공지사항 detail page's "중요한 안내사항" banner is gone
+
+**Area:** `src/app/[mountain]/pages/announcements/[id]/page.tsx`.
+**Type:** removal (owner-requested).
+
+**What changed and why.** Every 공지사항 detail page ended with a fixed banner — a warning
+triangle and the line `이 공지사항은 중요한 안내사항입니다. 내용을 숙지해 주세요.` The owner's
+call: it **reads too official and doesn't match the site's tone** (해요체, friendly). The whole
+banner went, not just the sentence: the text was its only content, so keeping the box would
+have left a warning icon captioning nothing.
+
+📌 **It was static, and that was the deeper problem.** The line was hard-coded markup appended
+to _every_ announcement regardless of content, so a note about a cat being fed read as gravely
+as a real advisory — and calling everything important is how nothing reads as important. There
+is no per-post "중요" flag behind it and none was added; if one is ever wanted, it belongs on
+the post, not on the page template.
+
+**Verified:** in Chrome against production data — `/pages/announcements/<id>` now ends cleanly
+after the media block. tsc 0, smoke 32/32, unit 121/121. No test or fixture referenced the
+string (grepped `숙지` across `src/`, `tests/`, `scripts/`: no other occurrence).
+
+⚠️ **Unrelated, pre-existing, and left alone:** that page logs a React **hydration mismatch** in
+dev. Confirmed pre-existing by stashing this change and reloading — the error reappeared on
+untouched code. Not investigated here; noted so the next person doesn't attribute it to this
+removal.
+
+---
+
+## 2026-07-31 — a post's media shows its 제목/설명/태그, on every surface
+
+**Area:** `media-albums.ts` (two new lookups), new `hooks/useMediaTags.ts`, `PostMedia.tsx`.
+**Type:** feature enhancement (owner-requested).
+
+**What changed and why.** The composers let an admin tag the cats in a post's photos and
+videos, and those tags reach `cat_images.tags` and YouTube — but nothing displayed them, so a
+reader of a 공지사항 or 입양홍보 post had no way to know who was in the picture. Each medium now
+carries a `태그: 이름, 이름` line, matching the 사진첩 lightbox's existing wording rather than
+inventing a second treatment.
+
+**Below the media, not overlaid on it.** The owner preferred tags _on_ the image if possible.
+Rejected because the images render `object-contain`: a photo is letterboxed inside its box, so
+an overlay would frequently sit on blank space rather than on the picture. Below also matches
+the album precedent the owner cited as the acceptable alternative.
+
+🔑 **Resolved live from the media records, not copied onto the post.** A post stores only
+`imageUrls` / `videoUrls` — bare URLs — while the tags live on `cat_images` / `cat_videos`. New
+`getImageTagsByUrls()` / `getVideoTagsByYoutubeIds()` resolve URL → record. Stamping the tags
+onto the post at creation would have been cheaper and was **deliberately not done**: tags keep
+being edited in `/admin/tag-images` and `/admin/tag-videos`, so a copy would disagree with the
+album from the first retag — the same failure mode the 2026-07-26 "the tagging surfaces own
+this data" rule exists to prevent. The live lookup also means **posts created before this
+shipped display their tags with no migration**, which is how the owner's existing post was
+verified.
+
+📌 **Details worth keeping:** both collections are `allow read: if true`, so this works for
+anonymous visitors — required, since these are public pages. The `in` clause is chunked at 30
+(Firestore's cap). A lookup failure is non-fatal and logged: the media still renders, untagged.
+And no composite index is needed — `mountainId ==` plus an `in` is a disjunction of equalities
+served by merging single-field indexes, with the sort done in memory; adding an `orderBy` would
+change that, and the emulator would not warn you.
+
+**Extended the same day, owner-reported: "the form has 제목/설명 fields but the post shows
+none of them."** The per-file video 제목 and the 설명 typed for each file had the same problem as
+the tags — written to the media record, never displayed — so the lookup now returns
+`{ tags, title, description }` and each medium carries a caption block.
+
+🐛 **And it surfaced a third hand-rolled media renderer.** `/pages/announcements/[id]` (the
+detail page) had its own copy: no tags, no captions, and a `videoUrl` legacy branch. It now
+uses `PostMedia` like everything else, which is why the owner's screenshot showed none of this
+even after the tags shipped — they were looking at a page the shared component had never
+reached.
+
+⚠️ **One regression caught before commit, worth recording.** Adopting `PostMedia` on the detail
+page also adopted the modal's image sizing (two columns, capped at 16rem), shrinking photos
+that had been full-width. The component took a `layout` prop — `compact` for the modal and
+feed, `full` for a dedicated page — rather than letting a shared component quietly downgrade a
+surface it was newly applied to.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 121/121 · full e2e green for the affected specs
+(161 passed with one unrelated known flake, `member/nav-permissions`, which passes on re-run).
+The e2e fixtures give each medium a **different** tag on purpose — album-01 → test-cat-01,
+album-02 → test-cat-03, yt-vid-01 → test-cat-01 — so a lookup returning one answer for
+everything could not pass. Browser-verified against **production data**: the owner's 공지 post
+shows `태그: 아들조로, 찰리` under its photo and `태그: 예쁜이` under its video, i.e. correctly
+different per medium — and on the detail page, the photo's 설명 ("나도 좀…"), the video's 제목
+and 설명, and both tag lines, with the photo back at full width.
+
+---
+
+## 2026-07-31 — 입양홍보 posts can pop up on a site visit, like 공지사항
+
+**Area:** new `PostMedia.tsx`, `AnnouncementModal.tsx` → `PostModal.tsx`, new
+`forms/ShowInModalToggle.tsx`, `AnnouncementModalContext`, `adoption-service.ts`,
+`NewAdoptionForm`, `NewAnnouncementForm`, `AdminPostList`. **Type:** feature enhancement
+(owner-requested).
+
+**What changed and why.** 공지사항 had a 모달 팝업 설정 toggle that makes a post appear as a
+popup on a visitor's first page view of the session; 입양홍보 had no equivalent, even though it
+is the surface where a popup is most likely to be _wanted_ (an adoptable cat is time-sensitive
+in a way an announcement usually is not). The toggle now exists on the 입양홍보 composer and on
+the 게시물 관리 list, backed by `getModalPost()` / `toggleModalDisplay()` on the adoption
+service.
+
+🔑 **One popup per visit, most recently updated wins.** This is the existing behaviour
+extended, not a new rule: the announcement service already picked the most recent when several
+carried the flag, and the session key already capped it at one. Both kinds are now queried in
+parallel and the newer of the two shows. Two popups stacking on one visit would be a different
+and more intrusive product decision — worth revisiting only if the owner asks. The
+`hasSeenAnnouncementModal` session key is deliberately **unchanged** so sessions already open
+when this shipped are not shown a second popup.
+
+**Three extractions rather than three copies**, because every one of these had a copy-and-drift
+twin waiting to happen — the failure mode this codebase spent the whole complexity-retirement
+track undoing:
+
+- `PostMedia` — the "render the whole post's media" block, lifted out of `AnnouncementModal`.
+  Now serves the 공지사항 popup, the 입양홍보 popup, and the 입양홍보 feed's expanded card,
+  which is also what fixes the bug logged in `DEBUG_LOG.md` for the same day.
+- `PostModal` — `AnnouncementModal` generalised over a `kind` ('announcement' | 'adoption'),
+  which drives only the title bar. A second modal component would have been ~140 duplicated lines.
+- `ShowInModalToggle` — the ~50 lines of switch markup, previously inline in
+  `NewAnnouncementForm`. Both composers now render the same control, with only the
+  descriptive sentence differing.
+
+📌 **`AdminPostList`'s toggle had to become service-aware.** It called
+`announcementService.toggleModalDisplay(postId, …)` unconditionally; pointed at an adoption
+post that would have written to a non-existent document in the announcements collection and
+still reported success, because `updateDoc` on a missing doc rejects but the alert sat past the
+await. It now picks the service from `postType`.
+
+📌 **No Firestore index needed, and that is deliberate.** `getModalPost` filters on
+`mountainId` + `showInModal` — two equality clauses, which Firestore serves by merging
+single-field indexes — and sorts **in memory**. Adding `orderBy('updatedAt')` would make it an
+equality+orderBy query and demand a composite index; since the emulator auto-creates indexes
+and never flags a missing one, and the method swallows errors to `null`, that would have
+surfaced only as "the popup silently never appears in production".
+
+**Verified:** tsc 0 · smoke 32/32 · unit 121/121 · full e2e **162 passed / 13 skipped / 0
+failed**. Browser-verified: the toggle renders on the 입양홍보 composer with its own Korean
+description, and the expanded feed card shows real production media.
+
+---
+
+## 2026-07-30 — the three composers converge: per-file media, cat tagging, no name collisions
+
+**Area:** `MediaItemList.tsx`, new `CatTagSelectField.tsx`, `MediaUploadField.tsx` (deleted),
+`uploadStrategies.ts`, `useSimpleContentForm.ts`, `useRichContentForm.ts`,
+`api/generate-signed-url/route.ts`, `NewAnnouncementForm`, `NewAdoptionForm`,
+`NewButlerTalkForm`. **Type:** feature enhancement (owner-directed, one session, four asks).
+
+**1. Per-file media in 공지사항 / 입양홍보.** Both could already _pick_ several files — the
+input carried `multiple` — but every video got the **same** YouTube title (the post title)
+and photos had no description at all. Both now use the same `MediaItemList` as 집사톡: one
+file per section, each with its own 제목 (video) and 설명.
+
+🔄 **This reversed the queued PROJECT_PLAN §10d decision** (2026-07-29: "cap video upload at
+one per post"), replaced by the owner before any of it was built. These two are admin-only,
+so admins stay **unrestricted**; what they lacked was per-file upload, not a limit. A
+**CMS-controlled** toggle for multiple upload is the remaining half and is **not started**
+(§10d D2 — which also records that `mountains.json` cannot host it: static import,
+redeploy-only, therefore not a CMS setting).
+
+**2. Images changed pipeline — with a visible consequence.** A per-photo 설명 needs somewhere
+to persist and the old path had none: `uploadImagesToStorage` uploaded to
+`<prefix>/<Date.now()>_<name>` and wrote **nothing** to Firestore. Both forms moved to
+`uploadImagesWithSignedUrls`, which records a **`cat_images`** entry — so 공지사항 / 입양홍보
+photos now appear in the public 사진첩 and the admin tagging queue, where before they appeared
+nowhere. Owner-chosen with that consequence stated.
+
+**3. Cat selector on both forms.** The same `CatSelectorModal` 집사톡 uses, one for video and
+one for images, appearing once there is media to tag — so those new `cat_images` records and
+YouTube videos can be tagged at upload instead of only later in the queue. Empty stays empty:
+`needsTagging` is the signal that a photo has never been tagged, and a default would erase it
+(the 2026-07-29 rule). The read-only selector field was extracted to `CatTagSelectField` and
+집사톡's two hand-rolled copies now use it — three composers × two media kinds would otherwise
+have been six copies. ⚠️ Deliberately **not** merged with `admin/media/CatTagField`, which is
+the tagging editor's free-text variant; a composer must not be a place where a cat name is
+invented by typo, because the name is what the album and `[catmodal:이름]` match on.
+
+**4. Filename collisions are prevented, not made unlikely.** The object path is the filename
+verbatim (`uploads/<name>`), so two posts uploading `IMG_001.jpg` silently overwrote each
+other. 🔑 **The owner asked whether checking the name against the collection would beat adding
+timestamps — and was right to reject timestamps** (they only lower the odds). But the
+**bucket** is the authority, not `cat_images`: the `cat_images` write is deliberately
+non-fatal, 공지사항's old uploads recorded nothing, and the owner's separate `image_uploader`
+script shares the bucket — an object can exist with no record, and a record can outlive its
+object. So `generate-signed-url` now does a `file.exists()` check → **409** with an actionable
+Korean message. ⚠️ This applies to 집사톡 too — same shared route, same latent bug.
+
+🔁 **Corrected within the day.** This first _also_ signed the URL with
+`x-goog-if-generation-match: 0`, so GCS would refuse an overwrite **atomically** and close the
+check-then-PUT race. That header made the cross-origin PUT **preflighted**, the bucket's CORS
+allow-list does not contain it, and the result was that **every image upload from every
+deployed origin silently failed** — owner-reported within hours. The header is gone from both
+ends and the residual race is documented as accepted in the route. Re-adding it is an ordered
+two-step change: widen `cors_fbstorage.json`, apply with `npm run storage:cors`, _then_ ship
+the code. Full chain: `log/DEBUG_LOG.md` 2026-07-30.
+
+**5. URL pasting removed** (owner). Both forms briefly kept an "또는 URL 입력" list beside the
+picker; it is gone, so these composers now only attach media they upload.
+
+**Kept deliberately:** a video left without its own 설명 still inherits the post body in these
+two forms (`비어 있으면 글 내용이 사용돼요.`). 집사톡's rule is the opposite — empty means
+empty — so `MediaItemList` took a `descriptionHelp` override rather than teach the wrong thing
+in one of them. Dropping the inheritance would have silently blanked the description on every
+announcement video whose author didn't type one.
+
+**Borders (owner-requested).** With several files stacked and a 동영상 list directly above a
+사진 list, it was not obvious where one file's fields ended or which section a picker belonged
+to — the ambiguity behind the 2026-07-29 "the picker won't select videos" false alarm.
+`MediaItemList` is now a framed section (`border-2`) with a header bar + count badge, a
+numbered badge per file, and a **dashed 2px rule between files**; the trailing picker is
+tinted and ruled off so it reads as "add another".
+
+**Consolidation that fell out of it.** `uploadVideosToYouTube(files, oneSharedMeta)` became
+`uploadVideoItems(items, …)`, shared by both hooks — `useRichContentForm` had been hand-rolling
+the same parallel loop including the fiddly `(Part n)` numbering that must count only the
+_untitled_ videos. Written once, and unit-tested at strategy level for the first time.
+🗑️ Deleted with no callers left: `MediaUploadField.tsx` (159 LOC), `uploadImagesToStorage`,
+and the `imagePathPrefix` config field.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 121/121 · **full e2e 160 passed / 13 skipped / 0
+failed**. Browser-verified on `/admin/announcements/new` and `/pages/butler_talk/new`: framed
+sections, count badges, numbered files, the dashed rule, the per-form 설명 hint, 촬영 날짜 still
+auto-parsing, the cat selector committing real names (개똥이, 꽃분이) with video/image
+selections independent, and no URL fields left.
+
+**Two e2e repairs this forced, both worth knowing:**
+
+- **`posts.spec.ts` image legs are stubbed via `page.route()` — forced, not chosen.**
+  `/api/generate-signed-url` signs locally with a service-account private key; the harness
+  initializes the Admin SDK **credential-less** on purpose and the Storage emulator does not
+  implement signing. Verified empirically by running with the stub disabled: `Could not load
+the default credentials` → 500. No emulator configuration fixes it.
+- **Upload fixtures must not reuse a seeded filename.** These specs now write real `cat_images`
+  records, and `fileName` is what `/admin/tag-images` keys its grid cards on — uploading
+  `album-01.jpg` put three cards with that alt on the page and broke that spec's strict-mode
+  locator. The specs now generate unique names. Relatedly, `tag-images` no longer asserts an
+  exact 전체 사진 count of 4: its "nothing creates/deletes images" premise is now false.
+
+⚠️ **Suite stability note.** Baseline (`HEAD`, clean tree) ran **green twice**; with these
+changes the suite reached green (160/13/0) but three earlier runs each lost **1–2 unrelated,
+timing-sensitive specs** — the 동참 pair (`member/contact-submit` writes, `admin/members` reads
+it) most often, plus `anonymous-gating` and `nav-permissions` once each. All pass when re-run,
+and none touch media forms. The likely cause is simply +2 tests of parallel load on a suite
+with marginal timeouts. Worth watching in CI; the 동참 pair is the fragile spot.
+
+## 2026-07-29 — video uploads no longer invent tags nobody chose
+
+**Area:** `useRichContentForm.ts`, `useSimpleContentForm.ts`, `NewAnnouncementForm`,
+`NewAdoptionForm`. **Type:** small fix (owner-reported, then extended on the owner's call).
+
+**What changed and why:** uploading a video from 집사톡 with no cat selected sent
+`tags: '산고양이'` instead of nothing. The record then landed with
+`needsTagging: tagsArray.length === 0` → **false**, so a video that had never been tagged
+was excluded from the tagging queue that exists to find exactly those. A fallback that
+fills a field also erases the signal that the field is empty. Now the selection is passed
+through as-is; empty stays empty, and `needsTagging` becomes true.
+
+📌 **Photos were already correct** — the 집사톡 image path passes `selectedImageTags`
+straight through, no fallback. The suspicion that it did the same was worth checking, but
+`산고양이` appeared exactly once in the codebase.
+
+**The same rule then went to 공지사항 / 입양홍보 (owner, same day).** Those composers attached
+a fixed `공지사항` / `입양홍보` tag to every video via `youtubeDefaults.tags` — a category
+label rather than a fallback, but with the identical downstream effect: `needsTagging` false,
+so **none of those videos ever reached the tagging queue** despite none of them carrying a cat
+tag. The field is **removed from the config type**, not set to `''`: neither form offers the
+uploader any tag input, so "empty unless specified" means always empty here, and a lingering
+empty string would only invite someone to refill it. Every video from these composers now
+lands in the queue — which is correct, since they all still need cat tags.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 119/119 (one test pins that an empty selection
+reaches YouTube with no `snippet.tags`, so no default can creep back in downstream). The
+composers have no unit coverage — vitest runs in a `node` environment with no React harness —
+so this is guarded at the route boundary and by `tsc` on the removed field.
+
+---
+
+## 2026-07-29 — video uploads show a progress bar
+
+**Area:** `src/components/forms/UploadProgressBar.tsx` (new), `uploadStrategies.ts`,
+both form hooks, 공지사항 / 입양홍보 / 집사톡. **Type:** enhancement (owner-requested).
+
+**What changed and why:** the composers now show one progress bar per submit while video
+bytes upload. Until the same day's upload fix (`DEBUG_LOG.md`) nothing over 4.5 MB could
+be uploaded at all, so "disable the submit button" was adequate feedback. With the
+resumable direct-to-Google upload there is no practical size limit, so a submit can
+legitimately run for minutes — long enough to read as frozen.
+
+- **One bar per submit, not per file.** `createUploadProgressTracker` sums each file's
+  latest byte count against the batch total. Per-file tracking is required because the
+  uploads run in **parallel**: a running total would count every progress event on top
+  of the last and race past 100%.
+- **`XMLHttpRequest` for the byte leg, deliberately.** `fetch` cannot report _request_
+  upload progress — streaming request bodies are Chrome-only and need HTTP/2 plus
+  `duplex: 'half'`, while `xhr.upload.onprogress` works everywhere. Only the leg that
+  carries bytes uses XHR; both API legs stay on `fetch`.
+- **100% is not "done"**, so the copy changes at 100% (`YouTube에서 처리 중이에요...`):
+  YouTube still processes the video and `/complete` still has to file and record it. A
+  full bar with the form still busy would otherwise read as stuck.
+- The bar reports the full byte count on completion, because the last progress event can
+  arrive before the request finishes and would leave the bar short.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 111/111 (+5, incl. the parallel-aggregation case
+that would catch a running-total regression) · `next build` clean. Browser-checked on
+`/pages/butler_talk/new`: the composer renders unchanged when idle (the bar returns
+`null`), and the bar's markup renders correctly at 0 / 37 / 100% with `bg-primary`
+resolving to geyang's `#FACC15` via the M8 CSS variable. ⏳ **Not yet seen driven by a
+real upload** — that needs credentials on Preview, and comes with the P5.4 pass.
+
+---
+
+## 2026-07-28 — admin CMS idle timeout raised from 2 hours to 24
+
+**Area:** `src/components/admin/AdminAuth.tsx`. **Type:** small change (owner's call).
+
+**What changed and why:** `ADMIN_IDLE_TIMEOUT_MS` 2h → **24h**. Two hours was short
+enough to interrupt real operator sessions — a CMS tab left over lunch or overnight
+was signed out — for a single-operator site where the walk-away risk the timeout
+guards is low. It remains an **idle** window, not an absolute one, so an active
+session still never expires under anyone.
+
+⚠️ **The duration is written in two places** and they must move together: the constant
+(`AdminAuth.tsx:21`) and the Korean expiry notice on the admin login screen
+(`AdminAuth.tsx:209`), which hardcodes it — "24시간 동안 활동이 없어 자동으로
+로그아웃되었어요." Changing the constant alone leaves the notice lying to the operator.
+No test pins that copy, so nothing fails if they drift.
+
+📌 Still global, not per-mountain: the constant applies to `/admin` on every tenant, and
+does not affect member sessions. Making it per-tenant would mean moving it into
+`mountains.json`. Supersedes the 2-hour value recorded in the original session-timeout
+entry below (kept as history).
+
+**Verified:** tsc 0, smoke 31/31, unit 102/102. The timing itself is not
+machine-verified — a 24h idle window isn't practical to exercise in a test, and the
+hook it drives (`useIdleTimeout`) is unchanged.
+
+---
+
+## 2026-07-28 — 내 집사 정보 offers a 관리자 shortcut to members who have CMS access
+
+**Area:** `src/app/[mountain]/mypage/page.tsx`, `src/constants/strings.ts`,
+`tests/e2e/member/mypage.spec.ts`.
+
+**What changed and why:** `/mypage` gained a **관리자** section with a
+**관리자 페이지로 가기** link to `/admin`, rendered only for members who hold admin
+access **on the active mountain**. Before this, the CMS had no entry point from the
+member surface at all — an admin had to know the URL and type it.
+
+**The gate reuses `isAdmin(user, mountainId)` from `@/lib/auth/admin`** — the very
+function `AdminAuth` runs — rather than re-deriving a permission list. That is the
+whole design of this change: a second, hand-written list of "admin-ish" permissions
+would be free to drift from the gate, and the two failure modes it produces are both
+bad (a link that dead-ends in 접근 권한이 없어요, or a hidden link for someone who
+does have access). The mountain comes from `useMountain()`, so a dual-mountain admin
+is offered it only on the mountain they hold a role on.
+
+⚠️ **`isAdmin` re-raises** when the permission read fails (blocked extension / offline
+/ denied) — "couldn't verify" is not "not an admin". Here the catch **logs and leaves
+the link hidden**, deliberately: this is a shortcut, not the gate, and offering an
+entry point we couldn't verify is worse than omitting one. `/admin` remains reachable
+directly and carries its own 다시 시도 UI for exactly that state.
+
+**Verified:** browser pass against the seeded emulator, both roles — `admin@test.local`
+sees the section and the link lands on the CMS shell; `member@test.local`
+(butler-ground) does not see it, page otherwise unchanged. New e2e guard in
+`tests/e2e/member/mypage.spec.ts` pins both directions (the admin case overrides
+`storageState`, matching `admin-auth-gate.spec.ts`), so the link and the gate can't
+drift apart silently. Gates: tsc 0, smoke 31/31, unit 102/102, `member/mypage.spec.ts`
+6/6.
+
+📌 Noted, not fixed: `/mypage` logs a React hydration mismatch in dev. Confirmed
+**pre-existing** by A/B-ing this change out — it is absent on untouched pages, so it
+belongs to mypage's own auth-dependent render, not to this section.
+
+---
+
+## 2026-07-27 — 집사게시판 stops composing media; 집사톡 becomes the media composer; playlists go per-mountain
+
+**Area:** `src/components/NewPostForm.tsx`, `NewButlerTalkForm.tsx`, `NewAdoptionForm.tsx`,
+`src/components/forms/` (new `MediaItemList.tsx`; `useRichContentForm`,
+`useSimpleContentForm`, `uploadStrategies`), `src/utils/config.ts`,
+`config/mountains/mountains.json`, `src/app/api/upload-youtube/route.ts`. Plan:
+[`butler-media-separation-plan-20260727.md`](../docs/planning/butler-media-separation-plan-20260727.md).
+Four commits: `0f9190f` → `c2fc78f` → `bd7ce23` → `97b72ed`.
+
+**What changed and why:**
+
+1. **집사게시판 lost media upload entirely** (owner call). It was doing two jobs — a 급식소
+   check-in log _and_ a second media composer — and the second was already done properly by
+   집사톡. Removing it rather than improving it twice. **Compose-time only:** legacy posts
+   keep rendering through `PostList`, and admins keep URL-based media editing in
+   `EditPostForm`. The form dropped `useRichContentForm` for a plain submit handler.
+2. **집사톡 got one-file-per-section with per-file 제목/설명.** A single `multiple` picker
+   forced one title and one description onto the whole selection, which only works when every
+   file is about the same thing. Videos get a 제목, photos don't — YouTube owns a real title,
+   while `CatImage` has only `fileName` and `description`, and `description` is what the album
+   caption and lightbox show. A photo title would be write-only data.
+3. **Empty now means empty.** `upload-youtube` no longer substitutes
+   `'Uploaded via Mountain Cats app'`, and each photo carries its own caption instead of
+   inheriting the post body. ⚠️ Behavior change: an empty photo 설명 saves empty, where every
+   photo in a post used to get the same text.
+4. **취소 on both composers**, confirming only when something would be lost (picked files
+   count as content).
+5. **Video filing became config-driven and per-mountain.** It used to match the playlist
+   _titled_ `집사게시판`, so a rename on YouTube stopped filing silently, and with one shared
+   channel every mountain filed into the same list. Now `social.youtubePlaylistId` per
+   mountain, plus a `_shared` platform block for the one cross-mountain 입양홍보 playlist —
+   `_` prefixed because `getAllMountains()` already filters those as non-tenant entries. An
+   입양홍보 video joins **both** playlists, so "mountain playlist = what that mountain owns"
+   stays true for the deferred `syncVideos` fix. 공지사항 gained its mountain playlist too; it
+   filed into nothing before.
+
+**Removed as a consequence:** `youtubeDescriptionDefault` and `createdTimeInputType` config
+knobs, `formatDateTimeForInput`, and `multiPartVideoTitles` — ⚠️ that last one was `false` for
+집사톡, so several untitled videos would have uploaded with identical titles; fallback
+numbering is now unconditional and applies **only** to videos left untitled.
+
+📌 **Found while doing this, not caused by it:** `/api/youtube-playlists` now has **no caller
+at all** (`/admin/tag-videos` uses `/api/manage-playlists`). Left in place pending the same
+`git log -S` history check that retired `generate-youtube-signed-url`.
+
+**Verified:** tsc 0, smoke 31/31, unit 102/102, **full e2e 153 passed / 13 skipped / 0
+failed**, plus browser passes on both rebuilt composers. New e2e guards the boundary — the
+집사게시판 spec fails if a file input ever reappears there. ⚠️ The YouTube-side behavior
+(actual playlist filing, empty descriptions) is **Preview-verified only**: the emulator has no
+credentials.
+
+---
+
+## 2026-07-26 — Removed: the `YOUTUBE_REFRESH_TOKEN` env var and the command-line token workflow
+
+**Area:** removed — `scripts/auth/` (both scripts), the `YOUTUBE_REFRESH_TOKEN` entry in
+`.env.example`, the env branch in `getYouTubeOAuthCredentials()`, and the status route's
+second "environment" token row. Changed — `src/components/admin/YouTubeAuthPanelNew.tsx`
+(shows the stored token's real issue date instead of the env token's placeholder),
+`scripts/README.md`.
+
+**What changed:** the YouTube refresh token now lives in exactly one place — Firestore
+`admin_config/youtube_auth`, written by the admin panel's 「토큰 갱신」 button. The env var is gone, along
+with `generate_youtube_refresh_token.js` / `refresh_youtube_token.js`, the command-line
+"generate a token, paste it into `.env`, redeploy" workflow the admin panel replaced (the
+generator script already pointed at the GUI in its own header).
+
+**Rationale:** this rides on the same-day credential fix (`DEBUG_LOG.md` 2026-07-26), which
+first kept env as a _fallback_ behind Firestore. The owner opted to remove it outright, and
+that's the better line: a fallback preserves the exact failure that was just fixed for the
+case where the Firestore doc goes missing — routes would quietly resume on a stale token —
+while adding no capability, since obtaining a token needs only the client id/secret. The
+recovery from "no token anywhere" is the same button as every other token problem. What
+remains in env is client identity (`YOUTUBE_CLIENT_ID`/`_SECRET`/`_REDIRECT_URI`), which
+identifies the OAuth app and effectively never rotates.
+
+⚠️ **Sequencing:** production runs `main`, which is pre-fix and reads the token from env only.
+`YOUTUBE_REFRESH_TOKEN` must stay set in Vercel **Production** until this promotes, or YouTube
+stops working there. Preview can be cleared immediately — and clearing it makes the P5.4 manual
+pass strictly stronger, since with nothing to fall back to, a working video edit proves the
+Firestore path end to end.
+
+**Verified:** tsc 0, smoke 30/30, unit 80/80 (the suite now asserts a leftover
+`YOUTUBE_REFRESH_TOKEN` is ignored), full e2e 146/13/0.
+
+---
+
+## 2026-07-26 — Decision: one shared YouTube channel for all mountains (per-mountain channels rejected)
+
+**Area:** changed — `config/mountains/mountains.json` (`manisan.social.youtubeChannelId` →
+geyang's channel); documented in `docs/handoff/HANDOFF.md` (Open threads).
+
+**What changed:** the platform commits to a **single YouTube channel serving every mountain**.
+Per-mountain attribution comes from `cat_videos.mountainId` — already stamped on every upload by
+`/api/upload-youtube` — rather than from channel ownership. No code change was needed: there has
+only ever been one OAuth credential, and per-tenant channels existed solely as a config field
+that was never populated for a second tenant.
+
+**Rationale:** the original intent behind separate channels was to attribute videos to each
+mountain's owner so they could be paid for their own mountain's content. Tracking by mountain
+achieves the same attribution without the cost. Against separate channels: (a) YouTube's
+monetization thresholds (1,000 subscribers + 4,000 public watch hours) apply **per channel**, so
+a new mountain's channel would earn nothing for a long time while a pooled channel earns from day
+one; (b) N channels means N OAuth clients and N independently expiring refresh tokens — the exact
+failure mode fixed the same day (`DEBUG_LOG.md` 2026-07-26), multiplied. Accepted trade-off:
+revenue lands in one AdSense account, so payouts to another mountain's owner are manual and
+trust-based; making the split auditable on YouTube (per-mountain playlist or a title/description
+convention) is the mitigation to design alongside a real mountain #2.
+
+**Consequence logged, not fixed:** `syncVideos()` (`src/services/media-albums.ts`) imports every
+video on the configured channel as belonging to whichever mountain ran the sync — harmless while
+`manisan` is a `hidden`, data-less stub, but a **prerequisite to fix before provisioning a real
+mountain #2**. Recorded as an open thread rather than fixed here: no live impact, and the right
+scoping mechanism is a product decision bound up with the attribution convention above.
+
+**Verified:** config-only; tsc 0, smoke 30/30, unit 80/80, full e2e green (the suite exercises
+both tenants and is indifferent to the channel value — no test reaches YouTube).
+
+---
+
+## 2026-07-26 — Analytics: `mountain_id` becomes a GA4 default parameter (all events, not just `page_view`)
+
+**Area:** changed — `src/components/AnalyticsTracker.tsx`;
+`docs/manuals/admin-manual/google_analytics.md` (substantially expanded).
+
+**What shipped:** `AnalyticsTracker` now calls `gtag('set', { mountain_id })` before emitting
+its `page_view`. M7 attached `mountain_id` **per-event**, which covered only the one event the
+app sends itself; GA4's automatic **Enhanced-measurement** events (scroll, outbound click, file
+download, video engagement, form interaction) are emitted by gtag with no call site to pass
+parameters at, so they arrived with **no tenant dimension**. `set` registers it as a default
+parameter inherited by every subsequent event. It is still also passed explicitly on the
+`page_view`, so that event stays self-describing.
+
+**Rationale:** the gap became live when the owner enabled Enhanced measurement on the GA4 web
+stream (2026-07-26) — until then `page_view` was the only event, so per-event was sufficient.
+
+**Known limit (documented, not a bug):** only events sent _after_ hydration inherit the
+default; `mountain_id` isn't knowable in the root layout, which sits above `MountainProvider`.
+Automatic events require user interaction, so in practice they land after hydration.
+
+**Verified:** tsc 0, unit 71/71, smoke 30/30 (no automated coverage exists for this component —
+there are no gtag/AnalyticsTracker tests; the real check is GA4 DebugView after promotion).
+
+**Doc:** `google_analytics.md` gained a ⚠️ **A0** step, an **A2** Enhanced-measurement step, and
+Firebase-ID reuse guidance — see the GA4 open thread in the hand-off for the console state.
+
+⚠️ **Sequencing trap recorded in A0:** production (`main`) is **pre-M7** — it still runs
+`getAnalytics(app)` driven by `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`, and reads
+`NEXT_PUBLIC_GA_MEASUREMENT_ID` nowhere. On such a build, setting the new var does nothing and
+deleting the old one **turns analytics off**. Keep both until M7 is promoted and verified.
+
+## 2026-07-26 — Auth gate on the 7 ungated media / credential API routes (one deleted)
+
+**Area:** changed — `src/app/api/{generate-signed-url,upload-youtube,update-youtube-video,
+refresh-video-metadata,manage-playlists,youtube-playlists}/route.ts`,
+`src/components/forms/{uploadStrategies.ts,useRichContentForm.ts,useSimpleContentForm.ts}`,
+`src/app/[mountain]/admin/tag-videos/{page.tsx,useYouTubeVideoMutations.ts}`.
+Removed — `src/app/api/generate-youtube-signed-url/route.ts`.
+Added — `tests/e2e/api/media-route-authz.spec.ts`.
+
+**What shipped:** these seven routes had **no auth gate at all** — any unauthenticated
+caller could mint 15-minute Firebase Storage _write_ URLs, upload to the shared YouTube
+channel on the operator's OAuth credential, and write `cat_videos` through the Admin SDK
+(which bypasses `firestore.rules`). Six now open with `requireApiPermission`, and every
+in-app caller sends `Authorization: Bearer <idToken>` via the existing `authHeader(user)`
+helper. The seventh — **`generate-youtube-signed-url` — was deleted as dead code** rather
+than gated (see below).
+
+**Permission choice — mirror the rule that already guards the resource:**
+`generate-signed-url` → **`manage-photo`** (its uploads are recorded as `cat_images`,
+which `firestore.rules` gates on `manage-photo`); all six YouTube routes →
+**`manage-video`** (mirrors the `cat_videos` rule). This deliberately makes each route
+exactly as permissive as the write it enables, so **nobody who can successfully complete
+these flows today loses access**: the post/image writes they end in already require
+`manage-posts`/`manage-photo` at the rules layer.
+
+**Rationale:** surfaced by the M5.3 route audit (2026-07-23) as a **pre-existing gap,
+orthogonal to multi-tenancy** — the routes predate the refactor — and logged as an open
+thread at the time (owner chose log-not-fix then). This is that hardening pass.
+
+**Client threading:** `uploadStrategies.ts` takes the signed-in `user` as an injected
+option (type-only `firebase/auth` import, matching `lib/auth/authHeader.ts`) rather than
+reaching into the auth SDK — the module stays a plain strategy with no Firebase coupling.
+`useRichContentForm`/`useSimpleContentForm` pass `user` through; the tag-videos page and
+`useYouTubeVideoMutations` route their 10 fetch sites through one `jsonAuthHeaders()`
+helper.
+
+**Verified:** new `tests/e2e/api/media-route-authz.spec.ts` (21 tests, pure HTTP) pins all
+7 method/route pairs three ways — 401 unauthenticated, 403 for a seeded butler holding
+neither permission, and past-the-gate for the seeded admin. Gates: tsc 0, smoke 30/30,
+unit 71/71, **full e2e 146/13/0** (125 pre-existing all still green).
+
+⚠️ **Non-obvious, pinned in the spec:** status alone can't tell a gate rejection from a
+downstream failure — with no YouTube OAuth credentials (the emulator, and any
+unauthorized deploy), `update-youtube-video` answers an `invalid_grant` with **its own
+401** ("YouTube authentication failed…"). The spec's admin case therefore asserts on the
+gate's error _messages_ ('Authentication required' / 'Invalid token' / 'Insufficient
+permissions'), not on the status code. A first draft keyed on status and failed for
+exactly this reason.
+
+**`generate-youtube-signed-url` DELETED, not gated (owner-approved).** It had **no caller
+anywhere** in `src/`, `tests/`, or `scripts/`, and `git log -S` over all history showed
+every reference outside its own folder was **documentation** — it has had no code caller
+since the commit that created it (`b901359`, the pages-router → app-router conversion),
+superseded by `upload-youtube`. It also read `process.env.YOUTUBE_*` directly rather than
+going through `getYouTubeOAuthConfig()`, so it would have drifted from the Firestore
+refresh-token fallback the live upload path uses. **No env var is orphaned** — the same
+four vars are read by `getYouTubeOAuthConfig()` in `src/utils/config.ts`. Verified by
+re-running the full suite after removal.
+
+**One adjacent finding left as-is (owner's call, 2026-07-26):** the butler post pages
+(`/pages/butler_{stream,talk}/new`) gate only on `isAuthenticated`; their writes already
+fail at the `posts_butler` rule without `manage-posts`, so nothing leaks, but a signed-in
+user without it only discovers this on submit. Accepted.
+
+## 2026-07-25 — Multi-mountain M8: per-tenant theming (minimal — primary color only)
+
+**Area:** changed — `tailwind.config.js`, `src/app/globals.css`,
+`src/app/[mountain]/layout.tsx`, `src/components/ui/Button.tsx`,
+`src/components/Navigation.tsx`, `src/components/LeafletMountainMap.tsx`,
+`src/app/[mountain]/pages/adoption/page.tsx`, `src/app/[mountain]/pages/faq/page.tsx`,
+`config/mountains/mountains.json`.
+
+**What shipped:** `config.theme` is now **live** (it was typed but read nowhere). A new
+`primary` tailwind token resolves to a `--color-primary` CSS variable — default `#FACC15`
+in `globals.css` (== geyang's shipped `brand.DEFAULT`). The `[mountain]` layout injects
+`:root{--color-primary:<tenant primaryColor>}` per request (hex-validated, throws on a
+malformed value; set on `:root` so it also covers modals that portal to `document.body`).
+The signature `from-brand to-accent` CTA gradient was repointed to `from-primary` on the
+**public** brand surfaces: shared `ui/Button` (primary variant), the header 입양홍보 CTA
+(`Navigation`), the Leaflet cluster-count marker, and the adoption + faq page CTAs.
+
+**Rationale (multi-mountain plan M8; PROJECT_PLAN §9):** make per-tenant theming real so a
+second mountain isn't hard-locked to geyang yellow. **Scope was owner-chosen: "primary
+color only" (minimal)** over the "full brand ramp via CSS vars" option — lower risk on
+live geyang (`brand` is used 261×), themes the design-sanctioned CTA surface, and leaves
+the ramp static. geyang's `theme.primaryColor` was **stale** (`#ffbc00` ≠ the shipped
+`#FACC15`); reconciled to `#FACC15` so honoring "geyang = zero visual change" holds.
+
+**Verified in-browser** (dev, `/` vs `/manisan`): geyang's CTA computes gradient-from
+`#FACC15` (pixel-identical to today); manisan's computes `#0ea5e9` (sky-blue) — proving
+differentiation. Gates: tsc 0, smoke 30/30, unit 71/71, **full e2e 125/13/0** (no
+regression).
+
+**Deliberately partial** (documented so it isn't mistaken for a bug): the `brand` 10-stop
+ramp and the **admin-only** `from-brand` CTAs (content-form submit buttons, the `IntroCard`
+badge) stay static — on a real second mountain those would still read yellow until a fuller
+token-migration pass. That pass is out of scope for the minimal M8 theming.
+
+## 2026-07-25 — Multi-mountain M7: analytics decoupled from Firebase → gtag.js + `mountain_id`
+
+**Area:** changed — `src/components/AnalyticsTracker.tsx`, `src/app/layout.tsx`,
+`src/services/firebase.ts`, `src/utils/config.ts`.
+
+**What shipped:** analytics no longer runs through the Firebase SDK. A single shared
+**GA4** property now loads via `gtag.js` — a `next/script` `<Script>` in the **root**
+layout, gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID` and configured with
+`send_page_view: false`. `AnalyticsTracker` sends every `page_view` itself, on route
+change, carrying `mountain_id` from `useMountain()` — so the shared property can be
+segmented per tenant. `services/firebase.ts` drops the `getAnalytics` import, the
+browser-only `analytics` init guard, and the `analytics` export (only `AnalyticsTracker`
+consumed it); the now-dead `measurementId` was removed from `getFirebaseConfig`.
+
+**Rationale (multi-mountain plan M7 §2.7):** decouple measurement from the single
+Firebase app so a **future** per-mountain GA4 property is a config change
+(`gtag('config', 'G-OTHER')`), not a rewrite — `firebase/analytics` welds measurement to
+the app's one id. Doing it now, while geyang is the only analytics consumer, is cheap; it
+also drops the `typeof window && !USE_EMULATORS` guard that existed only because
+`getAnalytics` throws server-side / without a `measurementId`. `send_page_view: false`
+additionally removes a pre-existing double-count (the SDK's auto page_view, which never
+carried `mountain_id`).
+
+**Behavior when unconfigured:** unset `NEXT_PUBLIC_GA_MEASUREMENT_ID` (local dev /
+emulator / e2e / Preview-without-it) → the snippet isn't rendered, `window.gtag` is
+undefined, `AnalyticsTracker` no-ops — identical to the old "analytics = null" path. No
+analytics in e2e, as before.
+
+**Owner-owed (🔑, not code):** register the GA4 property + `mountain_id` **custom
+dimension** in the GA4 console **before any tenant-2 traffic** (GA4 never backfills
+dimensions), and add `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the `G-XXXX` id) to Vercel
+**Production + Preview**. The old `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is now unused and
+can be removed.
+
+**Verified:** tsc 0, smoke 30/30, unit 71/71, **full e2e 125 passed / 13 skipped / 0
+failed** (no regression vs the M6 baseline). The dead `analytics` **rules** block was
+already removed in M5.2 — only the retained `view-analytics` permission remains.
+
+## 2026-07-25 — Multi-mountain M6: per-tenant upload namespacing (scope corrected mid-flight)
+
+**Area:** changed — `src/components/forms/uploadStrategies.ts` +
+`useSimpleContentForm.ts`, `src/app/api/generate-signed-url/route.ts` (+ a `uploadStrategies`
+unit test). Also **docs** — corrected image-storage strategy across
+`docs/codebase/media-and-youtube.md`, `deployment-and-build.md`, the admin/provisioning
+manuals, and the archived `IMAGE_STORAGE_EXPLAINED`.
+
+**What shipped:** image uploads now prepend the active tenant's `storagePrefix` —
+`uploadImagesToStorage(files, pathPrefix, storagePrefix='')` (threaded via `useMountain()` +
+`getMountainConfig()` in `useSimpleContentForm`) and the `generate-signed-url` route
+(resolves the tenant per-request via `getRequestMountainId`, prefixes the object path + the
+returned `publicUrl`). So a **new** mountain's album/signed-URL uploads land under
+`mountains/<id>/…` and their Storage URLs are naturally isolated. Geyang's prefix is `''` →
+exact no-op. `generate-youtube-signed-url` is a no-op (YouTube, no Storage path);
+`storage-service.ts` stays tenant-free.
+
+**Scope correction (the important part):** M6 was first built to also **namespace baked
+thumbnails** (`public/images/thumbnails/{mountainId}/`) + migrate `cats.thumbnailUrl`.
+Inspecting prod data killed that: cat thumbnails **and** album photos are served from live
+Firebase **Storage URLs** (not baked local paths), so they're already tenant-scoped by the
+object path — the dry-run migration found **0** changes (all 32 cats `not-baked`). The
+baked-thumbnail namespacing, its migration script, the e2e-fixture edits, and the cutover
+runbook were **reverted/deleted**; only the upload-prefix wiring remains. (The cat-thumbnail
+baking in `fetch-static-assets.js` is legacy/dead-in-prod — used only by e2e fixtures.)
+
+**Rationale:** the real multi-tenant gap for images is upload placement, not thumbnail
+paths. Documented the whole baked-vs-Storage-URL model in
+`media-and-youtube.md → Image storage & serving strategy` so this isn't re-derived.
+
+**Verified:** tsc 0, unit green (+2 `storagePrefix` path tests), smoke 30/30, full e2e
+125/13/0. **No prod migration or cutover** — the wiring is a no-op for geyang and only
+affects a future tenant's uploads.
+
+---
+
+## 2026-07-23 — CI: emulator-backed `rules` job (mountain-aware Firestore rules now gated)
+
+**Area:** changed — `.github/workflows/ci.yml` (added a `rules` job).
+
+**What changed:** a dedicated CI job that runs `npm run test:rules` (the 11
+mountain-aware Firestore security-rules tests) on the Firebase emulator — checkout →
+setup-node → setup-java 21 → `npm ci` → Firebase-emulator cache → `npm run test:rules`,
+gated `needs: checks`, running in parallel with the `e2e` job. No Playwright/browser
+install (rules tests need only the Firestore emulator), so it's much lighter than `e2e`.
+
+**Rationale:** the default `npm test` (CI's `checks` job) **excludes `tests/rules/**`**
+(they require the emulator; kept out of the emulator-less run via
+`vitest.rules.config.ts`), so a mountain-aware rules regression would have passed CI.
+This was the one real CI gap for M5 — the M5.4 two-tenant isolation e2e needed no
+wiring, since the existing `e2e`job's`npm run test:e2e`already globs all of`tests/e2e/\*\*`.
+
+**Verified:** `ci.yml` parses as valid YAML with three jobs (`checks` → `rules` +
+`e2e`); the `rules` job's step list and `needs: checks` gate confirmed. (The
+`test:rules` suite itself is green at 11/11 from M5.2.)
+
+---
+
 ## 2026-07-23 — Multi-mountain M5.4b: two-tenant isolation e2e (M5 code-complete)
 
 **Area:** added — `tests/e2e/api/tenant-isolation.spec.ts`,

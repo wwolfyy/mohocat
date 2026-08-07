@@ -17,12 +17,6 @@
 
 import mountainsConfig from '../../config/mountains/mountains.json';
 
-export interface MountainTheme {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-}
-
 export interface MountainFeatures {
   videoAlbum: boolean;
   photoAlbum: boolean;
@@ -34,6 +28,13 @@ export interface MountainSocial {
   youtubeChannelId: string;
   instagramHandle: string;
   facebookPage: string;
+  /**
+   * The mountain's own playlist on the shared YouTube channel. Every video
+   * uploaded for this mountain is filed into it, which is what makes a video
+   * attributable to one mountain **on the YouTube side** (Firestore already has
+   * `cat_videos.mountainId`). See `getYouTubePlaylistId`.
+   */
+  youtubePlaylistId: string;
 }
 
 export interface MapImageConfig {
@@ -88,33 +89,14 @@ export interface OAuthProviderConfig {
   };
 }
 
-export interface YouTubeOAuthConfig {
-  clientId: string;
-  clientSecret: string;
-  refreshToken: string;
-  redirectUri?: string;
-}
-
-export interface AboutSection {
-  title: string;
-  content: string;
-}
-
-export interface AboutMainPhoto {
-  filename: string;
-  caption: string | string[]; // Support both string and array formats
-  altText: string;
-  localPath?: string; // Path to static local image (set during build time)
-}
-
-export interface MountainAbout {
-  title: string;
-  subtitle: string;
-  mainContent: string | string[]; // Support both string and array formats
-  mainPhoto?: AboutMainPhoto;
-  sections: AboutSection[];
-}
-
+/**
+ * ⚠️ There is deliberately **no `about`** here. A mountain's 소개 lives in
+ * Firestore (`about_content/{mountainId}`), written through the admin CMS, and
+ * that record is the only copy. This block used to hold a second one, which
+ * shadowed the CMS for the 대표 사진 and stood in for it before a mountain was
+ * filled in — so config and CMS could disagree about what the page said. Adding
+ * it back re-creates that split; provision a new mountain's 소개 in the CMS.
+ */
 export interface MountainConfig {
   id: string;
   name: string;
@@ -131,8 +113,6 @@ export interface MountainConfig {
    * every new mountain (plan §0 sub-decision 3).
    */
   storagePrefix: string;
-  about: MountainAbout;
-  theme: MountainTheme;
   features: MountainFeatures;
   social: MountainSocial;
   map?: MountainMapConfig;
@@ -211,11 +191,57 @@ export function getYouTubeChannelId(mountainId: string): string {
 }
 
 /**
- * Get about page configuration for a mountain
+ * The mountain's playlist on the shared YouTube channel, or `null` when the
+ * mountain deliberately has none yet.
+ *
+ * ⚠️ **A missing key and an empty value mean different things**, and conflating
+ * them is the bug this replaced: filing used to find its playlist by matching
+ * the literal title `'집사게시판'`, so renaming the playlist on YouTube stopped
+ * filing silently. Here:
+ *
+ * - key **absent** → `throw`. A typo or an unprovisioned mountain must be loud.
+ * - value `''` → `null`. An explicit, reviewable "no playlist yet"; the caller
+ *   skips filing and logs that it did.
+ * - value set → file into it.
+ *
+ * All three playlists are configured today, so the `null` branch is defensive:
+ * it exists so adding a mountain and creating its playlist need not be one
+ * atomic chore.
  */
-export function getMountainAbout(mountainId: string): MountainAbout {
+export function getYouTubePlaylistId(mountainId: string): string | null {
   const config = getMountainConfig(mountainId);
-  return config.about;
+  const playlistId = config.social.youtubePlaylistId;
+  if (playlistId === undefined || playlistId === null) {
+    throw new Error(
+      `social.youtubePlaylistId is not configured for mountain: ${mountainId} ` +
+        `(use "" to declare that it deliberately has no playlist yet)`
+    );
+  }
+  return playlistId.trim() || null;
+}
+
+/**
+ * The one cross-mountain 입양홍보 playlist (owner decision, 2026-07-27).
+ *
+ * Adoption promotion is platform-wide, so this is **not** a tenant knob — hence
+ * no `mountainId` parameter and a home in the `_shared` block rather than in a
+ * mountain. An 입양홍보 video is filed into *both* this and its own mountain's
+ * playlist, so per-mountain attribution survives.
+ *
+ * Same missing-vs-empty contract as `getYouTubePlaylistId`.
+ */
+export function getAdoptionPlaylistId(): string | null {
+  const shared = (mountainsConfig as Record<string, unknown>)._shared as
+    | { youtube?: { adoptionPlaylistId?: string } }
+    | undefined;
+  const playlistId = shared?.youtube?.adoptionPlaylistId;
+  if (playlistId === undefined || playlistId === null) {
+    throw new Error(
+      '_shared.youtube.adoptionPlaylistId is not configured ' +
+        '(use "" to declare that there is deliberately no 입양홍보 playlist yet)'
+    );
+  }
+  return playlistId.trim() || null;
 }
 
 /**
@@ -256,9 +282,9 @@ export function getFirebaseConfig() {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
-    ...(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID && {
-      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-    }),
+    // measurementId intentionally omitted: analytics is decoupled from the Firebase
+    // app (multi-mountain plan M7 §2.7) and driven by NEXT_PUBLIC_GA_MEASUREMENT_ID
+    // via gtag.js, so the Firebase config no longer needs it.
   };
 
   if (process.env.FIREBASE_CONFIG) {
@@ -279,24 +305,11 @@ export function getYouTubeApiKey(): string {
   return process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
 }
 
-/**
- * Get YouTube OAuth configuration
- */
-export function getYouTubeOAuthConfig(): YouTubeOAuthConfig | undefined {
-  if (
-    process.env.YOUTUBE_CLIENT_ID &&
-    process.env.YOUTUBE_CLIENT_SECRET &&
-    process.env.YOUTUBE_REFRESH_TOKEN
-  ) {
-    return {
-      clientId: process.env.YOUTUBE_CLIENT_ID,
-      clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
-      refreshToken: process.env.YOUTUBE_REFRESH_TOKEN,
-      redirectUri: process.env.YOUTUBE_REDIRECT_URI,
-    };
-  }
-  return undefined;
-}
+// getYouTubeOAuthConfig() lived here until 2026-07-26. It required all three of
+// YOUTUBE_CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN before returning anything, which made
+// an env-only credential the only one any route could see. The OAuth credential now
+// lives in `src/lib/youtube/credentials.ts`, which reads the freshest refresh token
+// from Firestore and keeps client identity separate from it.
 
 /**
  * Get Firebase Admin Service Account configuration for admin operations

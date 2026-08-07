@@ -9,11 +9,15 @@
  * before scaling membership.
  */
 
+import { POLICY_EFFECTIVE_DATE_KO } from '@/constants/policy';
+
 export const metadata = {
   title: '이용약관 | 산냥이집냥이',
 };
 
-const EFFECTIVE_DATE = '2026년 7월 10일';
+// Single-sourced so the date shown here and the version stamped on a member's
+// consent record can never drift apart. See src/constants/policy.ts.
+const EFFECTIVE_DATE = POLICY_EFFECTIVE_DATE_KO;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

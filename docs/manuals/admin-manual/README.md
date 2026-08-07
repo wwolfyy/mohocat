@@ -42,6 +42,66 @@ role; a role grants permissions. The permission a given action needs:
 | `manage-app`     | edit About-page content (`/admin/app-management`)                 |
 | `manage-users`   | view/assign roles, view 동참 submissions (`/admin/members`)       |
 
+**Member (non-admin) permissions.** These are the grants a 집사 role holds. Everything above
+is admin-shaped ("manage anything"); these are deliberately narrower:
+
+| Permission               | Lets you…                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `view-post-butler`       | **read** 집사톡                                                                  |
+| `view-post-feeding`      | **read** 급식현황                                                                |
+| `write-own-post-butler`  | write a 집사톡 post, **edit and delete your own**, and edit/delete your own 댓글 |
+| `write-own-post-feeding` | the same on 급식현황, plus stamping the 급식소 you ticked                        |
+| `upload-own-photo`       | attach a **photo** to your 집사톡 post (2026-08-03)                              |
+| `upload-own-video`       | attach a **video** to your 집사톡 post (2026-08-03)                              |
+
+⚠️ **The two `upload-own-*` grants are not `manage-photo` / `manage-video`, and the difference
+matters.** They let a 집사 **add** a photo or video as part of their own post — nothing more.
+They do **not** allow editing or deleting any album entry (including one's own), retagging in
+`/admin/tag-images`, YouTube sync, or playlist management; all of that stays admin-only. A
+집사 who may add a photo must not thereby be able to reorganise the album.
+
+📌 **Why a 집사 needs these at all:** 집사톡 is the only member-writable board **that
+uploads**. Without them, attaching a file to a post fails at the upload — and the composer
+abandons the save, so the whole post is lost, not just the attachment (fixed 2026-08-03).
+
+### The two matrices on 사용자 관리, and which one you want
+
+| Tab      | Answers                                                          | Affects                                 |
+| -------- | ---------------------------------------------------------------- | --------------------------------------- |
+| **역할** | "which permissions does this **role** hold?"                     | everything — this is the real authority |
+| **권한** | "which permission does a visitor need to **see** this nav item?" | only whether the menu link is enabled   |
+
+🔑 **Grant a new capability in 역할.** 권한 is a _visibility_ map, which is why it offers only
+`view-*` permissions — gating a link on `write-own-post-butler` would hide it from people who
+may read but not post. ⚠️ **권한 does not enforce anything**: typing the URL still works, and
+the database is what refuses. Treat it as menu tidiness, not security.
+
+📌 Both tabs read their permission list from one place in the code now (2026-08-03). Before
+that each kept its own copy, which is how `upload-own-photo` / `upload-own-video` came to be
+active in the system while absent from the screen that manages them.
+
+🔑 **"Own" is enforced, not just hidden.** The 수정 link appears only on your own posts, and
+the database refuses an edit from anyone else even if the URL is typed by hand. An edit also
+cannot change who wrote a post or when — those are fixed at creation.
+
+🗑️ **Members can delete their own** (owner decision, 2026-08-04 — this reverses the
+2026-08-02 rule that made deleting an admin-only action).
+
+- **A post**: only its author, or an admin. ⚠️ **Deleting a post also deletes the 댓글 people
+  left on it** — that is why it was withheld at first, and the confirmation box says so
+  ("댓글 N개가 함께 지워져요"). It is the accepted cost of letting someone retract their own
+  post.
+- **A 댓글**: only **the person who wrote that 댓글** — not the author of the post it hangs
+  under. The one exception is the cascade above: removing a post takes its 댓글 with it,
+  whoever wrote them.
+- 📌 **사진과 영상은 남아요.** Deleting a post never removes its media — the photos stay in the
+  사진첩 and the videos on YouTube, with their records intact. If you also want the media gone,
+  remove it from 사진첩 / 영상첩 separately.
+
+📌 **The two boards are separate grants.** `butler-internet` reads 집사톡 but not 급식현황 —
+that split is why these are per-board permissions rather than one "member" flag. 공지사항 and
+입양홍보 stay admin-only (`manage-posts`); nothing here opens them up.
+
 > The role→permission matrix itself is edited in 사용자 관리. Changing it takes effect
 > immediately (permissions are resolved from the role at runtime, not copied per user).
 
@@ -129,7 +189,20 @@ Two views of the same data (toggle at the top):
 > **Modal order:** description → facts panel (출생연도 · 성별 · 거주지 · 중성화 · 부모/자식)
 > → prose sections (입양정보 · 작명 사유 · 성격 · 건강상태 · 특이사항) → 사진/동영상 buttons.
 
-Editing a cat re-bakes the public pages automatically (home + adoption revalidate), so
+> ⚠️ **Do not rename a cat by just editing 이름.** The name is stored in three other places,
+> and none of them follows: the cat's **사진첩 and 영상첩 go empty** (albums match photos by
+> the name in their tags), and **every `[catmodal:이름]` link to that cat stops working** — it
+> still looks like a link and does nothing. All of it fails **silently**; there is no error and
+> nothing to notice until someone opens the album.
+>
+> Use `scripts/migration/rename-cat.js` instead, which renames the cat and carries the name
+> everywhere it is stored. It is dry-run by default. **Full runbook:**
+> [§9 → Renaming a cat](#renaming-a-cat--use-the-script-not-the-이름-field).
+>
+> 📌 Links people have already shared are safe either way: `?cat=…` addresses the cat's
+> record, not its name, so a pasted link keeps working under the new name.
+
+Editing a cat re-bakes the public pages automatically (home + 냥이들 + adoption revalidate), so
 changes appear without a redeploy.
 
 ---
@@ -195,29 +268,54 @@ per-mountain config in `mountains.json`, which needs a redeploy — see §9.)_
 
 Four tabs, two kinds:
 
-| Tab      | Kind               | Who writes it                        |
-| -------- | ------------------ | ------------------------------------ |
-| 급식현황 | community feed     | app users (feeding check-ins)        |
-| 집사톡   | community feed     | app users                            |
-| 공지사항 | **admin-authored** | admins (**새 공지사항 작성** button) |
-| 입양홍보 | **admin-authored** | admins (**새 입양홍보 작성** button) |
+| Tab      | Kind               | Who writes it                                                                                        |
+| -------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| 급식현황 | community feed     | app users (feeding check-ins)                                                                        |
+| 집사톡   | community feed     | app users (**one video + one photo** per post — [§9](#9-configuration--operations-owner--developer)) |
+| 공지사항 | **admin-authored** | admins (**새 공지사항 작성** button)                                                                 |
+| 입양홍보 | **admin-authored** | admins (**새 입양홍보 작성** button)                                                                 |
 
 ### Create (공지사항 / 입양홍보)
 
 Click the create button → fill 제목 (title) + 내용 (body) → optionally attach images and
-videos (image files upload to storage; video files upload to YouTube; you can also paste
-image/YouTube URLs). Save.
+videos. Each file gets its own 제목/설명, and there's a 냥이 태그 selector and a 촬영 날짜
+field. Image files upload to Firebase Storage; video files upload to YouTube. Save.
+
+_(Pasting a media **URL** is no longer offered — these composers only attach files they
+upload themselves.)_
 
 - 공지사항 has a **팝업(모달) 토글** in the list — turn it on to show that announcement as a
   popup to visitors. Only one is shown (most recently updated).
 - 입양홍보 posts appear in the public **새로운 입양 소식** feed on `/pages/adoption`, and
   their body supports the [link tokens](#2-rich-text--links-the-important-one).
+- **No file-count limit here.** These two admin composers accept as many videos and photos as
+  you attach — the one-video/one-photo cap applies to **집사톡 only**
+  ([§9](#9-configuration--operations-owner--developer)).
 
 ### Edit / delete (any post type)
 
-- **Edit** — opens an editor for 제목 / 내용 and the **media links** (add/remove image &
-  video URLs). Note: uploading a brand-new media **file** during an edit is not supported
-  yet — do that via the create flow; edit is for fixing text and links.
+- **Edit (공지사항 / 입양홍보)** — opens **the same form you wrote the post with**, prefilled.
+  Everything creating has, editing has: file pickers for new photos/videos, per-file 제목/설명,
+  the 냥이 태그 selector, 촬영 날짜, and the 팝업 토글. You no longer need an image's URL to
+  change a picture.
+  - Media already on the post is listed at the top of its section, marked **기존**, each with
+    its own **삭제**. ⚠️ **삭제 only detaches it from this post** — the photo stays in the
+    사진첩 and the video stays on YouTube. That's why it's safe to undo by re-attaching.
+  - **기존 items have no 제목/설명 box on purpose.** That text belongs to the photo/video
+    itself, not to the post — edit it in [사진 관리 / 동영상 관리](#6-photos--videos--사진동영상-관리-admintag-images-admintag-videos).
+    For a video, YouTube is the source of truth, so anything typed elsewhere is overwritten by
+    the next 📺 YouTube와 동기화.
+  - The post keeps its **original author and 게시일**; editing does not move it to the top of
+    the list or put your name on it.
+- **Edit (집사톡)** — same story: opens 집사톡's own composer, prefilled, with file pickers
+  and the 기존 list. ⚠️ 집사톡 is capped at **one video + one photo**
+  ([§9](#9-configuration--operations-owner--developer)), and media already on the post
+  **counts against that cap** — so a post that already has both shows no file picker until
+  you 삭제 one.
+- **Edit (급식현황)** — still the older editor: 제목 / 내용 plus add/remove media by **URL**.
+  That's deliberate: the 급식현황 composer doesn't upload media at all any more, so its edit
+  screen keeps the URL list — otherwise older 급식현황 posts that still carry a photo would
+  have no way to change it.
 - **Delete** — removes the post (and its replies, for community posts). No undo.
 
 ---
@@ -231,6 +329,46 @@ photo/video album pages.
 - **사진 관리** (`/admin/tag-images`) — browse images, assign/adjust cat tags.
 - **동영상 관리** (`/admin/tag-videos`) — browse videos, edit metadata, manage playlists;
   YouTube integration lives here (auth/refresh handled server-side).
+  📄 **Button-by-button reference: [`tag-videos-spec.md`](./tag-videos-spec.md)** — what each
+  button writes to (YouTube vs Firestore vs nothing), when it's disabled, and the known traps.
+
+### ⚠️ Video data: YouTube is the source of truth — never edit it in Firebase
+
+**Rule: every change to a video must be made on YouTube (via this admin UI, or on YouTube
+itself). Never edit a video's data directly in the Firebase console — the edit will not
+survive.**
+
+Videos live in two places. The real video and its metadata (title, description, tags, 촬영일,
+playlists) belong to the **YouTube channel**. Firestore holds a **copy** that the 영상첩 album
+reads, and that copy is rebuilt from YouTube every time a video is synced. The rebuild is a
+straight overwrite: whatever YouTube says wins, and a field YouTube doesn't have is **cleared**.
+
+So a value written straight into Firestore has no defence. It survives until the next sync of
+that video — which happens on the 📺 YouTube와 동기화 button, and also automatically after **any**
+save on that video — and is then silently replaced by YouTube's value, or by nothing.
+
+This is why the admin UI always writes to YouTube first and then copies the result back, and why
+`/admin/tag-videos` performs **no direct writes to Firestore at all**. If you're ever tempted to
+"just fix it in the console", fix it on YouTube instead and press 📺 YouTube와 동기화.
+
+_(Photos are the opposite: `cat_images` has no upstream, so Firestore **is** the source of truth
+for them. The rule above is about videos.)_
+
+**YouTube 토큰 갱신 (re-authorization).** Google's refresh token expires every **7–14 days**;
+when video edits, uploads, or playlist saves start failing with an authentication error, go to
+the **대쉬보드** (`/admin` — _not_ this page) and click **🔄 토큰 갱신** in the
+**🎬 YouTube API 토큰 관리** panel, sign in on the Google window that opens, and let it close by
+itself. That's the whole procedure — since 2026-07-26 the new token is
+stored server-side and takes effect immediately for **every** YouTube function. **No
+environment-variable edit and no redeploy are needed**; older instructions saying to paste
+`YOUTUBE_REFRESH_TOKEN` into Vercel are obsolete — that variable no longer exists, and the
+command-line token scripts that went with it were deleted. If the panel ever reports no token at
+all, the fix is the same button.
+
+📌 **"토큰 갱신" is a full re-authorization, not a silent refresh** — the name undersells it. It
+opens Google's consent screen and stores whatever comes back, which is why it's also the fix when
+the _permissions_ on a token are wrong (see the 2026-07-26 scope entry in `log/DEBUG_LOG.md`), not
+only when it has expired.
 
 _⚠️ expand: step-by-step tagging workflow, bulk-tagging, and the YouTube auth setup._
 
@@ -238,9 +376,42 @@ _⚠️ expand: step-by-step tagging workflow, bulk-tagging, and the YouTube aut
 
 ## 7. About page content — 앱관리 → About (`/admin/app-management`)
 
-Edit the public **소개(About)** page sections here. The section content supports the same
+Edit the public **소개(About)** page here. The content supports the same
 [link tokens](#2-rich-text--links-the-important-one); a **💡 링크 지원** help panel in this
 editor lists them.
+
+🔑 **This editor is the only place the 소개 exists (2026-08-02).** It used to share the job
+with a copy in `config/mountains/mountains.json`, which quietly won for the 대표 사진 — so a
+photo changed here kept showing the old one until someone redeployed. That copy is gone: what
+you save here is what the page renders, with no deploy needed.
+
+### ⚠️ Known limitation — the 대표 사진 takes a file _name_, not an upload
+
+The 대표 사진 block is **three text boxes** (파일명 · 대체 텍스트 · 사진 설명). There is no
+file picker, no upload button and no preview, so **this editor cannot put the image in
+Storage** — it only records the name of one that is already there.
+
+**To change the photo, two steps in two different tools:**
+
+1. Upload the image to **Firebase Storage** at `about-photos/{mountainId}/` (Firebase Console).
+2. Come back here and type that **exact** filename into **파일명**. Leave it blank for no photo.
+
+⚠️ **Nothing checks the name, in either direction.** Saving always reports
+**"소개 내용을 저장했어요!"** even when the file does not exist; the mistake only appears later
+on the public page as **"사진을 불러오지 못했어요"**, with no hint whether the cause was a
+typo, `.jpg` vs `.jpeg`, a rename in Storage, or the wrong mountain's folder. 👉 **Always open
+`/pages/about` after saving a photo change** — that habit is standing in for a check the
+software should be doing.
+
+📌 **This is a known gap, not the intended end state**, and it is the same shape as the
+pasted-URL post editor that was replaced on 2026-08-02: the create paths can upload, this one
+can only reference. Giving it a real upload control is tracked in
+[`docs/planning/BACKLOG.md`](../../planning/BACKLOG.md) → **B1**. Until then the two-step
+routine above is the supported way.
+
+📌 **섹션 is stored but not displayed.** The public page renders 제목, 부제, 대표 사진 and
+본문 only — anything typed into 섹션 is saved and never shown. (Raised 2026-08-02; awaiting a
+decision on whether the page should render them or the field should go.)
 
 ---
 
@@ -261,10 +432,30 @@ Mostly one-time or infrequent setup. Details live in
 [`docs/manuals/deployment/README.md`](../deployment/README.md) and the root
 [`CLAUDE.md`](../../../CLAUDE.md); the essentials:
 
+> 🏔️ **Adding a new mountain?** The owner-facing checklist is
+> [`adding-a-mountain.md`](./adding-a-mountain.md) — DNS, Vercel, Firebase authorized
+> domains, Kakao redirect URIs, the YouTube playlist, and seeding the first admin. ⛔ It
+> starts by sending you to
+> [`mountain-2-prerequisites.md`](../../planning/mountain-2-prerequisites.md), which lists
+> what must be fixed **before** a second mountain goes live — including a security defect
+> (§1.1) that becomes real the day a second subdomain resolves.
+
 - **Environment variables** (Vercel dashboard — Production **and** Preview): Firebase
   `NEXT_PUBLIC_FIREBASE_*`, `SERVICE_ACCOUNT_KEY` (Admin SDK), Gmail SMTP
-  (`SMTP_HOST/PORT/USER/PASSWORD/FROM`) for 동참 email, optional `MOUNTAIN_ID`
-  (defaults to `geyang`).
+  (`SMTP_HOST/PORT/USER/PASSWORD/FROM`) for 동참 email, `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+  (GA4 analytics — see the next bullet), optional `MOUNTAIN_ID` (defaults to `geyang`).
+- **Analytics (GA4 via gtag.js).** Page-view analytics run through a **single shared GA4
+  property**, tagged per mountain. Setup is env-driven: set `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+  to the GA4 `G-XXXX` id in Vercel (Production **and** Preview). **Until it is set, no
+  analytics loads at all** (no error — the tracking script simply isn't rendered), which is
+  also why local dev / Preview stay analytics-free. Each page view is sent with a
+  `mountain_id` field so one property can be filtered per mountain — but GA4 only records
+  that field once it is registered as a **custom dimension** in the GA4 console, and GA4
+  **does not backfill**, so register `mountain_id` **before** a second mountain ever gets
+  traffic. _(The older `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is no longer used for analytics
+  and can be removed.)_ **Full step-by-step:**
+  [`google_analytics.md`](./google_analytics.md) (create the property, register the dimension,
+  set the Vercel var, verify, read per-mountain data).
 - **Deploy = `git push`** (Vercel Git integration): Production ← `main`, Preview
   ("staging") ← `dev`. There is no deploy command.
 - **Firestore security rules** are **not** auto-deployed. After editing
@@ -272,11 +463,32 @@ Mostly one-time or infrequent setup. Details live in
   `firebase deploy --only firestore:rules`. Until then, reads/writes to the new collection
   fail against live Firestore. ⚠️ This is the most common "why doesn't the new thing work
   in production" cause.
-- **Build assets:** thumbnails / about-photos are fetched from Firebase Storage at build
-  time (`npm run fetch:assets`, run automatically by `npm run build`). They are **not** in
-  git — a fresh dev checkout needs `npm run fetch:assets` before pages with photos render.
+- **Build assets:** cat thumbnails are fetched from Firebase Storage at build time
+  (`npm run fetch:assets`, run automatically by `npm run build`). They are **not** in git.
+  - **How images are actually served (important mental model):** **every** photo the site
+    shows now rides on live Firebase **Storage** — cat **thumbnails** and **album photos**
+    from URLs stored in Firestore (`cats.thumbnailUrl` / `cat_images.imageUrl`), and the
+    **about-page photo** from the filename in the CMS record — all optimized by Next
+    `<Image>`. **Nothing from Firebase is baked into the build any more** (2026-08-02: about
+    photos were the last, and their baking is what made the CMS's photo field not work).
+    The baked `thumbnails/` folder is legacy/unused in prod. Full detail:
+    [`docs/codebase/media-and-youtube.md`](../../codebase/media-and-youtube.md#image-storage--serving-strategy).
+  - **Per-mountain uploads (M6):** new image uploads (the signed-URL route + the form image
+    upload) automatically land under the active mountain's `storagePrefix` in Storage, so a
+    second mountain's photos are isolated — operators set nothing. The default mountain
+    (`geyang`) has `storagePrefix: ""` (flat bucket, `uploads/`); a new tenant uses a
+    non-empty prefix (e.g. `mountains/<id>/`).
 - **Multi-tenant:** per-mountain public config is in `config/mountains/mountains.json`;
   `MOUNTAIN_ID` selects the active one.
+  - **Brand color is platform-wide, not per-mountain** _(changed 2026-08-05, owner
+    decision)_. Every mountain renders the same brand yellow; `mountains.json` no longer has a
+    `theme` block and there is **no color setting to configure per tenant**. 🔑 **Why it was
+    removed:** letting each mountain pick its own colors is an administrative burden — there
+    is no preview and no contrast check, and because the file is baked at build, "trying a
+    color" means queuing a redeploy each time. (`secondaryColor` / `accentColor` had also
+    never been wired to anything, so editing them silently did nothing.) To change the brand
+    color for **the whole platform**, edit `brand` in `tailwind.config.js` and `git push` — a
+    developer task, not a CMS one.
 - **Map clustering (mobile):** the **whole-mountain** lever for cluttered pins (option 3 in
   [§4 → Three ways to fix cluttered pins](#three-ways-to-fix-cluttered--overlapping-pins); the
   other two — label position and coordinates — are per-pin CMS edits). Two per-mountain knobs in
@@ -291,6 +503,90 @@ Mostly one-time or infrequent setup. Details live in
   Both are **baked at build**, so edit the file and `git push` to change them — a rebuild/redeploy
   is required (no runtime toggle). Desktop is always un-clustered. Details:
   [`deployment/README.md`](../deployment/README.md#map-clustering--per-mountain-config-values).
+
+- **Media-upload limits — how many files a 집사톡 post may carry.** Lives in
+  **`config/media_control.json`** — **not** a `/admin` CMS setting, and **not** per-mountain.
+
+  ```json
+  {
+    "butlerTalk": {
+      "allowMultipleVideos": false,
+      "allowMultipleImages": false
+    }
+  }
+  ```
+
+  - **What it does.** `false` caps that medium at **one file per post**: once a file is
+    attached, the picker for adding another disappears. The member can still hit **삭제** and
+    pick a different file — it is a cap, not a lock. `true` restores an unlimited list. The two
+    flags are **independent**, so "one video but any number of photos" is a valid setting.
+  - **Currently shipped: both `false`** — 집사톡 takes **one video + one photo** per post.
+  - **집사톡 only.** 공지사항 / 입양홍보 are admin-authored and stay **unrestricted by
+    decision** (owner, 2026-07-30) — they ignore this file. Don't extend the flags to them
+    without a new decision.
+  - **Changing it needs a redeploy.** Edit the file and `git push` (`dev` = Preview,
+    `main` = production). ⚠️ **That is the design, not a limitation.** The setting is
+    deployment-wide by decision, so a runtime CMS toggle would let **any one mountain's admin
+    silently reconfigure every other mountain's composer**; a static file moves that authority
+    to whoever can deploy. Rationale recorded in
+    [`PROJECT_PLAN.md`](../../planning/PROJECT_PLAN.md) §10d (D2) so the rejected Firestore
+    design isn't re-derived later.
+  - ⚠️ **Fail-loud:** a missing key, a typo'd key, or a non-boolean value makes the 집사톡
+    composer **throw** rather than quietly pick a behaviour. Keep both keys present and keep
+    the values `true`/`false` (no quotes). Validation lives in `src/utils/mediaControl.ts`.
+
+### Renaming a cat — use the script, not the 이름 field
+
+⛔ **Editing 이름 in `/admin/cats` renames the cat and nothing else.** The name is also stored
+in three other places, and none of them follows:
+
+| What                                   | What happens after a bare rename                                                                            |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| The cat's **사진첩 / 영상첩**          | **Goes empty.** Albums find media by the cat's name in its tags, and the tags still say the old name.       |
+| Every **`[catmodal:이름]`** link to it | **Stops working.** The link still renders and still looks clickable; clicking it does nothing.              |
+| Other cats' **작명 사유 / 특이사항 …** | Same dead links, in any prose that mentions the renamed cat.                                                |
+| Other cats' **엄마 / 애** rows         | Keep naming the old name — a cat that no longer exists. Plain text, so nothing breaks; it just reads wrong. |
+
+⚠️ **All of it fails silently** — no error, no warning, nothing to notice until someone opens
+the album and finds it empty.
+
+✅ **Links already shared are safe either way.** A `?cat=…` link addresses the cat's _record_,
+not its name, so anything pasted into KakaoTalk keeps working under the new name.
+
+**How to do it.** From the repo, with the service-account key available:
+
+```bash
+# 1. Back up first — this writes to production data.
+npm run backup:firestore
+
+# 2. See exactly what would change. Writes nothing.
+OLD_NAME=아롱이 NEW_NAME=다롱이 node scripts/migration/rename-cat.js
+
+# 3. Do it.
+OLD_NAME=아롱이 NEW_NAME=다롱이 APPLY=true node scripts/migration/rename-cat.js
+```
+
+- **Check the first line of the output.** Every run states its target — `TARGET: PRODUCTION
+Firestore (project 'mountaincats-61543')`. If it says `TARGET: Firestore EMULATOR` instead,
+  you have a test environment variable set and your changes are going nowhere real.
+- Use `CAT_ID=<document id>` instead of `OLD_NAME` when two cats share a name — the script
+  **refuses** an ambiguous `OLD_NAME` rather than picking one.
+- Add `MOUNTAIN_ID=…` for any mountain other than `geyang`.
+- It also **refuses** to rename a cat onto a name another cat already holds: two cats with one
+  name makes every `[catmodal:그이름]` link resolve to whichever one the lookup happens to
+  return first.
+
+⚠️⚠️ **One step the script cannot finish for you — YouTube.** YouTube owns its videos' tags and
+overwrites ours from them every time anyone presses **📺 YouTube와 동기화**. So for videos the
+script's fix is correct but **temporary**: the next sync silently puts the old name back and the
+영상첩 empties again. The script prints the affected videos at the end of its run — re-tag those
+in **동영상 태깅 → 일괄 태그 저장**, which writes through to YouTube. Do it in the same sitting.
+
+📌 **The public pages can lag by up to an hour after a script rename — this is expected.** The
+script writes to Firestore directly, so it never tells the site to re-bake the way a CMS save
+does. 홈 / 냥이들 / 입양홍보 keep serving the old name until the hourly refresh catches up. To
+see it immediately, open any cat in `/admin/cats` and press 저장 — that one save re-bakes all
+three pages.
 
 ---
 
@@ -419,5 +715,10 @@ Enter                     → line break
 - New Firestore collection or rule change → owner runs
   `firebase deploy --only firestore:rules`.
 - Publish changes → `git push` (`main` = production, `dev` = preview).
+- 집사톡 = **one video + one photo** per post; 공지사항 / 입양홍보 = unlimited. Change it in
+  `config/media_control.json` + redeploy ([§9](#9-configuration--operations-owner--developer)).
 - "입양 가능" checkbox on a cat (with a photo) → shows in the 입양홍보 gallery.
+- ⛔ **Renaming a cat → `scripts/migration/rename-cat.js`, never the 이름 field alone** — a bare
+  rename silently empties that cat's 사진첩/영상첩 and kills every `[catmodal:]` link to it
+  ([§9](#renaming-a-cat--use-the-script-not-the-이름-field)).
 - **Before any production data migration → `npm run backup:firestore`** ([§10](#10-backups--recovery-owner)).

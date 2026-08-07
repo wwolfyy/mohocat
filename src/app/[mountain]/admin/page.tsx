@@ -7,6 +7,9 @@ import {
   getCatService,
   getContactService,
   getPostService,
+  getButlerTalkService,
+  getAnnouncementService,
+  getAdoptionService,
 } from '@/services';
 import YouTubeAuthPanel from '@/components/admin/YouTubeAuthPanelNew';
 import Card from '@/components/ui/Card';
@@ -27,9 +30,26 @@ interface AdminStats {
   totalContacts: number;
   totalPoints: number;
 
-  // Posts stats (collections starting with "posts_")
-  postsCollections: { name: string; count: number }[];
+  // Posts stats — one entry per real post collection (see POST_COLLECTIONS)
+  postsCollections: { label: string; count: number }[];
+  totalPosts: number;
 }
+
+/**
+ * The post collections, with the Korean name of the surface each one backs.
+ *
+ * 🗑️ This list used to be operator-configurable — a textarea in 앱 관리 that saved
+ * collection names to `localStorage`. It was removed 2026-08-02: which collections
+ * exist is a fact about the code (each is a service's `COLLECTION_NAME`), not an
+ * operator choice, and the counts beside the names were a hard-coded `0` the whole
+ * time. Add a row here when a post service is added.
+ */
+const POST_COLLECTIONS = [
+  { label: '급식현황', getService: getPostService }, // posts_feeding
+  { label: '집사톡', getService: getButlerTalkService }, // posts_butler
+  { label: '공지사항', getService: getAnnouncementService }, // posts_announcements
+  { label: '입양홍보', getService: getAdoptionService }, // posts_adoption
+] as const;
 
 export default function AdminDashboard() {
   const mountainId = useMountain();
@@ -39,7 +59,6 @@ export default function AdminDashboard() {
   const videoService = getVideoService(mountainId);
   const catService = getCatService(mountainId);
   const contactService = getContactService(mountainId);
-  const postService = getPostService(mountainId);
 
   const [stats, setStats] = useState<AdminStats>({
     totalImages: 0,
@@ -50,49 +69,16 @@ export default function AdminDashboard() {
     totalContacts: 0,
     totalPoints: 0,
     postsCollections: [],
+    totalPosts: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get posts collections from user configuration
-  const getConfiguredPostsCollections = async (collectionNames: string[]) => {
-    const postsCollections: { name: string; count: number }[] = [];
-
-    for (const collectionName of collectionNames) {
-      try {
-        // TODO: Replace with post service when collection-specific methods are available
-        // For now, return placeholder data since we don't have collection-specific service methods
-        postsCollections.push({
-          name: collectionName,
-          count: 0, // Placeholder until proper post service implementation
-        });
-      } catch (error) {
-        console.warn(`Failed to get count for collection ${collectionName}:`, error);
-        postsCollections.push({
-          name: collectionName,
-          count: 0,
-        });
-      }
-    }
-
-    return postsCollections;
-  };
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        // Load posts collection configuration from localStorage
-        let configuredCollections = ['posts_main', 'posts_feeding', 'posts_announcements'];
-        try {
-          const saved = localStorage.getItem('admin-posts-collections');
-          if (saved) {
-            configuredCollections = saved.split('\n').filter((name) => name.trim().length > 0);
-          }
-        } catch (error) {
-          console.warn('Failed to load posts collection config from localStorage:', error);
-        }
 
         // Fetch data using service layer
         const [
@@ -139,8 +125,14 @@ export default function AdminDashboard() {
           return video.tags && Array.isArray(video.tags) && video.tags.length > 0;
         }).length;
 
-        // Get posts collections based on user configuration
-        const postsCollections = await getConfiguredPostsCollections(configuredCollections);
+        // Count each post collection. `getAllPosts()` is mountain-scoped and
+        // excludes replies, so this counts posts rather than every document.
+        const postsCollections = await Promise.all(
+          POST_COLLECTIONS.map(async ({ label, getService }) => ({
+            label,
+            count: (await getService(mountainId).getAllPosts()).length,
+          }))
+        );
 
         setStats({
           totalImages: allImages.length,
@@ -151,6 +143,7 @@ export default function AdminDashboard() {
           totalContacts: totalContacts,
           totalPoints: totalPoints,
           postsCollections: postsCollections,
+          totalPosts: postsCollections.reduce((sum, { count }) => sum + count, 0),
         });
       } catch (err: any) {
         console.error('Error fetching stats:', err);
@@ -225,34 +218,20 @@ export default function AdminDashboard() {
           subline={!loading && stats.totalVideos > 0 ? `${stats.taggedVideos}개 태그됨` : undefined}
         />
 
-        {/* 4. 게시물 */}
+        {/* 4. 게시물 — total across every post collection, broken down per surface */}
         <Card>
-          <div className="flex justify-between items-start mb-2">
-            <div className="text-3xl">📝</div>
-            <a
-              href="/admin/app-management?tab=posts-config"
-              className="text-xs px-2 py-1 bg-gray-100 border border-gray-300 rounded text-gray-700 hover:bg-gray-200"
-              title="게시물 컬렉션 설정"
-            >
-              ⚙️ 설정
-            </a>
-          </div>
+          <div className="text-3xl mb-2">📝</div>
           <h3 className="text-base text-gray-500">게시물</h3>
-          <div className="text-2xl font-bold text-gray-900">
-            {loading ? '불러오는 중' : stats.postsCollections.length}
-          </div>
-          {!loading && stats.postsCollections.length > 0 && (
+          <div className="text-2xl font-bold text-gray-900">{tileValue(stats.totalPosts)}</div>
+          {!loading && (
             <div className="text-xs text-gray-500 mt-1">
-              {stats.postsCollections.map((collection) => (
-                <div key={collection.name} className="my-0.5 flex justify-between">
-                  <span>{collection.name.replace('posts_', '')}</span>
-                  <span className="font-bold">{collection.count}</span>
+              {stats.postsCollections.map(({ label, count }) => (
+                <div key={label} className="my-0.5 flex justify-between">
+                  <span>{label}</span>
+                  <span className="font-bold">{count}</span>
                 </div>
               ))}
             </div>
-          )}
-          {!loading && stats.postsCollections.length === 0 && (
-            <p className="text-xs text-red-500 mt-1">설정된 컬렉션이 없어요</p>
           )}
         </Card>
 

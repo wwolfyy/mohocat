@@ -1,55 +1,38 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ButlerTalkClient from '@/components/ButlerTalkClient';
-import { useAuth } from '@/hooks/useAuth';
-import { useMountain } from '@/components/MountainProvider';
-import { isAdmin as checkIsAdmin } from '@/lib/auth/admin';
+import { usePermissions } from '@/hooks/usePermissions';
 
-const ButlerTalkContent = () => {
-  const { user } = useAuth();
-  const mountainId = useMountain();
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+/**
+ * 집사톡 — gated on `view-post-butler`, the permission the roles already carry.
+ *
+ * 🔑 **This used to gate on `isAdmin()`**, which is why the board was admin-only
+ * in practice while `butler-ground` / `butler-internet` held a
+ * `view-post-butler` that granted nothing. The nav has always offered the link
+ * to those roles — `useResourceAccess` reads the same permission out of
+ * `role_permissions/resource-config` — so a member could see the link and then
+ * be told 관리자 권한이 필요합니다. The old code said what it meant to do:
+ * _"we allow both admin and butler roles"_, directly above
+ * `setHasPermission(isAdmin)`.
+ */
+export default function ButlerTalk() {
+  const { hasPermission, isLoading } = usePermissions();
 
-  useEffect(() => {
-    const checkPermission = async () => {
-      if (!user) {
-        setHasPermission(false);
-        return;
-      }
-
-      try {
-        // Use the same permission checking logic as the admin page
-        const isAdmin = await checkIsAdmin(user, mountainId);
-        // For butler talk, we allow both admin and butler roles
-        // You can customize this logic based on your permission requirements
-        setHasPermission(isAdmin);
-      } catch (error) {
-        console.error('Permission check failed:', error);
-        setHasPermission(false);
-      }
-    };
-
-    checkPermission();
-  }, [user, mountainId]);
-
-  if (hasPermission === null) {
+  if (isLoading) {
     return (
       <div className="p-4 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-        <p className="mt-2">Checking permissions...</p>
+        <p className="mt-2">권한을 확인하고 있어요...</p>
       </div>
     );
   }
 
-  if (!hasPermission) {
+  if (!hasPermission('view-post-butler')) {
     return (
       <div className="p-4 text-center">
         <h1 className="text-2xl font-bold mb-4">접근 제한</h1>
-        <p className="text-gray-600 mb-4">이 페이지에 접근하려면 관리자 권한이 필요합니다.</p>
-        <p className="text-sm text-gray-500">
-          Butler Talk 기능은 관리자와 버틀러만 사용할 수 있습니다.
-        </p>
+        <p className="text-gray-600 mb-4">집사톡은 집사로 등록된 분만 볼 수 있어요.</p>
       </div>
     );
   }
@@ -61,10 +44,4 @@ const ButlerTalkContent = () => {
       <ButlerTalkClient />
     </div>
   );
-};
-
-const ButlerTalk = () => {
-  return <ButlerTalkContent />;
-};
-
-export default ButlerTalk;
+}

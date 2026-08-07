@@ -14,7 +14,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 // docs/design/design.md §Components. Surfaces stay neutral; brand carries actions.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-r from-brand to-accent text-ink font-bold hover:shadow-lg focus:ring-brand-400',
+    'bg-gradient-to-r from-primary to-accent text-ink font-bold hover:shadow-lg focus:ring-brand-400',
   secondary:
     'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200 focus:ring-gray-400',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',

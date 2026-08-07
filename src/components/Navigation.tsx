@@ -69,7 +69,7 @@ const NavItem = ({
 
 const CTA_CLASSES = cn(
   'rounded-lg px-4 py-2 font-bold',
-  'bg-gradient-to-r from-brand to-accent text-ink',
+  'bg-gradient-to-r from-primary to-accent text-ink',
   'shadow-sm transition-all duration-200 hover:shadow-md'
 );
 

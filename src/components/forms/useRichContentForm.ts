@@ -1,36 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  parseRecordingDateFromTitle,
-  formatDateForInput,
-  formatDateTimeForInput,
-} from '@/utils/dateParser';
-import { uploadVideoToYouTube, uploadImagesWithSignedUrls } from './uploadStrategies';
+import { parseRecordingDateFromTitle, formatDateForInput } from '@/utils/dateParser';
+import { uploadVideoItems, uploadImagesWithSignedUrls } from './uploadStrategies';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
-
-interface Playlist {
-  id: string;
-  title: string;
-  description?: string;
-}
+import { getMountainName, getYouTubePlaylistId } from '@/utils/config';
+import type { ExistingMedia, MediaItem } from './MediaItemList';
+import { toExistingImages, toExistingVideos } from './existingMedia';
 
 /**
- * Shared submit/upload flow for the rich-content family (집사게시판 NewPostForm +
- * 집사톡 NewButlerTalkForm; complexity-retirement P3.1). Owns the state and
- * pipeline the two forms duplicated: file selection with filename date
- * auto-parse, the YouTube playlist fetch (auto-selecting 집사게시판), cat-tag
- * selector state, video upload via the shared YouTube strategy, image upload via
- * the signed-URL strategy, post assembly, and the create/reset/redirect tail.
- * Form-specific behavior is injected via config; Post-only side effects
- * (feeding-spots update, visit-time reset) ride through `afterCreate` /
- * `onResetExtras`.
+ * Shared submit/upload flow for the rich-content family (complexity-retirement
+ * P3.1). Owns file selection with filename date auto-parse, the per-mountain
+ * playlist, cat-tag selector state, video upload via the shared YouTube
+ * strategy, image upload via the signed-URL strategy, post assembly, and the
+ * create/reset/redirect tail. Form-specific behavior is injected via config.
+ *
+ * ⚠️ **집사톡(NewButlerTalkForm) is the only consumer** since 2026-07-27:
+ * 집사게시판 dropped media upload entirely and now has a plain submit handler of
+ * its own (plan D1). Kept as a hook rather than inlined because the per-file
+ * media rework (D2) lands here next.
  *
  * Convergence deltas accepted at P3 (documented in the assessment): empty
- * `createdTime`/`playlistId` are now omitted from the YouTube request instead of
+ * `createdTime`/`playlistIds` are omitted from the YouTube request instead of
  * sent as '' (old ButlerTalk), single-video titles lose a trailing space (old
  * Post), and both forms share the statusText-style upload error message.
  */
@@ -43,12 +37,6 @@ export interface RichContentFormConfig {
    * `buildDefaultTitle` (ButlerTalk stores the undated '집사톡 글입니다').
    */
   buildPostTitleFallback?: () => string;
-  /** YouTube description fallback when the message is empty. */
-  youtubeDescriptionDefault: string;
-  /** Drives the created-time input type AND the filename auto-parse format. */
-  createdTimeInputType: 'date' | 'datetime-local';
-  /** Multi-video uploads get " (Part n)" title suffixes (Post behavior). */
-  multiPartVideoTitles: boolean;
   /** Firestore write, injected from the owning form's service. */
   createPost: (post: Record<string, unknown>) => Promise<unknown>;
   /** Post-create side effects (Post: feeding-spots update; non-fatal inside). */
@@ -60,99 +48,157 @@ export interface RichContentFormConfig {
   successMessage: string;
   errorMessagePrefix: string;
   redirectPath: string;
+  /**
+   * Present ⇒ the form is **editing** an existing post rather than creating one
+   * (2026-08-02, owner). Mirrors `useSimpleContentForm.edit`: same fields, same
+   * pickers, same upload pipeline — only prefilling, appending to the media
+   * already attached, and `updatePost` instead of `createPost` differ.
+   *
+   * 🔑 집사톡 was the last post type still edited through the URL-only
+   * `EditPostForm`, which meant changing a photo required hunting down its
+   * Storage URL. Its create composer already did the job properly.
+   */
+  edit?: {
+    postId: string;
+    /** Loads the post to prefill from; `null` ⇒ render the not-found state. */
+    loadPost: () => Promise<Record<string, any> | null>;
+    /** Merging write (`updateDoc`), so fields this form never shows survive. */
+    updatePost: (postId: string, post: Record<string, unknown>) => Promise<unknown>;
+    /**
+     * Where to go after saving. Defaults to the admin post list, which is where
+     * the CMS edit screen lives — a **member** editing their own post must
+     * override it, or a successful save bounces them into `/admin` (2026-08-02).
+     */
+    redirectTo?: string;
+  };
 }
 
 export const useRichContentForm = (config: RichContentFormConfig) => {
   const mountainId = useMountain();
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [videoItems, setVideoItems] = useState<MediaItem[]>([]);
+  const [imageItems, setImageItems] = useState<MediaItem[]>([]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  /** 0 → 1 while video bytes are in flight; null when no video upload is running. */
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [createdTime, setCreatedTime] = useState('');
-  const [selectedPlaylist, setSelectedPlaylist] = useState('');
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
   const [selectedImageTags, setSelectedImageTags] = useState<string[]>([]);
   const [showVideoTagSelector, setShowVideoTagSelector] = useState(false);
   const [showImageTagSelector, setShowImageTagSelector] = useState(false);
 
+  /**
+   * Media already attached to the post being edited — stored URLs, not `File`s,
+   * so they never enter an upload strategy. They are carried back into the write
+   * unless the operator removes them.
+   */
+  const [existingImages, setExistingImages] = useState<ExistingMedia[]>([]);
+  const [existingVideos, setExistingVideos] = useState<ExistingMedia[]>([]);
+  /** Edit mode only: the prefill is a fetch, so it has the usual three states. */
+  const [loadingPost, setLoadingPost] = useState(Boolean(config.edit));
+  const [postNotFound, setPostNotFound] = useState(false);
+
   const router = useRouter();
   const dialog = useDialog();
   const { user, isAuthenticated, loading } = useAuth();
 
-  const formatParsedDate =
-    config.createdTimeInputType === 'date' ? formatDateForInput : formatDateTimeForInput;
+  // The mountain's own playlist on the shared channel, straight from config —
+  // this replaced a `/api/youtube-playlists` fetch that picked the playlist whose
+  // title happened to equal '집사게시판' (a rename on YouTube silently stopped
+  // filing, and it filed every mountain into the same list). `null` = the mountain
+  // deliberately has no playlist yet; the upload proceeds unfiled.
+  const playlistId = getYouTubePlaylistId(mountainId);
+  const playlistLabel = playlistId ? getMountainName(mountainId) : null;
 
-  // Fetch the YouTube playlists once signed in; auto-select 집사게시판.
+  // Prefill when editing. Keyed on the post id alone — `config` is rebuilt every
+  // render, so depending on it would refetch in a loop.
+  const editPostId = config.edit?.postId;
+  const loadPost = config.edit?.loadPost;
+
   useEffect(() => {
-    if (!isAuthenticated || loading) return;
+    if (!editPostId || !loadPost) return;
+    let active = true;
 
-    const fetchData = async () => {
-      setLoadingPlaylists(true);
+    const run = async () => {
+      setLoadingPost(true);
       try {
-        const response = await fetch('/api/youtube-playlists');
-        if (response.ok) {
-          const data = await response.json();
-          const playlistsData = data.playlists || [];
-          setPlaylists(playlistsData);
+        const post = await loadPost();
+        if (!active) return;
 
-          const butlerPlaylist = playlistsData.find(
-            (playlist: Playlist) => playlist.title === '집사게시판'
-          );
-          if (butlerPlaylist) {
-            setSelectedPlaylist(butlerPlaylist.id);
-          }
-        } else {
-          const errorText = await response.text();
-          console.warn(
-            'Failed to fetch playlists:',
-            response.status,
-            response.statusText,
-            errorText
-          );
+        if (!post) {
+          setPostNotFound(true);
+          return;
         }
+
+        setTitle(post.title || '');
+        setMessage(post.message || '');
+        setExistingImages(toExistingImages(post.imageUrls));
+        setExistingVideos(toExistingVideos(post.videoUrls));
       } catch (error) {
-        console.error('Error fetching playlists:', error);
+        console.error('useRichContentForm: failed to load the post to edit', error);
+        if (active) setPostNotFound(true);
       } finally {
-        setLoadingPlaylists(false);
+        if (active) setLoadingPost(false);
       }
     };
 
-    fetchData();
-  }, [isAuthenticated, loading]);
+    run();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editPostId]);
 
-  const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const files = Array.from(event.target.files);
-      setVideoFiles(files);
-
-      // Auto-parse the recording date from the first video file name.
-      if (!createdTime) {
-        const parsedDate = parseRecordingDateFromTitle(files[0].name);
-        if (parsedDate) {
-          setCreatedTime(formatParsedDate(parsedDate));
-        }
+  /**
+   * Fill 촬영일 from a filename the first time one yields a date. Unchanged in
+   * spirit from the single-picker version (first video, else first image) — with
+   * one file per section, "first" is now the first item that parses.
+   */
+  const autoParseCreatedTime = (items: MediaItem[]) => {
+    if (createdTime) return;
+    for (const item of items) {
+      const parsedDate = parseRecordingDateFromTitle(item.file.name);
+      if (parsedDate) {
+        setCreatedTime(formatDateForInput(parsedDate));
+        return;
       }
-    } else {
-      setVideoFiles([]);
     }
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const files = Array.from(event.target.files);
-      setImageFiles(files);
+  const handleVideoItemsChange = (items: MediaItem[]) => {
+    setVideoItems(items);
+    autoParseCreatedTime(items);
+  };
 
-      // Fall back to the first image file name when no video set the date.
-      if (files.length > 0 && videoFiles.length === 0 && !createdTime) {
-        const parsedDate = parseRecordingDateFromTitle(files[0].name);
-        if (parsedDate) {
-          setCreatedTime(formatParsedDate(parsedDate));
-        }
-      }
+  const handleImageItemsChange = (items: MediaItem[]) => {
+    setImageItems(items);
+    // Videos take precedence for the date, as before.
+    if (videoItems.length === 0) {
+      autoParseCreatedTime(items);
     }
+  };
+
+  /**
+   * Leave without posting, confirming first if anything would be lost. Files
+   * count as content: picking three videos and then typing nothing is still work
+   * the user would not want silently dropped.
+   */
+  const handleCancel = async () => {
+    // ⚠️ When editing, title/message arrive prefilled — they are not evidence
+    // the operator typed anything, so only newly picked files count as work.
+    const isDirty = config.edit
+      ? videoItems.length > 0 || imageItems.length > 0
+      : title.trim().length > 0 ||
+        message.trim().length > 0 ||
+        videoItems.length > 0 ||
+        imageItems.length > 0;
+
+    if (isDirty) {
+      const confirmed = await dialog.confirm('작성 중인 내용이 사라져요. 그만 쓸까요?');
+      if (!confirmed) return;
+    }
+    router.push(config.redirectPath);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -166,23 +212,22 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       let mediaType: 'video' | 'image' = 'image';
 
       // Upload videos first if present (this takes longer)
-      if (videoFiles.length > 0) {
+      if (videoItems.length > 0) {
         try {
-          const finalTitle = title.trim() || config.buildDefaultTitle();
-          videoUrls = await Promise.all(
-            videoFiles.map((file, index) =>
-              uploadVideoToYouTube(file, {
-                title:
-                  config.multiPartVideoTitles && videoFiles.length > 1
-                    ? `${finalTitle} (Part ${index + 1})`
-                    : finalTitle,
-                description: message || config.youtubeDescriptionDefault,
-                tags: selectedVideoTags.length > 0 ? selectedVideoTags.join(', ') : '산고양이',
-                createdTime: createdTime || undefined,
-                playlistId: selectedPlaylist || undefined,
-              })
-            )
-          );
+          setUploadProgress(0);
+          videoUrls = await uploadVideoItems(videoItems, {
+            // Untitled videos fall back to the post title; per-item titles are
+            // uploaded verbatim (plan §4.3).
+            fallbackTitle: title.trim() || config.buildDefaultTitle(),
+            // Untagged stays untagged. A '산고양이' fallback used to fill this in,
+            // which set `needsTagging: false` on the record and hid the video from
+            // the very queue meant to surface it (owner, 2026-07-29).
+            tags: selectedVideoTags.join(', '),
+            createdTime: createdTime || undefined,
+            playlistIds: playlistId ? [playlistId] : undefined,
+            user,
+            onProgress: setUploadProgress,
+          });
           mediaType = 'video';
         } catch (videoError) {
           await dialog.alert(
@@ -193,15 +238,18 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
         }
       }
 
-      if (imageFiles.length > 0) {
+      if (imageItems.length > 0) {
         try {
-          imageUrls = await uploadImagesWithSignedUrls(imageFiles, {
-            mountainId,
-            tags: selectedImageTags,
-            createdTime,
-            uploadedBy: user?.email || 'unknown',
-            description: message || '',
-          });
+          imageUrls = await uploadImagesWithSignedUrls(
+            imageItems.map((item) => ({ file: item.file, description: item.description })),
+            {
+              mountainId,
+              tags: selectedImageTags,
+              createdTime,
+              uploadedBy: user?.email || 'unknown',
+              user,
+            }
+          );
           if (!videoThumb && imageUrls.length > 0) {
             videoThumb = imageUrls[0];
           }
@@ -214,27 +262,59 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
         }
       }
 
+      // Validate that we have the expected content
+      if (videoItems.length > 0 && videoUrls.length === 0) {
+        throw new Error('Video files were selected but no video URLs were generated');
+      }
+
+      // Editing starts from whatever the operator kept; creating starts empty.
+      // Retained media leads, so newly picked files append in pick order.
+      const allVideoUrls = [...existingVideos.map((m) => m.url), ...videoUrls];
+      const allImageUrls = [...existingImages.map((m) => m.url), ...imageUrls];
+
       const now = new Date();
-      const thumbnailUrl = videoThumb || (imageUrls.length > 0 ? imageUrls[0] : '');
+      const thumbnailUrl = videoThumb || (allImageUrls.length > 0 ? allImageUrls[0] : '');
       const finalTitle =
         title.trim() || (config.buildPostTitleFallback ?? config.buildDefaultTitle)();
+      // A post with any video reads as a video post, whether that video was just
+      // uploaded or was already attached.
+      const finalMediaType: 'video' | 'image' = allVideoUrls.length > 0 ? 'video' : mediaType;
 
       const post = {
         title: finalTitle,
-        username: user?.email || 'unknown',
-        date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
-        time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
         thumbnailUrl,
-        mediaType,
-        videoUrls,
-        imageUrls,
+        mediaType: finalMediaType,
+        videoUrls: allVideoUrls,
+        imageUrls: allImageUrls,
         message,
-        tags: mediaType === 'video' ? selectedVideoTags : selectedImageTags,
+        // ⚠️ Authorship and timestamp are set **once, at creation**. Re-stamping
+        // them on an edit would relabel someone else's post with the editor's
+        // address and jump it to the top of a list ordered by 게시일.
+        ...(config.edit
+          ? {}
+          : {
+              username: user?.email || 'unknown',
+              // Authorization identity (2026-08-02) — the Firestore rules let an
+              // author edit their own post by matching this, never `username`.
+              // Set only here, so an edit can neither claim nor transfer authorship.
+              ...(user?.uid ? { authorUid: user.uid } : {}),
+              date: now.toISOString().split('T')[0], // YYYY-MM-DD format in UTC
+              time: now.toISOString().split('T')[1].split('.')[0], // HH:MM:SS format in UTC
+            }),
+        // ⚠️ Post-level `tags` mirror the cat selector, which only ever applies to
+        // files being uploaded now. On an edit with no new files it would be
+        // empty — and since `updatePost` merges, sending it would ERASE the tags
+        // the post already carries. Omitted unless something was actually picked.
+        ...(config.edit && videoItems.length === 0 && imageItems.length === 0
+          ? {}
+          : { tags: finalMediaType === 'video' ? selectedVideoTags : selectedImageTags }),
       };
 
-      // Validate that we have the expected content
-      if (videoFiles.length > 0 && videoUrls.length === 0) {
-        throw new Error('Video files were selected but no video URLs were generated');
+      if (config.edit) {
+        await config.edit.updatePost(config.edit.postId, post);
+        await dialog.alert(config.successMessage);
+        router.push(config.edit.redirectTo ?? '/admin/posts');
+        return;
       }
 
       await config.createPost(post);
@@ -242,8 +322,8 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       await config.afterCreate?.();
 
       if (config.resetAfterCreate) {
-        setVideoFiles([]);
-        setImageFiles([]);
+        setVideoItems([]);
+        setImageItems([]);
         setTitle('');
         setMessage('');
       }
@@ -258,6 +338,7 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
       );
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -265,20 +346,22 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     user,
     isAuthenticated,
     loading,
-    videoFiles,
-    imageFiles,
-    handleVideoChange,
-    handleImageChange,
+    videoItems,
+    imageItems,
+    handleVideoItemsChange,
+    handleImageItemsChange,
     title,
     setTitle,
     message,
     setMessage,
     uploading,
+    uploadProgress,
     createdTime,
     setCreatedTime,
-    selectedPlaylist,
-    playlists,
-    loadingPlaylists,
+    /** The mountain's playlist, or `null` when it has none configured yet. */
+    playlistId,
+    /** Display name for the locked 재생목록 field; `null` mirrors `playlistId`. */
+    playlistLabel,
     selectedVideoTags,
     setSelectedVideoTags,
     selectedImageTags,
@@ -288,6 +371,18 @@ export const useRichContentForm = (config: RichContentFormConfig) => {
     showImageTagSelector,
     setShowImageTagSelector,
     handleSubmit,
+    handleCancel,
+    /** Media already on the post — edit mode only; empty when creating. */
+    existingImages,
+    setExistingImages,
+    existingVideos,
+    setExistingVideos,
+    /** `true` while an edit's prefill is in flight; always `false` when creating. */
+    loadingPost,
+    /** The edited post could not be loaded — render the not-found state. */
+    postNotFound,
+    /** `true` when this form is editing rather than creating. */
+    isEditing: Boolean(config.edit),
     /** Render once inside the owning form (replaces native alert dialogs). */
     dialog: dialog.element,
   };

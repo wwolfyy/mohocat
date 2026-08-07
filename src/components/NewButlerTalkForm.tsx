@@ -6,15 +6,42 @@ import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useRichContentForm } from '@/components/forms/useRichContentForm';
 import { useMountain } from '@/components/MountainProvider';
+import MediaItemList from '@/components/forms/MediaItemList';
+import CatTagSelectField from '@/components/forms/CatTagSelectField';
+import UploadProgressBar from '@/components/forms/UploadProgressBar';
+import { getButlerTalkMediaRules } from '@/utils/mediaControl';
+import { FormLoadingState, FormNotFoundState } from '@/components/forms/FormStates';
 
 /**
  * 집사톡(butler_talk) post composer. Submit/upload flow comes from the shared
  * rich-content primitives (complexity-retirement P3); no feeding-spots section.
  * Note: the stored-post title fallback is the undated '집사톡 글입니다' while the
  * YouTube title fallback is dated — preserved pre-refactor behavior.
+ *
+ * ⚠️ This is the **only** composer whose media sections are capped — 공지사항 and
+ * 입양홍보 are admin-only and stay unrestricted (PROJECT_PLAN §10d). The caps come
+ * from `config/media_control.json`, which is static: changing them is a redeploy,
+ * deliberately, so no single mountain's admin can reconfigure the others.
  */
-const NewButlerTalkForm = () => {
+interface NewButlerTalkFormProps {
+  /**
+   * Present ⇒ **edit** that post instead of creating one (2026-08-02). 집사톡 was
+   * the last type still edited through the URL-only `EditPostForm`; editing now
+   * offers the same file pickers, per-file 제목/설명, cat selector and 촬영 날짜
+   * this form has always had for writing.
+   */
+  postId?: string;
+  /**
+   * Where a successful edit lands. Defaults to the admin post list (the CMS edit
+   * screen's home); the member-facing editor passes the public board instead, so
+   * an author is not dropped into `/admin` after fixing their own post.
+   */
+  editRedirectTo?: string;
+}
+
+const NewButlerTalkForm = ({ postId, editRedirectTo }: NewButlerTalkFormProps = {}) => {
   const DEFAULT_TITLE = '집사톡 글입니다';
+  const mediaRules = getButlerTalkMediaRules();
 
   // Generate dynamic title based on current time
   const generateDynamicTitle = () => {
@@ -37,18 +64,32 @@ const NewButlerTalkForm = () => {
   const form = useRichContentForm({
     buildDefaultTitle: generateDynamicTitle,
     buildPostTitleFallback: () => DEFAULT_TITLE,
-    youtubeDescriptionDefault: '산고양이 영상',
-    createdTimeInputType: 'datetime-local',
-    multiPartVideoTitles: false,
     createPost: (post) => butlerTalkService.createPost(post),
     resetAfterCreate: false,
-    successMessage: '글이 성공적으로 작성되었습니다!',
-    errorMessagePrefix: '글 작성 중 오류가 발생했습니다: ',
+    successMessage: postId ? '글이 수정되었습니다!' : '글이 성공적으로 작성되었습니다!',
+    errorMessagePrefix: postId
+      ? '글 수정 중 오류가 발생했습니다: '
+      : '글 작성 중 오류가 발생했습니다: ',
     redirectPath: '/pages/butler_talk',
+    ...(postId
+      ? {
+          edit: {
+            postId,
+            loadPost: () => butlerTalkService.getPostById(postId),
+            updatePost: (id: string, post: Record<string, unknown>) =>
+              butlerTalkService.updatePost(id, post),
+            ...(editRedirectTo ? { redirectTo: editRedirectTo } : {}),
+          },
+        }
+      : {}),
   });
 
-  if (form.loading) {
-    return <div className="p-4">로딩 중...</div>;
+  if (form.loading || form.loadingPost) {
+    return <FormLoadingState />;
+  }
+
+  if (form.postNotFound) {
+    return <FormNotFoundState />;
   }
 
   if (!form.isAuthenticated) {
@@ -93,54 +134,42 @@ const NewButlerTalkForm = () => {
         />
       </div>
 
-      {/* Video Upload */}
-      <div>
-        <label htmlFor="videos" className="block text-sm font-medium text-gray-700 mb-1">
-          동영상 파일 (YouTube 업로드)
-        </label>
-        <input
-          type="file"
-          id="videos"
-          accept="video/*"
-          multiple
-          onChange={form.handleVideoChange}
-          className="w-full p-2 border border-gray-300 rounded-md"
-        />
-        {form.videoFiles.length > 0 && (
-          <p className="text-sm text-green-600 mt-2">
-            {form.videoFiles.length}개의 동영상 파일이 선택되었습니다.
-          </p>
-        )}
-      </div>
+      {/* Video Upload — one file per section, each with its own 제목/설명 */}
+      <MediaItemList
+        kind="video"
+        items={form.videoItems}
+        onItemsChange={form.handleVideoItemsChange}
+        disabled={form.uploading}
+        allowMultiple={mediaRules.allowMultipleVideos}
+        existing={form.existingVideos}
+        onExistingChange={form.setExistingVideos}
+      />
 
       {/* YouTube Metadata - only show if video files are selected */}
-      {form.videoFiles.length > 0 && (
+      {form.videoItems.length > 0 && (
         <div className="border-t pt-4 mt-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">YouTube 업로드 설정</h3>
 
           {/* Cat Tags */}
           <div className="mb-4">
-            <label htmlFor="videoTags" className="block text-sm font-medium text-gray-700 mb-1">
-              등장하는 고양이
-            </label>
-            <input
-              type="text"
+            <CatTagSelectField
               id="videoTags"
-              value={form.selectedVideoTags.join(', ')}
-              onClick={() => form.setShowVideoTagSelector(true)}
-              readOnly
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 cursor-pointer bg-gray-50"
-              placeholder="고양이를 선택하려면 클릭하세요"
+              tags={form.selectedVideoTags}
+              onOpen={() => form.setShowVideoTagSelector(true)}
+              disabled={form.uploading}
             />
           </div>
 
           {/* Created Time */}
           <div className="mb-4">
             <label htmlFor="createdTime" className="block text-sm font-medium text-gray-700 mb-1">
-              촬영 시간 (선택사항)
+              촬영 날짜 (선택사항)
             </label>
+            {/* A calendar date, not an instant: the filename gives a day, and the
+                stored value is that day. Was datetime-local, but the time had
+                nowhere to live and was silently discarded. */}
             <input
-              type="datetime-local"
+              type="date"
               id="createdTime"
               value={form.createdTime}
               onChange={(e) => form.setCreatedTime(e.target.value)}
@@ -151,79 +180,83 @@ const NewButlerTalkForm = () => {
             </p>
           </div>
 
-          {/* Playlist Selection */}
+          {/* Playlist — the mountain's own, from config (no picker: filing is
+              per-mountain by design, plan D4). */}
           <div className="mb-4">
             <label htmlFor="playlist" className="block text-sm font-medium text-gray-700 mb-1">
-              재생목록 선택
+              재생목록
             </label>
-            {form.loadingPlaylists ? (
-              <p className="text-sm text-gray-600">재생목록을 불러오는 중...</p>
-            ) : (
+            {form.playlistLabel ? (
               <>
                 <input
                   type="text"
-                  value="집사게시판"
+                  value={form.playlistLabel}
                   readOnly
                   disabled
                   className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  모든 동영상은 자동으로 &quot;집사게시판&quot; 재생목록에 추가됩니다
+                  동영상은 &quot;{form.playlistLabel}&quot; 재생목록에 추가돼요
                 </p>
               </>
+            ) : (
+              // Never show a mountain name here when nothing will be filed — that
+              // is the shape of the bug this replaced.
+              <p className="text-sm text-gray-600">
+                재생목록이 아직 없어요. 동영상은 재생목록에 추가되지 않아요.
+              </p>
             )}
           </div>
         </div>
       )}
 
-      {/* Image Upload */}
-      <div>
-        <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
-          이미지 파일
-        </label>
-        <input
-          type="file"
-          id="images"
-          accept="image/*"
-          multiple
-          onChange={form.handleImageChange}
-          className="w-full p-2 border border-gray-300 rounded-md"
-        />
-        {form.imageFiles.length > 0 && (
-          <p className="text-sm text-green-600 mt-2">
-            {form.imageFiles.length}개의 이미지 파일이 선택되었습니다.
-          </p>
-        )}
-      </div>
+      {/* Image Upload — one file per section, each with its own 설명 */}
+      <MediaItemList
+        kind="image"
+        items={form.imageItems}
+        onItemsChange={form.handleImageItemsChange}
+        disabled={form.uploading}
+        allowMultiple={mediaRules.allowMultipleImages}
+        existing={form.existingImages}
+        onExistingChange={form.setExistingImages}
+      />
 
       {/* Image Cat Tags - only show if images are selected */}
-      {form.imageFiles.length > 0 && (
-        <div>
-          <label htmlFor="imageTags" className="block text-sm font-medium text-gray-700 mb-1">
-            등장하는 고양이
-          </label>
-          <input
-            type="text"
-            id="imageTags"
-            value={form.selectedImageTags.join(', ')}
-            onClick={() => form.setShowImageTagSelector(true)}
-            readOnly
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300 cursor-pointer bg-gray-50"
-            placeholder="고양이를 선택하려면 클릭하세요"
-          />
-        </div>
+      {form.imageItems.length > 0 && (
+        <CatTagSelectField
+          id="imageTags"
+          tags={form.selectedImageTags}
+          onOpen={() => form.setShowImageTagSelector(true)}
+          disabled={form.uploading}
+        />
       )}
 
-      {/* Submit Button */}
-      <div className="pt-4">
+      {/* Submit / Cancel */}
+      <UploadProgressBar progress={form.uploadProgress} />
+      <div className="pt-4 flex gap-2">
         <Button
           type="submit"
           variant="primary"
           size="lg"
-          className="w-full"
+          className="flex-1"
           disabled={form.uploading}
         >
-          {form.uploading ? '업로드 중...' : '글 작성'}
+          {form.uploading
+            ? form.isEditing
+              ? '저장 중...'
+              : '업로드 중...'
+            : form.isEditing
+              ? '글 저장'
+              : '글 작성'}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          onClick={form.handleCancel}
+          disabled={form.uploading}
+        >
+          취소
         </Button>
       </div>
 

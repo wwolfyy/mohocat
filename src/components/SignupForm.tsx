@@ -9,6 +9,7 @@ import { RecaptchaVerifier } from 'firebase/auth';
 import { getPermissionService } from '@/services';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { strings } from '@/constants/strings';
+import { POLICY_VERSION } from '@/constants/policy';
 
 const t = strings.login.signup;
 
@@ -150,7 +151,10 @@ function SignupFormContent() {
         // Exception: If they are resuming an interrupted cleanup?
         // Safer to just block and say "Account exists".
 
-        console.warn('Signup blocked: Phone number belongs to existing user', user.email);
+        // Do not log the email — PII. The uid is enough to correlate a report.
+        console.warn('Signup blocked: phone number belongs to an existing user', {
+          uid: user.uid,
+        });
 
         // We must sign out to prevent them from being logged into someone else's account
         // (or their own old account) when they intended to create a new one.
@@ -195,7 +199,36 @@ function SignupFormContent() {
         phoneNumber: user.phoneNumber, // Should be set from phone auth
       };
 
-      await permissionService.ensureUserExists(freshUser);
+      // Record the two required consents (PIPA). Both were gated above — the
+      // submit that sent the verification code is disabled until each is ticked
+      // — so reaching here means both are true. Stamped with the policy version
+      // in force, and written only on doc creation (see ensureUserExists).
+      const agreedAt = new Date();
+      await permissionService.ensureUserExists(freshUser, {
+        terms: { agreedAt, version: POLICY_VERSION },
+        privacy: { agreedAt, version: POLICY_VERSION },
+      });
+
+      // 6. Grant the mountain's default role (viewer). Must be server-side: the
+      // self-write rule requires `roles` to be EMPTY on create, so the client
+      // cannot seed it (that restriction is what blocks self-escalation). The
+      // route reads the role from config and refuses to overwrite an existing
+      // one. Non-fatal — the account is fully created either way, and an admin
+      // can assign a role — so a failure here must not fail the signup.
+      try {
+        const idToken = await auth.currentUser?.getIdToken();
+        if (idToken) {
+          const res = await fetch('/api/account/default-role', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${idToken}` },
+          });
+          if (!res.ok) {
+            console.error(`Default-role assignment failed: HTTP ${res.status}`);
+          }
+        }
+      } catch (roleError) {
+        console.error('Default-role assignment failed:', roleError);
+      }
 
       // 5. Success & Redirect
       setIsSuccess(true);

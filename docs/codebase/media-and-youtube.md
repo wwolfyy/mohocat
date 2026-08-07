@@ -11,22 +11,22 @@ videos look and behave consistently.
 
 ## Key Components
 
-| Component            | File(s)                                                                                               | Responsibility                                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Photo album          | `src/app/pages/photo-album/page.tsx`, `components/PhotoAlbum.tsx`                                     | 사진첩 — reads images via `getImageService`, grid of `MediaTile`, opens `Lightbox`                                 |
-| Video album          | `src/app/pages/video-album/page.tsx`, `components/VideoAlbum.tsx`                                     | 영상첩 — reads videos via `getVideoService`, grid of `MediaTile`, opens `VideoPlayer`                              |
-| Album tile           | `src/components/album/MediaTile.tsx`                                                                  | Shared grid card (rounded, hover lift/zoom, badge/placeholder slots; `square` for photos, `video` 16:9 for videos) |
-| Album filter         | `src/components/album/AlbumFilterBar.tsx`                                                             | Shared search + cat-name filter; owns the `CatSelectorModal`; single consolidated chip row                         |
-| Album states         | `src/components/album/AlbumStates.tsx`                                                                | Branded loading/empty/error states                                                                                 |
-| Lightbox             | `src/components/ui/Lightbox.tsx`                                                                      | Full-bleed dark image viewer; Esc closes, ←/→ navigate (topmost layer)                                             |
-| Video player         | `src/components/ui/VideoPlayer.tsx`                                                                   | Full-bleed dark video viewer; same key/nav language as Lightbox                                                    |
-| Filter hook          | `src/hooks/useMediaFilter.ts`                                                                         | Shared free-text (description + tags) + cat-tag filtering for both albums                                          |
-| Media links hook     | `src/hooks/useMediaLinks.tsx`                                                                         | Resolves media link tokens                                                                                         |
-| YouTube service      | `src/services/youtube.ts`                                                                             | `fetchChannelVideos`, `searchYouTubeVideos`, YouTube data types                                                    |
-| Image/video services | `src/services/image-service.ts`, `video-service.ts`, `media-albums.ts`                                | Firestore-backed media records + album grouping                                                                    |
-| Storage/signed URLs  | `src/services/storage-service.ts`, API `generate-signed-url`, `generate-youtube-signed-url`           | Firebase Storage access + signed upload URLs                                                                       |
-| YouTube admin        | `src/components/admin/YouTubeAuthPanelNew.tsx`, `admin/tag-videos`, `tag-images`                      | OAuth panel + tagging surfaces                                                                                     |
-| YouTube API routes   | `api/{manage-playlists,youtube-playlists,upload-youtube,update-youtube-video,refresh-video-metadata}` | Playlist/video management. See [api-routes](api-routes.md)                                                         |
+| Component            | File(s)                                                                                                                       | Responsibility                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Photo album          | `src/app/pages/photo-album/page.tsx`, `components/PhotoAlbum.tsx`                                                             | 사진첩 — reads images via `getImageService`, grid of `MediaTile`, opens `Lightbox`                                 |
+| Video album          | `src/app/pages/video-album/page.tsx`, `components/VideoAlbum.tsx`                                                             | 영상첩 — reads videos via `getVideoService`, grid of `MediaTile`, opens `VideoPlayer`                              |
+| Album tile           | `src/components/album/MediaTile.tsx`                                                                                          | Shared grid card (rounded, hover lift/zoom, badge/placeholder slots; `square` for photos, `video` 16:9 for videos) |
+| Album filter         | `src/components/album/AlbumFilterBar.tsx`                                                                                     | Shared search + cat-name filter; owns the `CatSelectorModal`; single consolidated chip row                         |
+| Album states         | `src/components/album/AlbumStates.tsx`                                                                                        | Branded loading/empty/error states                                                                                 |
+| Lightbox             | `src/components/ui/Lightbox.tsx`                                                                                              | Full-bleed dark image viewer; Esc closes, ←/→ navigate (topmost layer)                                             |
+| Video player         | `src/components/ui/VideoPlayer.tsx`                                                                                           | Full-bleed dark video viewer; same key/nav language as Lightbox                                                    |
+| Filter hook          | `src/hooks/useMediaFilter.ts`                                                                                                 | Shared free-text (description + tags) + cat-tag filtering for both albums                                          |
+| Media links hook     | `src/hooks/useMediaLinks.tsx`                                                                                                 | Resolves media link tokens                                                                                         |
+| YouTube service      | `src/services/youtube.ts`                                                                                                     | `fetchChannelVideos`, `searchYouTubeVideos`, YouTube data types                                                    |
+| Image/video services | `src/services/image-service.ts`, `video-service.ts`, `media-albums.ts`                                                        | Firestore-backed media records + album grouping                                                                    |
+| Storage/signed URLs  | `src/services/storage-service.ts`, API `generate-signed-url`                                                                  | Firebase Storage access + signed upload URLs                                                                       |
+| YouTube admin        | `src/components/admin/YouTubeAuthPanelNew.tsx`, `admin/tag-videos`, `tag-images`                                              | OAuth panel + tagging surfaces                                                                                     |
+| YouTube API routes   | `api/{manage-playlists,youtube-playlists,upload-youtube,upload-youtube/complete,update-youtube-video,refresh-video-metadata}` | Playlist/video management. See [api-routes](api-routes.md)                                                         |
 
 ## Data Flow
 
@@ -83,6 +83,178 @@ graph LR
 - **YouTube via service + routes**: client reads go through `getVideoService`/`youtube.ts`;
   mutating YouTube (upload, playlist edits, metadata) goes through the admin API routes using
   `googleapis` + refresh-token OAuth.
+
+## YouTube OAuth credential (single shared channel)
+
+> Corrected 2026-07-26 after the P5.4 manual pass found the routes and the admin
+> re-authorize button using different token sources (`log/DEBUG_LOG.md`).
+
+**One channel serves every mountain**, on one OAuth credential — per-mountain channels were
+considered and rejected (monetization thresholds apply per channel; N channels means N expiring
+refresh tokens). Per-mountain attribution comes from `cat_videos.mountainId`, not from channel
+ownership.
+
+`src/lib/youtube/credentials.ts` is the **only** place that credential is resolved. It exists
+because the credential has two halves that live in different places:
+
+| Half                                         | Source                                            | Rotates           |
+| -------------------------------------------- | ------------------------------------------------- | ----------------- |
+| Client identity (`getYouTubeOAuthClient`)    | env `YOUTUBE_CLIENT_ID`/`_SECRET`/`_REDIRECT_URI` | effectively never |
+| Refresh token (`getYouTubeOAuthCredentials`) | Firestore `admin_config/youtube_auth` — **only**  | every 7–14 days   |
+
+- ⚠️ **There is no `YOUTUBE_REFRESH_TOKEN` env var, by design.** Reading the token from env is
+  what let a stale value silently shadow the one the admin 「토큰 갱신」 button had just written, so
+  re-authorizing appeared to work and changed nothing. Env was removed rather than demoted to a
+  fallback, because a fallback keeps that same failure shape for the case where the Firestore doc
+  goes missing. **Don't reintroduce an env token path** — obtaining a token needs client identity
+  only, so the recovery from "no token anywhere" is just 「토큰 갱신」.
+- ⚠️ **Scopes are fixed at consent time and must cover writes.** `auth-url` requests
+  `youtube.upload` + `youtube` + `youtube.readonly` + `youtube.force-ssl`. Trimming to
+  upload+readonly (as it did until 2026-07-26) still yields a token that refreshes fine and
+  reports healthy, but fails `videos.update` and `playlistItems.insert/delete` with Google's
+  **"Insufficient Permission"** — distinct from our gate's "Insufficient permissions". Changing
+  this list requires a re-authorize; an existing token cannot gain scopes.
+- **Client identity resolves without a token** so `auth-url`/`callback` can _obtain_ one. The
+  predecessor (`getYouTubeOAuthConfig()` in `utils/config.ts`, now deleted) required all three env
+  vars together, which deadlocked the OAuth flow on a fresh deployment.
+- **One token source means one status row.** `/api/admin/youtube-auth/status` used to report an
+  `environment` token beside the `firestore` one — and displayed Firestore's timestamp against the
+  env token, which is much of why the split went unnoticed. It now reports the stored token alone.
+- **Consumers:** `upload-youtube`, `update-youtube-video`, `manage-playlists` (GET+POST),
+  `youtube-playlists`, `admin/youtube-auth/{auth-url,callback,status}`. `refresh-video-metadata`
+  is **not** one — it uses the public API key.
+- **No automated test reaches YouTube** (the emulator has no credentials). Precedence is pinned by
+  `tests/unit/youtubeCredentials.test.ts`; everything past the credential is covered only by the
+  P5.4 manual pass on Preview.
+
+## Video upload (resumable, direct-to-Google)
+
+> Changed 2026-07-29 (`log/DEBUG_LOG.md`). Before this, the composer POSTed the file itself to
+> `/api/upload-youtube` — which meant **no real video could be uploaded at all**.
+
+🚨 **The file must never pass through a Vercel function.** Vercel caps a function's request body
+at **4.5 MB** and rejects anything larger at the proxy with 413 `FUNCTION_PAYLOAD_TOO_LARGE` —
+before the handler runs, so it cannot be caught, and no `vercel.json` setting, plan tier or Fluid
+compute changes it. 4.5 MB is a few seconds of phone video.
+
+The upload is therefore three legs, all from `uploadVideoToYouTube` in `uploadStrategies.ts`:
+
+| Step            | Where                                          | Carries                                                                                       |
+| --------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1. Open session | `POST /api/upload-youtube`                     | Metadata only (a few hundred bytes) → returns Google's session URI from the `Location` header |
+| 2. Upload bytes | **Browser → Google**, `PUT` to the session URI | The file. Never touches our server, so there is no size ceiling                               |
+| 3. Record it    | `POST /api/upload-youtube/complete`            | The new video id → playlist filing + the `cat_videos` write                                   |
+
+- **Both routes gate on `manage-video` independently.** Step 3 writes via the Admin SDK, so it
+  must not trust step 1's gate.
+- **No token reaches the browser.** The session URI is itself the upload capability; the `PUT`
+  carries no `Authorization` header.
+- 🚨 **Step 1 must forward the browser's `Origin`.** Google fixes the session's
+  `Access-Control-Allow-Origin` from the Origin on the call that **opened** it — a server-side
+  call, which sends none by default. Omit it and the browser uploads every byte, then cannot
+  read the response: 100% followed by an `onerror` that looks like a dead connection, with the
+  video **public on YouTube and unrecorded** because step 3 never runs. The route 400s rather
+  than opening an origin-less session.
+  - ⚠️ Preflighting `googleapis.com/upload/youtube/v3/videos` does **not** test this — that
+    endpoint echoes any origin. The session URI is a separate resource whose CORS answer is
+    already fixed. Checking the wrong URL is what let this ship.
+- ⚠️ **A failure in step 3 leaves a video public on YouTube but unrecorded in Firestore** — never
+  a lost video. The next sync reconciles it.
+
+## Playlist filing (per mountain, from config)
+
+> Added 2026-07-27 (plan `butler-media-separation-plan-20260727.md`). Replaces a lookup that
+> matched the playlist **titled** `집사게시판`.
+
+Every uploaded video is filed into **its mountain's playlist** on the shared channel. That
+membership is what makes a video attributable to one mountain _on the YouTube side_ — Firestore
+already has `cat_videos.mountainId`, stamped from the request Host.
+
+| Playlist                  | Config                                | Who files into it                 |
+| ------------------------- | ------------------------------------- | --------------------------------- |
+| The mountain's own        | `<mountain>.social.youtubePlaylistId` | every upload, all composers       |
+| `산냥이집냥이 - 입양홍보` | `_shared.youtube.adoptionPlaylistId`  | 입양홍보 uploads, **in addition** |
+
+- ⚠️ **`_shared` is platform config, not a tenant.** It rides the `_`-prefix convention
+  `getAllMountains()` already filters as meta entries, so it can never be routed to or read as a
+  mountain. `getAdoptionPlaylistId()` takes **no `mountainId`** — the missing parameter is what
+  documents it as platform-scoped.
+- ⚠️ **A missing key and an empty value differ.** An absent key **throws** (a typo or an
+  unprovisioned mountain must be loud); `""` means "no playlist yet", returns `null`, and the
+  upload proceeds unfiled with a log line. All three IDs are populated today, so the empty branch
+  is defensive — it exists so adding a mountain and creating its playlist need not be one atomic
+  chore.
+- **An 입양홍보 video joins both playlists**, deliberately: if it were only in the adoption one,
+  the mountain playlist would stop being a complete record of what that mountain owns — and that
+  record is the handle the deferred `syncVideos` fix needs (see the multi-mountain plan's deferred
+  items). `upload-youtube/complete` accepts a **`playlistIds` array** for this, filing into each and
+  logging _which_ one failed; with two targets, a single "not in a playlist" warning would be
+  ambiguous. _(Until 2026-07-29 this was a repeated `playlistId` form field on `upload-youtube`
+  itself, before the upload was split into session + complete — see below.)_
+- **`cat_videos.playlist`** stores the **mountain** playlist, resolved from config rather than from
+  the request, so it does not depend on the order the caller sent them.
+- ⚠️ **Not retroactive.** Filing starts at the next upload; existing channel videos have to be
+  added to their mountain's playlist by hand (as of 2026-07-27 the 계양산 playlist holds 4 of the
+  channel's 13 videos).
+- 📌 **`/api/youtube-playlists` has no caller** since the forms stopped fetching the list
+  (`/admin/tag-videos` uses `/api/manage-playlists`). Left in place pending a history check.
+
+## Image storage & serving strategy
+
+> Verified against prod data 2026-07-25. Supersedes the archived, stale
+> `docs/archive/implementation/[ OUTDATED ] IMAGE_STORAGE_EXPLAINED.md` (which describes the
+> old `unoptimized: true` / "direct-from-CDN" setup, before Next optimization was enabled).
+
+Two distinct mechanisms serve images — know which applies where:
+
+| Image                       | Stored as                                     | Served via            | Baked into build?             |
+| --------------------------- | --------------------------------------------- | --------------------- | ----------------------------- |
+| Cat thumbnails              | Storage URL (`cats.thumbnailUrl`)             | Next `<Image>`, live  | baked but **UNUSED** (legacy) |
+| Album photos (`cat_images`) | Storage URL (`cat_images.imageUrl`)           | Next `<Image>`, live  | **never** baked               |
+| About-page photos           | filename (`about_content…mainPhoto.filename`) | Next `<Image>`, live  | **never** baked (since 8/2)   |
+| Map background              | config `url` → `public/`                      | static `public/` file | in-git design asset           |
+
+- **Storage-URL + live optimizer (the dominant pattern).** Cat thumbnails and album photos
+  store a **full Firebase Storage download URL**
+  (`https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media&token=…`). The app
+  reads them live from Firestore and renders through Next `<Image>`, which fetches the original
+  from Storage at request time, optimizes to WebP/AVIF, and CDN-caches it (1-year TTL).
+  `firebasestorage.googleapis.com` is whitelisted in `next.config.js` `remotePatterns`. No build
+  step; ISR-fresh. Cost is negligible at this scale (per-transformation billing, long cache).
+  - **About-page photos joined this pattern on 2026-08-02**, with one difference: the CMS
+    record stores a bare **filename**, not a full URL, and `useAboutPhoto` resolves it at
+    render time via `getDownloadUrl('about-photos/{mountainId}/{filename}')`. ⚠️ That makes
+    the filename **free text matched against Storage** — a typo is a broken photo with no
+    other signal, which is the cost of the CMS owning the field. (Verified 2026-08-02 that
+    `about-photos/**` is anonymously readable in prod Storage, which this path requires.)
+- **Baked build artifact — none from Firebase any more.** `fetch-static-assets.js` downloads
+  only the legacy-and-unused cat thumbnails (see below). The **map background**
+  (`map.landscapeImage/portraitImage`) is served from `public/`, but it's a static in-git
+  design asset, not fetched from Firebase.
+  📌 **About photos used to be the exception here, and the reason they stopped is worth
+  keeping.** They were baked into `public/images/about-photos/{mountainId}/…` and served from
+  a path written back into `mountains.json` — so static config, not the CMS, was the real
+  source of the image, and `useAboutPhoto` short-circuited to it while the caption beside it
+  came from Firestore. Editing the photo in the CMS silently kept rendering the old one.
+
+⚠️ **Cat-thumbnail baking is legacy/dead in prod.** `fetch-static-assets.js` still downloads the
+Storage `thumbnails/` folder into `public/images/thumbnails/…`, but **no prod cat references those
+files** — prod `cats.thumbnailUrl` are Storage URLs (cats switched from local paths to Storage URLs
+historically — see `scripts/migration/rewrite-storage-bucket-urls.js`). The baked thumbnail files
+are only referenced by the **e2e fixtures**, which still use `/images/thumbnails/…` local paths. So
+changing how thumbnails are namespaced _on disk_ has **no effect on prod serving**.
+
+⚠️ **Multi-tenant (M6).** Because thumbnails and album photos ride on Storage URLs, tenant
+isolation comes from the **Storage object path**, not from baked files: uploads prepend the
+tenant's `storagePrefix` (`generate-signed-url` route + the form image strategy in
+`uploadStrategies.ts`), so a new mountain's uploads land under `mountains/<id>/…` and their URLs
+are naturally scoped. Geyang's prefix is `''` (flat bucket). **No per-cat thumbnail migration is
+needed** — the served values are already Storage URLs. See
+[`multi-mountain-refactor-plan` §3 M6](../planning/multi-mountain-refactor-plan-20260719.md).
+
+⚠️ **Token fragility.** The Storage URLs carry `?alt=media&token=…` (a download token). Rotating or
+revoking that token breaks the URL. Baked files / a public bucket / signed URLs avoid this — a
+low-probability, pre-existing consideration, not an active issue.
 
 ## External Integrations
 

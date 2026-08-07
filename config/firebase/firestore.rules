@@ -44,10 +44,25 @@ service cloud.firestore {
     match /cat_images/{x} {
       allow read: if true;
       allow write: if canWrite('manage-photo');
+
+      // Member upload (2026-08-03). 집사톡 is the only board a non-admin may write
+      // AND the only one that uploads, so a member who attaches a photo needs to
+      // record it here or it never reaches the 사진첩 / tagging queue.
+      // ⚠️ CREATE only, and only attributed to self. `upload-own-photo` deliberately
+      // does NOT grant update or delete — a member who may add a photo must not
+      // thereby be able to retag or remove anyone else's album entries. That
+      // narrowness IS the permission's reason to exist; widening it here silently
+      // turns it back into `manage-photo`.
+      allow create: if canWrite('upload-own-photo') && uploadingAsSelf();
     }
 
     // Video album tagging (tag-videos). Server-side YouTube sync/upload uses the
     // Admin SDK and bypasses these rules.
+    // 📌 **No `upload-own-video` clause here, deliberately.** A member's video record
+    // is written by the Admin SDK in POST /api/upload-youtube/complete, which never
+    // consults these rules — the gate for that path is the route. A clause here would
+    // be dead surface guarding a client write that does not exist. Revisit only if the
+    // video write ever moves client-side.
     match /cat_videos/{x} {
       allow read: if true;
       allow write: if canWrite('manage-video');
@@ -87,16 +102,66 @@ service cloud.firestore {
     match /feeding_spots/{document} {
       allow read: if request.auth != null;
       allow write: if canWrite('manage-posts');
+
+      // Member check-in (2026-08-02). Creating a 급식현황 post stamps every spot
+      // the author ticked — that stamp IS the board's purpose, so a member who
+      // may post there must be able to write it, or their post lands and their
+      // check-in silently does not (the call is deliberately non-fatal).
+      // ⚠️ Narrower than it looks in one way and WIDER in another: only these two
+      // fields may change, but a feeding spot is **shared state with no owner**,
+      // so any holder may stamp any spot. That is the real-world action; it is
+      // not an oversight.
+      allow update: if canWrite('write-own-post-feeding') &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['last_attended', 'last_attended_by']);
     }
+
+    // ── 급식현황 / 집사톡: members author their own (2026-08-02) ────────────────
+    // These two boards are the only ones a non-admin may write. 공지사항 and
+    // 입양홍보 stay `manage-posts`-only above — do not copy this shape there
+    // without deciding that members should publish announcements.
+    //
+    // 🔑 Authorship is `authorUid`, never `username`. `username` is an email the
+    // UI shows as a label; authorizing on it would tie "may edit" to a mutable
+    // display field. Posts predating `authorUid` fall back to an email match —
+    // and the legacy `admin@mtcat.com` posts match no account, so they stay
+    // admin-only. That is correct, not a gap.
+    //
+    // 🗑️ **Delete: authors may now remove their own (owner, 2026-08-04).** This
+    // reverses the 2026-08-02 decision to withhold it. The reason it was withheld is
+    // real and unchanged — a post can carry other people's replies, and deleting the
+    // post **cascades to those replies** (`deletePost` removes them first). That is
+    // the accepted cost of letting an author retract their own post.
+    // 📌 **Media survives a delete**, by design: `cat_images` / `cat_videos` records
+    // and the Storage objects are untouched, so a deleted post's photos stay in the
+    // 사진첩. Nothing here needed changing for that — the delete never reached them.
+    // ⚠️ A **reply** is a document in this same collection, so these rules govern it
+    // too: its author may edit and delete it via the identical author test.
 
     match /posts_feeding/{document} {
       allow read: if request.auth != null;
-      allow write: if canWrite('manage-posts');
+      allow create: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-feeding') && authoringAsSelf());
+      allow update: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-feeding') &&
+                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountAdjustment()));
+      allow delete: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-feeding') &&
+                        (isPostAuthor() ||
+                         isParentAuthor(/databases/$(database)/documents/posts_feeding/$(resource.data.get('parentId', '__none__')))));
     }
 
     match /posts_butler/{document} {
       allow read: if request.auth != null;
-      allow write: if canWrite('manage-posts');
+      allow create: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-butler') && authoringAsSelf());
+      allow update: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-butler') &&
+                        ((isPostAuthor() && provenanceUnchanged()) || isReplyCountAdjustment()));
+      allow delete: if canWrite('manage-posts') ||
+                       (canWrite('write-own-post-butler') &&
+                        (isPostAuthor() ||
+                         isParentAuthor(/databases/$(database)/documents/posts_butler/$(resource.data.get('parentId', '__none__')))));
     }
 
     // Permission system collections
@@ -179,6 +244,98 @@ service cloud.firestore {
       return request.resource != null
         ? request.resource.data.mountainId
         : resource.data.mountainId;
+    }
+
+    // ── Post authorship (2026-08-02, member authoring) ────────────────────────
+
+    /** The stored post's author uid, '' when the post predates the field. */
+    function storedAuthorUid() {
+      return resource.data.get('authorUid', '');
+    }
+
+    /**
+     * The signed-in user wrote this post.
+     *
+     * 🔑 Two eras. A post with `authorUid` matches on uid — the only durable
+     * identity. A post without one predates the field, so it falls back to the
+     * author's recorded email; the fallback is deliberately unreachable once
+     * `authorUid` is present, so a stale `username` can never re-open a post.
+     */
+    function isPostAuthor() {
+      return request.auth != null && (
+        storedAuthorUid() != ''
+          ? storedAuthorUid() == request.auth.uid
+          : resource.data.get('username', '') == request.auth.token.get('email', '')
+      );
+    }
+
+    /** A new post may only be attributed to the person writing it. */
+    function authoringAsSelf() {
+      return request.resource.data.get('authorUid', '') == request.auth.uid;
+    }
+
+    /**
+     * A new media record may only be attributed to the person uploading it.
+     *
+     * 🔑 Keyed on `uploadedByUid`, never `uploadedBy`. The latter is a free-text
+     * display string that holds emails AND literals ('admin', 'user',
+     * 'system_sync', 'youtube_sync'), so it cannot carry authorization — the same
+     * reasoning that put `authorUid` on posts.
+     */
+    function uploadingAsSelf() {
+      return request.resource.data.get('uploadedByUid', '') == request.auth.uid;
+    }
+
+    /**
+     * An edit may not rewrite who wrote the post or when.
+     *
+     * The composers already decline to re-stamp these; stating it here is what
+     * makes it true against a hand-crafted client, which is the point of a rule.
+     */
+    function provenanceUnchanged() {
+      return request.resource.data.get('authorUid', '') == storedAuthorUid() &&
+             request.resource.data.get('username', '') == resource.data.get('username', '') &&
+             request.resource.data.get('date', '') == resource.data.get('date', '') &&
+             request.resource.data.get('time', '') == resource.data.get('time', '');
+    }
+
+    /**
+     * Posting or removing a reply changes `replyCount` on the PARENT — a document
+     * the replier usually does not own, so "authors may edit their own" alone would
+     * deny most replies. Bounded to exactly that one field moving by exactly one,
+     * in either direction, so it cannot carry anything else through.
+     *
+     * 📌 **Why ±1 and not "any value".** The services *recount* (`replies.length`)
+     * rather than increment, so the write lands on the true total — which moves by
+     * one per reply added or deleted. Anything further apart means the stored count
+     * had already drifted, and correcting drift is an admin action (`manage-posts`
+     * writes freely). Allowing arbitrary values here would let any member set any
+     * post's reply count to anything.
+     */
+    function isReplyCountAdjustment() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']) &&
+             (request.resource.data.replyCount == resource.data.get('replyCount', 0) + 1 ||
+              request.resource.data.replyCount == resource.data.get('replyCount', 0) - 1);
+    }
+
+    /**
+     * The signed-in user wrote the POST this reply hangs under.
+     *
+     * 🔑 Deleting a post **cascades**: `deletePost` removes every reply first, and
+     * those replies belong to other people. Without this the cascade is denied
+     * partway and the post itself is never deleted — the author would see a failure
+     * on their own post because somebody else had replied to it.
+     *
+     * ⚠️ Costs a document read, so it is deliberately the *last* term of the delete
+     * rule — `isPostAuthor()` short-circuits the common case. A stamped
+     * `parentAuthorUid` field would avoid the read, and was rejected: a reply is
+     * client-written, so a crafted one could name the wrong parent author and make a
+     * post **undeletable by its own author**.
+     */
+    function isParentAuthor(parentPath) {
+      return request.auth != null &&
+             exists(parentPath) &&
+             get(parentPath).data.get('authorUid', '') == request.auth.uid;
     }
 
     // A content write is allowed when the actor holds `permission` on the doc's

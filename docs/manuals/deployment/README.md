@@ -55,9 +55,64 @@ SMTP_PASSWORD=<gmail App Password, no spaces>
 SMTP_FROM=<same gmail address>
 ```
 
-(Gmail App Password setup is in the walkthroughs, §7/§8.) Everything else the route needs —
-`SERVICE_ACCOUNT_KEY`, the recipient `adminEmail` (from `config/mountains/mountains.json`) —
-is already in place.
+Everything else the route needs — `SERVICE_ACCOUNT_KEY`, the recipient `adminEmail` (from
+`config/mountains/mountains.json`) — is already in place. ⚠️ **`adminEmail` is the
+_recipient_**; the five vars above are the _sender_. They are unrelated settings that both
+look like "the contact email".
+
+#### Check the credential before it goes near Vercel
+
+```
+npm run smtp:verify
+```
+
+It mirrors the route's own configuration, authenticates, and disconnects — **it never sends
+mail**, so it is safe to run against production credentials. It also flags the mistakes that
+actually happen (see the traps below). Confirm `✅ AUTH OK` locally first, so you are only ever
+debugging one environment at a time.
+
+#### Creating the Gmail App Password
+
+`SMTP_USER` and `SMTP_FROM` are both **just the Gmail address**, and they must be the **same**
+one. `SMTP_PASSWORD` is **not** the account password — it is a 16-character **App Password**:
+
+1. Sign in **as the exact address in `SMTP_USER`**, not another account that happens to be
+   logged in. This is the mistake that yields a well-formed password that is still rejected.
+2. Go to **https://myaccount.google.com/apppasswords**.
+3. If that page says the setting is unavailable, **that is the answer**: App Passwords require
+   **2-Step Verification** (https://myaccount.google.com/signinoptions/two-step-verification).
+   They are also unavailable under Advanced Protection, or if a Workspace admin disabled them.
+4. Name it something recognisable (e.g. `mohocat-vercel`) and create it.
+5. Google shows **16 characters in four groups of four**. The spaces are display formatting —
+   copy it as one unbroken 16-character string. It is shown **once**.
+6. **Revoke the old one** on the same page. Creating a new App Password does not invalidate
+   the previous one.
+
+#### Traps, each of which has actually bitten
+
+- ⚠️ **`SMTP_FROM` must equal `SMTP_USER`.** Gmail silently **rewrites** a From address the
+  authenticated account does not own — not an error, just a no-op that still reports success.
+  Re-check the pairing after changing **either** var; changing one and forgetting the other is
+  exactly how this happened (2026-08-06).
+- ⚠️ **Turning 2-Step Verification off revokes every App Password already issued**, and a
+  Google account password change does the same.
+- ⚠️ **Do not paste a value with a trailing `# comment` into the Vercel dashboard.** A `.env`
+  file strips inline comments; the dashboard stores values **verbatim**, so the password
+  becomes the whole string and fails exactly like a wrong one.
+- ⚠️ **Env vars are injected at build time — redeploy after changing them.** Production and
+  Preview are separate deployments and both need it.
+- 📌 **Gmail SMTP caveats:** host `smtp.gmail.com`, port `587` (STARTTLS). Sending is
+  rate-limited (~500 recipients/day on consumer Gmail) and deliverability is weaker than a
+  transactional provider — fine for low-volume admin notifications; revisit (SendGrid/SES) if
+  volume grows.
+
+#### If a submission records but no email arrives
+
+That is the designed behaviour, not a lost submission: `/api/contact` writes the contact
+**first** and treats the email as best-effort, so a failure never costs the visitor their
+message. Since 2026-08-06 it is visible rather than silent — the admin 동참 table shows an
+**⚠️ 미전송** badge on that row, and the visitor is told the reply may be slow. Run
+`npm run smtp:verify` to find out why; the raw error is also in the Vercel function log.
 
 ## ISR revalidation — the `revalidate` (N) value is hardcoded in the codebase
 
@@ -147,6 +202,59 @@ so a redeploy is required for a change to take effect — there is no runtime di
   npx firebase login:list          # authenticated? otherwise: npx firebase login
   npx firebase use                 # confirm the active project (or pass --project <id>)
   ```
+
+- **Storage bucket CORS** — `config/firebase/cors_fbstorage.json`, applied with an npm
+  script (**not** the Firebase CLI, and no `gcloud` install needed):
+
+  ```bash
+  npm run storage:cors                                  # dry run: prints live vs desired
+  APPLY=true CONFIRM_PROJECT=mountaincats-61543 npm run storage:cors   # apply
+  ```
+
+  Dry-run by default, because `setCorsConfiguration` **replaces** the whole list rather
+  than merging. It prints the live config, the desired config, and the origin-level diff,
+  then reads back what actually landed. Uses the `@google-cloud/storage` client that
+  `firebase-admin` already ships with, and the same service-account credential as the
+  other maintenance scripts.
+
+  <details>
+  <summary>Equivalent with the Google Cloud SDK, if you have it</summary>
+
+  ```bash
+  gcloud storage buckets update gs://mountaincats-61543.firebasestorage.app \
+    --cors-file=config/firebase/cors_fbstorage.json
+
+  gcloud storage buckets describe gs://mountaincats-61543.firebasestorage.app \
+    --format="default(cors_config)"
+  ```
+
+  </details>
+
+  🚨 **This gates 집사톡 image upload, and it is easy to miss.** Those images are PUT
+  from the **browser straight to the bucket** with a signed URL (`generate-signed-url`),
+  so the bucket's own CORS list decides which origins may upload. Until 2026-07-29 that
+  list held **only `http://localhost:3000`** — so the upload worked in dev and failed on
+  every deployed origin with a bare `TypeError: Failed to fetch`, which names neither
+  CORS nor the bucket (`log/DEBUG_LOG.md`).
+  - 공지사항 / 입양홍보 images are **not** affected: they go through the Firebase JS SDK,
+    which uses a different endpoint that doesn't consult this list. Only the signed-URL
+    path does — so "images upload fine over there" proves nothing about this.
+  - ⚠️ **No wildcards.** GCS matches origins exactly: `*.vercel.app` does not work. The
+    list therefore names each environment — `http://localhost:3000` (local),
+    `https://dev.mohocats.org` (the `dev` branch on Vercel) and `https://mohocats.org`
+    (production). A one-off PR preview on a per-deployment `*.vercel.app` URL is **not**
+    covered: test the upload path on `dev.mohocats.org` rather than adding a URL that
+    changes on the next push.
+  - 📌 **One origin per _environment_, never per mountain.** Tenancy is **path-based**
+    (`mohocats.org/manisan`), so a new mountain adds a _path_ and nothing here changes when
+    one is provisioned. `dev.` earns its place as an environment; per-mountain subdomains do
+    not — `geyangsan.` / `manisan.mohocats.org` are **NXDOMAIN** and stay that way (decision
+    `tenancy-url-model-decision-20260728.md`). `mountains.json` still carries a `domains`
+    field because host resolution hasn't been retired yet; that is not evidence those hosts
+    exist.
+  - The origin list is not a security boundary — the short-lived signed URL is the
+    credential, and minting one already requires `manage-photo`. It only decides which
+    browser origins may present it.
 
 ## Whitelisting a new domain with the auth / identity providers
 

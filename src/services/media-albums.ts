@@ -91,6 +91,22 @@ export const getCatImages = async (catName: string, mountainId: string): Promise
   }
 };
 
+/**
+ * Drop videos the public cannot watch — deleted from YouTube (`missing`) or made
+ * private (`private`), as established by `POST /api/admin/video-availability`.
+ *
+ * 🐛 2026-08-01: deleted videos kept their `cat_videos` record and so kept a tile
+ * in the public 영상첩, showing YouTube's grey "unavailable" placeholder.
+ *
+ * ⚠️ **Filtered here in memory, not as a `where` clause.** Records that predate
+ * the availability check have no `youtubeStatus` field at all, and a Firestore
+ * inequality would exclude exactly those — i.e. every existing video. Absent is
+ * therefore treated as watchable: nothing vanishes until a check has actually
+ * judged it.
+ */
+const isWatchable = (videos: CatVideo[]): CatVideo[] =>
+  videos.filter((v) => v.youtubeStatus !== 'missing' && v.youtubeStatus !== 'private');
+
 // Get videos for a specific cat
 export const getCatVideos = async (catName: string, mountainId: string): Promise<CatVideo[]> => {
   try {
@@ -115,7 +131,7 @@ export const getCatVideos = async (catName: string, mountainId: string): Promise
     }) as CatVideo[];
 
     // Sort client-side by uploadDate descending
-    return videos.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
+    return isWatchable(videos).sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
   } catch (error) {
     console.error(`Error fetching videos for cat "${catName}":`, error);
     return [];
@@ -180,6 +196,148 @@ export const getAllImages = async (
 };
 
 // Get all videos (with optional filtering)
+/**
+ * Firestore `in` accepts at most 30 values per query, so a lookup over a list has
+ * to be chunked. Posts realistically carry a handful of media, but nothing stops
+ * an admin attaching more.
+ */
+const IN_CLAUSE_LIMIT = 30;
+
+const chunk = <T>(items: T[], size: number): T[][] => {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+};
+
+/** What a post can display about one of its media items, from the media record. */
+export interface MediaDetail {
+  tags: string[];
+  /** Video only — `cat_videos.title`, mirroring the YouTube title. */
+  title?: string;
+  /** The caption typed per file in the composer. */
+  description?: string;
+}
+
+/**
+ * Details for specific media, looked up by the identifier a **post** stores.
+ *
+ * WHY THIS EXISTS (2026-07-31): a post document holds only `imageUrls` /
+ * `videoUrls` — bare URLs. Everything the composer collects *per file* (the cat
+ * tags, the video 제목, the 설명) is written to the `cat_images` / `cat_videos`
+ * record the upload created, not to the post. So a post that wants to show any of
+ * it has to resolve URL → record.
+ *
+ * 🔑 **Deliberately a live lookup, not a copy on the post.** Stamping these onto
+ * the post at creation would be cheaper, but they are edited afterwards in
+ * `/admin/tag-images` and `/admin/tag-videos` — and for videos **YouTube is the
+ * source of truth**, with `refresh-video-metadata` rebuilding the record from it
+ * (the 2026-07-26 rule). A copy on the post would be stale from the first edit and
+ * nothing would reconcile it. The live lookup also means posts created before this
+ * shipped display their captions with no migration.
+ *
+ * Both collections are `allow read: if true`, so this works for anonymous
+ * visitors — which matters, since these render on public pages.
+ *
+ * 📌 No composite index required: `mountainId ==` plus an `in` (a disjunction of
+ * equalities) is served by merging single-field indexes, and there is no
+ * `orderBy`. Keep it that way — the emulator would not warn you.
+ *
+ * ⚠️ **Duplicate keys are possible** (two records pointing at one URL — legacy
+ * data, and the e2e fixtures do it deliberately), so the tie-break is explicit:
+ * a record carrying tags beats one without. Without that rule the winner would
+ * depend on Firestore's return order, and the displayed caption would flicker
+ * between deploys.
+ */
+const mergeDetail = (
+  into: Record<string, MediaDetail>,
+  key: string,
+  candidate: MediaDetail
+): void => {
+  const existing = into[key];
+  if (!existing || (candidate.tags.length > 0 && existing.tags.length === 0)) {
+    into[key] = candidate;
+  }
+};
+
+export const getImageDetailsByUrls = async (
+  mountainId: string,
+  imageUrls: string[]
+): Promise<Record<string, MediaDetail>> => {
+  const urls = Array.from(new Set(imageUrls.filter(Boolean)));
+  if (urls.length === 0) return {};
+
+  try {
+    const byUrl: Record<string, MediaDetail> = {};
+
+    await Promise.all(
+      chunk(urls, IN_CLAUSE_LIMIT).map(async (batch) => {
+        const snapshot = await getDocs(
+          query(
+            collection(db, COLLECTIONS.CAT_IMAGES),
+            where('mountainId', '==', mountainId),
+            where('imageUrl', 'in', batch)
+          )
+        );
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (!data.imageUrl) return;
+          mergeDetail(byUrl, data.imageUrl, {
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            description: data.description || undefined,
+          });
+        });
+      })
+    );
+
+    return byUrl;
+  } catch (error) {
+    // Non-fatal by design: captions enhance the media, and a post that renders its
+    // photo without one is far better than a post that renders nothing. Logged so
+    // the failure is not invisible.
+    console.error('Error fetching image details by url:', error);
+    return {};
+  }
+};
+
+/** As `getImageDetailsByUrls`, keyed by YouTube video id (`cat_videos.youtubeId`). */
+export const getVideoDetailsByYoutubeIds = async (
+  mountainId: string,
+  youtubeIds: string[]
+): Promise<Record<string, MediaDetail>> => {
+  const ids = Array.from(new Set(youtubeIds.filter(Boolean)));
+  if (ids.length === 0) return {};
+
+  try {
+    const byId: Record<string, MediaDetail> = {};
+
+    await Promise.all(
+      chunk(ids, IN_CLAUSE_LIMIT).map(async (batch) => {
+        const snapshot = await getDocs(
+          query(
+            collection(db, COLLECTIONS.CAT_VIDEOS),
+            where('mountainId', '==', mountainId),
+            where('youtubeId', 'in', batch)
+          )
+        );
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (!data.youtubeId) return;
+          mergeDetail(byId, data.youtubeId, {
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            title: data.title || undefined,
+            description: data.description || undefined,
+          });
+        });
+      })
+    );
+
+    return byId;
+  } catch (error) {
+    console.error('Error fetching video details by youtube id:', error);
+    return {};
+  }
+};
+
 export const getAllVideos = async (
   mountainId: string,
   options: MediaQueryOptions = {}
@@ -208,6 +366,12 @@ export const getAllVideos = async (
         updated: data.updated ? parseDate(data.updated) : undefined,
       };
     }) as CatVideo[];
+
+    // Public surfaces show only what a visitor can actually watch; the CMS opts
+    // in to the rest, since managing them is the whole point of /admin/tag-videos.
+    if (!options.includeUnavailable) {
+      results = isWatchable(results);
+    }
 
     // Sort client-side
     const orderField = options.orderBy || 'uploadDate';
@@ -682,6 +846,12 @@ export const syncVideos = async (mountainId: string): Promise<boolean> => {
           thumbnailUrl: video.thumbnailUrl || '',
           duration: video.duration || 0,
           publishedAt: video.publishedAt,
+          // Imported videos had NO uploadDate: the field only appeared because
+          // refresh-video-metadata stamped `new Date()` on every video right after the
+          // import. Now that the refresh no longer invents it, set it here from YouTube's
+          // publish date — the album listings sort on `uploadDate.getTime()`, so a record
+          // without one would throw (parseDate returns null for a missing value).
+          uploadDate: video.publishedAt ? new Date(video.publishedAt) : new Date(),
           channelTitle: video.channelTitle || 'Mountain Cats',
           tags: [],
           location: '',

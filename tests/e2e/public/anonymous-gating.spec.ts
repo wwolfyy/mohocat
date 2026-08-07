@@ -15,13 +15,20 @@ import type { Page } from '@playwright/test';
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1024;
 
 test.describe('anonymous gating', () => {
-  for (const path of ['/pages/butler_talk', '/pages/butler_stream']) {
+  // 📌 The copy changed on 2026-08-02 with member authoring: these boards are no
+  // longer admin-only, so telling an anonymous visitor they need 관리자 권한 was
+  // wrong. Each board now names who may read it. Anonymous is still denied —
+  // `usePermissions` resolves to an empty list with no signed-in user.
+  const DENIED = {
+    '/pages/butler_talk': '집사톡은 집사로 등록된 분만 볼 수 있어요.',
+    '/pages/butler_stream': '급식현황은 현장 집사만 볼 수 있어요.',
+  } as const;
+
+  for (const [path, message] of Object.entries(DENIED)) {
     test(`${path} shows the access-denied UI`, async ({ page }) => {
       await page.goto(path);
       await expect(page.getByRole('heading', { name: '접근 제한' })).toBeVisible();
-      await expect(
-        page.getByText('이 페이지에 접근하려면 관리자 권한이 필요합니다.')
-      ).toBeVisible();
+      await expect(page.getByText(message)).toBeVisible();
     });
   }
 

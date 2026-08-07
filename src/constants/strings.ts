@@ -256,6 +256,11 @@ export const strings = {
       disconnectConfirm: '카카오톡 연결을 해제할까요?',
       operationFailed: (msg: string) => `작업에 실패했어요: ${msg}`,
     },
+    admin: {
+      heading: '관리자',
+      description: '이 산의 콘텐츠와 회원을 관리할 수 있어요.',
+      link: '관리자 페이지로 가기',
+    },
     withdraw: {
       button: '회원 탈퇴',
       confirmTitle: '정말 탈퇴하시겠어요?',

@@ -6,6 +6,28 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+
+  /* Primary brand color, as a CSS variable so it also reaches surfaces Tailwind
+     utilities cannot style — `<style jsx global>` blocks and third-party CSS
+     (`.dsg-*`, Leaflet). Declared on `:root` so it reaches modals that portal to
+     `document.body`.
+
+     `theme()` resolves at BUILD time, so this is not a copy of the value — it IS
+     `brand.DEFAULT` from tailwind.config.js, which stays the single source of
+     truth per docs/design/design.md. Do not inline a hex here.
+
+     The palette is GLOBAL: every mountain uses the same colors (owner decision,
+     2026-08-05). This was previously overridden per tenant by the `[mountain]`
+     layout from `mountains.json`'s `theme` block; both are gone. */
+  --color-primary: theme('colors.brand.DEFAULT');
+
+  /* Escape hatch for CSS that Tailwind utilities cannot reach: `<style jsx global>`
+     blocks and third-party stylesheets (react-datasheet-grid's `.dsg-*`, Leaflet).
+     styled-jsx does NOT run through Tailwind's PostCSS pipeline, so `theme()` is
+     unavailable there — but `var()` works. Add a stop here only when such a rule
+     actually needs it; component markup must use the `brand-*` utilities instead. */
+  --color-brand-100: theme('colors.brand.100');
+  --color-brand-300: theme('colors.brand.300');
 }
 
 body {

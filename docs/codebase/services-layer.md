@@ -5,8 +5,10 @@
 ## Purpose
 
 A factory-pattern abstraction over Firebase. Components and pages never touch the Firebase SDK
-directly — they call `getXxxService()` from `@/services`, which returns an interface-typed lazy
-singleton. This is the seam for future multi-tenant DB separation, alternate backends, and
+directly — they call `getXxxService(mountainId)` from `@/services`, which returns an
+interface-typed instance **cached per tenant** (`Map<mountainId, instance>`); each service
+stamps `mountainId` on writes and scopes reads by it (multi-tenant M5). This same seam is what
+would enable future full DB separation or alternate backends, and it isolates the SDK for
 testing.
 
 ## Key Components

@@ -195,13 +195,12 @@ export class FirebaseAuthService implements IAuthService {
 
       console.log('Popup completed successfully, processing result...');
 
+      // Never log identity fields (email / displayName / photoURL / phoneNumber) — PII.
+      // `uid` is an opaque Firebase identifier and is kept for correlating a report.
       console.log('=== KAKAOTALK SIGN IN SUCCESS ===');
       console.log('Kakao sign in successful:', {
         isNewUser: additionalUserInfo?.isNewUser,
         providerId: additionalUserInfo?.providerId,
-        displayName: result.user.displayName,
-        email: result.user.email,
-        photoURL: result.user.photoURL,
         uid: result.user.uid,
       });
 
@@ -277,15 +276,14 @@ export class FirebaseAuthService implements IAuthService {
           const linkingResult = await linkWithPopup(anonymousResult.user, kakaoProvider);
           const additionalUserInfo = getAdditionalUserInfo(linkingResult);
 
+          // Never log identity fields — PII. `providerData` is especially unsafe here:
+          // it carries phoneNumber/email per linked provider.
           console.log('=== KAKAOTALK LINKING SUCCESS ===');
           console.log('KakaoTalk account linked successfully:', {
             isNewUser: additionalUserInfo?.isNewUser,
             providerId: additionalUserInfo?.providerId,
-            displayName: linkingResult.user.displayName,
-            email: linkingResult.user.email,
-            photoURL: linkingResult.user.photoURL,
             uid: linkingResult.user.uid,
-            providerData: linkingResult.user.providerData,
+            linkedProviderIds: linkingResult.user.providerData.map((p) => p.providerId),
           });
 
           return linkingResult;

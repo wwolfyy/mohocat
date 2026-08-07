@@ -4,17 +4,11 @@ import { requireApiPermission } from '@/lib/auth/requireApiPermission';
 
 export const dynamic = 'force-dynamic';
 
-// Define the resource pages
-const PAGES = {
-  home: 'Home Page',
-  about: 'About Page',
-  announcements: 'Announcements',
-  butler_talk: 'Butler Talk',
-  butler_stream: 'Butler Stream',
-  photo_album: 'Photo Album',
-  video_album: 'Video Album',
-  faq: 'FAQ',
-};
+// 🗑️ A `PAGES` const lived here, declared and never read (removed 2026-08-03). It had
+// drifted out of agreement with reality in both directions — it listed `home`, which is
+// not a nav item, and omitted `contact` / `adoption` / `cats`, which are. The list that
+// matters is `RESOURCES` in ResourcePermissionConfig.tsx, which must track the
+// `resourceId` props in Navigation.tsx.
 
 // GET is intentionally NOT gated: the public Navigation (via useResourceAccess) reads this
 // page→permission map to decide which nav links to show, for anonymous visitors too. The map

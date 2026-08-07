@@ -69,6 +69,11 @@ export default function ReplyForm({
         parentId,
         message: message.trim(),
         username: user.email, // Use authenticated user's email
+        // ⚠️ A reply is a document in the SAME collection as the post it hangs
+        // under, so the post rules govern it — including the create rule's
+        // "you may only author as yourself" check. Without this a member's
+        // reply would be denied while their post succeeded (2026-08-02).
+        ...(user.uid ? { authorUid: user.uid } : {}),
         date: now.toLocaleDateString('ko-KR'),
         time: now.toLocaleTimeString('ko-KR', {
           hour: '2-digit',

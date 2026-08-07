@@ -14,6 +14,12 @@
  *
  * Returns a discriminated result rather than throwing, so each route maps a failure to
  * the right HTTP status without a try/catch dance.
+ *
+ * `permission` may be a **list**, which means **any one of** — used where a broad admin
+ * grant and a narrow member grant both authorize the same call (the upload routes take
+ * `['manage-photo', 'upload-own-photo']`). ⚠️ **Keep the admin permission in the list.**
+ * Dropping it locks admins out, because an admin holds only the broad one — the exact
+ * bug §10n shipped with `manage-posts` vs `write-own-*`.
  */
 import { auth, db } from '@/lib/firebase-admin';
 import { getRequestMountainId } from '@/lib/tenant';
@@ -24,7 +30,8 @@ export type ApiPermissionResult =
 
 export async function requireApiPermission(
   request: Request,
-  permission: string
+  /** A single permission, or a list meaning **any one of**. */
+  permission: string | string[]
 ): Promise<ApiPermissionResult> {
   // 1. Extract the Bearer token.
   const authHeader = request.headers.get('authorization') ?? '';
@@ -60,7 +67,8 @@ export async function requireApiPermission(
     const roles = (cfgSnap.exists ? cfgSnap.data()?.roles : undefined) ?? {};
     const granted: string[] = roles[role.role]?.permissions ?? [];
 
-    if (!granted.includes(permission)) {
+    const accepted = Array.isArray(permission) ? permission : [permission];
+    if (!accepted.some((p) => granted.includes(p))) {
       return { ok: false, status: 403, error: 'Insufficient permissions' };
     }
 

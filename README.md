@@ -2,155 +2,121 @@
 
 ## Mountain Cat Tracking Platform
 
-A Next.js application for tracking and managing mountain cats with multi-tenant capabilities.
+A Next.js 14 (App Router, TypeScript) multi-tenant platform for tracking mountain cats,
+with a Korean-first UI. Data, auth and image hosting run on **Firebase**; the app is
+deployed to **Vercel**.
 
-## 🎯 **Project Status**
+## 📚 Where the documentation lives
 
-### **Future-Proofing Implementation: COMPLETE** ✅
+- **[`AGENTS.md`](./AGENTS.md)** (= `CLAUDE.md`) — the agent/contributor guide: architecture
+  patterns, working agreements, anti-patterns. **Start here.**
+- **[`docs/handoff/HANDOFF.md`](./docs/handoff/HANDOFF.md)** — current engineering state and
+  what's next. Read it first when picking work up.
+- **[`docs/planning/PROJECT_PLAN.md`](./docs/planning/PROJECT_PLAN.md)** — cross-workstream
+  status tracker · **[`BACKLOG.md`](./docs/planning/BACKLOG.md)** — known, non-urgent gaps.
+- **[`docs/codebase/CODEBASE_OVERVIEW.md`](./docs/codebase/CODEBASE_OVERVIEW.md)** — per-domain
+  deep dives (auth, permissions, services, API routes, admin, media, map, multi-tenant).
+- **[`docs/manuals/`](./docs/manuals/)** — operator manuals: the `/admin` CMS
+  ([`admin-manual/`](./docs/manuals/admin-manual/)) and deployment
+  ([`deployment/`](./docs/manuals/deployment/)).
+- **[`log/`](./log/)** — `DEBUG_LOG.md` (non-obvious bug fixes) and `FEATURE_MOD_LOG.md`
+  (intentional product changes).
 
-The platform has been successfully future-proofed for multi-tenant deployment:
+## 🚀 Major features
 
-- **Configuration System Foundation**: ✅ Complete
-- **Service Layer Abstraction**: ✅ Complete
-- **Static Data Cloud Storage Migration**: ✅ Complete
+### Cat Management System (CMS) 🐱
 
-**📊 See [MULTI_TENANT_AUDIT_REPORT.md](./MULTI_TENANT_AUDIT_REPORT.md) for comprehensive implementation verification.**
+Direct, real-time cat management at `/admin` — add, edit, delete and search cats, with
+built-in validation. **No Google Sheets dependency**; changes save straight to Firestore.
+The same CMS covers media, posts, announcements, members/roles and the about page.
 
-### **Architecture Documentation**
+### Multi-tenant
 
-- [Platform Architecture](./PLATFORM_ARCHITECTURE.md) - Multi-tenant platform overview
-- [Configuration Implementation](./CONFIGURATION_IMPLEMENTATION.md) - Config system details
-- [Service Layer Summary](./SERVICE_LAYER_SUMMARY.md) - Service abstraction details
-- [Static Data Migration](./scripts/migration/README_cloud_storage_migration.md) - Cloud Storage migration details
+One Firebase project and one Vercel project serve every mountain. The active tenant is
+resolved **per request by Host** (production subdomains; a `/{id}` path in dev/preview), every
+content document carries a `mountainId`, and per-mountain config/theme/features come from
+[`config/mountains/mountains.json`](./config/mountains/mountains.json). Permissions are scoped
+per mountain — a role on one grants nothing on another.
 
-## 🚀 **Major Features**
+### Service layer
 
-### **Cat Management System (CMS)** 🐱
-
-- **Direct Management**: Manage cat information directly in the application
-- **No Google Sheets Required**: Eliminates the need for external spreadsheet management
-- **Real-time Updates**: Changes are immediately reflected in the application
-- **Comprehensive Interface**: Add, edit, delete, and search cats with ease
-- **Data Validation**: Built-in validation ensures data integrity
-
-### **Static Data Performance**
-
-- **Cloud Storage Integration**: All static data (cats, points, feeding spots) served from Google Cloud Storage
-- **Build-Time Optimization**: Data exported to Cloud Storage during build process
-- **Admin Management**: One-click data refresh through admin interface
-- **CDN Caching**: Improved performance with Firebase Storage CDN
-
-### **Multi-Tenant Ready**
-
-- **Configuration-Driven**: Environment-specific Firebase projects
-- **Service Layer**: Abstracted data access for easy deployment variations
-- **Scalable Architecture**: Ready for multiple instances and tenants
+`src/services/index.ts` exports lazily-cached service getters (`getCatService()`,
+`getPointService()`, `getImageService()`, …) implementing interfaces in
+`src/services/interfaces.ts`. Components never call Firebase directly.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Copy [`.env.example`](./.env.example) to
+`.env.local` and fill it in first — Firebase, YouTube OAuth, Kakao, SMTP.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Note:** `npm run build` is not a bare `next build` — it runs
+> `scripts/maintenance/fetch-static-assets.js` first to download cat thumbnails from Firebase
+> Storage into `public/`. In dev, run `npm run fetch:assets` once if images are missing.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📊 Data management
 
-## Learn More
+### Data source
 
-To learn more about Next.js, take a look at the following resources:
+All data is read **live from Firestore** through the service layer. Cats are read server-side
+via the Admin SDK and baked into the home + adoption Server Components (ISR,
+`revalidate=3600`, with on-demand `revalidatePath` on admin edits — see PROJECT_PLAN §7a).
+There is **no** static-data JSON export and **no** Cloud Storage data-serving path.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Data update workflow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Update data in Firestore through the admin interface.
+2. Admin cat-edits trigger on-demand `revalidatePath`, so the baked home + adoption pages
+   reflect changes immediately; a 1-hour ISR fallback backstops console/script edits.
+3. All other reads come straight from Firestore live via the service layer.
 
-## 🚀 **Deployment**
+### Admin operations
 
-### **Current: Cloud Run (Recommended)**
+Use `/admin` to manage cats, media, posts and announcements, members and roles, the about
+page, and to view the statistics dashboard.
 
-The application is deployed using Google Cloud Run for optimal performance:
+## 🖼️ Image optimization
+
+Next.js `<Image>` optimization is enabled (WebP/AVIF, 1-year TTL, responsive sizes, priority
+loading). Firebase Storage hosts the files, whitelisted via `remotePatterns` in
+[`next.config.js`](./next.config.js).
+
+## 🚀 Deployment
+
+**Vercel is the only target, and deploying is `git push`** (Vercel Git integration):
+
+| Branch | Environment         |
+| ------ | ------------------- |
+| `main` | Production          |
+| `dev`  | Preview ("staging") |
+
+There is no deploy command, Dockerfile, or CI deploy workflow. Environment variables are
+managed by hand in the Vercel dashboard. Firestore **rules** are the one thing that still
+deploys to Firebase, via the CLI:
 
 ```bash
-# Quick deployment
-npm run cloud-run:deploy
-
-# Or use the deployment script
-scripts/deployment/deploy-cloud-run.sh  # Linux/Mac
-scripts/deployment/deploy-cloud-run.bat # Windows
+firebase deploy --only firestore:rules
 ```
 
-**Benefits of Cloud Run:**
+See [`docs/manuals/deployment/README.md`](./docs/manuals/deployment/README.md) for the full
+story, including new-mountain provisioning.
 
-- ✅ **70% faster image loading** with Next.js optimization
-- ✅ **Auto-scaling** from 0 to multiple instances
-- ✅ **Pay-per-use** pricing model
-- ✅ **Full Next.js features** (API routes, SSR, image optimization)
+> Cloud Run, the home-server Docker path, and Firebase Hosting were all removed in the
+> 2026-06-27 deployment cleanup. Do not reintroduce them.
 
-See [Cloud Run Deployment Guide](./docs/guides/CLOUD_RUN_DEPLOYMENT.md) for detailed instructions.
+## 🧪 Testing
 
-### **Legacy: Firebase Hosting (Deprecated)**
+```bash
+npx tsc --noEmit      # types
+npm test              # unit
+npm run test:smoke    # structural regression net
+npm run test:rules    # Firestore security rules (starts the emulator)
+npm run test:e2e      # Playwright, emulator-backed
+```
 
-The previous static export deployment to Firebase Hosting has been **deprecated** due to:
-
-- ❌ No image optimization support
-- ❌ Limited to static files only
-- ❌ No server-side API routes
-- ❌ Slower performance
-
-See [Firebase Deployment Guide](./docs/guides/FIREBASE_DEPLOYMENT.md) for legacy documentation.
-
-## 🖼️ **Image Optimization**
-
-The application uses Next.js Image optimization for superior performance:
-
-- **Automatic WebP conversion**: 70% smaller file sizes
-- **Responsive serving**: Correct sizes for each device
-- **Priority loading**: Critical images load first
-- **Built-in caching**: Optimized cache strategy
-
-See [Image Optimization Guide](./docs/implementation/IMAGE_OPTIMIZATION.md) for technical details.
-
-## 📊 **Data Management**
-
-### **Cat Management System (CMS)**
-
-The platform now includes a comprehensive CMS for managing cats:
-
-- **Access**: Navigate to `/admin/cats` from the admin dashboard
-- **Features**: Add, edit, delete, and search cats
-- **Real-time**: Changes are immediately saved to Firestore
-- **Documentation**: See [CAT_CMS_GUIDE.md](./docs/guides/CAT_CMS_GUIDE.md) for detailed usage instructions
-
-### **Data Source**
-
-All data is read **live from Firestore** through the service layer. Cats are read
-server-side via the Admin SDK and baked into the home + adoption Server Components (ISR,
-`revalidate=3600`, with on-demand `revalidatePath` on admin edits — see PROJECT_PLAN §7a).
-There is no static-data JSON export and no Cloud Storage data-serving path.
-
-### **Admin Operations**
-
-Use the admin interface at `/admin` to:
-
-- **Manage Cats**: Direct cat information management through the CMS
-- **View Statistics**: Comprehensive statistics dashboard
-- Manage posts collections
-- Monitor system health
-
-### **Data Update Workflow**
-
-1. Update data in Firestore through the admin interface
-2. Admin cat-edits trigger on-demand `revalidatePath`, so the baked home + adoption pages
-   reflect changes immediately; a 1-hour ISR fallback backstops console/script edits
-3. All other reads come straight from Firestore live via the service layer
+`test:rules` and `test:e2e` need a JDK for the Firebase emulators. On this project's macOS
+setup that means `export PATH=/usr/local/opt/openjdk/bin:$PATH` first.

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getMountainAbout } from '@/utils/config';
 import { useMountain } from '@/components/MountainProvider';
 import { useAboutPhoto } from '@/hooks/useAboutPhoto';
 import { getAboutContentService, getCatService } from '@/services';
@@ -42,68 +41,29 @@ export default function About() {
   const aboutContentService = getAboutContentService(mountainId);
   const catService = getCatService(mountainId);
 
-  // Load about content from Firestore or fallback to JSON
+  // The CMS (`about_content/{mountainId}`) is the sole source of truth. There is
+  // deliberately no static fallback: `mountains.json` used to carry an `about`
+  // block that shadowed this record for the photo and stood in for it before a
+  // mountain was filled in, which meant two places could disagree about what
+  // the page said. A mountain with no doc yet renders the not-set-up state below.
   useEffect(() => {
     const loadAboutContent = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const firestoreContent = await aboutContentService.getAboutContent();
-
-        if (firestoreContent) {
-          setAboutData(firestoreContent);
-        } else {
-          // Fallback to JSON config
-          const jsonConfig = getMountainAbout(mountainId);
-          const fallbackContent: AboutContent = {
-            title: jsonConfig.title,
-            subtitle: jsonConfig.subtitle,
-            mainContent: Array.isArray(jsonConfig.mainContent)
-              ? jsonConfig.mainContent.join('')
-              : jsonConfig.mainContent,
-            mainPhoto: {
-              filename: jsonConfig.mainPhoto?.filename || '',
-              caption: Array.isArray(jsonConfig.mainPhoto?.caption)
-                ? jsonConfig.mainPhoto.caption.join('')
-                : jsonConfig.mainPhoto?.caption || '',
-              altText: jsonConfig.mainPhoto?.altText || '',
-              localPath: jsonConfig.mainPhoto?.localPath,
-            },
-            sections: jsonConfig.sections || [],
-          };
-          setAboutData(fallbackContent);
-        }
+        setAboutData(await aboutContentService.getAboutContent());
       } catch (err) {
-        console.error('Error loading about content:', err);
-        setError('Failed to load about content');
-
-        // Fallback to JSON config on error
-        const jsonConfig = getMountainAbout(mountainId);
-        const fallbackContent: AboutContent = {
-          title: jsonConfig.title,
-          subtitle: jsonConfig.subtitle,
-          mainContent: Array.isArray(jsonConfig.mainContent)
-            ? jsonConfig.mainContent.join('')
-            : jsonConfig.mainContent,
-          mainPhoto: {
-            filename: jsonConfig.mainPhoto?.filename || '',
-            caption: Array.isArray(jsonConfig.mainPhoto?.caption)
-              ? jsonConfig.mainPhoto.caption.join('')
-              : jsonConfig.mainPhoto?.caption || '',
-            altText: jsonConfig.mainPhoto?.altText || '',
-            localPath: jsonConfig.mainPhoto?.localPath,
-          },
-          sections: jsonConfig.sections || [],
-        };
-        setAboutData(fallbackContent);
+        console.error(`Error loading about content for ${mountainId}:`, err);
+        setError('소개를 불러오지 못했어요.');
+        setAboutData(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadAboutContent();
-  }, []);
+  }, [mountainId, aboutContentService]);
 
   // Handle cat modal link clicks
   useEffect(() => {
@@ -164,12 +124,27 @@ export default function About() {
     );
   }
 
+  // A read that failed and a mountain nobody has written a 소개 for are different
+  // situations, and telling a visitor "불러올 수 없어요" about the second one
+  // reports a fault that isn't there.
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">소개</h1>
+          <p className="text-gray-600">{error}</p>
+          <p className="mt-1 text-sm text-gray-500">잠시 후 다시 시도해 주세요.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!aboutData) {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">소개</h1>
-          <p className="text-gray-600">내용을 불러올 수 없어요.</p>
+          <p className="text-gray-600">아직 소개가 준비되지 않았어요.</p>
         </div>
       </div>
     );
@@ -187,8 +162,8 @@ export default function About() {
         )}
         <div className="mb-5 h-0.5 w-8 rounded-full bg-brand" />
 
-        {/* Main Photo */}
-        {aboutData.mainPhoto && (
+        {/* Main Photo — only when the CMS names one; an empty filename is "no photo". */}
+        {aboutData.mainPhoto?.filename && (
           <div className="mb-8" data-oid="fb83bh3">
             {photoLoading && (
               <div

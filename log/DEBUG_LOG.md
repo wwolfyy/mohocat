@@ -11,6 +11,1235 @@
 
 ---
 
+## 2026-08-07 — CI's e2e job was red on a test defect, and the retries were doomed by design
+
+**Symptom:** CI run 31017908440 (`9a552cf`, 2026-08-05) failed the **`e2e`** job — the one status
+check `main`'s branch protection requires, so it blocked the promotion PR.
+`post-edit-composer.spec.ts` → _"existing media is listed and survives a text-only save"_ failed
+**three times** (attempt + 2 retries). The same test passed locally on every run.
+
+**Root cause — one flake, two artifacts, and they had different errors.**
+
+_Attempt 1_ timed out waiting for the URL to become `/admin/posts` after a save. But the save had
+**already committed**: `useSimpleContentForm.ts:313-317` awaits `updatePost`, _then_ alerts, _then_
+`router.push`. So the fixture was mutated by an attempt that reported failure. 🔑 The wait itself
+was the flaw — the App Router updates the URL only once the transition **commits** (it must fetch
+the destination's payload), so on a loaded runner **a slow navigation is indistinguishable from a
+failed one** when you poll `page.url()`.
+
+_Retries 1–2_ then failed on something else entirely: the spec asserted the **seeded** body, which
+attempt 1 had overwritten. `retries: CI ? 2 : 0` and the seed runs **once per job**, so both
+retries were guaranteed to fail before they started.
+
+⚠️ **The failure mode cannot occur locally at all** — `retries: 0` on a dev machine. That is why
+three red attempts in CI coexisted with a clean local suite, and why "it passes here" proved
+nothing.
+
+**Fix.** `confirmSave` now waits on the destination's own `게시물 관리` heading instead of polling
+the pathname. Every spec that overwrites its fixture writes a **unique** value and asserts that,
+never the seeded one (`not.toHaveValue('')` where all it needs is "the form loaded"). Two more
+specs carried the same latent defect and were fixed with it. The photo-removal spec **cannot** be
+made idempotent — detaching is one-way — so it performs the removal only when there is something
+to remove and asserts the end-state invariant either way; 📌 recorded honestly in the file: on a
+retry that verifies the outcome rather than re-exercising the removal.
+
+🔴 **A second, independent defect surfaced during verification, and it was never about retries.**
+`test-butler-edit-01` is shared by **two specs in the same file** — the cap spec _reads_ its body,
+the text-only-save spec _rewrites_ it — and `fullyParallel` leaves their order arbitrary, so a
+plain CI run could hit it on unlucky scheduling. 🔑 **The file's "each spec owns its fixture" rule
+was necessary but not sufficient:** it was written about collisions _across_ files and silently
+did not hold _within_ one.
+
+**Verified.** Seed once, run the file twice: `--repeat-each=2 --workers=1` → **14 passed**. Then
+the full suite. ⚠️ **`--workers=1` is required**: without it the two repeats run **concurrently**
+against one document and collide, which a real (sequential) retry never does — the first attempt
+at this proof failed that way and the failure was manufactured by the check, not by the code.
+
+📌 **Generalises: verify a retry defect by re-running against the mutated state, not by re-running
+the suite.** A green suite cannot see this class of bug, because the bug only exists on attempt 2.
+
+---
+
+## 2026-08-06 — The e2e suite was sending real email to the production admin, two per run
+
+**Symptom:** two new specs asserting the "notification did not send" copy failed, and the
+screenshot showed the page rendering the **delivered** copy — 메시지가 전송되었습니다.
+감사합니다! So `/api/contact` inside the hermetic Playwright harness was reporting
+`emailDelivered: true`, which should have been impossible.
+
+**Root cause: `next start` runs Next's own env loader, which backfills from `.env` on disk.**
+`.env.test` (applied via `dotenv -e .env.test`) declares no SMTP keys, so they arrived at the
+server as `undefined` — and `loadEnvConfig` fills exactly the keys that are `undefined`. It
+therefore handed the route the developer's **real Gmail credentials** from `.env`. Proven
+directly rather than inferred:
+
+```
+before loadEnvConfig — SMTP_HOST: (unset)
+after  loadEnvConfig — SMTP_HOST: smtp.gmail.com
+after  loadEnvConfig — SMTP_PASSWORD set: true
+```
+
+Two specs submit a 동참 form, so **every full `npm run test:e2e` delivered two live emails to
+the mountain's `adminEmail`.**
+
+🔑 **Why it hid for so long — the tell was suppressed on both sides.** The route swallows a
+send failure by design and the page rendered one unconditional success message, so a _sent_
+mail and a _failed_ mail looked identical from the test's point of view; and the SMTP
+credentials in `.env` had been **failing** (`535-5.7.8`), so nothing actually went out. It
+became visible only when both changed on the same day: the owner fixed the credentials, and
+the page started rendering `emailDelivered`.
+
+📌 **"Not configured" was an assumption, never a check.** The old spec header asserted "SMTP
+is unset in test" as settled fact and the new one inherited it. Nothing tested the claim —
+and the claim was false.
+
+**Fix:** `.env.test` now declares the five SMTP keys **empty**. `dotenv` puts them in
+`process.env`, and Next only fills keys that are `undefined` — an empty string is defined, so
+`.env` can no longer win. `/api/contact`'s own guard then reports "SMTP not configured".
+⚠️ **Blank is load-bearing; deleting those lines silently restores live sending.**
+
+**Verified:** the guard `(!host||!user||!pass)` evaluates `true` under
+`dotenv -e .env.test` + `loadEnvConfig`, and the full suite returned to **233 passed / 13
+skipped / 0 failed** with both specs now asserting the un-sent path.
+
+📌 **Generalises beyond SMTP:** any secret in `.env` that `.env.test` does not explicitly
+blank is reachable by `next start` in the harness. `.env.test`'s header says the demo project
+id means the SDKs "can NEVER reach a real project" — true for Firebase, and it does not
+extend to anything else the app talks to.
+
+---
+
+## 2026-08-03 — Deleted posts stayed in the collection, and no permission could remove them
+
+**Symptom (owner-reported):** posts deleted through the admin CMS were still present in
+`posts_feeding` / `posts_butler` in the Firebase console, while `posts_announcements` /
+`posts_adoption` deleted cleanly. The owner's first read was that documents with a **flat
+structure** (no `imageUrls` / `videoUrls` / `tags`) were the survivors — then found a
+nested-structure post that had also survived, which broke that theory.
+
+**Root cause: a missing `mountainId`, which makes a document undeletable by _everyone_.**
+`canWrite()` resolves the mountain a write targets:
+
+```
+function writeMountainId() {
+  return request.resource != null ? request.resource.data.mountainId
+                                  : resource.data.mountainId;   // ← delete takes this
+}
+```
+
+On a **delete** `request.resource` is null, so it reads the **stored** field, and
+`hasPermissionFor()` requires `mountainId != null`. No field ⇒ no mountain ⇒ denied — for
+admins too. 🔑 **There is no permission that grants past this**, which is why it did not look
+like a permission problem.
+
+📌 **Why the flat/nested correlation was a coincidence.** The flat documents are **replies**,
+and every reply in `posts_butler` was created **2025-07-09**, before multi-tenancy existed —
+so none had `mountainId` until the 2026-07-20 M4 backfill. They were unstamped at the moment
+deletion was attempted. The counter-example, `posts_feeding/brftRGjV7XWkPaZ91Gap`, was created
+**2026-07-21 — one day _after_ the backfill ran**, so nothing ever stamped it. It was the only
+such document among 98 across 11 content collections.
+
+⚠️ **The failure mode is silent by construction:** a one-shot backfill cannot catch documents
+written after it, and an unstamped document behaves normally until someone tries to write or
+delete it. Nothing reports it in between.
+
+**Fix:**
+
+- `scripts/migration/stamp-missing-mountain-id.js` — audits every content collection and
+  stamps what is missing (Admin SDK, which bypasses the very rule that blocks the client).
+  Applied to production 2026-08-03 after a snapshot: 1 document stamped, re-audit clean.
+  ⚠️ **Re-run it as an audit after any migration or bulk import** — that is the gap that
+  produced this.
+- `post-service.updateReplyCount` recounts instead of `increment(1)`. Found on the way:
+  `deleteReply()` calls it too, so deleting a 급식현황 reply _raised_ the parent's count.
+  집사톡's service had always recounted; the two now agree.
+
+**Verified:** the rule behaviour was proven, not inferred — `@firebase/rules-unit-testing`
+against the real `firestore.rules` in the emulator, deleting the same document twice as the
+same admin: **with `mountainId` → ALLOWED, without → DENIED**. Then the production audit
+re-run reports `missingMountainId: 0`, and full e2e stays green.
+
+---
+
+## 2026-08-02 — Every 집사톡 post opened on "Post not found."
+
+**Symptom (owner-reported):** clicking any post on `/pages/butler_talk` rendered
+**"Post not found."** instead of the post. The same on the **집사톡 tab of `/admin/posts`**.
+급식현황 was fine.
+
+**Root cause:** the four post types live in **four separate Firestore collections** —
+`posts_feeding` (급식현황), `posts_butler` (집사톡), `posts_announcements`, `posts_adoption` —
+but the shared detail route `/pages/posts/[id]` hard-coded **one** of them:
+
+```ts
+const postService = getPostService(mountainId); // → FirebasePostService → 'posts_feeding'
+```
+
+`PostList` and `AdminPostList` link **every** post, of every type, to `/pages/posts/${post.id}`.
+So a `posts_butler` document id was looked up in `posts_feeding`, `docSnap.exists()` was false,
+and the page reported the post missing. 급식현황 only worked because it genuinely _is_
+`posts_feeding`.
+
+🔑 **A post's address is `(type, id)`, not `id`.** Firestore ids are unique only _within_ a
+collection, so a route that takes an id alone cannot resolve a post — no amount of retrying or
+permission-fixing would have helped. 📌 The same defect silently covered **공지사항 and
+입양홍보 in the admin CMS**, which link to this route too; the report named only 집사톡.
+
+📌 **Not a regression — it never worked.** `posts_butler` arrived with the 집사톡 list
+(`9bb26d3`) and the detail page was never taught about it. It survived because
+**`/pages/posts/[id]` had no e2e coverage at all** — the one route where a wrong collection is
+indistinguishable from a deleted post.
+
+**Fix:**
+
+- New `src/services/post-types.ts` — one `PostType` union, `getServiceForPostType()`,
+  `isPostType()` and `postDetailPath()`. The type→service mapping had **three** copies
+  (`AdminPostList`, `EditPostForm`, and the detail page, which simply lacked it); all now share
+  this one. ⚠️ Import it directly, not through `@/services` — it depends on the factory getters
+  there to keep the per-tenant singleton cache, so re-exporting would close a cycle.
+- The type moved **into the path**: `/pages/posts/{postType}/{id}`, built by `postDetailPath()`.
+  🔑 **A segment, not a `?type=` query param, and no default.** The first cut used a param with a
+  `butler_stream` fallback for backward compatibility — **rejected on review (owner)**. A param
+  can go missing while the route still matches, so the page would have to guess a collection:
+  that is the original bug, reproduced silently. It also bought nothing — the route only ever
+  resolved 급식현황, which is admin-gated, so no shareable link to it exists. As a segment an
+  incomplete link does not resolve at all, and an unrecognised type reports the post missing
+  rather than reading some other collection.
+- `PostList` gained a **required** `postType` prop — the compiler now refuses a caller that
+  cannot say what it is listing.
+- While in there: the page kept `post` as a single nullable value, so **"Post not found." was
+  the first render of every visit** and a thrown fetch landed on the same screen. Moved onto the
+  shared `useAsyncData` + `ErrorNotice` (the 2026-08-01 treatment the 공지사항 detail page got),
+  and the message is Korean now.
+
+**Verified:** new `tests/e2e/admin/post-detail.spec.ts` (7 tests) — clicking 집사수다 1 from the
+집사톡 list (the exact reported path), all four types by direct URL, a genuine miss still saying
+so, and an unrecognised type resolving nothing rather than guessing. Full e2e **206 passed / 13
+skipped / 0 failed** (was 199/13/0); tsc clean, vitest 137/137, smoke 34/34.
+
+---
+
+## 2026-08-02 — Hydration mismatch wiped input a visitor had already typed
+
+**Symptom:** every page logged _"Hydration failed because the initial UI does not match what
+was rendered on the server"_ followed by _"the entire root will switch to client rendering"_.
+The visible consequence was **lost form input**: text typed in the first moment after a page
+load silently disappeared. Found via the 동참 e2e pair, where the snapshot showed 이름
+**empty** while 전화번호 and 메시지 — filled a fraction of a second later — held their values.
+
+**Root cause:** `AuthProvider` seeded its state from a **browser-only value, during render**:
+
+```ts
+const [user, setUser] = useState<User | null>(auth.currentUser);
+const [loading, setLoading] = useState(!auth.currentUser);
+```
+
+Firebase Auth persists the session to `localStorage` (`browserLocalPersistence`). On the
+**server** `auth.currentUser` is always `null`, so the header renders 로그인/등록; in the
+**browser**, once the session has been restored, the _first_ render already sees a `User` and
+renders the signed-in menu. React compares **rendered output**, finds a mismatch, and cannot
+patch it — so it discards the server DOM and rebuilds the root client-side. Every component
+remounts, every `useState` initializer re-runs, and anything already typed is gone.
+
+🔑 **Why it was intermittent (and looked like flake): it is a race.** The session restore is
+**asynchronous**, so the mismatch only occurs when the restore finishes _before_ hydration —
+usually, and more often under load. Three conditions must all hold: a persisted session (so
+**never** for logged-out visitors), a full page load (client-side navigation does not
+hydrate), and the restore winning that race. ⚠️ An earlier note in this session called the
+restore _synchronous_; that was wrong, and it is precisely what explains the intermittency.
+
+📌 **Corroboration:** the flaky specs were exactly the signed-in ones (`member/`, `admin/`).
+All **12** anonymous `public/` specs were never affected — condition 1.
+
+**Fix:** seed from `null` / `loading: true` — i.e. render what the server rendered — and let
+the existing `onAuthStateChanged` effect deliver the user as an ordinary post-hydration
+update. It always fires at least once after init, so `loading` still resolves.
+🔑 **The fix is not to win the race but to stop depending on it.**
+
+💡 **Accepted cost:** a signed-in visitor sees the logged-out header for one tick on a full
+page load. Consumers already tolerate it (`NavItem` treats `isLoading` as "no access yet";
+the contact form's 보내기 waits for `!authLoading`). Do not "optimize" it back.
+
+**Verified:** the console error is gone on `/pages/contact` and on `/admin/cats` — the page
+that reproduced it most reliably and that no recent change had touched — with the header
+still resolving to the signed-in user and 보내기 still enabling. Full e2e **2× 199 passed /
+13 skipped / 0 failed** after the change.
+
+---
+
+## 2026-08-02 — The e2e "flake set" was three real bugs, one of them in app code
+
+**Symptom:** the full suite had sat at ~196 passed / 2–3 failed for weeks, with a rotating
+cast of failures — `api/tenant-isolation`'s cats and points cases, `member/nav-permissions`,
+the 동참 pair — every one of which **passed when re-run in isolation**. The hand-off had
+filed them all as "timing-sensitive" and warned not to read a red run as a regression.
+
+🔑 **"Passes in isolation" was true and the conclusion drawn from it was wrong.** It was read
+as _slowness_ (needs a longer timeout); it actually meant _interference_ — three independent
+causes, none of which a timeout could fix.
+
+**Cause 1 — a process-global flag guarding a per-instance connection (app code).**
+`src/services/firebase.ts` connected the client SDK to the emulators behind
+`globalThis.__FIREBASE_EMULATORS_CONNECTED__`. `globalThis` is per-**process**, but
+`getApps()` lives in the `firebase/app` **module registry** — so when the server ended up
+with a second copy of that registry, a fresh `app`/`db` was built while the flag was already
+`true`, leaving that instance pointed at the **real** backend.
+
+⚠️ **The resulting failure is the nastiest shape there is: a silent empty read.** The SDK
+cannot reach the real project (`PERMISSION_DENIED` on `demo-mohocat`), so it goes offline —
+and an offline `getDocs` **resolves from the empty in-memory cache instead of throwing**. The
+route returned `200 []`, so `res.ok()` passed and only the content assertion failed.
+🔑 **The tell was that two different collections read empty at the same moment** — that is one
+unconnected `db`, not two missing fixtures. Fixed by keying the guard on the **instance**
+(a `WeakSet`) rather than the process. Inert in production (gated on `USE_EMULATORS`).
+
+**Cause 2 — one spec mutated a fixture six others read.** `admin/cats.spec.ts` renamed
+`테스트냥이일` and ticked its adoptable box, permanently, mid-run, against a shared emulator
+with `fullyParallel: true`. `api/tenant-isolation` asserts `toContain('테스트냥이일')` on an
+**exact array element**, so it broke outright; `public/galleries-adoption` asserts that cat is
+**not** adoptable. The other four survived only because `getByRole({name})` matches
+**substrings** and `테스트냥이일-수정12345` contains the original name — and two specs already
+carried comments steering around the hazard instead of fixing it. Repointed at `이사한냥이`
+(test-cat-06), the one fixture cat no spec reads.
+
+**Cause 3 — specs acted before async state resolved.** `member/nav-permissions` hovered the
+갤러리 dropdown immediately after `goto`; `NavItem` renders `isLoading || !hasAccess` items as
+**spans**, so during the resolve window 사진첩 is not a link at all. The 동참 pair typed into
+the contact form before hydration settled. 🔑 **The 동참 evidence was specific and worth
+keeping:** the failure snapshot showed 이름 **empty** while 전화번호 and 메시지 — filled
+immediately after it — held their values. That is a re-render wiping state _between_ the first
+fill and the second: hydration fails, React discards the server DOM and re-renders the root
+client-side, and anything typed before that lands is lost. Both fixed by waiting on the
+"resolved" signal (the enabled 보내기 button / the 집사메뉴 button) **before** acting.
+
+🔴 **Cause 3 leaves a real product bug open, and it is not a test concern.** The hydration
+mismatch is pre-existing and reproduces on untouched pages (`/admin/cats`) — the
+auth-dependent header renders 로그인/등록 on the server and the signed-in user on the client,
+so React switches the whole root to client rendering. **A real visitor typing quickly on a
+slow connection loses their input exactly the way the test did.** The specs now sidestep it;
+nothing fixes it. See PROJECT_PLAN §12.
+
+**Verified:** full e2e **3× consecutive 199 passed / 13 skipped / 0 failed** (from a
+196/3 baseline), which is the repo's flake-audit bar. The intermediate runs are the actual
+evidence per cause: fixing cats.spec alone took it to 197/2 with both tenant-isolation cases
+still red, and those two only went green after the `firebase.ts` fix.
+
+---
+
+## 2026-08-02 — An uploaded video was recorded as having been filmed the day it was uploaded
+
+**Symptom:** owner-reported. Videos uploaded through the composers came out with a 촬영일
+equal to the **upload** date rather than the day they were actually filmed.
+
+**Root cause:** one fallback in `POST /api/upload-youtube/complete`, where the `cat_videos`
+record is written:
+
+```ts
+createdTime: createdTime ? calendarDateToInstant(createdTime) : new Date(),
+```
+
+`createdTime` is 촬영일, and the composers derive it by regex-matching the **filename**
+(`parseRecordingDateFromTitle`). When nothing parses they send `''`, which is falsy — so the
+route substituted the current instant, i.e. the moment of upload. Android and KakaoTalk names
+(`VID_20260315_101530.mp4`) parse, so the bug is invisible for roughly half of likely sources;
+**iPhone names never parse** (`IMG_1234.MOV` carries no date), and those were the reports.
+
+🔑 **Why this was worse than a cosmetic slip, and why it was hard to notice.** The same request
+sends YouTube **no `recordingDate` at all** in this case — the sibling route only sets
+`recordingDetails` when a date was supplied. So Firestore claimed a recording date that YouTube
+did not have, and since **YouTube is the source of truth for video data** (principle adopted
+2026-07-26), the next metadata sync overwrites `createdTime` with `null`
+(`refresh-video-metadata`). The wrong date therefore **disappears later**, which reads as a
+second, unrelated bug ("the date vanished") rather than as evidence of the first. Neither stage
+logs anything: both writes succeed, and a fabricated date is indistinguishable from a real one.
+
+🔑 **The owner's observation found a second site.** They noted the bug did **not** affect
+집사톡 — which turned out to be the whole explanation. The composers split across two hooks:
+집사톡 / 집사게시판 (`useRichContentForm`) have had a **촬영 날짜 field** from the start, so a
+date is nearly always supplied; 공지사항 / 입양홍보 (`useSimpleContentForm`) had **none**, so
+nothing was ever sent. Following that asymmetry turned up the **same fabrication in the image
+path** (`uploadStrategies.ts`, `createdTime: '' → new Date()`), hit by the same two composers.
+⚠️ **That one is worse:** `cat_images` has no upstream — Firestore **is** the source of truth
+for photos — so unlike videos, nothing ever corrects it and the wrong date simply stays.
+
+**Fix, three parts:**
+
+1. **Videos** — store `null` when no recording date is known, the same value the sync writes
+   for a video YouTube has no `recordingDate` for, so the upload path and the sync path now
+   agree instead of fighting.
+2. **Photos** — the identical change in the signed-URL image strategy.
+3. **The gap underneath both** — 공지사항 / 입양홍보 gained a **촬영 날짜 field**
+   (`forms/RecordingDateField.tsx`, new), auto-filled from the filename exactly as 집사톡 does,
+   with videos taking precedence over images and a typed value never overwritten. Without it
+   the fix alone would have left those two composers unable to record a date at all.
+
+The UI already renders the empty case honestly (`parseDate` → `날짜 없음`), which also prompts
+someone to set the date instead of hiding the gap behind a plausible-looking one.
+
+⏸️ **Deliberately not fixed here:** that 촬영일 is guessed from the _filename_ at all, when it
+should be read from the file's own metadata. That is a separate, **owner-deferred** item (see
+HANDOFF open threads) — this change only stops the fabrication. ⚠️ The neighbouring
+`uploadDate` / `publishedAt` fields are **correctly** `new Date()`: 게시일 genuinely is "now"
+for a fresh upload, and the album sorts on it (a null there caused a crash once —
+DEBUG_LOG 2026-07-26). The fix must not be over-applied to them.
+
+**Verified.** New `tests/unit/uploadYouTubeComplete.test.ts` (5 cases) asserts directly on the
+written document — null for a missing date, null for the `''` the composers actually send, UTC
+midnight for a supplied calendar date (no KST shift), that `uploadDate` still stamps the upload
+moment, and that the permission gate refuses before any write. Two more cases cover the image
+strategy in `uploadStrategies.test.ts`. **Both were mutation-checked:** restoring each
+`new Date()` fallback fails exactly the date cases and leaves the rest green, so they are not
+passing incidentally. The new field is driven in a **real browser** by 3 cases in
+`tests/e2e/admin/posts.spec.ts` (auto-fill from a dated filename; stays empty for
+`IMG_1234.MOV`; a typed value survives a later file pick). tsc 0, smoke 34, unit 103, e2e
+admin/posts 12 passed.
+
+---
+
+## 2026-08-01 — the 이 냥이 링크 chip did nothing at all on desktop
+
+**Symptom:** owner-reported, within minutes of the chip shipping — clicking it on desktop does
+nothing. No copy, no dialog, no error, no change to the button.
+
+**Root cause: the capability check asked the wrong question.** The chip gated on
+`typeof navigator.share === 'function'` — i.e. _"does this browser have a share sheet"_ — when
+the question that matters is _"is a share sheet the right and usable affordance here"_. Desktop
+Chrome answers yes to the first and no to the second. Measured in Chrome on macOS with a real
+(trusted) click, wrapping both APIs to record their outcome:
+
+| call                                 | outcome                                              |
+| ------------------------------------ | ---------------------------------------------------- |
+| `navigator.share({title, url})`      | **rejected — `NotAllowedError — Permission denied`** |
+| `navigator.clipboard.writeText(url)` | resolved                                             |
+
+🔑 **And the failure was engineered to be silent.** The handler deliberately swallows
+`AbortError`, because on a phone that means the visitor dismissed the share sheet — a decision,
+not a fault (see §10c C3). Where a desktop sheet opens and closes, the same `AbortError` arrives
+and the button correctly says nothing. Combined with a `navigator.share` that refuses to run at
+all, the result is a control that cannot fail _visibly_: exactly "nothing happens".
+
+**Fix:** gate the share sheet on `(pointer: coarse)` as well as its existence — touch devices,
+which is both where it works and where it earns its keep (one tap into a KakaoTalk chat instead
+of copy-switch-paste). Desktop copies to the clipboard, which measurably works. The label follows
+the same predicate, so it now reads 링크 복사 on desktop and 링크 공유 on a phone.
+
+**Verified** with a real trusted click on desktop (a scripted `.click()` cannot prove this — it
+grants no transient activation, which is the very thing in question): the label sequence recorded
+by a MutationObserver is `🔗 링크 복사 → ✅ 복사했어요 → 🔗 링크 복사`. A new e2e case pins the
+branch itself — share on a coarse pointer, clipboard otherwise — so this cannot regress quietly.
+
+📌 **The lesson worth keeping: feature detection is not affordance detection.** An API existing
+does not mean the platform will honour it, and a control whose only failure path is silent will
+present as broken rather than as failed. ⚠️ **Both of my earlier verifications missed this**
+because they stubbed `navigator.share` — the stub always resolved, so the real refusal never
+appeared. A stub proves your code's branches; it cannot prove the platform runs them.
+
+---
+
+## 2026-08-01 — the new `?cat=` deep link kept erasing itself, then stopped opening at all
+
+**Context:** building the `?cat=<id>` cat deep link (PROJECT_PLAN §10c). Two stacked traps, both
+found by driving a browser — neither is visible in the diff, and the first is invisible in any
+test that asserts immediately after the click.
+
+**Symptom 1 — the URL flicked to `?cat=…` and reverted about a second later.** Sometimes the
+modal closed with it. A check run 800 ms after opening passed; the same check at 2 s failed.
+
+**Root cause 1:** the arrival path does two things — strips the param with `replaceState` (so
+closing has a clean entry to fall back to), then opens the modal, whose `useModalLayer` entry
+pushes the param back. Doing both **in one React commit** loses a race with Next itself:
+`next/dist/client/components/app-router.js` re-asserts the router's **canonical URL** onto
+history in an effect that runs _after_ the page's own effects, and the canonical it writes was
+computed _before_ our push. So Next's write lands last and wipes `?cat=` off. `history.state`
+loses `mohocat_modal` with it, so the modal's close path then finds no entry to pop and the URL
+desyncs from what is on screen. 🔑 **Confirmed by stack trace, not inference** — wrapping
+`history.replaceState` and printing the caller pointed straight at `app-router.js:105`, after
+the same evidence had wrongly implicated our own strip.
+
+**Fix 1:** defer the open by one task (`setTimeout(…, 0)`), so the router settles on the
+stripped URL before the modal pushes.
+
+**Symptom 2 — after fixing that, the deep link opened nothing at all.** The param was stripped,
+then the page just sat on the full list. Twice, for two different reasons:
+
+**Root cause 2a:** the first attempt used `requestAnimationFrame`. ⚠️ **rAF does not fire in a
+background tab** — and the browser under automation was not the focused window, which is also
+exactly how a real visitor opens a shared link (cmd-click, "open in new tab"). The callback was
+simply never called. `setTimeout` is throttled in background tabs but still runs.
+
+**Root cause 2b:** the scheduled open was cancelled in the effect's cleanup. The effect re-runs
+whenever the router hands down a fresh `cats` array; cleanup cancelled the pending open, and the
+run-once guard then swallowed the retry — so the deep link silently did nothing. The schedule is
+deliberately **not** cancelled now.
+
+**Verified:** in Chrome against a **production build** (dev alone was not enough — the two
+diverged during this work): arrival opens and the param holds at 3.5 s; close clears it without
+leaving the site; click sets it; back closes and clears it and releases the scroll lock. Plus
+`tests/e2e/public/cat-deep-link.spec.ts`, 5 cases × desktop + mobile, all green.
+
+📌 **The general lesson: any URL write that is not Next's own is racing Next's canonical URL.**
+The patched `history.pushState` _does_ update that canonical, but asynchronously — so two URL
+writes in one commit are unsafe. One write per commit is fine, which is why the ordinary
+click-to-open path never showed this.
+
+---
+
+## 2026-08-01 — videos deleted from YouTube kept their tile in the public 영상첩
+
+**Symptom:** owner-reported — a couple of videos were deleted on YouTube, and the public
+영상첩 still showed tiles for them, filled with YouTube's grey "unavailable" placeholder.
+
+**Root cause:** `syncVideos` (`services/media-albums.ts`) is **import-only**. It computes one
+set difference and acts on it:
+
+```js
+const newVideos = youtubeVideos.filter((video) => !existingYouTubeIds.has(video.id));
+```
+
+YouTube minus Firestore → import. Nothing ever computes the other direction, so a `cat_videos`
+record outlives its video indefinitely, and every surface reading that collection keeps
+listing it.
+
+🔑 **Why the obvious fix is a trap, and what this cost in design.** "Delete anything not in
+the channel listing" would be wrong, because `fetchChannelVideos` reads the uploads playlist
+with the **public API key** — and a video made **private** disappears from that listing
+identically to a deleted one. Auto-pruning would therefore destroy the record, and with it the
+cat tags, 설명 and playlist membership the tagging queue exists to produce, the moment somebody
+flips a video to private — an action that destroys nothing on YouTube's side. Same shape as the
+2026-07-26 "YouTube owns video data" rule, aimed at the one thing YouTube does **not** own:
+our tags.
+
+**Fix — label, then let a human decide (owner chose this over auto-prune):**
+
+- New `POST /api/admin/video-availability` (gated `manage-video`) asks YouTube with the
+  **owner's OAuth credential**, which _can_ tell the two apart: a private video comes back with
+  `privacyStatus: 'private'`, a deleted one does not come back at all. It writes
+  `youtubeStatus: 'available' | 'private' | 'missing'` and never deletes anything.
+- 🚨 **Safety valve:** if YouTube acknowledges _zero_ of the submitted ids, that is a
+  credential/scope/quota failure, not a vanished channel — the route refuses and writes
+  nothing, rather than flagging every video and emptying the public album in one call.
+- Public reads (`getCatVideos`, `getAllVideos`) drop `missing` and `private`. ⚠️ **Filtered in
+  memory, deliberately not as a `where` clause**: records predating the check have no
+  `youtubeStatus` field, and a Firestore inequality would exclude exactly those — i.e. every
+  existing video. Absent = watchable, so nothing disappears until a check has judged it.
+- `/admin/tag-videos` loads with `includeUnavailable: true` and grows a panel listing the
+  missing ones with a 기록 삭제 button (confirm dialog spells out that tags go too). Private
+  ones get a one-line note — they return on their own if re-published.
+- The 동기화 flow calls the check as a third step, and a failure there is logged but never fails
+  the sync, since the metadata refresh before it has already succeeded.
+
+**Verified:** new `tests/e2e/public/video-availability.spec.ts` (a `missing` record stays out of
+the public album) + `tests/e2e/admin/video-cleanup.spec.ts` (the CMS lists it and offers
+deletion), on fixture `test-vid-03`. The existing `admin/tag-videos` characterization suite
+passes with its count updated **2 → 3** — the CMS legitimately sees one more than the public
+album now, which is the whole design. tsc 0, smoke 33/33, unit 122/122, full e2e 169 passed.
+
+⏳ **Not covered by any test, and cannot be:** the classification itself needs real YouTube
+OAuth, which the emulator harness has no credential for — the same reason P5.4 is a manual
+pass. What is pinned is the half the symptom lived in: given a labelled record, who shows it.
+**Owner action:** the existing records are unlabelled until 📺 YouTube와 동기화 is run once on a
+deployed environment; the ghosts then appear in the new panel for deletion.
+
+📌 **Measured while gating this, not caused by it:** `api/tenant-isolation.spec.ts`'s cats and
+points cases fail under full-suite parallel load and pass in isolation — **twice**. Confirmed
+pre-existing by re-running the full suite with the 2026-08-01 long-polling change temporarily
+disabled: the same two failed. Add them to the known timing-sensitive set alongside the 동참
+pair; do not chase them as a media regression.
+
+---
+
+## 2026-08-01 — 공지사항 was empty, missing, or untagged for 30 seconds: a Firestore transport probe waiting out its timeout
+
+**Symptom:** owner-reported on Safari, three faces of one problem. (1) Opening a post showed
+its tags and 설명 late or never. (2) Returning to the 공지 list said _아직 등록된 공지사항이
+없어요_ when there are four posts. (3) Clicking a post sometimes showed _공지사항을 찾을 수
+없습니다_. Reloading fixed all three, which made it look like data loss.
+
+**Root cause — two independent defects, stacked.** The second is why the first was visible.
+
+**A. Firestore waited out a 30-second timeout before every first read.** Measured on Safari
+with `console.log` wrapped to stamp `performance.now()`:
+
+```
+2208396ms  Fetching announcements...
+2208396ms  Starting to fetch announcements   ← 0 ms: adjacent statements, no code between
+2238444ms  Query snapshot size: 4            ← 30,048 ms later
+2238446ms  everything else                   ← 2 ms
+```
+
+The query itself was the last **48 ms**. The 30,000 before it was the SDK's
+`detectBufferingProxy` probe — it opens a connection to work out whether anything on the
+network buffers its stream, and when the probe gets no answer it does not fail fast, it waits
+out the transport timeout, then falls back to polling and succeeds. This SDK caps that
+timeout at exactly 30s (`timeoutSeconds > 30` → _maximum allowed value is 30_), matching the
+measurement to within 48 ms. ⚠️ **Auto-detect was already on** — `@firebase/firestore` 4.7.3
+defaults `experimentalAutoDetectLongPolling` to `true` when unset, so "enable auto-detect",
+the usual advice, was a no-op here and was proposed and discarded before shipping.
+
+**B. Every public post surface used its failure state as its loading state.** `posts` was a
+bare `any[]` and `post` a nullable value, so _없어요_ / _찾을 수 없습니다_ rendered whenever
+the value was empty — including **before the first fetch**, which the SSR HTML proved:
+`curl` of both pages returned the failure text in the first paint. During A's 30-second
+stall, that is what a reader sat looking at. Compounding it, `getAllPosts` throws and the
+caller's `catch` only logged, so `posts` stayed `[]` with nothing to set it again — hence
+"only refreshing helps".
+
+**Fix:**
+
+- `services/firebase.ts` — `getFirestore(app)` → `initializeFirestore(app, {
+experimentalForceLongPolling: true })` in the browser, skipping the probe entirely. 🔑 **No
+  functionality is lost**: this is transport, not feature. `onSnapshot` still pushes live
+  updates and the timeout only bounds an _idle_ connection. What it trades is streaming
+  efficiency for realtime listeners, of which this app has **zero** — all ~47 read sites are
+  one-shot `getDoc`/`getDocs`. ⚠️ Revisit if live listeners are ever added.
+- New `hooks/useAsyncData.ts` + `components/ui/AsyncStates.tsx` (`SkeletonList`,
+  `ErrorNotice`), applied to the 공지사항 list, the 공지사항 detail page and the 입양홍보 feed —
+  the same defect sat in all three. `loading | ready | error` are now distinct, so the empty
+  message is unreachable until a fetch really returns nothing, and a failure says
+  _불러오지 못했어요_ with 다시 시도 instead of impersonating empty content.
+- The detail page also moved from `window.location.pathname` to `useParams()`, and
+  `useMediaDetails` gained a `loading` flag so a caption still resolving renders a placeholder
+  rather than looking permanently untagged.
+
+**Verified:** the SSR first paint no longer contains either failure string (0 occurrences,
+was 1 each). New `tests/e2e/public/post-loading-states.spec.ts` — **3 pass on the fix and all
+3 fail when the source is stashed back to the pre-fix state**, which is the check that
+distinguishes a net from a decoration. Gates: tsc 0, smoke 32/32, unit 121/121. Browser pass
+over all three surfaces against production data.
+
+📌 **Why no error was ever logged, and why the error state is a safety net rather than the
+main fix.** Firestore retries network failures internally instead of rejecting, so a broken
+connection surfaces as a _hang_, never as a thrown error. That is why the owner's console
+showed a clean run with 4 documents returned and nothing red — and why the e2e delays the
+response rather than aborting it. The genuinely reachable error cases are permission-denied
+and missing-index, not offline.
+
+⚠️ **Still unconfirmed: whether the probe stalls for everyone or only on the owner's network.**
+Whatever buffers that connection may be an ISP or proxy rather than Safari itself, so other
+visitors may never have hit this. The fix is correct either way, but it wants a Safari pass on
+the deployed Preview — the local dev server has no proxy in front of it to reproduce against.
+
+---
+
+## 2026-08-01 — an 입양홍보 post's photos rendered out of proportion with the video beside them
+
+**Symptom:** owner-reported, with a screenshot — in an expanded 입양홍보 card, the 이미지 section
+showed the photo in a small bordered box roughly **half** the card's width, floating between
+white bars, while the 동영상 section below it filled the full width. Same post, same section
+spacing, two completely different sizes.
+
+**Root cause:** two independent things, both from `PostMedia`'s `compact` layout landing on a
+surface that isn't a dialog:
+
+1. **Half width** — `compact` lays images out in `md:grid-cols-2`, so a lone photo occupies one
+   column while the video (which has no grid) takes the whole row. The 입양홍보 expanded card
+   used `compact` only because it is `PostMedia`'s **default**; nothing chose it. The
+   announcement detail page — the other full-width surface — already passes `layout="full"`.
+2. **The white bars** — inside that half-width cell the `<img>` was `w-full max-h-64
+object-contain`. `w-full` forces the element box to the cell width while `max-h-64` clamps
+   its height, so `object-contain` letterboxes the picture **inside its own border**. The bars
+   are not the layout's padding; they are empty space in the image element.
+
+📌 This is the **third** defect on this surface traceable to the same decision: `PostMedia`'s
+`compact` treatment was designed for the popup dialog, and every surface that takes the default
+inherits dialog sizing. 2026-07-31 already saw its mirror image — putting `PostMedia` on the
+announcement detail page carried the modal's sizing over and shrank previously full-width
+photos, which is why the `layout` prop exists. **Pick the layout explicitly at every call
+site.**
+
+**Fix:** two lines. `AdoptionPromotionClient` passes `layout="full"`, so photos match the video's
+width at their own natural aspect. Independently, `compact`'s image is now sized to the picture
+itself (`mx-auto max-h-64 w-auto max-w-full`) instead of stretched to the cell, which removes
+the pillarboxing from the popup as well — a landscape photo and a portrait one now both have a
+border that hugs them.
+
+**Verified:** in Chrome against production data on `localhost:3000`. `/pages/adoption`, post
+expanded: photo and video now render at identical width, each at its own aspect, no bars,
+captions unchanged. Popup re-triggered by clearing `sessionStorage.hasSeenAnnouncementModal` and
+reloading: the 공지사항 popup keeps its compact two-column layout, with the bars gone. Gates:
+tsc 0, smoke 32/32, unit 121/121.
+
+⚠️ **Not changed, owner's call:** in the popup a photo is still narrower than the video beside
+it — that is `compact`'s deliberate fit-in-a-dialog design, not the reported bug.
+
+---
+
+## 2026-07-31 — expanding an 입양홍보 post showed no image (and never could, if it had a video)
+
+**Symptom:** owner-reported — the 입양홍보 feed folds each post to 3 lines, and expanding it
+"doesn't show the image". 공지사항 showed its media fine.
+
+**Root cause:** `AdoptionPostCard`'s expanded branch rendered **one** thumbnail, chosen with a
+ternary: `videoId ? <youtube thumb> : post.thumbnailUrl`. Two separate defects fell out of that
+single line:
+
+1. **A post carrying a video never displayed its photos at all** — the video branch won and the
+   image branch was unreachable. This is what was reported, because the test post had both.
+2. **A post with several images showed only the first**, since it rendered `thumbnailUrl` (which
+   `useSimpleContentForm` sets to `imageUrls[0]`) rather than the list.
+
+Both were then rendered at `h-15 w-20` — and `h-15` is not a Tailwind class, so even the one
+thumbnail that did appear had no height rule. The whole block was a miniature preview
+masquerading as "the expanded post".
+
+**Fix:** the media rendering was extracted from `AnnouncementModal` into a shared `PostMedia`
+(every image, then every video, YouTube ones embedded as `iframe`), and the adoption card's
+expanded branch now uses it. So 공지사항's popup, 입양홍보's popup and the 입양홍보 feed all
+render a post the same way.
+
+⚠️ **Why no test caught it, which is the part worth remembering.** The e2e
+`creating an 입양홍보 post with an image publishes it to the adoption feed` asserted
+`getByAltText('이미지')` and passed the entire time — the old markup _did_ emit that alt, but
+only on the image-only path the spec happened to exercise. The broken path needed a post with
+**both** kinds of media, and **no fixture in the repo had any media at all** (`posts_adoption`
+was a single text-only post). The assertion was true and the feature was broken: a green test
+over the one input that works is not coverage.
+
+**Verified:** new fixture `test-adopt-02` carries two images _and_ a video — the combination
+that was broken — and `public/galleries-adoption.spec.ts` asserts both images and the embedded
+video appear on expand, then vanish on fold. It fails against the old code by construction.
+The YouTube embed is stubbed with `page.route()` so the strict console watchdog does not see a
+real network fetch. Full suite **162 passed / 13 skipped / 0 failed**. Also confirmed in the
+browser against **production data**: the owner's real post now renders its photo under 이미지
+and a playable embed under 동영상.
+
+---
+
+## 2026-07-30 — a one-header hardening silently blocked every image upload (self-inflicted, same day)
+
+**Symptom:** owner-reported from 공지사항 on `dev.mohocats.org` — "video is uploading fine but
+images are still not uploading". Video was unaffected because it goes to **YouTube**; only the
+image leg touches the Storage bucket.
+
+**Root cause:** the duplicate-filename fix shipped hours earlier signed the upload URL with
+`extensionHeaders: { 'x-goog-if-generation-match': '0' }` and had the browser echo that header
+on the PUT. The precondition itself was right — it makes GCS refuse an overwrite **atomically**,
+closing the check-then-PUT race that a bare `exists()` lookup cannot. But the PUT is
+**cross-origin to the bucket**, and `x-goog-if-generation-match` is not a CORS-safelisted
+request header, so adding it converted a simple request into a **preflighted** one. The
+preflight is answered from the bucket's own CORS `responseHeader` allow-list
+(`config/firebase/cors_fbstorage.json`), which lists only `Content-Type` and `Authorization` —
+so the browser refused to send the PUT at all. Nothing server-side logged anything: the
+request never left the browser.
+
+⚠️ **The same shape as 2026-07-29's bucket-CORS bug, one layer in.** That one was "the bucket
+has no CORS"; this one is "the bucket has CORS, but not for the header we just started
+sending." Both are invisible to every automated suite — e2e stubs the signed-URL legs because
+the emulator cannot sign — and both fail _only_ on a real browser against a real bucket.
+
+**Fix:** removed the header from both ends. The `exists()` → **409** duplicate check stays,
+which is what the owner actually asked for ("check the name and refuse a duplicate"); the
+narrow race is documented as accepted in the route. Re-adding the precondition is possible but
+is a **two-step, ordered** change: add the header to `cors_fbstorage.json`, apply it live with
+`APPLY=true CONFIRM_PROJECT=… npm run storage:cors`, _then_ ship the code — in that order, or
+image upload breaks again.
+
+**Verified:** a bare `OPTIONS` preflight against the live bucket host, which needs no signature
+and writes nothing:
+
+- `Access-Control-Request-Headers: content-type` → `200` **with**
+  `access-control-allow-origin/methods/headers`. Browser proceeds.
+- `Access-Control-Request-Headers: content-type,x-goog-if-generation-match` → `200` with
+  **no `access-control-allow-*` headers at all**. Browser treats it as denied and blocks the PUT.
+
+That asymmetry is the whole bug, and it is reproducible from a terminal in two seconds.
+📌 **Probe the bucket host** (`storage.googleapis.com/<bucket>/<object>`), not our API — the
+2026-07-29 lesson about verifying the wrong URL applies exactly here. New unit test pins that
+the PUT carries `Content-Type` and nothing else, so a future added header fails a test rather
+than a deploy.
+
+---
+
+## 2026-07-29 — every video upload over 4.5 MB failed: the file was POSTed through a Vercel function
+
+**Symptom:** uploading a 48 MB video from the 집사톡 composer failed with
+`Request Entity Too Large` / `FUNCTION_PAYLOAD_TOO_LARGE`. Owner-reported. The message is
+**Vercel's**, not ours — no Korean dialog copy, and a Vercel request id (`icn1::…`) — because
+the request never reached our handler.
+
+**Root cause:** `uploadVideoToYouTube` sent the raw file as multipart form data to
+`POST /api/upload-youtube`, which buffered it whole (`Buffer.from(await file.arrayBuffer())`)
+before streaming it on to YouTube. **Vercel caps a function's request body at 4.5 MB** and
+rejects anything larger at the proxy, before the handler runs — so it can be neither caught
+nor configured away (no `vercel.json` setting, no plan tier, unchanged by Fluid compute).
+4.5 MB is a few seconds of phone video, so in practice _no_ real video could be uploaded
+through any of the four composers. Images were never affected: they already go direct to
+Storage via `generate-signed-url`, where the server only mints a URL.
+
+⚠️ **The misleading part, and why this went unnoticed for months.** The owner was certain a
+much larger video had gone up through 급식현황 on the same Vercel deployment, which made the
+cap look like the wrong explanation and sent the first investigation into deployment history
+(the app did run on Cloud Run / a home server until 2026-03-04, neither of which caps bodies —
+a true fact that explained nothing, since the upload in question postdated it). Re-running the
+same upload on 급식현황 reproduced the identical error, which is what finally ruled the
+premise out. **Reproducing beat reasoning here**: the code path is shared, so no amount of
+reading could have distinguished the two composers — there was nothing to find.
+
+⚠️ Vercel runtime-log retention is **1 hour** (Hobby) / **1 day** (Pro), so a next-day log
+hunt would have found nothing either way. And a 413 is rejected at the proxy, so it produces
+no function invocation at all — its _absence_ from the logs proves nothing.
+
+**Fix:** the bytes no longer cross our own API. The upload is now a **resumable, direct-to-
+Google** three-step flow:
+
+1. `POST /api/upload-youtube` — the server opens a resumable session (metadata only, a few
+   hundred bytes) and returns the session URI from Google's `Location` header.
+2. The browser `PUT`s the file **straight to Google**. No size ceiling, and no token is
+   exposed: the session URI is itself the upload capability.
+3. `POST /api/upload-youtube/complete` — the server files the video into its playlists and
+   writes the `cat_videos` record, exactly as the old route did after `videos.insert`.
+
+Both routes keep the `manage-video` gate independently — the second one writes Firestore via
+the Admin SDK, so it must not trust the first.
+
+📌 **CORS was the load-bearing assumption and was verified before any code was written**, since
+the whole approach dies without it. An unauthenticated `OPTIONS` preflight against
+`googleapis.com/upload/youtube/v3/videos` returns `access-control-allow-origin` echoing the
+caller's origin, `access-control-allow-methods: POST, GET, PUT, PATCH`, and allows
+`authorization, content-type, x-upload-content-length, x-upload-content-type`. Google's docs
+do not mention browser uploads at all, so this is worth keeping recorded.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 106/106 (the strategy's unit net rewritten to the
+three-step shape, including a regression asserting the file body goes to the session URL and
+that our own API only ever receives JSON) · `media-route-authz.spec.ts` extended to cover
+`/complete`. ⏳ **Not yet verified against real YouTube** — the emulator has no credentials, so
+a Preview pass with a genuinely large file is still owed.
+
+### Follow-up the same day: the first real upload reached 100%, then failed — CORS
+
+**Symptom:** on Preview, the progress bar ran smoothly to 100% and only then raised
+`Failed to upload video: the connection to YouTube failed`. Nothing in the network was
+actually wrong.
+
+**Root cause:** **Google fixes a resumable session's `Access-Control-Allow-Origin` from the
+`Origin` on the request that _opened_ the session** — and that request is ours, made
+server-side, which sends no `Origin` at all. So the session was bound to no origin. The
+browser then PUT every byte successfully (hence a bar that reached 100%), Google answered
+201, and the browser **refused to expose the response** because it carried no matching
+`Access-Control-Allow-Origin`. XHR surfaces that as `onerror` with status 0 — indistinguishable
+from a dead socket, which is exactly why the message blamed the connection.
+
+⚠️ **The earlier preflight check did not cover this and looked like it did.** It probed the
+**initiation endpoint** (`/upload/youtube/v3/videos`), which happily echoes any origin. The
+session URI is a different resource with its own, already-decided CORS answer. Verifying the
+wrong URL is worse than not verifying: it retired the risk in the write-up while leaving it
+live in the code.
+
+⚠️ **Failures here are not clean.** The video **does** land on YouTube — public, and with no
+`cat_videos` record, because `/complete` never runs. Check the channel for orphans before
+retrying, or the retry silently double-posts.
+
+**Fix:** forward the browser's `Origin` on the session-initiation call
+(`upload-youtube/route.ts`), falling back to `x-forwarded-proto` + `host`, and **400 rather
+than opening an origin-less session** — the failure mode is too expensive to reach silently.
+The client's transport-error message no longer asserts the upload failed; it says the video
+may already be up and to check the channel.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 118/118. New `tests/unit/uploadYouTubeSession.test.ts`
+(7 tests) pins the forwarded `Origin`, the host fallback, and the 400 — the header is invisible
+to every other layer: the e2e authz suite only proves the gate, and no automated test reaches
+Google. ⏳ Still owed: the Preview re-test that this actually completes.
+
+### Second follow-up: video upload worked, and uncovered two older bugs behind it
+
+With the video path finally reaching the end, the next Preview attempt failed on
+`Image upload failed: Failed to fetch`, and neither the video nor the photo appeared in the
+albums. **Both causes predate this work** — they had simply never been reachable, because
+nothing had ever completed a video upload from a deployed origin before.
+
+**Bug A — the live Storage bucket had no CORS configuration at all, because the Seoul
+migration left it behind on the old bucket.** 집사톡 images are PUT from the browser
+**straight to the bucket** with a signed URL, so the bucket's own CORS list decides which
+origins may upload. Every deployed origin was rejected, surfacing as a bare
+`TypeError: Failed to fetch`, which names neither CORS nor the bucket.
+
+⚠️ **There are two buckets, and only one is live** — this is the part that misled the first
+two attempts at fixing it:
+
+| Bucket                                   | CORS before the fix | Used by                                            |
+| ---------------------------------------- | ------------------- | -------------------------------------------------- |
+| `mountaincats-61543`                     | **`[]` — none**     | every deployment; all 30 `cat_images` URLs in prod |
+| `mountaincats-61543.firebasestorage.app` | `localhost:3000`    | **nothing** — the pre-migration default bucket     |
+
+The `us-central1` → `asia-northeast3` (Seoul) migration created the new bucket, moved the
+files and rewrote the Firestore URLs — but **CORS was never applied to it**, and stayed on
+the bucket being abandoned. The first fix attempt then applied the corrected list to the
+_wrong_ bucket, because **local `.env` still names the old one** (so does `.env.example`,
+now corrected). The console error naming the bucket in the request URL is what finally
+separated them: trust the failing request's URL over any config file.
+
+🔑 **That stale local env is also why this looked like it worked in dev.** Local uploads
+succeed against the old bucket — which has localhost CORS and which nothing reads — so they
+land nowhere the app will ever look. Anything uploaded from localhost since the migration is
+stranded there.
+
+It survived because the one path that hits it is invisible to every test: e2e uses the
+**storage emulator** (no CORS), and 공지사항/입양홍보 images take a **different route
+entirely** — the Firebase JS SDK, which doesn't consult this list. So "images work over
+there" was true and meant nothing.
+
+⚠️ **Fix is configuration, not code** — committing the JSON changes nothing on its own.
+Applied with `npm run storage:cors` (dry-run by default; `APPLY=true CONFIRM_PROJECT=…` to
+write), and verified by preflighting the live bucket with the exact
+origin/method/header triple the browser sends. Runbook + the no-wildcards trap:
+[`deployment/README.md`](../docs/manuals/deployment/README.md).
+
+**Bug B — the `cat_videos` record was written with the client SDK from the server, and always
+failed.** `/api/upload-youtube/complete` wrote through `getVideoService()`, whose
+implementation is `firebase/firestore` — the **client** SDK. Server-side it carries no
+authenticated user, so `firestore.rules` denied the create (`cat_videos` requires
+`manage-video`); `addVideoRecord` caught it, returned `null`, and the route logged and carried
+on. **Every form-uploaded video has reached YouTube unrecorded**, appearing in 영상첩 only
+after somebody ran 📺 YouTube와 동기화 — which is exactly why nobody noticed. The sibling
+`refresh-video-metadata` had used the Admin SDK for this collection all along.
+
+🔑 **Rule this establishes: a server-side write must never go through the service layer.**
+The service factory is client-SDK-backed; it looks identical at the call site and fails only
+at the rules boundary, where the failure is a returned `null` rather than a throw. The route's
+own comment claimed "Admin SDK (bypassing firestore.rules)" — it had been wrong since it was
+written.
+
+**Fix:** the route writes `cat_videos` via `@/lib/firebase-admin`, stamping `mountainId`
+itself (the service used to). Kept non-fatal — the video really is public by then, and failing
+would push the operator into a retry that double-posts — but it now returns `recorded: false`
+instead of swallowing, since silent swallowing is precisely what hid this.
+
+**Verified:** tsc 0 · smoke 32/32 · unit 118/118. ⏳ Both need the Preview re-test, and Bug A
+needs the bucket updated first.
+
+---
+
+## 2026-07-27 — 촬영일 landed a day early in KST: a calendar date round-tripped through an instant
+
+**Symptom:** picking `2026-03-15 산책.mp4` in 집사톡 filled 촬영 시간 with **2026-03-14,
+3:00 PM**. Spotted in a browser pass while verifying an unrelated change — no test failed,
+and nobody had reported it.
+
+**Root cause:** a _calendar date_ (a day, with no instant and no timezone) was being carried
+through a `Date`, converted **local on the way in and UTC on the way out**:
+
+| Step    | Code                                                   | KST result              |
+| ------- | ------------------------------------------------------ | ----------------------- |
+| Parse   | `new Date('2026-03-15T00:00:00')` — no `Z` → **local** | 2026-03-15 00:00 +09:00 |
+| Format  | `.toISOString()` → **UTC**                             | `2026-03-14T15:00Z`     |
+| Display | slice of that string                                   | **2026-03-14** ❌       |
+
+The two conversions don't cancel — they differ by the UTC offset, so the date lands a day
+early east of Greenwich and a day late west of it. Then it happened **twice**: the submitted
+`2026-03-14T15:00` was re-parsed by `new Date()` in `upload-youtube` (local again), so
+YouTube's `recordingDate` became `2026-03-14T06:00Z`, ~33 hours before the day in the
+filename.
+
+⚠️ **The trap underneath:** `new Date('2026-03-15')` parses as **UTC** while
+`new Date('2026-03-15T00:00')` parses as **local** — same function, opposite rules, and the
+codebase used both forms.
+
+⚠️ **Why nothing caught it:** at UTC the offset is zero and the round trip cancels, so the
+code is correct on CI runners and wrong for every user in Korea. Reproduced both ways:
+`TZ=Asia/Seoul` → `2026-03-14`, `TZ=UTC` → `2026-03-15`.
+
+**Fix:** treat 촬영일 as a calendar date end to end, and convert exactly once at the storage
+boundary.
+
+- `formatDateForInput` builds the string from **local** components
+  (`getFullYear/getMonth/getDate`), never `toISOString()`.
+- New `calendarDateToInstant('YYYY-MM-DD')` encodes it as **UTC midnight** — the convention
+  `/admin/tag-videos` already writes (`page.tsx`), so one Firestore field never carries two
+  conventions. It also **rejects** malformed input and impossible dates: `2026-02-31` does
+  _not_ produce NaN, JS rolls it to March 3, which is the same class of quietly-wrong value.
+- Both write paths (`upload-youtube`, `uploadImagesWithSignedUrls`) use it instead of a bare
+  `new Date(str)`.
+- 집사톡's field became **date-only**; it was `datetime-local`, but under a calendar-date
+  convention the typed time was silently discarded.
+- `formatDateTimeForInput` deleted — no callers left.
+
+**Verified:** new `tests/unit/dateParser.test.ts` (10 tests) **pins `TZ=Asia/Seoul`**, with a
+first assertion that the timezone fixture is real (`getTimezoneOffset() === -540`) — asserting
+this suite at the runner's default timezone would prove nothing. Covers every filename
+pattern, year boundaries and a leap day, the full filename → input → stored → redisplayed
+loop, and the rejections. Plus an e2e assertion on the field value. Gates: tsc 0, smoke 31/31,
+unit 102/102, full e2e 153 passed / 13 skipped / 0 failed.
+
+⏸️ **Related but separate, and deliberately deferred:** 촬영일 is derived from the _filename_
+at all, rather than from the file's own metadata. The owner deferred that on 2026-07-27 — it is
+**not queued work**; see the HANDOFF open thread for the behavior it explains.
+
+---
+
+## 2026-07-26 — Batch edits reached YouTube but never came back to Firestore: the sync was called with Firestore doc ids
+
+**Symptom:** owner-reported from Preview. Batch tag / 촬영일 / playlist edits applied to
+YouTube correctly, but the site's copy didn't change until 📺 YouTube와 동기화 was run by
+hand. Individual edits (변경사항 저장) synced automatically, as designed — the asymmetry is
+what gave it away.
+
+**Root cause:** `/api/refresh-video-metadata` takes **YouTube video ids** — it queries the
+YouTube Data API with them, then finds each Firestore doc by
+`where('youtubeId','==',videoId)`. The batch mutations sent it **Firestore document ids**.
+The loop iterates `Array.from(selectedIds)` (doc ids), correctly sends
+`video.youtubeId || video.id` to the YouTube `PUT`, but then records the **loop variable**:
+
+```ts
+youtubeUpdateResults.push({ videoId, success: true });   // videoId = the doc id
+…
+body: JSON.stringify({ videoIds: successfulVideoIds })   // → 404 "No videos found"
+```
+
+`saveVideoMetadata` (individual) never had the bug because it resolves
+`const videoId = selectedVideo.youtubeId || selectedVideo.id` **once** and uses that value
+for both calls.
+
+Two things kept it quiet. The caller did `if (refreshResponse.ok) console.log('✅ …')` with
+no `else`, so a 404 was invisible and the completion dialog still reported 완료. And **the
+e2e fixtures made it unreproducible**: neither seeded video had a `youtubeId`, so
+`youtubeId || id` collapsed to the doc id and the two ids could not diverge — in production
+the doc id is auto-generated and never matches.
+
+**Fix:** both batch mutations key their results by `youtubeVideoId`. The refresh call is
+extracted into `syncToFirestore()`, which **returns whether it succeeded** and logs the
+status + error body when it doesn't; when it fails, the completion dialog now says the
+change reached YouTube but the site copy didn't, and to press 📺 YouTube와 동기화. (The batch
+playlist save added earlier the same day already used the YouTube id for both calls.)
+
+⚠️ **Fixture change, deliberately:** `tests/e2e/fixtures/media.json` now gives each video a
+`youtubeId` (`yt-vid-01/02`) distinct from its doc id, so the seed has production's shape.
+Without that the new regression test would pass against the broken code.
+
+**Verified:** new e2e test stubs both routes, runs a batch tag save and asserts the `PUT`
+**and** the refresh both carry `yt-vid-02` — the old code sent `test-vid-02` to the refresh —
+plus that no sync-failure warning appears when the refresh is accepted. tsc 0, smoke 30/30,
+unit 80/80, full e2e 148/13/0.
+
+---
+
+## 2026-07-26 — Every metadata sync reset a video's 게시일 to "now", reordering the public 영상첩
+
+**Symptom:** videos showed today's date as 게시: in 동영상 관리 and jumped to the top of the
+listing after any save or sync. **Not admin-only** — the public 영상첩
+(`getAllVideos`) and the per-cat video lists sort by `uploadDate` descending, so a synced
+video jumped the public album too. Found while auditing the sync's write block after the
+owner asked how far the "never write video data to Firestore" hazard actually reached.
+
+**Root cause:** `refresh-video-metadata` built its Firestore payload with
+
+```ts
+uploadDate: new Date(),   // ← the moment of the sync
+uploadedBy: 'admin',
+lastMetadataRefresh: new Date(),
+```
+
+`uploadDate` means "when the video was published" and must never move; the refresh
+overwrote it with the sync time on every call — including the per-video refresh that runs
+after **every** metadata save. YouTube's real publish date was sitting right there in the
+same payload as `publishedAt`, which nothing reads. Two related crossings in the same three
+lines: `uploadedBy` was forced to `'admin'`, erasing `'youtube_sync'`; and the edit
+timestamp was written as `lastMetadataRefresh`, a field **nothing reads**, while the field
+the admin UI _does_ read for 메타데이터 수정 (and its sort), `updated`, was written by
+`videoService.updateVideo`/`updateVideoTags` — both of which have had **no callers** since
+the auto-parse fix, so that column and sort were dead.
+
+**Fix:** `uploadDate` now comes from YouTube's `publishedAt` (immutable, authoritative, and
+consistent with videos being YouTube-owned), falling back to the stored value; existing
+mis-stamped records **self-heal on their next refresh**, so no migration is needed.
+`uploadedBy` is no longer written — a refresh is not an upload. `lastMetadataRefresh` is
+replaced by `updated`, which makes 메타데이터 수정 and its sort work for the first time.
+
+⚠️ **The clobber was masking a latent crash.** `syncVideos()` never set `uploadDate` on
+import; imported records only got one because the refresh stamped it moments later. Removing
+the stamp alone would have left freshly imported videos with no `uploadDate`, and the album
+sorts call `.getTime()` on it (`parseDate` returns `null` when absent). `syncVideos` now sets
+it from `publishedAt` at import.
+
+**Verified:** tsc 0, smoke 30/30, unit 80/80, full e2e 147/13/0. ⚠️ The repair itself is only
+observable against real YouTube data — the emulator has no publish dates — so confirm on
+Preview that a synced video keeps its original 게시일.
+
+---
+
+## 2026-07-26 — Batch playlist assignment updated one video (or none): the modal's save ignored the batch selection
+
+**Symptom:** latent — found while writing the button spec for `/admin/tag-videos`, not from a
+report. Selecting several videos, opening 재생목록 선택 from the batch panel, ticking a
+playlist and saving appeared to work, but only ever changed **one** video — or silently
+nothing at all.
+
+**Root cause:** the playlist modal is opened from two places (the batch panel and the
+per-video 📋 재생목록 관리), tracked by `playlistSelectorContext`. Its save handler,
+`savePlaylistChanges()`, never read that context: it opened with
+`if (!ytm.selectedVideo …) return;` and operated on `selectedVideo` — the video open in the
+right-hand **edit form**, which has nothing to do with the batch checkboxes. So the batch
+path wrote to whatever was open in the form, and short-circuited to a no-op when nothing
+was. Nothing surfaced the mismatch: the panel's own hint says `✅ 모달에서 저장하기`, and the
+success dialog reports the single video's result.
+
+**Fix:** `savePlaylistChanges()` now dispatches on the context. The new
+`saveBatchPlaylistChanges()` walks every selected **YouTube** video, POSTing
+`batch_update_playlists` per video, then syncs the successes back with one
+`refresh-video-metadata` call and reports a tally — the same shape as `batchUpdateTags`.
+
+**Semantics chosen (worth not re-litigating): set, not merge.** Each selected video ends up
+in exactly the ticked playlists and is removed from the others. That matches 태그 저장 (which
+replaces the tag list) and is what the route's `batch_update_playlists` action already does
+per video, since it diffs against that video's own membership. Because the removal is
+destructive and a mixed selection has no meaningful "current" state to pre-tick, the batch
+modal opens with **nothing ticked** and the save **confirms first**, spelling out that
+unticked playlists are removed.
+
+**Verified:** new e2e regression test — stubs both playlist routes plus the refresh, selects
+two videos, **deliberately leaves the edit form empty** (the condition that made the old code
+a silent no-op), and asserts one POST per selected video carrying the ticked playlist set.
+The old code would produce zero POSTs. tsc 0, smoke 30/30, unit 80/80, full e2e 147/13/0.
+
+---
+
+## 2026-07-26 — 자동 날짜 인식's parsed dates silently vanished: it wrote Firestore, and the sync overwrites Firestore from YouTube
+
+**Symptom:** videos kept reappearing in 동영상 관리 with no 촬영일 after the bulk
+자동 날짜 인식 button had already filled them in. Found by reading the code while writing
+the page's button spec, not from a report — the disappearance has no error and no log.
+
+**Root cause:** `/admin/tag-videos`'s auto-parse wrote the parsed date **straight to
+Firestore** (`videoService.updateVideo(id, { createdTime })`), while every other write on
+that page goes to YouTube first and then syncs back. But Firestore is a **copy** of
+YouTube for videos, and `refresh-video-metadata` rebuilds it as a straight overwrite:
+
+```ts
+createdTime: youtubeRecordingDate ? new Date(youtubeRecordingDate) : null,
+```
+
+A video only has a `recordingDate` on YouTube if someone set one — so for exactly the
+videos auto-parse targets (the dateless ones), YouTube returns nothing and the sync writes
+**`null`** over the parsed date. It didn't need the 📺 YouTube와 동기화 button either:
+saving _any_ change on that video runs the same per-video refresh, so a tag edit would
+erase the date too.
+
+**Fix:** auto-parse now `PUT`s the parsed date to `/api/update-youtube-video` per video
+(mirroring `batchUpdateDate`), collects the IDs YouTube accepted, waits 3s for propagation,
+and syncs those back with one `refresh-video-metadata` call. The confirmation dialog was
+rewritten to say it changes YouTube irreversibly, since it now does. `videoService` on that
+page is **reads only**.
+
+🔑 **Owner's principle, adopted platform-wide for videos (2026-07-26): YouTube is the source
+of truth; no UI path may write video data to Firestore.** Anything written there is undone
+by the next sync, so a Firestore-only write is broken by construction rather than merely
+risky. Documented for operators in
+[`admin-manual` §6](../docs/manuals/admin-manual/README.md) ("never edit video data in
+Firebase") and per-button in
+[`tag-videos-spec.md`](../docs/manuals/admin-manual/tag-videos-spec.md). ⚠️ The same
+overwrite-with-null applies to `tags`, `location`, `title` and `description` — any future
+direct write to those fails the same silent way. _(Photos are the opposite: `cat_images` has
+no upstream, so Firestore **is** their source of truth and `tag-images`' own auto-parse
+correctly writes it directly.)_
+
+**Verified:** the P0 characterization test for this flow pinned the old Firestore-only
+behavior and was rewritten to the new contract — it stubs both YouTube routes, asserts the
+`PUT` carries the parsed date for the right video and that the refresh follows, then asserts
+**both cards stay dateless**, which is a direct regression guard on the principle (with the
+sync stubbed, only an illegal direct write could produce a date). tsc 0, smoke 30/30, unit
+80/80, full e2e 146/13/0 (this fix's own rewritten test included).
+
+---
+
+## 2026-07-26 — "Insufficient Permission" on video metadata edits: the admin OAuth flow asked for too few scopes
+
+**Symptom:** immediately after the credential fix below, editing a video's metadata as an
+admin holding every permission failed with
+_"❌ 동영상 메타데이터를 업데이트하지 못했어요: Insufficient Permission"_.
+
+**Root cause:** that message is **Google's**, not ours — our permission gate says
+"Insufficient permissions" (lowercase, plural), while `Insufficient Permission` is the
+YouTube Data API rejecting the access token's **OAuth scope**. `/api/admin/youtube-auth/
+auth-url` requested only `youtube.upload` + `youtube.readonly`, which cover
+`videos.insert` and reads but **not** `videos.update` (metadata) or
+`playlistItems.insert/delete` (playlist membership) — those need `youtube` or
+`youtube.force-ssl`. The retired `scripts/auth/generate_youtube_refresh_token.js`
+requested all four, so the token that had actually been in use for years (pasted into
+`YOUTUBE_REFRESH_TOKEN` from that script) carried the broad scopes. **The admin panel's
+re-authorize button had never once produced a token that could edit metadata** — nobody
+noticed because its token was never the one being used.
+
+⚠️ **Exposed by, not caused by, the credential fix below.** Making the routes read the
+panel's Firestore token — the correct behavior — is what put the narrow-scoped token into
+play. Two latent bugs were stacked: the wrong token source hid the wrong scope set.
+
+**Fix:** `auth-url` now requests the same four scopes the CLI script did (`youtube.upload`,
+`youtube`, `youtube.readonly`, `youtube.force-ssl`) — the set empirically proven against
+every operation this app performs. **Re-authorizing is required**: scopes are fixed at
+consent time, so the already-stored token cannot gain them (`prompt: 'consent'` is already
+set, so the flow returns a fresh refresh token).
+
+📌 **Related gap, deliberately not fixed:** the token status panel calls
+`refreshAccessToken()`, which succeeds regardless of scope — so a scope-starved token still
+reports "유효한 토큰이 있습니다". Same class as the timestamp problem below: the panel is
+reassuring about a credential that cannot do the job. Detecting it would mean probing a
+write endpoint, which is a product decision, not a bug fix.
+
+**Verified:** tsc 0, smoke 30/30, unit 80/80. ⚠️ The real proof is the **manual pass** —
+no automated test can reach Google's consent screen or a scoped token.
+
+---
+
+## 2026-07-26 — Re-authorizing YouTube fixed nothing: the button writes the token to Firestore, every route read it from env
+
+**Symptom:** Found on Preview during the P5.4 scripted manual YouTube pass. The
+`/admin` "re-authorize" button reported success, and the token status panel showed
+healthy tokens — but editing a video's metadata still failed with _"YouTube
+authentication failed. The refresh token may be expired or invalid."_ Saving playlist
+membership failed separately with _"Channel ID not configured."_
+
+**Root cause — two independent bugs, both invisible to the automated suites** (the
+emulator has no YouTube credentials, which is exactly why P5.4 exists as a manual pass):
+
+1. **Split credential sources.** `/api/admin/youtube-auth/callback` stores the fresh
+   refresh token in Firestore (`admin_config/youtube_auth`), but every consuming route
+   went through `getYouTubeOAuthConfig()` (`utils/config.ts`), which read **env only**.
+   So a stale `YOUTUBE_REFRESH_TOKEN` shadowed the token that had just been written, and
+   the operator was silently expected to hand-copy it into Vercel and redeploy. Three
+   things conspired to hide it: (a) the error said "expired or invalid", not "not
+   configured" — so the var _was_ set, just stale; (b) the status panel checks **both**
+   sources, and worse, displayed **Firestore's** `updatedAt` against the **env** token
+   ("they should be the same token"), so a stale copy rendered with a fresh timestamp;
+   (c) `upload-youtube` looked like it had a Firestore fallback, so uploads were assumed
+   to prove the whole path worked. That fallback was **dead code**: it only ran when
+   `getYouTubeOAuthConfig()` returned `undefined`, but it then needed `clientId`/
+   `clientSecret` _from that same undefined config_ → always `null`. The same
+   all-or-nothing gate also meant `auth-url` refused to start the OAuth flow without a
+   refresh token already present — a bootstrap deadlock on any fresh deployment.
+2. **`manage-playlists` POST read a retired env var for the channel ID.**
+   `batch_update_playlists` did `process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID`, which is
+   set nowhere (not in Vercel, not in `.env.example`) — M1 moved channel config into
+   `mountains.json` and this call site was missed. The GET in the same file already did
+   it right (`getYouTubeChannelId(authz.mountainId)`). Both a live 500 and a
+   multi-tenant leak: a global where the request's tenant belonged.
+
+**Fix:** new `src/lib/youtube/credentials.ts` — one resolver for the single shared
+credential, splitting **client identity** (env; effectively never rotates) from **the
+refresh token** (rotates every 7–14 days, and now lives **only** in Firestore).
+`getYouTubeOAuthClient()` returns identity alone, so `auth-url`/`callback`/`status` no
+longer need a token to obtain one. All six OAuth consumers migrated (`upload-youtube`,
+`update-youtube-video`, `manage-playlists` GET+POST, `youtube-playlists`,
+`admin/youtube-auth/{auth-url,callback,status}`); `getYouTubeOAuthConfig()` deleted.
+Bug 2 is the one-line switch to `getYouTubeChannelId(authz.mountainId)`.
+
+⚠️ **`YOUTUBE_REFRESH_TOKEN` was removed outright, not demoted to a fallback** (owner's
+call). The first cut resolved Firestore-first with env behind it; the fallback was then
+dropped because it preserves the same failure shape whenever the Firestore doc is missing
+— routes would quietly resume on a stale env token. It also earns nothing: obtaining a
+token needs client identity only, so a deployment with no token anywhere recovers by
+clicking 「토큰 갱신」. Follow-on cleanups: the status route reports one token source instead of
+two (it used to show **Firestore's** timestamp against the **env** token — much of why
+the split went unnoticed); the OAuth success page no longer prints the raw token with
+instructions to paste it into `.env.local`; `scripts/auth/` (the command-line
+generate-and-paste workflow) deleted; `.env.example` updated.
+
+**Verified:** `tests/unit/youtubeCredentials.test.ts` (9 tests) — the token resolves from
+Firestore, a leftover `YOUTUBE_REFRESH_TOKEN` is ignored entirely, identity resolves with
+no token present, and a Firestore read failure re-raises instead of degrading to
+"unconfigured". tsc 0, smoke 30/30, unit 80/80, full e2e 146/13/0. ⚠️ The end-to-end proof
+is still the **manual pass on Preview** — no emulator can reach YouTube.
+
+---
+
 ## 2026-07-19 — Modal dialog conversion silently canceled the post-submit redirect (App-Router transition vs. modal-unmount re-render)
 
 **Symptom:** After the P6.1 `alert()` → shared `ui/Modal` conversion, all four

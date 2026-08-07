@@ -5,6 +5,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { CatVideo } from '@/types/media';
 import { adminStrings } from '@/constants/adminStrings';
 import type { DialogApi } from '@/components/ui/useDialog';
+import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 
 const { tagVideos: t } = adminStrings;
 
@@ -43,6 +45,14 @@ export function useYouTubeVideoMutations({
   videoService,
   dialog,
 }: UseYouTubeVideoMutationsOptions) {
+  // The YouTube API routes are gated on 'manage-video', so every call below carries
+  // the signed-in user's ID token alongside the JSON content type.
+  const { user } = useAuth();
+  const jsonAuthHeaders = async () => ({
+    'Content-Type': 'application/json',
+    ...(await authHeader(user)),
+  });
+
   // Selected video + YouTube-specific form states
   const [selectedVideo, setSelectedVideo] = useState<AdminVideo | null>(null);
   const [youtubeTitle, setYoutubeTitle] = useState<string>('');
@@ -181,9 +191,7 @@ export function useYouTubeVideoMutations({
       // Step 1: Update YouTube video metadata
       const updateResponse = await fetch('/api/update-youtube-video', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await jsonAuthHeaders(),
         body: JSON.stringify({
           videoId: videoId,
           updates: updates,
@@ -220,9 +228,7 @@ export function useYouTubeVideoMutations({
 
       const refreshResponse = await fetch('/api/refresh-video-metadata', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await jsonAuthHeaders(),
         body: JSON.stringify(refreshPayload),
       });
 
@@ -291,6 +297,50 @@ export function useYouTubeVideoMutations({
     }
   };
 
+  /**
+   * Pull the videos YouTube just accepted back into Firestore.
+   *
+   * `youtubeVideoIds` must be **YouTube** ids: the route queries the YouTube Data API with
+   * them and then locates each Firestore doc by `where('youtubeId','==',id)`.
+   *
+   * Returns whether the sync succeeded so callers can say so. It used to be
+   * `if (res.ok) console.log(…)` — a failure was invisible, and the completion dialog still
+   * reported success, which is why batch edits silently stopped short of Firestore.
+   */
+  const syncToFirestore = async (
+    youtubeVideoIds: string[],
+    expectedRecordingDate?: string
+  ): Promise<boolean> => {
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for YouTube propagation
+
+    try {
+      const refreshResponse = await fetch('/api/refresh-video-metadata', {
+        method: 'POST',
+        headers: await jsonAuthHeaders(),
+        body: JSON.stringify({
+          videoIds: youtubeVideoIds,
+          // Lets the route retry until YouTube reports the date we just set.
+          ...(expectedRecordingDate ? { expectedRecordingDate } : {}),
+        }),
+      });
+
+      if (refreshResponse.ok) {
+        console.log('✅ Firestore synced with fresh YouTube metadata');
+        return true;
+      }
+
+      const errorData = await refreshResponse.json().catch(() => ({}));
+      console.error(
+        `❌ Firestore sync failed (${refreshResponse.status}):`,
+        errorData.error || 'unknown error'
+      );
+      return false;
+    } catch (err) {
+      console.error('❌ Firestore sync threw:', err);
+      return false;
+    }
+  };
+
   const batchUpdateTags = async (selectedIds: Set<string>) => {
     if (selectedIds.size === 0 || !batchTags.trim()) return;
 
@@ -299,7 +349,17 @@ export function useYouTubeVideoMutations({
       setError(null);
 
       const videoIds = Array.from(selectedIds);
-      const youtubeUpdateResults = [];
+      // ⚠️ Results are keyed by the **YouTube** video id, not the Firestore doc id the
+      // selection holds: /api/refresh-video-metadata looks videos up on YouTube and then
+      // finds their doc via `where('youtubeId','==',id)`. Sending doc ids made it 404 and
+      // do nothing, so batch edits reached YouTube but never synced back — see
+      // log/DEBUG_LOG.md 2026-07-26. The seed hides this (its fixtures have no youtubeId,
+      // so the two ids are equal); in prod the doc id is auto-generated and never matches.
+      const youtubeUpdateResults: Array<{
+        youtubeVideoId: string;
+        success: boolean;
+        error?: string;
+      }> = [];
 
       console.log('Performing batch tags update...');
       console.log(`Processing ${videoIds.length} selected videos for tags:`, batchTags);
@@ -307,6 +367,8 @@ export function useYouTubeVideoMutations({
       for (const videoId of videoIds) {
         const video = videos.find((v) => v.id === videoId);
         if (!video) continue;
+
+        const youtubeVideoId = video.youtubeId || video.id;
 
         const newTags = batchTags
           .split(',')
@@ -322,20 +384,20 @@ export function useYouTubeVideoMutations({
           try {
             const youtubeResponse = await fetch('/api/update-youtube-video', {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: await jsonAuthHeaders(),
               body: JSON.stringify({
-                videoId: video.youtubeId || video.id,
+                videoId: youtubeVideoId,
                 updates: { tags: newTags },
               }),
             });
 
             if (youtubeResponse.ok) {
-              youtubeUpdateResults.push({ videoId, success: true });
+              youtubeUpdateResults.push({ youtubeVideoId, success: true });
               console.log(`✅ Successfully updated tags for ${video.title}`);
             } else {
               const errorData = await youtubeResponse.json();
               youtubeUpdateResults.push({
-                videoId,
+                youtubeVideoId,
                 success: false,
                 error: errorData.error,
               });
@@ -343,7 +405,7 @@ export function useYouTubeVideoMutations({
             }
           } catch (err) {
             youtubeUpdateResults.push({
-              videoId,
+              youtubeVideoId,
               success: false,
               error: err instanceof Error ? err.message : 'Unknown error',
             });
@@ -355,27 +417,19 @@ export function useYouTubeVideoMutations({
       // Sync Firestore if there were successful updates
       const successfulVideoIds = youtubeUpdateResults
         .filter((r) => r.success)
-        .map((r) => r.videoId);
-      if (successfulVideoIds.length > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for YouTube propagation
-
-        const refreshResponse = await fetch('/api/refresh-video-metadata', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ videoIds: successfulVideoIds }),
-        });
-
-        if (refreshResponse.ok) {
-          console.log('✅ Firestore synced with fresh YouTube metadata');
-        }
-      }
+        .map((r) => r.youtubeVideoId);
+      const syncedToFirestore =
+        successfulVideoIds.length > 0 ? await syncToFirestore(successfulVideoIds) : true;
 
       // Reload videos and show results
       await reloadVideos();
       const successful = youtubeUpdateResults.filter((r) => r.success).length;
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
-      await dialog.alert(t.alerts.batchTagsDone(successful, failed));
+      await dialog.alert(
+        t.alerts.batchTagsDone(successful, failed) +
+          (syncedToFirestore ? '' : t.alerts.firestoreSyncFailed)
+      );
       setBatchTags(''); // Clear tags after successful update
     } catch (err: any) {
       console.error('Error updating tags:', err);
@@ -393,7 +447,12 @@ export function useYouTubeVideoMutations({
       setError(null);
 
       const videoIds = Array.from(selectedIds);
-      const youtubeUpdateResults = [];
+      // Keyed by YouTube id, not the Firestore doc id — see the note in batchUpdateTags.
+      const youtubeUpdateResults: Array<{
+        youtubeVideoId: string;
+        success: boolean;
+        error?: string;
+      }> = [];
 
       console.log('Performing batch date update...');
       console.log(
@@ -405,6 +464,7 @@ export function useYouTubeVideoMutations({
         const video = videos.find((v) => v.id === videoId);
         if (!video) continue;
 
+        const youtubeVideoId = video.youtubeId || video.id;
         const newCreatedTime = new Date(batchYoutubeCreatedTime).toISOString();
         const currentCreatedTime = video.createdTime || '';
 
@@ -417,20 +477,20 @@ export function useYouTubeVideoMutations({
           try {
             const youtubeResponse = await fetch('/api/update-youtube-video', {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
+              headers: await jsonAuthHeaders(),
               body: JSON.stringify({
-                videoId: video.youtubeId || video.id,
+                videoId: youtubeVideoId,
                 updates: { createdTime: newCreatedTime },
               }),
             });
 
             if (youtubeResponse.ok) {
-              youtubeUpdateResults.push({ videoId, success: true });
+              youtubeUpdateResults.push({ youtubeVideoId, success: true });
               console.log(`✅ Successfully updated date for ${video.title}`);
             } else {
               const errorData = await youtubeResponse.json();
               youtubeUpdateResults.push({
-                videoId,
+                youtubeVideoId,
                 success: false,
                 error: errorData.error,
               });
@@ -438,7 +498,7 @@ export function useYouTubeVideoMutations({
             }
           } catch (err) {
             youtubeUpdateResults.push({
-              videoId,
+              youtubeVideoId,
               success: false,
               error: err instanceof Error ? err.message : 'Unknown error',
             });
@@ -450,30 +510,24 @@ export function useYouTubeVideoMutations({
       // Sync Firestore if there were successful updates
       const successfulVideoIds = youtubeUpdateResults
         .filter((r) => r.success)
-        .map((r) => r.videoId);
-      if (successfulVideoIds.length > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for YouTube propagation
-
-        const refreshResponse = await fetch('/api/refresh-video-metadata', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            videoIds: successfulVideoIds,
-            expectedRecordingDate: new Date(batchYoutubeCreatedTime).toISOString(),
-          }),
-        });
-
-        if (refreshResponse.ok) {
-          console.log('✅ Firestore synced with fresh YouTube metadata');
-        }
-      }
+        .map((r) => r.youtubeVideoId);
+      const syncedToFirestore =
+        successfulVideoIds.length > 0
+          ? await syncToFirestore(
+              successfulVideoIds,
+              new Date(batchYoutubeCreatedTime).toISOString()
+            )
+          : true;
 
       // Reload videos and show results
       await reloadVideos();
       const successful = youtubeUpdateResults.filter((r) => r.success).length;
       const failed = youtubeUpdateResults.filter((r) => !r.success).length;
 
-      await dialog.alert(t.alerts.batchDateDone(successful, failed));
+      await dialog.alert(
+        t.alerts.batchDateDone(successful, failed) +
+          (syncedToFirestore ? '' : t.alerts.firestoreSyncFailed)
+      );
       setBatchYoutubeCreatedTime(''); // Clear date after successful update
     } catch (err: any) {
       console.error('Error updating date:', err);
@@ -515,9 +569,7 @@ export function useYouTubeVideoMutations({
       // Call the refresh metadata API to update all YouTube videos
       const response = await fetch('/api/refresh-video-metadata', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await jsonAuthHeaders(),
         body: JSON.stringify({
           videoIds: youtubeVideoIds,
         }),
@@ -530,6 +582,27 @@ export function useYouTubeVideoMutations({
 
       const result = await response.json();
       console.log('Metadata refresh result:', result);
+
+      // Step 3: reconcile the other direction — records whose video no longer
+      // exists on YouTube. `syncVideos` only imports what YouTube has that we
+      // lack, so without this a deleted video keeps its record (and its tile in
+      // the public 영상첩) forever. This only labels; deleting is the operator's
+      // call, in the panel the label drives. A failure here must not fail the
+      // sync — the metadata refresh above already succeeded.
+      try {
+        const availability = await fetch('/api/admin/video-availability', {
+          method: 'POST',
+          headers: await jsonAuthHeaders(),
+        });
+        if (availability.ok) {
+          console.log('Availability check:', await availability.json());
+        } else {
+          const body = await availability.json().catch(() => ({}));
+          console.error('Availability check failed:', body);
+        }
+      } catch (availabilityError) {
+        console.error('Availability check failed:', availabilityError);
+      }
 
       // Reload videos to get the updated data
       await reloadVideos();

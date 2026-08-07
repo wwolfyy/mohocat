@@ -1,67 +1,72 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
-import { Readable } from 'stream';
-import { getVideoService } from '@/services';
-import { getYouTubeOAuthConfig } from '@/utils/config';
-import { getRequestMountainId } from '@/lib/tenant';
-import { db } from '@/lib/firebase-admin';
+import { requireApiPermission } from '@/lib/auth/requireApiPermission';
+import { getYouTubeOAuthCredentials } from '@/lib/youtube/credentials';
+import { parseTagList } from '@/lib/youtube/videoMetadata';
+import { calendarDateToInstant } from '@/utils/dateParser';
 
-async function getYouTubeRefreshToken() {
-  // First try to get token from environment variable
-  const youtubeOAuth = getYouTubeOAuthConfig();
-  if (youtubeOAuth?.refreshToken) {
-    return {
-      refreshToken: youtubeOAuth.refreshToken,
-      clientId: youtubeOAuth.clientId,
-      clientSecret: youtubeOAuth.clientSecret,
-      redirectUri: youtubeOAuth.redirectUri,
-    };
-  }
-
-  // If env var token is not available, try to get from Firestore
-  try {
-    const doc = await db.collection('admin_config').doc('youtube_auth').get();
-
-    if (doc.exists) {
-      const data = doc.data();
-      if (data?.refreshToken && youtubeOAuth?.clientId && youtubeOAuth?.clientSecret) {
-        return {
-          refreshToken: data.refreshToken,
-          clientId: youtubeOAuth.clientId,
-          clientSecret: youtubeOAuth.clientSecret,
-          redirectUri: youtubeOAuth.redirectUri,
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to get YouTube token from Firestore:', error);
-  }
-
-  return null;
-}
-
+/**
+ * Opens a **resumable upload session** on YouTube and hands the session URI back to
+ * the browser, which then PUTs the file bytes straight to Google.
+ *
+ * ⚠️ The bytes deliberately do not pass through this function. Vercel caps a
+ * function's request body at **4.5 MB** and rejects anything larger at the proxy with
+ * 413 `FUNCTION_PAYLOAD_TOO_LARGE` — before the handler runs, so it cannot be caught
+ * or configured away. This route used to receive the whole file as multipart form
+ * data, which meant any video worth posting failed (`log/DEBUG_LOG.md` 2026-07-29).
+ * Only the metadata crosses this boundary now, so the video size no longer matters.
+ *
+ * The session URI is itself the upload capability, which is why the browser never
+ * needs — and never receives — an OAuth token.
+ *
+ * Gated: uploading to the shared YouTube channel with the operator's OAuth credential
+ * requires 'manage-video' (what the `cat_videos` rule enforces) or, since 2026-08-03,
+ * the narrow 'upload-own-video' a 집사톡 member holds (§10p). ⚠️ Both must stay listed:
+ * an admin holds only the first, a member only the second. The companion `/complete`
+ * route re-checks the same pair before writing anything.
+ */
 export async function POST(request: NextRequest) {
+  const authz = await requireApiPermission(request, ['manage-video', 'upload-own-video']);
+  if (!authz.ok) {
+    return NextResponse.json({ error: authz.error }, { status: authz.status });
+  }
+
   try {
-    // Get YouTube OAuth configuration from centralized config or Firestore
-    const tokenConfig = await getYouTubeRefreshToken();
+    const body = await request.json();
+    const { fileName, fileSize, mimeType, title, description, tags, createdTime } = body ?? {};
+
+    // Google needs the exact byte count and content type up front to open the
+    // session; without them the upload would fail well after the user committed to it.
+    if (!fileName || typeof fileSize !== 'number' || fileSize <= 0 || !mimeType) {
+      return NextResponse.json(
+        { error: 'fileName, a positive fileSize and mimeType are required' },
+        { status: 400 }
+      );
+    }
+
+    // The origin the browser will send on its PUT — it must match what this session
+    // is opened with (see the Origin header below). Browsers send `Origin` on any
+    // POST, including same-origin ones, so the header is normally present; the
+    // Host-derived fallback covers non-browser callers and keeps this fail-loud
+    // rather than silently opening an origin-less session.
+    const browserOrigin =
+      request.headers.get('origin') ??
+      `${request.headers.get('x-forwarded-proto') ?? 'https'}://${request.headers.get('host') ?? ''}`;
+
+    if (!browserOrigin || browserOrigin.endsWith('://')) {
+      return NextResponse.json(
+        { error: 'Could not determine the request origin for the upload session' },
+        { status: 400 }
+      );
+    }
+
+    // Client identity from env + the freshest refresh token (Firestore).
+    const tokenConfig = await getYouTubeOAuthCredentials();
     if (!tokenConfig) {
       return NextResponse.json(
-        {
-          error: 'YouTube OAuth credentials not configured',
-        },
+        { error: 'YouTube OAuth credentials not configured' },
         { status: 500 }
       );
-    } // Parse the multipart form data
-    const formData = await request.formData();
-    const file = formData.get('video') as File;
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string; // Enhanced metadata options
-    const tags = formData.get('tags') as string; // Comma-separated tags
-    const createdTime = formData.get('createdTime') as string; // ISO date string
-    const playlistId = formData.get('playlistId') as string; // Playlist ID
-
-    if (!file) {
-      return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
     }
 
     const oauth2Client = new google.auth.OAuth2(
@@ -69,12 +74,12 @@ export async function POST(request: NextRequest) {
       tokenConfig.clientSecret,
       tokenConfig.redirectUri
     );
-    oauth2Client.setCredentials({
-      refresh_token: tokenConfig.refreshToken,
-    });
+    oauth2Client.setCredentials({ refresh_token: tokenConfig.refreshToken });
 
+    let accessToken: string | null | undefined;
     try {
-      await oauth2Client.getAccessToken();
+      const token = await oauth2Client.getAccessToken();
+      accessToken = token?.token;
     } catch (authError) {
       console.error('OAuth2 authentication failed:', authError);
       return NextResponse.json(
@@ -86,143 +91,85 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-
-    const buffer = Buffer.from(await file.arrayBuffer()); // Convert buffer to readable stream for YouTube API
-    const stream = Readable.from(buffer); // Prepare snippet data with enhanced metadata
-    const snippetData: any = {
-      title: title || file.name,
-      description: description || 'Uploaded via Mountain Cats app',
-    };
-
-    // Add tags if provided
-    if (tags && tags.trim()) {
-      snippetData.tags = tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
+    if (!accessToken) {
+      return NextResponse.json({ error: 'YouTube authentication failed' }, { status: 401 });
     }
 
-    // Prepare recording details if provided
-    let recordingDetails: any = undefined;
+    const snippet: Record<string, unknown> = {
+      title: title || fileName,
+      // No invented default: an empty description means the uploader left it empty on
+      // purpose, and the video goes up without one (plan B3.4).
+      description: description || '',
+    };
+
+    const tagList = parseTagList(tags);
+    if (tagList.length > 0) {
+      snippet.tags = tagList;
+    }
+
+    const parts = ['snippet', 'status'];
+    const videoResource: Record<string, unknown> = {
+      snippet,
+      status: { privacyStatus: 'public' },
+    };
+
     if (createdTime) {
       try {
-        const date = new Date(createdTime);
-        if (!isNaN(date.getTime())) {
-          recordingDetails = {
-            recordingDate: date.toISOString(),
-          };
-        }
+        // UTC midnight of that calendar date — the same encoding the admin editor
+        // writes, so one field never carries two conventions.
+        videoResource.recordingDetails = {
+          recordingDate: calendarDateToInstant(createdTime).toISOString(),
+        };
+        parts.push('recordingDetails');
       } catch (e) {
-        console.warn('Invalid created time provided:', createdTime);
+        console.warn('Invalid created time provided:', createdTime, e);
       }
     }
 
-    // Prepare status data
-    const statusData: any = {
-      privacyStatus: 'public',
-    };
-
-    // Prepare request body with proper structure
-    const requestBody: any = {
-      snippet: snippetData,
-      status: statusData,
-    }; // Add recording details as a separate top-level property
-    if (recordingDetails) {
-      requestBody.recordingDetails = recordingDetails;
-    }
-
-    console.log('YouTube upload request body:', JSON.stringify(requestBody, null, 2));
-
-    const response = await youtube.videos.insert({
-      part: ['snippet', 'status', ...(recordingDetails ? ['recordingDetails'] : [])],
-      requestBody,
-      media: {
-        body: stream,
-      },
-    });
-
-    const videoId = response.data.id;
-    if (!videoId) {
-      throw new Error('No video ID returned from YouTube');
-    }
-
-    // Add video to playlist if specified
-    if (playlistId && playlistId.trim()) {
-      try {
-        await youtube.playlistItems.insert({
-          part: ['snippet'],
-          requestBody: {
-            snippet: {
-              playlistId: playlistId,
-              resourceId: {
-                kind: 'youtube#video',
-                videoId: videoId,
-              },
-            },
-          },
-        });
-      } catch (playlistError) {
-        console.warn('Failed to add video to playlist:', playlistError);
-        // Don't fail the entire upload if playlist addition fails
+    const initResponse = await fetch(
+      `https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=${parts.join(',')}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json; charset=UTF-8',
+          'X-Upload-Content-Length': String(fileSize),
+          'X-Upload-Content-Type': mimeType,
+          // 🚨 Load-bearing. Google decides the `Access-Control-Allow-Origin` for
+          // **every request in the session** from the Origin on this initiating call
+          // — and this call is server-side, so without forwarding it there is no
+          // Origin at all. The browser then delivers all the bytes and gets a
+          // response it is not allowed to read: the upload reaches 100%, XHR fires
+          // `onerror` with status 0, and the video lands on YouTube unrecorded.
+          // Verified the hard way (`log/DEBUG_LOG.md` 2026-07-29).
+          Origin: browserOrigin,
+        },
+        body: JSON.stringify(videoResource),
       }
-    }
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    );
 
-    // Create Firestore entry in cat_videos collection
-    try {
-      const tagsArray =
-        tags && tags.trim()
-          ? tags
-              .split(',')
-              .map((tag) => tag.trim())
-              .filter((tag) => tag.length > 0)
-          : [];
-      const videoData = {
-        videoUrl,
-        fileName: response.data.snippet?.title || title || file.name,
-        storagePath: videoUrl, // For YouTube videos, this is the same as videoUrl
-        tags: tagsArray,
-        uploadDate: new Date(),
-        createdTime: createdTime ? new Date(createdTime) : new Date(), // Use created time or current date
-        uploadedBy: 'user', // or get from authentication context
-        description: response.data.snippet?.description || description || '',
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        duration: undefined, // YouTube doesn't return duration in upload response
-        needsTagging: tagsArray.length === 0, // Needs tagging if no tags provided
-        videoType: 'youtube' as const,
-        youtubeId: videoId, // Important: YouTube video ID
-        title: response.data.snippet?.title || title || file.name,
-        publishedAt: new Date().toISOString(),
-        channelTitle: 'Mountain Cats', // or get from YouTube API
-        catName: '', // Empty initially, can be filled later through tagging
-        playlist: playlistId || '', // Add playlist field
-        autoTagged: false, // User manually provided tags
-        // fileSize omitted for YouTube uploads to avoid Firestore undefined errors
-      };
-
-      console.log('Creating Firestore entry for uploaded video:', videoData);
-
-      const videoService = getVideoService(getRequestMountainId(request));
-      const firestoreVideoId = await videoService.createVideo(videoData);
-      console.log('Created cat_videos entry with ID:', firestoreVideoId);
-    } catch (firestoreError) {
-      console.error('Failed to create Firestore entry:', firestoreError);
-      // Don't fail the entire upload if Firestore creation fails
+    if (!initResponse.ok) {
+      const details = await initResponse.text();
+      console.error('Failed to open a YouTube upload session:', initResponse.status, details);
+      return NextResponse.json(
+        { error: 'Failed to open a YouTube upload session', details },
+        { status: 502 }
+      );
     }
 
-    return NextResponse.json({
-      videoId,
-      videoUrl,
-      title: response.data.snippet?.title,
-      description: response.data.snippet?.description,
-    });
+    // The session URI arrives in the Location header and has a finite lifetime.
+    const sessionUrl = initResponse.headers.get('location');
+    if (!sessionUrl) {
+      throw new Error('YouTube returned no upload session URL');
+    }
+
+    return NextResponse.json({ sessionUrl });
   } catch (error) {
-    console.error('Error uploading video to YouTube:', error);
+    console.error('Error opening a YouTube upload session:', error);
 
     return NextResponse.json(
       {
-        error: 'Failed to upload video to YouTube',
+        error: 'Failed to open a YouTube upload session',
         details: error instanceof Error ? error.message : 'Unknown error',
         type: error instanceof Error ? error.name : 'UnknownError',
       },

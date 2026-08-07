@@ -56,6 +56,14 @@ export interface Contact {
   message: string;
   // Firestore Timestamp; kept loosely-typed to avoid a firebase import in the shared types module.
   createdAt?: { seconds: number; nanoseconds: number } | Date;
+  /**
+   * Whether the admin notification email actually sent. Written by `/api/contact`:
+   * `false` on create, promoted to `true` only after the send succeeds.
+   *
+   * ⚠️ **`undefined` is "unknown", not "failed".** Contacts recorded before this field
+   * existed carry no value, and rendering those as failures would be a fabrication.
+   */
+  notified?: boolean;
 }
 
 // Post and Reply interfaces
@@ -70,7 +78,22 @@ export interface Post {
   videoUrls?: string[];
   videoUrl?: string; // Keep for backward compatibility
   imageUrls?: string[];
+  /** Author's email — **display only**. See `authorUid` for authorization. */
   username: string;
+  /**
+   * Author's Firebase Auth uid, stamped once at creation (2026-08-02).
+   *
+   * 🔑 **This is the field the Firestore rules authorize an author-edit against.**
+   * `username` is an email, i.e. mutable and display-shaped; keying "may this
+   * person edit this post" on it would tie authorization to a field the UI
+   * treats as a label.
+   *
+   * ⚠️ Optional because posts created before this existed have none. Those fall
+   * back to a `username == request.auth.token.email` comparison in the rules —
+   * and the legacy `admin@mtcat.com` posts, which match no account at all, stay
+   * editable by admins only.
+   */
+  authorUid?: string;
   date: string;
   time: string;
 

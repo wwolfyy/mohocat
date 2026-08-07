@@ -1,25 +1,31 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAdoptionService } from '@/services';
 import { cn } from '@/utils/cn';
 import CatLinkedText from '@/components/CatLinkedText';
+import PostMedia from '@/components/PostMedia';
 import { useMountain } from '@/components/MountainProvider';
-
-const youtubeId = (url?: string) =>
-  url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1] || null;
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { SkeletonList, ErrorNotice } from '@/components/ui/AsyncStates';
 
 /**
  * A single 입양홍보 post as an accordion card. Folded by default: title + a
- * 3-line preview of the content. Expanding reveals the full message and media
- * (video thumbnails open the source on YouTube). Only the header toggles, so the
- * `[catmodal:…]` links inside the body keep opening the cat modal independently.
+ * 3-line preview of the content. Expanding reveals the **whole post** — the full
+ * message and every image and video — the same rendering the 공지사항 popup uses.
+ * Only the header toggles, so the `[catmodal:…]` links inside the body keep
+ * opening the cat modal independently.
+ *
+ * 🐛 **Fixed 2026-07-31 (owner-reported): expanding showed no image.** This used
+ * to render a single 80×20 thumbnail chosen as `video ? youtubeThumb : image` —
+ * so a post carrying a video never displayed its photos at all, and a post with
+ * several images showed only the first. Both are now rendered in full by the
+ * shared `PostMedia`. ⚠️ The e2e for this asserted `getByAltText('이미지')` and
+ * passed throughout, because the old markup did emit that alt for the
+ * image-only case; the gap was the video branch, which no spec covered.
  */
 function AdoptionPostCard({ post }: { post: any }) {
   const [open, setOpen] = useState(false);
-
-  const firstVideoUrl = post.videoUrls?.[0] || post.videoUrl;
-  const videoId = youtubeId(firstVideoUrl);
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-sm">
@@ -48,44 +54,23 @@ function AdoptionPostCard({ post }: { post: any }) {
 
       <div className="px-4 pb-4">
         {open ? (
-          <div className="flex items-start gap-4">
-            {videoId ? (
-              <a
-                href={`https://www.youtube.com/watch?v=${videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative block flex-shrink-0"
-              >
-                <img
-                  src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                  alt="동영상 미리보기"
-                  className="h-15 w-20 rounded object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="rounded-full bg-red-600 p-1 text-white">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </a>
-            ) : (
-              post.thumbnailUrl && (
-                <img
-                  src={post.thumbnailUrl}
-                  alt="이미지"
-                  className="h-15 w-20 flex-shrink-0 rounded object-cover"
-                />
-              )
-            )}
+          <>
             <CatLinkedText
               text={post.message}
-              className="flex-grow whitespace-pre-line text-base text-gray-700"
+              className="mb-6 block whitespace-pre-line text-base text-gray-700"
             />
-          </div>
+            {/* `videoUrl` is the legacy single-value field some older posts carry;
+                newer ones only ever write `videoUrls`. */}
+            {/* `full`, not the default `compact`: an expanded card is a full-width
+                page surface, so the modal's two-column, height-capped treatment
+                rendered photos at half the width of the video beside them. */}
+            <PostMedia
+              imageUrls={post.imageUrls}
+              videoUrls={post.videoUrls?.length ? post.videoUrls : post.videoUrl && [post.videoUrl]}
+              label="입양홍보"
+              layout="full"
+            />
+          </>
         ) : (
           <CatLinkedText text={post.message} className="line-clamp-3 text-base text-gray-700" />
         )}
@@ -138,30 +123,25 @@ const AdoptionPromotionClient = () => {
   const mountainId = useMountain();
   const adoptionService = getAdoptionService(mountainId);
 
-  const [allPosts, setAllPosts] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 20;
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const posts = await adoptionService.getAllPosts();
-        const sorted = posts.sort((a: any, b: any) => {
-          const dateA =
-            a.date && a.time ? new Date(`${a.date}T${a.time}Z`) : new Date(a.createdAt || 0);
-          const dateB =
-            b.date && b.time ? new Date(`${b.date}T${b.time}Z`) : new Date(b.createdAt || 0);
-          return dateB.getTime() - dateA.getTime();
-        });
-        setAllPosts(sorted);
-      } catch (error) {
-        console.error('Error fetching adoption posts:', error);
-      }
-    };
-    fetchPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Same three-state treatment as the 공지사항 list (2026-08-01): the empty
+  // message below is content, not a stand-in for "loading" or "failed".
+  const fetchPosts = useCallback(async () => {
+    const posts = await adoptionService.getAllPosts();
+    return posts.sort((a: any, b: any) => {
+      const dateA =
+        a.date && a.time ? new Date(`${a.date}T${a.time}Z`) : new Date(a.createdAt || 0);
+      const dateB =
+        b.date && b.time ? new Date(`${b.date}T${b.time}Z`) : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [adoptionService]);
+
+  const { status, data, reload } = useAsyncData(fetchPosts);
+  const allPosts = useMemo(() => data ?? [], [data]);
 
   // Filter by title + content (case-insensitive) before paginating.
   const normalizedQuery = query.trim().toLowerCase();
@@ -180,6 +160,12 @@ const AdoptionPromotionClient = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [normalizedQuery]);
+
+  if (status === 'loading') return <SkeletonList />;
+
+  if (status === 'error') {
+    return <ErrorNotice message="입양홍보 소식을 불러오지 못했어요." onRetry={reload} />;
+  }
 
   return (
     <div>

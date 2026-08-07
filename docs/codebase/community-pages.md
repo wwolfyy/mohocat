@@ -14,8 +14,8 @@ terms), and member self-service (mypage). Includes the shared post/reply system 
 | Component        | File(s)                                                                                                                     | Responsibility                                                                                      |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Adoption gallery | `src/app/pages/adoption/page.tsx`, `AdoptionGallery.tsx`, `components/AdoptionPromotionClient.tsx`                          | 입양홍보 — server-read cats flagged `adoptable` on circular cards + accordion promotion posts (ISR) |
-| Butler talk      | `src/app/pages/butler_talk/{page,new}.tsx`, `ButlerTalkClient.tsx`, `NewButlerTalkForm.tsx`                                 | 집사수다 feed + new-post form                                                                       |
-| Butler stream    | `src/app/pages/butler_stream/{page,new}.tsx`, `ButlerStreamClient.tsx`                                                      | 집사방송 feed                                                                                       |
+| Butler talk      | `src/app/pages/butler_talk/{page,new}.tsx`, `ButlerTalkClient.tsx`, `NewButlerTalkForm.tsx`                                 | 집사톡 feed + **the platform's media composer** (photo + YouTube video)                             |
+| Butler stream    | `src/app/pages/butler_stream/{page,new}.tsx`, `ButlerStreamClient.tsx`, `NewPostForm.tsx`                                   | 집사게시판 — a 급식소 check-in log. ⚠️ **Composes text only; no media upload** (see below)          |
 | Posts            | `src/app/pages/posts/[id]/page.tsx`, `PostList.tsx`, `NewPostForm.tsx`, `EditPostForm.tsx`                                  | Generic post list/detail + create/edit                                                              |
 | Announcements    | `src/app/pages/announcements/{page,[id]}.tsx`, `AnnouncementClient.tsx`, `AnnouncementModal.tsx`, `NewAnnouncementForm.tsx` | 공지사항 list/detail + site-wide announcement modal                                                 |
 | Replies          | `ReplyList.tsx`, `ReplyItem.tsx`, `ReplyForm.tsx`, `ReplyButton.tsx` (+ `AdminReplyList/Item`)                              | Threaded replies on posts                                                                           |
@@ -87,6 +87,16 @@ graph LR
 
 ## Watch-outs
 
+- ⚠️ **집사게시판 does not compose media, on purpose** (2026-07-27, plan
+  `butler-media-separation-plan-20260727.md`). It is a 급식소 check-in log; 집사톡 is the media
+  composer. `NewPostForm` has no file input, no YouTube metadata block and no cat-tag selector,
+  and its e2e spec **fails if a file input reappears there**. Media _display_ is untouched:
+  legacy 집사게시판 posts still carry `videoUrls`/`imageUrls` and `PostList` renders them, and
+  admins can still attach media by URL in `EditPostForm`. Don't "restore" the uploader.
+- **집사톡 composes one file per section**, each with its own 제목 (video) and 설명, via
+  `components/forms/MediaItemList`. An empty 설명 is saved empty — no invented default, and the
+  post body is not copied onto every photo. 공지사항/입양홍보 still use the multi-file
+  `MediaUploadField`; the two patterns coexist deliberately for now.
 - **Adoption is dual-surface**: admins create 입양홍보 posts (`admin/adoption/new`) _and_ flag
   cats `adoptable`; the public gallery shows adoptable cats **with a photo** plus the promotion
   posts. Both feed the one page.

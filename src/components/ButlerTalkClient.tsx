@@ -7,12 +7,17 @@ import PostList from '@/components/PostList';
 import Button from '@/components/ui/Button';
 import { User } from 'firebase/auth';
 import { useMountain } from '@/components/MountainProvider';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const ButlerTalkClient = () => {
   // Service references
   const mountainId = useMountain();
   const authService = getAuthService();
   const butlerTalkService = getButlerTalkService(mountainId);
+  // Viewing and posting are separate grants: a role may read this board without
+  // being able to write to it (plan D1), so the composer link follows the write
+  // permission, not mere authentication.
+  const { hasAnyPermission } = usePermissions();
 
   const [posts, setPosts] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -100,16 +105,18 @@ const ButlerTalkClient = () => {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full"
-          onClick={() => router.push('/pages/butler_talk/new')}
-        >
-          새글 작성
-        </Button>
-      </div>
+      {hasAnyPermission(['manage-posts', 'write-own-post-butler']) && (
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full"
+            onClick={() => router.push('/pages/butler_talk/new')}
+          >
+            새글 작성
+          </Button>
+        </div>
+      )}
 
       <PostList
         posts={posts}
@@ -117,6 +124,7 @@ const ButlerTalkClient = () => {
         totalPages={totalPages}
         onPageChange={handlePageClick}
         postService={butlerTalkService}
+        postType="butler_talk"
       />
     </>
   );

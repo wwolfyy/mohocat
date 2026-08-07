@@ -81,8 +81,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const authService = getAuthService();
   const permissionService = getPermissionService();
 
-  const [user, setUser] = useState<User | null>(auth.currentUser);
-  const [loading, setLoading] = useState(!auth.currentUser);
+  /**
+   * ⚠️ **Seed these from nothing — never from `auth.currentUser` (fixed 2026-08-02).**
+   *
+   * 🐛 They used to be `useState(auth.currentUser)` / `useState(!auth.currentUser)`,
+   * which read a **browser-only** value **during render**. Firebase Auth persists the
+   * session to `localStorage` (`browserLocalPersistence`), so:
+   *
+   *   - on the **server** `auth.currentUser` is always `null` → the header renders
+   *     로그인/등록;
+   *   - in the **browser**, once the session has been restored, the *first* render
+   *     already sees a `User` → the header renders the signed-in menu.
+   *
+   * Those two disagree, so hydration fails, and React's recovery is to **discard the
+   * server-rendered DOM and re-render the whole root client-side**. Every component
+   * below remounts, every `useState` initializer re-runs — and **anything the visitor
+   * had already typed is wiped**. That is a real user-facing bug, not just a test
+   * artifact: it ate the 이름 field on the 동참 form while 전화번호 and 메시지, typed a
+   * fraction of a second later, survived.
+   *
+   * 🔑 **It was intermittent because it is a race** — the restore is asynchronous, so
+   * it only bites when it completes before hydration (usually, and more often under
+   * load). Never for logged-out visitors, whose client render matches the server.
+   *
+   * The fix is not to win that race but to stop depending on it: render what the
+   * server rendered, then let the `onAuthStateChanged` effect below deliver the real
+   * user as an ordinary post-hydration update. It always fires at least once after
+   * init, so `loading` still resolves on its own.
+   *
+   * 💡 **The cost, accepted deliberately:** a signed-in visitor sees the logged-out
+   * header for one tick on a full page load. Consumers already handle it —
+   * `NavItem` treats `isLoading` as "no access yet" so items don't flicker
+   * enabled→disabled, and the contact form's 보내기 stays disabled until
+   * `!authLoading`. Do **not** "optimize" this back by seeding from `currentUser`.
+   */
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [providerData, setProviderData] = useState<ProviderData[]>([]);
   const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
 

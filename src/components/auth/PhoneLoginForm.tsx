@@ -158,7 +158,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
               className={cn(
                 'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
                 'text-gray-900 placeholder-gray-500',
-                'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
+                'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-brand-500'
               )}
               disabled={isLoading}
               required
@@ -190,7 +190,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onLoginSuccess, onLogin
               className={cn(
                 'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
                 'text-gray-900 placeholder-gray-500',
-                'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500',
+                'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-brand-500',
                 'tracking-widest text-center text-lg'
               )}
               disabled={isLoading}

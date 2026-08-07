@@ -43,7 +43,7 @@ The 5 **new** SMTP variables are the exception — they don't exist in Vercel ye
     (`prj_…`).
   - **Team ID** (only if the project lives under a Team, not your personal account) —
     **Settings → General** of the team (`team_…`). For personal projects, omit it.
-- **A Gmail App Password** for SMTP (see §8).
+- **A Gmail App Password** for SMTP (steps: [`README.md`](./README.md#동참-contact--smtp--the-most-recent-addition)).
 
 ---
 
@@ -85,7 +85,8 @@ cp terraform.tfvars.example terraform.tfvars
 
 Crucially, the values you put here **must match what's already in Vercel** for the existing
 vars (otherwise the post-import `plan` will show drift and want to overwrite them). Pull the
-current values from your `.env` / the Vercel dashboard. The SMTP block is new (see §8):
+current values from your `.env` / the Vercel dashboard. For the SMTP block see
+[`README.md`](./README.md#동참-contact--smtp--the-most-recent-addition):
 
 ```hcl
 smtp_host     = "smtp.gmail.com"
@@ -233,27 +234,23 @@ deployed via the Firebase CLI; Terraform/Vercel doesn't handle it.
 
 ---
 
-## 8. Gmail App Password (for the SMTP vars)
+## 8. Gmail App Password (for the SMTP vars) — **moved**
 
-`smtp_user` and `smtp_from` are **just your Gmail address** (e.g. `jaesangpark@gmail.com`) —
-yes, both the same. Gmail won't let you send "from" an arbitrary address, so `from` must equal
-the authenticated user. `smtp_password` is **not** your normal Google password — it's a
-16-character **App Password**:
+➡️ **The App Password procedure now lives in
+[`README.md` → 동참 (contact) / SMTP](./README.md#동참-contact--smtp--the-most-recent-addition),
+beside the env vars it configures. Use that copy.**
 
-1. The Google account must have **2-Step Verification ON** (App Passwords are unavailable
-   without it): https://myaccount.google.com/security → "2-Step Verification".
-2. Go to **App Passwords**: https://myaccount.google.com/apppasswords
-   (or Google Account → Security → 2-Step Verification → App passwords at the bottom).
-3. Enter a name (e.g. `mohocat SMTP`) and click **Create**.
-4. Google shows a **16-character** password (often grouped as `xxxx xxxx xxxx xxxx`). Copy it
-   and use it as `smtp_password` **with the spaces removed**.
-5. Store it only in `terraform.tfvars` (and Vercel via apply). Never commit it. You can revoke
-   it anytime from the same App Passwords page.
+📌 **Why it moved (2026-08-06):** it was the only live, routinely-needed instruction inside
+this **parked** Terraform document, so the person setting up SMTP had to read a workstream
+that is explicitly not the deployment path — and it referenced the pre-rename
+`infra/terraform` directory. The README version is also fuller: it covers checking the
+credential with `npm run smtp:verify` before touching Vercel, and the traps that have actually
+bitten (the `SMTP_FROM`/`SMTP_USER` rewrite, revocation on a 2SV change, pasting a trailing
+`# comment` into the Vercel dashboard, and needing a redeploy).
 
-**Caveats with Gmail SMTP:** host `smtp.gmail.com`, port `587` (STARTTLS). Sending is rate-
-limited (~500 recipients/day on consumer Gmail) and deliverability is weaker than a
-transactional provider — fine for low-volume admin notifications; revisit (SendGrid/SES) if
-volume grows.
+For this document's purposes only: `smtp_user` and `smtp_from` are both the same Gmail address,
+and `smtp_password` is the 16-character App Password with spaces removed — stored only in
+`terraform.tfvars` (gitignored) and never committed.
 
 ```
 

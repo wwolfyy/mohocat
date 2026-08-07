@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  getAuthService,
-  getPostService,
-  getButlerTalkService,
-  getAnnouncementService,
-  getAdoptionService,
-} from '@/services';
+import { getAuthService } from '@/services';
+import { getServiceForPostType, postDetailPath, type PostType } from '@/services/post-types';
 import { User } from 'firebase/auth';
 import { cn } from '@/utils/cn';
 import Link from 'next/link';
@@ -103,31 +98,22 @@ interface Post {
   time: string;
   createdAt?: any; // Can be Date, string, number, or Firestore timestamp
   replyCount?: number;
-  showInModal?: boolean; // For announcements modal popup
+  showInModal?: boolean; // Site-visit popup — 공지사항 and 입양홍보
 }
 
 interface AdminPostListProps {
-  postType: 'butler_stream' | 'butler_talk' | 'announcements' | 'adoption_promotion';
+  postType: PostType;
 }
 
 const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   // Service references
   const authService = getAuthService();
   const mountainId = useMountain();
-  const postService = getPostService(mountainId);
-  const butlerTalkService = getButlerTalkService(mountainId);
-  const announcementService = getAnnouncementService(mountainId);
-  const adoptionService = getAdoptionService(mountainId);
 
-  // The post service backing the active tab.
-  const serviceFor = (type: AdminPostListProps['postType']) =>
-    type === 'butler_stream'
-      ? postService
-      : type === 'butler_talk'
-        ? butlerTalkService
-        : type === 'announcements'
-          ? announcementService
-          : adoptionService;
+  // The post service backing the active tab. Shared with `EditPostForm` and the
+  // public detail page — three private copies of this mapping is what let the
+  // detail page miss it entirely and read every type out of `posts_feeding`.
+  const serviceFor = (type: PostType) => getServiceForPostType(type, mountainId);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -249,11 +235,17 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
   const handleToggleModal = async (postId: string, currentStatus: boolean) => {
     try {
       setIsLoading(true);
-      await (announcementService as any).toggleModalDisplay(postId, !currentStatus);
+      // 입양홍보 posts carry the same `showInModal` flag since 2026-07-31, so the
+      // toggle has to write through the owning collection's service — sending an
+      // adoption id to the announcement service would update nothing and still
+      // report success.
+      const service = serviceFor(postType);
+      await (service as any).toggleModalDisplay(postId, !currentStatus);
 
       // Refresh the posts list
       await fetchPosts(currentPage);
-      alert(`공지사항 팝업이 ${!currentStatus ? '활성화' : '비활성화'}되었습니다.`);
+      const label = postType === 'adoption_promotion' ? '입양홍보' : '공지사항';
+      alert(`${label} 팝업이 ${!currentStatus ? '활성화' : '비활성화'}되었습니다.`);
     } catch (error) {
       console.error('Failed to toggle modal display:', error);
       alert('모달 설정 변경에 실패했습니다. 다시 시도해주세요.');
@@ -286,7 +278,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
               )
             }
             className={cn(
-              'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+              'px-6 py-3 bg-gradient-to-r from-brand to-accent',
               'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
             )}
           >
@@ -313,7 +305,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                       const videoCount = post.videoUrls?.length || 1;
                       return (
-                        <Link href={`/pages/posts/${post.id}`}>
+                        <Link href={postDetailPath(postType, post.id)}>
                           <div className="relative cursor-pointer">
                             <img
                               src={thumbnailUrl}
@@ -347,7 +339,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                 {/* Show image thumbnail only if no video exists */}
                 {!((post.videoUrls && post.videoUrls.length > 0) || post.videoUrl) &&
                   post.thumbnailUrl && (
-                    <Link href={`/pages/posts/${post.id}`}>
+                    <Link href={postDetailPath(postType, post.id)}>
                       <img
                         src={post.thumbnailUrl}
                         alt="Image thumbnail"
@@ -358,7 +350,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
               </div>
               <div className="flex-grow">
                 <Link
-                  href={`/pages/posts/${post.id}`}
+                  href={postDetailPath(postType, post.id)}
                   className="text-xl font-bold mb-2 block flex items-center space-x-2"
                 >
                   {post.title}
@@ -392,8 +384,8 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
                       Delete
                     </button>
 
-                    {/* Modal Toggle Switch - Only for announcements */}
-                    {postType === 'announcements' && (
+                    {/* Modal Toggle Switch — the two popup-capable post kinds */}
+                    {(postType === 'announcements' || postType === 'adoption_promotion') && (
                       <div
                         onClick={() => handleToggleModal(post.id, post.showInModal || false)}
                         className={cn(
@@ -470,8 +462,8 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
             <button
               key={page}
               className={cn(
-                'px-4 py-2 rounded bg-gradient-to-r from-yellow-400 to-orange-300 text-black font-bold shadow',
-                'border border-yellow-500',
+                'px-4 py-2 rounded bg-gradient-to-r from-brand to-accent text-black font-bold shadow',
+                'border border-brand-500',
                 'transition-all duration-200'
               )}
               disabled
@@ -499,7 +491,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
             <button
               onClick={() => handlePageClick(currentPage - 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+                'px-6 py-3 bg-gradient-to-r from-brand to-accent',
                 'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
             >
@@ -512,7 +504,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
             <button
               onClick={() => handlePageClick(currentPage + 1)}
               className={cn(
-                'px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-300',
+                'px-6 py-3 bg-gradient-to-r from-brand to-accent',
                 'text-black rounded-lg font-bold hover:shadow-lg transition-all duration-200'
               )}
             >

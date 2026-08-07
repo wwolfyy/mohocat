@@ -71,7 +71,7 @@ Key fields (see `variables.tf` for the full list):
 | `mountain_id`                          | `geyang`                                               |
 
 > **Note on the build:** Vercel runs `vercel-build` = `fetch-static-assets.js && next build`.
-> The asset fetch pulls cat thumbnails/about-photos from **Firebase Storage**, so the Firebase
+> The asset fetch pulls cat thumbnails from **Firebase Storage**, so the Firebase
 > config values above must be correct or the build fails. No Node version is pinned in
 > `package.json`; set Vercel's project Node version to a current LTS if the default ever
 > drifts.

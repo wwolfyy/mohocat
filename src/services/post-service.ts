@@ -17,7 +17,6 @@ import {
   where,
   orderBy,
   updateDoc,
-  increment,
   deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -247,12 +246,25 @@ export class FirebasePostService implements IPostService {
     }
   }
 
+  /**
+   * Recount this post's direct replies and store the result.
+   *
+   * ⚠️ **This used to be `increment(1)`, which was wrong in one of its two
+   * callers** (fixed 2026-08-03). `deleteReply()` calls it after removing a
+   * reply, so deleting one *raised* the parent's 급식현황 count instead of
+   * lowering it — the number drifted upward and never came back. 집사톡's
+   * service has always recounted; this brings the two into line rather than
+   * leaving one board's arithmetic different from the other's.
+   *
+   * 📌 The counted read also keeps the member-authoring rule satisfied: adding a
+   * reply still lands on exactly `previous + 1`, which is what
+   * `isReplyCountBump()` in `firestore.rules` allows a non-owner to write.
+   */
   async updateReplyCount(postId: string): Promise<void> {
     try {
+      const replies = await this.getReplies(postId);
       const docRef = doc(db, this.COLLECTION_NAME, postId);
-      await updateDoc(docRef, {
-        replyCount: increment(1),
-      });
+      await updateDoc(docRef, { replyCount: replies.length });
     } catch (error) {
       console.error('Error updating reply count:', error);
       throw new Error(`Failed to update reply count for post: ${postId}`);

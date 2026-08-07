@@ -13,6 +13,19 @@ export interface CatImage {
   createdTime?: Date; // When the image was originally taken/created
   updated?: Date; // When the image metadata was last updated
   uploadedBy: string; // User ID or name
+  /**
+   * Firebase Auth uid of the uploader — the **authorization** identity, stamped at
+   * creation and never rewritten (firestore.rules `uploadingAsSelf`, 2026-08-03).
+   *
+   * 🔑 Separate from `uploadedBy` because that field is free text: composers put an
+   * email in it, and the sync/admin paths put literals ('admin', 'system_sync',
+   * 'youtube_sync'). A display string cannot carry authorization — the same split
+   * `authorUid` / `username` makes on posts.
+   *
+   * Absent on every record created before that date; nothing reads it on an existing
+   * doc, because the member rule is create-only.
+   */
+  uploadedByUid?: string;
   description?: string; // Optional description
   location?: string; // Optional location where photo was taken
   thumbnailUrl?: string; // Optional smaller thumbnail version
@@ -37,6 +50,13 @@ export interface CatVideo {
   createdTime?: Date; // When the video was originally created/recorded
   updated?: Date; // When the video metadata was last updated
   uploadedBy: string; // User ID or name
+  /**
+   * Firebase Auth uid of the uploader — see `CatImage.uploadedByUid`. For videos this
+   * is **audit only**: the record is written by the Admin SDK in
+   * `/api/upload-youtube/complete`, which bypasses the rules, so nothing authorizes
+   * against it. It answers "which member uploaded this", now that non-admins can.
+   */
+  uploadedByUid?: string;
   description?: string; // Optional description
   location?: string; // Optional location where video was taken
   thumbnailUrl?: string; // Video thumbnail
@@ -46,6 +66,18 @@ export interface CatVideo {
   videoType: 'storage' | 'youtube'; // Where the video is hosted
   youtubeId?: string; // YouTube video ID (for YouTube videos)
   allPlaylists?: Array<{ id: string; title: string }>; // All playlists the video belongs to
+  /**
+   * Whether the video still exists on YouTube, as of the last availability check
+   * (`POST /api/admin/video-availability`, run by the 동기화 flow).
+   *
+   * `missing` = YouTube no longer has it; `private` = it exists but the public
+   * cannot watch it. Both are hidden from public surfaces; only `missing` is
+   * offered for deletion in the CMS. **Absent** on records checked before this
+   * existed — treated as available, so nothing disappears until a check has run.
+   */
+  youtubeStatus?: 'available' | 'private' | 'missing';
+  /** When `youtubeStatus` was last established. */
+  youtubeCheckedAt?: Date;
 }
 
 export interface MediaCollection {
@@ -70,6 +102,12 @@ export interface MediaQueryOptions {
   limit?: number;
   orderBy?: 'uploadDate' | 'fileName';
   orderDirection?: 'asc' | 'desc';
+  /**
+   * Include videos the public cannot watch — `youtubeStatus` `missing` (deleted
+   * from YouTube) or `private`. Off by default so public surfaces never show a
+   * dead tile; the CMS passes it, since removing such records is its job.
+   */
+  includeUnavailable?: boolean;
 }
 
 export interface MediaUploadRequest {

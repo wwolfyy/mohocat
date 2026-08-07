@@ -77,4 +77,71 @@ test.describe('입양홍보 — adoption', () => {
     await page.getByPlaceholder('제목이나 내용으로 검색').fill('존재하지않는검색어zzz');
     await expect(page.getByText('검색 결과가 없어요.')).toBeVisible();
   });
+
+  /**
+   * 🐛 **Regression net for the 2026-07-31 bug (owner-reported).** Expanding a post
+   * rendered ONE 80×20 thumbnail, chosen as `video ? youtubeThumb : image` — so a
+   * post carrying a video never showed its photos at all, and a post with several
+   * images showed only the first. `test-adopt-02` carries two images *and* a video,
+   * which is the combination that was broken; nothing in the fixture set had media
+   * before, which is why no spec caught it.
+   */
+  test('소식 feed: an expanded post shows every image AND its video, not one or the other', async ({
+    page,
+  }) => {
+    // Keep the YouTube embed off the network: the console watchdog fails a test on
+    // any non-emulator resource error, and the fixture id is not a real video.
+    await page.route('**://www.youtube.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '' })
+    );
+
+    await page.goto('/pages/adoption');
+
+    const postHeader = page.getByRole('button', { name: /입양 소식 2/ });
+    await expect(postHeader).toBeVisible();
+    await postHeader.click();
+    await expect(postHeader).toHaveAttribute('aria-expanded', 'true');
+
+    // Both images — the old markup could only ever show one.
+    await expect(page.getByAltText('입양홍보 이미지 1')).toBeVisible();
+    await expect(page.getByAltText('입양홍보 이미지 2')).toBeVisible();
+
+    // …and the video, embedded rather than replacing the images.
+    await expect(page.locator('iframe[title="입양홍보 동영상 1"]')).toBeVisible();
+
+    /**
+     * Cat tags under each item (2026-07-31). A post stores only URLs, so these are
+     * resolved live from the `cat_images` / `cat_videos` records — which is what
+     * makes them correct for posts created before the feature existed, and what
+     * keeps them in step when someone retags in /admin/tag-images.
+     *
+     * The fixtures give each medium a *different* tag on purpose, so a lookup that
+     * returned the same answer for everything could not pass: album-01 →
+     * test-cat-01, album-02 → test-cat-03, yt-vid-01 → test-cat-01.
+     */
+    await expect(page.getByText('태그: test-cat-01', { exact: false }).first()).toBeVisible();
+    await expect(page.getByText('태그: test-cat-03', { exact: false })).toBeVisible();
+    // One line per tagged medium: two images + one video, and album-01's tag is
+    // shared with the video.
+    await expect(page.getByText(/^태그: /)).toHaveCount(3);
+
+    /**
+     * The per-file 설명 typed in the composer, which lives on the media record and
+     * not on the post — reported 2026-07-31 as "the form has these fields but the
+     * post shows none of them".
+     *
+     * ⚠️ album-01 has **two** `cat_images` records in the fixtures (one tagged
+     * '픽스처 사진 1', one untagged '픽스처 사진 3'). The tagged one must win, or the
+     * caption would depend on Firestore's return order and flicker between runs.
+     */
+    await expect(page.getByText('픽스처 사진 1')).toBeVisible();
+    await expect(page.getByText('픽스처 사진 2')).toBeVisible();
+    await expect(page.getByText('픽스처 사진 3')).toHaveCount(0);
+    await expect(page.getByText('픽스처 영상 1')).toBeVisible();
+
+    // Folding hides the media again.
+    await postHeader.click();
+    await expect(page.getByAltText('입양홍보 이미지 1')).toHaveCount(0);
+    await expect(page.getByText(/^태그: /)).toHaveCount(0);
+  });
 });

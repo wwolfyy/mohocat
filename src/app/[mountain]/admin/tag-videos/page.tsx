@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideoService } from '@/services';
 import { parseRecordingDateFromTitle } from '@/utils/dateParser';
 import { parseDate } from '@/utils/parse-date';
@@ -9,6 +9,8 @@ import Button from '@/components/ui/Button';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
+import { useAuth } from '@/hooks/useAuth';
+import { authHeader } from '@/lib/auth/authHeader';
 import {
   useMediaListController,
   useDateAutoParse,
@@ -75,6 +77,10 @@ const sortDate = (video: AdminVideo, sortBy: VideoSortKey): Date | null => {
 export default function TagVideosPage() {
   const mountainId = useMountain();
 
+  // Signed-in user — the YouTube API routes are gated on 'manage-video', so every
+  // call below carries this user's ID token.
+  const { user } = useAuth();
+
   // Service references
   const videoService = getVideoService(mountainId);
 
@@ -82,8 +88,10 @@ export default function TagVideosPage() {
   const dialog = useDialog();
 
   // Read side: shared media-list controller (load/selection/filter/sort/pagination)
+  // `includeUnavailable`: the CMS is where a video deleted on YouTube gets dealt
+  // with, so unlike the public 영상첩 it must still see those records (2026-08-01).
   const load = useCallback(async () => {
-    const allVideos = await videoService.getAllVideos();
+    const allVideos = await videoService.getAllVideos({ includeUnavailable: true });
     return allVideos.map((video) => ({ ...video, processingStatus: null }) as AdminVideo);
   }, [videoService]);
 
@@ -105,6 +113,30 @@ export default function TagVideosPage() {
     dialog,
   });
 
+  // Records whose video is gone from YouTube, or is private — labelled by the
+  // 동기화 flow's availability check (2026-08-01). Deleting is deliberate: the
+  // record carries cat tags and 설명 that exist nowhere else.
+  const missingVideos = c.items.filter((v) => v.youtubeStatus === 'missing');
+  const privateVideos = c.items.filter((v) => v.youtubeStatus === 'private');
+  const [deletingMissing, setDeletingMissing] = useState(false);
+
+  const handleDeleteMissing = async () => {
+    if (missingVideos.length === 0) return;
+    if (!(await dialog.confirm(t.availability.deleteConfirm(missingVideos.length)))) return;
+
+    try {
+      setDeletingMissing(true);
+      await videoService.batchDeleteVideos(missingVideos.map((v) => v.id));
+      await c.reload();
+      await dialog.alert(t.availability.deleted(missingVideos.length));
+    } catch (err: any) {
+      console.error('Error deleting missing video records:', err);
+      await dialog.alert(t.availability.deleteFailed(err.message));
+    } finally {
+      setDeletingMissing(false);
+    }
+  };
+
   // Cat selector states (selection itself lives inside the shared CatSelectorModal;
   // the dead 'youtube-batch' context — never set by any trigger — was dropped)
   const [showCatSelector, setShowCatSelector] = useState(false);
@@ -125,14 +157,55 @@ export default function TagVideosPage() {
   const [savingPlaylists, setSavingPlaylists] = useState(false);
 
   // 자동 날짜 인식: shared loop machinery (title/description date-source)
+  /**
+   * YouTube IDs whose parsed date landed on YouTube, collected during a run so the
+   * Firestore sync afterwards knows which videos to re-read.
+   */
+  const autoParsedYoutubeIds = useRef<string[]>([]);
+
   const autoParse = useDateAutoParse<AdminVideo>({
     items: c.items,
     setItems: c.setItems,
     needsDate: (video) => !video.createdTime,
     parse: (video) => parseRecordingDateFromTitle(video.description || video.id || ''),
     label: (video) => video.description || video.id,
+    // ⚠️ Writes to YouTube, NOT straight to Firestore. Video data is YouTube-owned: a
+    // Firestore-only write does not survive, because refresh-video-metadata re-reads
+    // YouTube's recordingDetails and nulls createdTime when YouTube has none — so the
+    // next sync (or any other save on that video) erased every date parsed here.
+    // Same shape as batchUpdateDate: PUT per video, then one Firestore sync at the end.
     applyUpdate: async (video, date) => {
-      await videoService.updateVideo(video.id, { createdTime: date });
+      const youtubeVideoId = video.youtubeId || video.id;
+
+      // parseRecordingDateFromTitle builds its Date from an ISO string with no `Z`, so it
+      // is LOCAL time: calling .toISOString() on it moves the calendar day backwards in
+      // any timezone ahead of UTC (2024-03-15 00:00 KST → 2024-03-14T15:00Z). Send the
+      // calendar date the operator sees, at UTC midnight — the convention
+      // saveVideoMetadata already uses for the per-video 촬영일 field.
+      const calendarDate = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+      ].join('-');
+
+      const response = await fetch('/api/update-youtube-video', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await authHeader(user)),
+        },
+        body: JSON.stringify({
+          videoId: youtubeVideoId,
+          updates: { createdTime: `${calendarDate}T00:00:00.000Z` },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update YouTube video');
+      }
+
+      autoParsedYoutubeIds.current.push(youtubeVideoId);
     },
     mergeParsedDate: (video, date) => ({ ...video, createdTime: date }),
   });
@@ -147,7 +220,9 @@ export default function TagVideosPage() {
       setLoadingPlaylists(true);
       console.log('Loading playlists...');
 
-      const response = await fetch('/api/manage-playlists?action=list_playlists');
+      const response = await fetch('/api/manage-playlists?action=list_playlists', {
+        headers: await authHeader(user),
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch playlists');
       }
@@ -178,7 +253,29 @@ export default function TagVideosPage() {
 
     try {
       c.setError(null);
+      autoParsedYoutubeIds.current = [];
       const report = await autoParse.run();
+
+      // Pull the dates YouTube just accepted back into Firestore. Without this the
+      // parsed dates live only on YouTube until the next sync — the mirror image of the
+      // bug this replaced (Firestore-only writes that YouTube later erased).
+      if (autoParsedYoutubeIds.current.length > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // YouTube propagation
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await authHeader(user)),
+          },
+          body: JSON.stringify({ videoIds: autoParsedYoutubeIds.current }),
+        });
+
+        if (!refreshResponse.ok) {
+          console.warn('Failed to sync auto-parsed dates to Firestore');
+        }
+
+        await c.reload();
+      }
 
       let resultMessage = `${t.alerts.doneHeader}\n\n`;
       resultMessage += `${t.alerts.successLine(report.successCount)}\n`;
@@ -261,8 +358,105 @@ export default function TagVideosPage() {
     setSelectedPlaylists(newSelectedPlaylists);
   };
 
-  // Save playlist changes for the selected video
+  /**
+   * Apply the ticked playlists to every selected video (batch context).
+   *
+   * **Set semantics, matching 태그 저장:** each video ends up in exactly the ticked
+   * playlists and is removed from the rest — which is also what the route's
+   * `batch_update_playlists` action does per video, since it diffs against that video's
+   * own current membership. Because that removal is destructive and the modal can't show
+   * a meaningful "current" state for a mixed selection, it confirms first.
+   */
+  const saveBatchPlaylistChanges = async () => {
+    const targets = c.items.filter(
+      (video) => c.selectedIds.has(video.id) && video.videoType === 'youtube'
+    );
+
+    if (targets.length === 0) {
+      await dialog.alert(t.alerts.noYoutubeSelectedForPlaylists);
+      return;
+    }
+
+    if (
+      !(await dialog.confirm(t.alerts.batchPlaylistConfirm(targets.length, selectedPlaylists.size)))
+    )
+      return;
+
+    try {
+      setSavingPlaylists(true);
+      const playlistIds = Array.from(selectedPlaylists);
+      const succeededIds: string[] = [];
+      let failCount = 0;
+
+      // Sequential on purpose: the same one-at-a-time shape as the other batch
+      // mutations, so a single video's failure doesn't abandon the rest.
+      for (const video of targets) {
+        const youtubeVideoId = video.youtubeId || video.id;
+        try {
+          const response = await fetch('/api/manage-playlists', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(await authHeader(user)),
+            },
+            body: JSON.stringify({
+              action: 'batch_update_playlists',
+              videoId: youtubeVideoId,
+              playlistIds,
+            }),
+          });
+
+          if (response.ok) {
+            succeededIds.push(youtubeVideoId);
+          } else {
+            failCount++;
+            const errorData = await response.json();
+            console.error(`Failed to update playlists for ${youtubeVideoId}:`, errorData.error);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Exception updating playlists for ${youtubeVideoId}:`, error);
+        }
+      }
+
+      if (succeededIds.length > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // YouTube propagation
+        const refreshResponse = await fetch('/api/refresh-video-metadata', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await authHeader(user)),
+          },
+          body: JSON.stringify({ videoIds: succeededIds }),
+        });
+
+        if (!refreshResponse.ok) {
+          console.warn('Failed to sync batch playlist changes to Firestore');
+        }
+      }
+
+      await c.reload();
+      setShowPlaylistSelector(false);
+      await dialog.alert(t.alerts.batchPlaylistDone(succeededIds.length, failCount));
+    } catch (error) {
+      console.error('Error saving batch playlist changes:', error);
+      await dialog.alert(
+        t.alerts.playlistSaveFailed(error instanceof Error ? error.message : '알 수 없는 오류')
+      );
+    } finally {
+      setSavingPlaylists(false);
+    }
+  };
+
+  // Save playlist changes — the modal is opened from two places, and until 2026-07-26 this
+  // always acted on `selectedVideo`, so the batch entry point silently applied to the one
+  // video open in the edit form (or did nothing at all).
   const savePlaylistChanges = async () => {
+    if (playlistSelectorContext === 'batch') {
+      await saveBatchPlaylistChanges();
+      return;
+    }
+
     if (!ytm.selectedVideo || ytm.selectedVideo.videoType !== 'youtube') {
       return;
     }
@@ -283,6 +477,7 @@ export default function TagVideosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(await authHeader(user)),
         },
         body: JSON.stringify({
           action: 'batch_update_playlists',
@@ -323,6 +518,7 @@ export default function TagVideosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(await authHeader(user)),
         },
         body: JSON.stringify({
           videoIds: [videoId],
@@ -443,6 +639,40 @@ export default function TagVideosPage() {
           </Button>
         </div>
       </div>
+
+      {/* Videos that vanished from YouTube. Only rendered once the availability
+          check has actually found some, so this is invisible in the normal case. */}
+      {(missingVideos.length > 0 || privateVideos.length > 0) && (
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+          {missingVideos.length > 0 && (
+            <>
+              <h3 className="font-semibold text-amber-900">
+                ⚠️ {t.availability.missingHeading(missingVideos.length)}
+              </h3>
+              <p className="mt-1 text-sm text-amber-800">{t.availability.missingExplain}</p>
+              <ul className="mt-2 list-inside list-disc text-sm text-amber-800">
+                {missingVideos.map((v) => (
+                  <li key={v.id}>{v.title || v.youtubeId}</li>
+                ))}
+              </ul>
+              <Button
+                size="sm"
+                variant="danger"
+                className="mt-3"
+                onClick={handleDeleteMissing}
+                disabled={deletingMissing}
+              >
+                🗑️ {deletingMissing ? t.availability.deleting : t.availability.deleteRecords}
+              </Button>
+            </>
+          )}
+          {privateVideos.length > 0 && (
+            <p className={`text-sm text-amber-800 ${missingVideos.length > 0 ? 'mt-3' : ''}`}>
+              {t.availability.privateNote(privateVideos.length)}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Statistics */}
       <MediaStatsCards
@@ -687,6 +917,11 @@ export default function TagVideosPage() {
               type="button"
               onClick={() => {
                 setPlaylistSelectorContext('batch');
+                // A mixed selection has no single "current" membership to pre-tick, and
+                // inheriting the last single-video selection would be misleading — the
+                // save is set-semantics, so start from nothing and let the confirm spell
+                // out what gets removed.
+                setSelectedPlaylists(new Set());
                 setShowPlaylistSelector(true);
               }}
               disabled={loadingPlaylists}
@@ -1251,10 +1486,13 @@ export default function TagVideosPage() {
               <button
                 onClick={() => {
                   setShowPlaylistSelector(false);
-                  // Reset selected playlists to original state
-                  const videoPlaylists = ytm.selectedVideo?.allPlaylists || [];
-                  const preSelectedPlaylists = new Set(videoPlaylists.map((p) => p.id));
-                  setSelectedPlaylists(preSelectedPlaylists);
+                  // Reset the ticks: back to the video's real membership for the single
+                  // context, or to nothing for a batch (which never had one).
+                  const videoPlaylists =
+                    playlistSelectorContext === 'batch'
+                      ? []
+                      : ytm.selectedVideo?.allPlaylists || [];
+                  setSelectedPlaylists(new Set(videoPlaylists.map((p) => p.id)));
                 }}
                 disabled={savingPlaylists}
                 className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm disabled:opacity-50"

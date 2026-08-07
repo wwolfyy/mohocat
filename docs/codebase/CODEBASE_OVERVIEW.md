@@ -26,25 +26,25 @@ removed; Terraform is parked under `_infra/_terraform/` as a future blueprint.
 
 ## Tech Stack
 
-| Layer             | Technology                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| Framework         | Next.js 14 (App Router, ISR/SSR), TypeScript (strict)                                 |
-| UI                | React 18, Tailwind CSS, Heroicons, react-icons                                        |
-| Map               | Leaflet + react-leaflet; react-zoom-pan-pinch (legacy image-map interactions)         |
-| Forms / grids     | react-hook-form; react-datasheet-grid + @dnd-kit (admin cat grid)                     |
-| Data fetching     | Live Firestore via service layer; SWR + axios on some client views                    |
-| Auth (client)     | Firebase Auth (`firebase` SDK) — email/password, phone (SMS), Kakao OIDC              |
-| Auth (server)     | Firebase Admin SDK (`firebase-admin`)                                                 |
-| Database          | Firestore (read live through the service layer)                                       |
-| File storage      | Firebase Storage (images/video thumbnails, signed URLs); CORS configured              |
-| Email             | Nodemailer (contact/동참 notifications via an API route)                              |
-| Uploads           | busboy (multipart parsing in upload routes)                                           |
-| Video integration | YouTube Data API v3 (`googleapis`)                                                    |
-| Build             | `fetch-static-assets.js` (pull thumbnails/about-photos into `public/`) → `next build` |
-| Testing           | Vitest (`tests/smoke/` structural smoke suite)                                        |
-| Tooling           | ESLint, Prettier, Husky + lint-staged, dotenv                                         |
-| Deploy target     | **Vercel only** (Git integration: Production = `main`, Preview = `dev`)               |
-| IaC               | Terraform — **parked** under `_infra/_terraform/` (not the live path)                 |
+| Layer             | Technology                                                                    |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Framework         | Next.js 14 (App Router, ISR/SSR), TypeScript (strict)                         |
+| UI                | React 18, Tailwind CSS, Heroicons, react-icons                                |
+| Map               | Leaflet + react-leaflet; react-zoom-pan-pinch (legacy image-map interactions) |
+| Forms / grids     | react-hook-form; react-datasheet-grid + @dnd-kit (admin cat grid)             |
+| Data fetching     | Live Firestore via service layer; SWR + axios on some client views            |
+| Auth (client)     | Firebase Auth (`firebase` SDK) — email/password, phone (SMS), Kakao OIDC      |
+| Auth (server)     | Firebase Admin SDK (`firebase-admin`)                                         |
+| Database          | Firestore (read live through the service layer)                               |
+| File storage      | Firebase Storage (images/video thumbnails, signed URLs); CORS configured      |
+| Email             | Nodemailer (contact/동참 notifications via an API route)                      |
+| Uploads           | busboy (multipart parsing in upload routes)                                   |
+| Video integration | YouTube Data API v3 (`googleapis`)                                            |
+| Build             | `fetch-static-assets.js` (pull cat thumbnails into `public/`) → `next build`  |
+| Testing           | Vitest (`tests/smoke/` structural smoke suite)                                |
+| Tooling           | ESLint, Prettier, Husky + lint-staged, dotenv                                 |
+| Deploy target     | **Vercel only** (Git integration: Production = `main`, Preview = `dev`)       |
+| IaC               | Terraform — **parked** under `_infra/_terraform/` (not the live path)         |
 
 ## Top-Level Structure
 
@@ -76,7 +76,7 @@ mohocat/
 │   ├── maintenance/              # fetch-static-assets.js (build-time asset pull)
 │   ├── auth/ , dev/              # OAuth/Kakao + local dev helpers
 ├── tests/smoke/                  # Vitest structural smoke suite
-├── public/                       # Static assets (build-fetched thumbnails/about-photos, icons)
+├── public/                       # Static assets (build-fetched cat thumbnails, icons)
 ├── docs/                         # codebase/, handoff/, planning/, design/, manuals/, compliance/, archive/
 ├── log/                          # DEBUG_LOG.md, FEATURE_MOD_LOG.md, doc_updates.log
 ├── _infra/_terraform/            # Parked Terraform blueprint (underscore = stale)
@@ -95,7 +95,8 @@ mohocat/
   account deletion, signed URLs, revalidate).
 - `package.json` `build` / `vercel-build` — both run
   `node scripts/maintenance/fetch-static-assets.js && next build`. The pre-build step pulls
-  cat thumbnails / about-photos from Firebase Storage into `public/`.
+  cat thumbnails from Firebase Storage into `public/`. (About-photos stopped being baked
+  on 2026-08-02 — they serve live from Storage, keyed on the filename in the CMS record.)
 - **Deploy = `git push`** — Vercel Git integration builds and hosts. There is no deploy
   command, Dockerfile, or CI deploy workflow.
 
@@ -108,7 +109,9 @@ All ten areas have a Layer 2 deep-dive document in this folder:
   browser, and server-side (Admin SDK) cat reads baked into the ISR landing.
 - **[authentication](authentication.md)** — Firebase Auth + Kakao OIDC + phone/email login;
   `AuthProvider` context; account linking/unlinking; reauth, email change, idle-timeout, and
-  account-deletion flows.
+  account-deletion flows. **Read it before touching anything in this area**: it traces every
+  flow event-by-event and tabulates what each one writes, including the two facts that drive
+  the rest — signup is **phone-first**, and an **Auth account is not a membership**.
 - **[permissions-and-roles](permissions-and-roles.md)** — RBAC (`admin`, `butler-ground`,
   `butler-internet`, `viewer`); `PermissionService`, `RoleAssignmentService`,
   `permission-config`, `usePermissions`/`useResourceAccess`; `requireApiPermission` guard;
@@ -211,10 +214,13 @@ graph LR
 
 ## External Dependencies
 
-- **Firebase** (per mountain) — Firestore (database), Authentication, Storage. Configured via
+- **Firebase** — **one project serves every mountain** (Firestore, Authentication, Storage);
+  tenants are separated by a `mountainId` field on content docs, not by project. Configured via
   `NEXT_PUBLIC_FIREBASE_*` and `SERVICE_ACCOUNT_KEY` (Admin SDK) env vars.
-- **`mountain-cats-users` Firebase project** — Centralized authentication / user-management
-  project shared across mountains, declared in `mountains.json` `_meta.centralUserService`.
+  _(Corrected 2026-08-02: this previously read "per mountain", and listed a separate
+  **`mountain-cats-users`** central user-management project. That scaffolding — and its
+  `mountains.json` `_meta.centralUserService` entry — was **removed in the multi-tenant M2
+  phase**; neither exists in `src/` or `config/` today.)_
 - **Kakao OIDC** — Korean social login. Configured via `NEXT_PUBLIC_KAKAO_*` env vars.
 - **YouTube Data API v3** — Playlist management, video upload, metadata sync. Refresh-token
   OAuth flow (`YOUTUBE_*`, `NEXT_PUBLIC_YOUTUBE_API_KEY`).

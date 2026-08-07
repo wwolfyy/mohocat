@@ -21,7 +21,9 @@ import { useEffect, useId, useRef, useState } from 'react';
  * 3. **Back-button / swipe-back** — each layer pushes a synthetic history entry
  *    on open so the browser/OS back gesture closes the overlay rather than
  *    navigating away from the underlying page. The entry is popped on normal
- *    close (X button, backdrop) so the history stack stays clean.
+ *    close (X button, backdrop) so the history stack stays clean. A layer that
+ *    is worth addressing (a specific cat, say) can give that entry a `historyUrl`
+ *    and become shareable/reloadable for free — see the option's doc below.
  */
 
 const layerStack: string[] = [];
@@ -56,6 +58,20 @@ interface LayerHandlers {
   onEscape?: () => void;
   onArrowLeft?: () => void;
   onArrowRight?: () => void;
+  /**
+   * Optional URL to put on this layer's synthetic history entry (e.g.
+   * `/pages/cats?cat=<id>`), which makes the overlay shareable and survive a
+   * reload without any extra history bookkeeping: the entry this hook already
+   * pushes carries the URL, and the `history.back()` it already issues on close
+   * restores the previous one.
+   *
+   * Omit it for overlays with nothing to address (lightboxes, players) — the
+   * entry then keeps the current URL, which is the existing behaviour.
+   *
+   * Read once, when the entry is pushed; changing it on an open layer does
+   * nothing (the layer would have to close and reopen to re-push).
+   */
+  historyUrl?: string;
 }
 
 /**
@@ -83,8 +99,23 @@ export function useModalLayer(isOpen: boolean, handlers: LayerHandlers): number 
     setZIndex(BASE_Z_INDEX + (layerStack.length - 1) * Z_INDEX_STEP);
 
     // Push a synthetic history entry so the browser/OS back button closes this
-    // overlay instead of navigating away from the underlying page.
-    history.pushState({ mohocat_modal: id }, '');
+    // overlay instead of navigating away from the underlying page. When the
+    // layer supplied a `historyUrl`, that entry also addresses the overlay, so
+    // the URL is shareable and a reload reopens it.
+    //
+    // If the current URL is *already* the one this layer addresses — a forward
+    // navigation back into the overlay — adopt that entry rather than pushing a
+    // duplicate of it. Claiming it still lets the close path below pop back to
+    // the page underneath, which a plain push would not: it would strand an
+    // identical URL behind the overlay.
+    const { historyUrl } = handlersRef.current;
+    const isCurrentUrl =
+      historyUrl != null && new URL(historyUrl, location.href).href === location.href;
+    if (isCurrentUrl) {
+      history.replaceState({ mohocat_modal: id }, '');
+    } else {
+      history.pushState({ mohocat_modal: id }, '', historyUrl);
+    }
 
     // Register this layer's close callback for popstate dispatch.
     layerEscapeHandlers.set(id, () => handlersRef.current.onEscape?.());

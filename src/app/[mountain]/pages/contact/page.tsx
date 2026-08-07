@@ -59,7 +59,16 @@ export default function Contact() {
         message: '',
       });
 
-      setStatusMessage('메시지가 전송되었습니다. 감사합니다!');
+      // The submission is SAFE either way — it is already in Firestore and visible in
+      // 동참 management. So a failed notification must not read as an error and must not
+      // invite a resubmit, which would duplicate the record (the very thing the route's
+      // best-effort email design exists to avoid). It only sets expectations about the
+      // reply, and stays on the non-error styling.
+      setStatusMessage(
+        result.emailDelivered === false
+          ? '메시지가 접수되었습니다. 다만 알림 전달에 문제가 있어 답변이 늦어질 수 있어요.'
+          : '메시지가 전송되었습니다. 감사합니다!'
+      );
     } catch (error) {
       console.error('Error submitting form:', error);
       setIsError(true);

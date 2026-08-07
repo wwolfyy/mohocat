@@ -1,43 +1,22 @@
 {
   "_meta": {
     "version": "3.0",
-    "lastUpdated": "2026-07-19"
+    "lastUpdated": "2026-08-02"
+  },
+  "_shared": {
+    "youtube": {
+      "adoptionPlaylistId": "PL3DBzcr-rpCG8QxBiLgcSZtgD9LoXjY58"
+    }
   },
   "geyang": {
     "id": "geyang",
     "name": "계양산",
-    "description": "계양산에서 살고 있는 고양이들의 이야기",
+    "description": "인천 계양구",
     "adminEmail": "jaesangpark@gmail.com",
     "domains": [
       "geyangsan.mohocats.org"
     ],
     "storagePrefix": "",
-    "about": {
-      "title": "계양산에서 만나는 고양이 이야기",
-      "subtitle": "계양산에서 만나는 특별한 이야기들",
-      "mainContent": "산냥이집냥이는 길에서 먹이를 찾아 올라오거나, 전 주인에게 유기당하거나, 혹은 산에서 태어나는 등의 사연으로 산에 살고 있거나 살았던 고양이들의 이야기입니다.",
-      "mainPhoto": {
-        "filename": "about-main-geyang.jpg",
-        "caption": "2020년 1월 19일 해질 무렵. 추위가 좀 풀린 틈을 타 같이 햇볕을 쬐고 있는 계양산 최고의 절친 아롱이(오른쪽)와 개똥이.",
-        "altText": "개똥이와 아롱이",
-        "localPath": "/images/about-photos/geyang/about-main-geyang.jpg"
-      },
-      "sections": [
-        {
-          "title": "우리의 미션",
-          "content": "계양산의 고양이들이 안전하고 행복하게 살 수 있도록 보호하고 돌보며, 그들의 이야기를 사람들과 나누는 것이 우리의 목표입니다."
-        },
-        {
-          "title": "활동 내용",
-          "content": "정기적인 급식, 의료 지원, 중성화 수술, 그리고 입양 연결 등을 통해 계양산 고양이들의 삶의 질을 향상시키고 있습니다."
-        }
-      ]
-    },
-    "theme": {
-      "primaryColor": "#ffbc00",
-      "secondaryColor": "#059669",
-      "accentColor": "#34d399"
-    },
     "features": {
       "videoAlbum": true,
       "photoAlbum": true,
@@ -47,7 +26,8 @@
     "social": {
       "youtubeChannelId": "UC1g-XZS4wwyUu7JHDEpB0jw",
       "instagramHandle": "",
-      "facebookPage": ""
+      "facebookPage": "",
+      "youtubePlaylistId": "PL3DBzcr-rpCGQtNw2dgC8cJcDTjIEOSxa"
     },
     "map": {
       "clustering": false,
@@ -88,22 +68,6 @@
       "manisan.mohocats.org"
     ],
     "storagePrefix": "mountains/manisan/",
-    "about": {
-      "title": "마니산에서 만나는 고양이 이야기",
-      "subtitle": "마니산에서 만나는 특별한 이야기들",
-      "mainContent": "마니산 산냥이집냥이는 강화도 마니산에 살고 있거나 살았던 고양이들의 이야기입니다.",
-      "sections": [
-        {
-          "title": "우리의 미션",
-          "content": "마니산의 고양이들이 안전하고 행복하게 살 수 있도록 보호하고 돌봅니다."
-        }
-      ]
-    },
-    "theme": {
-      "primaryColor": "#0ea5e9",
-      "secondaryColor": "#0369a1",
-      "accentColor": "#38bdf8"
-    },
     "features": {
       "videoAlbum": true,
       "photoAlbum": true,
@@ -111,9 +75,10 @@
       "adminPanel": true
     },
     "social": {
-      "youtubeChannelId": "",
+      "youtubeChannelId": "UC1g-XZS4wwyUu7JHDEpB0jw",
       "instagramHandle": "",
-      "facebookPage": ""
+      "facebookPage": "",
+      "youtubePlaylistId": "PLVEAQ-0vlkXw"
     },
     "map": {
       "clustering": false,

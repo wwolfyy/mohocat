@@ -3,9 +3,25 @@
 import React, { useState } from 'react';
 import { getAnnouncementService } from '@/services';
 import { cn } from '@/utils/cn';
-import MediaUploadField from '@/components/forms/MediaUploadField';
+import MediaItemList from '@/components/forms/MediaItemList';
+import RecordingDateField from '@/components/forms/RecordingDateField';
+import CatTagSelectField from '@/components/forms/CatTagSelectField';
+import CatSelectorModal from '@/components/CatSelectorModal';
+import ShowInModalToggle from '@/components/forms/ShowInModalToggle';
+import UploadProgressBar from '@/components/forms/UploadProgressBar';
 import { useSimpleContentForm } from '@/components/forms/useSimpleContentForm';
+import { FormLoadingState, FormNotFoundState } from '@/components/forms/FormStates';
 import { useMountain } from '@/components/MountainProvider';
+
+interface NewAnnouncementFormProps {
+  /**
+   * Present ⇒ **edit** that announcement instead of creating one (2026-08-02).
+   * The same composer serves both, so editing gets file pickers, per-file
+   * 제목/설명, the cat selector and 촬영 날짜 — none of which the old URL-only
+   * `EditPostForm` could offer.
+   */
+  postId?: string;
+}
 
 /**
  * 공지사항 composer — admin-authored, publicly listed on /pages/announcements.
@@ -13,25 +29,46 @@ import { useMountain } from '@/components/MountainProvider';
  * primitives (complexity-retirement P2); the 팝업(모달) toggle is this form's
  * extra field and rides along via extraPostData.
  */
-const NewAnnouncementForm = () => {
+const NewAnnouncementForm = ({ postId }: NewAnnouncementFormProps = {}) => {
   const mountainId = useMountain();
   const [showInModal, setShowInModal] = useState(false);
   const announcementService = getAnnouncementService(mountainId);
 
   const form = useSimpleContentForm({
-    imagePathPrefix: 'announcements/images',
     youtubeDefaults: {
       title: '공지사항 동영상',
-      description: '공지사항 동영상',
-      tags: '공지사항',
     },
     createPost: (postData) => announcementService.createPost(postData),
     extraPostData: () => ({ showInModal }),
     onResetExtras: () => setShowInModal(false),
-    successMessage: '공지사항이 성공적으로 작성되었습니다!',
-    errorMessagePrefix: '공지사항 작성 중 오류가 발생했습니다: ',
+    successMessage: postId ? '공지사항이 수정되었습니다!' : '공지사항이 성공적으로 작성되었습니다!',
+    errorMessagePrefix: postId
+      ? '공지사항 수정 중 오류가 발생했습니다: '
+      : '공지사항 작성 중 오류가 발생했습니다: ',
     redirectPath: '/pages/announcements',
+    ...(postId
+      ? {
+          edit: {
+            postId,
+            loadPost: () => announcementService.getPostById(postId),
+            updatePost: (id: string, postData: Record<string, unknown>) =>
+              announcementService.updatePost(id, postData),
+            // The 팝업 toggle is this form's own field, so the hook cannot
+            // prefill it — an edit that skipped this would silently switch the
+            // popup off on every save.
+            onLoadExtras: (post) => setShowInModal(Boolean(post.showInModal)),
+          },
+        }
+      : {}),
   });
+
+  if (form.loadingPost) {
+    return <FormLoadingState />;
+  }
+
+  if (form.postNotFound) {
+    return <FormNotFoundState />;
+  }
 
   return (
     <form onSubmit={form.handleSubmit} className="space-y-4">
@@ -58,75 +95,66 @@ const NewAnnouncementForm = () => {
         />
       </div>
 
-      {/* Modal Toggle */}
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <label className="block font-semibold text-lg">모달 팝업 설정</label>
-            <p className="text-sm text-gray-600 mt-1">
-              이 공지사항을 사용자가 페이지를 방문할 때 팝업으로 표시합니다
-            </p>
-          </div>
-          <div className="flex items-center">
-            <div
-              onClick={() => setShowInModal(!showInModal)}
-              className={cn(
-                'relative inline-flex items-center h-8 w-14 rounded-full cursor-pointer transition-colors duration-200',
-                showInModal ? 'bg-yellow-500' : 'bg-gray-300'
-              )}
-              role="switch"
-              aria-checked={showInModal}
-            >
-              {/* Toggle circle */}
-              <span
-                className={cn(
-                  'inline-block w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform duration-200',
-                  showInModal ? 'translate-x-8' : 'translate-x-1'
-                )}
-              />
-              {/* ON label */}
-              <span
-                className={cn(
-                  'absolute left-1.5 text-xs font-medium transition-opacity duration-200',
-                  showInModal ? 'text-white opacity-100' : 'text-gray-500 opacity-0'
-                )}
-                style={{ fontSize: '10px' }}
-              >
-                ON
-              </span>
-              {/* OFF label */}
-              <span
-                className={cn(
-                  'absolute right-1.5 text-xs font-medium transition-opacity duration-200',
-                  !showInModal ? 'text-gray-600 opacity-100' : 'text-white opacity-0'
-                )}
-                style={{ fontSize: '10px' }}
-              >
-                OFF
-              </span>
-            </div>
-            <label htmlFor="showInModal" className="ml-3 text-sm font-medium text-gray-700">
-              팝업으로 표시
-            </label>
-          </div>
-        </div>
+      <ShowInModalToggle
+        checked={showInModal}
+        onChange={setShowInModal}
+        description="이 공지사항을 사용자가 페이지를 방문할 때 팝업으로 표시합니다"
+        disabled={form.uploading}
+      />
+
+      {/* Per-file media, each with its own 제목/설명. The cat selector sits under
+          the section it tags, and only once there is something to tag. */}
+      <div>
+        <MediaItemList
+          kind="image"
+          items={form.imageItems}
+          onItemsChange={form.handleImageItemsChange}
+          disabled={form.uploading}
+          existing={form.existingImages}
+          onExistingChange={form.setExistingImages}
+        />
+        {/* Keyed on NEW picks only: these tags are applied by the upload
+            strategy, so they reach the files being uploaded now. Media already
+            on the post is re-tagged in 사진 관리, not here. */}
+        {form.imageItems.length > 0 && (
+          <CatTagSelectField
+            id="imageTags"
+            tags={form.selectedImageTags}
+            onOpen={() => form.setShowImageTagSelector(true)}
+            disabled={form.uploading}
+          />
+        )}
       </div>
 
-      <MediaUploadField
-        kind="image"
-        files={form.imageFiles}
-        onFilesChange={form.setImageFiles}
-        urls={form.imageUrls}
-        onUrlsChange={form.setImageUrls}
+      <div>
+        <MediaItemList
+          kind="video"
+          items={form.videoItems}
+          onItemsChange={form.handleVideoItemsChange}
+          disabled={form.uploading}
+          existing={form.existingVideos}
+          onExistingChange={form.setExistingVideos}
+        />
+        {/* New picks only — see the note on the image selector above. */}
+        {form.videoItems.length > 0 && (
+          <CatTagSelectField
+            id="videoTags"
+            tags={form.selectedVideoTags}
+            onOpen={() => form.setShowVideoTagSelector(true)}
+            disabled={form.uploading}
+          />
+        )}
+      </div>
+
+      {/* Sits after both media sections: it is auto-filled from whichever file
+          was picked, so it only makes sense once there is something to pick from. */}
+      <RecordingDateField
+        value={form.createdTime}
+        onChange={form.setCreatedTime}
+        disabled={form.uploading}
       />
 
-      <MediaUploadField
-        kind="video"
-        files={form.videoFiles}
-        onFilesChange={form.setVideoFiles}
-        urls={form.videoUrls}
-        onUrlsChange={form.setVideoUrls}
-      />
+      <UploadProgressBar progress={form.uploadProgress} />
 
       <div className="flex gap-4">
         <button
@@ -138,7 +166,13 @@ const NewAnnouncementForm = () => {
             form.uploading && 'opacity-50 cursor-not-allowed'
           )}
         >
-          {form.uploading ? '작성 중...' : '공지사항 작성'}
+          {form.uploading
+            ? form.isEditing
+              ? '저장 중...'
+              : '작성 중...'
+            : form.isEditing
+              ? '공지사항 저장'
+              : '공지사항 작성'}
         </button>
         <button
           type="button"
@@ -148,6 +182,21 @@ const NewAnnouncementForm = () => {
           취소
         </button>
       </div>
+      <CatSelectorModal
+        isOpen={form.showVideoTagSelector}
+        onClose={() => form.setShowVideoTagSelector(false)}
+        selectedTags={form.selectedVideoTags}
+        onTagsChange={form.setSelectedVideoTags}
+        title="비디오에 등장하는 고양이 선택"
+      />
+
+      <CatSelectorModal
+        isOpen={form.showImageTagSelector}
+        onClose={() => form.setShowImageTagSelector(false)}
+        selectedTags={form.selectedImageTags}
+        onTagsChange={form.setSelectedImageTags}
+        title="이미지에 등장하는 고양이 선택"
+      />
       {form.dialog}
     </form>
   );

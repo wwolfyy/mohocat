@@ -559,10 +559,13 @@ export default function CatGrid() {
           background-color: #fee2e2 !important;
         }
         /* Tint the whole header row (brand-100) so it reads as a header, with a
-           slightly stronger bottom border for a spreadsheet feel. */
+           slightly stronger bottom border (brand-300) for a spreadsheet feel.
+           Via CSS variables because styled-jsx cannot use Tailwind utilities or
+           theme(); the variables are declared in globals.css from the brand ramp,
+           so these follow the palette instead of drifting from it. */
         .dsg-cell-header {
-          background-color: #fef9c3 !important;
-          border-bottom: 2px solid #fde047 !important;
+          background-color: var(--color-brand-100) !important;
+          border-bottom: 2px solid var(--color-brand-300) !important;
         }
       `}</style>
 

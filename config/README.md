@@ -4,16 +4,25 @@ This directory contains configuration files that don't need to be at the project
 
 ## Subdirectories
 
-- **`firebase/`** - Firebase and Google Cloud configurations
-  - `firebase.json` - Firebase project configuration
-  - `firestore.rules` - Firestore security rules
+- **`firebase/`** - Firebase configuration
+  - `firestore.rules` - Firestore security rules (the live copy; `firebase.json` at the repo
+    root points here, and `firebase deploy --only firestore:rules` ships it)
+  - `firestore.indexes.json` - Firestore composite indexes
+  - `storage.rules` - Firebase Storage security rules
   - `cors_fbstorage.json` - Firebase Storage CORS configuration
   - `mountaincats-61543-7329e795c352.json` - Service account key (gitignored)
 
 - **`mountains/`** - Mountain-specific configurations for multi-tenancy
   - `mountains.json` - Mountain metadata and configuration
 
-- **`deployment/`** - Deployment-related configurations
+## Root-Level Files In This Directory
+
+- `permissions.json` - Role → permission matrix and per-mountain admin/default-role settings
+- `media_control.json` - Media-upload rules for the 집사톡 composer (one video / one photo per
+  post). **Deployment-wide, not per-mountain**, and **static** — changing it needs a redeploy.
+  That is deliberate: the setting spans every mountain, so a runtime CMS toggle would let one
+  mountain's admin reconfigure the others. Read via `src/utils/mediaControl.ts`, which validates
+  and throws on a malformed file. Rationale: `docs/planning/PROJECT_PLAN.md` §10d (D2).
 
 ## Root-Level Configuration Files
 

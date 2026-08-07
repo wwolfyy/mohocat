@@ -7,7 +7,7 @@
 > testing) and their status in one place.
 >
 > **Companion docs:**
-> [`docs/handoff/2026-06-21-kickoff-3.md`](../handoff/2026-06-21-kickoff-3.md)
+> [`docs/handoff/2026-06-21-kickoff-3.md`](../handoff/archive/2026-06-21-kickoff-3.md)
 > (orientation — read first) ·
 > [`design.md`](../design/design.md) (design source-of-truth) ·
 > [`mohocat-app-redesign-plan.md`](../design/mohocat-app-redesign-plan.md) +
@@ -23,31 +23,46 @@
 
 ---
 
-## 1. Snapshot (as of 2026-07-10)
+## 1. Snapshot (as of 2026-08-03)
 
-| Workstream                                 | Status            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Landing redesign (Phases 0–2)              | `[x]` done        | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| App redesign — A (Modals)                  | `[x]` done        | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| App redesign — B (Album pages)             | `[x]` done        | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| App redesign — D (Localization)            | `[x]` done        | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| App redesign — C (other pages)             | `[x]` done        | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴 — **DONE 2026-07-03** (butler surfaces de-gradient-ified, `border-yellow-500` dropped, English empty states → 해요체, submits → shared `<Button>`, focus rings → brand). Cross-cutting public/auth button convergence closed **2026-07-10** (§12.2). Auth-gated butler list/pagination verifications still owed under §4.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Redesign A4 (live-verification)            | `[~]` blocked     | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **Functional: 입양홍보 page missing**      | `[x]` done        | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **Functional: 동참 form end-to-end**       | `[x]` done        | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **Deployment-target cleanup**              | `[x]` done        | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **Perf: bake the data layer**              | `[x]` done        | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Mobile UX optimization**                 | `[~]` in progress | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled; nav/modals/albums/forms/content audited. **Pass 2 (2026-07-05):** S22 map bugs, portrait-only map, static clustering. **Off-plan (2026-07-08):** lightbox pinch-to-zoom, back-button/swipe-back modal fix, page-wide UI scale reduction. **Device-verified (S22, 2026-07-10):** map zoom/scroll/quirks + touch-target sweep closed. **Off-plan (2026-07-10):** hamburger closes on route/sign-in, mobile logout modal actually logs out, mypage edit-button layout, login/logout menu-pill centering, landscape rotate-notice GIF fix. **Device-verified (S22, 2026-07-11):** map re-fit on resize. **Remaining:** mobile perf not started; sign-in-gated surfaces partially touched (login/logout/mypage fixed) but not fully audited.                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **Firebase Storage → Seoul bucket**        | `[x]` done        | Migrated from `us-central1` to `asia-northeast3` (Seoul) to cut image latency for Korean users. New bucket `mountaincats-61543`; files transferred via gsutil; Firestore URL rewrite script run against all 6 collections; `fetch-static-assets.js` reads bucket from env var; `generate-signed-url` hardcoded fallback removed. See `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Admin desktop cleanup**                  | `[~]` in progress | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the disabled-link feature stubs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Admin mobile optimization**              | 🚧 placeholder    | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Codebase health / tech-debt                | `[~]` in progress | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/2026-06-29-handoff-12.md). **Complexity retirement: EXECUTED 2026-07-19** (P0–P6 — forms + admin editors on shared primitives, alerts → Modal; §7 entry below). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation; owner-owed P5.4 manual YouTube pass.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Compliance / legal                         | `[x]` done        | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed (accepted, out of workstream):** professional legal review before scaling; phone/Kakao signup consent; security audit; Kakao scope verification.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Multi-tenant hardening                     | `[~]` in progress | §9 — make the 2nd-mountain path real. **M1–M4 + M5.1 + M5.2 done & committed; M5.3 audit done (docs-only).** M1–M4 (`…`→`b83a112`, incl. the verified 99-doc prod backfill) → **M5.1 `d4a0bb2`** scoped reads + composite indexes → **M5.2 `47d0f3d`** per-mountain role model (map keyed by `mountainId`) + mountain-aware rules (`test:rules` 11/11; e2e 116/13/0) → **M5.3 route audit (2026-07-23)** — all 21 API routes verified: no leak-by-omission (content routes tenant-scoped, identity/matrix routes central-by-design; only residual cross-tenant surface = the shared YouTube channel, non-Firestore/deferred; a pre-existing 7-ungated-route auth gap logged as an open thread) → **M5.4a stub tenant + M5.4b isolation e2e (2026-07-23)** — `manisan` added to `mountains.json` (`hidden: true`) + seeded; two-tenant isolation specs written (api Host-scoped reads + mountain-scoped authz; public rendered content); full e2e 125/13/0. **M5 is code-complete.** 🔑 **Owner-gated prod cutover is ORDER-CRITICAL:** see the cutover runbook (snapshot → migrate → indexes → promote → rules). ⚠️ CI not yet updated for `test:rules` (owner-flagged, fresh session). **Next = owner-gated rules deploy + CI wiring.** |
-| **Data protection / backups**              | `[x]` done        | **Not a numbered §** — did not exist before 2026-07-20; built after M4's backfill ran against prod with no snapshot and no PITR. **PITR enabled** (7-day) + **weekly** backup schedule + `npm run backup:firestore` / `import-firestore.js` for local off-Google dumps (**round-trip verified lossless**). Weekly-not-daily (meshes with PITR's window) and no-GCS-bucket (second PII store) are deliberate, reasoning recorded. Standing rule: **snapshot before any script writes to prod**, wired into the refactor plan's M6. Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Testing & quality gates                    | `[x]` done        | §10 — **Main plan COMPLETE + merged to `main` (PR #7, 2026-07-16).** Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + all main-plan suites — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Phase 7 flake audit green (local 3× + CI green on PR #7 and pushes). **Branch protection enforced** — `e2e` is a required status check on `main` (protect-main ruleset + classic protection). Remaining owner action: `firebase deploy --only firestore:rules` for prod parity.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **입양홍보 posts + adoption/modal polish** | `[x]` done        | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Admin manual / operator docs**           | `[x]` started     | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + `docs/manuals/deployment/new-mountain-setup.md` (🚧 provisioning placeholder).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+> ⚠️ **Audited against the code on 2026-08-02, and seven entries were wrong** — six unticked
+> boxes described work finished weeks earlier (§7 API-route auth + RBAC drift, §7a's static-data
+> seam, §9's two config-consistency items and theme wiring, §10's four testing candidates), and
+> §5's "급식소 관리 is a disabled stub" was stale in a way that would have misled: its
+> neighbouring §7 note claimed `points` is `write: if false` with no live writer, when the 급식소
+> CMS writes it through the client SDK under a `manage-canteen` rule. Each is now ticked with a
+> note on where it actually closed. 🔑 **A plan entry is a claim about the code, and claims rot —
+> verify before scheduling, and tick the box in the same change that does the work.**
+
+| Workstream                                     | Status                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing redesign (Phases 0–2)                  | `[x]` done                  | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| App redesign — A (Modals)                      | `[x]` done                  | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| App redesign — B (Album pages)                 | `[x]` done                  | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| App redesign — D (Localization)                | `[x]` done                  | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| App redesign — C (other pages)                 | `[x]` done                  | Brand audit of about/공지/FAQ/동참/입양홍보/집사메뉴 — **DONE 2026-07-03** (butler surfaces de-gradient-ified, `border-yellow-500` dropped, English empty states → 해요체, submits → shared `<Button>`, focus rings → brand). Cross-cutting public/auth button convergence closed **2026-07-10** (§12.2). Auth-gated butler list/pagination verifications still owed under §4.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Redesign A4 (live-verification)                | `[~]` blocked               | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Functional: 입양홍보 page missing**          | `[x]` done                  | **§11** — built the adoptable-cats gallery (`Cat.adoptable` flag + admin tagging + `/pages/adoption`); all 404 entry points resolve. Browser-verified 2026-06-26 (gallery + CatInfo badge + admin badge/toggle).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Functional: 동참 form end-to-end**           | `[x]` done                  | **§11** — Variant A shipped 2026-06-28: `POST /api/contact` (ID-token verify → Admin SDK write → SMTP email to `adminEmail`); form repointed at the route; `contacts` rule tightened to `create: if false` + deployed; Gmail SMTP vars in `.env` + Vercel. Local end-to-end verified (Firestore write + admin tab + email). **2026-08-06:** the sending account changed and is **verified live** (From header confirmed on a real submission); `emailDelivered` is now surfaced to the visitor **and** the operator (⚠️ 미전송 badge); `npm run smtp:verify` checks a credential without sending; and a harness defect was fixed — the e2e suite had been sending **real** email to the production `adminEmail`, two per run.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Deployment-target cleanup**                  | `[x]` done                  | **§7** — Vercel-only (IaC: `infra/terraform/`). **Phase 1+2** removed Cloud Run / home-server / Firebase-Hosting / Docker / static-export / functions; trimmed `firebase.json`; aligned `build`; dropped `/api/health` + Firebase `staging` alias. **Phase 3** (2026-06-27) removed dead permission routes + `MIGRATION_EXAMPLE.ts` + the Cloud Storage static-data push path, refreshed stale comments/docs. Static-data Half B parked for §7a. ([`phase3-cleanup-plan.md`](./completed/phase3-cleanup-plan.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Perf: bake the data layer**                  | `[x]` done                  | **§7a** — cats now read server-side via the Admin SDK + baked into the home & adoption Server Components (ISR `revalidate=3600`, single-sourced); on-demand `revalidatePath` on admin cat-edits. Landing avatars + galleries have **zero client Firestore queries** (browser-verified; ISR confirmed via `next build`). Follow-up **done 2026-06-30**: dead static-data export seam removed (`saveStaticDataJson` + `update:*` scripts + exporters + JSON artifacts; `fetch:assets` re-verified green) — tasks-doc §6. **§7a fully closed.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Mobile UX optimization**                     | `[~]` in progress           | §4 — public-facing mobile pass. **Pass 1 (2026-07-04):** verification tooling settled; nav/modals/albums/forms/content audited. **Pass 2 (2026-07-05):** S22 map bugs, portrait-only map, static clustering. **Off-plan (2026-07-08):** lightbox pinch-to-zoom, back-button/swipe-back modal fix, page-wide UI scale reduction. **Device-verified (S22, 2026-07-10):** map zoom/scroll/quirks + touch-target sweep closed. **Off-plan (2026-07-10):** hamburger closes on route/sign-in, mobile logout modal actually logs out, mypage edit-button layout, login/logout menu-pill centering, landscape rotate-notice GIF fix. **Device-verified (S22, 2026-07-11):** map re-fit on resize. **Remaining:** mobile perf not started; sign-in-gated surfaces partially touched (login/logout/mypage fixed) but not fully audited.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Firebase Storage → Seoul bucket**            | `[x]` done                  | Migrated from `us-central1` to `asia-northeast3` (Seoul) to cut image latency for Korean users. New bucket `mountaincats-61543`; files transferred via gsutil; Firestore URL rewrite script run against all 6 collections; `fetch-static-assets.js` reads bucket from env var; `generate-signed-url` hardcoded fallback removed. See `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Admin desktop cleanup**                      | `[~]` in progress           | §5 — admin UI/UX consistency. **Done:** spreadsheet-grid cat editor + filter/sort/bulk-edit ([handoff-14](../handoff/archive/2026-06-29-handoff-14.md)); dead-route/example cleanup (Phase 3A); **react-admin subsystem removed** (6 files + 8 deps); **AdminAuth hardened** — emergency-bypass buttons removed + listener consolidated onto `useAuth()` (10s init-timeout gone); **dead `/admin/create-user` route/bypass removed** (all 2026-06-29→30). **Deferred (owner):** visual/UX consistency (utilitarian Tailwind cleanup, no brand re-skin) + admin Korean-string consistency. **Remaining:** those two deferred items + the one remaining disabled-link stub (`겨울집 관리`; 급식소 관리 shipped as `/admin/points`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Admin mobile optimization**                  | 🚧 placeholder              | §6 — admin usable on phones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Codebase health / tech-debt                    | `[~]` in progress           | §7 — **permissions + admin-API auth: DONE 2026-06-28** (fixed the never-working `hasPermission` rule; gated every `/api/admin/*` route; closed a YouTube refresh-token leak). **Admin CMS `write:if false` collections: DONE 2026-06-29** — gated `about_content`/`cat_images`/`cat_videos`/`posts_announcements` writes (`points` left locked, no writer); all browser-verified. See [handoff-12](../handoff/archive/2026-06-29-handoff-12.md). **Complexity retirement: EXECUTED 2026-07-19** (P0–P6 — forms + admin editors on shared primitives, alerts → Modal; §7 entry below). Remaining: error handling, structured logging, `ignoreUndefinedProperties`, request validation; owner-owed P5.4 manual YouTube pass — **started 2026-07-26, blocked on two pre-existing YouTube bugs it surfaced** (split refresh-token source; `manage-playlists` global channel-ID), both queued for a fresh session (§7 + hand-off Open threads). **Media/credential API routes gated 2026-07-26** (`requireApiPermission` on 6, 1 dead route deleted).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Auth / media integrity (2026-08-02)**        | `[x]` done                  | **Not a numbered §ction — see §7 (PII in auth logs), §8 (consent + orphan cleanup + default role), §10h (촬영일 fabrication), §10i (one album tile).** Four commits `8a50348`…`82d0f07`: signup consent is **recorded** with a policy version; new members get their mountain's `defaultRole` via a new Admin-SDK route (the client cannot seed it — the empty-`roles` create rule is what blocks self-escalation); Auth accounts minted for people the login gate then refuses are **deleted** instead of stranded holding PII; PII is out of the auth logs (3 sites); 촬영일 is no longer fabricated as the upload moment (2 paths) and 공지사항/입양홍보 gained the field; video tiles name the clip and the modal albums converged onto the shared `MediaTile`. 🔑 Two premises were **wrong and corrected**: §8's (implicit signup was already refused) and the email-exclusion rationale (signup is **phone-first**, so the test is a password credential, not the login method — owner-caught). `docs/codebase/authentication.md` rewritten around both.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Compliance / legal                             | `[x]` done                  | §8 — **CLOSED 2026-07-10: privacy policy + terms shipped** (`/pages/privacy` + `/pages/terms`, KISA/PIPC-structured, footer links live; CPO 산냥이집냥이 운영자 · `rescuezoro@gmail.com`; under-14 w/ guardian consent; retention 탈퇴 시 즉시 삭제; **국외 이전** disclosure §6, disclosure-based not consent per Art. 28-8). **Email-signup consent capture** + **member self-service 탈퇴/deletion** (`/api/account/delete`, Admin SDK hard-delete) **done**. **Deferred/owner-owed — 2 of 4 CLOSED 2026-08-01.** ✅ Done: phone/Kakao signup consent (the premise was wrong — implicit signup was already refused; the real gap was an **orphaned Auth account** holding PII, now deleted on the bounce path) + **consent is now recorded** on `users/{uid}` with a policy version. 🔴 A **PII-in-auth-logs** defect found during the same check was fixed (3 sites) — tracked in §7. **Still open:** Kakao scope verification (needs the Kakao Developers console) + the two needing an outside professional (legal review, PIPA security audit).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Multi-tenant hardening                         | `[x]` done                  | §9 — make the 2nd-mountain path real. **M1–M4 + M5.1 + M5.2 done & committed; M5.3 audit done (docs-only).** M1–M4 (`…`→`b83a112`, incl. the verified 99-doc prod backfill) → **M5.1 `d4a0bb2`** scoped reads + composite indexes → **M5.2 `47d0f3d`** per-mountain role model (map keyed by `mountainId`) + mountain-aware rules (`test:rules` 11/11; e2e 116/13/0) → **M5.3 route audit (2026-07-23)** — all 21 API routes verified: no leak-by-omission (content routes tenant-scoped, identity/matrix routes central-by-design; only residual cross-tenant surface = the shared YouTube channel, non-Firestore/deferred; a pre-existing 7-ungated-route auth gap logged as an open thread) → **M5.4a stub tenant + M5.4b isolation e2e (2026-07-23)** — `manisan` added to `mountains.json` (`hidden: true`) + seeded; two-tenant isolation specs written (api Host-scoped reads + mountain-scoped authz; public rendered content); full e2e 125/13/0. **CI wired** (2026-07-23) — emulator-backed `rules` job in `ci.yml`. ✅ **M1–M5 SHIPPED TO PROD via PR #8 (merge `366425c`, 2026-07-23); the order-critical cutover ran in sequence (snapshot → migrate → indexes Enabled → merge → rules deploy).** Multi-mountain is live: prod stamps/scopes by `mountainId`, resolves `roles[mountainId]`, enforces mountain-aware rules. Tail: delete legacy `currentRole` + `about_content/about` + local dump once CMS confirmed healthy. **✅ M6 DONE & committed (`d644d1b`, 2026-07-25; no prod migration)** — per-tenant upload namespacing (`storagePrefix` on uploads); the drafted thumbnail namespacing/migration was reverted after a dry-run found 0 changes (prod thumbnails/album photos serve from live Storage URLs, already tenant-scoped). **✅ M7 DONE & committed (`48f7085`, 2026-07-25)** — analytics decoupled from Firebase → shared GA4 via gtag.js + `mountain_id` event param. **✅ M8 DONE & committed (`a237e8b`, 2026-07-25)** — per-tenant theming (minimal: `theme.primaryColor` → `--color-primary`, public CTAs themed, geyang zero-change), browser-verified (geyang `#FACC15` / manisan `#0ea5e9`); provisioning guide rewritten + docs close-out done. A standalone GA4 setup guide (`admin-manual/google_analytics.md`) landed in `7e3c517`. **All phases M0–M8 complete & committed on `dev` (not yet promoted to prod — gated on the P5.4 YouTube pass). Owner-owed externalities only:** GA4 `mountain_id` custom dimension + Vercel `NEXT_PUBLIC_GA_MEASUREMENT_ID` (M7); per-mountain DNS/console allowlists for a real 2nd mountain. 📁 **Everything still gated on a real mountain #2 is now consolidated in [`mountain-2-prerequisites.md`](./pending/mountain-2-prerequisites.md)** (2026-07-28) — blocking items, owner-run provisioning, should-fixes, and the decided/won't-do record; 🚨 its §1.1 is a **security defect** (sign-out clears only the origin it runs on, so with a second subdomain logging out of one mountain leaves the others live — members and admins alike; zero exposure today on a single origin). ✅ **The URL model is now DECIDED — path-based** ([`tenancy-url-model-decision-20260728.md`](./pending/tenancy-url-model-decision-20260728.md), owner 2026-07-28): a mountain is identified by a **path prefix** (`mohocats.org/manisan`), geyang keeps prefix-free URLs at the apex, and a 2nd mountain's owner does not need their own hostname. This makes §1.1 structurally impossible (and demotes `revokeRefreshTokens` to optional hardening) and deletes §1.5/§1.6/most of §2. **Execution plan: [`tenancy-path-migration-plan-20260728.md`](./pending/tenancy-path-migration-plan-20260728.md)** — T0–T7, 28 tasks, **not started**; sequenced **after** the P5.4 pass + the `dev → main` promotion. 🚨 Planning re-measured the surface and found a cost the decision doc missed: all `/api/*` routes resolve the tenant from the **Host header**, so path-based would resolve every API call to geyang — including `requireApiPermission`, an authorization inversion (geyang-only admin allowed on manisan, manisan-only admin denied on their own). Fix = validated `X-Mountain-Id` header, 400 on unknown, sequenced first (T2). Real surface: 83 navigation sites / 29 files + 27 fetch sites / 11 files + 4 `usePathname()` comparisons. |
+| **Data protection / backups**                  | `[x]` done                  | **Not a numbered §** — did not exist before 2026-07-20; built after M4's backfill ran against prod with no snapshot and no PITR. **PITR enabled** (7-day) + **weekly** backup schedule + `npm run backup:firestore` / `import-firestore.js` for local off-Google dumps (**round-trip verified lossless**). Weekly-not-daily (meshes with PITR's window) and no-GCS-bucket (second PII store) are deliberate, reasoning recorded. Standing rule: **snapshot before any script writes to prod**, wired into the refactor plan's M6. Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Testing & quality gates                        | `[x]` done                  | §10 — **Main plan COMPLETE + merged to `main` (PR #7, 2026-07-16).** Vitest (40) + **Playwright e2e** (emulator-backed): harness/CI + all main-plan suites — `public/`, `auth/`, `member/`, `admin/`, `api/` (~140 tests). Phase 7 flake audit green (local 3× + CI green on PR #7 and pushes). **Branch protection enforced** — `e2e` is a required status check on `main` (protect-main ruleset + classic protection). Remaining owner action: `firebase deploy --only firestore:rules` for prod parity.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Member post authoring                          | `[x]` **LIVE** (corrected)  | §10n — butler roles view / create / **edit their own** on 집사톡 + 급식현황 (`8334c51`). 🔑 The ask's premise was false: members could not see or create at all, so "let the author edit" had no non-admin author to apply to. Two per-board permissions, `authorUid` as the authorization identity, rules that refuse an edit rewriting authorship, and a member edit route outside `/admin`. 🔴 **CORRECTED 2026-08-03: this is live in production** — rules deployed 2026-08-02T16:00Z, the live matrix already grants both permissions, and a butler-ground member has authored two 급식현황 posts. ⚠️ But **§10p** is not: a member cannot attach media to a 집사톡 post without losing the post.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Member media upload (집사톡)                   | `[x]` **LIVE** (2026-08-03) | §10p — §10n granted the two **post** permissions and stopped; 집사톡 is the only board that **uploads**, and every upload surface gates on `manage-photo`/`manage-video`, which only `admin` holds. 🔴 The member does not get a degraded post — `useRichContentForm` alerts and `return`s, so **the whole post is lost**. Fixed with narrow `upload-own-photo`/`upload-own-video` (owner's call over widening `manage-*`, which also authorizes retagging/deleting anyone's album) + `uploadedByUid` as the identity. 🔬 Both nets missed it for mirror-image reasons — the member e2e specs inherited a media exclusion from the **admin** specs, where it was harmless because admins hold every permission; the rules suite tested the permissions the feature _added_, not the ones its journey _depends on_.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Author delete + reply edit/delete              | `[x]` **LIVE** (2026-08-04) | §10q — authors may delete their own posts, and a **reply's** author may edit and delete that reply (owner, reversing §10n's withholding). 🔑 A reply is a document in the same collection, so one rule governs both and no new permission was needed. The cascade needed its own clause: `deletePost` removes every reply first, so without it **an author cannot delete their own post once anyone has replied**. `replyCount` may now move ±1 (the services recount, so a delete lands on old−1). Media survives — verified, and it already did.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **입양홍보 posts + adoption/modal polish**     | `[x]` done                  | **Not a numbered §** — feature workstream (handoff-21). Admin-authored **입양홍보 post type** (`posts_adoption`, public feed + admin tab + create/edit), **admin post editing** across all types, adoption-page polish (accordion + search), **cat-modal redesign** + `작명 사유` field, and **inline `[img]`/`[video]` links** → in-app Lightbox/VideoPlayer. Gates green; browser-verified except admin-gated flows. See [`handoff-21`](../handoff/archive/2026-07-03-handoff-21.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Posts: detail route + editing (2026-08-02)** | `[x]` done                  | **§10k/§10l** — a post is addressed by `(type, id)`, not `id` (집사톡/공지사항/입양홍보 all opened on "Post not found"); the detail page moved onto the shared 공지사항 shell + `PostMedia`; and 공지사항/입양홍보/집사톡 editing moved onto their **create composers** (급식현황 keeps the URL editor by decision).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Colour / design tokens (2026-08-05)**        | `[~]` Phases 1–4 done       | **§10u** — colour now has one source of truth (`tailwind.config.js`); **no new token file was created — the repo already designated one** (`design.md:9`, and `:292` forbids a `tokens.json`). 🔑 **Per-tenant theming is WITHDRAWN, superseding M8** — a mountain may not differ in colour (owner): no preview, no contrast check, and the config is baked, so each try is a redeploy. The `--color-primary` variable is **kept** (`theme('colors.brand.DEFAULT')`, build-resolved) because Tailwind tokens cannot reach `<style jsx global>` / third-party CSS; three hand-copied `#FACC15`s collapse to one. ~30 brand utilities adopted `brand`/`accent` (admin included — `design.md`'s "admin out of scope" line was stale, subsystem deleted in `d963d30`). ⚠️ **One user-visible change:** 급식현황's freshness ramp goes green→red ⇒ blue→red, lifting its worst contrast from **1.37:1 to 6.47:1** and dropping the colour-blindness-hostile pair; `feeding_spots` is seeded at last so the table has e2e cover. **Phase 4 (2026-08-06) closed the hygiene:** the last raw hexes leave `YouTubeAuthPanelNew` and `Compass` (`LeafletMountainMap:302` keeps its by decision — Leaflet writes an SVG **presentation attribute**, which takes neither a class nor `var()`), and **`design.md` §Colors now carries the global-palette decision**, which had been recorded everywhere except the design reference. **Open:** Phase 5, the unsized admin-vs-`design.md` audit D5 opened. Gates: tsc · unit 196 · smoke 39 · e2e 233/13/0.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Admin manual / operator docs**               | `[x]` started               | **Not a numbered §** — `docs/manuals/admin-manual/` (operator how-to: content link tokens, cat/post fields, config & ops) + GA4 setup, the `tag-videos` button spec, and **2026-07-28** [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md) — the owner-facing console checklist for provisioning a tenant) + `docs/manuals/deployment/new-mountain-setup.md` (**rewritten as a real runbook in M8**; keeps the repo half — config files, storage prefix, about-photos — and links to the checklist for console work rather than restating it).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ---
 
@@ -85,9 +100,21 @@ those are the forward plan.
 
 - Each numbered workstream below is a **placeholder** until picked up. Picking one
   up means: (1) confirm scope/specs with the user, (2) write them into that
-  section, (3) spin a companion `docs/planning/<workstream>-tasks.md` mirroring
-  the rigor of the redesign tasks doc, (4) implement in small, browser-verified
-  chunks, (5) update the §1 snapshot.
+  section, (3) spin a companion `docs/planning/pending/<workstream>-tasks.md`
+  mirroring the rigor of the redesign tasks doc, (4) implement in small,
+  browser-verified chunks, (5) update the §1 snapshot.
+- **Where planning docs live (2026-07-28):** this tracker stays at
+  `docs/planning/`; every companion doc sits in **`pending/`** (open, in
+  progress, or decided-but-not-executed) or **`completed/`** (executed —
+  historical record). A doc **moves from `pending/` to `completed/` when its
+  own status line says it is done**, and links to it are updated in the same
+  change.
+- **Known gaps that are _not_ scheduled live in [`BACKLOG.md`](./BACKLOG.md)** (added
+  2026-08-02) — real, deferred on purpose, no date — together with owner questions
+  awaiting an answer. 🔑 **An item belongs in exactly one of the two:** promoting a
+  backlog entry means moving it here (or into a `pending/` plan) and striking it there
+  **in the same change**. A duplicated entry is how the 2026-08-02 audit ended up with
+  seven claims that had rotted.
 - **Sequencing is not yet decided** — see §12. Mobile UX and admin cleanup are
   called out by the user as priorities; ordering among them and the debt items is
   open.
@@ -170,7 +197,7 @@ those are the forward plan.
       device-owed** (collision layout is width/DPI-dependent — author against a real device).
       _(Lands together with the 급식소 admin CMS below.)_
 - [x] **급식소 관리 (feeding-station points) admin CMS — 2026-07-05, FEATURE_MOD_LOG,
-      [plan](./feeding-station-points-admin-cms-plan.md).** Built the `/admin/points` editor
+      [plan](./completed/feeding-station-points-admin-cms-plan.md).** Built the `/admin/points` editor
       (create/edit/delete pins incl. the `labelSide` override) behind `manage-canteen`; Leaflet-free
       visual map picker for x/y; delete blocked while cats reference the point (lists them). Reuses
       `PointService` CRUD + `/api/revalidate`. Gates green; browser-verified (list, picker, delete-
@@ -231,8 +258,8 @@ _(Out of scope here: admin mobile — that's §6.)_
 **Candidate scope — _confirm with user_:**
 
 - [x] **✅ Spreadsheet-grid cat editor (shipped 2026-06-29 — see
-      [handoff-14](../handoff/2026-06-29-handoff-14.md); built per
-      [handoff-13](../handoff/2026-06-29-handoff-13.md)).** Cell-editable `react-datasheet-grid` (MIT)
+      [handoff-14](../handoff/archive/2026-06-29-handoff-14.md); built per
+      [handoff-13](../handoff/archive/2026-06-29-handoff-13.md)).** Cell-editable `react-datasheet-grid` (MIT)
       grid for `cats` as a second tab (스프레드시트) beside the card editor in `/admin/cats` (both
       kept). Typed columns; batch **전체 저장** via `catService.batchUpdateCats` (one Firestore
       `writeBatch` of per-field `update()`s → partial, non-destructive — `adoptable` etc. never
@@ -250,7 +277,7 @@ _(Out of scope here: admin mobile — that's §6.)_
       `scripts/README.md` + `docs/codebase/deployment-and-build.md` **swept 2026-06-29**
       (commit `089bfee`); handoff-13 left intact as a historical record._
 - [~] **Visual/UX consistency — Core done 2026-06-30; folds into the new cross-cutting
-  design system (handoff-16 §4).** **Core pass shipped** ([handoff-16](../handoff/2026-06-30-handoff-16.md)
+  design system (handoff-16 §4).** **Core pass shipped** ([handoff-16](../handoff/archive/2026-06-30-handoff-16.md)
   §3): built `src/components/admin/ui/` (`Button`/`Card`/`Alert`) and converged the 5
   inline-style files (`admin/layout.tsx`, `AdminAuth.tsx`, `admin/page.tsx`,
   `app-management/page.tsx`, `YouTubeAuthPanelNew.tsx`) → lean Tailwind + primitives; folded
@@ -262,7 +289,7 @@ _(Out of scope here: admin mobile — that's §6.)_
   admin**, and (2) **actual branding of admin** (re-skin to the public brand). So the Core
   primitives are a **throwaway template**: to be merged into ONE shared, token-driven set and
   re-branded (drop the gray). Restarts as a unified **design + Korean** workstream in a new
-  session (see [handoff-16](../handoff/2026-06-30-handoff-16.md) §4). Still the foundation to
+  session (see [handoff-16](../handoff/archive/2026-06-30-handoff-16.md) §4). Still the foundation to
   land **before** §6 admin-mobile.
 - [x] **✅ `AdminAuth` hardening (UX side) — DONE (2026-06-29 → 2026-06-30).**
   - [x] **Emergency-bypass buttons removed (commit `0cd9c2c`).** The "🚨 Emergency Bypass" /
@@ -281,9 +308,12 @@ _(Out of scope here: admin mobile — that's §6.)_
       `RoleManagement.tsx` + `PermissionDebug.tsx` (kept). **`/admin/create-user` resolved
       (commit `dc1d748`):** the page **does not exist** (browser-confirmed 404), so the
       `admin/layout.tsx` auth-bypass for it and the two `AdminAuth` links to it were dead —
-      all removed (no more unguarded admin route). _Still open:_ disabled-link placeholders
-      (`급식소 관리`, `겨울집 관리`) — intentional stubs for unbuilt features; leave until
-      those features land.
+      all removed (no more unguarded admin route). _Still open:_ **one** disabled-link
+      placeholder — `겨울집 관리` (an intentional stub; leave until that feature lands).
+      ⚠️ **`급식소 관리` is no longer a stub** — it shipped as `/admin/points` with the 급식소 CMS
+      (PR #7), is linked live from the admin nav, and `PointService.create/update/deletePoint`
+      all have callers. _(Corrected 2026-08-01, owner-flagged; the §7 `points` rule note below
+      was stale for the same reason.)_
 - [x] **✅ react-admin decision — REMOVED (2026-06-29).** Investigation showed the
       whole react-admin subsystem was dead: `src/lib/admin/dataProvider.ts` +
       `sampleData.ts` were imported by nothing, and the four react-admin components
@@ -360,7 +390,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 - [x] **✅ EXECUTED (2026-07-19) — complexity retirement (duplication + local-state sprawl).**
       Assessment + phase log:
-      [`complexity-retirement-assessment-20260716.md`](./complexity-retirement-assessment-20260716.md)
+      [`complexity-retirement-assessment-20260716.md`](./completed/complexity-retirement-assessment-20260716.md)
       (§8 holds per-phase execution notes). Origin: a "Next.js/React → HTMX?" feasibility
       question, answered **no** — the complexity was _in_ the client components, so it was
       retired **in place** over phases P0–P6 (commits `6454d80`→ onward), each gated on the
@@ -376,8 +406,107 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
     shared `CatSelectorModal` (commit-on-done — the one accepted intentional behavior change).
   - **P6 follow-up**: all `alert()/confirm()` (editors + the four public forms) converted to
     the shared `ui/Modal` system via the new `useDialog` primitive.
-  - ⚠️ Owner-owed before the next `dev → main` promotion: the scripted **manual pass over the
-    YouTube surfaces** (P5.4 — sync, playlists, real creds).
+  - ✅ **P5.4 — the scripted manual pass over the YouTube surfaces (sync, playlists, real creds)
+    is DONE and verified working (owner, 2026-08-07).** This was the standing gate on the
+    `dev → main` promotion; with it clear, **[PR #9](https://github.com/wwolfyy/mohocats/pull/9)
+    is open** and the promotion is unblocked.
+    🐛 **It earned its keep twice over.** The first attempt (2026-07-26, on Preview) became a bug
+    hunt: **six pre-existing defects** — credential source, OAuth scopes, channel-ID env var,
+    `자동 날짜 인식` writing Firestore, batch playlist save ignoring the selection, and the sync
+    resetting 게시일. All were fixed and pushed, which forced the pass to **restart from the
+    top**, since the credential source, the scopes and three write paths had all changed under
+    it. That restart is the run that has now passed.
+    🔑 **Not one of the six was reachable by an automated test** — the emulator has no YouTube
+    credentials. ⚠️ **So keep P5.4 as a manual gate on every future promotion**; the case for it
+    is stronger after this, not weaker.
+- [x] ✅ **YouTube credential source unified — the admin "re-authorize" button now fixes
+      everything (found + FIXED 2026-07-26).** `/api/admin/youtube-auth/callback` writes the fresh
+      refresh token to **Firestore** (`admin_config/youtube_auth`), but every route read it from
+      **env only** via `getYouTubeOAuthConfig()` — so a stale `YOUTUBE_REFRESH_TOKEN` shadowed it
+      and `update-youtube-video` / `manage-playlists` / `youtube-playlists` failed `invalid_grant`
+      while the status panel looked healthy (it checks both sources, and showed Firestore's
+      timestamp against the env token). `upload-youtube`'s apparent Firestore fallback was **dead
+      code** — it needed the client id/secret from the very config whose absence triggered it.
+      **Fixed:** new `src/lib/youtube/credentials.ts` splits **client identity** (env) from **the
+      refresh token** (Firestore **only** — `YOUTUBE_REFRESH_TOKEN` removed outright rather than
+      kept as a fallback, which would preserve the same failure whenever the Firestore doc goes
+      missing; obtaining a token needs client identity only, so 「토큰 갱신」 is the recovery); all six
+      OAuth consumers migrated and `getYouTubeOAuthConfig()` deleted. Also unblocks a **bootstrap
+      deadlock**: `auth-url` used to need a refresh token in order to obtain one. ⚠️ Keep the var
+      in Vercel **Production** until this promotes (`main` is pre-fix and env-only). `refresh-video-metadata` was never affected
+      (it uses the public API key, not OAuth — the original write-up listed it in error).
+      Pre-existing, **not** a regression from the same-day route auth-gating; unreachable by
+      automated tests (no YouTube credentials in the emulator), so the manual pass stays the
+      end-to-end proof. Net: `tests/unit/youtubeCredentials.test.ts` (9). Detail:
+      `log/DEBUG_LOG.md` 2026-07-26.
+- [x] ✅ **`manage-playlists` POST read a global env var for the channel ID (found + FIXED
+      2026-07-26).** `batch_update_playlists` used `process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID`,
+      set nowhere (not Vercel, not `.env.example`) → 500 "Channel ID not configured", so
+      playlist-membership saves failed. The GET in the same file already used
+      `getYouTubeChannelId(authz.mountainId)`. Missed when M1 moved channel config out of env
+      vars; both a live bug and a multi-tenant leak. **Fixed** with the tenant-aware getter (no
+      env var added).
+- [x] ✅ **Admin OAuth flow requested too few scopes (found + FIXED 2026-07-26, `05fdbd9`).**
+      `auth-url` asked only for `youtube.upload` + `youtube.readonly`, which cover
+      `videos.insert` and reads but **not** `videos.update` or `playlistItems.insert/delete` —
+      so metadata edits failed with Google's _"Insufficient Permission"_ (distinct from our
+      gate's "Insufficient permissions"). The retired CLI token script requested all four
+      scopes, so the token actually in use had them: **the admin panel had never minted a token
+      capable of editing metadata**, and only fixing the credential source put its token into
+      play. Fixed by requesting the same four scopes; **requires a re-authorization**, since
+      scopes are granted at consent time. 📌 Known gap left open: the token status panel
+      validates by refreshing, which succeeds regardless of scope, so it reports healthy on a
+      token that cannot write.
+- [x] ✅ **Three `/admin/tag-videos` write-path bugs (found + FIXED 2026-07-26 — `b5f08b7`,
+      `80ba04a`, `dc8391f`).** All three found by reading the page while writing its button
+      spec; none reported, none reachable by the existing suites. (a) **`자동 날짜 인식` wrote
+      Firestore**, so `refresh-video-metadata` — which rebuilds Firestore from YouTube and nulls
+      `createdTime` when YouTube has none — erased every parsed date on the next sync **or any
+      other save on that video**; it now writes YouTube first (and sends UTC midnight of the
+      calendar date, since the parser returns local-time Dates and `.toISOString()` shifted the
+      day back in KST). (b) **Batch playlist save ignored the batch selection**, acting on the
+      video open in the edit form or silently nothing; now applies to the whole selection with
+      **set semantics** + confirmation. (c) **Every sync reset 게시일** (`uploadDate: new
+Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
+      YouTube's `publishedAt`, so mis-stamped records **self-heal, no migration**. Alongside (c):
+      `uploadedBy` no longer clobbered to `'admin'`, and the refresh now writes `updated` (the
+      field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh` —
+      making that column and its sort work for the first time. ⚠️ The clobber had been masking a
+      latent crash (`syncVideos()` never set `uploadDate`; the album sorts call `.getTime()` on
+      it), so the import sets it now too. Net: 2 e2e tests (one rewritten, one new) →
+      **147/13/0**. ⏳ The 게시일 repair, 메타데이터 수정, `자동 날짜 인식` and the batch playlist
+      save are **stubbed in tests and unverified against real YouTube** — Preview checks listed
+      in the hand-off's fresh-session box.
+- [x] 🔑 **Principle adopted (owner, 2026-07-26): YouTube is the source of truth for video
+      data.** No UI path may write video data to Firestore — anything written there is undone by
+      the next sync, so such a write is broken by construction rather than merely risky.
+      `/admin/tag-videos` now performs **zero** direct Firestore writes (its `videoService` use
+      is reads-only) and `videoService.updateVideo` has no callers left. Operator-facing rule in
+      `admin-manual` §6 ("never edit video data in Firebase — it will not survive"). ⚠️ The same
+      null-overwrite applies to `tags`, `location`, `title`, `description`; the rule — not a code
+      guard — is what prevents the next occurrence. _(Photos are the opposite: `cat_images` has
+      no upstream, so Firestore **is** their source of truth.)_
+- [x] ✅ **Batch edits reached YouTube but never Firestore (owner-reported + FIXED
+      2026-07-26).** Batch tag / 촬영일 / playlist saves needed a manual 📺 YouTube와 동기화 to
+      show up on the site, while individual saves synced themselves.
+      `/api/refresh-video-metadata` takes **YouTube video ids** (Data API lookup, then
+      `where('youtubeId','==',id)`), but the batch loops recorded the **Firestore doc id** from
+      the selection and passed those — a 404 the caller swallowed, so the dialog still said
+      완료. Fixed: results keyed by `youtubeVideoId`; the refresh extracted into
+      `syncToFirestore()`, which returns success and logs failures; the dialog now reports a
+      failed sync instead of claiming success. ⚠️ **The e2e fixtures had made this
+      unreproducible** — no seeded video had a `youtubeId`, so `youtubeId || id` collapsed to
+      the doc id; both fixtures now carry a distinct one, matching production. **Second time
+      this session a fixture concealed a production-only failure mode** (the first: emulator
+      videos have no YouTube publish dates). Worth a broader fixture-realism audit.
+- [ ] 📄 **NEW workstream — per-page admin button spec sheets.** First one shipped:
+      [`docs/manuals/admin-manual/tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md),
+      organised by **what each button writes to** (🔴 YouTube→Firestore = public and
+      irreversible vs ⚪ local) — a distinction the UI doesn't surface, and the frame that
+      exposed all three bugs above. Owner wants the same for the remaining CMS pages
+      (`tag-images`, `cats`, `points`, `posts`, `members`, `app-management`). ⚠️ The first sheet
+      is **source-derived, not browser-verified** — do a `/chrome` pass over the live page before
+      cloning the format.
 - [x] **✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated.**
       `GET`/`POST /api/admin/role-permissions` read/rewrite `role_permissions/role-config` via the
       **Admin SDK** (bypasses Firestore rules). Once `firestore.rules` `hasPermission` started
@@ -415,9 +544,12 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       **Fix:** applied the proven `hasPermission(uid, 'manage-X')` pattern (mirroring the
       `cats` / `posts_*` rules) to each collection that has a live **client-SDK** write path:
       `about_content`→`manage-app`, `cat_images`→`manage-photo`, `cat_videos`→`manage-video`,
-      `posts_announcements`→`manage-posts`. **`points` left `write: if false`** — it has no
-      live admin writer (the 급식소/겨울집 pages are disabled placeholders;
-      `PointService.create/update/deletePoint` are never called). Deployed by owner; matrix
+      `posts_announcements`→`manage-posts`. **`points` was left `write: if false`** at the time —
+      it had no live admin writer (both the 급식소 and 겨울집 pages were disabled placeholders).
+      ⚠️ **No longer true:** the 급식소 CMS (`/admin/points`, PR #7) writes `points` through the
+      **client SDK**, and the rule moved with it — `firestore.rules` now gates `points` on
+      `canWrite('manage-canteen')`, mirroring `cats`. 겨울집 remains an unbuilt stub.
+      _(Corrected 2026-08-01, owner-flagged.)_ Deployed by owner; matrix
       confirmed admin grants all four permissions.
       **Browser-verified 2026-06-29** (each write persisted to live Firestore, then reverted):
       cats (alt-name edit), `posts_announcements` (modal toggle), `about_content` (subtitle
@@ -431,7 +563,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       "Migrate …" buttons that exercise these are likely no longer needed (owner to confirm).
   - _**Admin-SDK migration — analyzed & re-scoped (2026-06-30).** Full Client-vs-Admin SDK
     inventory + analysis in
-    [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md). \*\*The old blanket
+    [`firebase-sdk-usage-inventory.md`](./completed/firebase-sdk-usage-inventory.md). \*\*The old blanket
     target — "Admin SDK is the eventual writer for \_all_ writes" — is retired.** Bundle size is
     **not** a reason to migrate (auth + community writes keep Firebase in the browser regardless),
     and latency/offline is **not\*\* a reason to stay (admin CMS, handful of users). The decision
@@ -524,21 +656,51 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
       2026-06-27) removed the dead permission routes + `MIGRATION_EXAMPLE.ts` and the
       Cloud Storage static-data push path (preserved on `archive/static-data-cloud-export`),
       and corrected stale comments/docs. Plans:
-      [`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md) +
-      [`phase3-cleanup-plan.md`](./phase3-cleanup-plan.md). Static-data Half B (local
+      [`deployment-cleanup-plan.md`](./completed/deployment-cleanup-plan.md) +
+      [`phase3-cleanup-plan.md`](./completed/phase3-cleanup-plan.md). Static-data Half B (local
       `src/lib/*.json` export) intentionally left for §7a.
 - [ ] **Error handling** — read-paths swallow errors → `[]`/`null` (silent
       degradation). Align with the fail-loud convention; surface visible error
       states for critical reads (e.g. the home points fetch).
 - [ ] **Structured logging** — replace ad-hoc `console.*` with per-module loggers
       (`logger.exception` on errors); never log secrets (the Kakao flow logs are
-      verbose).
-- [ ] **API route auth** — admin `/api/admin/*` routes don't consistently verify a
-      Firebase ID token; `generate-signed-url` hands out write URLs without auth.
-      Add bearer-token verification at the boundary. _(Overlaps §5.)_
-- [ ] **RBAC collection drift** — `firestore.rules` reads `user_permissions/{uid}`
-      while code writes `users/{uid}`; reconcile before relying on rule-level
-      enforcement.
+      verbose — 118 `console.*` calls in `auth-service.ts` alone).
+- [x] ✅ 🔴 **PII in the auth logs — FIXED 2026-08-01** (found while checking whether the §8
+      compliance items had closed). Every Kakao sign-in logged the user's identity to the
+      browser console. **Three sites, one more than first reported** — a sweep of the auth
+      path turned up the third:
+  - `auth-service.ts` Kakao sign-in — logged `email` / `displayName` / `photoURL`; now
+    `isNewUser` / `providerId` / `uid` only.
+  - `auth-service.ts` Kakao **linking** — same, plus it dumped the whole `providerData`
+    array, which carries **`phoneNumber`**; now a `linkedProviderIds` list.
+  - `SignupForm.tsx` — logged `user.email` when blocking a signup whose phone already
+    belonged to an account; now logs `uid`.
+    📌 `uid` is kept throughout on purpose: it is an opaque Firebase identifier, so a report
+    stays correlatable without carrying personal data. _(Checked and left alone: the anonymous-
+    user log already logged only `uid` + `isAnonymous`.)_ Gates: tsc 0, smoke 33, unit 96.
+    ⏳ **Owner-owed:** a real Kakao sign-in **and** the linking fallback still need a live
+    verification — neither is reachable from the emulator.
+- [x] **✅ API route auth — DONE.** Closed in two passes and re-verified 2026-08-01: the
+      `/api/admin/*` sweep (2026-06-28, the two `[x]` SECURITY entries below) and the
+      media/credential routes (2026-07-26). **All 10 `/api/admin/**`routes now call
+`requireApiPermission`**; the sole exception is `youtube-auth/callback`, deliberately
+ ungated with the reason in a header comment (it is Google's OAuth redirect target — no
+ Authorization header exists to verify; it acts only on a valid Google `code`).
+ `generate-signed-url`— called out by name here as handing out write URLs without auth —
+ is gated on`manage-photo` (`src/app/api/generate-signed-url/route.ts:26`).
+ ⚠️ **Still open, tracked separately:** `youtube-auth/callback`has no OAuth`state`/PKCE
+      CSRF protection (noted in the token-leak follow-up below). _(Overlaps §5.)_
+- [x] **✅ RBAC collection drift — DONE (2026-06-28, `5c096a9`).** `firestore.rules` resolved
+      permissions against `user_permissions/{uid}` while the app wrote roles to `users/{uid}`,
+      so rule-level enforcement read a collection nothing populated. Fixed as **Bug 0** of the
+      four-bug members-page chain below — the same session that caught **Bug 2**, the unbound
+      `$(database)` that had made `hasPermission` deny everyone including admins. **M5.2
+      (`47d0f3d`) then rewrote the helper mountain-aware:** `hasPermissionFor` reads exactly
+      `users/{uid}` + `role_permissions/role-config` (`firestore.rules:166-174`), resolving
+      `roles[mountainId].role` → the matrix, with an `isActive` check. `user_permissions`
+      survives only as three explanatory comments (`firestore.rules:104`,
+      `permission-service.ts:24`, the members roster route) — zero live reads or writes.
+      _(Ticked 2026-08-01; the box was never crossed off when the work landed.)_
 - [x] **Dead code** — ✅ route variants + `MIGRATION_EXAMPLE.ts` removed (Phase 3A).
       `role-assignment-service.ts` is **live** (used by `RoleManagement` +
       `PermissionDebug`) — not dead. _(Overlaps §5.)_
@@ -569,7 +731,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 > **Surfaced 2026-06-26**, picked up with the user **2026-06-28** and implemented the same
 > session. Full task log + locked design decisions:
-> [`7a-bake-data-layer-tasks.md`](./7a-bake-data-layer-tasks.md). The client cat-query
+> [`7a-bake-data-layer-tasks.md`](./completed/7a-bake-data-layer-tasks.md). The client cat-query
 > waterfall is gone on both baked surfaces. **One follow-up remains:** the mechanical removal
 > of the now-dead static-data export seam (§6 of the tasks doc) — see handoff-9.
 
@@ -611,19 +773,25 @@ reads" from points/images to cat **metadata**.
       (end-to-end check pending a preview deploy — dev can't exercise ISR).
 - [x] Resolved the **`page.tsx` client-Web-SDK-on-server** tech-debt (now Admin SDK).
 - [~] Timing: qualitative win proven (zero client cat reads); no ms figure captured.
-- [ ] **Carried follow-up:** remove the dead static-data export seam (tasks-doc §6).
-      _Re-verified 2026-06-29 (independent trace, during the §5 admin-cleanup work):_ a
-      whole-repo grep finds **zero** references to `cats-static-data.json` /
-      `points-static-data.json` / `feeding-spots-static-data.json` in `src/` — the runtime
-      cat path is `src/app/page.tsx` → `getAllCatsServer()` (`src/lib/server/cat-reads.ts`,
-      Admin SDK → Firestore), never the JSON. All readers/writers are in `scripts/` only.
-      Confirmed **firsthand** that the file is dead build output: a `npm run build` (run to
-      gate the react-admin removal) rewrote `src/lib/cats-static-data.json` from live
-      Firestore, yet nothing consumes it — the churn was reverted, harmless. So in **both**
-      prod build and dev server the JSON is never `import`ed/read; webpack never bundles it.
-      Strengthens the REMOVE decision — no new blockers found. Keep the removal in this §7a
-      pass (it untangles `saveStaticDataJson` from the still-needed asset fetcher and wants
-      its own `next build` gate), not in unrelated cleanup branches.
+- [x] **✅ Carried follow-up — DONE 2026-06-30.** The dead static-data export seam was removed
+      (`saveStaticDataJson` + the `update:*` scripts + the exporters + the JSON artifacts;
+      `fetch:assets` re-verified green) — tasks-doc §6, and the §1 snapshot has recorded it as
+      closed since. **Re-verified 2026-08-01:** zero hits in `src/`, no `src/lib/*.json`
+      artifacts remain, and `build`/`vercel-build`/`fetch:assets` all run the JS
+      `fetch-static-assets.js`. _(Residual mentions are historical only: the legacy
+      `scripts/maintenance/_fetch_static_assets.py` and two `scripts/migration/README_\*.md`    records — nothing in the build path.)_ **§7a is fully closed.**
+ _Re-verified 2026-06-29 (independent trace, during the §5 admin-cleanup work):_ a
+ whole-repo grep finds **zero** references to`cats-static-data.json`/
+`points-static-data.json`/`feeding-spots-static-data.json`in`src/`— the runtime
+ cat path is`src/app/page.tsx`→`getAllCatsServer()` (`src/lib/server/cat-reads.ts`,
+ Admin SDK → Firestore), never the JSON. All readers/writers are in `scripts/`only.
+ Confirmed **firsthand** that the file is dead build output: a`npm run build`(run to
+ gate the react-admin removal) rewrote`src/lib/cats-static-data.json`from live
+ Firestore, yet nothing consumes it — the churn was reverted, harmless. So in **both**
+ prod build and dev server the JSON is never`import`ed/read; webpack never bundles it.
+ Strengthens the REMOVE decision — no new blockers found. Keep the removal in this §7a
+ pass (it untangles `saveStaticDataJson`from the still-needed asset fetcher and wants
+ its own`next build` gate), not in unrelated cleanup branches.
 
 **Inherited from Phase 3B (don't re-investigate from scratch):**
 
@@ -656,6 +824,13 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 > 국외 이전 disclosed (Art. 28-8, disclosure-based), and email-signup consent capture
 > shipped. The items below under **"Deferred / owner-owed"** are consciously accepted
 > as out of this workstream — reopen if/when membership scales.
+>
+> ✅ **Two of the four closed on 2026-08-01** — see the consent item below, whose stated
+> premise turned out to be **wrong** (implicit signup was already refused; the real gap was
+> an orphaned Auth account, now deleted) and the 🔴 **PII-in-auth-logs** defect found during
+> the same check, fixed and tracked in **§7** with the rest of the logging debt.
+> **Still open: the two that need an outside professional**, plus Kakao scope verification,
+> which needs the Kakao Developers console.
 
 **Done:**
 
@@ -680,51 +855,206 @@ _Risk/size: architectural, touches the services seam and several pages — hence
       each linking the full text); 인증번호 받기 submit gated until both checked.
       (국외 이전 is disclosure-based per §6, so it's not in the consent.)
 
-**Deferred / owner-owed (accepted, out of workstream):**
+**Deferred / owner-owed (accepted, out of workstream).** ⚠️ **Split into two kinds
+(2026-08-01)** — the four items had been sitting as one undifferentiated pile, but two are
+ordinary code work and two need an outside professional. All four **re-verified still open**
+on 2026-08-01; none had been quietly closed.
+
+_Code work — doable in a normal session, no external party:_
+
+- [x] ✅ **Consent capture for the phone / Kakao paths — RESOLVED 2026-08-01, but NOT the way
+      this item assumed.** 🔑 **The premise was wrong and is corrected here so it is not
+      re-derived:** an earlier pass that day noted `auth/PhoneLoginForm.tsx` and
+      `SocialLoginButton.tsx` contain **zero** consent code — true — and concluded a
+      first-time phone or Kakao user could become a member without agreeing. **They cannot.**
+      All three login paths funnel through `LoginForm.handleCheckUser`, and a user with no
+      `users/{uid}` doc is shown `UserNotFoundModal` and **signed out**
+      (`LoginForm.tsx`, the `else` branch — "Requirement: Do not allow account creation via
+      Google/Kakao implicitly"). They are sent to 집사등록 = `SignupForm`, which **already**
+      gates on both checkboxes. **Implicit signup was already refused**; no consent gate was
+      needed on the login surfaces, and none was added. _(A post-auth consent step with a
+      decline-deletes-the-account path was designed and then discarded on this finding —
+      recorded so it is not rebuilt.)_
+  - 🔴 **The real residual gap it exposed, now FIXED:** phone and Kakao sign-in **mint a
+    Firebase Auth account** as a side effect of authenticating, _before_ the flow can decide
+    whether the person may join. Signing them out stranded an Auth record holding PII (phone
+    number, or the Kakao email/닉네임) with **no consent, no profile doc, and nothing that
+    would ever remove it** — retention with no PIPA basis. The bounce path now deletes it via
+    the existing `POST /api/account/delete` (uid from the verified token; the doc-delete is a
+    no-op when no doc exists) — `src/lib/auth/deleteImplicitlyCreatedAccount.ts`.
+    ⚠️ **Email is deliberately excluded — the line is consent, not account age.** 📌 **Every
+    account in this app is phone-created:** 집사등록 verifies the phone **first** (that call
+    creates the Auth user) and links email/password onto it afterwards; `validateDetails`
+    requires a phone number and `authService.createUser` has **no UI caller**, so there is no
+    email-only signup path. An email sign-in reaching the bounce is therefore usually an
+    **interrupted signup**, not an anomaly — and that person **did consent**, since
+    `SignupForm` gates both checkboxes before the SMS is sent, i.e. consent precedes account
+    creation. Only the record failed to write, and the state is resumable (re-running 집사등록
+    with the same email+phone completes idempotently). Deleting there would destroy a
+    credential belonging to someone who agreed.
+    🔑 **The check is therefore the password credential, not the login method**
+    (`providerData` containing `'password'`). Gating on the method — the first cut — would
+    have deleted exactly those consenting users whenever an interrupted signup led them to
+    sign in **by phone**. _(An earlier draft justified the exclusion as "the account predates
+    the sign-in, so a missing doc is an anomaly" — that reasoning was **wrong** given the
+    phone-first flow; corrected 2026-08-01 after the owner challenged it, which is also what
+    surfaced the method-vs-credential leak.)_
+  - 📌 **Confirmed while answering the owner: 회원탈퇴 does delete the email.**
+    `POST /api/account/delete` removes the Firestore doc **and** the Firebase Auth account
+    (`mypage` → route L46-47), so email/phone/닉네임 go from both stores. Doc first, so a
+    failed Auth delete cannot orphan an account that can no longer reach its own doc.
+    ⚠️ The orphan helper **logs without re-raising**, a conscious departure from
+    the repo's log-and-rethrow rule: the caller's next step is `signOut()`, and its catch
+    block is contractually forbidden from signing anyone out, so propagating would strand a
+    live session for someone just refused membership. Rationale is in the file.
+  - ✅ **New members now get a default role** (owner, 2026-08-01). They previously got
+    `roles: {}` and therefore **no role on any mountain** until an admin assigned one; the
+    per-mountain `defaultRole: "viewer"` in `config/permissions.json` was read by nothing.
+    ⚠️ **It could not simply be seeded client-side:** `firestore.rules` allows a self-create
+    only with an **empty** `roles` map, and that is precisely what makes self-escalation
+    impossible — seeding a role there would have failed every signup. So the client still
+    creates with `roles: {}` (**rule unchanged**) and signup then calls the new Admin-SDK
+    `POST /api/account/default-role`, which takes the uid from the verified token, reads the
+    role from **config** (never the request body), resolves its permissions from the live
+    matrix, and refuses when a role already exists — so it cannot grant anything but the
+    default nor overwrite an admin's assignment. Failure is non-fatal to signup (`assignedBy:
+'system'` distinguishes it in the audit log). 📌 Worth knowing: `viewer` is **not**
+    permission-less — it carries `view-video` + `view-photo`; it merely happens to be
+    equivalent to no-role today because public content is not gated on them. That is exactly
+    why the relaxed-rule alternative was rejected.
+  - ✅ **Consent is now recorded** (it never was — the email path gated the button and stored
+    nothing). `users/{uid}.consent` holds `terms` + `privacy`, each with `agreedAt` and the
+    **policy version**, written by `SignupForm` on doc creation only — never on update, since
+    overwriting the timestamp would falsify when consent was given. New
+    `src/constants/policy.ts` single-sources `POLICY_VERSION` / `POLICY_EFFECTIVE_DATE_KO`,
+    and both policy pages now render 시행일 from it so the displayed date and the stamped
+    version cannot drift. ⚠️ **Bump it whenever either policy's substance changes.**
+    📌 Members created before 2026-08-01 have **no** consent record — absent ≠ refused, it
+    means "predates the feature". A re-consent flow for a future policy revision does not
+    exist and would be its own piece of work.
+- [ ] **Verify Kakao scopes + document received fields** (compliance-plan task 8).
+      📌 **Why this can't be answered from the repo alone:** all three `addScope` calls are
+      **commented out** (`auth-service.ts:175-177`, with a note to leave them off to avoid a
+      Kakao consent-items error), so the app requests nothing explicitly and receives whatever
+      the **Kakao Developers console** has configured as consent items. The console is the
+      source of truth — read it, then document the received fields here. (The 처리방침 already
+      names Kakao as a collection source; this confirms _which_ fields.)
+
+_Needs an outside professional — cannot be closed in-repo:_
 
 - [ ] Professional/legal review of the policy text + consent flows before scaling.
-- [ ] Consent capture for the phone-login-as-signup and Kakao social sign-up paths.
 - [ ] Security audit vs the PIPA safety-measures standard (compliance-plan task 7).
-- [ ] Verify Kakao scopes + document received fields (compliance-plan task 8).
+
 - [x] Stub `docs/compliance/` exists (`compliance-plan.md`).
 
 ---
 
-## 9. 🚧 Multi-tenant hardening
+## 9. ✅ Multi-tenant hardening (M0–M8 complete; owner-gated externalities only)
 
 > **Goal (placeholder):** make the "add a second mountain by editing JSON" promise
 > actually true. Today several paths are single-mountain hard-coded.
 >
 > **Decision framework (2026-07-18):**
-> [`multi-tenant-architecture-decision-20260718.md`](./multi-tenant-architecture-decision-20260718.md)
+> [`multi-tenant-architecture-decision-20260718.md`](./completed/multi-tenant-architecture-decision-20260718.md)
 > — verified current state, the custody-vs-management gating question, the open
 > deployment/data axes, and open questions Q1–Q8. **Q1–Q8 ANSWERED 2026-07-19**
 > (management-only · B1 one-Firestore-`mountainId` · A1 one-Vercel + subdomains ·
-> visitor-facing selector); the execution plan is
-> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
+> visitor-facing selector); ⚠️ **the "subdomains" half of that answer was REVERSED on
+> 2026-07-28** — tenancy goes **path-based** (`mohocats.org/manisan`), see
+> [`tenancy-url-model-decision-20260728.md`](./pending/tenancy-url-model-decision-20260728.md) +
+> [`tenancy-path-migration-plan-20260728.md`](./pending/tenancy-path-migration-plan-20260728.md).
+> Q3's substance — one Vercel project, one build serving every mountain — is unaffected;
+> only how the tenant is named in a URL changes. The execution plan is
+> [`multi-mountain-refactor-plan-20260719.md`](./completed/multi-mountain-refactor-plan-20260719.md)
 > (phases M0–M8 — supersedes the framework's §10 checklist and this section's
 > candidate-scope list as the tracker; every item below is absorbed into a phase).
-> **EXECUTING: M1–M4 + M5 (all sub-phases) ✅ CODE COMPLETE.** M1–M3 (`8920c66`/`092d226`/
+> **✅ M1–M5 DONE & SHIPPED TO PROD (PR #8, merge `366425c`, 2026-07-23); cutover complete.
+> ✅ M6 (`d644d1b`) + M7 (`48f7085`) + M8 (`a237e8b`) committed on `dev`, plus a standalone GA4
+> setup guide (`7e3c517`). All phases M0–M8 done & committed — only owner-gated externalities
+> remain; `dev` leads `main` and awaits the P5.4 YouTube pass before promotion.** M1–M3
+> (`8920c66`/`092d226`/
 > `491b832`, 2026-07-19) → **M4** `b83a112` per-tenant service factory + write stamps
 > (2026-07-20, incl. the prod backfill) → **M5.1** `d4a0bb2` scoped reads + composite
 > indexes → **M5.2** `47d0f3d` per-mountain role model (map keyed by `mountainId`) +
 > mountain-aware `firestore.rules` (both 2026-07-22). M5.2a (role model) and M5.2b
 > (rules) were **inseparable at the emulator gate**. Gates: tsc, smoke 30/30, unit
 > 39/39, **rules 11/11** (new mountain dimension), **full e2e 116/13/0**.
-> **M0 rules deploy — DONE 2026-07-22 (owner).** ⚠️ **A NEW rules deploy is owed for
-> M5.2b, and it must be preceded by `migrate-m5-role-and-about.js`** (ORDER-CRITICAL:
-> a not-yet-migrated user is fail-closed → locked out). ⚠️ **CI is not yet updated**
-> for the new `test:rules` suite / coming M5.4 isolation e2e (owner-flagged, fresh
-> session). **M5.3 route audit DONE 2026-07-23** (all 21 API routes verified: no
-> leak-by-omission; residual cross-tenant surface = shared YouTube channel only,
-> non-Firestore/deferred; a pre-existing 7-ungated-route auth gap logged as a thread).
-> **M5.4a + M5.4b DONE 2026-07-23** — `manisan` stub added to `mountains.json`
-> (`hidden: true`) + seeded, and the two-tenant isolation e2e written (api Host-scoped
-> reads + mountain-scoped authz; public rendered content); full e2e 125/13/0. **M5 is
-> code-complete; remaining = the owner-gated rules deploy + wiring `test:rules` into CI.**
-> Its §6
+> **CI updated 2026-07-23** — a dedicated emulator-backed `rules` job in `ci.yml` runs
+> `npm run test:rules`; the M5.4 isolation e2e already rides the `e2e` job. **M5.3 route
+> audit DONE 2026-07-23** (all 21 API routes verified: no leak-by-omission; residual
+> cross-tenant surface = shared YouTube channel only, non-Firestore/deferred; a pre-existing
+> 7-ungated-route auth gap logged as a thread — **that gap is now CLOSED, 2026-07-26**: six
+> routes gated with `requireApiPermission`, permission mirroring the `firestore.rules`
+> clause on the resource each touches, the 7th (`generate-youtube-signed-url`) **deleted as
+> dead code**, + a 21-test `media-route-authz` e2e net;
+> `log/FEATURE_MOD_LOG.md` 2026-07-26). **M5.4a + M5.4b DONE 2026-07-23** — `manisan`
+> stub added to `mountains.json` (`hidden: true`) + seeded, and the two-tenant isolation
+> e2e written; full e2e 125/13/0. **✅ PROD CUTOVER COMPLETE 2026-07-23 (owner):** snapshot →
+> migration (`currentRole`→`roles`, `'default'`→`geyang`) → `firestore:indexes` (Enabled) →
+> **PR #8 merge** → `firestore:rules`. Multi-mountain is live in prod. Tail: delete legacy
+> `currentRole` + `about_content/about` + local dump once CMS confirmed healthy. Its §6
 > prerequisite — the **Tier 1 write migration** — is **done 2026-07-18** (see §7 +
 > `log/FEATURE_MOD_LOG.md`).
+>
+> **✅ M6 DONE & committed (`d644d1b`, 2026-07-25; no prod cutover) — per-tenant upload
+> namespacing.** Image uploads now prepend the active tenant's `storagePrefix`
+> (`generate-signed-url` route + the direct-storage form strategy via `useMountain()`); geyang
+> `''` → exact no-op, a future tenant's uploads isolate under `mountains/<id>/…`. **Scope was
+> corrected mid-flight:** a first draft also namespaced baked thumbnails + a `cats.thumbnailUrl`
+> migration, but the owner's dry-run found **0 changes** — prod cat thumbnails **and** album
+> photos serve from live Firebase **Storage URLs** (already tenant-scoped by object path), not
+> baked local paths. The thumbnail namespacing + migration script + M6 cutover runbook + e2e
+> fixture edits were **reverted/deleted**. The baked-vs-Storage-URL image model is now
+> documented in
+> [`docs/codebase/media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy).
+> Gates: tsc 0, unit +2, smoke 30/30, **full e2e 125/13/0**.
+>
+> **✅ M7 DONE & committed (`48f7085`, 2026-07-25) — analytics decoupling.**
+> `firebase/analytics` → a single shared **GA4** property via `gtag.js` (root-layout
+> `<Script>` gated on `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `send_page_view:false`);
+> `AnalyticsTracker` emits every `page_view` with `mountain_id` from `useMountain()`.
+> `getAnalytics` + the `analytics` export removed from `services/firebase.ts`; dead
+> `measurementId` dropped from `getFirebaseConfig`. Gates: tsc 0, smoke 30/30, unit 71/71,
+> **e2e 125/13/0**. 🔑 Owner-owed: register the GA4 `mountain_id` custom dimension + set
+> `NEXT_PUBLIC_GA_MEASUREMENT_ID` in Vercel before any tenant-2 traffic.
+>
+> **✅ M8 DONE & committed (`a237e8b`, 2026-07-25) — geyang-as-one-of-many + per-tenant
+> theming (minimal) + provisioning proof.** `manisan` stub + isolation e2e already landed
+> (M5.4). Theme wiring (owner-chose "primary color only"): a `primary` tailwind token →
+> `--color-primary` CSS var injected per tenant on `:root` by the `[mountain]` layout;
+> public CTAs repointed `from-brand`→`from-primary`; geyang reconciled to zero-change
+> (`#FACC15`). Browser-verified: geyang `#FACC15`, manisan `#0ea5e9`. The
+> `docs/manuals/deployment/new-mountain-setup.md` provisioning guide was **rewritten** as a
+> real runbook (one Firebase + one Vercel, host-routed, no new env), and the docs close-out
+> is done (`multi-tenant-config.md`, `services-layer.md`, AGENTS/CLAUDE.md, this §9, the
+> decision framework → EXECUTED). Gates: tsc 0, smoke 30/30, unit 71/71, **e2e 125/13/0**.
+> ⚠️ Theming is **deliberately partial** — the `brand` ramp + admin-only `from-brand` CTAs
+> stay static (a real 2nd mountain reads yellow there until a fuller pass). **The
+> multi-tenant hardening track is complete.**
+>
+> 🔄 **M8 SUPERSEDED 2026-08-05 (owner): the palette is GLOBAL — per-tenant theming is
+> removed, not extended.** Asked to centralize color control, the owner decided a mountain may
+> **not** differ in color: choosing colors per tenant is an administrative burden with no
+> preview and no contrast check, and `mountains.json` is baked, so "trying a color" queues a
+> redeploy. The `theme` block is **deleted from `mountains.json`** (both mountains), along with
+> `MountainTheme` and the `[mountain]` layout's injection (a `dangerouslySetInnerHTML`, now
+> gone with the hex validation that guarded it).
+>
+> 🔑 **What survives is the indirection, and deliberately so.** `--color-primary` remains,
+> declared once in `globals.css` as `theme('colors.brand.DEFAULT')` — resolved at **build**
+> time, so it is not a copy. The variable exists because a Tailwind token cannot reach
+> `<style jsx global>` blocks or third-party CSS (`.dsg-*`, Leaflet), which read variables
+> only. Net effect: the **three** hand-copied `#FACC15`s (`tailwind.config.js:29`, `:44`,
+> `globals.css:14`) collapse to **one**, and the 7 `from-primary` CTA sites need no edits.
+> ✅ Zero visual change — every tenant already resolved to yellow except hidden `manisan`.
+> 📌 M8's other half (geyang-as-one-of-many, provisioning proof) is untouched; only the
+> per-tenant color knob is withdrawn. Plan:
+> [`color-token-centralization-plan-20260805.md`](./pending/color-token-centralization-plan-20260805.md).
+>
+> 📁 **Everything still gated on a real mountain #2 lives in one doc** (created 2026-07-28):
+> [`mountain-2-prerequisites.md`](./pending/mountain-2-prerequisites.md) — the blocking code items,
+> the owner-run provisioning externalities, the should-fixes, and the decided/won't-fix
+> record. This §9 no longer tracks them individually; add new ones there.
 
 ### ⚠️ Production data was modified — 2026-07-20 (`mountainId` backfill)
 
@@ -749,7 +1079,7 @@ field spot-check — `개똥이` 19 fields incl. `adoptable:false`, `깡패` 21 
 overwrite failure mode did **not** recur. Browser pass against the stamped data
 rendered unchanged (map 8 points + avatars, photo album 10).
 
-Full detail: [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md) §3 M4.
+Full detail: [`multi-mountain-refactor-plan-20260719.md`](./completed/multi-mountain-refactor-plan-20260719.md) §3 M4.
 
 ### ⚠️ This Firestore is shared with a second application — M5 constraint
 
@@ -787,10 +1117,24 @@ What M5 accounts for (verified benign):
 - [x] Hard-coded map image path in the map host; source it from mountain config.
       **Closed by M1 (`8920c66`)** — `map.landscapeImage`/`portraitImage` in
       `mountains.json`, resolved via `getMapConfig()` with a fail-loud guard.
-- [ ] `mountains.json` vs `permissions.json` inconsistency (`manisan` exists in
-      one, not the other).
-- [ ] Theme not wired through — `config.theme` colors are read by nothing (the unused
-      `getMountainTheme()` accessor was removed in the 2026-07-11 dead-code cleanup).
+- [x] **✅ `mountains.json` vs `permissions.json` inconsistency — CLOSED by M5.4a
+      (2026-07-23).** Adding `manisan` as the stub tenant made the two coherent; keeping them
+      so is now a step in the provisioning runbook. **Verified 2026-08-01:** both files carry
+      `geyang` + `manisan` (`mountains.json` additionally holds the `_meta`/`_shared` blocks,
+      which are not tenants).
+- [x] **✅ Theme wired through — CLOSED by M8 (`a237e8b`, 2026-07-25).** `config.theme` was
+      read by nothing; `theme.primaryColor` now drives a `--color-primary` CSS variable that
+      the `[mountain]` layout injects on `:root` per request (hex-validated, fail-loud), and
+      the public CTAs were repointed `from-brand` → `from-primary`. Browser-verified: geyang
+      `#FACC15` (zero-change) vs manisan `#0ea5e9`. ⚠️ **Scope was owner-chosen as "primary
+      color only"** — the `brand` ramp and the admin-only `from-brand` CTAs stay static
+      deliberately, so a real mountain #2 would still read yellow there. That fuller pass is
+      a separate, unscheduled piece of work, **not** a leftover of this item.
+      🔄 **SUPERSEDED 2026-08-05:** the "fuller pass" was answered by **removing** per-tenant
+      theming rather than extending it — the palette is now global and `config.theme` is
+      deleted. 📌 **The irony is worth keeping:** this item closed because `config.theme` "was
+      read by nothing," and the resolution three weeks later was that it should not have been
+      read by anything. See §9's M8 supersession note.
 - [~] Per-mountain DB isolation at the service-factory seam. **Seam parameterized
   by M4 (`b83a112`)** — the getters take a required `mountainId` and cache
   per-tenant instances, and every write stamps it. **Isolation itself is M5**
@@ -817,7 +1161,7 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
       server/env). Structural smoke: referenced `/api/*` routes resolve to handlers,
       deploy-config keepers survive, critical public pages exist. Added as the
       regression net for the deployment cleanup
-      ([`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md)).
+      ([`deployment-cleanup-plan.md`](./completed/deployment-cleanup-plan.md)).
 
 - [x] **Playwright e2e harness + CI foundation landed (2026-07-11)** — the
       prerequisite plan is **executed**: a hermetic Firebase Emulator Suite
@@ -827,7 +1171,7 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
       secrets). All env-gated `src/` touches (WP2/WP3/WP4/WP7) are off in prod;
       prod build verified untouched. Trivial spec green locally (desktop + mobile
       landing map + admin `storageState`, ~6s). See
-      [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md)
+      [`playwright-ci-prerequisite-plan.md`](./completed/playwright-ci-prerequisite-plan.md)
       §7 and the 2026-07-11 `FEATURE_MOD_LOG` entry. **Owner follow-ups:** push/PR
       to confirm CI 3× green + branch protection; decide the non-admin
       `users`-write rule question that blocks non-admin login (2026-07-11
@@ -855,7 +1199,7 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
 
 **Plans drafted (2026-07-11):**
 
-- [`playwright-ci-plan.md`](./playwright-ci-plan.md) — the Playwright E2E suite
+- [`playwright-ci-plan.md`](./completed/playwright-ci-plan.md) — the Playwright E2E suite
   (public / auth / member / admin / API-security) against the **Firebase Emulator
   Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phases 0–7
   are DONE + merged to `main`** — harness/CI, `public/`, `auth/`, `member/`, `admin/`,
@@ -864,22 +1208,28 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
   non-admin-login blocker is resolved** — a scoped `users` self-write rule
   (+ `npm run test:rules`, 6/6) now lets non-admins log in. ⚠️ Still to do: deploy the
   rules change to Firebase for prod parity (`firebase deploy --only firestore:rules`).
-- [`playwright-ci-prerequisite-plan.md`](./playwright-ci-prerequisite-plan.md) —
+- [`playwright-ci-prerequisite-plan.md`](./completed/playwright-ci-prerequisite-plan.md) —
   the enabler plan that must land first: adopts the main plan's recommendations
   as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
   packages (emulator wiring, asset-script compat, fixtures/seed, harness, CI).
   ✅ **EXECUTED.**
 
-**Candidate scope — _confirm with user_:**
+**Candidate scope — ✅ SUPERSEDED by the executed main plan (ticked 2026-08-01).** These four
+were written when coverage was **zero** and the stack was undecided. The main plan answered all
+of them, so they are closed as **overtaken by events**, not as individually-worked items:
 
-- [ ] Decide the broader test stack (unit / integration / UI) and what to cover first
-      (permissions resolution, service layer, auth flows are high-value).
-- [ ] Runtime HTTP smoke (boot the app, key routes return 200) — deferred; needs
-      Firebase env, slower/non-deterministic. Today's structural smoke + `vercel-build` + a Vercel preview deploy cover this for now.
-- [ ] Add mock service implementations behind the existing interfaces to unblock
-      component/unit tests.
-- [ ] Smoke/UI tests for the critical public paths (map loads, gallery opens,
-      login renders).
+- [x] **Test stack decided & built** — Vitest for unit + emulator-backed Playwright for e2e;
+      the high-value areas named here (permissions resolution, service layer, auth flows) are
+      exactly what the `auth/`, `member/`, `admin/`, `api/` suites and the `test:rules` suite
+      cover.
+- [x] **Runtime HTTP smoke** — subsumed. The e2e suite boots the real app against emulators and
+      asserts far more than 200s, which is strictly stronger than the deferred HTTP ping.
+- [x] **Mock service implementations** — **not needed, and deliberately not built.** The
+      emulator-backed harness gave real Firestore/Auth/Storage in tests, so mocks behind the
+      interfaces would have added a second fidelity-losing surface to maintain. Recorded so the
+      idea is not silently re-proposed.
+- [x] **Smoke/UI tests for critical public paths** (map loads, gallery opens, login renders) —
+      delivered by the `public/` + `auth/` suites.
 - [x] CI wiring beyond `tsc`/lint — `.github/workflows/ci.yml` (checks +
       emulator-backed Playwright e2e) landed 2026-07-11.
 
@@ -893,6 +1243,1219 @@ none block the completed workstream.
 - [-] Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream
   (§4 perf item), not this suite.
 - [-] YouTube tagging admin flows (external API).
+
+---
+
+## 10a. ✅ Post-composer separation + per-mountain playlist filing (DONE 2026-07-27)
+
+> **Goal:** stop 집사게시판 from being a second media composer, move the per-file media work
+> to the one that does the job (집사톡), and make YouTube filing per-mountain instead of
+> title-matched. Plan + decisions:
+> [`butler-media-separation-plan-20260727.md`](./completed/butler-media-separation-plan-20260727.md).
+
+- [x] **B1 `0f9190f` — 집사게시판 drops media upload.** It is a 급식소 check-in log. Compose
+      time only: legacy posts still render their media through `PostList`, and `EditPostForm`
+      keeps URL-based editing. The form dropped `useRichContentForm` for a plain submit
+      handler. Both composers gained **취소**.
+- [x] **B2 `c2fc78f` — config-driven, per-mountain playlist filing.** `social
+.youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
+      입양홍보 playlist. Replaces a lookup that matched the playlist **titled** `집사게시판`
+      (a rename on YouTube stopped filing silently; every mountain filed into one list).
+      `upload-youtube` takes repeated `playlistId` fields, so an 입양홍보 video joins **both**
+      its mountain playlist and the adoption one — keeping the mountain playlist a complete
+      ownership record for §9's deferred `syncVideos` fix.
+- [x] **B3 `bd7ce23` — 집사톡 one file per section**, each with its own 제목/설명. Empty
+      description now stays empty (no invented default, no post body copied onto every photo).
+- [x] **B4 `97b72ed` + docs — 촬영일 is a calendar date.** ⚠️ It was a day early in KST: parsed
+      local, serialized UTC. **Correct at UTC, wrong in Korea — CI could not have caught it.**
+      Now encoded once as UTC midnight, matching `/admin/tag-videos`.
+
+🔑 **Owner-owed:** add the channel's back catalogue to the 계양산 playlist — it holds **4** of
+**13** videos, and the deferred `syncVideos` fix will treat the rest as unowned.
+
+⏸️ **DEFERRED, not queued** (HANDOFF open threads): 촬영일 should come from the **file's own
+metadata** with its timezone rather than the filename — iPhone files parse to nothing and
+silently take the upload time. **The owner deferred this deliberately on 2026-07-27; do not
+start it unasked.** Recorded to explain the behavior, not to schedule it.
+
+📌 **Logged, not fixed:** `/api/youtube-playlists` now has **no caller**.
+
+**Gates:** tsc 0 · smoke 31/31 · unit 102/102 · **full e2e 153 passed / 13 skipped / 0
+failed** · browser passes on both composers. ⚠️ YouTube-side behavior is **Preview-verified
+only** — no credentials in the emulator.
+
+---
+
+## 10c. ✅ Shareable link to one cat's modal (DECIDED 2026-07-29, DONE 2026-08-01)
+
+> **Ask:** "invite someone to view a particular cat." Today the only answer is _link to
+> `/pages/cats` and tell them the name_ — there is no URL that opens a specific cat.
+
+**Decision (owner, 2026-07-29): take the cheap option. The "real fix" is explicitly declined.**
+
+- [x] **C1 — `?cat=<id>` on `/pages/cats` (DONE).** `CatsBrowser` consumes the param on
+      arrival and opens that cat's `CatInfo` modal; opening a cat pushes the param, closing
+      clears it. 🔑 **Built on the modal system's existing history entry rather than beside
+      it.** `useModalLayer` already pushed a synthetic entry per overlay (so Android back
+      closes a modal); it now takes an optional **`historyUrl`** to put on that entry, and the
+      `history.back()` it already issues on close restores the previous URL. So the deep link
+      is ~10 lines of new history logic, not a second mechanism racing the first. Any modal
+      worth addressing can opt in the same way — pass `historyUrl` to `ui/Modal`.
+- [x] **C2 — keyed on the cat `id`, not the name (DONE).** Pinned by
+      `tests/e2e/public/cat-deep-link.spec.ts`, which is checkable precisely because the
+      fixtures separate the two (`test-cat-01` is named 테스트냥이일). 📌 **In production the
+      two look identical**: legacy cats' Firestore doc ids _are_ their Korean names (the Sheets
+      pipeline keyed docs by name), so a real link reads `?cat=개똥이`. Cosmetic — a rename does
+      not break it. ⚠️ **But know exactly why, because it is weaker than "doc ids are
+      immutable":** `cat-reads.ts` maps `{ id: doc.id, ...doc.data() }`, and all 32 prod cat docs
+      carry their **own `id` field** (a duplicate of the doc key, left by the Sheets import), so
+      the spread wins and `cat.id` is a **stored field**, not the document address. What actually
+      protects a link is that `CatFormData` has **no `id` member**, so a CMS rename writes `name`
+      and never touches it. 🔑 **Add `id` to that form — or re-run any name-keyed import — and
+      pasted links start breaking silently, with nothing to catch it.** The sturdy fix is to
+      spread first (`{ ...doc.data(), id: doc.id }`) so the address always wins; a no-op on
+      current data, deliberately not done here as it touches a shared read path.
+
+**Behaviour, as verified in a production build** (dev and prod were checked separately — see
+the ⚠️ below for why that mattered): arriving on `?cat=<id>` opens the modal; closing returns to
+a clean `/pages/cats` **without leaving the site**; opening a cat from the list sets the param;
+the browser **back** button closes the modal and clears it. An unknown id (deleted cat, mangled
+link) lands quietly on the full list. A link to a 별냥이 / 행방불명 cat opens too — the lookup
+runs against the full list, not the filtered view, so the visitor needs no toggle.
+
+⚠️ **Forward does not re-open the modal, deliberately left as-is.** Next's AppRouter re-asserts
+its own canonical URL onto the history entry while handling the back navigation, so going
+forward lands on a _clean_ URL with nothing to restore — self-consistent (no param, no modal),
+just not a restore. The `popstate` sync in `CatsBrowser` and the adopt branch in `useModalLayer`
+keep it correct if that ever changes, and make a restore unable to push a duplicate entry.
+
+🐛 **The one real trap, worth knowing before touching this.** The deep-link open is deferred by
+one `setTimeout(…, 0)`, and that is not a stylistic choice: Next's AppRouter re-asserts its
+canonical URL in an effect that runs **after** the page's own effects. Stripping the param and
+letting the modal push it back **in the same commit** means the re-assert runs last, with a
+canonical URL computed before the push — it wipes `?cat=` straight back off, and the modal then
+has no entry to pop. Symptom: the URL flicks to `?cat=…` and reverts a moment later. ⚠️ It must
+be `setTimeout`, **not** `requestAnimationFrame` — a shared link is often opened into a
+**background tab**, where rAF does not fire until the tab is looked at, and the modal simply
+would not be there on arrival. (Both failure modes were observed in the browser, not reasoned
+about.) The scheduled open is also **not** cancelled on effect cleanup: the effect re-runs when
+the router hands down a fresh `cats` array, and cancelling drops the open while the run-once
+guard swallows the retry — the deep link then silently does nothing.
+
+**What this deliberately does NOT do — recorded so it isn't re-litigated.** There is no
+`generateMetadata` / `openGraph` anywhere in the app, so a shared link renders whatever generic
+preview the site's default gives — the same card for 아롱이 as for the homepage. A `?cat=` param
+on a client component **cannot change that**. Per-cat link previews would need a real
+`/pages/cats/[id]` page; the owner weighed that and declined the cost (2026-07-29). ⚠️ If the
+motivating use case ever turns out to be **입양홍보** — persuading someone about a specific
+adoptable cat, where the preview card does the persuading — this decision is worth revisiting,
+because a faceless link wastes the share. **Still true as built** — this shipped unchanged.
+
+- [x] **C3 — the 이 냥이 링크 chip (DONE 2026-08-01, owner-requested).** 🔑 **The deep link is
+      only usable if a human can produce one**; looking an id up in Firebase is not a workflow.
+      A third chip in `CatInfo`'s existing action row (beside 📸 사진 보기 / 🎬 동영상 보기,
+      reusing `AlbumButton`) opens the **OS share sheet on touch devices** — one tap into a
+      KakaoTalk chat, which is where these links actually go — and copies to the clipboard on
+      desktop. Label follows the same predicate (링크 공유 / 링크 복사), detected after mount so
+      it is not a hydration mismatch.
+  - 🐛 **Fixed same-day after an owner report: the chip did nothing on desktop.** The first cut
+    gated on `typeof navigator.share === 'function'`, which desktop Chrome satisfies and then
+    refuses (`NotAllowedError — Permission denied`, measured). Because a dismissed sheet
+    legitimately produces a **silent** `AbortError`, the button had no visible failure path at
+    all. Now gated on `(pointer: coarse)` too. 🔑 **Feature detection is not affordance
+    detection**, and both prior verification passes missed it because they **stubbed**
+    `navigator.share` — a stub proves your branches, never that the platform runs them.
+    `log/DEBUG_LOG.md` 2026-08-01.
+  - ⚠️ **It builds the link (`utils/cat-link.ts`), it does not copy `location.href`.** `CatInfo`
+    renders on **six** surfaces (냥이들, 입양홍보, 소개, `CatGallery`, and the inline
+    `[catmodal:이름]` / media-link paths) and only 냥이들 carries `?cat=`. Copying the current
+    URL would share a link to `/pages/adoption` — quietly wrong, which is worse than no button.
+    Building it also means the chip works **everywhere a cat modal can appear**, which is more
+    reach than the deep link was originally scoped for.
+  - 🔑 **The tenant prefix is mirrored from the current path, not resolved from config.** The
+    config-driven answer is wrong _today_: geyang's `domains` lists `geyangsan.mohocats.org`,
+    but production serves from the **apex**, which is in no `domains` list and resolves through
+    the default-tenant fallback — so `findMountainIdByHost` returns null there and a
+    `MountainSelector`-style branch would emit `/geyang/pages/cats…`, re-prefixing exactly the
+    URLs the 2026-07-28 path decision keeps prefix-free. Mirroring the current path is correct
+    for apex, mapped subdomain, and `/{id}` alike, and needs no change when a real mountain #2
+    arrives. ⚠️ A dropped prefix would be a **silent** defect: the link resolves to the default
+    mountain, which has no cat with that id, so the visitor gets a cat list with nothing open —
+    and the bad links are already out in KakaoTalk, where they cannot be recalled.
+  - 📌 **A dismissed share sheet rejects with `AbortError`** — the visitor changing their mind,
+    not a failure. It must not log or show an error (the repo's log-and-re-raise convention,
+    applied naively here, would report a failure for the most common outcome). Every other
+    rejection is real: it logs **and** falls back to copying rather than appearing to succeed.
+    ⚠️ `navigator.share` needs transient activation, so it is called synchronously in the click
+    handler — `await` anything first and iOS Safari rejects with `NotAllowedError`.
+
+🆕 **One owner decision this raises, not blocking.** The cats page now emits a **GA4
+`page_view` per modal open**, because the URL genuinely changes and `AnalyticsTracker` fires on
+every `searchParams` change. That is standard SPA behaviour and arguably correct now that a cat
+_is_ an address — but it means `/pages/cats` view counts include modal opens, so the page will
+look busier than it did. `page_path` stays `/pages/cats` (only `page_location` carries the cat),
+so reports do not split per cat. Suppressing it would mean teaching `AnalyticsTracker` to ignore
+the `cat` param — a few lines, not done, since which behaviour is wanted is a product call.
+
+📌 **Sequencing note:** the path-based tenancy migration rewrites ~83 navigation sites, so new
+URL surface built now is touched again by it. Not a blocker at this size; it is the reason the
+contained version won.
+
+---
+
+## 10d. Per-file media in every composer (2026-07-29 → **redirected + partly DONE** 2026-07-30)
+
+> 🔄 **The 2026-07-29 decision was replaced by the owner on 2026-07-30, before any of it was
+> built.** It read: _"remove multiple-video upload from the composers — posts should not carry
+> a pile of videos"_, capping video at one everywhere. **That is no longer the plan.** Do not
+> implement a cap from the old text; it is kept here only so the reversal is legible.
+
+**Decision (owner, 2026-07-30) — two parts, in this order:**
+
+1. **Admin composers stay unrestricted.** 공지사항 and 입양홍보 are admin-only surfaces;
+   admins may attach as much media as they want. What those two forms were actually missing
+   was 집사톡's **per-file** upload — one file per section, each with its own 제목/설명 —
+   which is the opposite of a cap. **✅ DONE 2026-07-30** (see below).
+2. **`[ ]` A CMS-controlled toggle for whether multiple upload is allowed** — the real
+   intent behind the original ask, now aimed at the member-facing composer rather than
+   hard-coded everywhere. **Not started.**
+
+- [x] **D1 — per-file media in 공지사항 / 입양홍보 (DONE 2026-07-30).** Both forms moved off
+      the flat `MediaUploadField` onto `MediaItemList`, so every file carries its own 제목
+      (video) and 설명. Before this, all videos in a post shared **one** YouTube title (the
+      post title) and photos had no 설명 at all.
+  - Images moved onto `uploadImagesWithSignedUrls` — the only image path with somewhere for
+    a per-photo description to live. ⚠️ **Consequence, intended (owner-chosen):** those
+    photos now get a **`cat_images` record**, so they appear in the public 사진첩 and in the
+    admin tagging queue. The old direct-storage path recorded nothing at all.
+  - 🗑️ `MediaUploadField.tsx` and `uploadImagesToStorage` deleted — no callers left.
+- [x] **D1c — cat selector on both forms (DONE 2026-07-30, owner-requested).** The same
+      `CatSelectorModal` 집사톡 uses, one for video and one for images, shown once there is
+      media to tag — so the new `cat_images` records and the uploaded videos can be tagged at
+      upload time rather than only later in the tagging queue. Empty stays empty
+      (`needsTagging` is the never-been-tagged signal). The read-only field was extracted to
+      `forms/CatTagSelectField.tsx` and 집사톡's two hand-rolled copies now use it. ⚠️ Kept
+      separate from `admin/media/CatTagField`, the editor's free-text variant.
+- [x] **D1d — pasted-URL lists removed (DONE 2026-07-30, owner's call).** Both forms briefly
+      kept an "또는 URL 입력" list; it is gone. These composers now only attach uploads.
+- [x] **D1e — filename collisions prevented (DONE 2026-07-30).** The object path is the
+      filename verbatim (`uploads/<name>`), so two posts uploading `IMG_001.jpg` overwrote
+      each other. 🔑 **The bucket is the authority, not `cat_images`** — the record write is
+      non-fatal, 공지사항's old uploads recorded nothing, and `image_uploader` shares the
+      bucket, so an object can exist with no record. `generate-signed-url` now checks
+      `file.exists()` → **409** with an actionable Korean message. Timestamps were
+      considered and rejected: they lower the odds of a clash, they do not remove it.
+      ⚠️ Applies to 집사톡 too — shared route.
+  - 🔁 **AMENDED the same day.** The first cut _also_ signed the URL with
+    `x-goog-if-generation-match: 0`, so GCS would refuse an overwrite **atomically** and
+    close the check-then-PUT race `exists()` cannot. That header made the cross-origin PUT
+    **preflighted**, the bucket's CORS allow-list does not contain it, and **every image
+    upload from every deployed origin silently failed** — owner-reported within hours. It is
+    gone from both ends and the residual race is documented as accepted in the route.
+    Re-adding it is an **ordered** two-step change: widen `config/firebase/cors_fbstorage.json`
+    → apply with `npm run storage:cors` → _then_ ship the code. In any other order, image
+    upload breaks again. Chain: `log/DEBUG_LOG.md` 2026-07-30.
+- [x] **D1b — conspicuous separators (DONE 2026-07-30, owner-requested).** With several files
+      stacked, and a 동영상 list directly above a 사진 list, it was not visually obvious where
+      one file's fields ended or which section a picker belonged to. `MediaItemList` is now a
+      framed section with a header bar + count badge, numbered files, and a dashed rule
+      between them. Browser-verified on 공지사항 and 집사톡.
+- [x] **D2 — the multiple-upload toggle (DONE 2026-08-02) — 🔄 shipped as _static config_,
+      not a CMS setting.** Owner's answers: **집사톡 only** (공지사항/입양홍보 stay
+      unrestricted per part 1 above), **video and image toggle separately**, and **one setting
+      for all mountains**. Lives in **`config/media_control.json`**, read through the
+      fail-loud `src/utils/mediaControl.ts`; `forms/MediaItemList` gained an `allowMultiple`
+      prop (defaults to `true`, so only 집사톡 passes it) which hides the trailing
+      "add another" picker once a file is present. **Both flags ship `false`** — 집사톡 is
+      one video + one photo per post as of this change.
+  - 🔑 **Why the "CMS-controlled" premise was dropped (owner, 2026-08-02).** The Firestore
+    design was drafted — `admin_config`-shaped doc, admin control, `manage-app` gate — and
+    then rejected on a consequence it exposed: the setting is **global by decision**, so a
+    Firestore toggle would let **any one mountain's admin silently reconfigure every other
+    mountain's composer**. Static config moves that authority from "any admin" to "whoever
+    can deploy". ⚠️ The redeploy cost is **accepted, not overlooked** — the owner said so
+    explicitly. Do not "improve" this back into a runtime setting without re-deciding who
+    may flip it.
+  - 📌 **Two things the drafted Firestore design got wrong, recorded so they aren't
+    repeated.** (1) `admin_config` is **not** a settings precedent — it has **no
+    `firestore.rules` entry at all** (default-deny, Admin-SDK only) because it stores the
+    YouTube **OAuth refresh token**; a client-readable flag there would have meant opening a
+    rules `match` beside a credential. (2) 앱 관리's old 게시물 컬렉션 설정 tab looked like a
+    settings precedent but saved to **`localStorage`** — per-browser, so it could never have
+    been a shared setting. Both are gone as of this change (see §10j).
+- [ ] **D3 — align the media-section order across composers** (proposed, **still not**
+      decided). 집사톡 renders 동영상 → 사진; 공지사항 renders 사진 → 동영상. See the note below.
+
+📌 **Not a bug, recorded so it isn't re-investigated:** on 2026-07-29 videos appeared
+greyed-out and unselectable in 공지사항's picker while the same files were selectable in
+집사톡's. Cause: the **image** picker was used. It is first in 공지사항 but second in 집사톡,
+so muscle memory from one form lands on the wrong picker in the other, and `accept="image/*"`
+correctly greys out videos. Both components resolve `accept` from the same `kind` prop and
+both pass it correctly — **there is nothing wrong with the pickers.** The external drive was
+a red herring; only the two pickers' `accept` values differed. D3 exists to remove the trap.
+_D1b's framed sections and header bars address the same confusion from the other side: the
+picker now sits visibly inside a labelled 사진 or 동영상 box._
+
+---
+
+## 10e. ✅ Post media rendering converged (DONE 2026-07-31)
+
+> **Ask (owner, over one session):** the 입양홍보 feed's expanded post showed no image; 입양홍보
+> should be able to pop up on a site visit like 공지사항; and none of the per-file 제목/설명/태그
+> the composer collects was visible anywhere in a post.
+
+**The root cause behind all three: three hand-rolled media renderers.** `AnnouncementModal`,
+`AdoptionPostCard` and `/pages/announcements/[id]` each had their own copy, and they had
+drifted — different capabilities, different bugs. They now share **`PostMedia`**.
+
+- [x] **E1 — 입양홍보 expanded post shows the whole post.** It rendered ONE 80×20 thumbnail
+      chosen as `video ? youtubeThumb : image`, so a post carrying a video could never show its
+      photos, and a post with several images showed only the first. Chain:
+      `log/DEBUG_LOG.md` 2026-07-31.
+- [x] **E2 — 입양홍보 posts can pop up on a site visit.** Toggle on the composer and on
+      게시물 관리, backed by `getModalPost()` / `toggleModalDisplay()`. `AnnouncementModal`
+      generalised to `PostModal` over a `kind`; the ~50-line switch extracted to
+      `forms/ShowInModalToggle`. 🔑 **One popup per visit, most recently updated wins** across
+      both kinds — the existing rule extended, not a new one.
+- [x] **E3 — each medium shows its 제목 / 설명 / 태그.** None of it is on the post (which
+      stores only URLs); it lives on the `cat_images` / `cat_videos` record. New
+      `getImageDetailsByUrls` / `getVideoDetailsByYoutubeIds` + `useMediaDetails` resolve it
+      **live** — deliberately not copied onto the post, since the tagging surfaces keep editing
+      it and, for videos, YouTube is the source of truth (the 2026-07-26 rule). Live also means
+      **pre-existing posts display it with no migration**.
+- [x] **E4 — the announcement detail page joined the shared renderer.** It was the third copy
+      and the reason the owner still saw nothing after E3 shipped. `PostMedia` gained a
+      `layout` prop (`compact` for modal/feed, `full` for a dedicated page) so adopting it did
+      not shrink that page's previously full-width photos.
+
+📌 **Open question for the owner, not a defect:** a video's 제목 now appears **twice** — once in
+YouTube's own player overlay and once as our caption. Correct, possibly redundant; dropping the
+caption title for videos is a one-line change if wanted.
+
+⚠️ **A green test was covering a broken feature, twice over.** The adoption e2e asserted
+`getByAltText('이미지')` and passed throughout E1's bug, because the old markup emitted that alt
+on the image-only path the spec happened to exercise — and **no fixture in the repo carried any
+media at all**. `test-adopt-02` now carries two images _and_ a video (the broken combination),
+with different tags/captions per medium so a lookup returning one answer for everything cannot
+pass.
+
+---
+
+## 10f. ✅ Post surfaces: proportion, tone, and the 30-second stall (DONE 2026-08-01)
+
+> **Ask (owner, one session):** photos in an 입양홍보 post rendered out of proportion with the
+> video beside them; the 공지사항 detail page's standing "중요한 안내사항" banner reads too
+> official; and — on Safari — 공지 pages showed "no posts" / "can't find the post", with a post's
+> tags arriving late or never, all cured by reloading.
+
+- [x] **F1 — photos render at the video's width** (`be8eb77`). Two causes, both from
+      `PostMedia`'s `compact` layout landing on a surface that is not a dialog: the two-column
+      grid gave a lone photo half the width of the full-width video, and `w-full` + `max-h-64` +
+      `object-contain` pillarboxed it inside its own border. The 입양홍보 card moved to
+      `layout="full"`; `compact` now sizes the `<img>` to the picture. 📌 **Third defect from the
+      same default** — 10e's E4 was its mirror image. **Pick the layout explicitly at every
+      `PostMedia` call site.**
+- [x] **F2 — the "중요한 안내사항" banner is gone** (`6e55463`). Static markup on the page
+      template, appended to every announcement regardless of content, so a note about a cat being
+      fed read as gravely as a real advisory. Removed whole (the text was the box's only
+      content). No per-post 중요 flag exists and none was added; if wanted, it belongs on the
+      post, not the template.
+- [x] **F3 — the 30-second stall, and pages that lied during it** (`be36c9e`). Two stacked
+      defects; the second made the first visible. - **Firestore waited out a timeout before every first read.** Measured on Safari with
+      `performance.now()` stamps: **30,048 ms** from issuing the query to receiving 4
+      documents, of which the query was the last **48 ms**. The SDK's `detectBufferingProxy`
+      probe gets no answer and waits out the transport timeout (this SDK caps it at exactly
+      30 s) before falling back to polling. ⚠️ **Auto-detect was already on** —
+      `@firebase/firestore` 4.7.3 defaults it to `true`, so the usual "enable auto-detect"
+      advice was a **no-op**, proposed and discarded before shipping. Now forced onto long
+      polling in the browser. 🔑 **No capability lost:** transport, not feature — `onSnapshot`
+      still pushes live updates; the trade is streaming efficiency for realtime listeners, of
+      which this app has **zero** (all ~47 reads are one-shot). **Revisit if live listeners
+      are ever added** — see §12. - **Every public post surface used its failure state as its loading state.** The
+      없어요/찾을 수 없습니다 branches rendered whenever the value was empty — including before
+      the first fetch, which the SSR HTML shipped as first paint. New `hooks/useAsyncData` +
+      `components/ui/AsyncStates` applied to the 공지사항 list, the 공지사항 detail page and the
+      입양홍보 feed (the same defect sat in all three): `loading | ready | error` are distinct,
+      so the empty message is unreachable until a fetch really returns nothing, and a failure
+      offers 다시 시도 instead of impersonating empty content.
+
+📌 **Why no error was ever logged.** Firestore retries network failures internally rather than
+rejecting, so a bad connection **hangs** and never throws. That is why the owner's console showed
+a clean run returning 4 documents — and why the new e2e delays the response instead of aborting
+it. The genuinely reachable error cases are permission-denied and missing-index, not offline.
+
+⏳ **Owner-owed:** a Safari pass on the deployed Preview to confirm the 30 s is gone. Whatever
+buffers that connection may be an ISP or proxy rather than Safari itself, so other visitors may
+never have hit it; the local dev server has no proxy to reproduce against.
+
+---
+
+## 10g. ✅ Videos deleted from YouTube (DONE 2026-08-01, `7e8aa1b`)
+
+> **Ask (owner):** a couple of videos were deleted on YouTube and still showed tiles in the
+> public 영상첩, filled with YouTube's grey "unavailable" placeholder.
+
+**Root cause:** `syncVideos` is **import-only** — it computes one set difference (YouTube minus
+Firestore) and imports it. Nothing computes the other direction, so a `cat_videos` record
+outlives its video indefinitely.
+
+🔑 **Why auto-pruning was rejected (owner chose label-then-confirm).** `fetchChannelVideos` reads
+the uploads playlist with the **public API key**, in which a video made **private** disappears
+identically to a deleted one. Pruning on absence would destroy the record — and the cat tags,
+설명 and playlist membership the tagging queue exists to produce — the moment somebody flips a
+video to private, which destroys nothing on YouTube's side. Same shape as the 2026-07-26
+"YouTube owns video data" rule, aimed at the one thing YouTube does **not** own: our tags.
+
+- [x] **G1 — `POST /api/admin/video-availability`** (gated `manage-video`) asks YouTube with the
+      **owner's OAuth credential**, which _can_ tell the two apart: a private video returns with
+      `privacyStatus: 'private'`, a deleted one does not return at all. Writes
+      `youtubeStatus: available | private | missing`; **never deletes**.
+      🚨 **Safety valve:** if YouTube acknowledges _zero_ of the submitted ids — a credential,
+      scope or quota failure rather than a vanished channel — it refuses and writes nothing,
+      instead of flagging everything and emptying the public album in one call.
+- [x] **G2 — public reads drop `missing`/`private`.** ⚠️ Filtered in memory, deliberately **not**
+      as a `where` clause: records predating the check have no `youtubeStatus` field and a
+      Firestore inequality would exclude exactly those — i.e. every existing video. Absent =
+      watchable, so nothing vanishes until a check has judged it.
+- [x] **G3 — the CMS keeps seeing them.** `/admin/tag-videos` loads with `includeUnavailable`
+      and grows a panel listing the missing ones with 기록 삭제 (the confirm spells out that tags
+      go too). Private ones get a one-line note — they return by themselves if re-published.
+      📌 **Text-only by design:** a thumbnail for a deleted video _is_ the grey placeholder that
+      made these look broken, so a thumbnail grid would be a row of grey boxes.
+- [x] **G4 — 동기화 runs the check** as a third step; a failure there is logged but never fails
+      the sync, since the metadata refresh before it has already succeeded.
+
+⏳ **Not testable here, and owner-owed:** the classification itself needs real YouTube OAuth,
+which the emulator harness has no credential for (the same reason P5.4 is manual). Existing
+records stay unlabelled until **📺 YouTube와 동기화** runs once on a deployed environment; the
+ghosts then appear in the panel for deletion. _(Verified against prod data 2026-08-01 after the
+owner ran it: 20 videos, 18 `available` + 2 `missing`, both hidden from the public album and
+listed in the CMS panel.)_
+
+---
+
+## 10h. ✅ 촬영일 stopped being fabricated, and the two composers that could not set it gained the field (DONE 2026-08-02, `6e2dc49`)
+
+> **Ask (owner):** "when uploading videos the upload date becomes creation date."
+
+**The defect.** `POST /api/upload-youtube/complete` wrote
+`createdTime: createdTime ? calendarDateToInstant(createdTime) : new Date()`. 촬영일 is derived
+by regex-matching the **filename**, and when nothing parses the composers send `''` — falsy — so
+the route substituted the moment of upload.
+
+🔑 **The owner's own observation was the diagnosis.** They noted the bug did **not** affect
+집사톡, and that turned out to be the whole explanation: the composers split across two hooks.
+집사톡 / 집사게시판 (`useRichContentForm`) have had a **촬영 날짜 field** from the start, so a date
+is nearly always supplied; 공지사항 / 입양홍보 (`useSimpleContentForm`) had **none**. Following
+that asymmetry found **the same fabrication in the image path** (`uploadStrategies.ts`).
+⚠️ **The image one is worse:** `cat_images` has no upstream — Firestore **is** the source of
+truth for photos — so unlike videos nothing ever corrects it.
+
+⚠️ **Why it was hard to notice, and reads as two bugs.** The same request sends YouTube **no
+`recordingDate`** when none is supplied, so Firestore claimed a date YouTube did not have — and
+the next metadata sync overwrites it with `null`. The wrong date therefore **disappears later**,
+which looks like an unrelated "the date vanished" bug rather than evidence of this one. Neither
+stage logs anything.
+
+- [x] **Videos + photos store `null` when the date is unknown** — the same value the sync writes,
+      so the upload path and the sync path agree instead of fighting. The UI already renders it as
+      **날짜 없음**, which is honest and prompts someone to set it.
+- [x] **공지사항 / 입양홍보 gained a 촬영 날짜 field** (`forms/RecordingDateField.tsx`), auto-filled
+      from the filename exactly as 집사톡 does — videos take precedence over images, and a typed
+      value is never overwritten. Without it the fix alone would have left those two composers
+      unable to record a date at all.
+- [x] **Deliberately unchanged:** `uploadDate` / `publishedAt` stay `new Date()` — 게시일 genuinely
+      _is_ "now" for a fresh upload, and the album sorts on it (a null there caused a crash once,
+      `DEBUG_LOG` 2026-07-26).
+- ⏸️ **Still deferred (owner):** that 촬영일 is guessed from the **filename** at all rather than read
+  from the file's own metadata. This change only stops the fabrication.
+- 📌 **Existing records:** videos self-heal on the next sync; **photos do not** (no upstream). The
+  owner fixed the affected photos by hand 2026-08-02.
+
+**Verified.** `tests/unit/uploadYouTubeComplete.test.ts` (5 cases) asserts on the written
+document; 2 more cover the image strategy. **Both mutation-checked** — restoring each fallback
+fails exactly the date cases. The new field is driven in a **real browser** by 3 e2e cases.
+
+---
+
+## 10i. ✅ One album tile implementation instead of two (DONE 2026-08-02, `b61216a` + `82d0f07`)
+
+> **Ask (owner):** the photo album captions its thumbnails, the video album does not — "it's
+> likely how the video thumbnails are structured makes it difficult." Then, on seeing the code:
+> "`video.description || '제목 없음'` is indeed odd. Let's remove the fallback."
+
+🔑 **It was not a structural difficulty.** Both grids use the same shared `album/MediaTile`, but
+pass **different layouts**: photos take the default `layout="overlay"` and pass `description`, so
+the caption is drawn over the image; videos use `layout="below"`, whose footer shelf rendered
+**only tags and meta**. `description` was neither passed nor rendered there.
+
+- [x] **`MediaTile` gained a `title` prop** for the `below` shelf (clamped to 2 lines, above the
+      tag chips); the video album passes `video.title`, falling back to `description` for older
+      records and to `''` — which renders no line — rather than a placeholder on every tile.
+      **Titles, not descriptions, by the owner's call:** a YouTube title identifies a clip, a
+      description is prose, and prose on a white shelf would dominate the card.
+- [x] **The `|| '제목 없음'` filler is gone from both places it lived** — it announced a missing
+      _title_ while rendering a _description_, and the second instance sat in `VideoPlayer` under a
+      player already showing the real title.
+- [x] **The modal albums converged onto `MediaTile`.** 🔑 **This was the root cause of both
+      symptoms:** the album _pages_ used the shared tile while the _modal_ albums (opened from a
+      cat's card) hand-rolled their own and drifted — which is why the filler survived there long
+      after the shared tile had dropped it. Converging also gives modal tiles **tag chips** for the
+      first time.
+- ⚠️ **Side effect, owner call open:** converging removed `PhotoAlbum`'s `설명 없음` filler, which
+  had been left alone deliberately (unlike the video one it is correctly labelled). The shared
+  tile drops empty-state fillers by design; restoring it should be done **there**, so both
+  grids agree.
+- 📌 **Also deliberate:** the photo modal moved from `next/image` to `MediaTile`'s raw `<img>`. The
+  shared tile documents that full-size Firebase URLs stall `next/image`, and the photo album
+  **page** has served the same images that way all along.
+
+**Verified.** Screenshots of both converged modals in a real browser (seeded with media matching
+the cat's name — fixtures tag by id, so the modals render empty otherwise), plus a new e2e case
+pinning both title paths. Full e2e 196 passed / 3 failed, all three green in isolation.
+
+---
+
+## 10j. ✅ A settings screen that configured nothing, deleted (DONE 2026-08-02)
+
+> **Found while siting §10d's D2 toggle**, not reported: 앱 관리's 게시물 컬렉션 설정 tab was
+> the natural home for it, and inspecting it showed it had never worked.
+
+**What it was.** A textarea in 앱 관리 where an admin typed Firestore collection names; it saved
+them to **`localStorage`** (`admin-posts-collections`) and the dashboard's 게시물 tile listed
+them back. Introduced 2025-06-27 (`3907ad7`), carried through the permissions and `[mountain]`
+refactors, never finished.
+
+**Why it was dead, precisely** — the distinction matters, because the value _was_ read:
+
+- The dashboard read the key, then passed it to a stub that pushed **`count: 0`** for every
+  name behind a `// TODO: Replace with post service…`. It never queried Firestore.
+- The tile's headline number was **`postsCollections.length`** — how many lines you had typed,
+  not how many posts exist.
+- 🔑 **The tell:** the default list shipped **`posts_main`**, a collection that **has never
+  existed** in this codebase, and omitted **`posts_adoption`** and **`posts_butler`**, which do.
+  A wrong name sat there for ~14 months with no symptom, because a wrong name and a right name
+  both rendered `0`.
+- Being `localStorage`, it was per-browser and per-admin regardless.
+
+**What replaced it.** The tile now counts the four real collections through the existing service
+getters (`getAllPosts()` is mountain-scoped and excludes replies), labelled by the surface each
+backs — 급식현황 / 집사톡 / 공지사항 / 입양홍보 — with a real total. **Which collections exist is
+a fact about the code** (each is a service's `COLLECTION_NAME`), not an operator choice, which is
+why the configurability was the wrong shape to begin with; the list lives in `POST_COLLECTIONS`
+in the dashboard, and a new post service adds a row. The 앱 관리 tab is gone (the page keeps
+소개페이지 관리 + the disabled FAQ).
+
+**Verified in a browser against live data:** 게시물 **14** = 급식현황 6 + 집사톡 2 + 공지사항 4 +
+입양홍보 2. ⚠️ The hydration mismatch logged on those admin pages is **pre-existing and unrelated**
+— it reproduces on untouched pages (`/admin/cats`) and comes from the auth-dependent header
+(server renders 로그인/등록, client renders the signed-in user).
+
+---
+
+## 10k. ✅ Post detail: the wrong collection, then the wrong layout (DONE 2026-08-02)
+
+> **Ask (owner):** clicking any post on `/pages/butler_talk` — and on the 집사톡 tab of
+> `/admin/posts` — showed **"Post not found."** instead of the post. Then, once they opened:
+> they rendered full-bleed and unstyled, not like 공지사항 / 입양홍보.
+
+**Two defects, one after the other. Both had always been there; only 급식현황 ever reached
+this route, so nobody had seen either.**
+
+- [x] **K1 — a post is addressed by `(type, id)`, not `id` (`c4789c5`).** The four post types
+      live in four collections (`posts_feeding` / `posts_butler` / `posts_announcements` /
+      `posts_adoption`), but `/pages/posts/[id]` hard-coded `getPostService`, i.e.
+      `posts_feeding` — while `PostList` and `AdminPostList` linked **every** type there. A
+      `posts_butler` id looked up in `posts_feeding` simply does not exist.
+      🔑 **A Firestore id is unique only within its collection**, so a route taking an id alone
+      cannot resolve a post — no retry or permission change could have helped.
+  - 📌 **The report named 집사톡; 공지사항 and 입양홍보 were broken identically** in the admin
+    CMS, which links to the same route. Found by tracing rather than by re-reading the report.
+  - **New `src/services/post-types.ts`** — one `PostType` union, `getServiceForPostType()`,
+    `isPostType()`, `postDetailPath()`. That mapping had **three** copies (`AdminPostList`,
+    `EditPostForm`, and this page, which simply lacked it); all now share one. ⚠️ Import it
+    directly, not through `@/services`: it uses the factory getters there to keep the
+    per-tenant singleton cache, so re-exporting would close a cycle.
+  - 🔑 **The type is a path segment (`/pages/posts/{postType}/{id}`), not `?type=`, and has
+    no default.** The first cut used a query param with a `butler_stream` fallback for
+    backward compatibility and was **rejected on review (owner)**: a param can go missing
+    while the route still matches, forcing the page to guess a collection — the original bug,
+    reproduced silently. It also protected nothing, since the only type this route ever
+    resolved is admin-gated. `PostList` now takes a **required** `postType` prop, so a caller
+    that cannot say what it is listing does not compile.
+  - 📌 **Why it survived: the route had no e2e coverage at all** — the one place where a wrong
+    collection is indistinguishable from a deleted post.
+- [x] **K2 — it renders in the shared post shell (`d7c601f`).** The page had its own markup:
+      an unpadded full-bleed `<img>` under English `Video:` / `Images:` headings, with videos
+      as a thumbnail **linking off to youtube.com** instead of an embedded player. It now uses
+      the 공지사항 detail page's shell (back link · title · author • date · white card) and the
+      shared **`PostMedia`** with `layout="full"`, so every surface renders a post's media
+      identically. Per-type back links; 급식현황 included, as asked.
+  - ⚠️ **댓글 is offered on the community types only** (급식현황 / 집사톡). 공지사항 / 입양홍보
+    have never had a reply thread, and this route is where the admin CMS links — reaching them
+    here must not quietly grow one.
+
+**Verified:** `tests/e2e/admin/post-detail.spec.ts` (9 tests) — clicking through from the
+집사톡 list, all four types by direct URL, a genuine miss, an unrecognised type resolving
+nothing rather than guessing, the shared shell, and 댓글 scoping.
+
+---
+
+## 10l. ✅ Editing converged onto the create composers (DONE 2026-08-02)
+
+> **Ask (owner):** the CMS edit form takes media as a **pasted URL** — _"It's going to be
+> cumbersome to find the URL of an image. Is it possible to edit those posts with the creation
+> form?"_ Raised first for 공지사항 / 입양홍보 (`d71a101`), then for 집사톡 (`219b0e5`).
+
+**It was possible, and the obstacle had already been removed.** `EditPostForm` documented its
+own limit as _"their upload paths differ — signed URLs for feeding, direct Storage for
+announcements/adoption, YouTube for video"_ — true when written, **stale since 2026-07-30**
+(§10d D1), when 공지사항 / 입양홍보 moved onto the same signed-URL strategy 집사톡 uses.
+Nothing was left but the divergence, and two implementations of one job is what produced
+§10e's defects.
+
+- [x] **L1 — `useSimpleContentForm` gained an `edit` block** (load · prefill · `updatePost`),
+      and `NewAnnouncementForm` / `NewAdoptionForm` take an optional `postId`.
+- [x] **L2 — `useRichContentForm` gained the same**, and `NewButlerTalkForm` takes a `postId`.
+      집사톡 runs on a **different hook**, which is why L1 did not reach it; the 기존-media
+      helpers were lifted into `forms/existingMedia.ts` rather than copied.
+- [x] **L3 — `MediaItemList` gained `existing` / `onExistingChange`.** Media already on the
+      post shows as `기존` rows with a thumbnail and its own 삭제, and the UI says plainly that
+      삭제 **detaches it from the post** and does not delete the file.
+
+🔑 **Four decisions inside this, each of which could have gone wrong quietly:**
+
+1. **`기존` items carry no 제목/설명 editor.** That text lives on the medium's own record
+   (`cat_images` / `cat_videos`), and for a video **YouTube is the source of truth** — a caption
+   typed here would be erased by the next 동기화. It is edited in 사진 관리 / 동영상 관리.
+2. **An edit does not re-stamp `username` / `date` / `time`.** Only creation sets them;
+   re-stamping would relabel someone else's post with the editor's address and jump it to the
+   top of a list ordered by 게시일.
+3. **Post-level `tags` are omitted on an edit with no new files.** They mirror the cat selector,
+   which only applies to files being uploaded now — and since `updatePost` **merges**, sending
+   an empty array would have **erased the tags the post already carried**.
+4. **Retained media counts against 집사톡's cap** (§10d D2). A post already holding one video
+   and one photo shows **no picker at all** until one is removed. Editing must not be a way
+   around a limit creation enforces.
+
+⚠️ **급식현황 stays on `EditPostForm`, and this is a decision, not an oversight.** Its composer
+uploads no media at all (§10a, owner 2026-07-27), so routing its edit screen there would leave
+legacy 급식현황 posts that still carry a photo with **no way to change it**. The URL list can.
+
+**Verified:** `tests/e2e/admin/post-edit-composer.spec.ts` (6 tests) — prefilled composer with
+real pickers and no URL boxes, existing media surviving a text-only save, removing one photo
+detaching only that one, the 집사톡 cap holding against retained media and freeing one slot on
+removal, and authorship / 게시일 unchanged. Full e2e **2× consecutive 214 / 13 / 0**.
+
+---
+
+## 10m. ✅ The about page has one source of truth — the CMS (DONE 2026-08-02)
+
+> **Ask (owner):** _"I want whatever's entered in the CMS page to be the source of truth, and
+> get rid of everything that gets in the way."_ Raised on noticing that `mountains.json` still
+> carried an `about` object that looked stale.
+
+**It was stale in the half that was visible, and load-bearing in the half that wasn't** — which
+is why "just delete it" needed the photo pipeline moved first.
+
+- Firestore won for `title` / `subtitle` / `mainContent` / `sections`: `about_content/geyang`
+  exists, so the JSON was pure fallback. 📌 The proof was `sections` — the JSON declared two,
+  Firestore held **zero**, and the live page showed none.
+- **The photo was the opposite.** `useAboutPhoto` short-circuited to a `localPath` baked into
+  `mountains.json` by `fetch-static-assets.js` and **ignored the filename it was handed from
+  Firestore**. So the image came from static config while the caption beside it came from the
+  CMS. 🔑 **Changing the photo in the CMS did nothing** — a latent bug, invisible only because
+  both sources happened to name the same file.
+
+- [x] **M1 — the photo serves live from Storage.** `useAboutPhoto` resolves
+      `about-photos/{mountainId}/{filename}` from the CMS-supplied filename; the `localPath`
+      short-circuit is gone, which fixed the bug and unblocked the deletion in one move.
+- [x] **M2 — no JSON fallback anywhere.** The page and `AboutContentEditor` read Firestore
+      only; a mountain with no doc gets a blank form and a **"아직 소개가 준비되지 않았어요"**
+      page, distinct from the read-failed state.
+- [x] **M3 — `about` deleted** from `mountains.json` (both mountains) along with
+      `MountainAbout` / `AboutMainPhoto` / `AboutSection` / `getMountainAbout` and
+      `MountainConfig.about`.
+- [x] **M4 — the build-time about-photo leg retired.** `fetch-static-assets.js` loses
+      `fetchAboutPhotosFromStorage`, `downloadAndUpdateAboutPhotos`, `verifyAboutPhotosExist`
+      and — with them — its only reason to **write to `mountains.json`**.
+      🔑 **No Firebase media is baked into the build any more**; about photos were the last.
+- [x] **M5 — `scripts/migration/migrate-about-content-to-cms.js`, APPLIED to prod
+      2026-08-02** (snapshot `backups/firestore/2026-08-02T13-15-25-299Z` first). Seeds
+      `about_content/manisan`, strips the `mainPhoto.localPath` build artifact from both docs,
+      and deletes the legacy `about_content/about` (M5.2a left it in place pending exactly this
+      verification). `about_content` now holds **two** docs; a re-run is a clean no-op.
+      📌 manisan's seed carries an **empty `mainPhoto`** — it never declared one, and an
+      invented filename would render as a broken image.
+- [x] **M6 — `next.config.js` allows the Storage emulator's host under the emulator flag.**
+      🔑 **The e2e harness had no remote-image coverage at all** — thumbnail and album fixtures
+      use local `public/` paths, so the about photo became the **first** e2e image served
+      through Storage, and `nav.spec` went red on a `next/image` **400**. Production still
+      resolves to exactly one allowed remote host.
+
+⚠️ **Two costs accepted on purpose, not overlooked:**
+
+1. **A missing about photo used to fail the build; now it is a broken image on a live page.**
+   The fail-loud guard was only possible because the filename sat in config the build could
+   read. Putting the CMS in charge means the check moves to the operator — hence the new
+   "check `/pages/about` after saving" step in both manuals.
+2. **The 파일 이름 field is free text matched against Storage.** The CMS names the photo but
+   cannot upload it, so a typo reads as "사진을 불러오지 못했어요". Making that a real upload
+   control is the natural follow-up — **deliberately not folded into this change**, and now
+   tracked as [`BACKLOG.md`](./BACKLOG.md) **B1**, which records why it is not the drop-in
+   reuse of `generate-signed-url` it looks like.
+
+📌 **Found on the way, awaiting a decision: `sections` is stored, editable, and never
+rendered.** The public page shows 제목 / 부제 / 대표 사진 / 본문 only; the CMS has offered a
+섹션 editor the whole time. Either the page should render them or the field should go.
+Tracked as [`BACKLOG.md`](./BACKLOG.md) **Q1**.
+
+**Verified:** `tsc` clean, smoke 34/34, unit 103/103, full e2e (below). Prod Storage confirmed
+to serve `about-photos/**` to an anonymous reader, which the new path requires.
+
+---
+
+## 10n. ✅ Members author and edit their own 집사톡 / 급식현황 posts (BUILT + LIVE 2026-08-03)
+
+> **Ask (owner):** _"allow the author of 집사톡 and 급식현황 posts to edit the post"_ —
+> refined, after the finding below, to: **members may view, create and edit their own** on
+> **those two boards only**, and **may not delete**.
+
+🔑 **The premise was false, and that was the whole finding.** Members could not **see or
+create** on either board: the pages gated on `isAdmin()`, and the client-SDK write requires
+`manage-posts`, which only `admin` holds (verified against the **live**
+`role_permissions/role-config`, not just `config/permissions.json`). So "the author" was
+always an admin — who could already edit everything. The missing capability was never editing.
+
+📌 **The model had anticipated this and nothing used it.** `view-post-butler` /
+`view-post-feeding` were already granted to the butler roles **and already drove the nav**, so
+a member saw the link and then met 관리자 권한이 필요합니다. The code said so out loud:
+_"we allow both admin and butler roles"_, directly above `setHasPermission(isAdmin)`.
+
+- [x] **N1 — two permissions**, `write-own-post-butler` / `write-own-post-feeding`, each
+      covering create **and** edit-own on that board. `butler-internet` gets only the 집사톡
+      one, preserving the per-board split the roles already encoded.
+- [x] **N2 — `authorUid`** stamped at creation is what the rules authorize against;
+      `username` is an email, i.e. display. Posts predating it fall back to an email match.
+- [x] **N3 — rules** split into create / update / delete: create must author as self, update
+      requires authorship and cannot rewrite `authorUid`/`username`/`date`/`time`, delete
+      stays `manage-posts`.
+- [x] **N4 — board pages** gate on the `view-post-*` permissions; the `/new` routes gained a
+      gate at all (they had none — reachable by URL, harmless only because the write failed).
+- [x] **N5 — member edit route** `/pages/posts/[postType]/[id]/edit`, author-only, using the
+      composers rather than `EditPostForm`'s raw URL list.
+- [x] **N6 — e2e**: six new member specs. Full suite **220 / 13 / 0**.
+- [x] **N7 — the rules, tested directly (2026-08-03).** `tests/rules/posts.rules.test.ts`,
+      **43 tests** (`npm run test:rules` = 54 with `users.rules.test.ts`, CI-gated), asserting
+      the refusals e2e structurally cannot reach: a post attributed to someone else's
+      `authorUid`, an edit rewriting provenance, a `replyCount` moving by anything but +1 or
+      carrying a second field, a `feeding_spots` write outside the two allowed keys, a delete
+      on `write-own-*`, and `butler-internet` reaching 급식현황.
+      🔑 **It passed on the first run, which proves nothing** — `assertFails` passes for any
+      denial, including a mistyped collection — so four holes were punched in the rules to
+      check the assertions discriminate. **One escaped:** the two boards carry separate,
+      near-identical rule blocks and the provenance cases only ran against `posts_butler`, so
+      gutting `posts_feeding` alone was invisible. Every ownership case now runs against
+      **both** via `describe.each`. ⚠️ Adding a case for one board only re-opens that gap.
+
+⚠️ **Two cross-collection consequences found while building, not while planning:**
+
+1. **A reply writes to two documents.** `createReply` increments `replyCount` on the
+   **parent**, which the replier usually does not own — so "authors may edit their own" alone
+   denies most replies. A narrow `+1`-only clause covers it.
+2. **A 급식현황 post stamps `feeding_spots`**, which was `manage-posts`-gated. That stamp _is_
+   the board's purpose, and the call is non-fatal, so a member's post would have landed while
+   their check-in silently did not. ⚠️ Note a feeding spot is **shared state with no owner** —
+   this grant is genuinely wider than the post rules.
+
+🔴 **CORRECTED 2026-08-03 — this section said "NOT LIVE" and it was live.** Verified against
+production: the deployed ruleset (release **2026-08-02T16:00:12Z**) matches
+`config/firebase/firestore.rules` ignoring comments; `role_permissions/role-config` already
+grants `write-own-post-*` to both butler roles; and one active `butler-ground` member has
+**already authored two 급식현황 posts** (2026-08-03, both stamped with `authorUid`). The
+deploy steps below were therefore already taken — by an admin-UI save on Preview or an
+unrecorded `APPLY=true` run; the auto-seed path is ruled out (it fires only when the doc is
+absent). 🔑 **"Not on `main`" is not "not in production":** Preview runs `dev` against the
+**production** database, and rules + the matrix deploy by hand, out of band. **Check the
+deployed artifact, not the branch.**
+
+~~Deploy order: (1) `firebase deploy --only firestore:rules`; (2) `APPLY=true node
+scripts/migration/add-member-post-permissions.js`; (3) push.~~ Done. The remaining deploy
+belongs to **§10p**.
+Plan: [`member-post-authoring-20260802.md`](./completed/member-post-authoring-20260802.md).
+
+---
+
+## 10p. ✅ Members can post on 집사톡 but cannot attach media (FIXED + DEPLOYED 2026-08-03)
+
+> **Owner-raised:** _"we modified roles and permissions to allow butlers to edit their own
+> posts. I think we only thought about permissions for posts, but if you upload images
+> and/or videos you need image/video permissions as well."_ — correct, and verified before
+> any code was written.
+
+§10n granted the two **post** permissions and stopped there. 집사톡 is the only board a
+non-admin may write **and** the only one that uploads, and every upload surface gates on
+`manage-photo` / `manage-video`, which **only `admin` holds**:
+`POST /api/generate-signed-url` (manage-photo), `POST /api/upload-youtube` and its
+`/complete` half (manage-video, independently), and the `cat_images` client write
+(rules: `manage-photo`).
+
+🔴 **The member does not get a degraded post — they lose the post.**
+`useRichContentForm` catches an upload failure, alerts, and **`return`s**, so the save never
+runs. Everything typed is gone, behind an English `Image upload failed: Failed to get signed
+URL: Forbidden`.
+
+✅ **Verified before planning:** a throwaway rules suite asserted both butler roles denied on
+`cat_images` / `cat_videos`, **with two controls in the same run** — admin succeeds on both,
+and butler-ground succeeds on its own `posts_butler` post — so the denials are specific to
+media, not a broken fixture.
+
+📌 **Scope is 집사톡 only** (create page **and** the member edit route, which renders the same
+composer). 급식현황 uploads nothing by design (2026-07-27 D1); 공지사항 / 입양홍보 upload but
+stay admin-only.
+
+- [x] **P1 — narrow permissions, not broad ones (owner's call).** `upload-own-photo` /
+      `upload-own-video` granted to both butler roles. 🔑 **Widening to `manage-photo` would
+      have also authorized retagging and deleting anyone's album entries** — the narrow grant
+      exists precisely for what it still refuses.
+- [x] **P2 — `uploadedByUid` is the authorization identity.** Mirrors §10n's `authorUid` for
+      the same reason: `uploadedBy` is free text holding emails **and literals** (`'admin'`,
+      `'user'`, `'system_sync'`, `'youtube_sync'`), so it cannot carry authorization. Derived
+      inside the upload strategy from the same `user` that signs the request, so the display
+      and identity fields can never disagree. No backfill — the member clause is create-only.
+- [x] **P3 — rules:** `cat_images` gains `allow create: if canWrite('upload-own-photo') &&
+uploadingAsSelf()`. 📌 **`cat_videos` deliberately gains nothing** — a member's video
+      record is written by the Admin SDK in `/api/upload-youtube/complete`, which bypasses
+      rules, so the route is its gate and a clause there would be dead surface.
+- [x] **P4 — API gates accept any-of.** `requireApiPermission` takes `string | string[]`.
+      ⚠️ **Both permissions stay listed everywhere** — an admin holds only the broad one, a
+      member only the narrow one. §10n shipped exactly this bug once already.
+- [x] **P5 — tests, and mutation-tested.** `tests/rules/media.rules.test.ts` (15) +
+      `tests/unit/requireApiPermission.test.ts` (7) + stamp/gate assertions on the existing
+      upload specs. Three rule mutations and one gate mutation each produced the expected
+      failures.
+- [x] **P6 — the admin UI could not manage the new permissions** (owner-raised: _"we need to
+      update the 권한 tab"_). Both matrices on `/admin/members` **hardcoded their own copy** of
+      the permission list, so `upload-own-*` were granted in config, enforced by the rules, and
+      **invisible to the operator who administers them**. 📌 Saving was at least safe — the
+      matrix posts the _fetched_ object, so unlisted permissions already in Firestore are
+      preserved, not stripped. Root cause fixed rather than patched: **one exported
+      `ALL_PERMISSIONS`** in `src/types/permissions.ts`, with the `Permission` union derived
+      from it (`typeof …[number]`) and all four former copies importing it — including a
+      **fifth** in `src/config/permission-config.ts` that nothing imported and that had
+      **already** drifted. Also in the same pass: the 권한 (nav-visibility) matrix gained the
+      missing **`cats`** row — 냥이들 is gated in `Navigation` and had no row, so it could never
+      be configured — and lost `write-own-post-*`, which are _write_ grants offered as
+      _visibility_ gates (never selected in live config). A dead `PAGES` const in
+      `api/admin/resource-permissions` went too: never read, and wrong in both directions.
+- [x] **P7 — a guard, because a comment is not a constraint.** `tests/smoke` now compares the
+      catalogue against every permission granted in `config/permissions.json`, every permission
+      `firestore.rules` enforces, and every `resourceId` in `Navigation` — and fails if any
+      matrix re-hardcodes the list. Mutation-tested (remove a permission / remove the `cats`
+      row → the right checks go red). 🔴 **It found a real one on its first run:**
+      `view-analytics` is enforced on `permission_logs` reads and held by **no role**, so the
+      audit trail is readable by nobody — see BACKLOG **B2**.
+      🔬 **Verified in a browser, not just compiled** — `tests/e2e/admin/members-permissions.spec.ts`
+      drives both tabs (4 specs); full suite **224 / 13 / 0**, up from 220.
+- [x] **P8 — deployed 2026-08-03** (owner), in the correct order. ✅ **Verified against
+      production 2026-08-04 rather than taken on trust** — the deployed ruleset (release
+      **2026-08-03T12:03:36Z**) contains the `cat_images` create clause and
+      `uploadingAsSelf`, and the live `role_permissions/role-config` grants
+      `upload-own-photo` + `upload-own-video` to **both** butler roles. 🔑 That check is the
+      §10n lesson applied: **read the deployed artifact, not the branch** — and it is what
+      caught §10q still being undeployed.
+
+🔬 **Why both nets missed it, which is the part worth keeping.**
+`tests/e2e/member/butler-authoring.spec.ts` is text-only by an exclusion **inherited from
+`admin/butler-create.spec.ts`, where it was harmless because an admin holds every
+permission**. Carried into the member specs, the same exclusion sat exactly on top of the one
+thing the new role could not do. And the §10n rules suite missed it for the mirror-image
+reason: **it tested the permissions the feature added, not the ones its user journey depends
+on.** 🔑 **When a role gains a capability, walk its whole journey and list every permission
+each step needs — the gap is never in the permission you just wrote.**
+
+Plan: [`member-media-upload-permissions-20260803.md`](./completed/member-media-upload-permissions-20260803.md).
+
+---
+
+## 10q. ✅ Authors may delete their own posts, and reply authors may edit + delete their replies (DEPLOYED 2026-08-04)
+
+> **Owner:** _"give the authors the permission to delete the post they created. The media can
+> survive. Also, I want to give authors the same permissions (modify & delete). For replies, I
+> do not mean the author of the post, but the author of the reply."_
+
+**This reverses a §10n decision, deliberately.** Delete was withheld from members because _"a
+집사톡 post can carry other people's replies"_ — that reason is real and unchanged; the owner
+weighed it and chose to let authors retract their own work anyway.
+
+🔑 **A reply is a document in the SAME collection as the post**, distinguished by `isReply` +
+`parentId`. So one rule governs both, and "the author of the reply" needs no separate
+permission — the existing author test already resolves to the replier for a reply document.
+`ReplyForm` has stamped `authorUid` since §10n, so the identity is there.
+
+- [x] **Q1 — `delete` opens to the author** on `posts_butler` / `posts_feeding`, still refusing
+      everyone else. Update needed no change: a reply author editing their own reply already
+      satisfied `isPostAuthor() && provenanceUnchanged()`.
+- [x] **Q2 — the cascade needed its own clause.** `deletePost` removes **every reply first**,
+      and those belong to other people — so without `isParentAuthor()` the cascade is denied
+      partway and **an author cannot delete their own post once anyone has replied**. It costs
+      a document read, so it is the last term, after `isPostAuthor()` short-circuits the common
+      case. 📌 **A stamped `parentAuthorUid` field would avoid the read and was rejected:** a
+      reply is client-written, so a crafted one could name the wrong parent author and make a
+      post **undeletable by its own author**.
+- [x] **Q3 — `replyCount` may now move ±1**, not just +1. The services **recount**
+      (`replies.length`) rather than increment, so deleting a reply lands on `old - 1` and the
+      old bound would have denied it. ⚠️ Still exactly one step: anything further apart means
+      the count had already drifted, and correcting drift stays an admin action. Allowing
+      arbitrary values would let any member set any post's reply count to anything.
+- [x] **Q4 — UI.** 삭제 beside the existing 수정 in `PostList`; inline 수정 + 삭제 on a
+      reply's own card in `ReplyItem`. The confirm names the consequence ("댓글 N개가 함께
+      지워져요 · 사진과 영상은 남아요"). The two-era author test moved to
+      `@/utils/postAuthor` so `PostList`, `ReplyItem` and the rules cannot drift apart.
+- [x] **Q5 — tests.** Rules suite +17 (86 total), mutation-tested: removing the author term,
+      the −1 branch, or the parent check each failed exactly the right cases, and M1 in
+      isolation proved the **positive** author-delete test is not vacuous. Plus
+      `tests/unit/postAuthor.test.ts` (9) and `tests/e2e/member/butler-delete.spec.ts` (4,
+      each creating the fixture it destroys). Full e2e **228 / 13 / 0**.
+
+✅ **"The media can survive" needed no code.** Verified in both services: `deletePost` /
+`deleteReply` touch only reply documents and the post document — never `cat_images`,
+`cat_videos`, or Storage. A deleted post's photos stay in the 사진첩, which is what the owner
+asked for and what the code already did.
+
+- [x] **Q6 — rules deployed 2026-08-04** (owner). No migration — these ride on the existing
+      `write-own-post-*` grants. ✅ **Verified against production:** the deployed ruleset
+      (release **2026-08-03T15:55:38Z**) is **identical to `config/firebase/firestore.rules`**
+      ignoring comments, so §10n + §10p + §10q are all live.
+
+⚠️ **It spent a few hours in the exact half-state the deploy order exists to prevent, and that
+is worth recording because the shape recurs.** The **code shipped** (`01d02d7`) while the
+rules had not, so `PostList` rendered **삭제** on a member's own post while the deployed rules
+still said `allow delete: if canWrite('manage-posts')` — the button appeared, the confirm
+appeared, and the write was refused. (Reply **수정** worked throughout; editing never needed a
+rule change.) 📌 **Not an operator mistake** — the earlier deploy simply predated work written
+the next day. 🔑 **The standing hazard: code reaches production on `git push`, rules and the
+permission matrix do not.** Which is why the deployed artifact, not the branch, is what you
+check.
+
+---
+
+## 10o. ✅ A document with no `mountainId` is undeletable by everyone (FIXED 2026-08-03)
+
+> **Ask (owner):** _"deleted posts are still there in `posts_feeding` / `posts_butler`, but
+> 공지사항 / 입양홍보 delete cleanly."_
+
+🔑 **`canWrite()` reads the mountain off the _stored_ doc on a delete** — `request.resource` is
+null then — and `hasPermissionFor()` requires it non-null. **No permission grants past a
+missing field**, which is why it never presented as a permission problem.
+
+📌 **The correlation was a decoy, and the exception was the evidence.** The owner first read it
+as "flat-structured documents survive" — a real pattern, since those are the **replies**, all
+written 2025-07-09 before multi-tenancy and therefore unstamped until the 2026-07-20 backfill.
+Then they produced a **nested** post that had also survived. It was created **2026-07-21, one
+day after that backfill ran**, and was the only unstamped document among **98** across 11
+content collections.
+
+⚠️ **The gap is silent by construction:** a one-shot backfill cannot catch what is written
+after it, and an unstamped document behaves normally until someone tries to write or delete it.
+
+- [x] **O1 — `scripts/migration/stamp-missing-mountain-id.js`** audits every content collection
+      and repairs via the Admin SDK (the only path that bypasses the blocking rule). Applied to
+      prod after a snapshot; re-audit clean. **Re-run it as an audit after any migration or
+      bulk import** — that omission is what produced this.
+- [x] **O2 — `post-service.updateReplyCount` recounts** instead of `increment(1)`.
+      `deleteReply` calls it too, so deleting a 급식현황 reply _raised_ the parent's count;
+      집사톡's service already recounted.
+
+✅ **Verified by testing the rules rather than reading them** — `@firebase/rules-unit-testing`
+against the real `firestore.rules`, same admin deleting the same doc twice: **with
+`mountainId` ALLOWED, without DENIED**. 💡 The same harness backs the existing
+`tests/rules/users.rules.test.ts` (M5.2b, `npm run test:rules`) — and, since 2026-08-03,
+`tests/rules/posts.rules.test.ts` for the §10n post rules (below).
+
+---
+
+## 10r. ✅ 급식현황 publishing is gated on a check-in confirmation (DONE 2026-08-05, `c515058`)
+
+> **Owner:** _"let's gate the 급식현황 post with confirmation. Once the post is posted, the
+> status of the feeding spots change and there's no way you can take it back. We should at
+> least give the list of updated feeding spots and have the user confirm."_
+
+🔑 **The irreversibility is real and asymmetric with the rest of the composer.** Publishing
+writes `last_attended` / `last_attended_by` onto shared `feeding_spots` documents, and a spot
+keeps only its **latest** visit — the previous stamp is overwritten, not versioned. So unlike
+the post itself (which its author may edit, and since §10q delete), the check-in has **no**
+correction path: `deletePost` never touches `feeding_spots`, and `NewPostForm` has hidden the
+급식소 section on edits since §10n for exactly this reason. The dialog is the only correction
+opportunity the flow has.
+
+- [x] **R1 — 확인 before any write**, listing every ticked 급식소 by name plus the 방문 시간 and
+      the warning that it cannot be undone. Asked **before** `setSubmitting`, so the buttons stay
+      live under the modal. Creation only — an edit touches 제목/내용 and re-stamps nothing.
+- [x] **R2 — the empty branch says something different.** With no spot ticked the dialog reads
+      선택한 급식소가 없어요 rather than warning about a write that is not about to happen. It
+      also catches the opposite mistake: the author who meant to tick and did not.
+- [x] **R3 — the message builder is a pure module** (`src/utils/feedingCheckIn.ts`), not a
+      closure in the form. The spot list, its ordering and its count are pinned by
+      `tests/unit/feedingCheckIn.test.ts` (11); e2e covers the gate itself (dismissing
+      publishes nothing and leaves the draft intact).
+      🔄 **Amended 2026-08-05:** this item used to say the listing was "unreachable from e2e"
+      because `seed-emulators.mjs` seeded no `feeding_spots`. **It is seeded now** (4 spots
+      spanning the freshness ramp), so the 급식소 현황 **table** has e2e cover —
+      `tests/e2e/member/feeding-spots-list.spec.ts`. 📌 The **composer's** picker remains
+      unit-only; the seeding closed the table, not the form.
+- [x] **R4 — time formatting reads the `datetime-local` components literally.** A `Date`
+      round-trip would reinterpret a zoneless value in the browser's zone and could show an hour
+      other than the one in the input beside the dialog.
+
+**Verified.** tsc · unit **133** (+11) · smoke **39** · e2e **229/13/0** (+1). Mutation-tested:
+dropping the `checkedSpotIds` filter failed exactly the four cases that assert the listing.
+
+📌 **Not done, deliberately out of scope:** the 급식소 write is still non-fatal
+(`NewPostForm.tsx` logs and swallows — "the post is already created"). The dialog now _promises_
+those spots will change, so a failed write leaves the author told the post succeeded with the
+spots unstamped. Flagged to the owner; also collides with the repo's log-and-re-raise convention.
+
+---
+
+## 10s. ✅ Renaming a cat is a cascade, and there is a script for it (DONE 2026-08-05, APPLIED to prod)
+
+> **Owner:** _"what happens when I change a cat's name? Will the cat modal and urls to the cat
+> modal break?"_ → _"can you write a script to 'refactor' a cat name?"_
+
+🔑 **A cat's identity is its document id.** `updateCat` patches in place, so `?cat=<id>` links
+already pasted into KakaoTalk survive a rename untouched — the reason §10c C2 made that param
+the id and not the name. **But four things store the name as a string, and editing the cat
+updates none of them. All four fail silently.**
+
+| Stored where                              | What a bare rename does                                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `cat_images[].tags` / `cat_videos[].tags` | 사진첩/영상첩 come back **empty** — the albums query `array-contains cat.name`. Media is not deleted, just unreachable. |
+| `[catmodal:이름]` in CMS text             | The link still renders and still looks clickable; clicking it produces a `console.warn` and nothing else.               |
+| Other cats' prose                         | The same tokens sit in any cat's 작명 사유 / 특이사항 / 설명.                                                           |
+| `cats.parents` / `cats.offspring`         | The modal's 엄마/애 rows keep naming a cat that no longer exists. Plain text, so nothing breaks — it just reads wrong.  |
+
+- [x] **S1 — `scripts/migration/rename-cat.js`**, dry-run by default (`APPLY=true` to write),
+      matching the other migration scripts. Refuses rather than guesses: a name another cat in
+      the tenant holds (that ambiguity is what makes `getCatByName`'s first-match-wins
+      unreliable), an `OLD_NAME` matching two cats, a `CAT_ID` from a different mountain than
+      `MOUNTAIN_ID`, a no-op rename.
+- [x] **S2 — token rewriting matches `[catmodal:NAME]` only**, never the bare name (a cat called
+      별이 must not rewrite every 별이 in a post body), with the name regex-escaped so `아롱(2)`
+      cannot compile into a capture group matching another cat's token.
+- [x] **S3 — `parents`/`offspring` added after the owner's dry run (`70e2c60`).** ⚠️⚠️ **Whole
+      members only, never a replace, and the live rename is the proof:** 아들조로 → 조로 makes the
+      **new** name a substring of **two** existing cats, and one cat stores a list
+      (`cats/예쁜이엄마 → "순돌이,예쁜이,블타"`). Separators and spacing round-trip untouched.
+- [x] **S4 — patches merge per document before committing.** A cat can appear in both the prose
+      and family passes (`cats/엄마조로` does), and Firestore rejects two writes to one document
+      in a single commit. Reported separately, written once.
+- [x] **S5 — emulator coverage + a `demo-*` guard** — see §10s-bis below.
+
+⚠️⚠️ **The video half of the cascade does not stick, and this is not fixable here.**
+`/api/refresh-video-metadata` overwrites `cat_videos.tags` from `snippet.tags` on every
+📺 YouTube와 동기화 run — the route says `// YOUTUBE-SOURCED: tags (ALWAYS OVERWRITE)`. Writing
+to YouTube needs the OAuth path the CMS owns, so the script instead **prints the affected
+YouTube ids and the exact CMS step** (동영상 태깅 → 일괄 태그 저장, which writes through). A fix
+that silently un-fixes itself would be worse than none.
+
+🔑 **The lesson that generalises: fixtures only model the fields you already know matter.**
+`parents`/`offspring` were missing from the first cut and **no test could have caught it** — the
+emulator fixtures were written by the same person who missed the field. What found it was the
+**owner dry-running the script against production** and querying a listed document that looked
+wrong. It was in fact correct (`cats/엄마조로`'s description links to the renamed cat), but
+checking it exposed `offspring: "아들조로"` sitting one field away. **Dry-run destructive tooling
+on real data before trusting its coverage.**
+
+✅ **APPLIED to production 2026-08-05** (owner): 아들조로 → 조로. Verified after the fact —
+`cats/아들조로.name = "조로"`, `cats/엄마조로.offspring = "조로"`, `cats/깡패.adoption_info` token
+repointed. ⚠️ **Two YouTube re-tags outstanding** (`HG-SA4gyVAE`, `XnIEN2chwww`).
+
+📌 **On cat document ids, since this surfaced it.** All **32** legacy cat docs are keyed by name,
+but `createCat` uses `addDoc`, so every cat added through the CMS already has a random id —
+`id ≠ name` is the normal state going forward, not an inconsistency to repair. **Changing an id
+is not possible**: Firestore ids are immutable, so it means create-copy-delete, which breaks
+every `?cat=` link in circulation **silently** (the page renders with no modal open). Verified
+across 8 collections that **nothing else in the database references a cat id**.
+
+---
+
+## 10s-bis. ✅ Migration scripts get an emulator-backed suite + a demo-only guard (DONE 2026-08-05, `de4efe2`)
+
+A **third** emulator-backed test category, `tests/scripts/**`, run by `npm run test:scripts`
+with its own CI job — mirroring `tests/rules/**` exactly, and excluded from the default
+`npm test` for the same reason (that run must stay usable with no emulator and no JVM).
+
+🔑 **The plumbing was mechanical; the real change was the script's credential path.**
+`rename-cat.js` could only start from a real service-account key, so the harness had to be
+pointed at the production project id by hand. CI is deliberately hermetic — the e2e job's
+comment: _"a demo-\* Firebase project with fake keys means NO GitHub secrets are required"_ — so
+the script now takes the credential-less emulator path `seed-emulators.mjs` already uses, **and
+refuses to run unless the project is `demo-*`**.
+
+📌 **The guard is the point, not a side effect.** It makes "the test cannot touch production" a
+property the script enforces rather than a property of how it happens to be invoked. It runs the
+other way too: every run prints `TARGET: PRODUCTION Firestore …` or `TARGET: … EMULATOR …`
+first, because a stray `FIRESTORE_EMULATOR_HOST` in an operator's shell would otherwise send an
+`APPLY` run to a throwaway database and report a tidy success.
+
+⚠️ **Each case spawns the script as a child process** — it reads `APPLY` / `OLD_NAME` /
+`NEW_NAME` at module load, so an imported copy could not vary them. `fileParallelism: false`,
+since the cases reseed shared collections.
+
+**Verified.** **23** cases. ✅ **Re-run with the service-account key moved aside and
+`SERVICE_ACCOUNT_KEY` unset** — still green, which is the claim the CI job actually depends on.
+Mutation-tested: neutering the `demo-*` check failed exactly the one case asserting it.
+⚠️ **The CI job has never run on a runner** — it is a near-copy of the `rules` job, but the
+first PR is its proof.
+
+---
+
+## 10t. ✅ A video's YouTube 설명 is taken verbatim, empty included (DONE 2026-08-05, `551049f`)
+
+> **Owner:** _"there is a distinct video description input field. We need to take what's in that
+> input field verbatim - empty if empty. […] I might have said something inconsistent with this
+> in the past."_
+
+They had, and the code recorded it. 공지사항/입양홍보 uploaded a video with
+`item.description || message || '공지사항 동영상'`, so a blank 설명 silently published the **post
+body** as the YouTube description.
+
+- [x] **T1 — `useSimpleContentForm` passes `videoItems` through unchanged.** The comment that
+      argued _for_ the old behaviour is replaced by one recording the **reversal**, so it cannot
+      be restored from the rationale that used to sit there.
+- [x] **T2 — `youtubeDefaults.description` removed** from both composers and from the config
+      type; it had no remaining consumer. **`youtubeDefaults.title` stays by decision (owner):**
+      an untitled video on YouTube is worse than one carrying its post's title.
+- [x] **T3 — the UI changed with the behaviour.** Both forms passed
+      `descriptionHelp="비어 있으면 글 내용이 사용돼요."` — true before, a lie after. The override
+      is **deleted** rather than reworded, so both inherit `MediaItemList`'s own
+      "비어 있으면 YouTube 설명 없이 올라가요." — the string 집사톡 already showed. That left the
+      `descriptionHelp` prop with no callers, so it is gone too.
+
+📌 **집사톡 needed no change and never appeared in the diff.** The report named it and was
+accurate — about **production**, which runs `main`, where the old shared hook still does
+`description: message || config.youtubeDescriptionDefault`. `dev` has taken the 설명 verbatim
+since the per-file refactor (§10d). 🔑 **A behaviour report is about the deployed artifact, not
+the branch** — the §10n lesson arriving from the opposite direction: there the repo looked behind
+and production was ahead; here the repo is ahead and production is behind.
+
+📌 Photo descriptions in these forms were already verbatim; only the video path inherited.
+
+**Verified.** tsc · unit **189** · lint · full e2e **229/13/0**, unchanged. ⚠️ **The upload leg
+has no automated cover** — `generate-signed-url` signs with a service-account key the harness
+lacks, and YouTube upload is manual-parity (P5.4) — so what description actually reaches YouTube
+is a **manual** check: upload a video to a 공지사항 with 설명 blank and confirm YouTube shows
+none. 📌 **Existing videos keep their inherited descriptions**; 동기화 reads description _from_
+YouTube, so correcting an old one means editing it there.
+
+---
+
+## 10u. 🎨 Colour has one source of truth; per-tenant theming is withdrawn (Phases 1–4 DONE; Phase 5 open)
+
+> **Owner:** _"I want to be able to control the colors in one place… a more natural place would
+> be a file that controls design tokens."_ — and, on scope: _"tenants may not differ in color.
+> every tenant use the same colors."_
+>
+> **Full plan, decisions and reasoning:**
+> [`color-token-centralization-plan-20260805.md`](./pending/color-token-centralization-plan-20260805.md).
+> Commits `165df61` · `223e3ef` · `b7fef42` · `ae363a1` · `f11c171` · `6618c8b`.
+
+🔑 **The answer to the ask was "you already have it."** `design.md:9` designates
+`tailwind.config.js` as the single source of truth for token values and `:292` explicitly
+forbids duplicating them into "this file, a `tokens.json`, or component CSS". A new token file
+would have been the exact artifact that doc exists to prevent — and Tailwind cannot read one
+without a build step, so every colour would then live in two hand-synced files. **Nothing was
+created; the existing file was adopted.**
+
+🔑 **The survey found colour defined in six mechanisms, and that most apparent drift is
+deliberate.** Of 1350 palette utilities, **1068 are neutrals** `design.md:65` intentionally does
+not alias and **207 are status colours**. Of the 75 yellow/amber/orange, only **~30 are brand**.
+⚠️ **A blanket migration would have shipped two defects**: warning notices adopting the brand
+hue (`design.md:75`: warning is _"distinct from brand"_) and a Kakao button that stops being
+Kakao yellow. **The classification was the work; the renaming was mechanical.**
+
+⚠️ **Mechanism 6 is the one to remember: colour computed at runtime.** The 급식현황 ramp was
+`rgb()` arithmetic inline in a component — invisible to a grep for hex literals _and_ to a grep
+for `text-*` utilities, which is why the first survey missed it entirely. **Any future colour
+audit must also grep `rgb(`, `hsl(`, and inline `style={{ color`.**
+
+### What shipped
+
+- [x] **U1 — the palette is global (supersedes M8).** `theme` deleted from `mountains.json`,
+      `MountainTheme` deleted, and the `[mountain]` layout's injection removed — including its
+      `dangerouslySetInnerHTML` and the hex validation that guarded it. 🔑 **The
+      `--color-primary` indirection is KEPT deliberately**: `globals.css` declares it as
+      `theme('colors.brand.DEFAULT')`, resolved at **build** time, so it is not a copy. It
+      exists because a Tailwind token cannot reach `<style jsx global>` or third-party CSS
+      (`.dsg-*`, Leaflet), which consume variables only. **Deleting it would have looked tidier
+      and been wrong.** Net: **three** hand-copied `#FACC15`s collapse to **one**.
+      📌 **Why removal and not a fuller theming pass:** no preview, no contrast check, and the
+      config is baked — so a mountain "trying a colour" queues a redeploy each time.
+- [x] **U2 — ~30 brand utilities adopt `brand`/`accent`** across 9 files, admin included (D5).
+      **Equivalence proven three ways**, not assumed: every ramp stop is byte-identical to
+      Tailwind's `yellow`/`orange`; each migrated class compiles to the same declaration as its
+      predecessor; old vs new rendered side by side. ✅ **An unplanned completeness proof:** in
+      that comparison the OLD classes rendered **unstyled**, because Tailwind had purged them
+      from the bundle — which happens only when no source file references them.
+- [x] **U3 — 급식현황's freshness ramp goes green→red ⇒ blue→red.** ⚠️ **The only user-visible
+      change in this workstream.** Requested on preference; it fixed three defects. The old
+      fresh end measured **1.37:1** against WCAG AA's 4.5:1 — invisible, and **worst exactly
+      where the news was good**; the new ramp's worst point is **6.47:1**. Green↔red is also the
+      pair most likely to be indistinguishable under colour blindness. And `0h`/`≥60h` were
+      special-cased with classes that did not match the ramp they bookended, so the scale
+      **jumped at the two thresholds an operator watches**; the ratio is clamped now.
+      🔑 **It went undetected because the logic was a closure inside the component and therefore
+      untestable** — extracting it to `src/utils/feedingFreshness.ts` was the precondition for
+      the contrast check, not tidiness. That check now walks every hour 0→60 and carries a
+      **negative control** so it cannot silently stop measuring.
+- [x] **U4 — `feeding_spots` is seeded, so the table has e2e cover for the first time.**
+      ⚠️ Needed a dedicated writer: `seedCollection` turns a fixture's `id` into the _document_
+      id and strips it, but this collection reads `data.id` as a **numeric field** and orders by
+      it. Offsets convert to Timestamps **relative to the seed run** — a fixed date would drift
+      past the clamp and stop exercising the scale. **This closes the caveat §10r R3 recorded.**
+- [x] **U5 — `design.md`'s scope line corrected.** It read _"Admin (`react-admin`) screens are
+      out of scope"_ and had outlived what it described: the subsystem was deleted in `d963d30`
+      (2026-06-29). Owner confirmed admin **is** in scope.
+
+**Gates:** `tsc` 0 · unit **196** · smoke **39** · **full e2e 233 passed / 13 skipped / 0
+failed** · `next build` green. ✅ **Both nets proven to have teeth** — inverting the ramp made
+the unit hue test _and_ the e2e colour assertion fail while hue-agnostic tests stayed green.
+
+### Phase 4 — hygiene — ✅ DONE 2026-08-06
+
+- [x] **U6 (plan Phase 4) — hygiene.** All three sites resolved.
+      `YouTubeAuthPanelNew`'s status map now returns **Tailwind utility pairs**
+      (`text-emerald-500` + `border-emerald-500/20`, …) as classes instead of four raw hexes in
+      two inline `style` props — and the `/20` is **exact**, since the old `${hex}33` suffix is
+      `0x33 = 51/255 = 0.2`. `Compass` takes `fill-red-500` / `fill-gray-100` (an inline SVG in
+      our own JSX, so `fill-*` reaches it). **`LeafletMountainMap:302` keeps its hex by
+      decision** — Leaflet writes `color` into the SVG `stroke` **presentation attribute**,
+      which takes neither a class nor `var(--…)` — and now carries a comment saying so.
+      ⚠️ **These stay status hues**; tokenizing them to `brand` was the one way this edit could
+      have shipped a regression. ✅ **`design.md` §Colors now opens with the global-palette
+      callout** — a mountain may not differ in colour, **M8 withdrawn, not deferred**, and
+      `--color-primary` is an escape hatch rather than a second definition. 🔑 **That doc edit
+      was the point of the phase:** the decision lived in `AGENTS.md`, this doc and the plan,
+      i.e. everywhere except the one document read before proposing per-tenant theming again.
+      **Verified:** `tsc` 0 · smoke **39** · unit **196** · **e2e 233/13/0** (unchanged from
+      Phase 3, as a no-behaviour-change phase should be); browser pass on the **public** map
+      (compass renders the identical `rgb(239,68,68)` / `rgb(243,244,246)`, and all eight
+      status rules confirmed in the compiled stylesheet). ⚠️ **`/admin` still unseen** — see U8.
+
+### Open — deferred to a fresh session
+
+- [ ] **U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED.** `design.md` also
+      governs typography, spacing, elevation, shapes and the modal/component specs. Admin
+      screens were exempt from all of it until 2026-08-05 and **nothing has ever checked them
+      against any of it.** Recorded so it is scheduled rather than discovered.
+- [ ] **U8 — one browser confirmation.** The `/admin/*` screens were never seen rendered
+      (auth-gated, no credentials that session): 게시물 / 집사들 / 앱 관리 and 냥이들' grid
+      header. Everything is pixel-identical by construction, so this is a confirmation, not a
+      hunt.
+
+📌 **Naming trap in the plan doc:** it numbers **§4/§5** (analysis, complete) _and_
+**Phase 4/Phase 5** (work, open). Say "Phase N" when you mean work.
 
 ---
 
@@ -915,8 +2478,8 @@ none block the completed workstream.
 - [x] **동참 (`/pages/contact`) — end-to-end, DONE 2026-06-28** (Variant A). A
       submission now records in Firestore **and** emails the admin, all on Vercel (no
       Firebase compute). Decisions/history in
-      [`handoff-5`](../handoff/2026-06-27-handoff-5.md) +
-      [`handoff-7`](../handoff/2026-06-27-handoff-7.md):
+      [`handoff-5`](../handoff/archive/2026-06-27-handoff-5.md) +
+      [`handoff-7`](../handoff/archive/2026-06-27-handoff-7.md):
   - **Diagnosed (earlier):** read path was dead (no `getAllContacts`, dashboard count
     hard-coded `0`, admin "Contact Management" tab disabled) and `contacts` had no
     Firestore rule. Submissions were invisible — the real gap.
@@ -935,9 +2498,56 @@ none block the completed workstream.
   - **SMTP:** Gmail SMTP (`SMTP_HOST/PORT/USER/PASSWORD/FROM`), set in local `.env`
     **and** the Vercel dashboard (Production + Preview). Terraform plumbing for these
     exists but is parked (`_infra/_terraform/`) — env vars are dashboard-managed; see
-    [`../deployment/README.md`](../deployment/README.md).
+    [`../deployment/README.md`](../manuals/deployment/README.md).
   - **Verified:** local end-to-end — submission writes Firestore, admin sees it in
     Contact Management, and the notification email arrives (`emailDelivered: true`).
+
+#### 2026-08-06 — the sending account changed, and the silence around it was closed
+
+The outgoing address moved to a new Gmail account. ✅ **Done and verified live:** the owner
+confirmed the **From header** on a real submission from the deployed app.
+
+🔑 **It failed twice first, and both failures were silent by construction.** (1) The App
+Password was rejected — `535-5.7.8` — so two real submissions recorded a contact, told the
+visitor it sent, and sent nothing. (2) Regenerating the password moved `SMTP_USER` and left
+`SMTP_FROM` on the old address; ⚠️ **Gmail silently rewrites a From it does not own**, so that
+would have "worked" while ignoring the header. **Re-check `SMTP_FROM == SMTP_USER` after any
+change to either.**
+
+- 🆕 **`npm run smtp:verify`** (`scripts/maintenance/smtp-verify.js`) mirrors
+  `sendNotification()` and authenticates **without sending mail** — safe against production
+  credentials. It warns on the `SMTP_FROM != SMTP_USER` rewrite trap (which is how fault 2 was
+  caught before shipping), on whitespace, and on a `#` in the value. 📌 **That last one is
+  real:** dotenv strips an inline `# comment`, the **Vercel dashboard stores values verbatim**,
+  so the same line authenticates as the whole string once pasted there.
+- 🆕 **`emailDelivered` is surfaced** (was computed and consumed by nobody). The **visitor**
+  gets expectation-setting on the non-error styling; the **operator** gets a persisted
+  `notified` flag rendered as an **⚠️ 미전송** badge in the admin 동참 table. `undefined` stays
+  distinct as _unknown_ — pre-existing records are not painted as failures. ⚠️ The visitor copy
+  must never invite a resubmit: the contact is already recorded, so a retry duplicates it.
+- 🔴 **A harness defect surfaced with it: the e2e suite had been sending REAL email to the
+  production `adminEmail`, two per run.** `next start` runs Next's own env loader, which
+  backfills any key `.env.test` leaves **undefined** from `.env` on disk. `.env.test` now
+  declares the five SMTP keys **empty** — defined-but-blank beats the backfill.
+  ⚠️ **Blank is load-bearing.** 📌 **Generalises: any secret in `.env` that `.env.test` does not
+  explicitly blank is reachable from the harness** — the demo-project guarantee covers Firebase
+  only. Full write-up in [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md).
+- ✅ **Doc hygiene done in the same session.** The **Gmail App Password procedure moved** from
+  `vercel-terraform-walkthrough.md` §8 into
+  [`docs/manuals/deployment/README.md`](../manuals/deployment/README.md), beside the env vars
+  it configures, with §8 left as a pointer. 🔑 **It had been the only live, routinely-needed
+  instruction inside a document whose own banner says it is not the current process.** The
+  README copy adds the `smtp:verify` pre-check and the four traps that have bitten.
+- 🔴 **The `.env.example` half was filed wrong, and the real defect was bigger.** The to-do read
+  "still hardcodes the old address" — but **the file was never in the repo**: `.gitignore`'s
+  broad `.env*` swallowed it (only `.env.test` had a negation). So it exposed nothing, while
+  **`CLAUDE.md` pointed readers at it** and that link **resolved to nothing in a fresh clone**.
+  Fixed both halves — placeholder address, and `!.env.example` added so the template ships.
+  ⚠️ **It must stay secret-free** (all populated values are `NEXT_PUBLIC_*` or OAuth **client
+  ids**; every secret field is empty); `.env` / `.env.local` / `.env.production` verified still
+  ignored. 🔑 **Same lesson as the 2026-08-02 plan audit: a to-do is a claim about the repo, and
+  claims rot** — acting on this one as written would have fixed a leak that did not exist and
+  left the broken link.
 
 ---
 
@@ -971,6 +2581,26 @@ none block the completed workstream.
 - **Admin visual target** — ✅ **SETTLED (owner, 2026-06-30): admin adopts the public
   brand.** The "deliberately utilitarian" option is retired; admin re-skins to the brand as
   part of the cross-cutting design system (handoff-16 §4).
+- ✅ **RESOLVED 2026-08-02 — the hydration mismatch that wiped typed input.** `AuthProvider`
+  seeded `useState` from `auth.currentUser`, a **browser-only** value read **during render**;
+  the server always has `null`, so the header disagreed and React discarded the server DOM to
+  re-render the root — remounting everything and **erasing text the visitor had already
+  typed**. Now seeded from `null` / `loading: true`, with `onAuthStateChanged` delivering the
+  user as an ordinary post-hydration update.
+  🔑 **The general rule this leaves behind:** nothing the server could not have known
+  (`localStorage`, `window.*`, `Date.now()`, `Math.random()`, a restored auth session) may
+  affect the **first** client render. Read it in `useEffect`, which runs after the handshake.
+  💡 Accepted cost: one tick of logged-out header on a full page load.
+  Detail: `log/DEBUG_LOG.md` 2026-08-02.
+- **Firestore transport if live listeners are ever added (2026-08-01).** §10f F3 forced the
+  browser onto long polling, which is free **only** because the app has zero `onSnapshot`
+  listeners. The natural candidates if that changes: replies appearing without a reload,
+  new 동참 submissions in the admin, a shared tagging queue two admins work at once, and a
+  "changed elsewhere" warning on concurrent edits. ⚠️ Listeners also bill per document read
+  **per change**, and the service layer returns plain promises — a listener needs a
+  subscribe/unsubscribe shape, so it is a real change to that layer. At that point revisit the
+  alternative that was set aside: keep the probe but cap its wait (`experimentalLongPolling
+Options.timeoutSeconds`, min 5) instead of skipping it.
 - **Mobile verification tooling** — real device vs un-maximized Chrome vs DevTools
   (the `resize_window` tool was flaky).
 - Whether the §7–§10 debt workstreams are scheduled now or parked until the
@@ -980,15 +2610,15 @@ none block the completed workstream.
 
 ## 13. How to resume
 
-1. Read the latest hand-off
-   [`docs/handoff/2026-07-10-handoff-27.md`](../handoff/2026-07-10-handoff-27.md)
-   (then `kickoff-3` for the broader debt map). **Off-plan session (handoff-27):** public/auth
-   button convergence onto shared `<Button>`, S22 mobile items closed, and a batch of mobile
-   nav/auth-flow fixes (hamburger-close, logout modal, mypage edit layout, menu-pill centering,
-   rotate-notice GIF). All pushed to `origin/dev`. No active workstream — next pick is open.
+1. Read [`docs/handoff/HANDOFF.md`](../handoff/HANDOFF.md) — the **single, continuously-updated**
+   hand-off, and the entry point. Start with its 🔜 box, which carries current state, the
+   findings worth knowing before touching anything, and the ordered next steps.
+   _(Corrected 2026-08-02: this used to point at the archived `handoff-27` from 2026-07-10. The
+   numbered `handoff-NN` files are **frozen history** for the detail behind a given session; the
+   living doc supersedes them as the place to start.)_
 2. With the user, pick the next workstream from §1 and fill in its section's
    concrete specs.
-3. Spin a companion `docs/planning/<workstream>-tasks.md` (mirror the redesign
-   tasks doc's rigor).
+3. Spin a companion `docs/planning/pending/<workstream>-tasks.md` (mirror the
+   redesign tasks doc's rigor); move it to `docs/planning/completed/` when done.
 4. Implement in small, browser-verified chunks; keep `tsc` clean; update the §1
    snapshot and `design.md` as you go.

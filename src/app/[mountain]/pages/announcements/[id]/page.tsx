@@ -1,39 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { getAnnouncementService } from '@/services';
 import { useMountain } from '@/components/MountainProvider';
 import Button from '@/components/ui/Button';
+import PostMedia from '@/components/PostMedia';
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { ErrorNotice } from '@/components/ui/AsyncStates';
 
 const AnnouncementDetailsPage = () => {
   // Service references
   const mountainId = useMountain();
   const announcementService = getAnnouncementService(mountainId);
-  const [post, setPost] = useState<any | null>(null);
   const router = useRouter();
+  // `useParams`, not `window.location.pathname`: the id is route state, and
+  // reading it from the URL string meant the fetch could not react to it.
+  const { id } = useParams<{ id: string }>();
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      const id = window.location.pathname.split('/').pop();
-      if (!id) return;
+  // 🐛 2026-08-01: `post` was a single nullable value, so "공지사항을 찾을 수
+  // 없습니다" was the *initial* render of every visit — the reader saw it until
+  // the fetch resolved (30s on the affected Safari path), and a thrown fetch
+  // landed on the same screen, making a failure indistinguishable from a deleted
+  // post. Three states now: loading, error, and a genuine null result.
+  const fetchPost = useCallback(async () => {
+    if (!id) return null;
+    return announcementService.getPostById(id);
+  }, [announcementService, id]);
 
-      try {
-        // Use service layer instead of direct Firebase access
-        const postData = await announcementService.getPostById(id);
-        if (postData) {
-          setPost(postData);
-        } else {
-          setPost(null);
-        }
-      } catch (error) {
-        console.error('Error fetching announcement:', error);
-        setPost(null);
-      }
-    };
+  const { status, data: post, reload } = useAsyncData(fetchPost);
 
-    fetchPost();
-  }, []);
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-4xl p-6" aria-busy="true" aria-live="polite">
+          <span className="sr-only">불러오는 중이에요.</span>
+          <div className="mb-4 h-9 w-32 animate-pulse rounded-lg bg-gray-200" />
+          <div className="mb-2 h-9 w-2/3 animate-pulse rounded bg-gray-200" />
+          <div className="mb-6 h-4 w-48 animate-pulse rounded bg-gray-100" />
+          <div className="h-64 animate-pulse rounded-lg bg-white shadow-md" />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="mx-auto max-w-4xl p-6">
+          <ErrorNotice message="공지사항을 불러오지 못했어요." onRetry={reload} />
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -69,92 +88,23 @@ const AnnouncementDetailsPage = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Video content */}
-          {post.videoUrls && post.videoUrls.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">동영상</h3>
-              <div className="space-y-4">
-                {post.videoUrls.map((url: string, index: number) => {
-                  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-                  const videoId = match ? match[1] : null;
-                  if (videoId) {
-                    return (
-                      <div key={index} className="aspect-video">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${videoId}`}
-                          title={`Video ${index + 1}`}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="w-full h-full rounded"
-                        />
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Backward compatibility for single video */}
-          {post.videoUrl && !post.videoUrls && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">동영상</h3>
-              <div className="aspect-video">
-                <iframe
-                  src={post.videoUrl}
-                  title="Video"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full rounded"
-                />
-              </div>
-            </div>
-          )}
-
           {/* Message content */}
           <div className="mb-6">
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{post.message}</p>
+            <p className="whitespace-pre-wrap leading-relaxed text-gray-700">{post.message}</p>
           </div>
 
-          {/* Image content */}
-          {post.imageUrls && post.imageUrls.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">이미지</h3>
-              <div className="space-y-2">
-                {post.imageUrls.map((url: string, index: number) => (
-                  <img
-                    key={index}
-                    src={url}
-                    alt={`Image ${index + 1}`}
-                    className="w-full rounded"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Important notice banner */}
-          <div className="mt-6 p-4 bg-brand-50 ring-1 ring-brand-100 rounded-lg">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-brand-600" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-gray-700">
-                  이 공지사항은 중요한 안내사항입니다. 내용을 숙지해 주세요.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Media — the shared renderer, so this page shows exactly what the
+              공지사항 popup and the 입양홍보 feed show: every image and video, each
+              with its own 제목/설명/태그. It previously hand-rolled a third copy
+              that displayed none of the per-file detail (owner-reported
+              2026-07-31), and `videoUrl` is the legacy single-value field some
+              older posts still carry. */}
+          <PostMedia
+            imageUrls={post.imageUrls}
+            videoUrls={post.videoUrls?.length ? post.videoUrls : post.videoUrl && [post.videoUrl]}
+            label="공지사항"
+            layout="full"
+          />
         </div>
       </div>
     </div>

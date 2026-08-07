@@ -16,6 +16,21 @@
       "username": "관리자",
       "date": "2026-01-03",
       "time": "11:00"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec: mutating a fixture other specs read is exactly how the 2026-08-02 'flake set' happened (DEBUG_LOG).",
+      "id": "test-anno-edit-01",
+      "title": "수정 전용 공지",
+      "message": "편집 스펙 전용 공지 본문이에요.",
+      "username": "관리자",
+      "date": "2026-01-08",
+      "time": "09:00",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg",
+        "/images/test-fixtures/album-02.jpg"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "image"
     }
   ],
   "posts_adoption": [
@@ -26,6 +41,51 @@
       "username": "관리자",
       "date": "2026-01-04",
       "time": "12:00"
+    },
+    {
+      "_comment": "Reproduces the 2026-07-31 bug: the expanded card chose video OR image, so a post carrying both never showed its photos. Two images so 'only the first' is caught too.",
+      "id": "test-adopt-02",
+      "title": "입양 소식 2 — 사진과 동영상",
+      "message": "사진과 동영상이 함께 있는 글이에요.",
+      "username": "관리자",
+      "date": "2026-01-05",
+      "time": "12:00",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg",
+        "/images/test-fixtures/album-02.jpg"
+      ],
+      "videoUrls": [
+        "https://www.youtube.com/watch?v=yt-vid-01"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "video"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec.",
+      "id": "test-adopt-edit-01",
+      "title": "수정 전용 입양홍보",
+      "message": "편집 스펙 전용 입양홍보 본문이에요.",
+      "username": "관리자",
+      "date": "2026-01-09",
+      "time": "09:30",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg",
+        "/images/test-fixtures/album-02.jpg"
+      ],
+      "videoUrls": [
+        "https://www.youtube.com/watch?v=yt-vid-01"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "video"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts (the authorship test), which EDITS it. ⚠️ Its own fixture on purpose: playwright.config sets fullyParallel, so two tests editing one post race and the later save reverts the earlier one. No media — that test is about username/date only.",
+      "id": "test-adopt-edit-02",
+      "title": "작성자 보존 확인용",
+      "message": "수정해도 작성자와 게시일이 그대로인지 확인하는 글이에요.",
+      "username": "관리자",
+      "date": "2026-01-09",
+      "time": "09:30"
     }
   ],
   "posts_butler": [
@@ -35,7 +95,8 @@
       "message": "집사 수다 게시글 1이에요.",
       "username": "집사회원",
       "date": "2026-01-05",
-      "time": "13:00"
+      "time": "13:00",
+      "authorUid": "test-member-uid"
     },
     {
       "id": "test-butler-02",
@@ -43,7 +104,35 @@
       "message": "집사 수다 게시글 2예요.",
       "username": "집사회원",
       "date": "2026-01-06",
-      "time": "14:00"
+      "time": "14:00",
+      "authorUid": "test-admin-uid"
+    },
+    {
+      "_comment": "OWNED BY tests/e2e/admin/post-edit-composer.spec.ts, which EDITS it. Do not read it from another spec. One photo + one video on purpose: that is exactly 집사톡's media_control cap, so the editor must show both as 기존 rows and offer no picker until one is removed.",
+      "id": "test-butler-edit-01",
+      "title": "수정 전용 집사톡",
+      "message": "편집 스펙 전용 집사톡 본문이에요.",
+      "username": "집사회원",
+      "date": "2026-01-10",
+      "time": "10:00",
+      "imageUrls": [
+        "/images/test-fixtures/album-01.jpg"
+      ],
+      "videoUrls": [
+        "https://www.youtube.com/watch?v=yt-vid-01"
+      ],
+      "thumbnailUrl": "/images/test-fixtures/album-01.jpg",
+      "mediaType": "video",
+      "authorUid": "test-admin-uid"
+    },
+    {
+      "id": "test-butler-member-edit-01",
+      "title": "회원 수정 전용 집사톡",
+      "message": "회원이 자기 글을 수정하는 e2e 전용 픽스처예요. 다른 스펙은 읽지 않아요.",
+      "username": "집사회원",
+      "date": "2026-01-05",
+      "time": "13:00",
+      "authorUid": "test-member-uid"
     }
   ],
   "posts_feeding": [
@@ -53,7 +142,8 @@
       "message": "급식 스트림 게시글 1이에요.",
       "username": "집사회원",
       "date": "2026-01-07",
-      "time": "15:00"
+      "time": "15:00",
+      "authorUid": "test-member-uid"
     }
   ]
 }

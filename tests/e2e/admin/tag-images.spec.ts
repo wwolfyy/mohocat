@@ -54,10 +54,19 @@ test.describe('사진 태깅 — characterization', () => {
     await page.goto('/admin/tag-images');
     await expect(page.getByRole('heading', { name: '사진 태깅' })).toBeVisible();
 
-    // Stat cards; 전체 사진 = the 4 seeded images (nothing creates/deletes).
-    await expect(
-      page.locator('div.bg-white').filter({ hasText: '전체 사진' }).getByText('4', { exact: true })
-    ).toBeVisible({ timeout: 15_000 });
+    // Stat cards. ⚠️ **Not an exact total any more.** This asserted exactly `4` on the
+    // premise that "nothing creates/deletes" images — false since 2026-07-30, when
+    // 공지사항 / 입양홍보 moved onto the signed-URL strategy and began writing their own
+    // `cat_images` records. Those create specs can run in a parallel worker against the
+    // same emulator, so the total is ">= the 4 seeded". The per-filename card
+    // assertions below are what actually pin the seed, and they still do.
+    const totalTile = page.locator('div.bg-white').filter({ hasText: '전체 사진' });
+    await expect(totalTile).toBeVisible({ timeout: 15_000 });
+    await expect
+      .poll(async () => Number((await totalTile.innerText()).match(/\d+/)?.[0] ?? 0), {
+        timeout: 15_000,
+      })
+      .toBeGreaterThanOrEqual(4);
     await expect(page.getByRole('heading', { name: '태그 없는 사진' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '태그된 사진' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '사진 필터' })).toBeVisible();
@@ -87,8 +96,9 @@ test.describe('사진 태깅 — characterization', () => {
     // (heading, not getByText — the panel also echoes the filename as the Storage path)
     await expect(editPanel(page).getByRole('heading', { name: 'album-01.jpg' })).toBeVisible();
 
-    // Tag a cat through the selector, committing with 완료. (테스트냥이이, not
-    // 테스트냥이일 — cats.spec.ts renames the latter mid-run in the same project.)
+    // Tag a cat through the selector, committing with 완료. (테스트냥이이 is chosen
+    // because it is never mutated; cats.spec.ts used to rename 테스트냥이일 mid-run,
+    // and now only touches 이사한냥이 — see that spec's header.)
     await editPanel(page).getByText('🐱 고양이 선택').click();
     await expect(page.getByRole('heading', { name: '고양이 선택 (개별 사진)' })).toBeVisible();
     await catSelector(page).getByText('테스트냥이이').click();

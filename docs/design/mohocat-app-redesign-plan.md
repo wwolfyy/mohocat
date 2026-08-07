@@ -228,8 +228,9 @@ Phase D is **concrete and independent** — it can proceed before/around B and C
   hand-roll a `fixed inset-0` shell (the portal-to-`<body>` avoids the
   `backdrop-blur` containing-block trap; see `design.md` → Modal).
 - **Content is live from Firebase** (shared dev/prod project) — admin/console
-  text edits hit production instantly; only _code_ needs build+deploy. Media
-  (thumbnails/about-photos) is build-fetched (`npm run fetch:assets`), not in git.
+  text edits hit production instantly; only _code_ needs build+deploy. Media rides
+  live Storage URLs; only the legacy-unused cat thumbnails are still build-fetched
+  (`npm run fetch:assets`), and about-photos stopped being baked on 2026-08-02.
 - `npx tsc --noEmit` stays clean (quick gate); `npm run lint` has only
   pre-existing warnings (`<img>` on Firebase media, a few exhaustive-deps).
 - Mirror the **plan + tasks-checklist** structure of the landing redesign docs.

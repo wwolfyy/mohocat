@@ -41,15 +41,25 @@ test.describe('사용자 관리 — contacts', () => {
 
     // Admin is signed in → the members-only contact form is submittable.
     await page.goto('/pages/contact');
+    // Wait for 보내기 to enable BEFORE typing — the page's hydration mismatch
+    // re-renders the root client-side and wipes anything typed before it lands.
+    // See member/contact-submit.spec.ts for the diagnosis and the product caveat.
+    const submit = page.getByRole('button', { name: '보내기' });
+    await expect(submit).toBeEnabled({ timeout: 15_000 });
+
     await page.locator('input[name="name"]').fill(name);
     await page.locator('input[name="phone"]').fill('01077776666');
     await page.locator('textarea[name="message"]').fill('연락처 관리 e2e 확인용 문의입니다.');
-    const submit = page.getByRole('button', { name: '보내기' });
-    await expect(submit).toBeEnabled({ timeout: 15_000 });
+    await expect(page.locator('input[name="name"]')).toHaveValue(name);
+
     await submit.click();
-    await expect(page.getByText('메시지가 전송되었습니다. 감사합니다!')).toBeVisible({
-      timeout: 15_000,
-    });
+    // SMTP is unset in the harness, so the notification cannot send and the page says
+    // so without calling the submission failed. See member/contact-submit.spec.ts.
+    await expect(
+      page.getByText(
+        '메시지가 접수되었습니다. 다만 알림 전달에 문제가 있어 답변이 늦어질 수 있어요.'
+      )
+    ).toBeVisible({ timeout: 15_000 });
 
     // The 문의 tab lists it via the Admin-readable contacts collection.
     await page.goto('/admin/members');
@@ -58,6 +68,15 @@ test.describe('사용자 관리 — contacts', () => {
       timeout: 15_000,
     });
     await page.getByRole('button', { name: '새로고침' }).click();
-    await expect(page.getByRole('cell', { name })).toBeVisible({ timeout: 15_000 });
+    const row = page.getByRole('row').filter({ has: page.getByRole('cell', { name }) });
+    await expect(row).toBeVisible({ timeout: 15_000 });
+
+    // 🔑 The 알림 badge, end to end: this contact was created by the real route with
+    // SMTP unconfigured, so `notified` was written `false` and never promoted. This is
+    // the assertion that makes a silently-unsent notification observable — the gap that
+    // let two production submissions report success while sending nothing.
+    // ⚠️ It must be 미전송 and NOT 전송됨; a route that stopped writing the field would
+    // render the '—' unknown state instead, and this would catch that too.
+    await expect(row.getByText('⚠️ 미전송')).toBeVisible({ timeout: 15_000 });
   });
 });

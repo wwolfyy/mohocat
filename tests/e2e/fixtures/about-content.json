@@ -5,8 +5,7 @@
   "mainPhoto": {
     "filename": "about-main-geyang.jpg",
     "caption": "테스트 대표 사진 캡션",
-    "altText": "테스트 대표 사진",
-    "localPath": "/images/about-photos/geyang/about-main-geyang.jpg"
+    "altText": "테스트 대표 사진"
   },
   "sections": [
     { "title": "우리의 이야기", "content": "테스트 섹션 1 본문이에요." },

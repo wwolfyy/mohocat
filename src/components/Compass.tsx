@@ -29,10 +29,13 @@ export default function Compass({ portrait = false }: { portrait?: boolean }) {
         N
       </span>
       <svg width="12" height="20" viewBox="0 0 12 20" className="-mt-0.5" aria-hidden="true">
-        {/* north half (points up) — red, the universal compass convention */}
-        <polygon points="6,0 10,11 2,11" fill="#ef4444" />
+        {/* north half (points up) — red, the universal compass convention.
+            `fill-*` utilities rather than raw hex: this is an inline SVG in our
+            own JSX, so Tailwind reaches it (unlike Leaflet's JS-set strokes).
+            red-500/gray-100 are the deployed values — pixel-identical. */}
+        <polygon points="6,0 10,11 2,11" className="fill-red-500" />
         {/* south half (points down) — light */}
-        <polygon points="6,20 10,11 2,11" fill="#f3f4f6" />
+        <polygon points="6,20 10,11 2,11" className="fill-gray-100" />
       </svg>
     </div>
   );

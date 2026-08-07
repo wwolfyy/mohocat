@@ -10,6 +10,7 @@ import Modal from './ui/Modal';
 import PhotoAlbum from './PhotoAlbum';
 import VideoAlbum from './VideoAlbum';
 import { useMountain } from '@/components/MountainProvider';
+import { buildCatLink } from '@/utils/cat-link';
 
 interface CatInfoProps {
   cat: Cat;
@@ -46,6 +47,90 @@ function InfoBlock({ heading, html }: { heading?: string; html: string }) {
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>
+  );
+}
+
+/**
+ * 이 냥이 링크 chip — hands the visitor a link straight to this cat.
+ *
+ * Exists because the `?cat=<id>` deep link is only useful if a human can get one
+ * without looking an id up in Firebase. On a phone this opens the OS share sheet
+ * (one tap into a KakaoTalk chat, which is where these links actually go); where
+ * that is unavailable it copies to the clipboard instead.
+ */
+function ShareCatButton({ cat }: { cat: Cat }) {
+  const mountainId = useMountain();
+  const [feedback, setFeedback] = useState<'idle' | 'copied' | 'failed'>('idle');
+  // Capability check runs after mount: `navigator` does not exist during SSR,
+  // and branching the label during render would be a hydration mismatch.
+  const [useShareSheet, setUseShareSheet] = useState(false);
+  useEffect(() => {
+    // ⚠️ Gate on "is a share sheet the right affordance here", NOT merely on
+    // "does navigator.share exist" — desktop Chrome exposes it and then refuses
+    // it. Measured on macOS Chrome: share rejects `NotAllowedError — Permission
+    // denied`, while clipboard writes resolve fine. And where the sheet does
+    // open on a desktop, dismissing it yields AbortError, which is silent by
+    // design (below) — so the button just looked dead. Touch devices are both
+    // where the sheet works and where it is worth having: one tap into a
+    // KakaoTalk chat instead of copy-switch-paste.
+    setUseShareSheet(
+      typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        window.matchMedia('(pointer: coarse)').matches
+    );
+  }, []);
+
+  useEffect(() => {
+    if (feedback === 'idle') return;
+    const t = setTimeout(() => setFeedback('idle'), 2000);
+    return () => clearTimeout(t);
+  }, [feedback]);
+
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setFeedback('copied');
+    } catch (error) {
+      // Clipboard access can be refused (insecure context, permissions). Say so
+      // rather than leave a button that looks like it worked.
+      console.error('Error copying cat link:', error);
+      setFeedback('failed');
+    }
+  };
+
+  const handleClick = () => {
+    const url = buildCatLink(window.location.origin, window.location.pathname, mountainId, cat.id);
+
+    // ⚠️ `navigator.share` needs transient activation, so it must be called
+    // synchronously in this handler — `await` anything first and iOS Safari
+    // rejects with NotAllowedError.
+    if (useShareSheet && typeof navigator.share === 'function') {
+      navigator.share({ title: cat.name, url }).catch((error: unknown) => {
+        // 🔑 Dismissing the share sheet rejects with AbortError. That is the
+        // visitor changing their mind, not a failure — it must not log or show
+        // an error. Everything else is real, so fall back to copying rather
+        // than appearing to have shared.
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('Error sharing cat link:', error);
+        void copyToClipboard(url);
+      });
+      return;
+    }
+
+    void copyToClipboard(url);
+  };
+
+  const label =
+    feedback === 'copied'
+      ? '복사했어요'
+      : feedback === 'failed'
+        ? '복사하지 못했어요'
+        : useShareSheet
+          ? '링크 공유'
+          : '링크 복사';
+
+  return (
+    <AlbumButton onClick={handleClick} emoji={feedback === 'copied' ? '✅' : '🔗'} label={label} />
   );
 }
 
@@ -192,6 +277,7 @@ export default function CatInfo({ cat }: CatInfoProps) {
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <AlbumButton onClick={() => setShowPhotoAlbum(true)} emoji="📸" label="사진 보기" />
           <AlbumButton onClick={() => setShowVideoAlbum(true)} emoji="🎬" label="동영상 보기" />
+          <ShareCatButton cat={cat} />
         </div>
       </div>
 

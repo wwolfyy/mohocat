@@ -13,6 +13,7 @@ import UserNotFoundModal from '@/components/auth/UserNotFoundModal';
 import EmailVerificationModal from '@/components/auth/EmailVerificationModal';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import { getPermissionService } from '@/services';
+import { deleteImplicitlyCreatedAccount } from '@/lib/auth/deleteImplicitlyCreatedAccount';
 import { strings } from '@/constants/strings';
 
 const t = strings.login.form;
@@ -92,6 +93,28 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
         // User not found in Firestore -> Show Modal
         setIsUserNotFoundModalOpen(true);
         // Requirement: Do not allow account creation via Google/Kakao implicitly.
+        //
+        // Phone and social sign-in MINT a Firebase Auth account as a side effect
+        // of authenticating — before we get to decide whether they may join.
+        // Signing out leaves that account behind holding PII (phone number, or
+        // the Kakao email/닉네임) with no consent, no profile doc, and nothing
+        // that would ever clean it up. So delete it here: we are declining to
+        // make them a member, and the data has no basis to be retained (PIPA).
+        //
+        // ⚠️ The test is whether they ever CONSENTED, and the reliable marker is
+        // a password credential — not which button they logged in with. Every
+        // account here is phone-created: 집사등록 verifies the phone first (that
+        // call creates the Auth user) and links email/password onto it after.
+        // SignupForm gates both consent checkboxes before the SMS goes out, so
+        // anyone holding a password reached the linking step and did agree; only
+        // their profile doc failed to write, and that is resumable (re-running
+        // 집사등록 with the same email+phone completes idempotently). Gating on the
+        // login method instead would delete exactly those people whenever they
+        // happened to sign in by phone.
+        const consented = user.providerData.some((p) => p.providerId === 'password');
+        if (!consented) {
+          await deleteImplicitlyCreatedAccount(user);
+        }
         await signOut();
       }
     } catch (err) {
@@ -298,7 +321,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
             className={cn(
               'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
               'text-gray-900 placeholder-gray-500',
-              'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
+              'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-brand-500'
             )}
             placeholder={t.emailPlaceholder}
             disabled={isSigningInWithKakao || isEmailLoginLoading}
@@ -318,7 +341,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({
               className={cn(
                 'w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
                 'text-gray-900 placeholder-gray-500',
-                'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-yellow-500'
+                'border-gray-300 hover:border-gray-400 focus:border-transparent focus:ring-brand-500'
               )}
               placeholder={t.passwordPlaceholder}
               disabled={isSigningInWithKakao || isEmailLoginLoading}
