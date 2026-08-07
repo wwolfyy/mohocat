@@ -614,10 +614,34 @@ showed a clean run with 4 documents returned and nothing red — and why the e2e
 response rather than aborting it. The genuinely reachable error cases are permission-denied
 and missing-index, not offline.
 
-⚠️ **Still unconfirmed: whether the probe stalls for everyone or only on the owner's network.**
-Whatever buffers that connection may be an ISP or proxy rather than Safari itself, so other
-visitors may never have hit this. The fix is correct either way, but it wants a Safari pass on
-the deployed Preview — the local dev server has no proxy in front of it to reproduce against.
+✅ **The Safari pass is DONE — owner, 2026-08-08, against production.** 입양홍보's
+**새로운 입양 소식** section filled in with the rest of the page, on the network where the stall
+was first seen. The 30 s is gone.
+
+🔑 **Picking the surface is the whole trick, because two of the three obvious candidates prove
+nothing.** The fix is **browser-only** by construction (`services/firebase.ts` returns plain
+`getFirestore` when there is no `window`), so any server-read surface paints fast whether or not
+the probe still stalls. `/pages/adoption` is **both**: the adoptable-cats gallery above is a
+Server Component on ISR (Admin SDK), and only the **새로운 입양 소식** island below it
+(`AdoptionPromotionClient`) goes through the browser SDK. ⚠️ **"The 입양홍보 page rendered
+quickly" is not a pass** — it is a statement about the server-rendered half. `/pages/announcements`
+is the unambiguous probe: a bare shell plus `AnnouncementClient`, nothing server-read to muddy it.
+📌 **One client read suffices** — the probe runs once per page load at client init, not once per
+collection.
+
+⚠️ **A second trap: the tell changed when the fix shipped.** Fix B made `loading` a distinct
+state, so the original symptoms (_없어요_ / _찾을 수 없습니다_) are now **unreachable while
+loading**. Absence of the error copy proves nothing; the criterion is **duration** — content in
+about a second, versus a skeleton held for ~30 s and then filled.
+
+⚠️ **Still unestablished, and now moot: whether the probe stalled for anyone but the owner.**
+The suspect buffer was always an ISP or proxy rather than Safari itself. The fix is correct
+either way. If it ever recurs, the set-aside alternative is capping the probe's wait rather than
+skipping it (`experimentalLongPollingOptions.timeoutSeconds`, minimum 5) — PROJECT_PLAN §12.
+
+📌 **Why it took a week to verify:** the fix landed on `dev` on 2026-08-01, but `main` had not
+been promoted since 2026-07-23, so production did not carry it until **PR #9** (2026-08-07).
+Until then this could only have been checked on Preview.
 
 ---
 

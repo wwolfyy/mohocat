@@ -334,3 +334,7 @@ mountain. (An earlier revision of this doc listed it; it was stale.)
   before adding a new method.
 - ⏳ **Emulators cannot exercise Kakao, SMS, or the orphan-delete path.** Those need a live
   verification pass with real credentials; automated suites will stay green regardless.
+  ✅ **A real Kakao sign-in passed in production 2026-08-08** (owner). ⏳ **The orphan-delete path
+  is still unverified** — it needs an identity that has never registered, and its visible half
+  (`UserNotFoundModal` → 집사등록 → sign-out) looks the same either way, since the helper logs
+  without re-raising. The check is the **Firebase Console Authentication user list**.

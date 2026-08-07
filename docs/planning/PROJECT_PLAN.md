@@ -1584,9 +1584,16 @@ rejecting, so a bad connection **hangs** and never throws. That is why the owner
 a clean run returning 4 documents — and why the new e2e delays the response instead of aborting
 it. The genuinely reachable error cases are permission-denied and missing-index, not offline.
 
-⏳ **Owner-owed:** a Safari pass on the deployed Preview to confirm the 30 s is gone. Whatever
-buffers that connection may be an ISP or proxy rather than Safari itself, so other visitors may
-never have hit it; the local dev server has no proxy to reproduce against.
+✅ **PASSED 2026-08-08, in production, by the owner — this is closed.** 입양홍보's
+**새로운 입양 소식** section filled in with the rest of the page on Safari, on the network where
+the stall was originally seen. That section is `AdoptionPromotionClient`, a client island reading
+`posts_adoption` through the **browser** SDK, so it exercises the probe; the adoptable-cats
+gallery above it does not (server-read via the Admin SDK with ISR). 🔑 **One client read is
+enough**: the probe runs once per page load when the Firestore client initializes, not once per
+collection. 📌 The verification could only happen this week — the fix shipped to `dev` on
+2026-08-01 but only reached production with **PR #9** (2026-08-07). ⚠️ **Still not established,
+and now moot: whether the probe ever stalled for anyone but the owner** — the suspect buffer was
+always an ISP or proxy rather than Safari itself. The fix is correct either way.
 
 ---
 
