@@ -1,6 +1,7 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-07 · **Branch:** `dev` — ✅ **`dev` and `main` are LEVEL.**
+**Last updated:** 2026-08-08 · **Branch:** `dev` — ✅ **`dev` and `main` are LEVEL** (bar
+docs-only commits).
 🎉 **PR #9 merged 2026-08-07** (`f570bcc`, by the owner) — 104 commits, 295 files, promoted
 since PR #8. **This is the first promotion since 2026-07-23**, and it is live in production.
 📌 **Don't trust any count written here — run `git rev-list --count origin/main..dev`.** This
@@ -214,7 +215,9 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 > on YouTube directly, so the 조로 rename now survives a 동기화) and the **SMTP change** (From
 > header verified live). **2026-08-07** — the **P5.4 manual YouTube pass**, done and verified
 > working by the owner; it had been the standing gate on the promotion since 2026-07-26. The push
-> that used to head the list went on 2026-08-05.)_
+> that used to head the list went on 2026-08-05. **2026-08-08** — the **`YOUTUBE_REFRESH_TOKEN`
+> deletion** and **five of the six piled-up verifications**, including the **Safari pass**, open
+> since 2026-08-01.)_
 >
 > ### 🎉 THE PROMOTION IS DONE — PR #9 merged 2026-08-07
 >
@@ -246,16 +249,104 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 >    screens are proven by compiled-CSS equality, not by looking. Everything is pixel-identical
 >    by construction, so this is a confirmation, not a hunt. 🆕 **Now checkable in
 >    _production_**, not just Preview.
-> 2. **The Preview verifications that piled up** — see the earlier session boxes below.
->    📌 **They are now production verifications**: the code they were waiting on is live, so the
->    real-device / real-account ones (the 이 냥이 링크 chip on a phone, a Safari pass, a real
->    Kakao sign-in, the orphan-delete path, a member attaching a photo to 집사톡, a member
->    deleting a post carrying someone else's 댓글) can be done against the live site.
-> 3. **Delete `YOUTUBE_REFRESH_TOKEN` from Vercel Production** and confirm 동기화 still works
->    (see the box above). This is the one env change the promotion unblocked.
-> 4. **Colour plan Phase 5** — the unsized admin-vs-`design.md` audit (typography, spacing,
->    elevation, shapes, modal spec). The only piece of that workstream still open.
-> 5. **Then the path-based tenancy migration (T0–T7)** — both its gates are now clear.
+> 2. ## 🔴 THE ORPHAN-DELETE PATH IS STILL UNVERIFIED — the last live gap
+>
+>    **The only production verification never done**, open since 2026-08-01 (`8a50348`). It is a
+>    **PIPA** path, which is why it is called out rather than left in a list: phone and Kakao
+>    sign-in **mint an Auth account before the app decides whether to admit the person**, so
+>    someone refused membership leaves a record holding their phone number (or Kakao
+>    email/닉네임) with no consent and no profile doc. `LoginForm.tsx:116` deletes it on the
+>    bounce. **Nobody has ever confirmed the delete actually lands in production.**
+>
+>    ⚠️ **It needs an identity that has NEVER registered** — a spare phone number or a fresh Kakao
+>    account. The path only runs for a uid with no `users/{uid}` doc; anything already used takes
+>    the member branch and never reaches the bounce. The emulator cannot reach it either (no real
+>    SMS, no Kakao OIDC), so no suite will ever cover this.
+>
+>    🔑 **The visible half of the flow is NOT the check.** `UserNotFoundModal` → 집사등록 → signed
+>    out renders identically whether or not the Auth record was deleted, because
+>    `deleteImplicitlyCreatedAccount` **logs without re-raising** (deliberate — propagating would
+>    strand a live session for someone just refused membership). **The verification is the Firebase
+>    Console → Authentication user list**: confirm no account survives for that number / Kakao
+>    identity, and glance at the browser console for
+>    `Failed to delete implicitly-created account`. Those are the only two places the answer exists.
+>
+>    📌 **If it turns out to be failing**, the leftover records are clearable from the same console,
+>    and the fix is in one small file (`src/lib/auth/deleteImplicitlyCreatedAccount.ts`).
+>
+> 3. ### ✅ The other piled-up verifications are DONE (owner, 2026-08-08)
+>
+>    Five cleared against **production** on 2026-08-08: the **이 냥이 링크 chip on a phone**, a
+>    **Safari pass**, a **real Kakao sign-in**, a **member attaching a photo to 집사톡**, and a
+>    **member deleting a post carrying someone else's 댓글**. That closes the §10p image leg and
+>    §10q's cascade — the two paths the emulator harness can never reach.
+>    🔑 **The Safari one is worth reading before repeating it** (`log/DEBUG_LOG.md`): the fix is
+>    **browser-only**, so a server-read surface paints fast regardless and proves nothing.
+>    `/pages/adoption` is **both halves at once** — the cat gallery is a Server Component on ISR,
+>    and only the **새로운 입양 소식** island below it goes through the browser SDK. It was that
+>    island that filled in fast, which is why this counts. ⚠️ **And the tell had changed:** fix B
+>    made the old _없어요_ / _찾을 수 없습니다_ copy unreachable while loading, so the criterion
+>    is **duration**, not the absence of an error message.
+>
+> 4. ### ✅ `YOUTUBE_REFRESH_TOKEN` is deleted from Vercel Production — and the sync still works
+>
+>    Owner, 2026-08-08, both halves. A **📺 YouTube와 동기화** was run after the deletion and
+>    succeeded, which is the proof that mattered: `main` reads the token from Firestore
+>    (`admin_config/youtube_auth`), not from env. The var was held only because pre-PR-#9 `main`
+>    still read env. 📌 **Nothing else should ever need it** — if a future 동기화 fails on
+>    credentials, the fix is re-authorising in 앱 관리's YouTube 토큰 관리 panel, **not**
+>    restoring the env var.
+>
+> 5. ### 🎨 Colour plan Phase 5 — audit DONE and 5 of 6 findings FIXED (2026-08-08)
+>
+>    5.1 (audit) and 5.2 (act on it) are both done bar **F3**, which is **held on purpose** —
+>    see the red block below. Findings are §9 of
+>    [the plan](../planning/pending/color-token-centralization-plan-20260805.md); 5.2 (acting on
+>    them) is now the open item. 🔑 **The result inverts D5's assumption.** D5 expected admin to
+>    have drifted from a spec it was never measured against. **Spacing, elevation and language are
+>    already clean** — zero arbitrary spacing values, only `shadow-sm/md/lg`, no English anywhere
+>    user-facing — and `useDialog` adoption is far further along than a grep suggests (**41 of 44**
+>    `alert`/`confirm` sites already route through `ui/Modal`; 2 more are comments).
+>
+>    ⚠️ **The two real problems are absences in `design.md`, not violations of it.** It was written
+>    landing-first and has **no admin tier**, so on **typography** (every one of admin's 48
+>    headings overrides the base scale, in three mutually disagreeing sizes — page titles change
+>    size between screens) and **shape** (`rounded` ×79 vs `rounded-lg` ×79, a dead-even split, and
+>    §Shapes justifies its radii by warning that squareness _"reads as admin/utility"_ — written
+>    when admin was out of scope) there is nothing for admin to conform **to**. Those two need an
+>    **owner decision** before any mechanical change: writing the missing rule, not correcting
+>    drift.
+>
+>    ✅ **FIXED the same day (owner-approved):** five hand-rolled modal shells now render through
+>    `ui/Modal` — gaining the frosted backdrop, `shadow-xl`, the portal, scroll-lock,
+>    `role="dialog"`, click-outside and **ESC-to-close**; six admin `h1`s normalised to `text-2xl`
+>    with the admin type tier written into `design.md` §Typography; `text-md` (**not a Tailwind
+>    class** — it compiled to nothing) → `text-sm`; three native `alert()`s moved onto `useDialog`;
+>    one classless `h3` sized.
+>
+>    ⚠️ **Two places the obvious fix was wrong, both worth knowing.** (1) The modals are **not** on
+>    `useDialog.confirm()` as first proposed — two are **destructive**, and §Modal requires those
+>    keep a **red** button, which that API cannot render. The "conformance" fix would have
+>    **removed the danger affordance**. (2) The playlist selector needed `closePlaylistSelector`
+>    extracted: the shell adds backdrop-click and ESC, and both had to reset the ticked playlists
+>    as 취소 does, or a dismissal carries stale ticks into the next open.
+>
+> 6. ### ✅ F3 (corner radius) resolved — but by a different route than the one approved
+>
+>    **Read this before touching radii again.** The approved fix was to move admin's **73** bare
+>    `rounded` sites to `rounded-lg`, on the understanding that admin sat below a spec the rest of
+>    the app met. Measuring the public components **before editing** showed they carry the same
+>    usage — bare `rounded` is **38 %** of admin's radii and **23 %** of the public ones — so
+>    admin-only normalisation would have made it **diverge** from the UI it must match.
+>
+>    🔑 **The sites are mostly form inputs, small badges and checkboxes — three categories
+>    §Shapes never named.** The spec was **silent**, not violated. So §Shapes gained rows
+>    describing what both halves already do (**descriptive, not aspirational** — `rounded-lg` on a
+>    16px checkbox is visibly wrong), and only **28 genuine buttons and cards** moved.
+>    ⚠️ **That touches public surfaces too** — post cards, the login card and a few buttons go
+>    4px → 8px. Small, but it is not an admin-only change.
+>
+> 7. **Then the path-based tenancy migration (T0–T7)** — both its gates are now clear.
 >
 > **What shipped, for reference when something looks different in production:** 급식현황 asks
 > for confirmation before publishing; 공지사항/입양홍보 videos stop inheriting the post body as
@@ -1807,11 +1898,14 @@ upload, signed-URL images) owe the **scripted manual pass** on Preview.
   include modal opens, so the page will look busier than it did. `page_path` stays `/pages/cats`
   (only `page_location` carries the cat), so reports do not split per cat. Suppressing it means
   teaching `AnalyticsTracker` to ignore the `cat` param — a few lines, deliberately not done.
-- **`[ ]` Safari pass on the deployed Preview (2026-08-01)** — confirm the 30-second stall is
-  gone now that the browser is forced onto long polling. ⚠️ Whatever buffers that connection may
-  be the owner's ISP or a proxy rather than Safari itself, so other visitors may never have hit
-  it; the local dev server has no proxy in front of it to reproduce against. If it recurs, the
-  set-aside alternative is capping the probe's wait rather than skipping it
+- **`[x]` Safari pass — ✅ PASSED 2026-08-08, in production** (owner). 입양홍보's
+  **새로운 입양 소식** section filled in with the rest of the page on the network where the stall
+  was first seen; the 30 s is gone. 🔑 **That section is the test and the page around it is not** —
+  the fix is browser-only, and `/pages/adoption`'s cat gallery is server-read on ISR, so only the
+  `AdoptionPromotionClient` island below it exercises the probe. ⚠️ Also note the tell changed when
+  the fix shipped: fix B made the old error copy unreachable while loading, so the criterion is
+  **duration**, not the absence of _없어요_. Full write-up in `log/DEBUG_LOG.md`. If it ever
+  recurs, the set-aside alternative is capping the probe's wait rather than skipping it
   (`experimentalLongPollingOptions.timeoutSeconds`, minimum 5) — PROJECT_PLAN §12.
 - **`[ ]` One owner decision from 2026-08-01, not blocking:** whether the CMS's new
   "YouTube에 없는 영상" panel should show thumbnails instead of a title list. **Text-only is

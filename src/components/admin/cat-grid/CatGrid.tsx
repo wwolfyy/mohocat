@@ -726,19 +726,19 @@ export default function CatGrid() {
       )}
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-300 text-green-800 rounded text-sm">
+        <div className="mb-4 p-3 bg-green-50 border border-green-300 text-green-800 rounded-lg text-sm">
           {notice}
         </div>
       )}
 
       {errorMessages.length > 0 && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-300 text-red-700 rounded text-sm">
+        <div className="mb-4 p-4 bg-red-50 border border-red-300 text-red-700 rounded-lg text-sm">
           <p className="font-medium mb-1">{t.fixFirst}</p>
           <ul className="list-disc pl-5 space-y-0.5">
             {Array.from(new Set(errorMessages)).map((msg) => (

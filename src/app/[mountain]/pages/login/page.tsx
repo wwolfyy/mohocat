@@ -24,7 +24,7 @@ const LoginContent = () => {
 
   return (
     <div className="flex items-center justify-center h-screen" data-oid="0m4l1dh">
-      <div className="w-full max-w-md p-4 bg-white rounded shadow-md" data-oid="p5o6d1h">
+      <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-md" data-oid="p5o6d1h">
         <h1 className="text-2xl font-bold mb-4" data-oid="7a4_aol">
           {strings.login.heading}
         </h1>

@@ -290,7 +290,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
       <div className="space-y-4">
         {posts.length === 0 && <div>No posts yet.</div>}
         {posts.map((post) => (
-          <div key={post.id} className="border p-4 rounded">
+          <div key={post.id} className="border p-4 rounded-lg">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
                 {/* Show video thumbnail if video exists */}
@@ -462,7 +462,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
             <button
               key={page}
               className={cn(
-                'px-4 py-2 rounded bg-gradient-to-r from-brand to-accent text-black font-bold shadow',
+                'px-4 py-2 rounded-lg bg-gradient-to-r from-brand to-accent text-black font-bold shadow',
                 'border border-brand-500',
                 'transition-all duration-200'
               )}
@@ -475,7 +475,7 @@ const AdminPostList: React.FC<AdminPostListProps> = ({ postType }) => {
               key={page}
               onClick={() => handlePageClick(page)}
               className={cn(
-                'px-4 py-2 rounded text-gray-700 hover:bg-gray-100',
+                'px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100',
                 'transition-all duration-200'
               )}
             >

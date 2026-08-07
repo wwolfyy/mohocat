@@ -173,7 +173,7 @@ export default function AdminDashboard() {
     <div className="p-8 max-w-[1200px] mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">🐱 산냥이집냥이 관리자 페이지</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">🐱 산냥이집냥이 관리자 페이지</h1>
 
         {error && (
           <Alert variant="error" className="mt-4">

@@ -289,7 +289,7 @@ export default function AboutContentEditor() {
           {content.sections.map((section, index) => (
             <div key={index} className="mb-6 p-4 border border-gray-100 rounded-lg">
               <div className="flex justify-between items-center mb-3">
-                <h4 className="text-md font-medium text-gray-800">
+                <h4 className="text-sm font-medium text-gray-800">
                   {t.fields.sectionTitle(index + 1)}
                 </h4>
                 <button

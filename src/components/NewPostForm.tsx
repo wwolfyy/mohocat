@@ -301,14 +301,14 @@ const NewPostForm = ({ feedingSpots, postId }: NewPostFormProps) => {
               <button
                 type="button"
                 onClick={handleSelectAllFeedingSpots}
-                className="px-3 py-1 text-sm bg-brand-100 text-brand-700 rounded hover:bg-brand-200 transition-colors"
+                className="px-3 py-1 text-sm bg-brand-100 text-brand-700 rounded-lg hover:bg-brand-200 transition-colors"
               >
                 모두 선택
               </button>
               <button
                 type="button"
                 onClick={handleDeselectAllFeedingSpots}
-                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 선택 해제
               </button>

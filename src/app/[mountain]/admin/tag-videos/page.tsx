@@ -6,6 +6,7 @@ import { parseRecordingDateFromTitle } from '@/utils/dateParser';
 import { parseDate } from '@/utils/parse-date';
 import { adminStrings } from '@/constants/adminStrings';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import CatSelectorModal from '@/components/CatSelectorModal';
 import { useDialog } from '@/components/ui/useDialog';
 import { useMountain } from '@/components/MountainProvider';
@@ -359,6 +360,25 @@ export default function TagVideosPage() {
   };
 
   /**
+   * Dismiss the playlist selector, discarding un-saved ticks.
+   *
+   * Extracted because the shared Modal shell adds two dismissal routes the
+   * hand-rolled one had — backdrop click and ESC — and both must reset the ticks
+   * exactly as 취소 does. Leaving them to close bare would carry stale ticks into
+   * the next open. A save in flight blocks all three (the original disabled its
+   * × for the same reason).
+   */
+  const closePlaylistSelector = () => {
+    if (savingPlaylists) return;
+    setShowPlaylistSelector(false);
+    // Back to the video's real membership for the single context, or to nothing
+    // for a batch (which never had one).
+    const videoPlaylists =
+      playlistSelectorContext === 'batch' ? [] : ytm.selectedVideo?.allPlaylists || [];
+    setSelectedPlaylists(new Set(videoPlaylists.map((p) => p.id)));
+  };
+
+  /**
    * Apply the ticked playlists to every selected video (batch context).
    *
    * **Set semantics, matching 태그 저장:** each video ends up in exactly the ticked
@@ -587,7 +607,7 @@ export default function TagVideosPage() {
       <div className="mt-2 mb-4 h-1 w-12 rounded-full bg-brand" />
 
       {c.error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
           {c.error}
           <button onClick={() => c.setError(null)} className="ml-2 text-red-500 hover:text-red-700">
             ×
@@ -646,7 +666,7 @@ export default function TagVideosPage() {
         <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
           {missingVideos.length > 0 && (
             <>
-              <h3 className="font-semibold text-amber-900">
+              <h3 className="text-lg font-semibold text-amber-900">
                 ⚠️ {t.availability.missingHeading(missingVideos.length)}
               </h3>
               <p className="mt-1 text-sm text-amber-800">{t.availability.missingExplain}</p>
@@ -1312,7 +1332,7 @@ export default function TagVideosPage() {
                   </div>
 
                   {(ytm.saving || ytm.updatingYoutube) && (
-                    <div className="text-xs text-gray-500 bg-brand-50 p-3 rounded border-l-4 border-brand-400">
+                    <div className="text-xs text-gray-500 bg-brand-50 p-3 rounded-lg border-l-4 border-brand-400">
                       <div className="font-medium text-ink mb-1">{t.form.saveProcess}</div>
                       <div className="space-y-1">
                         <div className={ytm.updatingYoutube ? 'text-brand-700' : 'text-gray-500'}>
@@ -1416,97 +1436,80 @@ export default function TagVideosPage() {
         title={t.catSelector.title(catSelectorContext)}
       />
 
-      {/* Playlist Selector Modal */}
+      {/* Playlist Selector Modal — on the shared shell (design.md §Modal). The
+          close affordance is hidden rather than disabled while a save is in
+          flight, which is what the hand-rolled × did with `disabled`. */}
       {showPlaylistSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {t.playlistSelector.title(playlistSelectorContext === 'batch')}
-              </h3>
-              <button
-                onClick={() => setShowPlaylistSelector(false)}
-                disabled={savingPlaylists}
-                className="text-gray-500 hover:text-gray-700 text-xl disabled:opacity-50"
-              >
-                ×
-              </button>
+        <Modal
+          isOpen
+          onClose={closePlaylistSelector}
+          title={t.playlistSelector.title(playlistSelectorContext === 'batch')}
+          hideCloseButton={savingPlaylists}
+          className="max-w-2xl max-h-96 flex flex-col"
+        >
+          {/* Saving indicator */}
+          {savingPlaylists && (
+            <div className="mb-4 bg-brand-50 border border-brand-200 p-3 rounded-lg">
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-500 mr-2"></div>
+                <span className="text-ink text-sm">{t.playlistSelector.savingNote}</span>
+              </div>
             </div>
+          )}
 
-            {/* Saving indicator */}
-            {savingPlaylists && (
-              <div className="mb-4 bg-brand-50 border border-brand-200 p-3 rounded">
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-500 mr-2"></div>
-                  <span className="text-ink text-sm">{t.playlistSelector.savingNote}</span>
-                </div>
+          {/* Playlist list */}
+          <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
+            {allPlaylists.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">{t.playlistSelector.noPlaylists}</div>
+            ) : (
+              <div className="space-y-2">
+                {allPlaylists.map((playlist) => (
+                  <label
+                    key={playlist.id}
+                    className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
+                      selectedPlaylists.has(playlist.id)
+                        ? 'bg-brand-50 border border-brand-200'
+                        : 'border border-gray-200'
+                    } ${savingPlaylists ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedPlaylists.has(playlist.id)}
+                      onChange={() => handlePlaylistToggle(playlist.id)}
+                      disabled={savingPlaylists}
+                      className="mr-2"
+                    />
+
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{playlist.title}</div>
+                      <div className="text-xs text-gray-500">{playlist.description}</div>
+                      <div className="text-xs text-gray-400">
+                        {t.playlistSelector.videoCount(playlist.itemCount)}
+                      </div>
+                    </div>
+                  </label>
+                ))}
               </div>
             )}
-
-            {/* Playlist list */}
-            <div className="flex-1 overflow-y-auto border border-gray-200 rounded">
-              {allPlaylists.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
-                  {t.playlistSelector.noPlaylists}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {allPlaylists.map((playlist) => (
-                    <label
-                      key={playlist.id}
-                      className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-50 ${
-                        selectedPlaylists.has(playlist.id)
-                          ? 'bg-brand-50 border border-brand-200'
-                          : 'border border-gray-200'
-                      } ${savingPlaylists ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedPlaylists.has(playlist.id)}
-                        onChange={() => handlePlaylistToggle(playlist.id)}
-                        disabled={savingPlaylists}
-                        className="mr-2"
-                      />
-
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{playlist.title}</div>
-                        <div className="text-xs text-gray-500">{playlist.description}</div>
-                        <div className="text-xs text-gray-400">
-                          {t.playlistSelector.videoCount(playlist.itemCount)}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setShowPlaylistSelector(false);
-                  // Reset the ticks: back to the video's real membership for the single
-                  // context, or to nothing for a batch (which never had one).
-                  const videoPlaylists =
-                    playlistSelectorContext === 'batch'
-                      ? []
-                      : ytm.selectedVideo?.allPlaylists || [];
-                  setSelectedPlaylists(new Set(videoPlaylists.map((p) => p.id)));
-                }}
-                disabled={savingPlaylists}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 text-sm disabled:opacity-50"
-              >
-                {t.playlistSelector.cancel}
-              </button>
-              <Button size="sm" onClick={savePlaylistChanges} disabled={savingPlaylists}>
-                {savingPlaylists
-                  ? t.playlistSelector.saving
-                  : t.playlistSelector.saveChanges(selectedPlaylists.size)}
-              </Button>
-            </div>
           </div>
-        </div>
+
+          {/* Action buttons */}
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={closePlaylistSelector}
+              disabled={savingPlaylists}
+            >
+              {t.playlistSelector.cancel}
+            </Button>
+            <Button size="sm" onClick={savePlaylistChanges} disabled={savingPlaylists}>
+              {savingPlaylists
+                ? t.playlistSelector.saving
+                : t.playlistSelector.saveChanges(selectedPlaylists.size)}
+            </Button>
+          </div>
+        </Modal>
       )}
     </div>
   );

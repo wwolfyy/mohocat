@@ -166,7 +166,7 @@ export default function AdminReplyItem({
             onClick={handleDelete}
             disabled={isDeleting}
             className={cn(
-              'px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600',
+              'px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600',
               'transition-colors duration-200',
               isDeleting && 'opacity-50 cursor-not-allowed'
             )}

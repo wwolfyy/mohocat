@@ -297,6 +297,10 @@ export default function AdminAuth({ children }: AdminAuthProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
+              {/* Masthead, not a page title — deliberately below the admin
+                  `h1 = text-2xl` tier (design.md §Typography): it sits in a
+                  64px-tall bar beside `text-sm` copy, and the page's own h1
+                  renders below it. */}
               <h1 className="text-xl font-semibold text-gray-900">산냥이집냥이 관리자</h1>
               <div className="text-sm text-gray-500">
                 환영해요, {user.displayName || user.email}님

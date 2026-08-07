@@ -6,9 +6,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { triggerPublicRevalidate } from '@/lib/revalidate-client';
 import type { Point, Cat, LabelSide } from '@/types';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import PointMapPicker from '@/components/admin/PointMapPicker';
 import { adminStrings } from '@/constants/adminStrings';
-import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
 import { useMountain } from '@/components/MountainProvider';
 
 // 'auto' is the form-only sentinel for "no override" (stored as an absent key).
@@ -204,7 +205,7 @@ export default function PointsCMSPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
           {error}
         </div>
       )}
@@ -236,14 +237,14 @@ export default function PointsCMSPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => handleEdit(p)}
-                        className="p-2 text-gray-500 hover:text-brand-600 hover:bg-gray-100 rounded"
+                        className="p-2 text-gray-500 hover:text-brand-600 hover:bg-gray-100 rounded-lg"
                         title={adminStrings.common.edit}
                       >
                         <FiEdit2 />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(p)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded"
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-lg"
                         title={adminStrings.common.delete}
                       >
                         <FiTrash2 />
@@ -257,127 +258,126 @@ export default function PointsCMSPage() {
         </div>
       )}
 
-      {/* Add / Edit form modal */}
+      {/* Add / Edit form modal. On the shared shell (design.md §Modal) rather than
+          a hand-rolled one: the width override is deliberate — the map picker needs
+          more than the shell's widest preset (`xl` = max-w-2xl). */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
-                {editingPoint ? S.form.editTitle : S.form.addTitle}
-              </h2>
-              <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
-                <FiX size={24} />
-              </button>
+        <Modal
+          isOpen
+          onClose={handleCancel}
+          title={editingPoint ? S.form.editTitle : S.form.addTitle}
+          className="max-w-3xl"
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {S.form.titleLabel} *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                placeholder={S.form.titlePlaceholder}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {S.form.titleLabel} *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  placeholder={S.form.titlePlaceholder}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {S.form.description}
+              </label>
+              <textarea
+                value={formData.description}
+                placeholder={S.form.descriptionPlaceholder}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {S.picker.label} *
+              </label>
+              <PointMapPicker
+                points={points}
+                editingId={editingPoint?.id}
+                value={
+                  formData.x !== null && formData.y !== null
+                    ? { x: formData.x, y: formData.y }
+                    : null
+                }
+                onChange={({ x, y }) => setFormData((f) => ({ ...f, x, y }))}
+              />
+            </div>
+
+            <div>
+              <p className="block text-sm font-medium text-gray-700 mb-1">
+                {S.form.labelSideHeading}
+              </p>
+              <p className="text-xs text-gray-500 mb-2">{S.form.labelSideHint}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <LabelSideSelect
+                  label={S.form.labelSideMobile}
+                  value={formData.labelMobile}
+                  onChange={(v) => setFormData({ ...formData, labelMobile: v })}
+                />
+                <LabelSideSelect
+                  label={S.form.labelSideDesktop}
+                  value={formData.labelDesktop}
+                  onChange={(v) => setFormData({ ...formData, labelDesktop: v })}
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {S.form.description}
-                </label>
-                <textarea
-                  value={formData.description}
-                  placeholder={S.form.descriptionPlaceholder}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {S.picker.label} *
-                </label>
-                <PointMapPicker
-                  points={points}
-                  editingId={editingPoint?.id}
-                  value={
-                    formData.x !== null && formData.y !== null
-                      ? { x: formData.x, y: formData.y }
-                      : null
-                  }
-                  onChange={({ x, y }) => setFormData((f) => ({ ...f, x, y }))}
-                />
-              </div>
-
-              <div>
-                <p className="block text-sm font-medium text-gray-700 mb-1">
-                  {S.form.labelSideHeading}
-                </p>
-                <p className="text-xs text-gray-500 mb-2">{S.form.labelSideHint}</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <LabelSideSelect
-                    label={S.form.labelSideMobile}
-                    value={formData.labelMobile}
-                    onChange={(v) => setFormData({ ...formData, labelMobile: v })}
-                  />
-                  <LabelSideSelect
-                    label={S.form.labelSideDesktop}
-                    value={formData.labelDesktop}
-                    onChange={(v) => setFormData({ ...formData, labelDesktop: v })}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <Button type="button" variant="secondary" onClick={handleCancel} disabled={saving}>
-                  {adminStrings.common.cancel}
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving ? adminStrings.common.saving : S.form.save}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="secondary" onClick={handleCancel} disabled={saving}>
+                {adminStrings.common.cancel}
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? adminStrings.common.saving : S.form.save}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       )}
 
-      {/* Delete confirmation / blocked modal */}
+      {/* Delete confirmation / blocked modal. NOT `useDialog.confirm()`: this is a
+          destructive action, which design.md §Modal requires keep its red button,
+          and the blocked branch is a one-button notice the promise API cannot
+          express. Both keep their own buttons on the shared shell. */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            {blockingCats.length > 0 ? (
-              <>
-                <h3 className="text-lg font-semibold mb-4">{S.delete.blockedTitle}</h3>
-                <p className="text-gray-600 mb-6">
-                  {S.delete.blockedBody(blockingCats.map((c) => c.name).join(', '))}
-                </p>
-                <div className="flex justify-end">
-                  <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-                    {adminStrings.common.confirm}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg font-semibold mb-4">{S.delete.title}</h3>
-                <p className="text-gray-600 mb-6">{S.delete.body}</p>
-                <div className="flex justify-end gap-3">
-                  <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-                    {adminStrings.common.cancel}
-                  </Button>
-                  <Button variant="danger" onClick={() => handleDelete(deleteTarget)}>
-                    {S.delete.confirm}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <Modal
+          isOpen
+          onClose={() => setDeleteTarget(null)}
+          title={blockingCats.length > 0 ? S.delete.blockedTitle : S.delete.title}
+        >
+          {blockingCats.length > 0 ? (
+            <>
+              <p className="text-gray-600 mb-6">
+                {S.delete.blockedBody(blockingCats.map((c) => c.name).join(', '))}
+              </p>
+              <div className="flex justify-end">
+                <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                  {adminStrings.common.confirm}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-6">{S.delete.body}</p>
+              <div className="flex justify-end gap-3">
+                <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                  {adminStrings.common.cancel}
+                </Button>
+                <Button variant="danger" onClick={() => handleDelete(deleteTarget)}>
+                  {S.delete.confirm}
+                </Button>
+              </div>
+            </>
+          )}
+        </Modal>
       )}
     </div>
   );

@@ -114,6 +114,25 @@ and never repurpose them as app UI colors:
 - **Body:** default Tailwind `text-base`; secondary/meta text `text-sm text-gray-500`.
 - **On-brand text** (buttons, markers) is **dark on yellow** (`ink` / black) — never
   white on yellow (fails contrast and looks washed out).
+- **Admin tier (added 2026-08-08, colour plan Phase 5 F2).** The scale above is
+  sized for the landing, where a title sits over a full-bleed map. `/admin` is a
+  dense CMS and steps every level down; it applies these as **utilities**, which
+  override the `@layer base` element styles:
+
+  | Element | Admin                   | Role        |
+  | ------- | ----------------------- | ----------- |
+  | `h1`    | `text-2xl font-bold`    | page title  |
+  | `h2`    | `text-xl font-semibold` | section     |
+  | `h3`    | `text-lg font-semibold` | sub-section |
+  | `h4`    | `text-sm font-medium`   | label       |
+
+  ⚠️ **This tier is why admin headings look "wrong" against the base scale — they
+  are not.** Before it was written down, admin ran it de facto and disagreed with
+  itself: `h1` was `text-2xl` on 12 screens and `text-3xl` on 5, so a page title
+  changed size as an operator moved between 게시물 and 게시물 수정.
+  📌 **One deliberate exception:** the persistent admin masthead
+  (`AdminAuth.tsx`) stays `text-xl` — it is chrome in a 64px bar, not a page
+  title, and it is commented as such at the site.
 
 ---
 
@@ -170,10 +189,39 @@ and never repurpose them as app UI colors:
 
 ## Shapes
 
-- **Rounded, friendly geometry.** Buttons `rounded-lg`; cards/modals `rounded-md`
-  to `rounded-xl`; avatars and markers fully circular (`rounded-full`).
-- Avoid sharp 0-radius corners on interactive surfaces — squareness reads as
-  "admin/utility," which is the opposite of the landing's tone.
+- **Rounded, friendly geometry.** Avoid sharp 0-radius corners on interactive
+  surfaces. **This applies to `/admin` too** (D5, 2026-08-05).
+
+  | Surface                                 | Radius                      |
+  | --------------------------------------- | --------------------------- |
+  | Buttons (filled, bordered, or nav pill) | `rounded-lg`                |
+  | Cards, panels, modals, notice boxes     | `rounded-md` … `rounded-xl` |
+  | Avatars, markers, circular ghost close  | `rounded-full`              |
+  | **Form inputs** (input/select/textarea) | **`rounded`**               |
+  | **Small badges & pills** (`text-xs`)    | **`rounded`**               |
+  | **Checkboxes / radios**                 | **`rounded`**               |
+  | Loading skeletons                       | `rounded`                   |
+
+  ⚠️ **The last four rows were added 2026-08-08 (colour plan Phase 5 F3) and are
+  descriptive, not aspirational** — they record what both halves of the app
+  already do consistently. A tighter 0.25 rem on a 16px checkbox or a `text-xs`
+  badge is correct; `rounded-lg` there would be visibly wrong.
+
+  🔑 **Why this needed writing down: the spec was silent, not violated.** Before
+  Phase 5 the rule legislated only buttons, cards, modals, avatars and markers,
+  so bare `rounded` read as drift — 38 % of admin's radii and 23 % of the public
+  components'. Measuring both halves showed they had filled the silence the same
+  way. ⚠️ **Do not "fix" one half against the other**; normalising admin alone
+  would make it diverge from the UI it is meant to match.
+
+- ⚠️ **Rewritten 2026-08-08:** the rule used to justify itself by warning that
+  squareness _"reads as admin/utility, which is the opposite of the landing's
+  tone"_ — written while admin was out of scope, and self-contradictory once it
+  came in. Admin is not a lesser tone to be avoided; it is a surface governed by
+  the same geometry.
+- **Correctly square, and not to be swept up:** underline tabs (`border-b-2`) and
+  ghost icon buttons with no background carry no radius by design. The rule is
+  about filled and bordered surfaces.
 
 ---
 

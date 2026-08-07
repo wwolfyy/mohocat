@@ -4,9 +4,11 @@ import { usePathname } from 'next/navigation';
 import AdminAuth from '@/components/admin/AdminAuth';
 import { cn } from '@/utils/cn';
 import { adminStrings } from '@/constants/adminStrings';
+import { useDialog } from '@/components/ui/useDialog';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const dialog = useDialog();
 
   // Helper function to determine if a path is active
   const isActivePath = (path: string) => {
@@ -19,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Tailwind classes for a nav item (active / inactive / disabled).
   const getNavItemClasses = (path: string, isDisabled = false) =>
     cn(
-      'px-4 py-2 rounded transition-colors',
+      'px-4 py-2 rounded-lg transition-colors',
       isDisabled
         ? 'text-gray-400 opacity-60 cursor-not-allowed'
         : isActivePath(path)
@@ -27,10 +29,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           : 'text-gray-500 hover:bg-gray-50 cursor-pointer'
     );
 
-  // Handle click on disabled items
+  // Handle click on disabled items. Uses the shared Modal-based dialog rather
+  // than a native alert() (colour plan Phase 5 F5) — `dialog.element` is
+  // rendered below, inside AdminAuth so it never paints over the auth gate.
   const handleDisabledClick = (e: React.MouseEvent, feature: string) => {
     e.preventDefault();
-    alert(adminStrings.nav.notImplemented(feature));
+    void dialog.alert(adminStrings.nav.notImplemented(feature));
   };
 
   return (
@@ -81,6 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Main Content */}
         <main>{children}</main>
+        {dialog.element}
       </div>
     </AdminAuth>
   );

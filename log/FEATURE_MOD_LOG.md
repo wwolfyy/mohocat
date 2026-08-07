@@ -15,6 +15,70 @@
 
 ---
 
+## 2026-08-08 — the admin CMS is measured against `design.md` for the first time (colour plan Phase 5)
+
+**Area:** `src/app/[mountain]/admin/{cats,points,tag-videos,layout,page,migration,adoption/new,announcements/new,posts/edit}`,
+`src/components/admin/{AdminAuth,AboutContentEditor,YouTubeAuthPanelNew}`, `docs/design/design.md`.
+
+**What changed.** D5 (2026-08-05) put `/admin` in `design.md`'s scope; Phase 5 audited it against
+the **non-colour** halves and acted on five of six findings.
+
+- **Five hand-rolled modal shells now render through `ui/Modal`** — two in 냥이들, two in 급식소
+  관리, one in 동영상 태깅. They gain the frosted backdrop, entrance animations, `rounded-xl
+shadow-xl`, the portal to `<body>`, body scroll-lock, `role="dialog"`, click-outside, and
+  **ESC-to-close** via the shared `useModalLayer` stack.
+- **Six admin `h1`s normalised to `text-2xl`**, and the admin type tier is now written into
+  `design.md` §Typography.
+- `text-md` → `text-sm`; three native `alert()`s moved onto `useDialog`; one classless `h3` sized.
+
+**Rationale, and the two places the obvious fix was wrong.**
+
+🔑 **The audit inverted its own premise.** D5 assumed admin had drifted from a spec. Spacing,
+elevation and language were **already clean** (zero arbitrary spacing values, only
+`shadow-sm/md/lg`, no English in any user-facing string), and `useDialog` adoption was far ahead
+of what a grep suggested — **41 of 44** `alert`/`confirm` sites already routed through `ui/Modal`.
+The real gaps were **absences in `design.md`**, which was written landing-first and had no admin
+tier at all.
+
+⚠️ **The modals are NOT on `useDialog.confirm()`, which was the first plan.** Two are destructive,
+and §Modal requires a destructive confirm keep its **red** button — `useDialog` renders 확인 as the
+brand primary, so the "conformance" fix would have **removed the danger affordance**. They keep
+their own buttons on the shared shell. 급식소's blocked-delete branch is a one-button notice the
+promise API cannot express either.
+
+⚠️ **The playlist selector needed a behaviour change to convert safely.** The shell adds two
+dismissal routes the hand-rolled one lacked — backdrop click and ESC — and both had to reset the
+ticked playlists exactly as 취소 does, or a dismissal would carry stale ticks into the next open.
+Extracted as `closePlaylistSelector`, which also blocks all three routes mid-save (the old × was
+`disabled` for that reason).
+
+📌 **One normalisation was reverted on inspection:** `AdminAuth`'s masthead is chrome in a 64px
+bar beside `text-sm` copy, not a page title, so it stays `text-xl` with a comment saying why.
+
+🔑 **F3 (corner radius) was resolved by a different route than the one approved, and the reason
+generalises: the fix was approved on a premise the fix pass disproved.** The plan was to move
+admin's **73** bare `rounded` sites to `rounded-lg`, on the understanding that admin sat below a
+spec the rest of the app met. Measuring the public components **before editing** showed they carry
+the same usage — bare `rounded` is **38 %** of admin's radii and **23 %** of the public ones — so
+admin-only normalisation would have made it **diverge** from the UI it must match.
+
+🔑 **And the sites turned out to be mostly form inputs, small badges and checkboxes — three
+categories §Shapes never named.** The spec was **silent**, not violated. So `design.md` §Shapes
+gained rows describing what both halves already do (descriptive, not aspirational — `rounded-lg`
+on a 16px checkbox is visibly wrong), and only **28 genuine buttons and cards** moved to
+`rounded-lg`: notice/alert boxes, post cards, the login card, pagination and composer buttons, the
+admin nav pill, and 급식소 관리's icon buttons. ⚠️ **This is a small user-visible change on public
+surfaces too** (4px → 8px corners on post cards and a few buttons), not admin-only.
+**Check the thing you are conforming to before conforming to it.**
+
+**Verified.** `tsc` 0 · smoke **39** · unit **196** · **e2e 233 passed / 13 skipped / 0 failed** —
+the same baseline as Phases 3 and 4, which is the expected result for a pass that changes no
+behaviour. `admin/tag-videos.spec`'s 재생목록 일괄 변경 case drives the converted playlist modal,
+so the riskiest conversion has live cover. ⏳ **Not seen in a browser** — `/admin/*` is auth-gated
+and no session here had credentials, so this joins the standing admin-glance item.
+
+---
+
 ## 2026-08-06 — a 동참 notification that never sent is now visible to the visitor and to the operator
 
 **Area:** `src/app/api/contact/route.ts`, `src/app/[mountain]/pages/contact/page.tsx`,

@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { authHeader } from '@/lib/auth/authHeader';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { useDialog } from '@/components/ui/useDialog';
 
 interface TokenInfo {
   source: 'firestore';
@@ -56,6 +57,9 @@ export default function YouTubeAuthPanel() {
   const [authStatus, setAuthStatus] = useState<YouTubeAuthStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // Shared Modal-based alert (replaces the native dialogs — P6.1 / colour plan
+  // Phase 5 F5). `dialog.element` is rendered at the end of this component.
+  const dialog = useDialog();
 
   const checkAuthStatus = async () => {
     try {
@@ -88,7 +92,7 @@ export default function YouTubeAuthPanel() {
       const { authUrl, error } = await response.json();
 
       if (error) {
-        alert(`오류: ${error}`);
+        await dialog.alert(`오류: ${error}`);
         return;
       }
 
@@ -124,8 +128,12 @@ export default function YouTubeAuthPanel() {
       );
     } catch (error) {
       console.error('Failed to refresh YouTube token:', error);
-      alert('토큰 갱신을 시작하지 못했어요');
+      // Clear the spinner BEFORE awaiting: the native alert() this replaces
+      // blocked the whole page, so the ordering was invisible; the Modal one
+      // does not, and leaving it until dismissal would strand the button in
+      // its "갱신 중" state behind the dialog.
       setRefreshing(false);
+      await dialog.alert('토큰 갱신을 시작하지 못했어요');
     }
   };
 
@@ -235,6 +243,7 @@ export default function YouTubeAuthPanel() {
       ) : (
         <div className="p-4 text-center text-red-500">❌ 인증 상태를 확인할 수 없습니다</div>
       )}
+      {dialog.element}
     </Card>
   );
 }

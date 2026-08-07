@@ -378,7 +378,162 @@ colour assertion fail, while the hue-agnostic tests correctly stayed green. Ramp
 
 ### Phase 5 — unscoped follow-up from D5
 
-- [ ] 5.1 🆕 Audit admin screens against the **non-colour** halves of `design.md` (typography, spacing, elevation, shapes, modal spec). Exempt until 2026-08-05; never checked. **Not sized here.**
+- [x] 5.1 Audit admin screens against the **non-colour** halves of `design.md` (typography,
+      spacing, elevation, shapes, modal spec). ✅ **DONE 2026-08-08** — findings in §9 below.
+      **Read-only; nothing changed.** Surface: 29 files / ~8,000 lines
+      (`src/app/[mountain]/admin/**` + `src/components/admin/**`).
+- [x] 5.2 Act on §9 — **five of six done 2026-08-08** (owner approved F1/F2/F4/F5/F6):
+  - [x] **F1** — all five hand-rolled shells now render through `ui/Modal`. ⚠️ **Not**
+        `useDialog.confirm()` as first proposed: two are **destructive** and design.md §Modal
+        requires they keep their red button, which that API cannot express (it renders 확인 as
+        the primary), and points' "blocked" branch is a one-button notice. They keep their own
+        buttons on the shared shell instead.
+  - [x] **F2** — six `h1`s normalised to `text-2xl`; the admin tier is now written into
+        `design.md` §Typography. 📌 **One reverted on inspection:** `AdminAuth.tsx`'s masthead
+        is chrome in a 64px bar, not a page title, so it stays `text-xl` and says so in a comment.
+  - [x] **F4** `text-md` → `text-sm` · **F5** all three native `alert()`s on `useDialog` ·
+        **F6** the classless `h3` sized.
+  - [x] **F3 — RESOLVED the same day, by a different route than approved.** The first fix
+        (normalise admin's 73 bare `rounded` to `rounded-lg`) was **abandoned before any edit**:
+        measuring the public components showed they carry the same usage, so admin-only
+        normalisation would have made it **diverge** from the UI it must match. Owner chose
+        option 1 instead — **describe what both halves already do, then fix only genuine
+        buttons and cards.** `design.md` §Shapes gained rows for **form inputs, small badges,
+        checkboxes and skeletons** (descriptive, not aspirational), and **28 sites** were moved
+        to `rounded-lg`: notice/alert boxes, post cards, the login card, pagination and
+        composer buttons, the admin nav pill, and 급식소 관리's icon buttons. ⚠️ **Deliberately
+        untouched:** every input, checkbox, `text-xs` badge, image overlay and skeleton —
+        `rounded-lg` on a 16px checkbox is visibly wrong.
+- **Gates after 5.2:** `tsc` 0 · smoke **39** · unit **196** · **e2e 233 / 13 skipped / 0
+  failed** — the same baseline as Phases 3 and 4. 📌 `admin/tag-videos.spec`'s
+  재생목록 일괄 변경 case drives the converted playlist modal, so F1's riskiest conversion has
+  live cover. ⏳ **Still unseen in a browser** — `/admin/*` remains auth-gated.
+
+---
+
+## 9. Phase 5 findings — admin vs the non-colour `design.md` (2026-08-08)
+
+🔑 **The headline is not what D5 implied.** D5 assumed admin had drifted from a spec it was
+never measured against. **Two of the five axes are already clean**, one is nearly clean, and the
+two real problems are **absences in `design.md`** rather than violations of it — the document was
+written landing-first and has **no admin tier**, so on typography and shape there is nothing for
+admin to conform to. That reframes 5.2 from "bring admin into line" to "decide what the line is."
+
+### Clean — no action
+
+| Axis                       | Result                                                                                                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Spacing** (§Layout)      | ✅ **Zero** arbitrary values (`p-[13px]`-style) anywhere in admin. Everything is on Tailwind's default scale, exactly as the spec requires.                                                |
+| **Elevation** (§Elevation) | ✅ Only `shadow-sm` (5) / `shadow-md` (9) / `shadow-lg` (9). No coloured, arbitrary, or heavy shadows.                                                                                     |
+| **Language & Voice**       | ✅ No English in any user-facing string — labels, placeholders, `aria-label`s, `title`s, or dialog copy. Copy is centralised in `adminStrings`, which is the pattern §Language recommends. |
+
+📌 **`useDialog` adoption is further along than the raw grep suggests.** 44 `alert(`/`confirm(`
+call sites look like native dialogs; **41 already route through `useDialog` → `ui/Modal`**
+(complexity-retirement P6.1), and 2 of the remaining hits are comments. Only **3** are real (F5).
+
+### F1 — five hand-rolled modal shells bypass `ui/Modal`
+
+`admin/cats/page.tsx` (×2), `admin/points/page.tsx` (×2), `admin/tag-videos/page.tsx` (×1). Each
+is `fixed inset-0 bg-black bg-opacity-50 … z-50` wrapping a `bg-white rounded-lg p-6 max-w-md`
+card. Against §Modal they lose: `backdrop-blur-sm`, the backdrop fade and panel
+scale/fade entrances, `rounded-xl`, **any shadow at all** (spec: `shadow-xl`), the portal to
+`<body>`, body scroll-lock, `role="dialog"`, click-outside-closes, and **ESC-to-close** — they
+are not on the `useModalLayer` stack. ⚠️ **CLAUDE.md's rule is explicit** ("don't hand-roll new
+modal shells"); these predate it.
+
+⚠️ **Do not report the missing portal as a live bug.** Its stated purpose is escaping a frosted
+ancestor, and the **admin header is static with no `backdrop-blur`** (`admin/layout.tsx`), so
+nothing traps them today. 📌 **The z-index is the fragile part instead:** `z-50` is exactly
+`useModalLayer`'s `BASE_Z_INDEX`, so a hand-rolled shell **ties** with the first `useDialog`
+layer and paints correctly only because the portal appends after the page root in DOM order.
+`tag-videos` runs both mechanisms in one file.
+
+✅ **The fix is small and mostly deletion**: every one is a delete-confirm rendering
+`Button variant="secondary"` + `variant="danger"`, which is what `useDialog.confirm()` already
+produces. `tag-videos` imports `useDialog` today; `cats` and `points` do not.
+
+### F2 — admin runs a second, undeclared type scale, applied inconsistently (needs a decision)
+
+`globals.css → @layer base` sets `h1 text-4xl` / `h2 text-3xl` / `h3 text-2xl`, and §Typography
+names it the source of truth. **Every single admin heading overrides it** — 18 `h1`, 8 `h2`,
+22 `h3`, and not one renders at the base size.
+
+🔑 **That override is right, and the spec is what is missing.** A `text-4xl` page title is
+correct over a full-bleed map and absurd on a CMS list. The defect is that the replacement scale
+was never written down, so it disagrees with itself:
+
+| Element | Sizes actually used                           | Base rule  |
+| ------- | --------------------------------------------- | ---------- |
+| `h1`    | `text-2xl` ×12 · `text-3xl` ×5 · `text-xl` ×1 | `text-4xl` |
+| `h2`    | `text-xl` ×7 · `text-sm` ×1                   | `text-3xl` |
+| `h3`    | `text-lg` ×14 · `text-sm` ×5 · `text-base` ×2 | `text-2xl` |
+
+⚠️ **Operator-visible:** a page title changes size between screens — 게시물 / 집사들 / 냥이들 at
+`text-2xl`, 게시물 수정 and 관리자 대시보드 at `text-3xl`. **Owner call:** add an admin tier to
+§Typography (recommendation: `h1 text-2xl`, the majority, and normalise the 5 outliers), or state
+that admin sets its own sizes per screen and drop the expectation.
+
+### F3 — corner radius has no single language 🔴 **STILL OPEN — the approved fix rested on a false premise**
+
+**Original finding.** Across admin: bare **`rounded` ×73** (0.25 rem) against **`rounded-lg` ×74**
+(0.5 rem), plus `rounded-full` ×33, `rounded-md` ×7, `rounded-xl` ×5 — a dead-even split. §Shapes
+says buttons are `rounded-lg` and cards `rounded-md`–`rounded-xl`, so the 73 sit **below the floor**
+for either role. _(An earlier draft said 79; that count also caught directional variants like
+`rounded-t-lg`. 73 is right.)_
+
+🔴 **What the fix pass found, before changing anything: the public components have the same
+defect.** The approved action was "move admin's bare `rounded` to `rounded-lg`", on the
+understanding that admin had drifted from a spec the rest of the app met. It has not:
+
+| Radius         | Admin | Public components |
+| -------------- | ----: | ----------------: |
+| `rounded`      |    73 |                50 |
+| `rounded-md`   |     7 |                16 |
+| `rounded-lg`   |    74 |                86 |
+| `rounded-xl`   |     5 |                 7 |
+| `rounded-full` |    33 |                54 |
+
+**38 % of admin's radii are bare `rounded`; so are 23 % of the public components'.** ⚠️ **Normalising
+admin alone would make it diverge from the very UI it is meant to match** — the opposite of D5's
+intent. The work was stopped here rather than applying 73 edits on a premise known to be wrong.
+
+🔑 **And the real gap is a third thing again.** In both halves the bare `rounded` sites are
+overwhelmingly **form inputs** (`w-full p-2 border rounded`), **small badges** (`px-2 py-1 text-xs`)
+and **checkboxes** (`h-4 w-4 … rounded`) — three categories §Shapes never names. It legislates
+buttons, cards, modals, avatars and markers. So this is less "admin drifted" than "the spec is
+silent, and both halves filled the silence the same way." 📌 A blanket `rounded-lg` would put an
+8 px radius on 16 px checkboxes, which is visibly wrong.
+
+**Needs a decision, now repo-wide rather than admin-only:**
+
+1. **Add input/badge/checkbox rows to §Shapes** describing what both halves already do (cheapest;
+   changes no code, and makes the existing usage correct rather than a violation), then normalise
+   only the genuine buttons and cards that use bare `rounded`.
+2. **Normalise everything to the current floor** across admin **and** public — the larger change,
+   and the only one that leaves a single radius language.
+3. Admin-only normalisation — **not recommended**, for the divergence reason above.
+
+📌 The 33 radius-less `<button>`s are underline tabs and ghost icon buttons — **correctly** square;
+do not sweep them in under any option.
+
+### F4 — `text-md` is not a Tailwind class
+
+`src/components/admin/AboutContentEditor.tsx:292` — `<h4 className="text-md …">`. Tailwind ships
+no `text-md` and `tailwind.config.js` adds no custom `fontSize`, so the class compiles to nothing
+and the heading silently renders at inherited size. **One-line fix** (`text-base`). Repo-wide this
+is the only occurrence.
+
+### F5 — three native `alert()` calls survived the P6.1 migration
+
+`admin/layout.tsx:33` (the not-implemented nav notice) and
+`YouTubeAuthPanelNew.tsx:91` + `:127` (token errors). 📌 The panel is already on the owner's
+browser-glance list from Phase 4, so these two can be confirmed in the same sitting.
+
+### F6 — one heading falls through to the base scale
+
+`admin/tag-videos/page.tsx:649` — an `h3` with weight and colour but **no size class**, so it
+inherits `text-2xl` while all 21 of its siblings are `text-lg` or smaller. It is the largest text
+in its box, which is not what the surrounding markup intends.
 
 ### Gates
 

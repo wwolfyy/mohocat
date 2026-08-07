@@ -223,7 +223,7 @@ const PostList: React.FC<PostListProps> = ({
             }
 
             return (
-              <div key={post.id} className="border p-4 rounded flex flex-col space-y-4">
+              <div key={post.id} className="border p-4 rounded-lg flex flex-col space-y-4">
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
                     {/* Show video thumbnail if video exists */}

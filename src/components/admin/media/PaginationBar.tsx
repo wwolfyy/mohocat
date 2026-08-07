@@ -34,7 +34,7 @@ const PaginationBar: React.FC<PaginationBarProps> = ({
       <button
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {previousLabel}
       </button>
@@ -55,7 +55,7 @@ const PaginationBar: React.FC<PaginationBarProps> = ({
           <button
             key={pageNum}
             onClick={() => onPageChange(pageNum)}
-            className={`px-3 py-2 text-sm border rounded ${
+            className={`px-3 py-2 text-sm border rounded-lg ${
               currentPage === pageNum
                 ? 'bg-brand text-ink border-brand font-bold'
                 : 'border-gray-300 hover:bg-gray-50'
@@ -69,7 +69,7 @@ const PaginationBar: React.FC<PaginationBarProps> = ({
       <button
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {nextLabel}
       </button>

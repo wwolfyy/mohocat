@@ -366,7 +366,7 @@ export default function TagImagesPage() {
       <h1 className="text-2xl font-bold">{t.title}</h1>
       <div className="mt-2 mb-4 h-1 w-12 rounded-full bg-brand" />
       {c.error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
           {c.error}
           <button onClick={() => c.setError(null)} className="ml-2 text-red-500 hover:text-red-700">
             ×

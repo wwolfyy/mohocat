@@ -8,6 +8,7 @@ import { triggerPublicRevalidate } from '@/lib/revalidate-client';
 import { Cat } from '@/types';
 import CatGrid from '@/components/admin/cat-grid/CatGrid';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import { adminStrings } from '@/constants/adminStrings';
 import {
   filterCats,
@@ -23,7 +24,6 @@ import {
   FiPlus,
   FiSearch,
   FiSave,
-  FiX,
   FiChevronUp,
   FiChevronDown,
   FiFilter,
@@ -333,7 +333,7 @@ export default function CatsCMSPage() {
       ) : (
         <>
           {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
               {error}
             </div>
           )}
@@ -497,421 +497,413 @@ export default function CatsCMSPage() {
           </div>
 
           {/* Cat Form Modal */}
+          {/* On the shared shell (design.md §Modal). The width override is
+              deliberate — this is a two-column form and needs more than the
+              shell's widest preset (`xl` = max-w-2xl). */}
           {showForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">
-                    {editingCat
-                      ? adminStrings.cats.form.editTitle
-                      : adminStrings.cats.form.addTitle}
-                  </h2>
-                  <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
-                    <FiX size={24} />
-                  </button>
-                </div>
+            <Modal
+              isOpen
+              onClose={handleCancel}
+              title={
+                editingCat ? adminStrings.cats.form.editTitle : adminStrings.cats.form.addTitle
+              }
+              className="max-w-4xl"
+            >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.name} *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.name} *
-                      </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.altName}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.alt_name}
+                      onChange={(e) => setFormData({ ...formData, alt_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.sex}
+                    </label>
+                    <select
+                      value={formData.sex}
+                      onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    >
+                      <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
+                      <option value="M">M</option>
+                      <option value="F">F</option>
+                      <option value="U">U</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.status}
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    >
+                      <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
+                      <option value="산냥이">산냥이</option>
+                      <option value="쉼터냥이">쉼터냥이</option>
+                      <option value="집냥이">집냥이</option>
+                      <option value="별냥이">별냥이</option>
+                      <option value="행방불명">행방불명</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.birthYear}
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.date_of_birth || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({
+                          ...formData,
+                          date_of_birth: value ? parseInt(value, 10) : undefined,
+                        });
+                      }}
+                      placeholder={adminStrings.cats.form.birthYearPlaceholder}
+                      min="1990"
+                      max="2030"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.birthYearCertainty}
+                    </label>
+                    <select
+                      value={formData.dob_certainty}
+                      onChange={(e) => setFormData({ ...formData, dob_certainty: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    >
+                      <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
+                      <option value="certain">{adminStrings.cats.form.certain}</option>
+                      <option value="uncertain">{adminStrings.cats.form.uncertain}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.thumbnailUrl}
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.thumbnailUrl}
+                      onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.currentDwelling}
+                    </label>
+                    <div className="relative" ref={dwellingRef}>
                       <input
                         type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                        value={formData.dwelling}
+                        onChange={(e) => setFormData({ ...formData, dwelling: e.target.value })}
+                        onFocus={() => setDwellingDropdownOpen(true)}
+                        placeholder={adminStrings.cats.form.dwellingPlaceholder}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.altName}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.alt_name}
-                        onChange={(e) => setFormData({ ...formData, alt_name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.sex}
-                      </label>
-                      <select
-                        value={formData.sex}
-                        onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                      <button
+                        type="button"
+                        onClick={() => setDwellingDropdownOpen(!dwellingDropdownOpen)}
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
                       >
-                        <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
-                        <option value="M">M</option>
-                        <option value="F">F</option>
-                        <option value="U">U</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.status}
-                      </label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      >
-                        <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
-                        <option value="산냥이">산냥이</option>
-                        <option value="쉼터냥이">쉼터냥이</option>
-                        <option value="집냥이">집냥이</option>
-                        <option value="별냥이">별냥이</option>
-                        <option value="행방불명">행방불명</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.birthYear}
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.date_of_birth || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setFormData({
-                            ...formData,
-                            date_of_birth: value ? parseInt(value, 10) : undefined,
-                          });
-                        }}
-                        placeholder={adminStrings.cats.form.birthYearPlaceholder}
-                        min="1990"
-                        max="2030"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.birthYearCertainty}
-                      </label>
-                      <select
-                        value={formData.dob_certainty}
-                        onChange={(e) =>
-                          setFormData({ ...formData, dob_certainty: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      >
-                        <option value="">{adminStrings.cats.form.selectPlaceholder}</option>
-                        <option value="certain">{adminStrings.cats.form.certain}</option>
-                        <option value="uncertain">{adminStrings.cats.form.uncertain}</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.thumbnailUrl}
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.thumbnailUrl}
-                        onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.currentDwelling}
-                      </label>
-                      <div className="relative" ref={dwellingRef}>
-                        <input
-                          type="text"
-                          value={formData.dwelling}
-                          onChange={(e) => setFormData({ ...formData, dwelling: e.target.value })}
-                          onFocus={() => setDwellingDropdownOpen(true)}
-                          placeholder={adminStrings.cats.form.dwellingPlaceholder}
-                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setDwellingDropdownOpen(!dwellingDropdownOpen)}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
-                        >
-                          {dwellingDropdownOpen ? (
-                            <FiChevronUp size={16} />
-                          ) : (
-                            <FiChevronDown size={16} />
-                          )}
-                        </button>
-                        {dwellingDropdownOpen && allDwellingValues.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                            {allDwellingValues
-                              .filter(
-                                (dwelling) =>
-                                  formData.dwelling === '' ||
-                                  dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
-                              )
-                              .map((dwelling) => (
-                                <button
-                                  key={dwelling}
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData({ ...formData, dwelling });
-                                    setDwellingDropdownOpen(false);
-                                  }}
-                                  className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
-                                >
-                                  {dwelling}
-                                </button>
-                              ))}
-                            {allDwellingValues.filter(
+                        {dwellingDropdownOpen ? (
+                          <FiChevronUp size={16} />
+                        ) : (
+                          <FiChevronDown size={16} />
+                        )}
+                      </button>
+                      {dwellingDropdownOpen && allDwellingValues.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                          {allDwellingValues
+                            .filter(
                               (dwelling) =>
                                 formData.dwelling === '' ||
                                 dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
-                            ).length === 0 &&
-                              formData.dwelling && (
-                                <div className="px-3 py-2 text-gray-500 italic">
-                                  {adminStrings.cats.form.noMatches}
-                                </div>
-                              )}
-                          </div>
-                        )}
-                      </div>
+                            )
+                            .map((dwelling) => (
+                              <button
+                                key={dwelling}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, dwelling });
+                                  setDwellingDropdownOpen(false);
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
+                              >
+                                {dwelling}
+                              </button>
+                            ))}
+                          {allDwellingValues.filter(
+                            (dwelling) =>
+                              formData.dwelling === '' ||
+                              dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())
+                          ).length === 0 &&
+                            formData.dwelling && (
+                              <div className="px-3 py-2 text-gray-500 italic">
+                                {adminStrings.cats.form.noMatches}
+                              </div>
+                            )}
+                        </div>
+                      )}
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.previousDwelling}
-                      </label>
-                      <div className="relative" ref={prevDwellingRef}>
-                        <input
-                          type="text"
-                          value={formData.prev_dwelling}
-                          onChange={(e) =>
-                            setFormData({ ...formData, prev_dwelling: e.target.value })
-                          }
-                          onFocus={() => setPrevDwellingDropdownOpen(true)}
-                          placeholder={adminStrings.cats.form.dwellingPlaceholder}
-                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setPrevDwellingDropdownOpen(!prevDwellingDropdownOpen)}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
-                        >
-                          {prevDwellingDropdownOpen ? (
-                            <FiChevronUp size={16} />
-                          ) : (
-                            <FiChevronDown size={16} />
-                          )}
-                        </button>
-                        {prevDwellingDropdownOpen && allDwellingValues.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                            {allDwellingValues
-                              .filter(
-                                (dwelling) =>
-                                  formData.prev_dwelling === '' ||
-                                  dwelling
-                                    .toLowerCase()
-                                    .includes(formData.prev_dwelling.toLowerCase())
-                              )
-                              .map((dwelling) => (
-                                <button
-                                  key={dwelling}
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData({ ...formData, prev_dwelling: dwelling });
-                                    setPrevDwellingDropdownOpen(false);
-                                  }}
-                                  className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
-                                >
-                                  {dwelling}
-                                </button>
-                              ))}
-                            {allDwellingValues.filter(
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.previousDwelling}
+                    </label>
+                    <div className="relative" ref={prevDwellingRef}>
+                      <input
+                        type="text"
+                        value={formData.prev_dwelling}
+                        onChange={(e) =>
+                          setFormData({ ...formData, prev_dwelling: e.target.value })
+                        }
+                        onFocus={() => setPrevDwellingDropdownOpen(true)}
+                        placeholder={adminStrings.cats.form.dwellingPlaceholder}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPrevDwellingDropdownOpen(!prevDwellingDropdownOpen)}
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
+                      >
+                        {prevDwellingDropdownOpen ? (
+                          <FiChevronUp size={16} />
+                        ) : (
+                          <FiChevronDown size={16} />
+                        )}
+                      </button>
+                      {prevDwellingDropdownOpen && allDwellingValues.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                          {allDwellingValues
+                            .filter(
                               (dwelling) =>
                                 formData.prev_dwelling === '' ||
                                 dwelling
                                   .toLowerCase()
                                   .includes(formData.prev_dwelling.toLowerCase())
-                            ).length === 0 &&
-                              formData.prev_dwelling && (
-                                <div className="px-3 py-2 text-gray-500 italic">
-                                  {adminStrings.cats.form.noMatches}
-                                </div>
-                              )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.description}
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={5}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.nameOrigin}
-                    </label>
-                    <textarea
-                      value={formData.name_origin}
-                      onChange={(e) => setFormData({ ...formData, name_origin: e.target.value })}
-                      rows={3}
-                      placeholder={adminStrings.cats.form.nameOriginPlaceholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.character}
-                    </label>
-                    <textarea
-                      value={formData.character}
-                      onChange={(e) => setFormData({ ...formData, character: e.target.value })}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.sickness}
-                    </label>
-                    <textarea
-                      value={formData.sickness}
-                      onChange={(e) => setFormData({ ...formData, sickness: e.target.value })}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.parents}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.parents}
-                        onChange={(e) => setFormData({ ...formData, parents: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {adminStrings.cats.form.offspring}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.offspring}
-                        onChange={(e) => setFormData({ ...formData, offspring: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.neutering}
-                    </label>
-                    <select
-                      value={
-                        formData.isNeutered === true
-                          ? 'true'
-                          : formData.isNeutered === false
-                            ? 'false'
-                            : ''
-                      }
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFormData({
-                          ...formData,
-                          isNeutered:
-                            value === 'true' ? true : value === 'false' ? false : undefined,
-                        });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    >
-                      <option value="">{adminStrings.cats.form.neuteringUnknown}</option>
-                      <option value="true">{adminStrings.cats.form.neuteringYes}</option>
-                      <option value="false">{adminStrings.cats.form.neuteringNo}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.adoptable}
-                        onChange={(e) => setFormData({ ...formData, adoptable: e.target.checked })}
-                        className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-300"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        {adminStrings.cats.form.adoptableLabel}
-                      </span>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.adoptionInfo}
-                    </label>
-                    <textarea
-                      value={formData.adoption_info}
-                      onChange={(e) => setFormData({ ...formData, adoption_info: e.target.value })}
-                      rows={4}
-                      placeholder={adminStrings.cats.form.adoptionInfoPlaceholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {adminStrings.cats.form.note}
-                    </label>
-                    <textarea
-                      value={formData.note}
-                      onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                      rows={4}
-                      placeholder={adminStrings.cats.form.notePlaceholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="secondary" onClick={handleCancel}>
-                      {adminStrings.common.cancel}
-                    </Button>
-                    <Button type="submit" disabled={saving} className="gap-2">
-                      {saving ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ink"></div>
-                          {adminStrings.common.saving}
-                        </>
-                      ) : (
-                        <>
-                          <FiSave /> {adminStrings.cats.form.saveCat}
-                        </>
+                            )
+                            .map((dwelling) => (
+                              <button
+                                key={dwelling}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, prev_dwelling: dwelling });
+                                  setPrevDwellingDropdownOpen(false);
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
+                              >
+                                {dwelling}
+                              </button>
+                            ))}
+                          {allDwellingValues.filter(
+                            (dwelling) =>
+                              formData.prev_dwelling === '' ||
+                              dwelling.toLowerCase().includes(formData.prev_dwelling.toLowerCase())
+                          ).length === 0 &&
+                            formData.prev_dwelling && (
+                              <div className="px-3 py-2 text-gray-500 italic">
+                                {adminStrings.cats.form.noMatches}
+                              </div>
+                            )}
+                        </div>
                       )}
-                    </Button>
+                    </div>
                   </div>
-                </form>
-              </div>
-            </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.description}
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={5}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.nameOrigin}
+                  </label>
+                  <textarea
+                    value={formData.name_origin}
+                    onChange={(e) => setFormData({ ...formData, name_origin: e.target.value })}
+                    rows={3}
+                    placeholder={adminStrings.cats.form.nameOriginPlaceholder}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.character}
+                  </label>
+                  <textarea
+                    value={formData.character}
+                    onChange={(e) => setFormData({ ...formData, character: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.sickness}
+                  </label>
+                  <textarea
+                    value={formData.sickness}
+                    onChange={(e) => setFormData({ ...formData, sickness: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.parents}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.parents}
+                      onChange={(e) => setFormData({ ...formData, parents: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {adminStrings.cats.form.offspring}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.offspring}
+                      onChange={(e) => setFormData({ ...formData, offspring: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.neutering}
+                  </label>
+                  <select
+                    value={
+                      formData.isNeutered === true
+                        ? 'true'
+                        : formData.isNeutered === false
+                          ? 'false'
+                          : ''
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({
+                        ...formData,
+                        isNeutered: value === 'true' ? true : value === 'false' ? false : undefined,
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  >
+                    <option value="">{adminStrings.cats.form.neuteringUnknown}</option>
+                    <option value="true">{adminStrings.cats.form.neuteringYes}</option>
+                    <option value="false">{adminStrings.cats.form.neuteringNo}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.adoptable}
+                      onChange={(e) => setFormData({ ...formData, adoptable: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-300"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {adminStrings.cats.form.adoptableLabel}
+                    </span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.adoptionInfo}
+                  </label>
+                  <textarea
+                    value={formData.adoption_info}
+                    onChange={(e) => setFormData({ ...formData, adoption_info: e.target.value })}
+                    rows={4}
+                    placeholder={adminStrings.cats.form.adoptionInfoPlaceholder}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {adminStrings.cats.form.note}
+                  </label>
+                  <textarea
+                    value={formData.note}
+                    onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                    rows={4}
+                    placeholder={adminStrings.cats.form.notePlaceholder}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button type="button" variant="secondary" onClick={handleCancel}>
+                    {adminStrings.common.cancel}
+                  </Button>
+                  <Button type="submit" disabled={saving} className="gap-2">
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-ink"></div>
+                        {adminStrings.common.saving}
+                      </>
+                    ) : (
+                      <>
+                        <FiSave /> {adminStrings.cats.form.saveCat}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Modal>
           )}
 
           {/* Cats Table */}
@@ -1119,21 +1111,24 @@ export default function CatsCMSPage() {
           </div>
 
           {/* Delete Confirmation Modal */}
+          {/* NOT `useDialog.confirm()`: a destructive action keeps its red button
+              per design.md §Modal, and that API renders 확인 as the primary. */}
           {deleteConfirm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-4">{adminStrings.cats.delete.title}</h3>
-                <p className="text-gray-600 mb-6">{adminStrings.cats.delete.body}</p>
-                <div className="flex justify-end gap-3">
-                  <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
-                    {adminStrings.common.cancel}
-                  </Button>
-                  <Button variant="danger" onClick={() => handleDelete(deleteConfirm)}>
-                    {adminStrings.cats.delete.confirm}
-                  </Button>
-                </div>
+            <Modal
+              isOpen
+              onClose={() => setDeleteConfirm(null)}
+              title={adminStrings.cats.delete.title}
+            >
+              <p className="text-gray-600 mb-6">{adminStrings.cats.delete.body}</p>
+              <div className="flex justify-end gap-3">
+                <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+                  {adminStrings.common.cancel}
+                </Button>
+                <Button variant="danger" onClick={() => handleDelete(deleteConfirm)}>
+                  {adminStrings.cats.delete.confirm}
+                </Button>
               </div>
-            </div>
+            </Modal>
           )}
         </>
       )}

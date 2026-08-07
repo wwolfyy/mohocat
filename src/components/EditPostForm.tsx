@@ -204,7 +204,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postType, postId }) => {
           <button
             type="button"
             onClick={addImageUrl}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             추가
           </button>
@@ -214,7 +214,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postType, postId }) => {
             {imageUrls.map((url, index) => (
               <div
                 key={index}
-                className="flex justify-between items-center p-2 bg-gray-100 rounded"
+                className="flex justify-between items-center p-2 bg-gray-100 rounded-lg"
               >
                 <span className="text-sm truncate">{url}</span>
                 <button
@@ -244,7 +244,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postType, postId }) => {
           <button
             type="button"
             onClick={addVideoUrl}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             추가
           </button>
@@ -254,7 +254,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({ postType, postId }) => {
             {videoUrls.map((url, index) => (
               <div
                 key={index}
-                className="flex justify-between items-center p-2 bg-gray-100 rounded"
+                className="flex justify-between items-center p-2 bg-gray-100 rounded-lg"
               >
                 <span className="text-sm truncate">{url}</span>
                 <button
