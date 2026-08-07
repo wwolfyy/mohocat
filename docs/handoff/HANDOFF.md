@@ -1,15 +1,15 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-06 · **Branch:** `dev` — ⚠️ **~5 commits are ahead of `origin/dev`**
-(the 2026-08-05 doc commit that marked the push done — it could not push itself — plus this
-session's colour Phase 4, the SMTP tooling, the `emailDelivered` work, and this doc pass).
-**~103** ahead of `origin/main`. 📌 **Don't trust that count — run
-`git rev-list --count origin/main..dev`.** This line cannot count the commit that writes it, so
-a tip hash here is stale the moment it is committed; that is why one is no longer quoted.
-🔑 **The same applies to the "everything is pushed" claim** — a header that says so is, by
-construction, describing the state _before_ the commit carrying it. **Run `git status -sb`.**
-· **`main`:** promoted through PR #8 (2026-07-23 — the multi-mountain M1–M5 bundle; supersedes
-PR #7)
+**Last updated:** 2026-08-07 · **Branch:** `dev` — ✅ **`dev` and `main` are LEVEL.**
+🎉 **PR #9 merged 2026-08-07** (`f570bcc`, by the owner) — 104 commits, 295 files, promoted
+since PR #8. **This is the first promotion since 2026-07-23**, and it is live in production.
+📌 **Don't trust any count written here — run `git rev-list --count origin/main..dev`.** This
+line cannot count the commit that writes it, so a tip hash is stale the moment it is committed;
+that is why one is no longer quoted. 🔑 **The same applies to any "everything is pushed" claim**
+— a header saying so is, by construction, describing the state _before_ the commit carrying it.
+**Run `git status -sb`.**
+· **`main`:** now `f570bcc` (PR #9). ⚠️ **The local `main` ref is still stranded at `26b1879`
+(2026-03-16)** — measure against **`origin/main`**, never the local one.
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
@@ -216,40 +216,61 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 > working by the owner; it had been the standing gate on the promotion since 2026-07-26. The push
 > that used to head the list went on 2026-08-05.)_
 >
-> ### 🚀 The promotion is OPEN — `dev` is pushed and **PR #9** is up
+> ### 🎉 THE PROMOTION IS DONE — PR #9 merged 2026-08-07
 >
 > <https://github.com/wwolfyy/mohocats/pull/9> — `dev` → `main`, **104** commits, 295 files,
-> since PR #8 (2026-07-23). Every gate is clear: `tsc` 0 · smoke 39 · unit 196 · e2e 233/13/0 ·
-> rules 54 · **P5.4 passed**. ⚠️ **Read the PR's deploy notes before merging** — the
-> behaviour-change list below is reproduced there, and **rules + permissions do NOT ship with the
-> merge** (they are already live in production, so the member features become reachable the
-> moment the code lands).
+> merged by the owner as `f570bcc`. Every gate was clear at merge: `tsc` 0 · smoke 39 · unit 196
+> · **e2e 233/13/0 green on the runner** · rules 54 · scripts 23 · **P5.4 passed**.
+>
+> ⚠️ **Everything in that bundle is now LIVE to real users.** The behaviour-change list is in the
+> PR body and below — 집사톡's media cap, the post-detail URL shape change, the 급식현황
+> confirmation and its new colours, videos no longer inheriting the post body as their YouTube
+> description, the one-tick logged-out header, and 동참's new 알림 column (existing rows read
+> `—`). 📌 **Rules and permissions did not ship with the merge and did not need to** — they were
+> already deployed, so member authoring / media upload / author-delete became reachable the
+> moment the code landed.
+>
+> 🆕 **`YOUTUBE_REFRESH_TOKEN` can now be deleted from Vercel Production.** It was held only
+> because `main` was pre-fix and read the token from env; `main` now reads Firestore
+> (`admin_config/youtube_auth`). ⚠️ **Verify a 📺 YouTube와 동기화 still works after deleting it**
+> — that is the cheap proof the Firestore path is the one in use.
+>
+> 📌 **Post-merge watch:** the first production visit after a deploy re-bakes ISR, and the
+> landing map is server-read. If a cat or point looks stale, that is the ≤1h backstop, not a
+> regression.
 >
 > 1. **Glance at the admin screens while logged in** — 게시물 / 집사들 / 앱 관리 (active-tab
 >    colour, 작성 CTAs), 냥이들' grid header, and 🆕 **앱 관리's YouTube 토큰 관리 panel** (the
 >    status chip's text + border colour, Phase 4). 🔑 **The only unverified part of the colour
 >    work**: `/admin/*` is behind `AdminAuth` and neither session had credentials, so those
 >    screens are proven by compiled-CSS equality, not by looking. Everything is pixel-identical
->    by construction, so this is a confirmation, not a hunt. 📌 **Not a merge blocker.**
+>    by construction, so this is a confirmation, not a hunt. 🆕 **Now checkable in
+>    _production_**, not just Preview.
 > 2. **The Preview verifications that piled up** — see the earlier session boxes below.
->    📌 **Not a merge blocker either**, but they are the cheapest to do while Preview still runs
->    the same code.
-> 3. **Merge PR #9.** ⚠️ **Count it yourself**
->    (`git rev-list --count origin/main..dev`) and measure against **`origin/main`**, not the
->    local `main` ref — that one is stranded at `26b1879` (2026-03-16).
->    🆕 **Add to the "changes behaviour on deploy" list:** 급식현황 now asks for confirmation
->    before publishing; 공지사항/입양홍보 videos stop inheriting the post body as their YouTube
->    description (and the help text under the field changes to match); **집사톡's
->    already-fixed verbatim 설명 finally reaches production** — that one is a fix users have
->    been waiting on without knowing it; and **급식현황's freshness scale changes colour**
->    (green→red ⇒ blue→red, deeper endpoints) — the one visible change in the colour work, and
->    the one an operator will notice.
->    🆕 **2026-08-06 adds two more, both in 동참:** the contact page now shows a **different
->    success message when the notification email fails** (접수되었습니다 + "답변이 늦어질 수
->    있어요", on the non-error styling — the submission is still recorded); and the admin 동참
->    table gains an **알림 column** with an **⚠️ 미전송** badge. 📌 **Every existing contact will
->    read `—` (unknown), not 전송됨** — the `notified` flag only exists from this deploy
->    forward, and that is deliberate rather than a bug to "fix" by backfilling a guess.
+>    📌 **They are now production verifications**: the code they were waiting on is live, so the
+>    real-device / real-account ones (the 이 냥이 링크 chip on a phone, a Safari pass, a real
+>    Kakao sign-in, the orphan-delete path, a member attaching a photo to 집사톡, a member
+>    deleting a post carrying someone else's 댓글) can be done against the live site.
+> 3. **Delete `YOUTUBE_REFRESH_TOKEN` from Vercel Production** and confirm 동기화 still works
+>    (see the box above). This is the one env change the promotion unblocked.
+> 4. **Colour plan Phase 5** — the unsized admin-vs-`design.md` audit (typography, spacing,
+>    elevation, shapes, modal spec). The only piece of that workstream still open.
+> 5. **Then the path-based tenancy migration (T0–T7)** — both its gates are now clear.
+>
+> **What shipped, for reference when something looks different in production:** 급식현황 asks
+> for confirmation before publishing; 공지사항/입양홍보 videos stop inheriting the post body as
+> their YouTube description (and the help text changed to match); **집사톡's already-fixed
+> verbatim 설명 finally reached production** — a fix users had been waiting on without knowing
+> it; **급식현황's freshness scale changed colour** (green→red ⇒ blue→red, deeper endpoints), the
+> one visible change in the colour work and the one an operator will notice; 집사톡 is capped at
+> one video + one photo; post-detail URLs changed shape, so old bookmarks stop resolving (only
+> 급식현황 ever worked there, and it is admin-gated); a signed-in visitor sees the logged-out
+> header for one tick on a full page load (the deliberate cost of the hydration fix); the contact
+> page shows a **different success message when the notification email fails** (접수되었습니다 +
+> "답변이 늦어질 수 있어요", on the non-error styling — the submission is still recorded); and the
+> admin 동참 table gained an **알림 column** with an **⚠️ 미전송** badge. 📌 **Every contact
+> created before this deploy reads `—` (unknown), not 전송됨** — the `notified` flag only exists
+> from here forward, and that is deliberate rather than a bug to "fix" by backfilling a guess.
 >
 > ### 🎨 2026-08-06 — colour plan **Phase 4 is done**; only Phase 5 is left
 >
@@ -746,13 +767,18 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 > it holds the YouTube OAuth token), and that tab was per-browser, so neither was the model it
 > looked like.
 >
-> ⏸️ **Do NOT start the path-based tenancy migration (T0–T7) until PR #9 is merged.** 🆕 **Its
-> first gate is now clear** — P5.4 passed 2026-08-07 — so **the promotion is the only thing left
-> in front of it.** Decision + plan:
+> ▶️ **The path-based tenancy migration (T0–T7) is UNBLOCKED as of 2026-08-07** — both its gates
+> are clear (P5.4 passed; PR #9 merged). It is 28 tasks and **not started**. Decision + plan:
 > [`tenancy-path-migration-plan-20260728.md`](../planning/pending/tenancy-path-migration-plan-20260728.md).
+> ⚠️ **Read its T2 first** — every `/api/*` route resolves the tenant from the **Host header**,
+> so path-based tenancy would resolve every API call to geyang, including
+> `requireApiPermission`. That is an **authorization inversion**, not a cosmetic bug, and it is
+> sequenced first for that reason.
 >
-> **Do NOT** delete `YOUTUBE_REFRESH_TOKEN` from Vercel **Production** until the promotion
-> lands — `main` is pre-fix and reads the token from env only.
+> ✅ **`YOUTUBE_REFRESH_TOKEN` may now be deleted from Vercel Production** — the hold is lifted.
+> It existed only because `main` was pre-fix and read the token from env; `main` now reads
+> Firestore (`admin_config/youtube_auth`). ⚠️ Run a 📺 YouTube와 동기화 afterwards to prove the
+> Firestore path is the live one.
 
 > **How this doc works.** This is the **single, continuously-updated** current-state
 > hand-off — read it first. It is edited **in place** (present tense = how things are
@@ -2256,7 +2282,20 @@ longer wanted.
 
 ## Changelog (living-doc audit trail — newest first)
 
-- **2026-08-07 (latest)** — **The promotion gate is clear and PR #9 is open.** The owner ran the
+- **2026-08-07 (latest)** — **🎉 PR #9 MERGED — `dev` and `main` are level for the first time
+  since 2026-07-23.** 104 commits, 295 files, merged by the owner as `f570bcc`; the whole bundle
+  is live to real users. Before it could merge, CI's **`e2e` job — the single required check —
+  had to be fixed**: it was red on a test defect where one slow post-save navigation failed an
+  attempt whose write had **already committed**, and the two retries then asserted a seeded value
+  that no longer existed (`retries: CI ? 2 : 0`, seed once per job). Verifying that fix surfaced
+  a **second, independent** defect: two specs in the same file share `test-butler-edit-01` under
+  `fullyParallel`. 📌 A correction worth carrying: I claimed CI had stopped firing and blamed the
+  renamed remote — **wrong**; runs were being created, and the one "failure" I cited was a
+  `cancel-in-progress` cancellation, not a red build. The `e2e` failure itself was real.
+  **Now unblocked:** deleting `YOUTUBE_REFRESH_TOKEN` from Vercel Production, and the T0–T7
+  tenancy migration.
+
+- **2026-08-07** — **The promotion gate is clear and PR #9 is open.** The owner ran the
   **P5.4 manual YouTube pass** and verified it works — that had been the standing gate on
   `dev → main` since 2026-07-26, and it is the only cover the upload leg has (no automated
   equivalent exists: `generate-signed-url` needs a service-account key the harness lacks).
