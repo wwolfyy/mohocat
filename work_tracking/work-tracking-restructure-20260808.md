@@ -83,7 +83,7 @@ than the cause (no single record per item).
 never a task — a task is work you intended; a decision is a conclusion you reached. Filing it as
 an abandoned task misrepresents it.
 
-Fixed by a `type` field: **`task` | `decision` | `bug` | `change`**, plus `outcome`
+Fixed by a `type` field: **`task` | `decision` | `bug` | `change` | `question`**, plus `outcome`
 (`adopted` | `rejected` | `superseded`) and a rationale. With that, merging history into the
 task store is genuinely better than a separate journal, because it removes the "record it
 twice" problem entirely.
@@ -300,6 +300,45 @@ then re-run `checkin`, because `work.json` still holds the intent and the script
 📌 The design credits: the generated-artifact idea, the append-only premise, the
 checkout/check-in workflow, the schema-as-validator, and dropping the on-disk `.db` are all the
 owner's. The assistant's fragment proposal was withdrawn as strictly worse.
+
+---
+
+### 4.5 The schema is expected to change (owner, 2026-08-09)
+
+🔑 **This schema was designed from what we knew, and cases we have not thought of will turn up.
+When modifying the schema is the best fix, modify it.** It is not frozen.
+
+⚠️ **But the two directions are not symmetric,** because the build re-validates the **entire
+store** on every run — so a tightened rule retroactively invalidates rows written under the old
+one. Measured against `node:sqlite`:
+
+| Change                            | Rows already in the store |
+| --------------------------------- | ------------------------- |
+| Add a nullable column             | ✅ still load             |
+| Add a column with a `DEFAULT`     | ✅ still load             |
+| **Add an enum value**             | ✅ still load             |
+| Add a `CHECK` on a **new** column | ✅ still load             |
+| Add `NOT NULL` with no default    | 🔴 **breaks history**     |
+| Remove an enum value              | 🔴 **breaks history**     |
+| Tighten an existing `CHECK`       | 🔴 **breaks history**     |
+
+**The policy that follows:**
+
+- **Additive changes are free.** Edit `schema.sql`, rebuild, note it in that file's CHANGELOG.
+  No ceremony, no migration, no decision record needed.
+- **Restrictive changes are a migration, not an edit.** Either put the new rule in `checkin.js`
+  so it binds **new writes only** and history is left alone, or run a real backfill — and record
+  either as a `type: decision` row. ⚠️ Quietly tightening a `CHECK` turns every historical row
+  into a validation failure the next time anyone builds, and the failure appears far from the
+  change that caused it.
+- 📌 If a restrictive change ever becomes unavoidable across a large history, the escape hatch is
+  a `schema_version` column with version-conditional validation. Not needed now; do not add it
+  pre-emptively.
+
+📌 **The first such change was already needed and is in.** `BACKLOG.md`'s own heading reads
+_"Open questions (owner decisions — **not tasks until answered**)"_, but the migration inventory
+had `Q1` importing as `type: task`. Filing a question as a task is the same category error §2.2
+identifies for decisions. `question` was added to the `type` enum — additive, so free.
 
 ---
 

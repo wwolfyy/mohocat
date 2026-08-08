@@ -143,6 +143,14 @@ Append newest-last. One entry per working session: what moved, what broke, where
   14 malformed record shapes rejected, duplicate `(id, rev)` caught (this is the two-sessions-
   edit-the-same-item collision detector), and the derived-staleness + children roll-up views
   both correct. Phase 1 tasks 2-3 now start from working, tested code rather than prose.
+- ✅ Owner set schema policy: **not frozen**. Measured which changes are safe — additive ones
+  (nullable column, column with DEFAULT, new enum value, CHECK on a new column) leave history
+  loadable; restrictive ones (NOT NULL without default, removing an enum value, tightening an
+  existing CHECK) retroactively invalidate every old row, because the build re-validates the
+  whole store each run. Policy + CHANGELOG now live in `schema.sql`'s header.
+- ✅ First schema change already applied: `type` gains **`question`**. `BACKLOG.md`'s Q1 was
+  slated to import as `type: task`, but that file's own heading says open questions are "not
+  tasks until answered" — the §2.2 category error. Additive, so free.
 - **Next:** Phase 1 — `SCHEMA.md` (prose companion; start from the comments in `schema.sql`),
   then `lib.js`.
 
@@ -153,13 +161,15 @@ Append newest-last. One entry per working session: what moved, what broke, where
 Record anything settled while doing the work, so it does not get re-litigated. Migrate these
 into the registry as `type: decision` once it is live.
 
-| Date       | Decision                                                           | Why                                                                                              |
-| ---------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/` | Owner — work tracking is not application code                                                    |
-| 2026-08-08 | Index companion docs, do not flatten them                          | A 787-line plan is a document, not a row                                                         |
-| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand            | Migration stops files being the live source; it does not move them                               |
-| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`        | Owner — they are work-tracking artifacts                                                         |
-| 2026-08-08 | Work source files **one at a time**, ticking each off here         | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point |
+| Date       | Decision                                                           | Why                                                                                                                         |
+| ---------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/` | Owner — work tracking is not application code                                                                               |
+| 2026-08-08 | Index companion docs, do not flatten them                          | A 787-line plan is a document, not a row                                                                                    |
+| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand            | Migration stops files being the live source; it does not move them                                                          |
+| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`        | Owner — they are work-tracking artifacts                                                                                    |
+| 2026-08-08 | Work source files **one at a time**, ticking each off here         | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point                            |
+| 2026-08-09 | The schema is **not frozen** — change it when that is the best fix | Owner. Additive changes (new nullable column, new enum value) are free; restrictive ones break history and need a migration |
+| 2026-08-09 | `type` gains `question` (additive)                                 | `BACKLOG.md`'s Q1 is an owner question, and its own heading says these are "not tasks until answered"                       |
 
 ---
 

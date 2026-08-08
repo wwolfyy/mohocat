@@ -80,8 +80,10 @@ valid record must pass, before any real data is imported.
 
 - [ ] `DEBUG_LOG.md` → 49 rows, `type: bug`, `status: done`, `rev: 1`.
 - [ ] `FEATURE_MOD_LOG.md` → 89 rows, `type: change`, `status: done`, `rev: 1`.
-- [ ] `BACKLOG.md` → `B1`, `B2`, `B4`, `B5`, `Q1` as `status: open`; **`B3` as `status: done`**
-      (it is struck through and marked ✅ — do not import it as open).
+- [ ] `BACKLOG.md` → `B1`, `B2`, `B4`, `B5` as `type: task, status: open`; **`Q1` as
+      `type: question`** — `BACKLOG.md`'s own heading says open questions are "not tasks until
+      answered", so importing it as a task is the §2.2 category error; **`B3` as `status: done`**
+      (struck through and marked ✅ — do not import it as open).
 - [ ] `PROJECT_PLAN.md` → 18 rows `status: open` with their `§` as `plan`; the 153 ticked boxes
       as `status: done`.
 - [ ] Prose bodies → `work_tracking/records/R-XXXX.md`, with `detail_ref` pointing at them.
