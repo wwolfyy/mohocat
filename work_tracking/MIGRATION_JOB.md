@@ -17,20 +17,20 @@
 
 ## Status
 
-|                      |                                                                         |
-| -------------------- | ----------------------------------------------------------------------- |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source file **1 of 7** done. |
-| **Current phase**    | Phase 2 — next is `log/FEATURE_MOD_LOG.md` (89 rows, same importer)     |
-| **Blocked on**       | nothing                                                                 |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                |
-| **Last updated**     | 2026-08-09                                                              |
+|                      |                                                                          |
+| -------------------- | ------------------------------------------------------------------------ |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source files **2 of 7** done. |
+| **Current phase**    | Phase 2 — next is `docs/planning/BACKLOG.md` (6 rows, needs judgment)    |
+| **Blocked on**       | nothing                                                                  |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                 |
+| **Last updated**     | 2026-08-09                                                               |
 
 ### Phase progress
 
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
 | 1     | Tooling — schema, scripts, CI gate           | ✅ 12/12 done  | no           |
-| 2     | Mechanical import (~315 rows)                | 🔄 49/~315     | no           |
+| 2     | Mechanical import (~315 rows)                | 🔄 138/~315    | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
 | 4     | Adjacent fixes — PROJECT_PLAN, HANDOFF size  | ⬜ not started | no           |
@@ -50,7 +50,7 @@ source count before anything is deleted.
 | #   | Source file                            | Items | Extracted | Count verified | Origin cut | Done |
 | --- | -------------------------------------- | ----- | --------- | -------------- | ---------- | ---- |
 | 1   | `log/DEBUG_LOG.md`                     | 49    | ✅ 49/49  | ✅             | ✅         | ✅   |
-| 2   | `log/FEATURE_MOD_LOG.md`               | 89    | ⬜ 0/89   | ⬜             | ⬜         | ⬜   |
+| 2   | `log/FEATURE_MOD_LOG.md`               | 89    | ✅ 89/89  | ✅             | ✅         | ✅   |
 | 3   | `docs/planning/BACKLOG.md`             | 6     | ⬜ 0/6    | ⬜             | ⬜         | ⬜   |
 | 4   | `docs/planning/PROJECT_PLAN.md`        | 171   | ⬜ 0/171  | ⬜             | ⬜         | ⬜   |
 | 5   | `docs/handoff/HANDOFF.md` — open items | ~9    | ⬜        | ⬜             | ⬜         | ⬜   |
@@ -201,8 +201,22 @@ Append newest-last. One entry per working session: what moved, what broke, where
 - 📌 **`work_tracking/records/` is in `.prettierignore`.** Reflowing migrated prose would
   mean the stored text no longer matches what `git show <pin>` returns, which is the audit
   trail. This came straight from Phase 1's lesson below.
-- **Next:** file 2, `log/FEATURE_MOD_LOG.md` — 89 rows, `--type change`. Then `BACKLOG.md`
-  (6), which needs a different extractor and per-item judgment on `type` and `status`.
+
+### 2026-08-09 — Phase 2 source file 2 of 7: `log/FEATURE_MOD_LOG.md` → `R-0050`…`R-0138`
+
+- ✅ **89 rows imported and the origin cut in the same commit**, with **no new code** — the
+  same `dated-log.js` run as `--type change --expect 89`. Pinned to `df132d0`.
+- **Fidelity verified the same way:** 89/89 bodies verbatim against the pinned origin, 89/89
+  titles found, 98.9% of non-whitespace captured (the remainder being the file header,
+  heading markers and `---` rules, as with file 1).
+- **The store now holds 138 records**, `R-0001`…`R-0138`, ids unique and continuous: 49
+  `bug` + 89 `change`, all `status: done`. Both dated logs are done.
+- **Next:** file 3, `docs/planning/BACKLOG.md`. ⚠️ **This is where the mechanical run
+  ends.** Only 6 items, but each needs a judgment call the importer cannot make: `B1`, `B2`,
+  `B4`, `B5` are `type: task, status: open`; **`Q1` is `type: question`** (the §2.2 category
+  error if filed as a task); **`B3` is `status: done`** — struck through and marked ✅, so
+  importing it as open would launder a stale claim. Its markup is `## B<n> — title`, not a
+  date, so `dated-log.js` does not apply.
 
 📌 **Rehearse every import against a scratch store first** — `WORK_TRACKING_STORE=/tmp/x`
 points every script, including the importer's `records/` output, somewhere harmless — then
