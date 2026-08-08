@@ -14,6 +14,90 @@ that is why one is no longer quoted. 🔑 **The same applies to any "everything 
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
+> ## 2026-08-08 — colour Phase 5 shipped; tenancy T0 is next; and the docs themselves are being restructured
+>
+> Two commits (`20b4c1a`, `df132d0`), both on `dev`, **not pushed**. Gates at the end of the
+> session: `tsc` 0 · smoke 39 · unit 196 · **e2e 233 / 13 skipped / 0 failed**.
+>
+> ✅ **Colour plan Phase 5 is DONE — the workstream is closed.** Detail in to-do #5 below and
+> §9 of [the plan](../planning/pending/color-token-centralization-plan-20260805.md).
+>
+> ✅ **Five of six piled-up production verifications came back from the owner** (to-do #3);
+> `YOUTUBE_REFRESH_TOKEN` is deleted and a 동기화 confirmed after it (to-do #4).
+> 🔴 **Only the orphan-delete path is still unverified** — promoted to to-do #2 with its own
+> heading, because it is a PIPA path whose visible half proves nothing.
+>
+> ### ▶️ NEXT: tenancy T0 — asked for, and NOT started
+>
+> The owner asked to start **T0** and then deferred it to a fresh session. **No T0 work exists**
+> — no spec was written, no fixture touched. Start clean from
+> [the plan](../planning/pending/tenancy-path-migration-plan-20260728.md) §3.
+>
+> 🔑 **First, a status correction worth keeping: the path-based migration is NOT done, and it
+> looks done from two directions.** The owner asked whether it had already shipped; verified
+> against the code, not the docs, and all three docs agree with the code that it has not started.
+> What is done and creates the impression: **M1–M8 multi-tenant hardening is live** (PR #8, PR
+> #9), and **`src/app/[mountain]/` already exists** as a full route tree.
+>
+> ⚠️ **But that segment is a rewrite target, not a URL.** `src/middleware.ts` resolves the tenant
+> from the **Host** header and `NextResponse.rewrite()`s onto `/{mountain}/…` with the browser URL
+> unchanged. The `/{id}` path form works only as a dev/preview fallback (middleware's first
+> branch). **The plumbing is in place; the selector is still the hostname.** Evidence it has not
+> started: no `useTenantPath` module, **zero** occurrences of `X-Mountain-Id` repo-wide,
+> `getRequestMountainId` still one Host-only line (`src/lib/tenant.ts:62`), **65 un-prefixed
+> navigation sites across 21 files**, and middleware that rewrites rather than redirects.
+>
+> ✅ **The emulator can carry T0 — no second mountain is needed in dev or prod.** `manisan`
+> already exists (`hidden: true`), with `tests/e2e/fixtures/manisan.json` and **three seeded
+> actors chosen to express the authorization matrix**: manisan-only admin, geyang-only admin,
+> dual-mountain admin. 🔑 **Host is just a request header** — `request.get('/api/…', { headers: {
+host: MANISAN_HOST } })`; both hosts hit the same 127.0.0.1 server. 7 tests already do this
+> across `tests/e2e/{api,public}/tenant-isolation.spec.ts`.
+>
+> 🔑 **And the failing test for the authorization inversion can be written TODAY.**
+> `mohocats.org` is in **no** mountain's `domains`, so a request with `Host: mohocats.org` falls
+> back to the default — geyang. That is exactly the production bug. Assert that a manisan-only
+> admin calling a gated route that way gets **403 on their own mountain**: it will, and it
+> should not. Red first, T2 turns it green. 📌 **Budget a fixture expansion in T0** — manisan has
+> one of each content type, and T0.1's navigation-retention spec needs pages that render
+> something other than an empty state.
+>
+> 📌 **`hidden: true` does gate the selector, as the owner assumed** — `getPublicMountains()`
+> (`config.ts:267`) is what `MountainSelector` lists, while routing uses `getAllMountains()`, so
+> a hidden mountain stays reachable by URL. **Three caveats:** the selector **button** renders
+> unconditionally (`[mountain]/layout.tsx:92`), so hiding shortens the menu rather than removing
+> the control; `mountains.json` is a **static import**, so flipping the flag needs a redeploy;
+> and ⚠️ **un-hiding manisan in production today would ship a dead link** —
+> `handleMountainSelect` navigates cross-origin to `manisan.mohocats.org` on a mapped host
+> (`MountainSelector.tsx:60-66`), which does not exist. **T3.2 deletes that branch.** Un-hide
+> freely in dev; leave production hidden until T3/T5 land.
+>
+> ### 📐 The document structure itself is being restructured — design recorded, not started
+>
+> The owner opened a redesign of how work is tracked, prompted by this session making the cost
+> concrete. **Nothing has changed in the repo for it.** The design, the agreed points, the one
+> open decision, and a migration inventory are in
+> **[`work-tracking-restructure-20260808.md`](../planning/pending/work-tracking-restructure-20260808.md)**
+> — the owner will implement it in a fresh session.
+>
+> 🔑 **Two problems, both measured rather than asserted.** (1) The backlog is **not centralized**:
+> open items split **5 in `BACKLOG.md` · 20 in `PROJECT_PLAN.md` · 9 here** — the file named for
+> the purpose holds under a sixth of it. (2) **Decisions and rejected approaches have no home** —
+> bugs go to `DEBUG_LOG`, changes to `FEATURE_MOD_LOG`, but "we investigated X and dropped it"
+> lives only in this document's prose, which is the least durable place for the entries that most
+> prevent re-derivation. ⚠️ **The five documents now total ~944 KB (~250k tokens) — they have
+> outgrown their reader**; reading a fifth of this file cost 25k tokens this session.
+>
+> ⚠️ **One decision is open and blocks implementation: the storage medium** — the owner proposed
+> SQLite for its structure, the assistant argued for structured text (NDJSON) on diffability,
+> PR-reviewability and branch-merge grounds. §4 of that doc lays out both positions. **Settle it
+> first and record the choice there.**
+>
+> 📌 **Until that lands, keep using the existing convention** — this box, `PROJECT_PLAN`,
+> `BACKLOG`, and the two logs, exactly as they are today.
+>
+> ---
+>
 > **2026-08-05 — three small owner-asked fixes, a rename that was a cascade, and then a
 > colour workstream that removed a feature instead of adding one.** Nothing here needed a
 > rules or permission deploy; it is all app code, one new script, and config.
