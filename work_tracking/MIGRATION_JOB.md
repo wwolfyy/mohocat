@@ -17,19 +17,19 @@
 
 ## Status
 
-|                      |                                                                             |
-| -------------------- | --------------------------------------------------------------------------- |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 task 1 of 12 done; no code or data written yet |
-| **Current phase**    | Phase 1 — Tooling (next: `SCHEMA.md` + `schema.sql`)                        |
-| **Blocked on**       | nothing                                                                     |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                    |
-| **Last updated**     | 2026-08-08                                                                  |
+|                      |                                                                           |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1: 2/12 done. First code landed: `schema.sql`. |
+| **Current phase**    | Phase 1 — Tooling (next: `SCHEMA.md`, then `lib.js`)                      |
+| **Blocked on**       | nothing                                                                   |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                  |
+| **Last updated**     | 2026-08-08                                                                |
 
 ### Phase progress
 
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
-| 1     | Tooling — schema, scripts, CI gate           | 🔄 1/12 done   | no           |
+| 1     | Tooling — schema, scripts, CI gate           | 🔄 2/12 done   | no           |
 | 2     | Mechanical import (~315 rows)                | ⬜ not started | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
@@ -139,7 +139,12 @@ Append newest-last. One entry per working session: what moved, what broke, where
   seven external references repointed. Two stale claims fixed on the way — `PROJECT_PLAN.md`
   still called the storage medium "open and blocking" and still referenced the abandoned
   `TASKS.md` idea.
-- **Next:** Phase 1, task 2 — `SCHEMA.md` + `schema.sql`.
+- ✅ `work_tracking/schema.sql` committed — the normative DDL, verified against `node:sqlite`:
+  14 malformed record shapes rejected, duplicate `(id, rev)` caught (this is the two-sessions-
+  edit-the-same-item collision detector), and the derived-staleness + children roll-up views
+  both correct. Phase 1 tasks 2-3 now start from working, tested code rather than prose.
+- **Next:** Phase 1 — `SCHEMA.md` (prose companion; start from the comments in `schema.sql`),
+  then `lib.js`.
 
 ---
 

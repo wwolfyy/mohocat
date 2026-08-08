@@ -40,9 +40,12 @@ included, deliberately **not** under the root `scripts/`, which belongs to the a
 - [x] ✅ **Create `work_tracking/`** and relocate this plan + the restructure doc into it,
       updating every link in the same change. _(done 2026-08-08 — 7 external references
       repointed across `AGENTS.md`, `HANDOFF.md`, `PROJECT_PLAN.md`.)_
-- [ ] **`work_tracking/SCHEMA.md` + `work_tracking/schema.sql`** — field definitions in prose,
-      plus the `CREATE TABLE … STRICT` that machine-enforces them. The DDL is normative; the
-      prose explains it.
+- [x] ✅ **`work_tracking/schema.sql`** — the normative `CREATE TABLE … STRICT` plus the
+      `records_with_stale`, `current_records` and `children_progress` views. _(done 2026-08-08;
+      verified against `node:sqlite` — **14 malformed shapes rejected**, valid rows accepted,
+      duplicate `(id, rev)` caught, staleness and the `1/2 children done` roll-up both correct.)_
+- [ ] **`work_tracking/SCHEMA.md`** — the prose companion: what each field means and why. The
+      DDL is normative; this explains it. 📌 Start from the comments already in `schema.sql`.
 - [ ] **`work_tracking/scripts/lib.js`** — load `registry.ndjson`, build the in-memory db
       (`node:sqlite`, built in on Node 25 — **no new dependency**), fold to current revs.
 - [ ] **`work_tracking/scripts/checkout.js`** — `--id R-0142` or
