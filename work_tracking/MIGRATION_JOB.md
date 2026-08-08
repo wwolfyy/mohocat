@@ -17,19 +17,19 @@
 
 ## Status
 
-|                      |                                                                           |
-| -------------------- | ------------------------------------------------------------------------- |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1: 2/12 done. First code landed: `schema.sql`. |
-| **Current phase**    | Phase 1 — Tooling (next: `SCHEMA.md`, then `lib.js`)                      |
-| **Blocked on**       | nothing                                                                   |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                  |
-| **Last updated**     | 2026-08-08                                                                |
+|                      |                                                                          |
+| -------------------- | ------------------------------------------------------------------------ |
+| **Overall**          | 🔄 **IN PROGRESS** — ✅ **Phase 1 complete (12/12).** The tooling works. |
+| **Current phase**    | Phase 2 — mechanical import (start with `DEBUG_LOG.md`, 49 rows)         |
+| **Blocked on**       | nothing                                                                  |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                 |
+| **Last updated**     | 2026-08-09                                                               |
 
 ### Phase progress
 
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
-| 1     | Tooling — schema, scripts, CI gate           | 🔄 2/12 done   | no           |
+| 1     | Tooling — schema, scripts, CI gate           | ✅ 12/12 done  | no           |
 | 2     | Mechanical import (~315 rows)                | ⬜ not started | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
@@ -151,8 +151,37 @@ Append newest-last. One entry per working session: what moved, what broke, where
 - ✅ First schema change already applied: `type` gains **`question`**. `BACKLOG.md`'s Q1 was
   slated to import as `type: task`, but that file's own heading says open questions are "not
   tasks until answered" — the §2.2 category error. Additive, so free.
-- **Next:** Phase 1 — `SCHEMA.md` (prose companion; start from the comments in `schema.sql`),
-  then `lib.js`.
+
+### 2026-08-09 — Phase 1 complete, the tooling is live
+
+- ✅ **`SCHEMA.md`** written — the prose companion, plus the workflow commands and the
+  merge-conflict recovery procedure, which previously existed only inside the design doc.
+- ✅ **All four scripts** are in `work_tracking/scripts/`: `lib.js`, `checkout.js`,
+  `checkin.js`, `build.js`. Zero dependencies — `node:sqlite` is built in.
+- ✅ **`work.json` gitignored** before any script was ever run, per the watch-out.
+- ✅ **CI gate** added as the `work-tracking` job: the store must load clean, and `registry.md`
+  must equal `build(registry.ndjson)`. Pinned to Node 24 — the app's jobs run Node 20, which has
+  no `node:sqlite`. It takes no `needs:` and runs no `npm ci`, so it reports independently of
+  the app build.
+- ✅ **The store exists and is empty**: `registry.ndjson` (0 rows) with `registry.md` generated
+  from it, so the CI gate is green from the start rather than after the first import.
+- ✅ **Phase 1 gate met.** `work_tracking/tests/` holds 69 assertions and no test framework.
+  `lib.test.js` rejects **15** malformed record shapes — the seven from restructure §4.3 plus
+  eight found while writing it — and `workflow.test.js` drives the CLIs end to end.
+- 🔑 **Two things the tests changed, both worth knowing:**
+  - **`checkin.js` originally deleted `work.json` on success, which silently destroyed the
+    §4.3 conflict-recovery procedure.** That procedure resolves a conflict by taking the
+    incoming registry wholesale and re-running check-in — which only works while `work.json`
+    still holds the intent. It now stamps the file `checked_in` instead, and `checkout.js`
+    reads that stamp to tell a finished checkout from an unfinished one. The recovery path is
+    now a test, not a paragraph.
+  - **Unknown field names are rejected in JS, not left to SQLite.** The insert names its
+    columns, so a typo'd field would have been dropped without complaint — the exact
+    silent-zero-rows failure §4.3 measured jq for.
+- **Next:** Phase 2, one source file at a time per the table above. Start with
+  `log/DEBUG_LOG.md` (49 rows, the most regular markup of the five). 📌 Rehearse each import
+  against a scratch store first — `WORK_TRACKING_STORE=/tmp/rehearsal` points every script
+  somewhere harmless — then verify the count before writing to the real registry.
 
 ---
 
@@ -161,15 +190,18 @@ Append newest-last. One entry per working session: what moved, what broke, where
 Record anything settled while doing the work, so it does not get re-litigated. Migrate these
 into the registry as `type: decision` once it is live.
 
-| Date       | Decision                                                           | Why                                                                                                                         |
-| ---------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/` | Owner — work tracking is not application code                                                                               |
-| 2026-08-08 | Index companion docs, do not flatten them                          | A 787-line plan is a document, not a row                                                                                    |
-| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand            | Migration stops files being the live source; it does not move them                                                          |
-| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`        | Owner — they are work-tracking artifacts                                                                                    |
-| 2026-08-08 | Work source files **one at a time**, ticking each off here         | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point                            |
-| 2026-08-09 | The schema is **not frozen** — change it when that is the best fix | Owner. Additive changes (new nullable column, new enum value) are free; restrictive ones break history and need a migration |
-| 2026-08-09 | `type` gains `question` (additive)                                 | `BACKLOG.md`'s Q1 is an owner question, and its own heading says these are "not tasks until answered"                       |
+| Date       | Decision                                                                | Why                                                                                                                                                                                                             |
+| ---------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/`      | Owner — work tracking is not application code                                                                                                                                                                   |
+| 2026-08-08 | Index companion docs, do not flatten them                               | A 787-line plan is a document, not a row                                                                                                                                                                        |
+| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand                 | Migration stops files being the live source; it does not move them                                                                                                                                              |
+| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`             | Owner — they are work-tracking artifacts                                                                                                                                                                        |
+| 2026-08-08 | Work source files **one at a time**, ticking each off here              | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point                                                                                                                |
+| 2026-08-09 | The schema is **not frozen** — change it when that is the best fix      | Owner. Additive changes (new nullable column, new enum value) are free; restrictive ones break history and need a migration                                                                                     |
+| 2026-08-09 | `type` gains `question` (additive)                                      | `BACKLOG.md`'s Q1 is an owner question, and its own heading says these are "not tasks until answered"                                                                                                           |
+| 2026-08-09 | `checkin` **stamps** `work.json` with `checked_in`; it never deletes it | Deleting it destroys the §4.3 conflict recovery, which replays the intent still held in that file. The stamp also lets `checkout` distinguish a finished checkout from unfinished work, so `--force` stays rare |
+| 2026-08-09 | Unknown field names are rejected in `lib.js`, not left to SQLite        | The insert names its columns, so a typo'd field would be dropped in silence — the same silent-zero-rows failure §4.3 measured for jq                                                                            |
+| 2026-08-09 | The work-tracking CI job is independent of the app's jobs               | The tooling has no dependencies and needs Node 24 for `node:sqlite` (app jobs run Node 20); an independent job also reports when the app build is red                                                           |
 
 ---
 

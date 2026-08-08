@@ -109,3 +109,8 @@ _infra/_terraform/.terraform.lock.hcl
 /.ua/
 /codegraph.json
 /.graphifyignore
+
+# Work registry — transient checkout file (work_tracking/SCHEMA.md §3).
+# Committing it once already cost us the file: a branch merge filled it with conflict
+# markers and destroyed the very file the recovery procedure depends on.
+/work_tracking/work.json

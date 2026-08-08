@@ -32,6 +32,25 @@ jobs:
       - name: Unit + smoke tests
         run: npm test
 
+  # Work registry (work_tracking/). Two gates: the store must load without a constraint
+  # error, and registry.md must equal build(registry.ndjson) — a hand-edited or unrebuilt
+  # registry.md is caught here rather than drifting silently.
+  #
+  # Deliberately independent of the app: no `npm ci` (this tooling has zero dependencies)
+  # and no `needs:`, so it reports even when the app build is red. Node 24 rather than the
+  # 20 the other jobs use, because node:sqlite does not exist on 20.
+  work-tracking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Tooling tests
+        run: node work_tracking/tests/run.js
+      - name: registry.md matches registry.ndjson
+        run: node work_tracking/scripts/build.js --check
+
   # Emulator-backed Firestore security-rules tests (mountain-aware role model, M5.2).
   # The default `npm test` excludes tests/rules/** (they need the emulator), so this
   # is the only place a rules regression is caught. Needs just the Firestore emulator

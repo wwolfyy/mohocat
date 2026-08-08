@@ -44,15 +44,22 @@ included, deliberately **not** under the root `scripts/`, which belongs to the a
       `records_with_stale`, `current_records` and `children_progress` views. _(done 2026-08-08;
       verified against `node:sqlite` — **14 malformed shapes rejected**, valid rows accepted,
       duplicate `(id, rev)` caught, staleness and the `1/2 children done` roll-up both correct.)_
-- [ ] **`work_tracking/SCHEMA.md`** — the prose companion: what each field means and why. The
-      DDL is normative; this explains it. 📌 Start from the comments already in `schema.sql`.
-- [ ] **`work_tracking/scripts/lib.js`** — load `registry.ndjson`, build the in-memory db
+- [x] ✅ **`work_tracking/SCHEMA.md`** — the prose companion: what each field means and why. The
+      DDL is normative; this explains it. _(done 2026-08-09 — also carries the workflow commands
+      and the merge-conflict recovery procedure.)_
+- [x] ✅ **`work_tracking/scripts/lib.js`** — load `registry.ndjson`, build the in-memory db
       (`node:sqlite`, built in on Node 25 — **no new dependency**), fold to current revs.
-- [ ] **`work_tracking/scripts/checkout.js`** — `--id R-0142` or
-      `--query "status='open' AND plan='§10'"` → writes `work.json`.
-- [ ] **`work_tracking/scripts/checkin.js`** — dry-run insert → rollback → append `rev+1` rows for
-      **changed items only**. Aborts on any constraint failure, writing nothing.
-- [ ] **Referential check in `checkin.js`, scoped to `work.json`** (owner, 2026-08-08) — a
+      _(done 2026-08-09. Rejects unknown field names in JS: the insert names its columns, so a
+      typo'd field would otherwise be dropped without complaint — the silent-zero-rows failure
+      §4.3 tested for. `WORK_TRACKING_STORE` relocates the store, for tests and for rehearsing
+      the Phase 2 import against a scratch copy.)_
+- [x] ✅ **`work_tracking/scripts/checkout.js`** — `--id R-0142` or
+      `--query "status='open' AND plan='§10'"` → writes `work.json`. _(done 2026-08-09; also
+      `--new` for adding records, and it refuses to overwrite an unfinished checkout.)_
+- [x] ✅ **`work_tracking/scripts/checkin.js`** — dry-run insert → rollback → append `rev+1` rows for
+      **changed items only**. Aborts on any constraint failure, writing nothing. _(done
+      2026-08-09; `rev` is computed from the store, never read from `work.json`.)_
+- [x] ✅ **Referential check in `checkin.js`, scoped to `work.json`** (owner, 2026-08-08) — a
       `split_from` or `supersedes` must point at an `id` present **in `work.json`**, not merely
       somewhere in `registry.ndjson`. Referencing an item you have not checked out is the signal
       that **it should have been checked out first** — you cannot correctly reference an item
@@ -62,17 +69,36 @@ included, deliberately **not** under the root `scripts/`, which belongs to the a
       📌 If a purely informational `related` link is ever added to the schema, it needs an
       exemption from this rule — pointing at a closed item for context should not force a
       checkout.
-- [ ] **Enforce `note` on unchanged revisions** — a row whose only differences are `ts` and `rev`
-      must carry a `note`, or `checkin.js` will drop it as unmodified (restructure §3).
-- [ ] **`work_tracking/scripts/build.js`** — regenerate `registry.md`. Deterministic output: fixed
-      column order, `ORDER BY id`, stable formatting.
-- [ ] **Add `work.json` to `.gitignore`.** ⚠️ Do this _before_ the first checkout ever runs.
-- [ ] **Do NOT add a `merge=union` driver** for `registry.ndjson`. Conflicts are wanted.
-- [ ] **CI job** — `registry.md` must equal `build(registry.ndjson)`, and the whole store must
-      load without a constraint error.
+- [x] ✅ **Enforce `note` on unchanged revisions** — a row whose only differences are `ts` and `rev`
+      must carry a `note`, or `checkin.js` will drop it as unmodified (restructure §3). _(done
+      2026-08-09. Implemented as a check with teeth rather than a convention: a reference whose
+      **target** would be dropped as unmodified is a hard error naming the target, so the
+      partial-split case fails loudly instead of leaving the parent's timeline silent.)_
+- [x] ✅ **`work_tracking/scripts/build.js`** — regenerate `registry.md`. Deterministic output: fixed
+      column order, `ORDER BY id`, stable formatting. _(done 2026-08-09. No clock anywhere in the
+      output — a generated-at stamp would fail `--check` on every commit.)_
+- [x] ✅ **Add `work.json` to `.gitignore`.** ⚠️ Do this _before_ the first checkout ever runs.
+      _(done 2026-08-09, before any script was run.)_
+- [x] ✅ **Do NOT add a `merge=union` driver** for `registry.ndjson`. Conflicts are wanted.
+      _(confirmed 2026-08-09 — `.gitattributes` has no such entry, and the recovery path is
+      tested end to end instead.)_
+- [x] ✅ **CI job** — `registry.md` must equal `build(registry.ndjson)`, and the whole store must
+      load without a constraint error. _(done 2026-08-09 — the `work-tracking` job in
+      `.github/workflows/ci.yml`. Pinned to Node 24, because the app's jobs run Node 20 and
+      `node:sqlite` does not exist there. No `npm ci` and no `needs:` — the tooling has zero
+      dependencies, so the gate reports even when the app build is red.)_
 
-**Gate:** the seven malformed-record cases from restructure §4.3 must all be rejected, and a
-valid record must pass, before any real data is imported.
+**Gate:** ✅ **met (2026-08-09).** `work_tracking/tests/` — 69 assertions, no test framework.
+`lib.test.js` rejects **15** malformed record shapes (the seven from restructure §4.3 plus eight
+more found while writing it) and accepts valid ones; `workflow.test.js` drives the four CLIs end
+to end, including the §4.3 git-conflict recovery.
+
+📌 **One design correction came out of writing those tests.** `checkin.js` first deleted
+`work.json` on success, which quietly destroyed the §4.3 recovery procedure — that procedure
+resolves a conflict by taking the incoming registry wholesale and re-running check-in, which only
+works while `work.json` still holds the intent. It now stamps the file with `checked_in` instead,
+and `checkout.js` uses that stamp to tell a finished checkout (safe to replace) from an unfinished
+one, so `--force` does not become routine.
 
 ---
 

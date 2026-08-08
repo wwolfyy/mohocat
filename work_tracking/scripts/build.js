@@ -1,0 +1,197 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * work_tracking/scripts/build.js — step 4 of the workflow (SCHEMA.md §3).
+ *
+ * Regenerates `registry.md`: the current revision of every record, rendered for the people
+ * who read pull requests. Nobody reads `registry.ndjson` by choice.
+ *
+ * ⚠️ The output must be a pure function of the store. No timestamps, no clock, no
+ * environment — `--check` compares a fresh render against the committed file, so anything
+ * that varies between runs would fail CI on every commit.
+ *
+ * Usage:
+ *   build.js            regenerate registry.md
+ *   build.js --check    verify the committed registry.md matches the store (CI gate)
+ */
+
+const fs = require('node:fs');
+const path = require('node:path');
+const lib = require('./lib');
+
+const logger = lib.createLogger('work_tracking/build');
+
+const REGISTRY_MD_PATH = path.join(lib.WORK_TRACKING_DIR, 'registry.md');
+
+const TYPES = ['task', 'bug', 'change', 'decision', 'question'];
+const STATUSES = ['open', 'in-progress', 'done', 'abandoned'];
+
+function parseArgs(argv) {
+  const args = { check: false, out: REGISTRY_MD_PATH };
+  for (let i = 0; i < argv.length; i += 1) {
+    const flag = argv[i];
+    if (flag === '--check') {
+      args.check = true;
+    } else if (flag === '--out') {
+      if (!argv[i + 1]) throw new Error('--out needs a path');
+      args.out = path.resolve(argv[i + 1]);
+      i += 1;
+    } else if (flag === '--help' || flag === '-h') {
+      process.stdout.write('Usage: build.js [--check] [--out <path>]\n');
+      process.exit(0);
+    } else {
+      throw new Error(`Unknown argument '${flag}'. Usage: build.js [--check] [--out <path>]`);
+    }
+  }
+  return args;
+}
+
+/** Table cells are one line and never break the column. */
+function cell(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  return String(value)
+    .replace(/\|/g, '\\|')
+    .replace(/\s*\n\s*/g, ' ');
+}
+
+function detailCell(record) {
+  if (!record.detail_ref) return '—';
+  return `[detail](./${record.detail_ref})`;
+}
+
+function table(header, rows) {
+  const lines = [`| ${header.join(' | ')} |`, `| ${header.map(() => '---').join(' | ')} |`];
+  for (const row of rows) lines.push(`| ${row.join(' | ')} |`);
+  return lines.join('\n');
+}
+
+function summarySection(records) {
+  const rows = TYPES.map((type) => {
+    const ofType = records.filter((record) => record.type === type);
+    return [
+      type,
+      ...STATUSES.map((status) => String(ofType.filter((r) => r.status === status).length)),
+      `**${ofType.length}**`,
+    ];
+  });
+  rows.push([
+    '**total**',
+    ...STATUSES.map((status) => `**${records.filter((r) => r.status === status).length}**`),
+    `**${records.length}**`,
+  ]);
+  return table(['type', ...STATUSES, 'total'], rows);
+}
+
+function recordRows(records) {
+  return records.map((record) => [
+    record.id,
+    cell(record.type),
+    cell(record.status),
+    cell(record.outcome),
+    cell(record.plan),
+    cell(record.title),
+    detailCell(record),
+  ]);
+}
+
+const RECORD_HEADER = ['id', 'type', 'status', 'outcome', 'plan', 'title', 'detail'];
+
+/**
+ * Parents and the records broken out of them, with roll-up progress. Only parents that
+ * actually have children appear — an exhaustive tree of one-line trees helps nobody.
+ */
+function hierarchySection(db, records) {
+  const byId = new Map(records.map((record) => [record.id, record]));
+  const rollups = db.prepare('SELECT * FROM children_progress ORDER BY parent_id').all();
+
+  if (rollups.length === 0) return '_No records have been broken out into children._';
+
+  const lines = [];
+  for (const rollup of rollups) {
+    const parent = byId.get(rollup.parent_id);
+    lines.push(
+      `- **${parent.id}** [${parent.status}] ${cell(parent.title)} ` +
+        `— _(${rollup.children_done}/${rollup.children} children done)_`
+    );
+    const children = records
+      .filter((record) => record.split_from === parent.id)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    for (const child of children) {
+      lines.push(`  - ${child.id} [${child.status}] ${cell(child.title)}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+function render(db, records) {
+  const open = records.filter(
+    (record) => record.status === 'open' || record.status === 'in-progress'
+  );
+
+  return `${[
+    '# Work registry',
+    '',
+    '> ⚠️ **Generated file — do not edit.** Regenerate with `node work_tracking/scripts/build.js`.',
+    '>',
+    '> The source of truth is [`registry.ndjson`](./registry.ndjson); this is the current',
+    '> revision of every record, rendered for humans and pull-request review. To change',
+    '> anything here, run `checkout.js`, edit `work.json`, then `checkin.js`. See',
+    '> [SCHEMA.md](./SCHEMA.md).',
+    '',
+    '## Summary',
+    '',
+    summarySection(records),
+    '',
+    '## Open work',
+    '',
+    open.length > 0 ? table(RECORD_HEADER, recordRows(open)) : '_Nothing open._',
+    '',
+    '## Hierarchy',
+    '',
+    hierarchySection(db, records),
+    '',
+    '## All records',
+    '',
+    records.length > 0 ? table(RECORD_HEADER, recordRows(records)) : '_The store is empty._',
+  ].join('\n')}\n`;
+}
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const { db } = lib.openStore({ allowMissing: true });
+
+  let markdown;
+  try {
+    markdown = render(db, lib.currentRecords(db));
+  } finally {
+    db.close();
+  }
+
+  if (!args.check) {
+    fs.writeFileSync(args.out, markdown);
+    logger.info(`Wrote ${args.out}.`);
+    return;
+  }
+
+  const committed = fs.existsSync(args.out) ? fs.readFileSync(args.out, 'utf8') : null;
+  if (committed === markdown) {
+    logger.info(`${args.out} matches the store.`);
+    return;
+  }
+  throw new Error(
+    `${args.out} does not match the store. Run 'node work_tracking/scripts/build.js' and ` +
+      `commit the result.`
+  );
+}
+
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    logger.error(error.message);
+    process.exit(1);
+  }
+}
+
+module.exports = { parseArgs, render, REGISTRY_MD_PATH };
