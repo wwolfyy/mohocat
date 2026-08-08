@@ -386,6 +386,40 @@ check('--check writes no registry.db', () => {
   assert(!fs.existsSync(DB), 'the CI gate must not write anything');
   run('build.js');
 });
+
+console.log('\n-- db.js --');
+/**
+ * `db.js` regenerates the database **without** touching `registry.md`. That separation is the
+ * whole reason it exists — refreshing the browsable view after a pull should not leave a
+ * generated markdown file dirty in `git status` — so it is what these pin.
+ */
+check('db.js regenerates the database', () => {
+  fs.rmSync(DB, { force: true });
+  const c = run('db.js');
+  assert.equal(c.status, 0, c.stderr);
+  assert(fs.existsSync(DB));
+  const d = new DatabaseSync(DB, { readOnly: true });
+  const n = d.prepare('SELECT count(*) AS n FROM current_records').get().n;
+  d.close();
+  assert(n > 0, 'the current_records view should be populated');
+});
+check('db.js leaves registry.md untouched', () => {
+  const before = fs.readFileSync(MD, 'utf8');
+  assert.equal(run('db.js').status, 0);
+  assert.equal(fs.readFileSync(MD, 'utf8'), before, 'db.js must not rewrite the markdown view');
+});
+check('db.js --out writes elsewhere and leaves registry.db alone', () => {
+  const elsewhere = path.join(store, 'scratch.db');
+  const stamp = fs.statSync(DB).mtimeMs;
+  assert.equal(run('db.js', '--out', elsewhere, '--quiet').status, 0);
+  assert(fs.existsSync(elsewhere));
+  assert.equal(fs.statSync(DB).mtimeMs, stamp, 'the real database must not have been rewritten');
+});
+check('db.js rejects an unknown flag rather than ignoring it', () => {
+  const c = run('db.js', '--nope');
+  assert.equal(c.status, 1);
+  assert.match(c.stderr, /Unknown argument/);
+});
 check('--check fails when registry.md drifts', () => {
   fs.appendFileSync(MD, 'stray edit\n');
   const c = run('build.js', '--check');

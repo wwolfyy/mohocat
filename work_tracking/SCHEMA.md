@@ -19,7 +19,13 @@ Two files hold the store, and one directory holds its prose:
 | ------------------- | ------------------------------------------------------------------------- |
 | `registry.ndjson`   | **The source of truth.** One JSON object per line, append-only.           |
 | `registry.md`       | **Generated and committed.** The current state, for humans and PR review. |
+| `registry.db`       | **Generated and gitignored.** A SQLite view, for browsing and ad-hoc SQL. |
 | `records/R-0142.md` | The long prose for one record — rationale, detail, investigation notes.   |
+
+⚠️ **`registry.db` is a view, never an input** (owner, 2026-08-09, amending restructure §4 —
+recorded as `R-0404`). It is rebuilt from `registry.ndjson` by `build.js` and by `db.js`, and
+deleting it at any time is safe. **Nothing in the tooling may read it back**: the moment a script
+does, the store has two sources of truth and the append-only design stops meaning anything.
 
 `schema.sql` is loaded into an **in-memory** SQLite database on every script run. No `.db` file
 is ever written to disk or committed. The database is rebuilt from `registry.ndjson` each time,
@@ -74,8 +80,32 @@ node work_tracking/scripts/checkout.js --new          # adding records only
 node work_tracking/scripts/checkin.js
 node work_tracking/scripts/build.js
 node work_tracking/scripts/build.js --check           # the CI gate
+node work_tracking/scripts/db.js                      # refresh registry.db only
 node work_tracking/tests/run.js
 ```
+
+### Looking things up
+
+`registry.md` answers "what is open?" at a glance. For anything else, query the store:
+
+```bash
+node work_tracking/scripts/checkout.js --query "type = 'decision' AND outcome = 'rejected'"
+```
+
+Or open **`registry.db`** in a SQLite browser and query the **`current_records`** view, which has
+already folded the log down to one row per record:
+
+```sql
+SELECT id, title, note FROM current_records WHERE status = 'open';
+SELECT id, title FROM current_records WHERE type = 'decision' AND outcome = 'rejected';
+```
+
+`build.js` writes that file as part of a normal build; **`db.js` regenerates only it**, which is
+what you want after a `git pull` — it leaves `registry.md` alone, so refreshing your view does not
+leave a generated file dirty in `git status`. Because it rebuilds from scratch, a successful run
+is also proof the whole store still loads clean.
+
+📌 **Never `grep` the store** (§3, above). Both paths here parse it.
 
 **Check out everything you intend to reference.** Check-in rejects a `split_from` or
 `supersedes` aimed at a record that is not in `work.json` — §7 explains why that is deliberate.

@@ -29,6 +29,8 @@ const WORK_TRACKING_DIR = process.env.WORK_TRACKING_STORE
   : path.resolve(__dirname, '..');
 const REGISTRY_PATH = path.join(WORK_TRACKING_DIR, 'registry.ndjson');
 const SCHEMA_PATH = path.resolve(__dirname, '..', 'schema.sql');
+/** Generated + gitignored: a browsable view, never an input. See restructure §4 and `R-0404`. */
+const REGISTRY_DB_PATH = path.join(WORK_TRACKING_DIR, 'registry.db');
 
 /**
  * Every column in `schema.sql`, in its declared order. This array is the canonical
@@ -300,13 +302,35 @@ function revisionsOf(db, id) {
   return db.prepare('SELECT * FROM records WHERE id = ? ORDER BY rev').all(id).map(fromRow);
 }
 
+/**
+ * Dump an open in-memory store to a SQLite file, so it can be opened in a database browser.
+ *
+ * 🔑 **The file is derived and gitignored — it is a view, never an input** (owner, 2026-08-09,
+ * amending restructure §4; see `R-0404`). `registry.ndjson` stays the only source of truth. ⚠️
+ * **Nothing in this repo may read the `.db` back**: the moment a script does, the store has two
+ * sources of truth and the whole append-only design stops meaning anything.
+ *
+ * `VACUUM INTO` copies the database the caller already loaded, **views included** — which is the
+ * point, since `current_records` is what makes the file worth opening. ⚠️ It **refuses to write
+ * over an existing file**, so the old one is removed first. The useful consequence is that a
+ * failed run leaves no file at all rather than a stale one that looks current.
+ */
+function writeDatabase(db, outPath = REGISTRY_DB_PATH) {
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.rmSync(outPath, { force: true });
+  db.exec(`VACUUM INTO '${outPath.replace(/'/g, "''")}'`);
+  return outPath;
+}
+
 module.exports = {
   FIELDS,
   JSON_FIELDS,
   INTEGER_FIELDS,
   REGISTRY_PATH,
+  REGISTRY_DB_PATH,
   SCHEMA_PATH,
   WORK_TRACKING_DIR,
+  writeDatabase,
   createLogger,
   originOf,
   parseRegistry,

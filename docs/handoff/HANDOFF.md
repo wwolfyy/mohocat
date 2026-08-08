@@ -57,8 +57,14 @@ node work_tracking/scripts/checkout.js --new     # or --id R-0142 / --query "sta
 #   edit work.json — type: bug | change | task | decision | question
 #   long prose goes in work_tracking/records/R-XXXX.md, not in the row
 node work_tracking/scripts/checkin.js
-node work_tracking/scripts/build.js              # regenerates registry.md
+node work_tracking/scripts/build.js              # regenerates registry.md (+ registry.db)
 ```
+
+📌 **To just look something up**, either query the store —
+`checkout.js --query "type = 'decision' AND outcome = 'rejected'"` — or open
+**`work_tracking/registry.db`** in a SQLite browser and read the `current_records` view.
+`node work_tracking/scripts/db.js` refreshes that file on its own, leaving `registry.md` alone.
+It is generated and gitignored, so deleting it is always safe.
 
 📄 **[`SCHEMA.md`](../../work_tracking/SCHEMA.md)** is the field reference and the workflow
 guide. **[`registry.md`](../../work_tracking/registry.md)** is the human view — open work,
