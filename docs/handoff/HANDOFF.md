@@ -21,7 +21,7 @@ that is why one is no longer quoted. 🔑 **The same applies to any "everything 
 > new structure is in place.**
 >
 > 📄 **Start here:**
-> [`work-tracking-restructure-20260808.md`](../planning/pending/work-tracking-restructure-20260808.md).
+> [`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md).
 > 🔴 **§4 is blocking** — the storage medium (SQLite vs structured text) is undecided, and it is
 > the first thing to settle. Everything else in that doc is agreed, and §5 carries the migration
 > inventory split into mechanical vs judgment.
@@ -104,7 +104,7 @@ host: MANISAN_HOST } })`; both hosts hit the same 127.0.0.1 server. 7 tests alre
 > The owner opened a redesign of how work is tracked, prompted by this session making the cost
 > concrete. **Nothing has changed in the repo for it.** The design, the agreed points, the one
 > open decision, and a migration inventory are in
-> **[`work-tracking-restructure-20260808.md`](../planning/pending/work-tracking-restructure-20260808.md)**
+> **[`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md)**
 > — the owner will implement it in a fresh session.
 >
 > 🔑 **Two problems, both measured rather than asserted.** (1) The backlog is **not centralized**:

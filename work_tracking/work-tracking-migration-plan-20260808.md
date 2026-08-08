@@ -37,8 +37,9 @@ trusting it.
 🔑 **Everything lives under a new root `work_tracking/` folder** (owner, 2026-08-08) — scripts
 included, deliberately **not** under the root `scripts/`, which belongs to the application.
 
-- [ ] **Create `work_tracking/`** and relocate this plan + the restructure doc into it, updating
-      every link in the same change.
+- [x] ✅ **Create `work_tracking/`** and relocate this plan + the restructure doc into it,
+      updating every link in the same change. _(done 2026-08-08 — 7 external references
+      repointed across `AGENTS.md`, `HANDOFF.md`, `PROJECT_PLAN.md`.)_
 - [ ] **`work_tracking/SCHEMA.md` + `work_tracking/schema.sql`** — field definitions in prose,
       plus the `CREATE TABLE … STRICT` that machine-enforces them. The DDL is normative; the
       prose explains it.

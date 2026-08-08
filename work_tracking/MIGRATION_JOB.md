@@ -3,10 +3,11 @@
 > **Live progress tracker for the work-tracking restructure.** Update it as work happens; it is
 > the file to read first when resuming this job in a new session.
 >
-> - **Design + storage decision:** [`../docs/planning/pending/work-tracking-restructure-20260808.md`](../docs/planning/pending/work-tracking-restructure-20260808.md)
-> - **Execution sequence:** [`../docs/planning/pending/work-tracking-migration-plan-20260808.md`](../docs/planning/pending/work-tracking-migration-plan-20260808.md)
+> - **Design + storage decision:** [`./work-tracking-restructure-20260808.md`](./work-tracking-restructure-20260808.md)
+> - **Execution sequence:** [`./work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md)
 >
-> 📌 Both move into `work_tracking/` as the first task of Phase 1 — update these links then.
+> ✅ Both were relocated into `work_tracking/` on 2026-08-08 (Phase 1, task 1) and all
+> references across `AGENTS.md`, `HANDOFF.md` and `PROJECT_PLAN.md` were repointed.
 >
 > 🙃 **This file is deliberately the last artifact written in the old style.** Once the registry
 > is live it should be migrated in and deleted, which doubles as the dogfooding test: if the
@@ -16,19 +17,19 @@
 
 ## Status
 
-|                      |                                                                         |
-| -------------------- | ----------------------------------------------------------------------- |
-| **Overall**          | ⬜ **NOT STARTED** — design settled 2026-08-08, no code or data written |
-| **Current phase**    | Phase 1 — Tooling                                                       |
-| **Blocked on**       | nothing                                                                 |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                |
-| **Last updated**     | 2026-08-08                                                              |
+|                      |                                                                             |
+| -------------------- | --------------------------------------------------------------------------- |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 task 1 of 12 done; no code or data written yet |
+| **Current phase**    | Phase 1 — Tooling (next: `SCHEMA.md` + `schema.sql`)                        |
+| **Blocked on**       | nothing                                                                     |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                    |
+| **Last updated**     | 2026-08-08                                                                  |
 
 ### Phase progress
 
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
-| 1     | Tooling — schema, scripts, CI gate           | ⬜ not started | no           |
+| 1     | Tooling — schema, scripts, CI gate           | 🔄 1/12 done   | no           |
 | 2     | Mechanical import (~315 rows)                | ⬜ not started | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
@@ -90,7 +91,7 @@ entries only exist in prose.
 
 **Excluded, deliberately:** `code-graph-tooling-comparison-20260728.md` and
 `code-graph-tooling-evaluation-20260728.md` (different workstream); the two work-tracking design
-docs (they relocate into `work_tracking/`, they are not records).
+docs (they now live in `work_tracking/`, they are not records).
 
 ### Phase 3 — decisions to lift by hand
 
@@ -134,7 +135,11 @@ Append newest-last. One entry per working session: what moved, what broke, where
   append-only `registry.ndjson`; SQLite is in-memory only, never written to disk.
 - Schema gained `split_from`, `note`, `source_ref` during review.
 - Owner set the layout: everything work-tracking lives in root `work_tracking/`, scripts included.
-- **Next:** Phase 1, first task — create `work_tracking/` and relocate the two design docs.
+- ✅ Phase 1 task 1 done: `work_tracking/` created, both design docs relocated into it, and the
+  seven external references repointed. Two stale claims fixed on the way — `PROJECT_PLAN.md`
+  still called the storage medium "open and blocking" and still referenced the abandoned
+  `TASKS.md` idea.
+- **Next:** Phase 1, task 2 — `SCHEMA.md` + `schema.sql`.
 
 ---
 

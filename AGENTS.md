@@ -19,9 +19,17 @@ content doc carries a `mountainId`, and per-mountain config/theme/features come 
 > ### 🚧 2026-08-08 — this structure is being replaced, and that is the ACTIVE workstream
 >
 > **Application work is paused.** The next piece of work is a restructure of how work itself is
-> tracked; feature/bug work restarts **after** the new structure is in place. Design, agreed
-> points, the open decision, and the migration inventory:
-> **[`docs/planning/pending/work-tracking-restructure-20260808.md`](./docs/planning/pending/work-tracking-restructure-20260808.md)**.
+> tracked; feature/bug work restarts **after** the new structure is in place.
+>
+> 📁 **Everything work-tracking now lives in [`work_tracking/`](./work_tracking/)** (root folder,
+> scripts included — deliberately not under the app's `scripts/`):
+>
+> - **[`work-tracking-restructure-20260808.md`](./work_tracking/work-tracking-restructure-20260808.md)**
+>   — design + the ✅ **settled** storage decision (§4) with its rejected alternatives.
+> - **[`work-tracking-migration-plan-20260808.md`](./work_tracking/work-tracking-migration-plan-20260808.md)**
+>   — the five-phase execution sequence.
+> - **[`MIGRATION_JOB.md`](./work_tracking/MIGRATION_JOB.md)** — 📌 **read this first when
+>   resuming**; it tracks progress file-by-file.
 >
 > 🔑 **Why**: the five documents below total **~944 KB (~250k tokens)** — they have outgrown
 > their reader — and open items are split **5 in `BACKLOG.md` · 20 in `PROJECT_PLAN.md` · 9 in
