@@ -229,12 +229,28 @@ check('FIELDS matches the columns in schema.sql', () => {
   assert.deepEqual([...cols].sort(), [...lib.FIELDS].sort());
   d.close();
 });
-check('no .db file is written to disk', () => {
+/**
+ * ⚠️ **Amended 2026-08-09 (owner): `build.js` now writes `registry.db`, and only `build.js`.**
+ *
+ * The original assertion was "no `.db` file is written to disk", guarding restructure §4's
+ * in-memory-only rule. The owner reversed that to get a file a SQLite browser can open. What
+ * still has to hold — and what this now pins — is the part the decision was actually protecting:
+ * **opening the store never writes a database.** `registry.db` is derived, gitignored and
+ * rebuilt from `registry.ndjson`, so the log stays the only source of truth. If loading the
+ * store ever starts leaving a file behind, that is the in-memory guarantee breaking.
+ */
+check('opening the store writes no database file', () => {
   const before = fs.readdirSync(lib.WORK_TRACKING_DIR);
   const d = lib.createDatabase();
   d.close();
   assert.deepEqual(fs.readdirSync(lib.WORK_TRACKING_DIR), before);
-  assert(!before.some((f) => f.endsWith('.db')));
+});
+
+check('the only .db permitted in the store directory is the generated registry.db', () => {
+  const stray = fs
+    .readdirSync(lib.WORK_TRACKING_DIR)
+    .filter((f) => f.endsWith('.db') && f !== 'registry.db');
+  assert.deepEqual(stray, [], `unexpected database file(s): ${stray.join(', ')}`);
 });
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

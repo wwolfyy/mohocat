@@ -12,7 +12,7 @@
  * that varies between runs would fail CI on every commit.
  *
  * Usage:
- *   build.js            regenerate registry.md
+ *   build.js            regenerate registry.md AND registry.db (gitignored, for browsing)
  *   build.js --check    verify the committed registry.md matches the store (CI gate)
  */
 
@@ -23,6 +23,8 @@ const lib = require('./lib');
 const logger = lib.createLogger('work_tracking/build');
 
 const REGISTRY_MD_PATH = path.join(lib.WORK_TRACKING_DIR, 'registry.md');
+/** Generated, gitignored, rebuilt on every build — a browsable view, never a source of truth. */
+const REGISTRY_DB_PATH = path.join(lib.WORK_TRACKING_DIR, 'registry.db');
 
 /**
  * Column order for the summary. These duplicate the enums in `schema.sql`, which is a drift
@@ -209,6 +211,24 @@ function render(db, records) {
   ].join('\n')}\n`;
 }
 
+/**
+ * Dump the in-memory store to `registry.db` so it can be opened in a SQLite browser.
+ *
+ * 🔑 **This is a derived artifact, exactly like `registry.md`** (owner, 2026-08-09, amending
+ * restructure §4). `registry.ndjson` is still the only source of truth; the file is rebuilt from
+ * it on every build and is **gitignored**, so none of what the NDJSON decision was protecting —
+ * line-level diffs, reviewable PRs, a real conflict on a real collision — is given up. A binary
+ * committed beside the log would surrender all three at once.
+ *
+ * ⚠️ **`VACUUM INTO` refuses to overwrite**, so the old file is removed first. That is also the
+ * reason this cannot silently write a stale database: a failed run leaves no file rather than an
+ * out-of-date one.
+ */
+function writeDatabase(db, outPath) {
+  fs.rmSync(outPath, { force: true });
+  db.exec(`VACUUM INTO '${outPath.replace(/'/g, "''")}'`);
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const { db } = lib.openStore({ allowMissing: true });
@@ -216,13 +236,15 @@ function main() {
   let markdown;
   try {
     markdown = render(db, lib.currentRecords(db));
+    // Only on a real build: `--check` is the CI gate and must not write anything.
+    if (!args.check) writeDatabase(db, REGISTRY_DB_PATH);
   } finally {
     db.close();
   }
 
   if (!args.check) {
     fs.writeFileSync(args.out, markdown);
-    logger.info(`Wrote ${args.out}.`);
+    logger.info(`Wrote ${args.out} and ${REGISTRY_DB_PATH}.`);
     return;
   }
 
@@ -246,4 +268,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { parseArgs, render, REGISTRY_MD_PATH };
+module.exports = { parseArgs, render, writeDatabase, REGISTRY_MD_PATH, REGISTRY_DB_PATH };

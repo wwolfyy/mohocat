@@ -216,9 +216,27 @@ the file the owner and PR reviewers actually read; nobody reads `registry.ndjson
 
 ## 4. ✅ DECIDED — storage medium and record model (owner + assistant, 2026-08-08)
 
-**Decision: a single append-only NDJSON file is the source of truth. SQLite is used, but only
-as an in-memory index built fresh on every script run. No `.db` file is ever written to disk or
-committed.**
+**Decision: a single append-only NDJSON file is the source of truth. SQLite is used as an
+in-memory index built fresh on every script run.**
+
+> 🔄 **AMENDED 2026-08-09 (owner): `build.js` now also writes `work_tracking/registry.db`.** The
+> clause this replaces read _"No `.db` file is ever written to disk or committed."_ The reason for
+> the change was practical — the store had no comfortable browser, and the NDJSON viewers tried
+> did not work — so a real SQLite file, opened in an editor extension, is how the owner wants to
+> read it.
+>
+> 🔑 **What the original decision was protecting is kept, because the file is derived, not
+> authoritative.** `registry.ndjson` remains the only source of truth; `registry.db` is rebuilt
+> from it by every build, has exactly the standing of `registry.md`, and is **gitignored**. The
+> three properties §4.3 measured — line-level diffs, a reviewable PR, and a real git conflict when
+> two branches revise the same record — are properties of _what is committed_, and a binary
+> committed beside the log would surrender all three at once. A gitignored artifact surrenders
+> none.
+>
+> ⚠️ **So the rule that survives is narrower and sharper: nothing may ever read the `.db` as
+> input, and loading the store must never write one.** `work_tracking/tests/lib.test.js` pins the
+> second half; the first is a convention — if a script ever opens `registry.db` to answer a
+> question, the store has silently acquired a second source of truth. Record `R-0404`.
 
 ```
 work_tracking/
@@ -226,6 +244,7 @@ work_tracking/
   schema.sql         the normative DDL
   registry.ndjson    single file, append-only, THE SOURCE OF TRUTH. No merge driver.
   registry.md        GENERATED + committed — the view humans and PR reviewers read
+  registry.db        GENERATED + GITIGNORED — a browsable SQLite view, never an input
   records/R-0142.md  long prose per record (rationale, detail)
   scripts/           checkout · checkin · build (NOT under the app's root scripts/)
   work.json          transient checkout file — GITIGNORED, never committed

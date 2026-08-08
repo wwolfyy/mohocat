@@ -15,6 +15,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { DatabaseSync } = require('node:sqlite');
 
 const SCRIPTS = path.resolve(__dirname, '..', 'scripts');
 const store = fs.mkdtempSync(path.join(os.tmpdir(), 'wt-e2e-'));
@@ -358,6 +359,33 @@ check('build is deterministic', () => {
 check('--check passes on a fresh build', () =>
   assert.equal(run('build.js', '--check').status, 0, 'should pass')
 );
+
+/**
+ * `registry.db` is the browsable view added 2026-08-09. Two properties matter and neither is
+ * obvious from reading `build.js`: a build produces it, and **`--check` does not**. The second
+ * is the important one — `--check` is the CI gate, and a gate that writes a file is no longer
+ * only checking. `VACUUM INTO` also refuses to overwrite, so a rebuild has to clear it first;
+ * that is what the second build here would catch.
+ */
+const DB = path.join(store, 'registry.db');
+check('build writes a queryable registry.db', () => {
+  fs.rmSync(DB, { force: true });
+  assert.equal(run('build.js').status, 0);
+  assert(fs.existsSync(DB), 'registry.db should exist after a build');
+  const d = new DatabaseSync(DB, { readOnly: true });
+  const n = d.prepare('SELECT count(*) AS n FROM current_records').get().n;
+  d.close();
+  assert(n > 0, 'registry.db should hold the current records');
+});
+check('rebuilding over an existing registry.db succeeds', () =>
+  assert.equal(run('build.js').status, 0, 'VACUUM INTO must not trip over the old file')
+);
+check('--check writes no registry.db', () => {
+  fs.rmSync(DB, { force: true });
+  assert.equal(run('build.js', '--check').status, 0);
+  assert(!fs.existsSync(DB), 'the CI gate must not write anything');
+  run('build.js');
+});
 check('--check fails when registry.md drifts', () => {
   fs.appendFileSync(MD, 'stray edit\n');
   const c = run('build.js', '--check');

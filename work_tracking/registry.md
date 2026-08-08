@@ -14,9 +14,9 @@
 | task | 31 | 8 | 9 | 171 | 0 | **219** |
 | bug | 1 | 0 | 0 | 49 | 0 | **50** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 1 | 30 | 7 | **38** |
+| decision | 0 | 0 | 1 | 31 | 7 | **39** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **39** | **8** | **10** | **339** | **7** | **403** |
+| **total** | **39** | **8** | **10** | **340** | **7** | **404** |
 
 ## Open work
 
@@ -504,3 +504,4 @@ _No records have been broken out into children._
 | R-0401 | decision | done | adopted | §9 | The role model is a map keyed by mountainId — one account can hold roles on several mountains | [detail](./records/R-0401.md) |
 | R-0402 | decision | done | adopted | §9 | Accepted dev-only caveat: relative links escape a path-prefixed tenant back to the default | [detail](./records/R-0402.md) |
 | R-0403 | decision | done | adopted | — | The same-day auto-commit grant was revoked — every commit is owner-gated again | [detail](./records/R-0403.md) |
+| R-0404 | decision | done | adopted | — | `build.js` also writes a gitignored `registry.db`, reversing "no .db is ever written" | [detail](./records/R-0404.md) |
