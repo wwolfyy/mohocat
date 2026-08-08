@@ -8,11 +8,13 @@
 > structure is in place. Tenancy **T0** was asked for and then stood down behind this; its
 > context is preserved in `HANDOFF.md` so it does not need re-deriving when it resumes.
 >
-> ⚠️ **One decision is still open and it is the first thing to settle** — §4. Everything else
-> below is agreed.
+> ✅ **The storage decision is SETTLED (2026-08-08) — see §4**, with the ten tests behind it and
+> the rejected alternatives recorded so they are not reopened. Everything in this doc is now
+> agreed.
 >
-> **This doc records a design discussion, not executed work.** Nothing in the repo has changed
-> for it. The five documents it describes are all still in their current form.
+> **This doc records a design, not executed work.** Nothing in the repo has changed for it. The
+> five documents it describes are all still in their current form. The execution plan is
+> **[`work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md)**.
 
 ---
 
@@ -93,6 +95,10 @@ An earlier draft had the task list hold "every **open** task", which meant a com
 does not disappear.** `status`: `open` | `in-progress` | `done` | `abandoned`, which also gives
 `PROJECT_PLAN` a generated `12/17 done` per workstream.
 
+⚠️ **"Flips a state" is a logical description, not a physical one.** Per §4.1 the row is never
+edited: completing a task **appends a new row** with the same `id` and the next `rev`. The
+projection shows one row per item, so it reads as a flip; the log keeps both.
+
 ### 2.4 The plan stays markdown
 
 `PROJECT_PLAN.md` keeps prose workstreams and status. It is the document a human reads to
@@ -106,92 +112,232 @@ is the single biggest practical win of the restructure.
 
 ---
 
-## 3. Proposed shape
+## 3. Shape (settled — see §4 for the decision and the evidence)
+
+🔑 **Everything work-tracking lives in a new root `work_tracking/` folder** (owner, 2026-08-08),
+including its scripts — deliberately **not** under the root `scripts/`, which serves the
+application.
 
 ```
-docs/planning/
-  SCHEMA.md         ← the precise schema definition (owner asked for this explicitly)
-  registry.*        ← the single store — tasks, backlog, decisions, bugs, changes
-  PROJECT_PLAN.md   ← workstreams + generated progress per section
-  TASKS.md          ← GENERATED open-items view, committed so humans and PRs read prose
+work_tracking/
+  SCHEMA.md          ← schema prose + the CREATE TABLE that enforces it
+  schema.sql         ← the normative DDL (STRICT + CHECK constraints)
+  registry.ndjson    ← the single store — append-only, source of truth
+  registry.md        ← GENERATED + committed: current rows only, the human/PR view
+  records/R-0142.md  ← long prose per record (rationale, detail)
+  PROJECT_PLAN.md    ← workstreams + generated progress per section
+  HANDOFF.md         ← current state + what is in flight (~150 lines, per §2.5)
+  scripts/           ← checkout.js · checkin.js · build.js · lib.js
+  work.json          ← transient checkout file, GITIGNORED
 ```
 
-One record, illustratively:
+✅ `PROJECT_PLAN.md` and `HANDOFF.md` move here too (owner-confirmed, 2026-08-08).
+
+📌 The current `docs/planning/`, `docs/handoff/`, and `log/` artifacts are being moved to
+`docs/archive/` **by the owner, by hand** — the migration does not relocate them.
+
+One row, illustratively — note `detail` is a **pointer**, not inline prose, and there is no
+`stale` field because staleness is derived from `rev`:
 
 ```json
 {
   "id": "R-0142",
+  "rev": 3,
+  "ts": "2026-08-08",
   "type": "task",
   "status": "done",
   "plan": "§10u",
   "title": "Admin type tier",
-  "detail": "…",
-  "created": "2026-08-08",
-  "closed": "2026-08-08",
+  "detail_ref": "records/R-0142.md",
   "outcome": "adopted",
   "supersedes": ["R-0031"],
+  "split_from": null,
+  "note": "closed out — fully covered by R-0200 and R-0201",
+  "source_ref": "BACKLOG.md#B1@4484234",
   "files": ["docs/design/design.md"]
 }
 ```
 
-📌 **`TASKS.md` is generated and committed.** That keeps a prose, diffable view for the owner
-and for PR review while the agent queries the store.
+- **`note`** — optional, one line: _why this revision exists_. ⚠️ **Required for any revision
+  whose other fields are unchanged**, because `checkin.js` drops unmodified items and would
+  otherwise silently discard the row (see §3.1's partial-split case).
+- **`source_ref`** — where this row came from during the bulk migration, **pinned to a commit**
+  (`@4484234`) because the origin files are deleted in the cut-over and only resolve via
+  `git show` afterwards.
+
+### 3.1 The three ways records relate (owner, 2026-08-08)
+
+| Relationship           | Expressed by            | Meaning                                                    |
+| ---------------------- | ----------------------- | ---------------------------------------------------------- |
+| Same item, later state | same `id`, higher `rev` | The earlier row is stale. Derived, never written.          |
+| Replacement            | `supersedes: [ids]`     | Those items are **dead**; this one replaces them.          |
+| **Break-out**          | `split_from: "R-0142"`  | The parent is **alive**; this is a piece broken out of it. |
+
+🔑 **`split_from` exists because later work on an item is not always superseding it.** Splitting
+a large item into pieces leaves the parent standing, which `supersedes` cannot express — it would
+wrongly mark the parent dead.
+
+Rules:
+
+- **Scalar, not an array.** A break-out has one origin; `supersedes` is an array because a merge
+  can replace several items.
+- ⚠️ **Store only the child's pointer. Never a `children` list on the parent** — children are
+  derived by query. Storing both directions is the same desync risk as a stored `stale` flag,
+  and writing it would mean editing the parent's row, which §4.1 forbids.
+- ⚠️ **A dangling `split_from` must be rejected at check-in.** SQLite foreign keys cannot enforce
+  it (the primary key is `(id, rev)`; the reference is to `id` alone), so it is an explicit check
+  in `checkin.js`.
+- 🔑 **A split ALWAYS appends a new `rev` to the parent** (owner, 2026-08-08). Two cases, and
+  the parent is written in both:
+  - **The children cover the parent entirely** → parent's new rev is `status: done`,
+    `outcome: superseded`, with a `note` naming why.
+  - **The children are partial or derivative** → parent keeps its status; the new rev exists to
+    record that a break-out happened, carried in `note`.
+
+  ⚠️ **The partial case is why `note` is mandatory there** — with no other field changed, the
+  row is identical to the previous rev and `checkin.js` would drop it as unmodified. Without a
+  parent rev, the parent's timeline is silent at the exact moment it was decomposed.
+
+  📌 **`rev` is per-`id`.** The parent goes to `rev + 1`; a child is a new `id` and starts at
+  `rev: 1`. Nothing is inferred by the tooling — both rows are written explicitly at check-in.
+
+This also lets `registry.md` render a hierarchy with roll-up progress
+(`R-0142 [in-progress] … (1/2 children done)`), which is what §2.3 wants for `PROJECT_PLAN`.
+
+🔑 **Keeping the prose out of the row is what makes the store legible.** Real log entries
+average **2,619 bytes**; a row carrying that inline is a 2.6 KB single line, which git shows as
+one deleted and one added blob — you can see _which_ record changed but never _what_ changed
+inside it. Externalising `detail` cuts the row to ~250 bytes and lets the prose diff as prose.
+
+📌 **`registry.md` is generated and committed**, replacing the earlier `TASKS.md` idea. It is
+the file the owner and PR reviewers actually read; nobody reads `registry.ndjson` by choice.
 
 ---
 
-## 4. 🔴 THE OPEN DECISION — storage medium
+## 4. ✅ DECIDED — storage medium and record model (owner + assistant, 2026-08-08)
 
-**This is unresolved and must be settled before implementation starts.** The owner proposed
-**SQLite**; the assistant argued for **structured text (NDJSON)**. The owner's framing — _"I'm
-proposing SQLite for the structure, not for data volume"_ — is a fair correction of the
-assistant's first answer, which rebutted a volume argument that was never made.
+**Decision: a single append-only NDJSON file is the source of truth. SQLite is used, but only
+as an in-memory index built fresh on every script run. No `.db` file is ever written to disk or
+committed.**
 
-The remaining disagreement is narrow: **does the structure require a binary format?**
+```
+work_tracking/
+  SCHEMA.md          schema prose + the CREATE TABLE that machine-enforces it
+  schema.sql         the normative DDL
+  registry.ndjson    single file, append-only, THE SOURCE OF TRUTH. No merge driver.
+  registry.md        GENERATED + committed — the view humans and PR reviewers read
+  records/R-0142.md  long prose per record (rationale, detail)
+  scripts/           checkout · checkin · build (NOT under the app's root scripts/)
+  work.json          transient checkout file — GITIGNORED, never committed
+```
 
-| Requirement               | SQLite            | NDJSON + schema doc                        |
-| ------------------------- | ----------------- | ------------------------------------------ |
-| One record per item       | ✅                | ✅                                         |
-| Enforced schema           | ✅                | ✅ (JSON Schema)                           |
-| Query by any field        | ✅                | ✅ (`grep` / `jq`)                         |
-| **Partial loading**       | ✅                | ✅ — grep matching lines, parse only those |
-| Diffable in git           | ❌                | ✅                                         |
-| Reviewable in a PR        | ❌                | ✅                                         |
-| Mergeable across branches | ❌ irreconcilable | ✅ append-only lines merge                 |
-| Readable in the editor    | ❌                | ✅                                         |
-| Agent appends safely      | needs tooling     | ✅ one line                                |
+### 4.1 The record model — append-only, revisions, derived staleness
 
-**The assistant's position.** At 34 open items and 138 history entries, SQLite's real advantages
-— indexes, concurrent writes, query planning — are all inactive, while its one real cost stays
-active: **the record of reasoning stops being reviewable.** ⚠️ **The merge point is the sharpest
-practical objection**: sessions on branches will append rows, NDJSON merges cleanly, a `.db`
-conflicts with no manual resolution. A second concern is failure shape — a slightly-wrong query
-returns _fewer rows_, not an error, and "queried and found nothing" is indistinguishable from
-"there is nothing", which is the same silent-failure class as the offline `getDocs` returning
-`200 []`, `assertFails` passing on a typo'd collection, and the rule requiring an undefined
-permission.
+- **Nothing in the store is ever edited.** Updating an item appends a **new row with the same
+  `id` and the next `rev`**. Readers keep the highest `rev` per `id`; older rows are stale.
+- ⚠️ **`stale` is DERIVED, never stored.** Writing a `stale` flag means mutating an existing
+  line, which is the one operation that breaks every merge strategy tested (§4.3). It is
+  computed at build time and materialised into `registry.md`, so `WHERE stale = 0` still works
+  — it is simply never written by hand.
+- **Corrections are appended, not erased.** A wrong record is superseded by a later `rev`; the
+  wrong version stays in the log. This is an audit trail, not an editable table.
 
-**The owner's position.** Structure and queryability are the goal; a precise schema in markdown
-makes SQLite tractable; one row carrying task + detail + state + backlink beats files joined by
-identifiers.
+### 4.2 The workflow (owner's design)
 
-**The bridge either way:** if the store is text, a script can build `registry.db` from it on
-demand — derived, gitignored, regenerated rather than repaired. If the store is the `.db`, an
-NDJSON dump should be committed alongside so history stays reviewable.
+1. `checkout` — builds an in-memory SQLite db from `registry.ndjson`, queries it to find the
+   related items, writes their **current revs** to `work.json`.
+2. Edit `work.json`.
+3. `checkin` — dry-run inserts into the schema'd db, **rolls back**, and only if that succeeded
+   appends the changed rows (with `rev + 1`) to `registry.ndjson`. Unmodified items are dropped.
+4. `build` — regenerates `registry.md`.
 
-📌 **Whoever implements this should pick one and record the choice here**, with the reason, so
-it is not re-litigated.
+🔑 **Rebuilding the index on every run is what makes this safe.** It costs ~11 ms at today's
+size and ~220 ms at 5,000 records, it makes staleness structurally impossible, and it
+re-validates the entire store on every invocation — a bad row anywhere fails loudly and
+immediately.
+
+### 4.3 Why — the tests behind this
+
+Ten scenarios were run before deciding; the results overturned several earlier positions.
+
+| Finding                                                                         | Consequence                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------- |
+| jq and SQL returned **identical results on all 8 faceted queries** + group-by   | Query power is not a differentiator. Parity.      |
+| NDJSON ↔ SQLite round-trip is **byte-identical**, ~30 lines each way            | The medium choice is reversible; low stakes.      |
+| grep pre-filter found **643 of 1,274** rows on non-canonical JSON               | ⚠️ Never grep the store. Always parse.            |
+| Typo'd field: jq returns **0 rows silently**; SQLite **errors**                 | Validation must come from a schema, not from jq.  |
+| Merging two branches' `.db` → **valid file, one branch's work gone, no error**  | 🔴 Decisive against SQLite-as-source.             |
+| `merge=union` + in-place edits → **duplicate ids both claiming current**        | Decisive against a stored `stale` flag.           |
+| `merge=union` + pure appends → **0 conflicts, correct fold**                    | Append-only is what makes text safe.              |
+| Per-branch fragment files → 0 conflicts, but **same-item collisions go silent** | 🔴 Rejected — see §4.4.                           |
+| Single file, **no** merge driver → collision **surfaces as a git conflict**     | ✅ The conflict is the safety mechanism. Keep it. |
+| Dry-run insert caught **all 7** malformed-record cases                          | ✅ Schema-as-validator works.                     |
+
+⚠️ **No `merge=union` driver, deliberately.** An earlier draft recommended one. It is wrong:
+the union driver silently accepts two rows claiming the same `rev`. A plain git conflict is the
+desired behaviour, and recovery needs no manual line editing — take the incoming file wholesale,
+then re-run `checkin`, because `work.json` still holds the intent and the script recomputes
+`rev` from the new state. This was verified end-to-end (revs 1,2,3,4; no duplicates).
+
+### 4.4 Rejected alternatives — do not reopen
+
+- **SQLite as the committed source of truth.** Merging two branches produces a valid database
+  that has silently dropped one side's rows. The checkout workflow does **not** rescue this —
+  the conflict is at the git layer, below where the workflow operates.
+- **The database outside git** (central location updated by CI, or a hosted DB). Two fatal
+  problems: an in-flight branch has nowhere to write, so it must journal its appends as text in
+  the repo anyway — meaning the text is the real source; and it **breaks atomicity between a
+  record and the code it explains**, so `git log -S`, blame, and "what did the store say at
+  commit X" all stop working.
+- **A stored `stale` / `current` flag.** Requires editing existing lines. Breaks under every
+  merge strategy tested, even when two branches touch _different_ records.
+- **Per-branch fragment files.** They make conflicts impossible — which is the problem. Removing
+  the conflict removes the alarm that two people edited the same item, converting a loud failure
+  into a silent one.
+- **A separate committed `registry.db`.** Dropped by the owner: it can only drift from the
+  ndjson and buys nothing over building in memory.
+
+📌 The design credits: the generated-artifact idea, the append-only premise, the
+checkout/check-in workflow, the schema-as-validator, and dropping the on-disk `.db` are all the
+owner's. The assistant's fragment proposal was withdrawn as strictly worse.
 
 ---
 
 ## 5. Migration inventory — what moves, and what needs judgment
 
-**Mechanical** (a script can do it; the entries are already `##`-delimited and dated):
+⚠️ **Counts and markup re-verified on `dev` at `4484234` (2026-08-08). The earlier draft of this
+section was wrong in two ways** — correct figures below.
 
-- `DEBUG_LOG.md` — 49 entries → `type: bug`.
-- `FEATURE_MOD_LOG.md` — 89 entries → `type: change`.
-- `BACKLOG.md` — 5 items (`B1`, `B2`, `B4`, plus open questions) → `type: task`, `status: open`.
-- `PROJECT_PLAN.md` — 20 unchecked boxes → `type: task`, `status: open`, with their `§` as `plan`.
-- `HANDOFF.md` — 9 unchecked boxes → same.
+**Mechanical** (a script can do it — the entries are `##`-delimited and dated):
+
+- `DEBUG_LOG.md` — **49** entries, `## YYYY-MM-DD — title` → `type: bug`.
+- `FEATURE_MOD_LOG.md` — **89** entries, same markup → `type: change`.
+- `BACKLOG.md` — **5** items: `B1`, `B2`, `B4`, `B5` (`## B<n> — title`) plus `Q1` under
+  _Open questions_ → `type: task`, `status: open`. (`B3` is struck through + ✅ DONE — import as
+  `status: done`, not as open.)
+- `PROJECT_PLAN.md` — **18** unchecked `- [ ]` boxes (not 20; two were ticked after the original
+  count) against **153** checked → `type: task`, `status: open`, with their `§` as `plan`.
+
+- 🔑 **`docs/planning/completed/` + `docs/planning/pending/` — 24 documents, ~5,400 lines**
+  (16 completed, 8 pending). **Missing from the first draft of this inventory entirely.**
+  **Index them, do not flatten them:** one row per document with `detail_ref` pointing at the
+  file, no rewrite. **17 of the 24 already carry a `Status:` line** that maps onto `status`;
+  read the other 7. `multi-mountain-refactor-plan-20260719.md` alone is 787 lines — that is a
+  document, not a row. See the migration plan §2b.
+  - ⚠️ The decisions _inside_ them still need lifting by hand (below) —
+    `multi-tenant-architecture-decision-20260718.md` and `tenancy-url-model-decision-20260728.md`
+    are named for exactly the P2.3 content this restructure targets.
+  - 📌 **Ignore the `pending/` vs `completed/` split** — the owner is archiving these folders by
+    hand, so the division does not need preserving in the store.
+
+**Not mechanical, contrary to the first draft:**
+
+- 🔴 **`HANDOFF.md` has no standard checkboxes at all.** The claim of "9 unchecked boxes" is
+  markup-wrong: open items are written as **`- **`[ ]` …`** — a backtick-wrapped box inside
+bold — so `grep '^- \[ \]'`returns **zero**. There are ~8 such items plus one`[x]`in
+_Open threads / owner-owed_ (lines 1962–2368), and further carry-overs written as plain prose
+bullets with no marker at all. ⚠️ **A script keyed on`- [ ]` will silently import nothing
+  from this file\*\* — which is exactly the failure mode this restructure exists to prevent.
 
 **Needs judgment** (do not automate):
 
@@ -235,3 +381,10 @@ it is not re-litigated.
   that no longer hold the answer.
 - 📌 The two untracked `code-graph-tooling-*` files in `docs/planning/pending/` belong to a
   **different workstream** — do not sweep them in.
+- ⚠️ **`work.json` must be gitignored before the first checkout is ever run.** Found the hard
+  way while testing: when it was committed, a branch merge filled it with conflict markers and
+  destroyed the very file the recovery procedure depends on (§4.3).
+- ⚠️ **Do not configure a `merge=union` driver for `registry.ndjson`.** It silently accepts two
+  rows claiming the same `rev`. The plain git conflict is wanted — see §4.3.
+- 📌 **Never `grep` the store.** Measured: a grep pre-filter found 643 of 1,274 matching rows
+  when serialization was not canonical. Parse it, always.
