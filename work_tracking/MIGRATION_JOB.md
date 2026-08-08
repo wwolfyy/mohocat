@@ -19,7 +19,7 @@
 
 |                      |                                                                          |
 | -------------------- | ------------------------------------------------------------------------ |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source files **2 of 7** done. |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source files **3 of 7** done. |
 | **Current phase**    | Phase 2 — next is `docs/planning/BACKLOG.md` (6 rows, needs judgment)    |
 | **Blocked on**       | nothing                                                                  |
 | **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                 |
@@ -30,7 +30,7 @@
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
 | 1     | Tooling — schema, scripts, CI gate           | ✅ 12/12 done  | no           |
-| 2     | Mechanical import (~315 rows)                | 🔄 138/~315    | no           |
+| 2     | Mechanical import (~315 rows)                | 🔄 144/~315    | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
 | 4     | Adjacent fixes — PROJECT_PLAN, HANDOFF size  | ⬜ not started | no           |
@@ -51,7 +51,7 @@ source count before anything is deleted.
 | --- | -------------------------------------- | ----- | --------- | -------------- | ---------- | ---- |
 | 1   | `log/DEBUG_LOG.md`                     | 49    | ✅ 49/49  | ✅             | ✅         | ✅   |
 | 2   | `log/FEATURE_MOD_LOG.md`               | 89    | ✅ 89/89  | ✅             | ✅         | ✅   |
-| 3   | `docs/planning/BACKLOG.md`             | 6     | ⬜ 0/6    | ⬜             | ⬜         | ⬜   |
+| 3   | `docs/planning/BACKLOG.md`             | 6     | ✅ 6/6    | ✅             | ✅         | ✅   |
 | 4   | `docs/planning/PROJECT_PLAN.md`        | 171   | ⬜ 0/171  | ⬜             | ⬜         | ⬜   |
 | 5   | `docs/handoff/HANDOFF.md` — open items | ~9    | ⬜        | ⬜             | ⬜         | ⬜   |
 | 6   | `docs/handoff/HANDOFF.md` — decisions  | ?     | ⬜        | ⬜             | ⬜         | ⬜   |
@@ -217,6 +217,41 @@ Append newest-last. One entry per working session: what moved, what broke, where
   error if filed as a task); **`B3` is `status: done`** — struck through and marked ✅, so
   importing it as open would launder a stale claim. Its markup is `## B<n> — title`, not a
   date, so `dated-log.js` does not apply.
+
+### 2026-08-09 — Phase 2 source file 3 of 7: `docs/planning/BACKLOG.md` → `R-0139`…`R-0144`
+
+- ✅ **6 rows imported and the origin cut in the same commit**, pinned to `4484234`. `B1`→
+  `R-0139`, `B2`→`R-0140`, `B4`→`R-0141`, `B5`→`R-0142` as open tasks; **`B3`→`R-0143` as
+  `done`**; **`Q1`→`R-0144` as `type: question`**.
+- 🔑 **`scripts/import/backlog.js` carries a decision table, not an extraction.** The script
+  guarantees verbatim prose; a human set every `type`, `status`, `ts` and `files` value, and
+  the script throws if the file contains an item the table does not know about — so a new
+  backlog entry cannot slip through unclassified.
+- ⚠️ **The four open items were re-verified against the code before import**, per the
+  watch-out, and all four still hold: `AboutContentEditor` has no upload control and the
+  signed-url route still hard-codes `uploads/`; `view-analytics` is catalogued but granted in
+  no role and its two readers still have no callers; `npx eslint <file>` still fails on ESLint
+  8.57.1; both login pages exist and `/pages/login` still has no 집사등록. **Nothing stale was
+  laundered in.**
+- **`files` was set on `R-0139` only** — B1 is the one item whose source states its own file
+  list, under "Touches:". The others were left null rather than guessed at.
+- 📌 **The routing table BACKLOG.md carried is now obsolete**, and the stub says so: a gap, a
+  task, a bug, a change and an owner question are one record each separated by `type`, so
+  nothing moves between files when it gets scheduled and there is no second place to leave a
+  stale copy — which is what the old rule existed to police.
+
+### 🔴 Found during Phase 2 — for the Phase 3 pass: 15 records cross-reference a stubbed file
+
+**18 references across 15 of the 144 records** point at files that are now stubs, from inside
+migrated prose: `DEBUG_LOG.md` ×10, `PROJECT_PLAN.md` ×3, `FEATURE_MOD_LOG.md` ×3,
+`HANDOFF.md` ×2. They still resolve — the stub names the record range and links to
+`registry.md` — but they are one hop longer than they should be.
+
+⚠️ **Deliberately not patched.** Rewriting them means editing prose that `source_ref` pins to
+a commit, which is exactly the audit trail the bulk import rests on. Repointing them at record
+ids is a judgment pass over the text, so it belongs with Phase 3's de-duplication rather than
+with a mechanical import. 📌 Several of these are the same cross-file duplication Phase 3 has
+to resolve anyway — the reference and the duplicate tend to be the same sentence.
 
 📌 **Rehearse every import against a scratch store first** — `WORK_TRACKING_STORE=/tmp/x`
 points every script, including the importer's `records/` output, somewhere harmless — then

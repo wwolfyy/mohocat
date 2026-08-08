@@ -11,16 +11,22 @@
 
 | type | open | in-progress | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- |
-| task | 0 | 0 | 0 | 0 | **0** |
+| task | 4 | 0 | 1 | 0 | **5** |
 | bug | 0 | 0 | 49 | 0 | **49** |
 | change | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 0 | 0 | **0** |
-| question | 0 | 0 | 0 | 0 | **0** |
-| **total** | **0** | **0** | **138** | **0** | **138** |
+| question | 1 | 0 | 0 | 0 | **1** |
+| **total** | **5** | **0** | **139** | **0** | **144** |
 
 ## Open work
 
-_Nothing open._
+| id | type | status | outcome | plan | title | detail |
+| --- | --- | --- | --- | --- | --- | --- |
+| R-0139 | task | open | — | — | The about page's 대표 사진 has no upload control | [detail](./records/R-0139.md) |
+| R-0140 | task | open | — | — | `view-analytics` is enforced by the rules and held by nobody | [detail](./records/R-0140.md) |
+| R-0141 | task | open | — | — | `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken | [detail](./records/R-0141.md) |
+| R-0142 | task | open | — | — | Two live login pages, and the one members get bounced to has no 집사등록 and no tests | [detail](./records/R-0142.md) |
+| R-0144 | question | open | — | — | Should the about page render `sections`? | [detail](./records/R-0144.md) |
 
 ## Hierarchy
 
@@ -168,3 +174,9 @@ _No records have been broken out into children._
 | R-0136 | change | done | — | — | Emphasize capital letters in the About subtitle (MOHOCATS wordplay) | [detail](./records/R-0136.md) |
 | R-0137 | change | done | — | — | Display the 부제 (subtitle) on the About/intro page | [detail](./records/R-0137.md) |
 | R-0138 | change | done | — | — | Remove 문의 (contact) link from the footer | [detail](./records/R-0138.md) |
+| R-0139 | task | open | — | — | The about page's 대표 사진 has no upload control | [detail](./records/R-0139.md) |
+| R-0140 | task | open | — | — | `view-analytics` is enforced by the rules and held by nobody | [detail](./records/R-0140.md) |
+| R-0141 | task | open | — | — | `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken | [detail](./records/R-0141.md) |
+| R-0142 | task | open | — | — | Two live login pages, and the one members get bounced to has no 집사등록 and no tests | [detail](./records/R-0142.md) |
+| R-0143 | task | done | — | — | `/api/revalidate` never refreshes 냥이들, so cat edits take up to an hour there | [detail](./records/R-0143.md) |
+| R-0144 | question | open | — | — | Should the about page render `sections`? | [detail](./records/R-0144.md) |
