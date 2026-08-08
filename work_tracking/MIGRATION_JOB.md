@@ -17,13 +17,13 @@
 
 ## Status
 
-|                      |                                                                        |
-| -------------------- | ---------------------------------------------------------------------- |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2 ✅ **7 of 7** (403 records). |
-| **Current phase**    | Phase 3 — dedup done; `split_from` and the decision-doc lift remain    |
-| **Blocked on**       | nothing                                                                |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)               |
-| **Last updated**     | 2026-08-09                                                             |
+|                      |                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------- |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2 ✅ **7 of 7**. Counts: `registry.md`. |
+| **Current phase**    | Phase 3 — dedup done; `split_from` and the decision-doc lift remain             |
+| **Blocked on**       | nothing                                                                         |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                        |
+| **Last updated**     | 2026-08-09                                                                      |
 
 ### Phase progress
 
@@ -43,6 +43,41 @@ section would have left every one of them duplicated in prose. What remains in P
 `PROJECT_PLAN.md`'s mega-cells.
 
 Legend: ⬜ not started · 🔄 in progress · ✅ done · ⛔ blocked
+
+### ▶️ Resume here — the next four pieces of work, in order
+
+Phases 1, 2, 2b and 2c are closed. **Every origin file has been cut**, so nothing is racing a
+half-migrated document any more and these can be done in any session, one at a time.
+
+1. **Finish Phase 3 — the decisions _inside_ the two decision documents.** §2b indexed
+   `multi-tenant-architecture-decision-20260718.md` (`R-0339`) and
+   `tenancy-url-model-decision-20260728.md` (`R-0346`) as one pointer row each, which is right
+   for the documents but leaves the decisions they contain unqueryable. A third turned up while
+   reading: `firebase-sdk-usage-inventory.md` (`R-0335`) closes by retiring the blanket "Admin
+   SDK is the eventual target for all writes" framing. 📌 **Apply the same rule as the hand-off
+   pass** — import a decision only where its reasoning is recorded nowhere else — and probe each
+   candidate against the store before writing it, the way `handoff.js` documents.
+2. **Finish Phase 3 — `split_from` on the `PROJECT_PLAN` break-outs.** ⚠️ **Do not guess.** The
+   plan's rule stands: link only where the source text says so, and leave it `null` otherwise. A
+   wrong parent is harder to spot than a missing one, because the hierarchy view will look
+   plausible. Candidates are §10's admin sub-items, the colour plan's phases, and the
+   mobile-admin cluster.
+3. **Finish Phase 3 — the 18 cross-references into stubbed files** (15 records; see the 🔴
+   section below). They still resolve one hop longer than they should. ⚠️ Rewriting them edits
+   prose that `source_ref` pins to a commit, so this is a judgment pass, not a sweep.
+4. **Then Phase 4 —`PROJECT_PLAN.md`'s mega-cells.** It is **332 KB** because single table cells
+   run to thousands of words (the multi-tenant row holds the entire M1–M8 history). Unreadable
+   for a human, unparseable for an agent. Phase 4's other half, shrinking `HANDOFF.md`, is
+   already done.
+
+**Phase 5 is the last step and should not start early** — it rewrites `CLAUDE.md` / `AGENTS.md`
+and un-pauses application work, and doing that while Phase 3 is open would point agents at a
+structure that is still moving.
+
+🔑 **Before touching anything, run the gates** — they are fast and they tell you the store is
+sane: `node work_tracking/tests/run.js` and `node work_tracking/scripts/build.js --check`.
+📌 **To look around**, `node work_tracking/scripts/db.js` then open `registry.db`, or
+`checkout.js --query "status = 'open'"`. **Never grep the store.**
 
 ---
 
@@ -440,6 +475,38 @@ verify the count before writing to the real registry.
   commit that added it. Fixed by adding it to `.prettierignore`: formatting a generated file
   is `build.js`'s job. Worth remembering for any future generated artifact here — the gate
   and the formatter will fight over it, and the gate has to win.
+
+### 2026-08-09 — a browsable `registry.db`, reversing restructure §4's in-memory-only rule
+
+- 🔑 **Owner call: `build.js` now also writes `work_tracking/registry.db`**, and `db.js`
+  regenerates only that file on demand. The clause it reverses read _"No `.db` file is ever
+  written to disk or committed."_ Reason: the store had no comfortable browser — `registry.md`
+  answers "what is open?" but not an arbitrary question, `checkout.js --query` writes its answer
+  to `work.json` rather than showing it, and the NDJSON viewer extension the owner tried in
+  VS Code did not work. Recorded as **`R-0404`**, with §4 of the restructure doc carrying the
+  amendment inline so the original clause is not read as still standing.
+- 🔑 **It costs nothing the original decision was protecting, and the reason is worth keeping:
+  the three grounds §4.3 settled on — line diffs, a reviewable PR, a real git conflict on a real
+  collision — are properties of what is _committed_.** `registry.db` is derived, rebuilt from
+  `registry.ndjson`, and **gitignored**, so it has exactly the standing `registry.md` already
+  had. A binary committed beside the log would have surrendered all three at once.
+- ⚠️ **The surviving rule is narrower and sharper: nothing may ever read the `.db` as input, and
+  loading the store must never write one.** The second half is a test — `lib.test.js`'s blanket
+  "no .db file is written to disk" became "opening the store writes no database file", plus a
+  check that no stray `.db` appears beside it. The first half is a **convention**, and it is the
+  one to watch: if a script ever opens `registry.db` to answer a question, the store has quietly
+  acquired a second source of truth and the reversal will have cost what it was meant to keep.
+- **`VACUUM INTO` does the dump**, against the in-memory database the caller already loaded — so
+  the file carries the **views**, which is what makes it worth opening (`current_records` folds
+  the log to one row per record). ⚠️ It refuses to overwrite, so the old file is removed first;
+  the useful consequence is that a failed run leaves **no** file rather than a stale one.
+- 📌 **`--check` writes nothing.** That flag is the CI gate, and a gate that writes a file is no
+  longer only checking. `workflow.test.js` pins that, and that `db.js` leaves `registry.md`
+  untouched — the whole reason it exists as a second script.
+- 🔑 **A count in a document rots within the hour.** This entry's own session added `R-0404`,
+  which made "403 records" wrong in **two** files written earlier the same day. Both now point at
+  `registry.md` instead of quoting a number. Same lesson as the boxes this migration imported —
+  do not restate what the store already answers.
 
 ---
 

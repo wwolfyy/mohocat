@@ -27,7 +27,7 @@ the phase sequence is in
 | Phase | What                                          | State                       |
 | ----- | --------------------------------------------- | --------------------------- |
 | 1     | Tooling — schema, scripts, CI gate            | ✅ done                     |
-| 2     | Import all seven source files                 | ✅ done — **403 records**   |
+| 2     | Import all seven source files                 | ✅ done — all 7             |
 | 3     | Judgment work — dedup, `split_from`           | 🔄 dedup done; splits to go |
 | 4     | Adjacent fixes — `PROJECT_PLAN.md` mega-cells | ⬜ not started              |
 | 5     | Cut over — rewrite `CLAUDE.md`, un-pause      | ⬜ not started              |
