@@ -17,13 +17,13 @@
 
 ## Status
 
-|                      |                                                                          |
-| -------------------- | ------------------------------------------------------------------------ |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source files **4 of 7** done. |
-| **Current phase**    | Phase 2 — next is `docs/planning/BACKLOG.md` (6 rows, needs judgment)    |
-| **Blocked on**       | nothing                                                                  |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                 |
-| **Last updated**     | 2026-08-09                                                               |
+|                      |                                                                           |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: **5 of 7** done (346 records). |
+| **Current phase**    | Phase 2 — next is `docs/planning/BACKLOG.md` (6 rows, needs judgment)     |
+| **Blocked on**       | nothing                                                                   |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                  |
+| **Last updated**     | 2026-08-09                                                                |
 
 ### Phase progress
 
@@ -31,7 +31,7 @@
 | ----- | -------------------------------------------- | -------------- | ------------ |
 | 1     | Tooling — schema, scripts, CI gate           | ✅ 12/12 done  | no           |
 | 2     | Mechanical import (**326** so far)           | ✅ files 1–4   | no           |
-| 2b    | Index 20 companion documents                 | ⬜ not started | no           |
+| 2b    | Index 20 companion documents                 | ✅ 20/20 done  | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
 | 4     | Adjacent fixes — PROJECT_PLAN, HANDOFF size  | ⬜ not started | no           |
 | 5     | Cut over — delete origins, rewrite CLAUDE.md | ⬜ not started | no           |
@@ -65,29 +65,29 @@ entries only exist in prose.
 
 `docs/planning/completed/` (16):
 
-- [ ] `7a-bake-data-layer-tasks.md`
-- [ ] `adoption-promotion-and-cat-adoption-info-plan.md`
-- [ ] `butler-media-separation-plan-20260727.md`
-- [ ] `complexity-retirement-assessment-20260716.md`
-- [ ] `dead-code-removal-assessment-20260711.md`
-- [ ] `deployment-cleanup-plan.md`
-- [ ] `feeding-station-points-admin-cms-plan.md`
-- [ ] `firebase-read-access-inventory.md`
-- [ ] `firebase-sdk-usage-inventory.md`
-- [ ] `member-media-upload-permissions-20260803.md`
-- [ ] `member-post-authoring-20260802.md`
-- [ ] `multi-mountain-refactor-plan-20260719.md` (787 lines)
-- [ ] `multi-tenant-architecture-decision-20260718.md` 🔑 **lift its decisions too**
-- [ ] `phase3-cleanup-plan.md`
-- [ ] `playwright-ci-plan.md`
-- [ ] `playwright-ci-prerequisite-plan.md`
+- [x] `7a-bake-data-layer-tasks.md`\1 → **R-0327**
+- [x] `adoption-promotion-and-cat-adoption-info-plan.md`\1 → **R-0328**
+- [x] `butler-media-separation-plan-20260727.md`\1 → **R-0329**
+- [x] `complexity-retirement-assessment-20260716.md`\1 → **R-0330**
+- [x] `dead-code-removal-assessment-20260711.md`\1 → **R-0331**
+- [x] `deployment-cleanup-plan.md`\1 → **R-0332**
+- [x] `feeding-station-points-admin-cms-plan.md`\1 → **R-0333**
+- [x] `firebase-read-access-inventory.md`\1 → **R-0334**
+- [x] `firebase-sdk-usage-inventory.md`\1 → **R-0335**
+- [x] `member-media-upload-permissions-20260803.md`\1 → **R-0336**
+- [x] `member-post-authoring-20260802.md`\1 → **R-0337**
+- [x] `multi-mountain-refactor-plan-20260719.md`\1 → **R-0338**
+- [x] `multi-tenant-architecture-decision-20260718.md`\1 → **R-0339**
+- [x] `phase3-cleanup-plan.md`\1 → **R-0340**
+- [x] `playwright-ci-plan.md`\1 → **R-0341**
+- [x] `playwright-ci-prerequisite-plan.md`\1 → **R-0342**
 
 `docs/planning/pending/` (4):
 
-- [ ] `color-token-centralization-plan-20260805.md`
-- [ ] `mountain-2-prerequisites.md`
-- [ ] `tenancy-path-migration-plan-20260728.md`
-- [ ] `tenancy-url-model-decision-20260728.md` 🔑 **lift its decisions too**
+- [x] `color-token-centralization-plan-20260805.md`\1 → **R-0343**
+- [x] `mountain-2-prerequisites.md`\1 → **R-0344**
+- [x] `tenancy-path-migration-plan-20260728.md`\1 → **R-0345**
+- [x] `tenancy-url-model-decision-20260728.md`\1 → **R-0346**
 
 **Excluded, deliberately:** `code-graph-tooling-comparison-20260728.md` and
 `code-graph-tooling-evaluation-20260728.md` (different workstream); the two work-tracking design
@@ -312,6 +312,46 @@ Append newest-last. One entry per working session: what moved, what broke, where
 - **Tests: 77 assertions** (was 69) — the constraint rejects a missing and a blank note,
   leaves the other four statuses note-free, round-trips a deferred record through the CLIs,
   and proves `build.js` refuses to drop an unknown value.
+
+### 2026-08-09 — Phase 2b: the 20 companion documents → `R-0327`…`R-0346`
+
+- ✅ **20 rows, one per document, indexed where they already live.** Nothing was moved,
+  rewritten or copied into `records/` — `detail_ref` points straight at the file, so
+  `multi-mountain-refactor-plan` stays a 787-line document rather than becoming a lossy row.
+  **This is the only importer that copies no prose.** All 20 pointers were verified to
+  resolve.
+- **Set: 16 in `completed/` + 4 in `pending/`.** The two `code-graph-tooling-*` files are
+  excluded by name (different workstream), and the two work-tracking design docs already live
+  in `work_tracking/`. The script **throws if the directories hold a file the decision table
+  does not know**, so a new companion plan cannot slip in unclassified.
+- **Statuses came from each document's own header, not its folder** — which mattered:
+  `playwright-ci-plan.md` and `playwright-ci-prerequisite-plan.md` both sit in `completed/`
+  while `tenancy-path-migration-plan` sits in `pending/` and is genuinely not started.
+  Result: 15 done · 3 in-progress · 2 open, and the first **2 `decision` rows** in the store.
+- ⚠️ **One deliberate exception to "use the document's own status": `playwright-ci-plan.md`**
+  (`R-0341`). Its header still reads "📋 PLAN — awaiting owner sign-off", but `PROJECT_PLAN`
+  §10's heading reads "**MAIN PLAN COMPLETE** (merged to `main` 2026-07-16)" and the suite is
+  CI-gated. Importing it as a plan awaiting sign-off would have laundered a stale claim — the
+  same failure the 2026-08-02 audit found seven of, in the opposite direction. Imported as
+  `done`, with the discrepancy in its `note`.
+- 📌 **Three documents carry owner-owed remainders and went in as `in-progress`, not `done`**
+  (`R-0328`, `R-0333`, `R-0343`) — two say "implemented" but flag an undeployed Firestore
+  rule, one has Phase 5 outstanding. Their folder said completed; their own text did not.
+- 📌 **Status-line detection was unreliable three times running** and had to be settled by
+  reading the headers. `member-media-upload-permissions` carries its status **inline on the
+  `Created:` line**, and `playwright-ci-prerequisite-plan` carries **two** status lines, the
+  newer one wrapping the older. Same markup family as every other miss in this migration: the
+  content is there, the pattern is not where you expect.
+- 🔴 **Watch-out for the archive move.** These 20 `detail_ref`s point outside
+  `work_tracking/` at `docs/planning/**`. When the owner archives those folders to
+  `docs/archive/` by hand, **all 20 links go stale** and must be repointed in the same change.
+  The `source_ref` pins mean the content stays recoverable either way, but the links will not
+  fix themselves.
+- **Still open in §2b:** the second bullet — **lifting the decisions _inside_ the two decision
+  documents** as their own `type: decision` rows. That is a read-and-judge pass, so it belongs
+  with Phase 3. A third candidate turned up while reading: `firebase-sdk-usage-inventory.md`
+  closes by retiring the blanket "Admin SDK is the eventual target for all writes" framing,
+  which is a decision the plan had not listed. Noted on `R-0335`.
 
 ### 🔴 Found during Phase 2 — for the Phase 3 pass: 15 records cross-reference a stubbed file
 

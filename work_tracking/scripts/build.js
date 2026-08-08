@@ -62,9 +62,15 @@ function cell(value) {
     .replace(/\s*\n\s*/g, ' ');
 }
 
+/**
+ * Most records point at their prose in `records/`; the §2b companion documents point out of
+ * `work_tracking/` at the file where they already live, so a `./` prefix would produce
+ * `./../docs/…`. Both forms are relative to this file either way.
+ */
 function detailCell(record) {
   if (!record.detail_ref) return '—';
-  return `[detail](./${record.detail_ref})`;
+  const href = record.detail_ref.startsWith('.') ? record.detail_ref : `./${record.detail_ref}`;
+  return `[detail](${href})`;
 }
 
 function table(header, rows) {

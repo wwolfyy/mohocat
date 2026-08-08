@@ -152,13 +152,20 @@ is 787 lines; that is a document, not a row, and flattening it would be a large 
 that buys nothing a pointer does not. The schema already supports this: a companion plan is just
 a bigger `records/` file.
 
-- [ ] One row per document. **17 of the 24 already carry a `Status:` line** that maps directly
-      onto `status`; read the remaining 7.
+- [x] ✅ One row per document. ~~**17 of the 24 already carry a `Status:` line** that maps
+      directly onto `status`; read the remaining 7.~~ _(done 2026-08-09 — `R-0327`…`R-0346`:
+      15 done · 3 in-progress · 2 open. ⚠️ **Status-line detection was unreliable and had to
+      be settled by reading the headers**: one document carries its status inline on the
+      `Created:` line, another carries **two** status lines with the newer wrapping the older.
+      One deliberate exception to "use the document's own status" — `playwright-ci-plan.md`
+      still says "awaiting owner sign-off" while §10 reads "MAIN PLAN COMPLETE"; imported as
+      `done` with the discrepancy in its `note`.)_
 - [ ] 🔑 **Separately lift the decisions _inside_ them** as `type: decision` rows —
       `multi-tenant-architecture-decision-20260718.md` and `tenancy-url-model-decision-20260728.md`
       are named for exactly the P2.3 content this restructure exists to capture.
-- [ ] 📌 Do **not** sweep in the two untracked `code-graph-tooling-*` files — different workstream
-      (restructure §7).
+- [x] ✅ 📌 Do **not** sweep in the two untracked `code-graph-tooling-*` files — different
+      workstream (restructure §7). _(excluded by name; the importer throws on any other
+      unclassified file.)_
 
 📌 Once `status` lives in the registry, the "move the doc between folders and update every link
 in the same change" rule in `CLAUDE.md` is obsolete and must be removed in Phase 5.

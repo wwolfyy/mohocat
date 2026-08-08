@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 21 | 5 | 7 | 154 | 0 | **187** |
+| task | 23 | 8 | 7 | 167 | 0 | **205** |
 | bug | 0 | 0 | 0 | 49 | 0 | **49** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 0 | 0 | 0 | **0** |
+| decision | 0 | 0 | 0 | 2 | 0 | **2** |
 | question | 1 | 0 | 0 | 0 | 0 | **1** |
-| **total** | **22** | **5** | **7** | **292** | **0** | **326** |
+| **total** | **24** | **8** | **7** | **307** | **0** | **346** |
 
 ## Open work
 
@@ -49,6 +49,11 @@
 | R-0253 | task | open | — | §10d | D3 — align the media-section order across composers (proposed, still not | [detail](./records/R-0253.md) |
 | R-0323 | task | open | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
 | R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
+| R-0328 | task | in-progress | — | — | Plan — 입양홍보 posts + per-cat 입양정보 | [detail](../docs/planning/completed/adoption-promotion-and-cat-adoption-info-plan.md) |
+| R-0333 | task | in-progress | — | §4 | Plan — 급식소 관리 (feeding-station points) admin CMS | [detail](../docs/planning/completed/feeding-station-points-admin-cms-plan.md) |
+| R-0343 | task | in-progress | — | — | Color token centralization — plan — 20260805 | [detail](../docs/planning/pending/color-token-centralization-plan-20260805.md) |
+| R-0344 | task | open | — | — | Prerequisites for a real mountain #2 | [detail](../docs/planning/pending/mountain-2-prerequisites.md) |
+| R-0345 | task | open | — | — | Subdomain → path-based tenancy — execution plan — 20260728 | [detail](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) |
 
 ## Deferred — parked, with the condition that would restart it
 
@@ -401,3 +406,23 @@ _No records have been broken out into children._
 | R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
 | R-0325 | task | done | — | §11 | 입양홍보 (/pages/adoption) — built 2026-06-26 as an 입양 가능 냥이 | [detail](./records/R-0325.md) |
 | R-0326 | task | done | — | §11 | 동참 (/pages/contact) — end-to-end, DONE 2026-06-28 (Variant A). A | [detail](./records/R-0326.md) |
+| R-0327 | task | done | — | §7a | 산냥이집냥이 — §7a Bake the Data Layer · Task List | [detail](../docs/planning/completed/7a-bake-data-layer-tasks.md) |
+| R-0328 | task | in-progress | — | — | Plan — 입양홍보 posts + per-cat 입양정보 | [detail](../docs/planning/completed/adoption-promotion-and-cat-adoption-info-plan.md) |
+| R-0329 | task | done | — | — | 집사게시판 미디어 분리 · 집사톡 작성기 개선 · 마운틴별 재생목록 — Plan — 20260727 | [detail](../docs/planning/completed/butler-media-separation-plan-20260727.md) |
+| R-0330 | task | done | — | — | Complexity-Retirement Assessment — 20260716 | [detail](../docs/planning/completed/complexity-retirement-assessment-20260716.md) |
+| R-0331 | task | done | — | — | Dead-code Removal Assessment — 20260711 | [detail](../docs/planning/completed/dead-code-removal-assessment-20260711.md) |
+| R-0332 | task | done | — | §7 | Deployment Cleanup Plan — Vercel-only | [detail](../docs/planning/completed/deployment-cleanup-plan.md) |
+| R-0333 | task | in-progress | — | §4 | Plan — 급식소 관리 (feeding-station points) admin CMS | [detail](../docs/planning/completed/feeding-station-points-admin-cms-plan.md) |
+| R-0334 | task | done | — | — | Firebase read-access inventory (Client SDK vs Admin SDK) | [detail](../docs/planning/completed/firebase-read-access-inventory.md) |
+| R-0335 | task | done | — | — | Firebase SDK usage inventory (Client SDK vs Admin SDK) | [detail](../docs/planning/completed/firebase-sdk-usage-inventory.md) |
+| R-0336 | task | done | — | §10p | Member media upload on 집사톡 — narrow `upload-own-*` permissions — plan | [detail](../docs/planning/completed/member-media-upload-permissions-20260803.md) |
+| R-0337 | task | done | — | — | Member authoring on 집사톡 + 급식현황 — plan | [detail](../docs/planning/completed/member-post-authoring-20260802.md) |
+| R-0338 | task | done | — | — | Multi-Mountain Refactor — Execution Plan — 20260719 | [detail](../docs/planning/completed/multi-mountain-refactor-plan-20260719.md) |
+| R-0339 | decision | done | adopted | — | Multi-Tenant Architecture — Decision Framework — 20260718 | [detail](../docs/planning/completed/multi-tenant-architecture-decision-20260718.md) |
+| R-0340 | task | done | — | — | Phase 3 Cleanup — Detailed Plan | [detail](../docs/planning/completed/phase3-cleanup-plan.md) |
+| R-0341 | task | done | — | §10 | Playwright E2E Test Suite + CI — Plan (PROJECT_PLAN §10) | [detail](../docs/planning/completed/playwright-ci-plan.md) |
+| R-0342 | task | done | — | — | Playwright CI — Prerequisite Plan (harness enablers, spikes, and flag resolution) | [detail](../docs/planning/completed/playwright-ci-prerequisite-plan.md) |
+| R-0343 | task | in-progress | — | — | Color token centralization — plan — 20260805 | [detail](../docs/planning/pending/color-token-centralization-plan-20260805.md) |
+| R-0344 | task | open | — | — | Prerequisites for a real mountain #2 | [detail](../docs/planning/pending/mountain-2-prerequisites.md) |
+| R-0345 | task | open | — | — | Subdomain → path-based tenancy — execution plan — 20260728 | [detail](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) |
+| R-0346 | decision | done | adopted | — | Tenancy URL model — subdomains or paths? — Decision doc — 20260728 | [detail](../docs/planning/pending/tenancy-url-model-decision-20260728.md) |
