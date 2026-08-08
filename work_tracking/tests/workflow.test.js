@@ -265,6 +265,66 @@ check('taking theirs wholesale and re-running checkin recovers my intent', () =>
   assert.equal(new Set(revs.map((x) => x.rev)).size, revs.length, 'no duplicate revs');
 });
 
+console.log('\n-- deferred round-trips, and build cannot silently drop an unknown value --');
+run('checkout.js', '--new', '--force');
+writeWork([
+  {
+    id: 'R-0007',
+    type: 'task',
+    status: 'deferred',
+    title: 'Parked work',
+    note: 'blocked on the Kakao review',
+  },
+]);
+r = run('checkin.js');
+check('a deferred record with a note checks in', () => assert.equal(r.status, 0, r.stderr));
+check('checkin refuses a deferred record with no note', () => {
+  writeWork([{ id: 'R-0008', type: 'task', status: 'deferred', title: 'No reason given' }]);
+  const c = run('checkin.js');
+  assert.equal(c.status, 1);
+  assert.match(c.stderr, /deferred_needs_note/);
+});
+check('registry.md shows the parked item AND its reason', () => {
+  fs.rmSync(WORK, { force: true });
+  run('build.js');
+  const out = fs.readFileSync(MD, 'utf8');
+  assert(out.includes('## Deferred'), 'no Deferred section');
+  assert(out.includes('blocked on the Kakao review'), 'the reason is not rendered');
+  const summary = out.slice(out.indexOf('## Summary'), out.indexOf('## Open work'));
+  assert(summary.includes('deferred'), 'the summary has no deferred column');
+});
+check('build throws rather than drop a status it does not know', () => {
+  const build = require(path.join(SCRIPTS, 'build.js'));
+  const wtlib = require(path.join(SCRIPTS, 'lib.js'));
+  const db = wtlib.createDatabase();
+  let threw = null;
+  try {
+    build.render(db, [
+      {
+        id: 'R-0001',
+        rev: 1,
+        ts: '2026-08-09',
+        type: 'task',
+        status: 'invented',
+        outcome: null,
+        title: 'x',
+        plan: null,
+        detail_ref: null,
+        note: null,
+        supersedes: null,
+        split_from: null,
+        files: null,
+        source_ref: null,
+      },
+    ]);
+  } catch (e) {
+    threw = e;
+  }
+  db.close();
+  assert(threw, 'expected a throw');
+  assert.match(threw.message, /does not know about/);
+});
+
 console.log('\n-- build --');
 fs.rmSync(WORK, { force: true });
 r = run('build.js');

@@ -148,6 +148,32 @@ bad({ rev: 1.5 }, 'non-integer rev', /must be an integer/);
 bad({ title: { a: 1 } }, 'object where text expected', /must be a string/);
 bad({ typ: 'task' }, 'typo-d field name', /Unknown field 'typ'/);
 
+console.log('\n-- deferred must carry a reason (2026-08-09) --');
+bad({ status: 'deferred', note: null }, 'deferred with no note', /deferred_needs_note/);
+bad({ status: 'deferred', note: '   ' }, 'deferred with a blank note', /deferred_needs_note/);
+check('deferred WITH a note is accepted', () => {
+  const p = path.join(tmp, 'deferred-ok.ndjson');
+  fs.writeFileSync(
+    p,
+    JSON.stringify(rec({ status: 'deferred', note: 'blocked on the Kakao review' })) + '\n'
+  );
+  const s = lib.openStore({ registryPath: p });
+  assert.equal(lib.currentRecords(s.db)[0].status, 'deferred');
+  s.db.close();
+});
+check('the rule is scoped to deferred — other statuses still need no note', () => {
+  const p = path.join(tmp, 'note-free.ndjson');
+  fs.writeFileSync(
+    p,
+    ['open', 'in-progress', 'done', 'abandoned']
+      .map((status, i) => JSON.stringify(rec({ id: `R-01${10 + i}`, status, note: null })))
+      .join('\n') + '\n'
+  );
+  const s = lib.openStore({ registryPath: p });
+  assert.equal(lib.currentRecords(s.db).length, 4);
+  s.db.close();
+});
+
 check("'question' is an accepted type (2026-08-09 additive change)", () => {
   const p = path.join(tmp, 'q.ndjson');
   fs.writeFileSync(p, JSON.stringify(rec({ type: 'question' })) + '\n');

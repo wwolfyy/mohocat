@@ -127,11 +127,11 @@ store, and a parent going to `rev: 4` says nothing about its children.
 
 ### Classification
 
-| Field     | Values                                              | Required |
-| --------- | --------------------------------------------------- | -------- |
-| `type`    | `task` · `decision` · `bug` · `change` · `question` | yes      |
-| `status`  | `open` · `in-progress` · `done` · `abandoned`       | yes      |
-| `outcome` | `adopted` · `rejected` · `superseded`               | no       |
+| Field     | Values                                                     | Required |
+| --------- | ---------------------------------------------------------- | -------- |
+| `type`    | `task` · `decision` · `bug` · `change` · `question`        | yes      |
+| `status`  | `open` · `in-progress` · `deferred` · `done` · `abandoned` | yes      |
+| `outcome` | `adopted` · `rejected` · `superseded`                      | no       |
 
 **`type` is the field that closes the gap this whole restructure exists for.** A decision is not
 a task: a task is work you intended, a decision is a conclusion you reached. "Renaming the
@@ -147,6 +147,32 @@ heading says open questions are "not tasks until answered", so they get their ow
   `outcome` and a rationale in `records/`.
 - **`question`** — an owner decision that has not been answered yet. It becomes something else
   once it is.
+
+**The statuses, and the line between them:**
+
+| status        | means                                                  | `note`       |
+| ------------- | ------------------------------------------------------ | ------------ |
+| `open`        | nothing is stopping this; it can be started now        | —            |
+| `in-progress` | someone is on it                                       | —            |
+| `deferred`    | we still want it, but something must change first      | **required** |
+| `done`        | finished                                               | —            |
+| `abandoned`   | we decided not to do it — a conclusion, not a schedule | —            |
+
+🔑 **The test between `deferred` and `abandoned` is whether you can name the condition that
+would restart it.** If you can, it is deferred and the condition goes in the `note`. If you
+cannot, it was decided against — that is `abandoned`, usually with `outcome: rejected`.
+
+⚠️ **`deferred` requires a non-empty `note`, enforced by the schema.** A parked item whose
+condition is invisible cannot be told apart from a forgotten one, which is the failure
+`BACKLOG.md` named: _"a finding that lives only inside the story of the day it was found is one
+nobody schedules."_ The rule binds **every** deferred revision, not only the one that parked
+it, because `registry.md` renders current rows — a reason living only on the transition
+revision would show there as a blank.
+
+📌 **This does overload `note` slightly.** Its definition is "why this revision exists", which
+coincides with the reason for parking on the revision that defers and then diverges. That is
+deliberate: a separate `deferred_reason` column would be null on almost every row, duplicate
+`note` on the rest, and go stale the moment an item un-parks.
 
 **`status` means the item flips a state rather than disappearing.** An earlier draft had the task
 list hold only open tasks, which meant finishing a task made it vanish — no progress indicator,
@@ -270,6 +296,18 @@ on every run. A tightened rule retroactively invalidates every row written under
 | Add a column with a `DEFAULT`     | Remove an enum value                |
 | Add an enum value                 | Tighten an existing `CHECK`         |
 | Add a `CHECK` on a **new** column | Add a `CHECK` to an existing column |
+
+⚠️ **That right-hand column is a heuristic, not the rule.** The rule is that a change breaks
+history **iff some row already in the store violates it** — and there is one systematic
+exception worth knowing, because the table above would otherwise talk you out of a correct
+change:
+
+🔑 **A `CHECK` conditioned on a new enum value cannot invalidate history.** No historical row
+can hold a value that did not exist when it was written, so
+`status <> 'deferred' OR note IS NOT NULL` is vacuously true for every row already stored. That
+was measured against all 326 rows before `deferred` was added. A rule of that shape therefore
+belongs in `schema.sql`, where every script enforces it — not in `checkin.js`, which a
+hand-edited `registry.ndjson` would bypass.
 
 - **Additive changes are free.** Edit `schema.sql`, rebuild, add a line to that file's CHANGELOG.
   No migration, no decision record, no ceremony.

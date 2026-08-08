@@ -322,6 +322,14 @@ one. Measured against `node:sqlite`:
 | Remove an enum value              | 🔴 **breaks history**     |
 | Tighten an existing `CHECK`       | 🔴 **breaks history**     |
 
+⚠️ **Correction (2026-08-09) — the table is a heuristic, not the rule.** A change breaks history
+**iff some row already in the store violates it**, and there is a systematic exception: 🔑 **a
+`CHECK` conditioned on a new enum value cannot invalidate history**, because no historical row
+can hold a value that did not exist when it was written. Measured against all 326 rows when
+`status: deferred` was added with its mandatory-`note` constraint. Rules of that shape belong in
+`schema.sql`, not in `checkin.js` — as written, the table would have pushed the enforcement into
+the one place a hand-edited `registry.ndjson` bypasses.
+
 **The policy that follows:**
 
 - **Additive changes are free.** Edit `schema.sql`, rebuild, note it in that file's CHANGELOG.
@@ -334,6 +342,14 @@ one. Measured against `node:sqlite`:
 - 📌 If a restrictive change ever becomes unavoidable across a large history, the escape hatch is
   a `schema_version` column with version-conditional validation. Not needed now; do not add it
   pre-emptively.
+
+📌 **The second such change is `status: deferred` (owner, 2026-08-09).** `open` and `abandoned`
+were both being used for parked work — `BACKLOG.md`'s items are "deferred on purpose, no date",
+and `PROJECT_PLAN.md`'s legend has a dedicated `[-]` "deferred/out of scope" — so "what is
+open?", the question the store exists to answer, returned items nobody could start. `deferred`
+**requires a non-empty `note`**: the test against `abandoned` is whether you can name the
+condition that would restart it, and a parked item whose condition is invisible cannot be told
+apart from a forgotten one.
 
 📌 **The first such change was already needed and is in.** `BACKLOG.md`'s own heading reads
 _"Open questions (owner decisions — **not tasks until answered**)"_, but the migration inventory

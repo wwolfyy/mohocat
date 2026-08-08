@@ -24,8 +24,15 @@ const logger = lib.createLogger('work_tracking/build');
 
 const REGISTRY_MD_PATH = path.join(lib.WORK_TRACKING_DIR, 'registry.md');
 
+/**
+ * Column order for the summary. These duplicate the enums in `schema.sql`, which is a drift
+ * risk, so `assertKnownValues` below turns that drift into a loud failure rather than a
+ * silent one: when `deferred` was added, this list still said four statuses and the summary
+ * quietly dropped seven records while its per-type totals stayed right — the columns simply
+ * stopped adding up. That is exactly the undercount this whole migration exists to prevent.
+ */
 const TYPES = ['task', 'bug', 'change', 'decision', 'question'];
-const STATUSES = ['open', 'in-progress', 'done', 'abandoned'];
+const STATUSES = ['open', 'in-progress', 'deferred', 'done', 'abandoned'];
 
 function parseArgs(argv) {
   const args = { check: false, out: REGISTRY_MD_PATH };
@@ -64,6 +71,22 @@ function table(header, rows) {
   const lines = [`| ${header.join(' | ')} |`, `| ${header.map(() => '---').join(' | ')} |`];
   for (const row of rows) lines.push(`| ${row.join(' | ')} |`);
   return lines.join('\n');
+}
+
+/** Refuse to render a store holding a `type` or `status` this file does not know about. */
+function assertKnownValues(records) {
+  const unknown = [];
+  for (const record of records) {
+    if (!TYPES.includes(record.type)) unknown.push(`${record.id}: type '${record.type}'`);
+    if (!STATUSES.includes(record.status)) unknown.push(`${record.id}: status '${record.status}'`);
+  }
+  if (unknown.length > 0) {
+    throw new Error(
+      `The store holds values build.js does not know about, and rendering would silently ` +
+        `drop them from the summary:\n  - ${unknown.slice(0, 10).join('\n  - ')}\n` +
+        `Add them to TYPES / STATUSES in build.js — they are already legal in schema.sql.`
+    );
+  }
 }
 
 function summarySection(records) {
@@ -124,7 +147,26 @@ function hierarchySection(db, records) {
   return lines.join('\n');
 }
 
+/**
+ * Parked work, with its reason. The reason is the whole point of `deferred` — a parked item
+ * whose condition is invisible is indistinguishable from a forgotten one — so it gets its own
+ * section rather than a cell in a table too wide to carry it.
+ */
+function deferredSection(records) {
+  const deferred = records.filter((record) => record.status === 'deferred');
+  if (deferred.length === 0) return '_Nothing is parked._';
+
+  return deferred
+    .map(
+      (record) =>
+        `- **${record.id}**${record.plan ? ` (${record.plan})` : ''} — ${cell(record.title)}\n` +
+        `  - _${cell(record.note)}_`
+    )
+    .join('\n');
+}
+
 function render(db, records) {
+  assertKnownValues(records);
   const open = records.filter(
     (record) => record.status === 'open' || record.status === 'in-progress'
   );
@@ -146,6 +188,10 @@ function render(db, records) {
     '## Open work',
     '',
     open.length > 0 ? table(RECORD_HEADER, recordRows(open)) : '_Nothing open._',
+    '',
+    '## Deferred — parked, with the condition that would restart it',
+    '',
+    deferredSection(records),
     '',
     '## Hierarchy',
     '',

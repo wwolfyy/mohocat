@@ -260,7 +260,10 @@ Append newest-last. One entry per working session: what moved, what broke, where
      quotes the notation while describing other entries.
 - 📌 **The §1 snapshot table's 27 status cells are roll-ups, not items.** Importing them would
   have double-counted every workstream — 27 phantom records that each duplicate a section.
-- 📌 **Judgment recorded: `[-]` maps to `abandoned`.** The legend reads "deferred/out of
+- ✅ **SUPERSEDED 2026-08-09 — `[-]` now maps to `deferred`.** The owner added the status (see
+  the entry below). The source's own heading for these five reads "**Deferred — e2e Phase 8
+  (revisit later…)**", so `deferred` is what the file said all along. Original reasoning kept:
+- 📌 ~~**Judgment recorded: `[-]` maps to `abandoned`.**~~ The legend reads "deferred/out of
   scope" and the schema has no `deferred`. All five are scope decisions inside §10's Playwright
   suite (WebKit, visual regression, Lighthouse CI…), so `abandoned` reports them more honestly
   than `open`, which would put five things nobody intends to do into the open-work list. Their
@@ -273,6 +276,42 @@ Append newest-last. One entry per working session: what moved, what broke, where
 - **Extraction and the cut share one span computation**, so they cannot disagree about where
   an item begins and ends, and `--cut` refuses to run unless the store already holds exactly
   as many records as the source still yields.
+
+### 2026-08-09 — schema change: `status: deferred`, and it must say why (owner)
+
+- 🔑 **Owner call: `open` and `abandoned` were both being used for parked work**, so
+  `status = 'open'` — the question the store exists to answer — returned items nobody could
+  start. `deferred` now sits between them, and **a deferred row must carry a non-empty
+  `note`**, enforced by `schema.sql`.
+- **The boundary:** can you name the condition that would restart it? If yes it is `deferred`
+  and the condition is the note; if no, it was decided against and is `abandoned`.
+- **Re-classified to `deferred` (7 records, each with its reason), through the normal
+  checkout/check-in workflow** — so they are `rev: 2` and the original classification stays in
+  the log:
+  - `R-0139` (B1, about-photo upload) and `R-0141` (B4, per-file eslint). ⚠️ **I had imported
+    these as `open` without flagging it**, while flagging the `[-]` call — and by
+    `BACKLOG.md`'s own definition ("known gaps… deliberately not fixed at the time, no date")
+    the `open` reading was the worse distortion of the two.
+  - `R-0234`…`R-0238` — the five `[-]` items, whose source heading literally reads "Deferred —
+    e2e Phase 8 (revisit later, not required for done)".
+- 📌 **`R-0140` (B2) and `R-0142` (B5) stay `open`** (owner). Both wait on an owner decision
+  rather than on a dependency, so they are actionable by the person who reads the open list —
+  which is the point of being on it.
+- 🔴 **The change exposed a real bug in `build.js`, of exactly the kind this migration is
+  about.** Its `STATUSES` list was hard-coded to four, so the summary silently dropped the 7
+  deferred records: per-type totals still read 187 while the columns summed to 180. Fixed, and
+  `render()` now **throws** on any `type` or `status` it does not know rather than printing a
+  table that does not add up. The next enum addition fails loudly.
+- 📌 **A doc correction fell out of it.** The schema-policy table in `schema.sql`, `SCHEMA.md`
+  and the restructure doc said "add a `CHECK` to an existing column → breaks history", which
+  would have pushed this rule into `checkin.js` — the one place a hand-edited
+  `registry.ndjson` bypasses. The real rule is that a change breaks history **iff some stored
+  row violates it**, and a `CHECK` conditioned on a **new enum value** never can. Verified
+  against all 326 rows before the constraint was added. All three documents now carry the
+  exception.
+- **Tests: 77 assertions** (was 69) — the constraint rejects a missing and a blank note,
+  leaves the other four statuses note-free, round-trips a deferred record through the CLIs,
+  and proves `build.js` refuses to drop an unknown value.
 
 ### 🔴 Found during Phase 2 — for the Phase 3 pass: 15 records cross-reference a stubbed file
 
@@ -306,18 +345,20 @@ verify the count before writing to the real registry.
 Record anything settled while doing the work, so it does not get re-litigated. Migrate these
 into the registry as `type: decision` once it is live.
 
-| Date       | Decision                                                                | Why                                                                                                                                                                                                             |
-| ---------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/`      | Owner — work tracking is not application code                                                                                                                                                                   |
-| 2026-08-08 | Index companion docs, do not flatten them                               | A 787-line plan is a document, not a row                                                                                                                                                                        |
-| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand                 | Migration stops files being the live source; it does not move them                                                                                                                                              |
-| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`             | Owner — they are work-tracking artifacts                                                                                                                                                                        |
-| 2026-08-08 | Work source files **one at a time**, ticking each off here              | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point                                                                                                                |
-| 2026-08-09 | The schema is **not frozen** — change it when that is the best fix      | Owner. Additive changes (new nullable column, new enum value) are free; restrictive ones break history and need a migration                                                                                     |
-| 2026-08-09 | `type` gains `question` (additive)                                      | `BACKLOG.md`'s Q1 is an owner question, and its own heading says these are "not tasks until answered"                                                                                                           |
-| 2026-08-09 | `checkin` **stamps** `work.json` with `checked_in`; it never deletes it | Deleting it destroys the §4.3 conflict recovery, which replays the intent still held in that file. The stamp also lets `checkout` distinguish a finished checkout from unfinished work, so `--force` stays rare |
-| 2026-08-09 | Unknown field names are rejected in `lib.js`, not left to SQLite        | The insert names its columns, so a typo'd field would be dropped in silence — the same silent-zero-rows failure §4.3 measured for jq                                                                            |
-| 2026-08-09 | The work-tracking CI job is independent of the app's jobs               | The tooling has no dependencies and needs Node 24 for `node:sqlite` (app jobs run Node 20); an independent job also reports when the app build is red                                                           |
+| Date       | Decision                                                                  | Why                                                                                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/`        | Owner — work tracking is not application code                                                                                                                                                                   |
+| 2026-08-08 | Index companion docs, do not flatten them                                 | A 787-line plan is a document, not a row                                                                                                                                                                        |
+| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand                   | Migration stops files being the live source; it does not move them                                                                                                                                              |
+| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`               | Owner — they are work-tracking artifacts                                                                                                                                                                        |
+| 2026-08-08 | Work source files **one at a time**, ticking each off here                | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point                                                                                                                |
+| 2026-08-09 | The schema is **not frozen** — change it when that is the best fix        | Owner. Additive changes (new nullable column, new enum value) are free; restrictive ones break history and need a migration                                                                                     |
+| 2026-08-09 | `status` gains **`deferred`**, and a deferred row **must** carry a `note` | Owner. `open` and `abandoned` were both holding parked work, so "what is open?" returned items nobody could start. The note separates parked-with-a-condition from quietly forgotten                            |
+| 2026-08-09 | `R-0140` (B2) and `R-0142` (B5) stay `open`, not `deferred`               | Owner. Both wait on an owner decision rather than a dependency, so they are actionable by whoever reads the open list                                                                                           |
+| 2026-08-09 | `type` gains `question` (additive)                                        | `BACKLOG.md`'s Q1 is an owner question, and its own heading says these are "not tasks until answered"                                                                                                           |
+| 2026-08-09 | `checkin` **stamps** `work.json` with `checked_in`; it never deletes it   | Deleting it destroys the §4.3 conflict recovery, which replays the intent still held in that file. The stamp also lets `checkout` distinguish a finished checkout from unfinished work, so `--force` stays rare |
+| 2026-08-09 | Unknown field names are rejected in `lib.js`, not left to SQLite          | The insert names its columns, so a typo'd field would be dropped in silence — the same silent-zero-rows failure §4.3 measured for jq                                                                            |
+| 2026-08-09 | The work-tracking CI job is independent of the app's jobs                 | The tooling has no dependencies and needs Node 24 for `node:sqlite` (app jobs run Node 20); an independent job also reports when the app build is red                                                           |
 
 ---
 

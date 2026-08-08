@@ -9,22 +9,20 @@
 
 ## Summary
 
-| type | open | in-progress | done | abandoned | total |
-| --- | --- | --- | --- | --- | --- |
-| task | 23 | 5 | 154 | 5 | **187** |
-| bug | 0 | 0 | 49 | 0 | **49** |
-| change | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 0 | 0 | **0** |
-| question | 1 | 0 | 0 | 0 | **1** |
-| **total** | **24** | **5** | **292** | **5** | **326** |
+| type | open | in-progress | deferred | done | abandoned | total |
+| --- | --- | --- | --- | --- | --- | --- |
+| task | 21 | 5 | 7 | 154 | 0 | **187** |
+| bug | 0 | 0 | 0 | 49 | 0 | **49** |
+| change | 0 | 0 | 0 | 89 | 0 | **89** |
+| decision | 0 | 0 | 0 | 0 | 0 | **0** |
+| question | 1 | 0 | 0 | 0 | 0 | **1** |
+| **total** | **22** | **5** | **7** | **292** | **0** | **326** |
 
 ## Open work
 
 | id | type | status | outcome | plan | title | detail |
 | --- | --- | --- | --- | --- | --- | --- |
-| R-0139 | task | open | — | — | The about page's 대표 사진 has no upload control | [detail](./records/R-0139.md) |
 | R-0140 | task | open | — | — | `view-analytics` is enforced by the rules and held by nobody | [detail](./records/R-0140.md) |
-| R-0141 | task | open | — | — | `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken | [detail](./records/R-0141.md) |
 | R-0142 | task | open | — | — | Two live login pages, and the one members get bounced to has no 집사등록 and no tests | [detail](./records/R-0142.md) |
 | R-0144 | question | open | — | — | Should the about page render `sections`? | [detail](./records/R-0144.md) |
 | R-0165 | task | open | — | §4 | Performance on mobile networks — image sizes, above-the-fold, the thumbnail | [detail](./records/R-0165.md) |
@@ -51,6 +49,23 @@
 | R-0253 | task | open | — | §10d | D3 — align the media-section order across composers (proposed, still not | [detail](./records/R-0253.md) |
 | R-0323 | task | open | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
 | R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
+
+## Deferred — parked, with the condition that would restart it
+
+- **R-0139** — The about page's 대표 사진 has no upload control
+  - _Deferred: not a drop-in reuse of the existing uploader — the signed-url route must learn a target path (it hard-codes uploads/) and replacement semantics need deciding first._
+- **R-0141** — `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken
+  - _Deferred: every gate that blocks a merge still lints (next lint, and the pre-commit hook calls next lint --file), so only the ad-hoc per-file invocation is broken._
+- **R-0234** (§10) — Vercel Preview-URL read-only smoke (post-push; needs secrets).
+  - _Deferred — e2e Phase 8 (playwright-ci-plan.md §8), an explicitly-parked extension: needs Preview-URL secrets. Blocks nothing in the completed suite._
+- **R-0235** (§10) — WebKit project (iOS Safari) alongside the Chromium/mobile projects.
+  - _Deferred — e2e Phase 8 (playwright-ci-plan.md §8), an explicitly-parked extension alongside the Chromium/mobile projects. Blocks nothing in the completed suite._
+- **R-0236** (§10) — Visual-regression screenshots (masked).
+  - _Deferred — e2e Phase 8 (playwright-ci-plan.md §8), an explicitly-parked extension. Blocks nothing in the completed suite._
+- **R-0237** (§10) — Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream
+  - _Deferred — e2e Phase 8: belongs to the separate perf workstream (§4 perf item), not this suite._
+- **R-0238** (§10) — YouTube tagging admin flows (external API).
+  - _Deferred — e2e Phase 8 (playwright-ci-plan.md §8), an explicitly-parked extension: external API. Blocks nothing in the completed suite._
 
 ## Hierarchy
 
@@ -198,9 +213,9 @@ _No records have been broken out into children._
 | R-0136 | change | done | — | — | Emphasize capital letters in the About subtitle (MOHOCATS wordplay) | [detail](./records/R-0136.md) |
 | R-0137 | change | done | — | — | Display the 부제 (subtitle) on the About/intro page | [detail](./records/R-0137.md) |
 | R-0138 | change | done | — | — | Remove 문의 (contact) link from the footer | [detail](./records/R-0138.md) |
-| R-0139 | task | open | — | — | The about page's 대표 사진 has no upload control | [detail](./records/R-0139.md) |
+| R-0139 | task | deferred | — | — | The about page's 대표 사진 has no upload control | [detail](./records/R-0139.md) |
 | R-0140 | task | open | — | — | `view-analytics` is enforced by the rules and held by nobody | [detail](./records/R-0140.md) |
-| R-0141 | task | open | — | — | `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken | [detail](./records/R-0141.md) |
+| R-0141 | task | deferred | — | — | `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken | [detail](./records/R-0141.md) |
 | R-0142 | task | open | — | — | Two live login pages, and the one members get bounced to has no 집사등록 and no tests | [detail](./records/R-0142.md) |
 | R-0143 | task | done | — | — | `/api/revalidate` never refreshes 냥이들, so cat edits take up to an hour there | [detail](./records/R-0143.md) |
 | R-0144 | question | open | — | — | Should the about page render `sections`? | [detail](./records/R-0144.md) |
@@ -293,11 +308,11 @@ _No records have been broken out into children._
 | R-0231 | task | done | — | §10 | Mock service implementations — not needed, and deliberately not built. The | [detail](./records/R-0231.md) |
 | R-0232 | task | done | — | §10 | Smoke/UI tests for critical public paths (map loads, gallery opens, login renders) — | [detail](./records/R-0232.md) |
 | R-0233 | task | done | — | §10 | CI wiring beyond tsc/lint — .github/workflows/ci.yml (checks + | [detail](./records/R-0233.md) |
-| R-0234 | task | abandoned | — | §10 | Vercel Preview-URL read-only smoke (post-push; needs secrets). | [detail](./records/R-0234.md) |
-| R-0235 | task | abandoned | — | §10 | WebKit project (iOS Safari) alongside the Chromium/mobile projects. | [detail](./records/R-0235.md) |
-| R-0236 | task | abandoned | — | §10 | Visual-regression screenshots (masked). | [detail](./records/R-0236.md) |
-| R-0237 | task | abandoned | — | §10 | Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream | [detail](./records/R-0237.md) |
-| R-0238 | task | abandoned | — | §10 | YouTube tagging admin flows (external API). | [detail](./records/R-0238.md) |
+| R-0234 | task | deferred | — | §10 | Vercel Preview-URL read-only smoke (post-push; needs secrets). | [detail](./records/R-0234.md) |
+| R-0235 | task | deferred | — | §10 | WebKit project (iOS Safari) alongside the Chromium/mobile projects. | [detail](./records/R-0235.md) |
+| R-0236 | task | deferred | — | §10 | Visual-regression screenshots (masked). | [detail](./records/R-0236.md) |
+| R-0237 | task | deferred | — | §10 | Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream | [detail](./records/R-0237.md) |
+| R-0238 | task | deferred | — | §10 | YouTube tagging admin flows (external API). | [detail](./records/R-0238.md) |
 | R-0239 | task | done | — | §10a | B1 0f9190f — 집사게시판 drops media upload. It is a 급식소 check-in log. Compose | [detail](./records/R-0239.md) |
 | R-0240 | task | done | — | §10a | B2 c2fc78f — config-driven, per-mountain playlist filing. social | [detail](./records/R-0240.md) |
 | R-0241 | task | done | — | §10a | B3 bd7ce23 — 집사톡 one file per section, each with its own 제목/설명. Empty | [detail](./records/R-0241.md) |
