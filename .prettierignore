@@ -10,6 +10,11 @@ node_modules/
 # the first time it ran. Formatting is build.js's job, not prettier's.
 work_tracking/registry.md
 
+# Record prose is lifted VERBATIM from the migrated source files, and source_ref pins each
+# one to the commit it came from. Reflowing it would mean the stored text no longer matches
+# what `git show <pin>` returns, which is the whole audit trail for a 315-row bulk import.
+work_tracking/records/
+
 # Ignore media and data
 public/images/
 *.json

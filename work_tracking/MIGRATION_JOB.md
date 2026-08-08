@@ -17,20 +17,20 @@
 
 ## Status
 
-|                      |                                                                          |
-| -------------------- | ------------------------------------------------------------------------ |
-| **Overall**          | 🔄 **IN PROGRESS** — ✅ **Phase 1 complete (12/12).** The tooling works. |
-| **Current phase**    | Phase 2 — mechanical import (start with `DEBUG_LOG.md`, 49 rows)         |
-| **Blocked on**       | nothing                                                                  |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                 |
-| **Last updated**     | 2026-08-09                                                               |
+|                      |                                                                         |
+| -------------------- | ----------------------------------------------------------------------- |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source file **1 of 7** done. |
+| **Current phase**    | Phase 2 — next is `log/FEATURE_MOD_LOG.md` (89 rows, same importer)     |
+| **Blocked on**       | nothing                                                                 |
+| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                |
+| **Last updated**     | 2026-08-09                                                              |
 
 ### Phase progress
 
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
 | 1     | Tooling — schema, scripts, CI gate           | ✅ 12/12 done  | no           |
-| 2     | Mechanical import (~315 rows)                | ⬜ not started | no           |
+| 2     | Mechanical import (~315 rows)                | 🔄 49/~315     | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
 | 4     | Adjacent fixes — PROJECT_PLAN, HANDOFF size  | ⬜ not started | no           |
@@ -49,7 +49,7 @@ source count before anything is deleted.
 
 | #   | Source file                            | Items | Extracted | Count verified | Origin cut | Done |
 | --- | -------------------------------------- | ----- | --------- | -------------- | ---------- | ---- |
-| 1   | `log/DEBUG_LOG.md`                     | 49    | ⬜ 0/49   | ⬜             | ⬜         | ⬜   |
+| 1   | `log/DEBUG_LOG.md`                     | 49    | ✅ 49/49  | ✅             | ✅         | ✅   |
 | 2   | `log/FEATURE_MOD_LOG.md`               | 89    | ⬜ 0/89   | ⬜             | ⬜         | ⬜   |
 | 3   | `docs/planning/BACKLOG.md`             | 6     | ⬜ 0/6    | ⬜             | ⬜         | ⬜   |
 | 4   | `docs/planning/PROJECT_PLAN.md`        | 171   | ⬜ 0/171  | ⬜             | ⬜         | ⬜   |
@@ -178,10 +178,43 @@ Append newest-last. One entry per working session: what moved, what broke, where
   - **Unknown field names are rejected in JS, not left to SQLite.** The insert names its
     columns, so a typo'd field would have been dropped without complaint — the exact
     silent-zero-rows failure §4.3 measured jq for.
-- **Next:** Phase 2, one source file at a time per the table above. Start with
-  `log/DEBUG_LOG.md` (49 rows, the most regular markup of the five). 📌 Rehearse each import
-  against a scratch store first — `WORK_TRACKING_STORE=/tmp/rehearsal` points every script
-  somewhere harmless — then verify the count before writing to the real registry.
+
+### 2026-08-09 — Phase 2 source file 1 of 7: `log/DEBUG_LOG.md` → `R-0001`…`R-0049`
+
+- ✅ **49 rows imported and the origin cut in the same commit.** `log/DEBUG_LOG.md` is now a
+  stub pointing at the registry; its prose lives in `work_tracking/records/R-0001.md` …
+  `R-0049.md`, carried over **verbatim**.
+- **`scripts/import/dated-log.js`** does the extraction. It covers **both** dated logs —
+  `FEATURE_MOD_LOG.md` uses the same `## YYYY-MM-DD — title` markup — so file 2 needs no new
+  code, just `--type change --expect 89`.
+- 🔑 **`--expect <n>` is mandatory and the script exits non-zero on a mismatch.** The failure
+  this migration fears is an extractor that finds nothing and reports success, so the count
+  gate is not optional.
+- ⚠️ **The `---` rules are NOT the entry separator.** There are 42 of them against 49
+  entries, so an importer keyed on them would have silently dropped seven records. It splits
+  on `##` headings only, and throws on any `## ` line that does not parse rather than
+  skipping it.
+- **Fidelity was verified, not assumed:** all 49 bodies are verbatim substrings of the
+  source, all 49 titles are found in it, and 99.0% of the source's non-whitespace characters
+  are captured. The missing 1,194 characters were accounted for exactly — 434 file-header,
+  637 heading markers and dates (dates live in `ts`), 126 `---` rules. No prose was lost.
+- 📌 **`work_tracking/records/` is in `.prettierignore`.** Reflowing migrated prose would
+  mean the stored text no longer matches what `git show <pin>` returns, which is the audit
+  trail. This came straight from Phase 1's lesson below.
+- **Next:** file 2, `log/FEATURE_MOD_LOG.md` — 89 rows, `--type change`. Then `BACKLOG.md`
+  (6), which needs a different extractor and per-item judgment on `type` and `status`.
+
+📌 **Rehearse every import against a scratch store first** — `WORK_TRACKING_STORE=/tmp/x`
+points every script, including the importer's `records/` output, somewhere harmless — then
+verify the count before writing to the real registry.
+
+### 2026-08-09 — the pre-commit hook broke the CI gate on its first run
+
+- ⚠️ **Prettier reformatted the generated `registry.md`** during the pre-commit hook, so it
+  no longer equalled `build(registry.ndjson)` and `--check` failed immediately after the
+  commit that added it. Fixed by adding it to `.prettierignore`: formatting a generated file
+  is `build.js`'s job. Worth remembering for any future generated artifact here — the gate
+  and the formatter will fight over it, and the gate has to win.
 
 ---
 
