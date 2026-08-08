@@ -10,8 +10,12 @@
 > references across `AGENTS.md`, `HANDOFF.md` and `PROJECT_PLAN.md` were repointed.
 >
 > 🙃 **This file is deliberately the last artifact written in the old style.** Once the registry
-> is live it should be migrated in and deleted, which doubles as the dogfooding test: if the
-> registry cannot track its own migration, it will not track anything else.
+> is live its contents belong in it, which doubles as the dogfooding test: if the registry cannot
+> track its own migration, it will not track anything else.
+>
+> 🔴 **That is now the NEXT piece of work, not the last** (owner, 2026-08-09 — see ▶️ Resume here,
+> item 1). ⚠️ **Stub this file, do not delete it**, the way the other five origins were; the
+> earlier "migrated in and deleted" wording predates that pattern being established.
 
 ---
 
@@ -20,22 +24,23 @@
 |                      |                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------- |
 | **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2 ✅ **7 of 7**. Counts: `registry.md`. |
-| **Current phase**    | Phase 3 — dedup done; `split_from` and the decision-doc lift remain             |
+| **Current phase**    | 🔴 **Phase 3a — migrate this tracker itself.** See ▶️ Resume here, item 1.      |
 | **Blocked on**       | nothing                                                                         |
 | **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                        |
 | **Last updated**     | 2026-08-09                                                                      |
 
 ### Phase progress
 
-| Phase | What                                          | Status         | Needs owner? |
-| ----- | --------------------------------------------- | -------------- | ------------ |
-| 1     | Tooling — schema, scripts, CI gate            | ✅ 12/12 done  | no           |
-| 2     | Mechanical import (**326**)                   | ✅ files 1–4   | no           |
-| 2b    | Index 20 companion documents                  | ✅ 20/20 done  | no           |
-| 2c    | `HANDOFF.md` — open items + decisions (57)    | ✅ done        | ✅ answered  |
-| 3     | Judgment work — dedup ✅ · splits · decisions | 🔄 in progress | 🔴 partly    |
-| 4     | Adjacent fixes — PROJECT_PLAN mega-cells      | ⬜ not started | no           |
-| 5     | Cut over — rewrite CLAUDE.md, un-pause        | ⬜ not started | no           |
+| Phase | What                                                     | Status          | Needs owner? |
+| ----- | -------------------------------------------------------- | --------------- | ------------ |
+| 1     | Tooling — schema, scripts, CI gate                       | ✅ 12/12 done   | no           |
+| 2     | Mechanical import (**326**)                              | ✅ files 1–4    | no           |
+| 2b    | Index 20 companion documents                             | ✅ 20/20 done   | no           |
+| 2c    | `HANDOFF.md` — open items + decisions (57)               | ✅ done         | ✅ answered  |
+| 3a    | 🔴 **Migrate this tracker itself** — the dogfooding test | ⬜ **do first** | no           |
+| 3     | Judgment work — dedup ✅ · splits · decisions            | 🔄 in progress  | 🔴 partly    |
+| 4     | Adjacent fixes — PROJECT_PLAN mega-cells                 | ⬜ not started  | no           |
+| 5     | Cut over — rewrite CLAUDE.md, un-pause                   | ⬜ not started  | no           |
 
 📌 **Phase 4's "shrink `HANDOFF.md`" was done early, with the 2c import** (owner, 2026-08-09) —
 the decisions being lifted were scattered through its narrative, so cutting only the open-items
@@ -44,12 +49,48 @@ section would have left every one of them duplicated in prose. What remains in P
 
 Legend: ⬜ not started · 🔄 in progress · ✅ done · ⛔ blocked
 
-### ▶️ Resume here — the next four pieces of work, in order
+### ▶️ Resume here — the next five pieces of work, in order
 
 Phases 1, 2, 2b and 2c are closed. **Every origin file has been cut**, so nothing is racing a
-half-migrated document any more and these can be done in any session, one at a time.
+half-migrated document any more and these can be done one at a time, in any session.
 
-1. **Finish Phase 3 — the decisions _inside_ the two decision documents.** §2b indexed
+1. 🔴 **FIRST — migrate _this file_ into the registry (Phase 3a). It is the dogfooding test, and
+   it has been sequenced wrong until now.**
+
+   This file's own header has said since 2026-08-08 that it should be migrated in and deleted
+   once the registry is live, _"which doubles as the dogfooding test: if the registry cannot
+   track its own migration, it will not track anything else."_ Its **Decisions made during
+   execution** table carries the same instruction in plainer words — _"Migrate these into the
+   registry as `type: decision` once it is live"_ — and there are **14** of them still sitting in
+   a markdown table. The registry went live on 2026-08-09. This is overdue by the document's own
+   terms.
+
+   🔑 **Why it goes first rather than last (owner, 2026-08-09, correcting an earlier
+   mis-sequencing).** The value of a dogfooding test is in _finding out_, and a test run at the
+   end discovers nothing — everything is already built on the assumption it works, with no budget
+   left to change course if it does not. This repo has recorded that lesson twice: the rules suite
+   that **passed on its first run and proved nothing** until four holes were punched in the rules
+   on purpose, and the **P0 characterization net written before the refactor**, because a net
+   written afterwards pins whatever you happened to build.
+
+   📌 **It is already costing something measurable.** The "403 records" rot fixed on 2026-08-09
+   happened _inside this file_, because it hand-maintains a status table, a phase table and a
+   source-file table that are all projections of state the registry already holds. That is the
+   exact failure this workstream exists to remove, living in the workstream's own tracker.
+
+   ⚠️ **Do not delete this file — stub it**, the way `BACKLOG.md`, `DEBUG_LOG.md` and
+   `FEATURE_MOD_LOG.md` were. The resume point then lives in the registry as ordered open
+   records, which cannot drift from the work the way a hand-written list does. What moves: the
+   14 decisions → `decision` rows; the remaining phase work and the **Definition of done** → open
+   `task` rows; the answered owner question → a `question` row, answered. What stays: the session
+   log as narrative, and the design rationale, which already lives in the two design documents.
+
+   🔑 **What this actually tests, and it is not "can the registry hold things".** Every record
+   imported so far is historical or settled. **Nothing in the store has yet been carried as live,
+   iterative work** — checked out, revised across sessions, re-checked-in. That is the case that
+   matters from Phase 5 onward, and it is the one still unproven.
+
+2. **Finish Phase 3 — the decisions _inside_ the two decision documents.** §2b indexed
    `multi-tenant-architecture-decision-20260718.md` (`R-0339`) and
    `tenancy-url-model-decision-20260728.md` (`R-0346`) as one pointer row each, which is right
    for the documents but leaves the decisions they contain unqueryable. A third turned up while
@@ -57,15 +98,15 @@ half-migrated document any more and these can be done in any session, one at a t
    SDK is the eventual target for all writes" framing. 📌 **Apply the same rule as the hand-off
    pass** — import a decision only where its reasoning is recorded nowhere else — and probe each
    candidate against the store before writing it, the way `handoff.js` documents.
-2. **Finish Phase 3 — `split_from` on the `PROJECT_PLAN` break-outs.** ⚠️ **Do not guess.** The
+3. **Finish Phase 3 — `split_from` on the `PROJECT_PLAN` break-outs.** ⚠️ **Do not guess.** The
    plan's rule stands: link only where the source text says so, and leave it `null` otherwise. A
    wrong parent is harder to spot than a missing one, because the hierarchy view will look
    plausible. Candidates are §10's admin sub-items, the colour plan's phases, and the
    mobile-admin cluster.
-3. **Finish Phase 3 — the 18 cross-references into stubbed files** (15 records; see the 🔴
+4. **Finish Phase 3 — the 18 cross-references into stubbed files** (15 records; see the 🔴
    section below). They still resolve one hop longer than they should. ⚠️ Rewriting them edits
    prose that `source_ref` pins to a commit, so this is a judgment pass, not a sweep.
-4. **Then Phase 4 —`PROJECT_PLAN.md`'s mega-cells.** It is **332 KB** because single table cells
+5. **Then Phase 4 — `PROJECT_PLAN.md`'s mega-cells.** It is **332 KB** because single table cells
    run to thousands of words (the multi-tenant row holds the entire M1–M8 history). Unreadable
    for a human, unparseable for an agent. Phase 4's other half, shrinking `HANDOFF.md`, is
    already done.

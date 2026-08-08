@@ -198,6 +198,16 @@ anything.
       the fuller of the two. They stay in the importer's `COVERED_BY_EXISTING` map naming the
       winning record, so the call is auditable. 📌 **Owner's rule (2026-08-09): import a decision
       only when its reasoning is recorded nowhere else in the store.**
+- [ ] 🔴 **Phase 3a — migrate `MIGRATION_JOB.md` itself into the registry and stub it. Do this
+      FIRST** (owner, 2026-08-09). It is the dogfooding test the design named: _if the registry
+      cannot track its own migration, it will not track anything else._ ⚠️ **This plan originally
+      left it implicit and it drifted to the end, which is the wrong place** — a dogfooding test
+      run last discovers nothing, because everything is already built on the assumption it works.
+      Same lesson as the mutation-tested rules suite and the P0 characterization net.
+      📌 What is unproven is **not** "can the store hold rows" — all 404 are historical or
+      settled — but whether it carries **live, iterative** work across sessions. The 14 decisions
+      in that file's own table (which it has been telling us to migrate since 2026-08-08) and its
+      Definition of done are the natural first load. **Stub the file, do not delete it.**
 - [ ] **Set `split_from` where the history shows a break-out.** Several `PROJECT_PLAN` boxes are
       pieces of a larger workstream rather than independent tasks (§10's admin sub-items, the
       colour plan's phases, the mobile-admin cluster at lines 370–380). ⚠️ Do **not** guess:

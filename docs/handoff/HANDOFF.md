@@ -18,19 +18,38 @@ tracked — not tenancy T0, and not any feature or bug work. **Application work 
 Phase 5 lands.**
 
 📄 **Start at [`work_tracking/MIGRATION_JOB.md`](../../work_tracking/MIGRATION_JOB.md)** — the
-live tracker, with a session log that carries the resume point. The design and the settled
-storage decision are in
+live tracker. Read its **▶️ Resume here** block; it names the next five pieces of work in order
+and why each is where it is. The design and the settled storage decision are in
 [`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md);
 the phase sequence is in
 [`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md).
 
-| Phase | What                                          | State                       |
-| ----- | --------------------------------------------- | --------------------------- |
-| 1     | Tooling — schema, scripts, CI gate            | ✅ done                     |
-| 2     | Import all seven source files                 | ✅ done — all 7             |
-| 3     | Judgment work — dedup, `split_from`           | 🔄 dedup done; splits to go |
-| 4     | Adjacent fixes — `PROJECT_PLAN.md` mega-cells | ⬜ not started              |
-| 5     | Cut over — rewrite `CLAUDE.md`, un-pause      | ⬜ not started              |
+| Phase  | What                                              | State                       |
+| ------ | ------------------------------------------------- | --------------------------- |
+| 1      | Tooling — schema, scripts, CI gate                | ✅ done                     |
+| 2      | Import all seven source files                     | ✅ done — all 7             |
+| **3a** | 🔴 **Migrate the job tracker itself** (see below) | ⬜ **do this first**        |
+| 3      | Judgment work — dedup, `split_from`               | 🔄 dedup done; splits to go |
+| 4      | Adjacent fixes — `PROJECT_PLAN.md` mega-cells     | ⬜ not started              |
+| 5      | Cut over — rewrite `CLAUDE.md`, un-pause          | ⬜ not started              |
+
+### 🔴 Start here, so you do not have to derive it
+
+**Migrate `MIGRATION_JOB.md` itself into the registry, and leave a stub** — Phase 3a. It is the
+dogfooding test the design named on 2026-08-08: _if the registry cannot track its own migration,
+it will not track anything else._ 🔑 **It was mis-sequenced as last and the owner moved it first
+(2026-08-09)**, because a test run at the end discovers nothing — everything is already built on
+the assumption it works, with no budget left if it is not. ⚠️ **Stub the file, do not delete
+it**, the way `BACKLOG.md` and the two logs were.
+
+📌 **What is actually unproven is not "can the store hold rows".** Every record in it is
+historical or settled, so **nothing has yet been carried as live, iterative work** — checked out,
+revised across sessions, re-checked-in. That is the case that matters from Phase 5 on.
+`MIGRATION_JOB.md`'s 14 hand-written decisions and its **Definition of done** are the natural
+first load.
+
+**Before touching anything**, run the two gates — they take seconds and they prove the store is
+sane: `node work_tracking/tests/run.js` and `node work_tracking/scripts/build.js --check`.
 
 ⚠️ **Tenancy T0 is deferred, not cancelled.** It was asked for and then stood down in favour of
 this. **No T0 work exists** — no spec written, no fixture touched. Start clean from
