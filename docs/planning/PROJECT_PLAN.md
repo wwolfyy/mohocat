@@ -138,112 +138,10 @@ those are the forward plan.
 
 **Pass 1 audit — 2026-07-04 (verified in the iframe harness at 390, nav also at 360×560):**
 
-- [x] Mobile audit pass of the public pages at ≈360 / 390 / 414 px: home/map, about,
-      공지/announcements, FAQ, 동참/contact, 입양홍보, photo-album, video-album,
-      login/signup. _(Remaining: butler_talk, butler_stream, mypage — behind sign-in.)_
-- [x] **Navigation on mobile** — frosted grouped nav + hamburger dropdown audited. **Fixed:**
-      mislabeled first section header 동참 → 소개 (+ item 소개 → 산냥이와 집냥이 to mirror
-      desktop); menu pinned in the sticky header with no height cap could clip the logout row
-      on short viewports → added `max-h-[calc(100dvh-4rem)] overflow-y-auto`. (FEATURE_MOD_LOG
-      2026-07-04.) z-index over Leaflet OK; tap targets OK.
-- [x] **Modals on mobile** — shared `ui/Modal` verified: Lightbox (full-screen, sized image,
-      clear close/next, readable caption) + 고양이 선택 cat-picker (centered, margins, 2-col
-      tappable checklist, sticky footer). No fixes needed.
-- [x] **Album grids on mobile** — `grid-cols-2` density + tile captions/chips legible;
-      filter-bar reduction (§3, previously code-only) now mobile-verified. No fixes needed.
-      _(Lightbox/VideoPlayer swipe gestures = deferred feature decision, not a fix.)_
-- [x] **Forms on mobile** — login + contact verified: all inputs computed `16px` (no iOS
-      auto-zoom), `type=tel`/`type=email` correct, single-column full-width, no overflow;
-      SignupForm matches in code. No fixes needed. _(Phone-OTP SMS send/verify still needs a
-      real device+number.)_
-- [x] **Content pages** — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good
-      typography/spacing at 390. No fixes needed.
-- [x] **Map zoom / orientation / scroll — Pass 2 (2026-07-04).** Fixed three owner-reported
-      S22 bugs (DEBUG*LOG 2026-07-04): (1) zoom-out past fill exposed grey → `minZoom` now
-      clamped to the fill zoom; (2) landscape rotation crammed the portrait map sideways →
-      *(originally: image chosen by orientation via `useIsPortrait`; **superseded** by Pass 3 —
-      the map is now portrait-only on phones, so the landscape-map path is gone entirely)\_;
-      (3) map ate page scroll → on mobile, one-finger swipe scrolls the page (drag disabled at
-      fill) and map-drag engages only when zoomed in. ✅ S22-verified by owner 2026-07-10.
-- [x] **Map pinch-bounce pin loss — S22 (2026-07-05, DEBUG_LOG).** ✅ S22-verified by owner.
-      `bounceAtZoomLimits={false}` hard-stops a pinch at fill instead of overshooting +
-      bouncing back; the transient sub-fill excursion (which merged the thumbnail pins into
-      clusters, with an intermittently-failing re-split on the S22) is gone.
-- [x] **Portrait-only mobile map + one-line landscape nav (2026-07-05, FEATURE_MOD_LOG).**
-      A phone in landscape gets a scoped 해요체 rotate-notice (지도는 세로 모드에서만…) instead of
-      a sideways map; the nav breakpoint moved `md`→`lg` so the header stays one line in
-      landscape. This **removed** the map's orientation machinery (`useIsPortrait`, the
-      `portrait` prop, image/coord swap, and the `key={portrait}` remount) — device and
-      orientation now coincide behind a single `isMobile` flag. Harness-verified; real-device
-      rotation _feel_ still device-owed.
-- [x] **Static clustering — durable fix for the recurring pin loss (2026-07-05, DEBUG_LOG).**
-      Replaced `leaflet.markercluster` on mobile with our own **zoom-independent** proximity
-      clustering (`utils/mapClustering.ts`) + tap-to-spiderfy. Root cause of the recurring
-      S22-only breakage (pins vanishing / drawn outside the map / stuck pan): markercluster's
-      integer cluster grid fought our fractional/mutated `CRS.Simple` min-zoom clamp, and which
-      device tripped it depended on where `fillZoom` landed vs the grid — so every prior shim
-      (floor-vs-exact, temp-lower-minZoom, `bounceAtZoomLimits`) kept reopening it. Static grouping
-      is computed once → no grid → device-independent by construction. Harness-verified (render,
-      spiderfy, collapse-on-tap/zoom, member→gallery) + 8 unit tests; **real-S22 pinch owed.**
-  - [x] **Cleanup: `npm uninstall leaflet.markercluster`** (2026-07-05) — dead dependency
-        removed (`leaflet.markercluster` + `@types/leaflet.markercluster`); only explanatory
-        comments remain in source. Gates green (tsc, smoke 25/25, full 39/39).
-- [x] **Per-Point title-label side override (`labelSide`) — 2026-07-05, FEATURE_MOD_LOG.**
-      Added `Point.labelSide?: { mobile?, desktop?: 'above'|'below' }` (Firestore-authored, ISR-
-      fresh — the `points` collection has no CMS UI). An explicit value for the active layout
-      overrides the automatic bottom-edge flip so an operator can move a label that overlaps an
-      adjacent pin; an unset side keeps today's auto behavior. Decision logic extracted to a pure,
-      unit-tested helper (`utils/mapLabels.ts`, `resolveLabelAbove`, 6 tests). Harness-verified
-      no-regression (desktop map renders, no console errors); **authoring an actual override is
-      device-owed** (collision layout is width/DPI-dependent — author against a real device).
-      _(Lands together with the 급식소 admin CMS below.)_
-- [x] **급식소 관리 (feeding-station points) admin CMS — 2026-07-05, FEATURE_MOD_LOG,
-      [plan](./completed/feeding-station-points-admin-cms-plan.md).** Built the `/admin/points` editor
-      (create/edit/delete pins incl. the `labelSide` override) behind `manage-canteen`; Leaflet-free
-      visual map picker for x/y; delete blocked while cats reference the point (lists them). Reuses
-      `PointService` CRUD + `/api/revalidate`. Gates green; browser-verified (list, picker, delete-
-      guard). Unblocks authoring the `labelSide` override above (lands with it). **⚠️ Owner-owed:**
-      `firebase deploy --only firestore:rules` (points write opened to `manage-canteen`), and an
-      actual save is only testable post-deploy.
-- [x] **Mobile lightbox pinch-to-zoom (2026-07-08, off-plan).** `react-zoom-pan-pinch` (v4.0.3)
-      wraps the lightbox image on mobile only (`useIsMobile`): pinch 1–4×, drag-to-pan while
-      zoomed, double-tap toggle, reset on image navigation. `touch-action` flips between `pan-y`
-      (un-zoomed) and `none` (zoomed) to avoid scroll/zoom conflict. Desktop unchanged. rAF
-      throttling in backgrounded tabs means zoom animation must be verified on a real device.
-- [x] **Back button / swipe-back closes modals (2026-07-08, off-plan).** `useModalLayer` now
-      pushes a `history.pushState({ mohocat_modal: id })` entry on open. A module-level `popstate`
-      listener closes the topmost overlay on back-gesture. Normal close pops the entry via
-      `history.back()` with a `suppressNextPopState` guard to avoid cascade. All three overlay
-      types (Modal, Lightbox, VideoPlayer) covered.
-- [x] **Page-wide UI scale reduction (2026-07-08–09, off-plan).** All public page headers
-      (`text-3xl font-bold` → `text-xl font-semibold`, hairline divider, muted description);
-      about page title `text-4xl` → `text-xl`, body `text-lg` → `text-base`; adoption section
-      header + post card titles + search input scaled down; contact form labels/inputs/button
-      tightened. Browser-verified across all pages.
-- [x] **Map mobile quirks — DEVICE-OWED (remaining).** Clustering aggressiveness
-      (`maxClusterRadius`) tuning, edge-clipping, spiderfy ergonomics. ✅ S22-verified by owner 2026-07-10.
-- [x] **Map re-fit on resize — mobile.** The fit-on-resize fix (2026-07-02,
-      `MapViewController`) re-fits + re-clamps min-zoom on resize. _(The old
-      landscape↔portrait `key={portrait}` remount is gone — the map is portrait-only on phones;
-      landscape shows the rotate-notice.)_ ✅ Device-verified by owner 2026-07-11.
-- [x] Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch
-      (replace hover-reveal with always-visible or tap states). ✅ S22-verified by owner 2026-07-10.
-- [x] **Mobile nav + auth-flow fixes (2026-07-10, off-plan — DEBUG_LOG ×2, FEATURE_MOD_LOG).**
-      (1) **Hamburger menu** now resets on `pathname`/`isAuthenticated` change — it no longer
-      lingers over the login page or after sign-in (`Navigation.tsx`). (2) **Mobile logout** now
-      works: the menu's `pointerdown` outside-click handler was closing the menu — and unmounting
-      the portaled `LogoutModal` (its child) — before the confirm button's `click` fired; it now
-      ignores taps inside `[role="dialog"]`. (3) **Mypage inline edit rows** (닉네임/이메일/전화)
-      restacked to a full-width input + right-aligned button row (no more squished 취소). (4)
-      **Login/logout menu pills** made full-width + centered (`mobile` prop) — no dead space on
-      the right. (5) **Landscape rotate-notice GIF** filename fix (`chubby-cat` → `chubby_cat`).
-      Login pill + hamburger-close browser-verified at 390px; logged-in legs (logout flow, pill,
-      mypage rows) share verified mechanisms but are credential/device-owed.
-- [ ] Performance on mobile networks — image sizes, above-the-fold, the thumbnail
-      preloader's eagerness on cellular. _(Not started.)_
-- [~] Sign-in-gated surfaces at mobile widths: butler*talk, butler_stream, mypage. *(mypage +
-  the login/logout menu affordances fixed 2026-07-10; butler*talk/butler_stream still owed
-  a full mobile audit — carry over.)*
+> 📋 **22 items — 20/22 done — now in the work registry**
+> as `R-0145`…`R-0166`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 _(Out of scope here: admin mobile — that's §6.)_
 
@@ -258,100 +156,10 @@ _(Out of scope here: admin mobile — that's §6.)_
 
 **Candidate scope — _confirm with user_:**
 
-- [x] **✅ Spreadsheet-grid cat editor (shipped 2026-06-29 — see
-      [handoff-14](../handoff/archive/2026-06-29-handoff-14.md); built per
-      [handoff-13](../handoff/archive/2026-06-29-handoff-13.md)).** Cell-editable `react-datasheet-grid` (MIT)
-      grid for `cats` as a second tab (스프레드시트) beside the card editor in `/admin/cats` (both
-      kept). Typed columns; batch **전체 저장** via `catService.batchUpdateCats` (one Firestore
-      `writeBatch` of per-field `update()`s → partial, non-destructive — `adoptable` etc. never
-      wiped); `triggerCatRevalidate` on save; `isNeutered`/`date_of_birth` **mandatory** (validated on
-      dirty-clear) with inline red-cell highlight **+** summary banner + block-save.
-      **Filter / sort / select / bulk-edit** added: filter+sort logic extracted to the shared pure
-      util `src/utils/cat-filters.ts` (used by **both** card and grid views); sortable headers;
-      checkbox selection (+ select-all); bulk-edit toolbar for the 8 categorical + year fields.
-      Browser-verified incl. a real persisted save. **Cleanup-on-success DONE:** the two CMS "Migrate"
-      buttons, `scripts/maintenance/data_updater.js` (+ `_data_updater.py`) and
-      `src/utils/cat-migration-helper.ts` removed; `cat-data-bulk-update-runbook.md` deleted and
-      `pre-deployment-checklist.md` §4 reframed (Sheets bulk path retired). **Carry-over:** the grid's
-      client-SDK writes join the Admin-SDK-writer migration list (§7 / handoff-11) — target is
-      API-route writes + restore `write:if false`. _Stale importer/runbook doc refs in
-      `scripts/README.md` + `docs/codebase/deployment-and-build.md` **swept 2026-06-29**
-      (commit `089bfee`); handoff-13 left intact as a historical record._
-- [~] **Visual/UX consistency — Core done 2026-06-30; folds into the new cross-cutting
-  design system (handoff-16 §4).** **Core pass shipped** ([handoff-16](../handoff/archive/2026-06-30-handoff-16.md)
-  §3): built `src/components/admin/ui/` (`Button`/`Card`/`Alert`) and converged the 5
-  inline-style files (`admin/layout.tsx`, `AdminAuth.tsx`, `admin/page.tsx`,
-  `app-management/page.tsx`, `YouTubeAuthPanelNew.tsx`) → lean Tailwind + primitives; folded
-  in Korean (해요체); stripped `data-oid`; fixed the broken cat-emoji. tsc + smoke green;
-  browser-verified in a live admin session.
-  **⚠️ Direction changed (owner, 2026-06-30):** the prior "keep admin deliberately
-  utilitarian, no brand re-skin" target is **RETIRED.** The job is now **two parts** —
-  (1) a reusable **shared primitive set** + consistent styling mechanism across **public +
-  admin**, and (2) **actual branding of admin** (re-skin to the public brand). So the Core
-  primitives are a **throwaway template**: to be merged into ONE shared, token-driven set and
-  re-branded (drop the gray). Restarts as a unified **design + Korean** workstream in a new
-  session (see [handoff-16](../handoff/archive/2026-06-30-handoff-16.md) §4). Still the foundation to
-  land **before** §6 admin-mobile.
-- [x] **✅ `AdminAuth` hardening (UX side) — DONE (2026-06-29 → 2026-06-30).**
-  - [x] **Emergency-bypass buttons removed (commit `0cd9c2c`).** The "🚨 Emergency Bypass" /
-        "Emergency Bypass (Dev Mode)" buttons were **removed** (not just gated to dev): they
-        never granted access — only cleared the error/loading flags before falling back
-        through the real `!user || !isAdmin` gate — so they were dead + misleading. Dropped
-        three unused `useAuth()` bindings (`isAuthenticated`/`providerData`/`linkedProviders`).
-  - [x] **10s init-timeout removed (commit `dc1d748`).** Diagnosed as a vestigial guard for
-        the long-fixed ~48s `indexedDBLocalPersistence` hang (now `browserLocalPersistence`);
-        it could only mis-fire mid-login via the effect's `[loading]` dependency. The
-        AdminAuth-onto-useAuth consolidation (below) deleted the whole self-owned listener +
-        timeout, so this is gone — no re-scope needed.
-- [x] **Dead/duplicate cleanup (routes + example)** — ✅ removed in Phase 3A: the 8
-      unreferenced `get-all-user-permissions-*`/`get-all-users` routes and
-      `MIGRATION_EXAMPLE.ts`. **`role-assignment-service.ts` is NOT dead** — it's used by
-      `RoleManagement.tsx` + `PermissionDebug.tsx` (kept). **`/admin/create-user` resolved
-      (commit `dc1d748`):** the page **does not exist** (browser-confirmed 404), so the
-      `admin/layout.tsx` auth-bypass for it and the two `AdminAuth` links to it were dead —
-      all removed (no more unguarded admin route). _Still open:_ **one** disabled-link
-      placeholder — `겨울집 관리` (an intentional stub; leave until that feature lands).
-      ⚠️ **`급식소 관리` is no longer a stub** — it shipped as `/admin/points` with the 급식소 CMS
-      (PR #7), is linked live from the admin nav, and `PointService.create/update/deletePoint`
-      all have callers. _(Corrected 2026-08-01, owner-flagged; the §7 `points` rule note below
-      was stale for the same reason.)_
-- [x] **✅ react-admin decision — REMOVED (2026-06-29).** Investigation showed the
-      whole react-admin subsystem was dead: `src/lib/admin/dataProvider.ts` +
-      `sampleData.ts` were imported by nothing, and the four react-admin components
-      (`ImageList`/`ImageEdit`/`VideoList`/`VideoEdit`) were rendered by nothing (no
-      `<Admin>`/`<Resource>` host context exists). Deleted all six files and the 8 deps
-      that existed solely for them — `react-admin`, `ra-data-fakerest`,
-      `ra-data-firebase-client`, `ra-ui-materialui`, `@mui/material`,
-      `@mui/icons-material`, `@emotion/react`, `@emotion/styled` (npm pruned 85 packages).
-      `tsc` clean + smoke 25/25. The real tag-images/tag-videos admin UIs are hand-built
-      and were never react-admin.
-- [~] **Unified branded design + admin Korean — IN PROGRESS (2026-06-30, handoffs 17–18).**
-  Picks up the retired "utilitarian, no re-skin" target as ONE token-driven primitive set
-  across public + admin, admin re-skinned to the brand, admin Korean (해요체) folded into the
-  same pass via a centralized **`src/constants/adminStrings.ts`** (mirrors the public
-  `strings.ts`). **Done:** Phase 1 shared primitives + admin-silo reconcile (`8e065fb`);
-  Phase 3 chunk 1 nav/CMS-core (`c8aba2d`), chunk 2 members/roles (`17a2509`); **chunk 3
-  media-tagging** (`tag-images`, `tag-videos`, `cat-grid`) + **chunk 4 content**
-  (`ContactManagement`, `AboutContentEditor`) — _this session (handoff-18)_: ~600 strings
-  centralized, `bg-blue/purple → <Button>`/brand, brand focus rings, `accent-brand-500`
-  checkboxes; YouTube-red vendor color kept. tsc + smoke 25/25 green after each.
-  **Remaining:** AdminAuth login/access-denied live-verify; ~~the deferred public
-  hand-rolled-button sweep~~ **✅ DONE 2026-07-03** (public filled CTAs → shared `<Button>`
-  primitive; `text-blue-*` links/nav-hovers/tab-indicator/spinners → brand; input focus
-  rings aligned to the canonical `focus:ring-2 focus:ring-brand-300`; Kakao vendor +
-  semantic success/warning states preserved; admin/dead/test components out of scope — see
-  `FEATURE_MOD_LOG` 2026-07-03); then §6 admin-mobile. **Dead-code candidates — DELETED
-  (2026-06-30):** the 4 grep-verified-unreachable items from handoff-18 §5 removed (767
-  lines): `RoleManagementDirect.tsx`, `PermissionManager.tsx`, and the unused
-  `batchUpdateVideos`/`batchUpdatePlaylists` fns in `tag-videos/page.tsx` (which leaves that
-  page free of user-facing English). tsc clean, smoke 25/25.
-- [x] **✅ Two auth listeners — CONSOLIDATED (commit `dc1d748`).** `AdminAuth` no longer runs
-      its own `onAuthStateChanged` subscription; it now derives `user` + `loading` from the
-      single app-wide `AuthProvider` via `useAuth()`, keeping only its own admin-privilege
-      check (made cancellation-safe). Render split into mutually-exclusive states
-      (loading / login / access-denied / shell). Browser-verified: `/admin` login screen
-      renders, no console errors; `tsc` + smoke 25/25 + `next build` green. (This is also
-      what eliminated the 10s init-timeout above.)
+> 📋 **9 items — 7/9 done — now in the work registry**
+> as `R-0167`…`R-0175`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
@@ -367,18 +175,10 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm with user_:**
 
-- [ ] Decide the **mobile-supported admin task set** (e.g. announcements,
-      light moderation, member approval) vs desktop-only heavy tasks (bulk
-      photo/video tagging, role-matrix config).
-- [ ] **Admin nav on mobile** — the top nav (대쉬보드/앱관리/고양이/사진/동영상/
-      게시물/사용자) needs a responsive pattern (drawer/hamburger).
-- [ ] **Tables → cards** — list views (posts, members, images, videos) reflow to
-      stacked cards or horizontally-scrollable tables on narrow screens.
-- [ ] **Batch-tagging UIs** (`tag-images` / `tag-videos`) — the grid + multi-select + `CatSelectorModal` flow on touch; or explicitly mark desktop-only.
-- [ ] **Forms** — cat add/edit, announcement create, about-content editor: input
-      sizing and modal fit on mobile.
-- [ ] Inline-style layout makes responsive work harder — coordinate with §5's
-      convention decision so this is built on the cleaned-up base, not before it.
+> 📋 **6 items — 0/6 done — now in the work registry**
+> as `R-0176`…`R-0181`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ---
 
@@ -389,86 +189,12 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 **Candidate scope — _confirm & prioritize_:**
 
-- [x] **✅ EXECUTED (2026-07-19) — complexity retirement (duplication + local-state sprawl).**
-      Assessment + phase log:
-      [`complexity-retirement-assessment-20260716.md`](./completed/complexity-retirement-assessment-20260716.md)
-      (§8 holds per-phase execution notes). Origin: a "Next.js/React → HTMX?" feasibility
-      question, answered **no** — the complexity was _in_ the client components, so it was
-      retired **in place** over phases P0–P6 (commits `6454d80`→ onward), each gated on the
-      P0 characterization e2e net + tsc/smoke/unit + browser verification.
-  - **Target B — content forms**: four forms 2,135→859 lines on shared
-    `src/components/forms/` primitives (`MediaUploadField`, injectable upload strategies,
-    `useSimpleContentForm`/`useRichContentForm`); `react-hook-form` dropped (was a declared
-    dep used in zero files); 집사톡's latently-broken signed-URL image upload fixed en route.
-  - **Target A — admin media editors**: recomposed on the `src/components/admin/media/`
-    **toolkit** (generic `MediaTaggingEditor<T>` was rejected at the owner deep-dive — write
-    paths aren't twins): `tag-images` 1,860→~820, `tag-videos` 2,570→~1,260 + a page-owned
-    `useYouTubeVideoMutations` (YouTube orchestration verbatim). Both editors now use the
-    shared `CatSelectorModal` (commit-on-done — the one accepted intentional behavior change).
-  - **P6 follow-up**: all `alert()/confirm()` (editors + the four public forms) converted to
-    the shared `ui/Modal` system via the new `useDialog` primitive.
-  - ✅ **P5.4 — the scripted manual pass over the YouTube surfaces (sync, playlists, real creds)
-    is DONE and verified working (owner, 2026-08-07).** This was the standing gate on the
-    `dev → main` promotion; with it clear, **[PR #9](https://github.com/wwolfyy/mohocats/pull/9)
-    is open** and the promotion is unblocked.
-    🐛 **It earned its keep twice over.** The first attempt (2026-07-26, on Preview) became a bug
-    hunt: **six pre-existing defects** — credential source, OAuth scopes, channel-ID env var,
-    `자동 날짜 인식` writing Firestore, batch playlist save ignoring the selection, and the sync
-    resetting 게시일. All were fixed and pushed, which forced the pass to **restart from the
-    top**, since the credential source, the scopes and three write paths had all changed under
-    it. That restart is the run that has now passed.
-    🔑 **Not one of the six was reachable by an automated test** — the emulator has no YouTube
-    credentials. ⚠️ **So keep P5.4 as a manual gate on every future promotion**; the case for it
-    is stronger after this, not weaker.
-- [x] ✅ **YouTube credential source unified — the admin "re-authorize" button now fixes
-      everything (found + FIXED 2026-07-26).** `/api/admin/youtube-auth/callback` writes the fresh
-      refresh token to **Firestore** (`admin_config/youtube_auth`), but every route read it from
-      **env only** via `getYouTubeOAuthConfig()` — so a stale `YOUTUBE_REFRESH_TOKEN` shadowed it
-      and `update-youtube-video` / `manage-playlists` / `youtube-playlists` failed `invalid_grant`
-      while the status panel looked healthy (it checks both sources, and showed Firestore's
-      timestamp against the env token). `upload-youtube`'s apparent Firestore fallback was **dead
-      code** — it needed the client id/secret from the very config whose absence triggered it.
-      **Fixed:** new `src/lib/youtube/credentials.ts` splits **client identity** (env) from **the
-      refresh token** (Firestore **only** — `YOUTUBE_REFRESH_TOKEN` removed outright rather than
-      kept as a fallback, which would preserve the same failure whenever the Firestore doc goes
-      missing; obtaining a token needs client identity only, so 「토큰 갱신」 is the recovery); all six
-      OAuth consumers migrated and `getYouTubeOAuthConfig()` deleted. Also unblocks a **bootstrap
-      deadlock**: `auth-url` used to need a refresh token in order to obtain one. ⚠️ Keep the var
-      in Vercel **Production** until this promotes (`main` is pre-fix and env-only). `refresh-video-metadata` was never affected
-      (it uses the public API key, not OAuth — the original write-up listed it in error).
-      Pre-existing, **not** a regression from the same-day route auth-gating; unreachable by
-      automated tests (no YouTube credentials in the emulator), so the manual pass stays the
-      end-to-end proof. Net: `tests/unit/youtubeCredentials.test.ts` (9). Detail:
-      `log/DEBUG_LOG.md` 2026-07-26.
-- [x] ✅ **`manage-playlists` POST read a global env var for the channel ID (found + FIXED
-      2026-07-26).** `batch_update_playlists` used `process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID`,
-      set nowhere (not Vercel, not `.env.example`) → 500 "Channel ID not configured", so
-      playlist-membership saves failed. The GET in the same file already used
-      `getYouTubeChannelId(authz.mountainId)`. Missed when M1 moved channel config out of env
-      vars; both a live bug and a multi-tenant leak. **Fixed** with the tenant-aware getter (no
-      env var added).
-- [x] ✅ **Admin OAuth flow requested too few scopes (found + FIXED 2026-07-26, `05fdbd9`).**
-      `auth-url` asked only for `youtube.upload` + `youtube.readonly`, which cover
-      `videos.insert` and reads but **not** `videos.update` or `playlistItems.insert/delete` —
-      so metadata edits failed with Google's _"Insufficient Permission"_ (distinct from our
-      gate's "Insufficient permissions"). The retired CLI token script requested all four
-      scopes, so the token actually in use had them: **the admin panel had never minted a token
-      capable of editing metadata**, and only fixing the credential source put its token into
-      play. Fixed by requesting the same four scopes; **requires a re-authorization**, since
-      scopes are granted at consent time. 📌 Known gap left open: the token status panel
-      validates by refreshing, which succeeds regardless of scope, so it reports healthy on a
-      token that cannot write.
-- [x] ✅ **Three `/admin/tag-videos` write-path bugs (found + FIXED 2026-07-26 — `b5f08b7`,
-      `80ba04a`, `dc8391f`).** All three found by reading the page while writing its button
-      spec; none reported, none reachable by the existing suites. (a) **`자동 날짜 인식` wrote
-      Firestore**, so `refresh-video-metadata` — which rebuilds Firestore from YouTube and nulls
-      `createdTime` when YouTube has none — erased every parsed date on the next sync **or any
-      other save on that video**; it now writes YouTube first (and sends UTC midnight of the
-      calendar date, since the parser returns local-time Dates and `.toISOString()` shifted the
-      day back in KST). (b) **Batch playlist save ignored the batch selection**, acting on the
-      video open in the edit form or silently nothing; now applies to the whole selection with
-      **set semantics** + confirmation. (c) **Every sync reset 게시일** (`uploadDate: new
-Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
+> 📋 **22 items — 17/22 done — now in the work registry**
+> as `R-0182`…`R-0203`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
+> Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
+
       YouTube's `publishedAt`, so mis-stamped records **self-heal, no migration**. Alongside (c):
       `uploadedBy` no longer clobbered to `'admin'`, and the refresh now writes `updated` (the
       field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh` —
@@ -478,253 +204,14 @@ Date()`), reordering the **public** 영상첩 as well as the admin grid; now sou
       **147/13/0**. ⏳ The 게시일 repair, 메타데이터 수정, `자동 날짜 인식` and the batch playlist
       save are **stubbed in tests and unverified against real YouTube** — Preview checks listed
       in the hand-off's fresh-session box.
-- [x] 🔑 **Principle adopted (owner, 2026-07-26): YouTube is the source of truth for video
-      data.** No UI path may write video data to Firestore — anything written there is undone by
-      the next sync, so such a write is broken by construction rather than merely risky.
-      `/admin/tag-videos` now performs **zero** direct Firestore writes (its `videoService` use
-      is reads-only) and `videoService.updateVideo` has no callers left. Operator-facing rule in
-      `admin-manual` §6 ("never edit video data in Firebase — it will not survive"). ⚠️ The same
-      null-overwrite applies to `tags`, `location`, `title`, `description`; the rule — not a code
-      guard — is what prevents the next occurrence. _(Photos are the opposite: `cat_images` has
-      no upstream, so Firestore **is** their source of truth.)_
-- [x] ✅ **Batch edits reached YouTube but never Firestore (owner-reported + FIXED
-      2026-07-26).** Batch tag / 촬영일 / playlist saves needed a manual 📺 YouTube와 동기화 to
-      show up on the site, while individual saves synced themselves.
-      `/api/refresh-video-metadata` takes **YouTube video ids** (Data API lookup, then
-      `where('youtubeId','==',id)`), but the batch loops recorded the **Firestore doc id** from
-      the selection and passed those — a 404 the caller swallowed, so the dialog still said
-      완료. Fixed: results keyed by `youtubeVideoId`; the refresh extracted into
-      `syncToFirestore()`, which returns success and logs failures; the dialog now reports a
-      failed sync instead of claiming success. ⚠️ **The e2e fixtures had made this
-      unreproducible** — no seeded video had a `youtubeId`, so `youtubeId || id` collapsed to
-      the doc id; both fixtures now carry a distinct one, matching production. **Second time
-      this session a fixture concealed a production-only failure mode** (the first: emulator
-      videos have no YouTube publish dates). Worth a broader fixture-realism audit.
-- [ ] 📄 **NEW workstream — per-page admin button spec sheets.** First one shipped:
-      [`docs/manuals/admin-manual/tag-videos-spec.md`](../manuals/admin-manual/tag-videos-spec.md),
-      organised by **what each button writes to** (🔴 YouTube→Firestore = public and
-      irreversible vs ⚪ local) — a distinction the UI doesn't surface, and the frame that
-      exposed all three bugs above. Owner wants the same for the remaining CMS pages
-      (`tag-images`, `cats`, `points`, `posts`, `members`, `app-management`). ⚠️ The first sheet
-      is **source-derived, not browser-verified** — do a `/chrome` pass over the live page before
-      cloning the format.
-- [x] **✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated.**
-      `GET`/`POST /api/admin/role-permissions` read/rewrite `role_permissions/role-config` via the
-      **Admin SDK** (bypasses Firestore rules). Once `firestore.rules` `hasPermission` started
-      resolving against that doc, the previously-ungated **POST** became a live escalation vector
-      — an unauthenticated caller could add `manage-*` to `viewer` and instantly grant every
-      viewer write access across `users` / `cats` / `posts_*`. **Fixed:** new server-side gate
-      `src/lib/auth/requireApiPermission.ts` (verify Firebase ID token → resolve role via
-      `users/{uid}` → require the permission in `role-config`, mirroring the rule but server-side);
-      both route methods now require `manage-users`, and `RolePermissionConfig.tsx` attaches the
-      caller's ID token. **Verified:** unauthenticated/invalid → 401; admin → matrix loads + saves.
-- [x] **✅ SECURITY (FIXED 2026-06-28): gated the remaining `/api/admin/*` routes.**
-      Applied `requireApiPermission` across the admin API surface (client callers updated to send
-      the ID token via the new `src/lib/auth/authHeader.ts` helper). **All browser- + curl-verified
-      (unauth → 401; admin paths still work).**
-  - `get-all-user-permissions-client` GET → **manage-users** (returns every user's email + role).
-  - `resource-permissions` **POST** → **manage-users** (writes the page→permission map). _GET left
-    open by design_ — the **public** Navigation (`useResourceAccess`) needs the map for anonymous
-    visitors; it's non-sensitive config.
-  - `youtube-auth/status` GET → **manage-video**. ⚠️ This one was **leaking the YouTube OAuth
-    refresh token** (a secret) to any unauthenticated caller — now 401.
-  - `youtube-auth/auth-url` GET → **manage-video** (initiates the OAuth flow).
-  - `cats` POST → **manage-cat**; `posts-collections` POST → **manage-posts** (mutation endpoints;
-    currently stubs, gated ahead of implementation). Their GETs return public/stub data — left open.
-  - `youtube-auth/callback` — **not gated** (Google OAuth redirect; no Authorization header to
-    verify). Acts only on a valid Google `code`.
-  - **Token-leak follow-up DONE (2026-06-28):** `youtube-auth/status` no longer returns the raw
-    refresh token in its response body — redacted server-side to source/validity/expiry; verified
-    the authenticated response omits it. **Remaining (not a blocker):** `youtube-auth/callback`
-    has no OAuth `state`/PKCE CSRF protection.
-- [x] **✅ Admin CMS writes un-blocked (DONE 2026-06-29; deployed + browser-verified).**
-      The deployed `firestore.rules` had locked `cats`, `about_content`, `cat_images`,
-      `cat_videos`, `posts_announcements` (and `points`) to `allow write: if false`, but the
-      admin CMS writes through the **client SDK** → permission-denied (UI: "Failed to update
-      cat with id: …"). The lock went live with the 동참 rules deploy (`f84f3c1`); **not** §7a.
-      **Fix:** applied the proven `hasPermission(uid, 'manage-X')` pattern (mirroring the
-      `cats` / `posts_*` rules) to each collection that has a live **client-SDK** write path:
-      `about_content`→`manage-app`, `cat_images`→`manage-photo`, `cat_videos`→`manage-video`,
-      `posts_announcements`→`manage-posts`. **`points` was left `write: if false`** at the time —
-      it had no live admin writer (both the 급식소 and 겨울집 pages were disabled placeholders).
-      ⚠️ **No longer true:** the 급식소 CMS (`/admin/points`, PR #7) writes `points` through the
-      **client SDK**, and the rule moved with it — `firestore.rules` now gates `points` on
-      `canWrite('manage-canteen')`, mirroring `cats`. 겨울집 remains an unbuilt stub.
-      _(Corrected 2026-08-01, owner-flagged.)_ Deployed by owner; matrix
-      confirmed admin grants all four permissions.
-      **Browser-verified 2026-06-29** (each write persisted to live Firestore, then reverted):
-      cats (alt-name edit), `posts_announcements` (modal toggle), `about_content` (subtitle
-      edit), `cat_images` (description edit, confirmed via Admin SDK), `cat_videos` (client-SDK
-      "Automatic Date Parsing" write, confirmed via Admin SDK). Closes handoff-10.
-      _Note: tag-videos' per-video metadata edit + batch update go through **Admin SDK** API
-      routes (`/api/update-youtube-video` → `/api/refresh-video-metadata`) and bypass rules;
-      the only client-SDK `cat_videos` writer is the date-parser path (and `syncWithYouTube`)._
-      _Secondary, latent (revisit next):_ `db` has no `ignoreUndefinedProperties`, so writes
-      with unset `isNeutered`/`date_of_birth` may still throw on `undefined`; the two CMS
-      "Migrate …" buttons that exercise these are likely no longer needed (owner to confirm).
-  - _**Admin-SDK migration — analyzed & re-scoped (2026-06-30).** Full Client-vs-Admin SDK
-    inventory + analysis in
-    [`firebase-sdk-usage-inventory.md`](./completed/firebase-sdk-usage-inventory.md). \*\*The old blanket
-    target — "Admin SDK is the eventual writer for \_all_ writes" — is retired.** Bundle size is
-    **not** a reason to migrate (auth + community writes keep Firebase in the browser regardless),
-    and latency/offline is **not\*\* a reason to stay (admin CMS, handful of users). The decision
-    turns on security/validation/auditability vs. migration cost, which weighs differently per
-    collection — so the Client-SDK writes split three ways:\_
-    - _**Tier 1 — `users` + `permission_logs`: ✅ DONE (2026-07-18).** Role assignment now
-      goes through `POST /api/admin/assign-role` (`requireApiPermission('manage-users')`):
-      role write + `permission_logs` audit entry in **one Admin-SDK transaction** — the
-      audit trail (previously denied & swallowed) is restored. Client-SDK role-write
-      methods removed from `role-assignment-service` + `permission-service`; the `users`
-      admin write clause removed from the rules. **Scope deviation from the original
-      plan:** the login-time self-provision writes (`ensureUserExists` /
-      `updateUserProviders`) **stay client-SDK** — the owner create/update rules clauses
-      (added 2026-07-11, after this analysis) already fixed the self-provision gap
-      escalation-safely, so "relock to `write:if false`" became "remove the admin clause;
-      keep the owner clauses." ⚠️ Rules deploy pending (owner-run). See
-      `log/FEATURE_MOD_LOG.md` 2026-07-18._
-    - _**Tier 2 — `cats` / `cat_images` / `cat_videos` / `about_content` / `posts_announcements`:
-      DEFER.** Authz is adequately handled by the (now-fixed) `hasPermission` rules; worst case
-      is recoverable data-quality, not privilege. The real upside is server-side payload
-      validation (the `ignoreUndefinedProperties`/string-typing + Sheets-import standardization),
-      which is "nice to have," not "must." Cost/risk is real (~5 services, many write sites incl.
-      `media-albums` batches). **Migrate a collection only when already touching it for
-      validation reasons — no purity-driven sweep.** (Gated stubs `/api/admin/cats`,
-      `/api/admin/posts-collections` already exist if/when needed.)_
-    - _**Not a migration target:** community/user-as-owner writes (`post-service`,
-      `butler-talk-service`, feeding check-ins, `auth-service`) — legitimate Client SDK.
-      Dead/superseded paths (`contact-service.addContact`, `point-service` writes) — cleanup,
-      independent of this decision._
-    - _Truly dropping the Firebase SDK from public bundles is a **separate** effort (also needs
-      `AuthProvider` to stop eagerly importing `firebase/auth`) and is **not** implied by Tier 1._
-- [x] **✅ `users` / role-assignment — FIXED & browser-verified (members page). Interim
-      client-SDK approach; Admin-SDK API route still deferred.**
-      Symptom: `/admin/members` showed **no users in any role group**, and assigning a role didn't
-      persist. Root cause was a chain of four bugs, each uncovered by the next. All fixed and
-      **browser-verified 2026-06-28** against live Firestore (assigned guest viewer→butler-internet:
-      persisted with admin-stamped `assignedBy` + a `roleHistory` entry, then reverted to viewer).
-      **Decision: permission-gate the client write** (same interim path as cats) rather than block
-      on the Admin-SDK migration.
-  - **Bug 0 — read path (list route).** `GET /api/admin/get-all-user-permissions-client` queried
-    the legacy, now-empty `user_permissions` collection → every group rendered 0 users. Repointed
-    to `users`. _(committed `5c096a9`)_
-  - **Bug 1 — empty per-user array.** Every user doc has `currentRole.permissions = []`
-    (permissions are derived from the role at runtime, never snapshotted per user); the old helper
-    read that empty array → always false. Fixed by resolving role → permissions from
-    `role_permissions/role-config` (the single source of truth behind the **Permission Matrix**
-    UI). No per-user backfill; editing the matrix updates enforcement.
-  - **Bug 2 — 🔴 helper scope (the real blocker).** `hasPermission` was defined **outside** the
-    `match /databases/{database}/documents { … }` block, so `$(database)` was unbound, paths
-    resolved to `/databases//documents/…`, `exists()` returned false, and **every**
-    `hasPermission`-gated rule **silently denied everyone, admins included**. → `hasPermission`
-    had _never_ worked, so `cats` (handoff-10), `posts_feeding/butler`, and `contacts` were all
-    latently broken by it. Fix: move the function **inside** the match block. One fix repairs all
-    of them. (Confirmed via the Rules REST API that the live ruleset matched the file, and via
-    the Contact Management read going green after deploy.)
-  - **Bug 3 — `users` read rule too narrow.** `assignSpecificRole` does `getDoc(users/{target})`
-    **before** writing; the read rule was self-read only (`request.auth.uid == userId`), so the
-    admin couldn't read the target doc → denied before the (working) write. Extended to also
-    allow `hasPermission(uid, 'manage-users')`.
-  - **Service:** `role-assignment-service.ts` repointed from `user_permissions` → `users`
-    (4 refs) so its client reads/writes hit the collection the rule + `hasPermission` + list route
-    all use.
-  - **Deployed + verified.** Rules deployed via `firebase deploy --only firestore:rules` (owner).
-    End-to-end role assignment confirmed persisting in `/admin/members`; Contact Management loads.
-    Cats / posts writes are repaired by the same `hasPermission` fix (not separately re-tested).
-  - **Known gaps (not fixed):**
-    - `ensureUserExists` (`permission-service.ts`) self-creates a new user's own `users/{uid}`
-      doc via client SDK; the `manage-users` gate still blocks brand-new non-admin users from
-      self-provisioning. Separate flow — revisit with the API-route work.
-    - **Audit log not persisted via client.** `assignSpecificRole` → `logRoleChange` writes
-      `permission_logs` (`allow write: if false`); the client write is denied but **swallowed**
-      (try/catch, no rethrow), so the assignment still succeeds — only the audit entry is lost.
-      Will be restored when role writes move behind the Admin SDK API route.
-  - **Still the eventual target:** migrate these writes behind an **Admin SDK API route** and
-    restore `write: if false` (the "Future consideration" above). `users` was originally
-    designed Admin-SDK-only (grouped with `permission_logs` / `admin_data`), so it's a strong
-    candidate — deferred, not dropped.
 
-  _Separately — and **not** a rules issue — a **read** bug was fixed this session:_ the members
-  list route (`/api/admin/get-all-user-permissions-client`) queried the now-empty legacy
-  `user_permissions` collection → every role group rendered 0 users despite 3 users existing in
-  `users`; the route now reads `users`. (Verified against Firestore: 3 docs in `users`, 0 in
-  `user_permissions`.)
-
-- [x] **✅ Deployment-target cleanup (DONE)** — **Vercel is the deployment target.**
-      **Phase 1+2** (`f62816b`…`2e6fd4d`) removed the dead Cloud Run / home-server /
-      Firebase-Hosting / Docker / static-export / `functions/` paths, trimmed
-      `firebase.json` to `{ firestore: { rules } }`, aligned `build` with `vercel-build`,
-      and dropped `/api/health` + the Firebase `staging` alias. **Phase 3** (`e0763b1`…,
-      2026-06-27) removed the dead permission routes + `MIGRATION_EXAMPLE.ts` and the
-      Cloud Storage static-data push path (preserved on `archive/static-data-cloud-export`),
-      and corrected stale comments/docs. Plans:
-      [`deployment-cleanup-plan.md`](./completed/deployment-cleanup-plan.md) +
-      [`phase3-cleanup-plan.md`](./completed/phase3-cleanup-plan.md). Static-data Half B (local
-      `src/lib/*.json` export) intentionally left for §7a.
-- [ ] **Error handling** — read-paths swallow errors → `[]`/`null` (silent
-      degradation). Align with the fail-loud convention; surface visible error
-      states for critical reads (e.g. the home points fetch).
-- [ ] **Structured logging** — replace ad-hoc `console.*` with per-module loggers
-      (`logger.exception` on errors); never log secrets (the Kakao flow logs are
-      verbose — 118 `console.*` calls in `auth-service.ts` alone).
-- [x] ✅ 🔴 **PII in the auth logs — FIXED 2026-08-01** (found while checking whether the §8
-      compliance items had closed). Every Kakao sign-in logged the user's identity to the
-      browser console. **Three sites, one more than first reported** — a sweep of the auth
-      path turned up the third:
-  - `auth-service.ts` Kakao sign-in — logged `email` / `displayName` / `photoURL`; now
-    `isNewUser` / `providerId` / `uid` only.
-  - `auth-service.ts` Kakao **linking** — same, plus it dumped the whole `providerData`
-    array, which carries **`phoneNumber`**; now a `linkedProviderIds` list.
-  - `SignupForm.tsx` — logged `user.email` when blocking a signup whose phone already
-    belonged to an account; now logs `uid`.
-    📌 `uid` is kept throughout on purpose: it is an opaque Firebase identifier, so a report
-    stays correlatable without carrying personal data. _(Checked and left alone: the anonymous-
-    user log already logged only `uid` + `isAnonymous`.)_ Gates: tsc 0, smoke 33, unit 96.
-    ⏳ **Owner-owed:** a real Kakao sign-in **and** the linking fallback still need a live
-    verification — neither is reachable from the emulator.
-- [x] **✅ API route auth — DONE.** Closed in two passes and re-verified 2026-08-01: the
-      `/api/admin/*` sweep (2026-06-28, the two `[x]` SECURITY entries below) and the
-      media/credential routes (2026-07-26). **All 10 `/api/admin/**`routes now call
 `requireApiPermission`**; the sole exception is `youtube-auth/callback`, deliberately
- ungated with the reason in a header comment (it is Google's OAuth redirect target — no
- Authorization header exists to verify; it acts only on a valid Google `code`).
- `generate-signed-url`— called out by name here as handing out write URLs without auth —
- is gated on`manage-photo` (`src/app/api/generate-signed-url/route.ts:26`).
- ⚠️ **Still open, tracked separately:** `youtube-auth/callback`has no OAuth`state`/PKCE
-      CSRF protection (noted in the token-leak follow-up below). _(Overlaps §5.)_
-- [x] **✅ RBAC collection drift — DONE (2026-06-28, `5c096a9`).** `firestore.rules` resolved
-      permissions against `user_permissions/{uid}` while the app wrote roles to `users/{uid}`,
-      so rule-level enforcement read a collection nothing populated. Fixed as **Bug 0** of the
-      four-bug members-page chain below — the same session that caught **Bug 2**, the unbound
-      `$(database)` that had made `hasPermission` deny everyone including admins. **M5.2
-      (`47d0f3d`) then rewrote the helper mountain-aware:** `hasPermissionFor` reads exactly
-      `users/{uid}` + `role_permissions/role-config` (`firestore.rules:166-174`), resolving
-      `roles[mountainId].role` → the matrix, with an `isActive` check. `user_permissions`
-      survives only as three explanatory comments (`firestore.rules:104`,
-      `permission-service.ts:24`, the members roster route) — zero live reads or writes.
-      _(Ticked 2026-08-01; the box was never crossed off when the work landed.)_
-- [x] **Dead code** — ✅ route variants + `MIGRATION_EXAMPLE.ts` removed (Phase 3A).
-      `role-assignment-service.ts` is **live** (used by `RoleManagement` +
-      `PermissionDebug`) — not dead. _(Overlaps §5.)_
-- [x] **Build pipeline** — ✅ `build` no longer exports to GCS (Phase 2 aligned it to
-      `fetch-static-assets.js && next build`); the GCS exporter + admin push path were
-      removed in Phase 3B Half A.
-- [ ] **Request validation** — no zod/schema at API boundaries.
-- [ ] **Upload-on-edit for posts (shared media-upload util).** The shared post editor
-      (`components/EditPostForm.tsx`, added with the 입양홍보 work — see the adoption-promotion
-      hand-off) deliberately edits **text + media _links_ only** (title, 내용, image/video
-      URLs), not new media **file** uploads. Reason: the four create forms upload files
-      **three different ways** — `posts_feeding`/`posts_butler` use `uploadImagesWithSignedUrls`
-      (signed-URL flow), `posts_announcements`/`posts_adoption` use
-      `storageService.uploadFile(file, '<type>/images/…')` (direct Storage, per-type path), and
-      all four POST video files to `/api/upload-youtube`. Duplicating those branches into the
-      single shared edit form (keyed on `postType`) would re-implement three upload paths and
-      silently drift from the create forms. **Clean fix (do this first):** extract each upload
-      mechanism into a shared hook/util the create forms **and** the edit form both consume,
-      then add file-upload to the edit form on top of it. That's a refactor touching the working
-      create forms — the adoption plan deliberately made a _dedicated_ copy to avoid risking the
-      working 공지 flow, so treat this as its own scoped change. _Until then, adding a brand-new
-      media file stays in the create flow; edit covers typos + broken/removable links (the actual
-      pain point)._
+ungated with the reason in a header comment (it is Google's OAuth redirect target — no
+Authorization header exists to verify; it acts only on a valid Google `code`).
+`generate-signed-url`— called out by name here as handing out write URLs without auth —
+is gated on`manage-photo` (`src/app/api/generate-signed-url/route.ts:26`).
+⚠️ **Still open, tracked separately:\*\* `youtube-auth/callback`has no OAuth`state`/PKCE
+CSRF protection (noted in the token-leak follow-up below). _(Overlaps §5.)_
 
 ---
 
@@ -761,38 +248,20 @@ reads" from points/images to cat **metadata**.
 
 **What shipped (hybrid freshness: on-demand revalidation + 1h ISR backstop):**
 
-- [x] Cats moved to **build/server reads via the Admin SDK** (`src/lib/server/cat-reads.ts`),
-      baked into the home + adoption Server Components with **ISR** (`revalidate = 3600`,
-      single-sourced in `src/lib/cache-config.ts`; confirmed via `next build` →
-      `initialRevalidateSeconds: 3600`).
-- [x] The marker `{ pointId → cats }` map is baked in `page.tsx` and threaded to the map +
-      `CatGallery` → **zero client Firestore queries** for avatars (browser-verified); the
-      adoption gallery is server-rendered too. The old client `getCatsByPointId` /
-      `getAllCats()` waterfalls + the duplicate `preloadThumbnailsForPoints` are removed.
-- [x] **On-demand path:** `POST /api/revalidate` (ID-token auth) wired to every admin
-      cat-write in `src/app/admin/cats/page.tsx`, so edits reflect without a redeploy
-      (end-to-end check pending a preview deploy — dev can't exercise ISR).
-- [x] Resolved the **`page.tsx` client-Web-SDK-on-server** tech-debt (now Admin SDK).
-- [~] Timing: qualitative win proven (zero client cat reads); no ms figure captured.
-- [x] **✅ Carried follow-up — DONE 2026-06-30.** The dead static-data export seam was removed
-      (`saveStaticDataJson` + the `update:*` scripts + the exporters + the JSON artifacts;
-      `fetch:assets` re-verified green) — tasks-doc §6, and the §1 snapshot has recorded it as
-      closed since. **Re-verified 2026-08-01:** zero hits in `src/`, no `src/lib/*.json`
-      artifacts remain, and `build`/`vercel-build`/`fetch:assets` all run the JS
-      `fetch-static-assets.js`. _(Residual mentions are historical only: the legacy
-      `scripts/maintenance/_fetch_static_assets.py` and two `scripts/migration/README_\*.md`    records — nothing in the build path.)_ **§7a is fully closed.**
- _Re-verified 2026-06-29 (independent trace, during the §5 admin-cleanup work):_ a
- whole-repo grep finds **zero** references to`cats-static-data.json`/
-`points-static-data.json`/`feeding-spots-static-data.json`in`src/`— the runtime
- cat path is`src/app/page.tsx`→`getAllCatsServer()` (`src/lib/server/cat-reads.ts`,
- Admin SDK → Firestore), never the JSON. All readers/writers are in `scripts/`only.
- Confirmed **firsthand** that the file is dead build output: a`npm run build`(run to
- gate the react-admin removal) rewrote`src/lib/cats-static-data.json`from live
- Firestore, yet nothing consumes it — the churn was reverted, harmless. So in **both**
- prod build and dev server the JSON is never`import`ed/read; webpack never bundles it.
- Strengthens the REMOVE decision — no new blockers found. Keep the removal in this §7a
- pass (it untangles `saveStaticDataJson`from the still-needed asset fetcher and wants
- its own`next build` gate), not in unrelated cleanup branches.
+> 📋 **6 items — 5/6 done — now in the work registry**
+> as `R-0204`…`R-0209`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
+> `points-static-data.json`/`feeding-spots-static-data.json`in`src/`— the runtime
+> cat path is`src/app/page.tsx`→`getAllCatsServer()` (`src/lib/server/cat-reads.ts`,
+> Admin SDK → Firestore), never the JSON. All readers/writers are in `scripts/`only.
+> Confirmed **firsthand** that the file is dead build output: a`npm run build`(run to
+> gate the react-admin removal) rewrote`src/lib/cats-static-data.json`from live
+> Firestore, yet nothing consumes it — the churn was reverted, harmless. So in **both**
+> prod build and dev server the JSON is never`import`ed/read; webpack never bundles it.
+> Strengthens the REMOVE decision — no new blockers found. Keep the removal in this §7a
+> pass (it untangles `saveStaticDataJson`from the still-needed asset fetcher and wants
+> its own`next build` gate), not in unrelated cleanup branches.
 
 **Inherited from Phase 3B (don't re-investigate from scratch):**
 
@@ -835,26 +304,10 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 **Done:**
 
-- [x] Privacy policy + terms content (Korean; PIPA). **Done (2026-07-10):**
-      `src/app/pages/privacy/page.tsx` + `src/app/pages/terms/page.tsx`, adapted
-      from the KISA/PIPC standard 처리방침 structure and grounded in the app's
-      actual collection (email/phone/닉네임/Kakao + 동참 form). Decisions:
-      CPO 산냥이집냥이 운영자 (`rescuezoro@gmail.com`); under-14 allowed w/ guardian
-      consent; retention = 탈퇴 시 즉시 삭제 (no grace). Includes **국외 이전** disclosure
-      (§6, PIPA Art. 28-8): Google LLC + Vercel Inc. (US) — relies on the
-      contract-necessity + 처리방침-disclosure basis, **not** consent. ⚠️ **Owner-owed:** get
-      a legal/professional review before scaling membership.
-- [x] Data-subject rights: account withdrawal/deletion (탈퇴). **Done (2026-07-10):**
-      mypage → confirm modal → `POST /api/account/delete` (verify ID token →
-      Admin SDK `auth.deleteUser` + `users/{uid}` doc delete) → sign out. Immediate
-      hard-delete; authored posts intentionally retained (content, not account PII).
-- [x] Wire the footer legal links to real pages/routes. **Done (2026-07-10):**
-      `Footer.tsx` greyed placeholders → live `<Link>`s to `/pages/privacy` and
-      `/pages/terms`.
-- [x] Consent touchpoints at signup (email path). **Done (2026-07-10):**
-      `SignupForm.tsx` gained two required checkboxes (이용약관 + 개인정보 수집·이용,
-      each linking the full text); 인증번호 받기 submit gated until both checked.
-      (국외 이전 is disclosure-based per §6, so it's not in the consent.)
+> 📋 **9 items — 6/9 done — now in the work registry**
+> as `R-0210`…`R-0218`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 **Deferred / owner-owed (accepted, out of workstream).** ⚠️ **Split into two kinds
 (2026-08-01)** — the four items had been sitting as one undifferentiated pile, but two are
@@ -863,90 +316,23 @@ on 2026-08-01; none had been quietly closed.
 
 _Code work — doable in a normal session, no external party:_
 
-- [x] ✅ **Consent capture for the phone / Kakao paths — RESOLVED 2026-08-01, but NOT the way
-      this item assumed.** 🔑 **The premise was wrong and is corrected here so it is not
-      re-derived:** an earlier pass that day noted `auth/PhoneLoginForm.tsx` and
-      `SocialLoginButton.tsx` contain **zero** consent code — true — and concluded a
-      first-time phone or Kakao user could become a member without agreeing. **They cannot.**
-      All three login paths funnel through `LoginForm.handleCheckUser`, and a user with no
-      `users/{uid}` doc is shown `UserNotFoundModal` and **signed out**
-      (`LoginForm.tsx`, the `else` branch — "Requirement: Do not allow account creation via
-      Google/Kakao implicitly"). They are sent to 집사등록 = `SignupForm`, which **already**
-      gates on both checkboxes. **Implicit signup was already refused**; no consent gate was
-      needed on the login surfaces, and none was added. _(A post-auth consent step with a
-      decline-deletes-the-account path was designed and then discarded on this finding —
-      recorded so it is not rebuilt.)_
-  - 🔴 **The real residual gap it exposed, now FIXED:** phone and Kakao sign-in **mint a
-    Firebase Auth account** as a side effect of authenticating, _before_ the flow can decide
-    whether the person may join. Signing them out stranded an Auth record holding PII (phone
-    number, or the Kakao email/닉네임) with **no consent, no profile doc, and nothing that
-    would ever remove it** — retention with no PIPA basis. The bounce path now deletes it via
-    the existing `POST /api/account/delete` (uid from the verified token; the doc-delete is a
-    no-op when no doc exists) — `src/lib/auth/deleteImplicitlyCreatedAccount.ts`.
-    ⚠️ **Email is deliberately excluded — the line is consent, not account age.** 📌 **Every
-    account in this app is phone-created:** 집사등록 verifies the phone **first** (that call
-    creates the Auth user) and links email/password onto it afterwards; `validateDetails`
-    requires a phone number and `authService.createUser` has **no UI caller**, so there is no
-    email-only signup path. An email sign-in reaching the bounce is therefore usually an
-    **interrupted signup**, not an anomaly — and that person **did consent**, since
-    `SignupForm` gates both checkboxes before the SMS is sent, i.e. consent precedes account
-    creation. Only the record failed to write, and the state is resumable (re-running 집사등록
-    with the same email+phone completes idempotently). Deleting there would destroy a
-    credential belonging to someone who agreed.
-    🔑 **The check is therefore the password credential, not the login method**
-    (`providerData` containing `'password'`). Gating on the method — the first cut — would
-    have deleted exactly those consenting users whenever an interrupted signup led them to
-    sign in **by phone**. _(An earlier draft justified the exclusion as "the account predates
-    the sign-in, so a missing doc is an anomaly" — that reasoning was **wrong** given the
-    phone-first flow; corrected 2026-08-01 after the owner challenged it, which is also what
-    surfaced the method-vs-credential leak.)_
-  - 📌 **Confirmed while answering the owner: 회원탈퇴 does delete the email.**
-    `POST /api/account/delete` removes the Firestore doc **and** the Firebase Auth account
-    (`mypage` → route L46-47), so email/phone/닉네임 go from both stores. Doc first, so a
-    failed Auth delete cannot orphan an account that can no longer reach its own doc.
-    ⚠️ The orphan helper **logs without re-raising**, a conscious departure from
-    the repo's log-and-rethrow rule: the caller's next step is `signOut()`, and its catch
-    block is contractually forbidden from signing anyone out, so propagating would strand a
-    live session for someone just refused membership. Rationale is in the file.
-  - ✅ **New members now get a default role** (owner, 2026-08-01). They previously got
-    `roles: {}` and therefore **no role on any mountain** until an admin assigned one; the
-    per-mountain `defaultRole: "viewer"` in `config/permissions.json` was read by nothing.
-    ⚠️ **It could not simply be seeded client-side:** `firestore.rules` allows a self-create
-    only with an **empty** `roles` map, and that is precisely what makes self-escalation
-    impossible — seeding a role there would have failed every signup. So the client still
-    creates with `roles: {}` (**rule unchanged**) and signup then calls the new Admin-SDK
-    `POST /api/account/default-role`, which takes the uid from the verified token, reads the
-    role from **config** (never the request body), resolves its permissions from the live
-    matrix, and refuses when a role already exists — so it cannot grant anything but the
-    default nor overwrite an admin's assignment. Failure is non-fatal to signup (`assignedBy:
-'system'` distinguishes it in the audit log). 📌 Worth knowing: `viewer` is **not**
-    permission-less — it carries `view-video` + `view-photo`; it merely happens to be
-    equivalent to no-role today because public content is not gated on them. That is exactly
-    why the relaxed-rule alternative was rejected.
-  - ✅ **Consent is now recorded** (it never was — the email path gated the button and stored
-    nothing). `users/{uid}.consent` holds `terms` + `privacy`, each with `agreedAt` and the
-    **policy version**, written by `SignupForm` on doc creation only — never on update, since
-    overwriting the timestamp would falsify when consent was given. New
-    `src/constants/policy.ts` single-sources `POLICY_VERSION` / `POLICY_EFFECTIVE_DATE_KO`,
-    and both policy pages now render 시행일 from it so the displayed date and the stamped
-    version cannot drift. ⚠️ **Bump it whenever either policy's substance changes.**
-    📌 Members created before 2026-08-01 have **no** consent record — absent ≠ refused, it
-    means "predates the feature". A re-consent flow for a future policy revision does not
-    exist and would be its own piece of work.
-- [ ] **Verify Kakao scopes + document received fields** (compliance-plan task 8).
-      📌 **Why this can't be answered from the repo alone:** all three `addScope` calls are
-      **commented out** (`auth-service.ts:175-177`, with a note to leave them off to avoid a
-      Kakao consent-items error), so the app requests nothing explicitly and receives whatever
-      the **Kakao Developers console** has configured as consent items. The console is the
-      source of truth — read it, then document the received fields here. (The 처리방침 already
-      names Kakao as a collection source; this confirms _which_ fields.)
+'system'`distinguishes it in the audit log). 📌 Worth knowing:`viewer`is **not**
+    permission-less — it carries`view-video`+`view-photo`; it merely happens to be
+equivalent to no-role today because public content is not gated on them. That is exactly
+why the relaxed-rule alternative was rejected.
+
+- ✅ **Consent is now recorded** (it never was — the email path gated the button and stored
+  nothing). `users/{uid}.consent` holds `terms` + `privacy`, each with `agreedAt` and the
+  **policy version**, written by `SignupForm` on doc creation only — never on update, since
+  overwriting the timestamp would falsify when consent was given. New
+  `src/constants/policy.ts` single-sources `POLICY_VERSION` / `POLICY_EFFECTIVE_DATE_KO`,
+  and both policy pages now render 시행일 from it so the displayed date and the stamped
+  version cannot drift. ⚠️ **Bump it whenever either policy's substance changes.**
+  📌 Members created before 2026-08-01 have **no** consent record — absent ≠ refused, it
+  means "predates the feature". A re-consent flow for a future policy revision does not
+  exist and would be its own piece of work.
 
 _Needs an outside professional — cannot be closed in-repo:_
-
-- [ ] Professional/legal review of the policy text + consent flows before scaling.
-- [ ] Security audit vs the PIPA safety-measures standard (compliance-plan task 7).
-
-- [x] Stub `docs/compliance/` exists (`compliance-plan.md`).
 
 ---
 
@@ -1105,41 +491,10 @@ What M5 accounts for (verified benign):
 
 **Candidate scope — _confirm with user; may be far-future_:**
 
-- [x] `?mountain=` switch is a no-op — `MountainSelector` sets the query but
-      `getCurrentMountainId()` only reads env. **Closed by M3 (`491b832`)** —
-      host-based selection via middleware; the selector now navigates for real
-      (mapped host → the target's `domains[0]`, else the `/{mountainId}` path)
-      and the no-op query write is gone.
-- [x] Hard-coded service-account path + bucket fallbacks. **Partially done (2026-07-10):**
-      `generate-signed-url` hardcoded fallback replaced with hard-fail; `fetch-static-assets.js`
-      reads `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` from env. **Closed by M1 (`8920c66`):**
-      `feeding-spots-admin-service.ts`'s hard-coded SA-path init deleted — it now imports
-      `db` from the shared `@/lib/firebase-admin`.
-- [x] Hard-coded map image path in the map host; source it from mountain config.
-      **Closed by M1 (`8920c66`)** — `map.landscapeImage`/`portraitImage` in
-      `mountains.json`, resolved via `getMapConfig()` with a fail-loud guard.
-- [x] **✅ `mountains.json` vs `permissions.json` inconsistency — CLOSED by M5.4a
-      (2026-07-23).** Adding `manisan` as the stub tenant made the two coherent; keeping them
-      so is now a step in the provisioning runbook. **Verified 2026-08-01:** both files carry
-      `geyang` + `manisan` (`mountains.json` additionally holds the `_meta`/`_shared` blocks,
-      which are not tenants).
-- [x] **✅ Theme wired through — CLOSED by M8 (`a237e8b`, 2026-07-25).** `config.theme` was
-      read by nothing; `theme.primaryColor` now drives a `--color-primary` CSS variable that
-      the `[mountain]` layout injects on `:root` per request (hex-validated, fail-loud), and
-      the public CTAs were repointed `from-brand` → `from-primary`. Browser-verified: geyang
-      `#FACC15` (zero-change) vs manisan `#0ea5e9`. ⚠️ **Scope was owner-chosen as "primary
-      color only"** — the `brand` ramp and the admin-only `from-brand` CTAs stay static
-      deliberately, so a real mountain #2 would still read yellow there. That fuller pass is
-      a separate, unscheduled piece of work, **not** a leftover of this item.
-      🔄 **SUPERSEDED 2026-08-05:** the "fuller pass" was answered by **removing** per-tenant
-      theming rather than extending it — the palette is now global and `config.theme` is
-      deleted. 📌 **The irony is worth keeping:** this item closed because `config.theme` "was
-      read by nothing," and the resolution three weeks later was that it should not have been
-      read by anything. See §9's M8 supersession note.
-- [~] Per-mountain DB isolation at the service-factory seam. **Seam parameterized
-  by M4 (`b83a112`)** — the getters take a required `mountainId` and cache
-  per-tenant instances, and every write stamps it. **Isolation itself is M5**
-  (scoped reads + mountain-aware rules + the two-tenant e2e that proves it).
+> 📋 **6 items — 5/6 done — now in the work registry**
+> as `R-0219`…`R-0224`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ---
 
@@ -1157,46 +512,10 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
 
 **Done:**
 
-- [x] **Test stack bootstrapped (Vitest)** — `npm test` / `npm run test:smoke`;
-      first suite `tests/smoke/smoke.test.ts` (2026-06-27, 24 tests, <1s, no
-      server/env). Structural smoke: referenced `/api/*` routes resolve to handlers,
-      deploy-config keepers survive, critical public pages exist. Added as the
-      regression net for the deployment cleanup
-      ([`deployment-cleanup-plan.md`](./completed/deployment-cleanup-plan.md)).
-
-- [x] **Playwright e2e harness + CI foundation landed (2026-07-11)** — the
-      prerequisite plan is **executed**: a hermetic Firebase Emulator Suite
-      (Auth+Firestore+Storage) seeded with hand-authored fixtures drives the real
-      prod build (`next build` → `next start`) under Playwright, wired into a
-      greenfield `.github/workflows/ci.yml` (checks + emulator-backed e2e, no
-      secrets). All env-gated `src/` touches (WP2/WP3/WP4/WP7) are off in prod;
-      prod build verified untouched. Trivial spec green locally (desktop + mobile
-      landing map + admin `storageState`, ~6s). See
-      [`playwright-ci-prerequisite-plan.md`](./completed/playwright-ci-prerequisite-plan.md)
-      §7 and the 2026-07-11 `FEATURE_MOD_LOG` entry. **Owner follow-ups:** push/PR
-      to confirm CI 3× green + branch protection; decide the non-admin
-      `users`-write rule question that blocks non-admin login (2026-07-11
-      `DEBUG_LOG`).
-
-- [x] **All e2e spec suites written & green (2026-07-13 → 2026-07-15)** — main-plan
-      Phases 2–6: `public/` (~60 tests, anonymous surfaces + landing map),
-      `api/` (route auth: unauth→401, non-admin→403), `auth/` (email/phone login,
-      logout, full 집사등록 signup), `member/` (mypage, 동참 contact, nav
-      permissions, butler-access denial, account withdrawal), `admin/` (AdminAuth
-      gate, cats/points/members/posts CMS). ~140 tests across the
-      `public`/`auth`/`member`/`admin`/`api` Playwright projects; each project green
-      in isolation against a fresh seed. Two former blockers cleared en route: the
-      "markerless bake" build hang (`26e8264`) and non-admin login (scoped `users`
-      self-write rule, `65a934f` + `npm run test:rules`, 6/6). See the testing
-      hand-off (`docs/handoff/testing/2026-07-12-e2e-harness-handoff.md`).
-
-- [x] **Phase 7 done + merged to `main` (2026-07-16)** — flake audit green (local
-      full-gate 3× consecutive: 101 passed / 13 skipped / 0 failed; CI green on PR #7
-      and dev pushes), docs finalized (this file, the CI plan, `tests/e2e/README.md`,
-      `FEATURE_MOD_LOG`, testing hand-off). Promoted via **PR #7** (`dev → main`,
-      merge commit `65d2020`). **Branch protection now enforces** the `e2e` required
-      status check on `main` (protect-main ruleset + classic protection; review count
-      0). Remaining owner action: `firebase deploy --only firestore:rules`.
+> 📋 **14 items — 9/14 done — now in the work registry**
+> as `R-0225`…`R-0238`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 **Plans drafted (2026-07-11):**
 
@@ -1219,31 +538,9 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
 were written when coverage was **zero** and the stack was undecided. The main plan answered all
 of them, so they are closed as **overtaken by events**, not as individually-worked items:
 
-- [x] **Test stack decided & built** — Vitest for unit + emulator-backed Playwright for e2e;
-      the high-value areas named here (permissions resolution, service layer, auth flows) are
-      exactly what the `auth/`, `member/`, `admin/`, `api/` suites and the `test:rules` suite
-      cover.
-- [x] **Runtime HTTP smoke** — subsumed. The e2e suite boots the real app against emulators and
-      asserts far more than 200s, which is strictly stronger than the deferred HTTP ping.
-- [x] **Mock service implementations** — **not needed, and deliberately not built.** The
-      emulator-backed harness gave real Firestore/Auth/Storage in tests, so mocks behind the
-      interfaces would have added a second fidelity-losing surface to maintain. Recorded so the
-      idea is not silently re-proposed.
-- [x] **Smoke/UI tests for critical public paths** (map loads, gallery opens, login renders) —
-      delivered by the `public/` + `auth/` suites.
-- [x] CI wiring beyond `tsc`/lint — `.github/workflows/ci.yml` (checks +
-      emulator-backed Playwright e2e) landed 2026-07-11.
-
 **Deferred — e2e Phase 8 (revisit later, not required for "done"):** these are the
 main plan's explicitly-parked extensions (see `playwright-ci-plan.md` §8 Phase 8) —
 none block the completed workstream.
-
-- [-] Vercel Preview-URL read-only smoke (post-push; needs secrets).
-- [-] WebKit project (iOS Safari) alongside the Chromium/mobile projects.
-- [-] Visual-regression screenshots (masked).
-- [-] Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream
-  (§4 perf item), not this suite.
-- [-] YouTube tagging admin flows (external API).
 
 ---
 
@@ -1254,22 +551,17 @@ none block the completed workstream.
 > title-matched. Plan + decisions:
 > [`butler-media-separation-plan-20260727.md`](./completed/butler-media-separation-plan-20260727.md).
 
-- [x] **B1 `0f9190f` — 집사게시판 drops media upload.** It is a 급식소 check-in log. Compose
-      time only: legacy posts still render their media through `PostList`, and `EditPostForm`
-      keeps URL-based editing. The form dropped `useRichContentForm` for a plain submit
-      handler. Both composers gained **취소**.
-- [x] **B2 `c2fc78f` — config-driven, per-mountain playlist filing.** `social
-.youtubePlaylistId` per mountain + a `_shared` platform block for the one cross-mountain
+> 📋 **4 items — 4/4 done — now in the work registry**
+> as `R-0239`…`R-0242`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
+> .youtubePlaylistId`per mountain + a`\_shared` platform block for the one cross-mountain
+
       입양홍보 playlist. Replaces a lookup that matched the playlist **titled** `집사게시판`
       (a rename on YouTube stopped filing silently; every mountain filed into one list).
       `upload-youtube` takes repeated `playlistId` fields, so an 입양홍보 video joins **both**
       its mountain playlist and the adoption one — keeping the mountain playlist a complete
       ownership record for §9's deferred `syncVideos` fix.
-- [x] **B3 `bd7ce23` — 집사톡 one file per section**, each with its own 제목/설명. Empty
-      description now stays empty (no invented default, no post body copied onto every photo).
-- [x] **B4 `97b72ed` + docs — 촬영일 is a calendar date.** ⚠️ It was a day early in KST: parsed
-      local, serialized UTC. **Correct at UTC, wrong in Korea — CI could not have caught it.**
-      Now encoded once as UTC midnight, matching `/admin/tag-videos`.
 
 🔑 **Owner-owed:** add the channel's back catalogue to the 계양산 playlist — it holds **4** of
 **13** videos, and the deferred `syncVideos` fix will treat the rest as unowned.
@@ -1294,28 +586,10 @@ only** — no credentials in the emulator.
 
 **Decision (owner, 2026-07-29): take the cheap option. The "real fix" is explicitly declined.**
 
-- [x] **C1 — `?cat=<id>` on `/pages/cats` (DONE).** `CatsBrowser` consumes the param on
-      arrival and opens that cat's `CatInfo` modal; opening a cat pushes the param, closing
-      clears it. 🔑 **Built on the modal system's existing history entry rather than beside
-      it.** `useModalLayer` already pushed a synthetic entry per overlay (so Android back
-      closes a modal); it now takes an optional **`historyUrl`** to put on that entry, and the
-      `history.back()` it already issues on close restores the previous URL. So the deep link
-      is ~10 lines of new history logic, not a second mechanism racing the first. Any modal
-      worth addressing can opt in the same way — pass `historyUrl` to `ui/Modal`.
-- [x] **C2 — keyed on the cat `id`, not the name (DONE).** Pinned by
-      `tests/e2e/public/cat-deep-link.spec.ts`, which is checkable precisely because the
-      fixtures separate the two (`test-cat-01` is named 테스트냥이일). 📌 **In production the
-      two look identical**: legacy cats' Firestore doc ids _are_ their Korean names (the Sheets
-      pipeline keyed docs by name), so a real link reads `?cat=개똥이`. Cosmetic — a rename does
-      not break it. ⚠️ **But know exactly why, because it is weaker than "doc ids are
-      immutable":** `cat-reads.ts` maps `{ id: doc.id, ...doc.data() }`, and all 32 prod cat docs
-      carry their **own `id` field** (a duplicate of the doc key, left by the Sheets import), so
-      the spread wins and `cat.id` is a **stored field**, not the document address. What actually
-      protects a link is that `CatFormData` has **no `id` member**, so a CMS rename writes `name`
-      and never touches it. 🔑 **Add `id` to that form — or re-run any name-keyed import — and
-      pasted links start breaking silently, with nothing to catch it.** The sturdy fix is to
-      spread first (`{ ...doc.data(), id: doc.id }`) so the address always wins; a no-op on
-      current data, deliberately not done here as it touches a shared read path.
+> 📋 **3 items — 3/3 done — now in the work registry**
+> as `R-0243`…`R-0245`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 **Behaviour, as verified in a production build** (dev and prod were checked separately — see
 the ⚠️ below for why that mattered): arriving on `?cat=<id>` opens the modal; closing returns to
@@ -1352,44 +626,6 @@ motivating use case ever turns out to be **입양홍보** — persuading someone
 adoptable cat, where the preview card does the persuading — this decision is worth revisiting,
 because a faceless link wastes the share. **Still true as built** — this shipped unchanged.
 
-- [x] **C3 — the 이 냥이 링크 chip (DONE 2026-08-01, owner-requested).** 🔑 **The deep link is
-      only usable if a human can produce one**; looking an id up in Firebase is not a workflow.
-      A third chip in `CatInfo`'s existing action row (beside 📸 사진 보기 / 🎬 동영상 보기,
-      reusing `AlbumButton`) opens the **OS share sheet on touch devices** — one tap into a
-      KakaoTalk chat, which is where these links actually go — and copies to the clipboard on
-      desktop. Label follows the same predicate (링크 공유 / 링크 복사), detected after mount so
-      it is not a hydration mismatch.
-  - 🐛 **Fixed same-day after an owner report: the chip did nothing on desktop.** The first cut
-    gated on `typeof navigator.share === 'function'`, which desktop Chrome satisfies and then
-    refuses (`NotAllowedError — Permission denied`, measured). Because a dismissed sheet
-    legitimately produces a **silent** `AbortError`, the button had no visible failure path at
-    all. Now gated on `(pointer: coarse)` too. 🔑 **Feature detection is not affordance
-    detection**, and both prior verification passes missed it because they **stubbed**
-    `navigator.share` — a stub proves your branches, never that the platform runs them.
-    `log/DEBUG_LOG.md` 2026-08-01.
-  - ⚠️ **It builds the link (`utils/cat-link.ts`), it does not copy `location.href`.** `CatInfo`
-    renders on **six** surfaces (냥이들, 입양홍보, 소개, `CatGallery`, and the inline
-    `[catmodal:이름]` / media-link paths) and only 냥이들 carries `?cat=`. Copying the current
-    URL would share a link to `/pages/adoption` — quietly wrong, which is worse than no button.
-    Building it also means the chip works **everywhere a cat modal can appear**, which is more
-    reach than the deep link was originally scoped for.
-  - 🔑 **The tenant prefix is mirrored from the current path, not resolved from config.** The
-    config-driven answer is wrong _today_: geyang's `domains` lists `geyangsan.mohocats.org`,
-    but production serves from the **apex**, which is in no `domains` list and resolves through
-    the default-tenant fallback — so `findMountainIdByHost` returns null there and a
-    `MountainSelector`-style branch would emit `/geyang/pages/cats…`, re-prefixing exactly the
-    URLs the 2026-07-28 path decision keeps prefix-free. Mirroring the current path is correct
-    for apex, mapped subdomain, and `/{id}` alike, and needs no change when a real mountain #2
-    arrives. ⚠️ A dropped prefix would be a **silent** defect: the link resolves to the default
-    mountain, which has no cat with that id, so the visitor gets a cat list with nothing open —
-    and the bad links are already out in KakaoTalk, where they cannot be recalled.
-  - 📌 **A dismissed share sheet rejects with `AbortError`** — the visitor changing their mind,
-    not a failure. It must not log or show an error (the repo's log-and-re-raise convention,
-    applied naively here, would report a failure for the most common outcome). Every other
-    rejection is real: it logs **and** falls back to copying rather than appearing to succeed.
-    ⚠️ `navigator.share` needs transient activation, so it is called synchronously in the click
-    handler — `await` anything first and iOS Safari rejects with `NotAllowedError`.
-
 🆕 **One owner decision this raises, not blocking.** The cats page now emits a **GA4
 `page_view` per modal open**, because the URL genuinely changes and `AnalyticsTracker` fires on
 every `searchParams` change. That is standard SPA behaviour and arguably correct now that a cat
@@ -1417,75 +653,10 @@ contained version won.
    admins may attach as much media as they want. What those two forms were actually missing
    was 집사톡's **per-file** upload — one file per section, each with its own 제목/설명 —
    which is the opposite of a cap. **✅ DONE 2026-07-30** (see below).
-2. **`[ ]` A CMS-controlled toggle for whether multiple upload is allowed** — the real
-   intent behind the original ask, now aimed at the member-facing composer rather than
-   hard-coded everywhere. **Not started.**
-
-- [x] **D1 — per-file media in 공지사항 / 입양홍보 (DONE 2026-07-30).** Both forms moved off
-      the flat `MediaUploadField` onto `MediaItemList`, so every file carries its own 제목
-      (video) and 설명. Before this, all videos in a post shared **one** YouTube title (the
-      post title) and photos had no 설명 at all.
-  - Images moved onto `uploadImagesWithSignedUrls` — the only image path with somewhere for
-    a per-photo description to live. ⚠️ **Consequence, intended (owner-chosen):** those
-    photos now get a **`cat_images` record**, so they appear in the public 사진첩 and in the
-    admin tagging queue. The old direct-storage path recorded nothing at all.
-  - 🗑️ `MediaUploadField.tsx` and `uploadImagesToStorage` deleted — no callers left.
-- [x] **D1c — cat selector on both forms (DONE 2026-07-30, owner-requested).** The same
-      `CatSelectorModal` 집사톡 uses, one for video and one for images, shown once there is
-      media to tag — so the new `cat_images` records and the uploaded videos can be tagged at
-      upload time rather than only later in the tagging queue. Empty stays empty
-      (`needsTagging` is the never-been-tagged signal). The read-only field was extracted to
-      `forms/CatTagSelectField.tsx` and 집사톡's two hand-rolled copies now use it. ⚠️ Kept
-      separate from `admin/media/CatTagField`, the editor's free-text variant.
-- [x] **D1d — pasted-URL lists removed (DONE 2026-07-30, owner's call).** Both forms briefly
-      kept an "또는 URL 입력" list; it is gone. These composers now only attach uploads.
-- [x] **D1e — filename collisions prevented (DONE 2026-07-30).** The object path is the
-      filename verbatim (`uploads/<name>`), so two posts uploading `IMG_001.jpg` overwrote
-      each other. 🔑 **The bucket is the authority, not `cat_images`** — the record write is
-      non-fatal, 공지사항's old uploads recorded nothing, and `image_uploader` shares the
-      bucket, so an object can exist with no record. `generate-signed-url` now checks
-      `file.exists()` → **409** with an actionable Korean message. Timestamps were
-      considered and rejected: they lower the odds of a clash, they do not remove it.
-      ⚠️ Applies to 집사톡 too — shared route.
-  - 🔁 **AMENDED the same day.** The first cut _also_ signed the URL with
-    `x-goog-if-generation-match: 0`, so GCS would refuse an overwrite **atomically** and
-    close the check-then-PUT race `exists()` cannot. That header made the cross-origin PUT
-    **preflighted**, the bucket's CORS allow-list does not contain it, and **every image
-    upload from every deployed origin silently failed** — owner-reported within hours. It is
-    gone from both ends and the residual race is documented as accepted in the route.
-    Re-adding it is an **ordered** two-step change: widen `config/firebase/cors_fbstorage.json`
-    → apply with `npm run storage:cors` → _then_ ship the code. In any other order, image
-    upload breaks again. Chain: `log/DEBUG_LOG.md` 2026-07-30.
-- [x] **D1b — conspicuous separators (DONE 2026-07-30, owner-requested).** With several files
-      stacked, and a 동영상 list directly above a 사진 list, it was not visually obvious where
-      one file's fields ended or which section a picker belonged to. `MediaItemList` is now a
-      framed section with a header bar + count badge, numbered files, and a dashed rule
-      between them. Browser-verified on 공지사항 and 집사톡.
-- [x] **D2 — the multiple-upload toggle (DONE 2026-08-02) — 🔄 shipped as _static config_,
-      not a CMS setting.** Owner's answers: **집사톡 only** (공지사항/입양홍보 stay
-      unrestricted per part 1 above), **video and image toggle separately**, and **one setting
-      for all mountains**. Lives in **`config/media_control.json`**, read through the
-      fail-loud `src/utils/mediaControl.ts`; `forms/MediaItemList` gained an `allowMultiple`
-      prop (defaults to `true`, so only 집사톡 passes it) which hides the trailing
-      "add another" picker once a file is present. **Both flags ship `false`** — 집사톡 is
-      one video + one photo per post as of this change.
-  - 🔑 **Why the "CMS-controlled" premise was dropped (owner, 2026-08-02).** The Firestore
-    design was drafted — `admin_config`-shaped doc, admin control, `manage-app` gate — and
-    then rejected on a consequence it exposed: the setting is **global by decision**, so a
-    Firestore toggle would let **any one mountain's admin silently reconfigure every other
-    mountain's composer**. Static config moves that authority from "any admin" to "whoever
-    can deploy". ⚠️ The redeploy cost is **accepted, not overlooked** — the owner said so
-    explicitly. Do not "improve" this back into a runtime setting without re-deciding who
-    may flip it.
-  - 📌 **Two things the drafted Firestore design got wrong, recorded so they aren't
-    repeated.** (1) `admin_config` is **not** a settings precedent — it has **no
-    `firestore.rules` entry at all** (default-deny, Admin-SDK only) because it stores the
-    YouTube **OAuth refresh token**; a client-readable flag there would have meant opening a
-    rules `match` beside a credential. (2) 앱 관리's old 게시물 컬렉션 설정 tab looked like a
-    settings precedent but saved to **`localStorage`** — per-browser, so it could never have
-    been a shared setting. Both are gone as of this change (see §10j).
-- [ ] **D3 — align the media-section order across composers** (proposed, **still not**
-      decided). 집사톡 renders 동영상 → 사진; 공지사항 renders 사진 → 동영상. See the note below.
+   > 📋 **8 items — 6/8 done — now in the work registry**
+   > as `R-0246`…`R-0253`. See
+   > [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+   > text in `work_tracking/records/`.
 
 📌 **Not a bug, recorded so it isn't re-investigated:** on 2026-07-29 videos appeared
 greyed-out and unselectable in 공지사항's picker while the same files were selectable in
@@ -1509,25 +680,10 @@ picker now sits visibly inside a labelled 사진 or 동영상 box._
 `AdoptionPostCard` and `/pages/announcements/[id]` each had their own copy, and they had
 drifted — different capabilities, different bugs. They now share **`PostMedia`**.
 
-- [x] **E1 — 입양홍보 expanded post shows the whole post.** It rendered ONE 80×20 thumbnail
-      chosen as `video ? youtubeThumb : image`, so a post carrying a video could never show its
-      photos, and a post with several images showed only the first. Chain:
-      `log/DEBUG_LOG.md` 2026-07-31.
-- [x] **E2 — 입양홍보 posts can pop up on a site visit.** Toggle on the composer and on
-      게시물 관리, backed by `getModalPost()` / `toggleModalDisplay()`. `AnnouncementModal`
-      generalised to `PostModal` over a `kind`; the ~50-line switch extracted to
-      `forms/ShowInModalToggle`. 🔑 **One popup per visit, most recently updated wins** across
-      both kinds — the existing rule extended, not a new one.
-- [x] **E3 — each medium shows its 제목 / 설명 / 태그.** None of it is on the post (which
-      stores only URLs); it lives on the `cat_images` / `cat_videos` record. New
-      `getImageDetailsByUrls` / `getVideoDetailsByYoutubeIds` + `useMediaDetails` resolve it
-      **live** — deliberately not copied onto the post, since the tagging surfaces keep editing
-      it and, for videos, YouTube is the source of truth (the 2026-07-26 rule). Live also means
-      **pre-existing posts display it with no migration**.
-- [x] **E4 — the announcement detail page joined the shared renderer.** It was the third copy
-      and the reason the owner still saw nothing after E3 shipped. `PostMedia` gained a
-      `layout` prop (`compact` for modal/feed, `full` for a dedicated page) so adopting it did
-      not shrink that page's previously full-width photos.
+> 📋 **4 items — 4/4 done — now in the work registry**
+> as `R-0254`…`R-0257`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 📌 **Open question for the owner, not a defect:** a video's 제목 now appears **twice** — once in
 YouTube's own player overlay and once as our caption. Correct, possibly redundant; dropping the
@@ -1549,36 +705,10 @@ pass.
 > official; and — on Safari — 공지 pages showed "no posts" / "can't find the post", with a post's
 > tags arriving late or never, all cured by reloading.
 
-- [x] **F1 — photos render at the video's width** (`be8eb77`). Two causes, both from
-      `PostMedia`'s `compact` layout landing on a surface that is not a dialog: the two-column
-      grid gave a lone photo half the width of the full-width video, and `w-full` + `max-h-64` +
-      `object-contain` pillarboxed it inside its own border. The 입양홍보 card moved to
-      `layout="full"`; `compact` now sizes the `<img>` to the picture. 📌 **Third defect from the
-      same default** — 10e's E4 was its mirror image. **Pick the layout explicitly at every
-      `PostMedia` call site.**
-- [x] **F2 — the "중요한 안내사항" banner is gone** (`6e55463`). Static markup on the page
-      template, appended to every announcement regardless of content, so a note about a cat being
-      fed read as gravely as a real advisory. Removed whole (the text was the box's only
-      content). No per-post 중요 flag exists and none was added; if wanted, it belongs on the
-      post, not the template.
-- [x] **F3 — the 30-second stall, and pages that lied during it** (`be36c9e`). Two stacked
-      defects; the second made the first visible. - **Firestore waited out a timeout before every first read.** Measured on Safari with
-      `performance.now()` stamps: **30,048 ms** from issuing the query to receiving 4
-      documents, of which the query was the last **48 ms**. The SDK's `detectBufferingProxy`
-      probe gets no answer and waits out the transport timeout (this SDK caps it at exactly
-      30 s) before falling back to polling. ⚠️ **Auto-detect was already on** —
-      `@firebase/firestore` 4.7.3 defaults it to `true`, so the usual "enable auto-detect"
-      advice was a **no-op**, proposed and discarded before shipping. Now forced onto long
-      polling in the browser. 🔑 **No capability lost:** transport, not feature — `onSnapshot`
-      still pushes live updates; the trade is streaming efficiency for realtime listeners, of
-      which this app has **zero** (all ~47 reads are one-shot). **Revisit if live listeners
-      are ever added** — see §12. - **Every public post surface used its failure state as its loading state.** The
-      없어요/찾을 수 없습니다 branches rendered whenever the value was empty — including before
-      the first fetch, which the SSR HTML shipped as first paint. New `hooks/useAsyncData` +
-      `components/ui/AsyncStates` applied to the 공지사항 list, the 공지사항 detail page and the
-      입양홍보 feed (the same defect sat in all three): `loading | ready | error` are distinct,
-      so the empty message is unreachable until a fetch really returns nothing, and a failure
-      offers 다시 시도 instead of impersonating empty content.
+> 📋 **3 items — 3/3 done — now in the work registry**
+> as `R-0258`…`R-0260`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 📌 **Why no error was ever logged.** Firestore retries network failures internally rather than
 rejecting, so a bad connection **hangs** and never throws. That is why the owner's console showed
@@ -1614,24 +744,10 @@ identically to a deleted one. Pruning on absence would destroy the record — an
 video to private, which destroys nothing on YouTube's side. Same shape as the 2026-07-26
 "YouTube owns video data" rule, aimed at the one thing YouTube does **not** own: our tags.
 
-- [x] **G1 — `POST /api/admin/video-availability`** (gated `manage-video`) asks YouTube with the
-      **owner's OAuth credential**, which _can_ tell the two apart: a private video returns with
-      `privacyStatus: 'private'`, a deleted one does not return at all. Writes
-      `youtubeStatus: available | private | missing`; **never deletes**.
-      🚨 **Safety valve:** if YouTube acknowledges _zero_ of the submitted ids — a credential,
-      scope or quota failure rather than a vanished channel — it refuses and writes nothing,
-      instead of flagging everything and emptying the public album in one call.
-- [x] **G2 — public reads drop `missing`/`private`.** ⚠️ Filtered in memory, deliberately **not**
-      as a `where` clause: records predating the check have no `youtubeStatus` field and a
-      Firestore inequality would exclude exactly those — i.e. every existing video. Absent =
-      watchable, so nothing vanishes until a check has judged it.
-- [x] **G3 — the CMS keeps seeing them.** `/admin/tag-videos` loads with `includeUnavailable`
-      and grows a panel listing the missing ones with 기록 삭제 (the confirm spells out that tags
-      go too). Private ones get a one-line note — they return by themselves if re-published.
-      📌 **Text-only by design:** a thumbnail for a deleted video _is_ the grey placeholder that
-      made these look broken, so a thumbnail grid would be a row of grey boxes.
-- [x] **G4 — 동기화 runs the check** as a third step; a failure there is logged but never fails
-      the sync, since the metadata refresh before it has already succeeded.
+> 📋 **4 items — 4/4 done — now in the work registry**
+> as `R-0261`…`R-0264`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ⏳ **Not testable here, and owner-owed:** the classification itself needs real YouTube OAuth,
 which the emulator harness has no credential for (the same reason P5.4 is manual). Existing
@@ -1665,16 +781,11 @@ the next metadata sync overwrites it with `null`. The wrong date therefore **dis
 which looks like an unrelated "the date vanished" bug rather than evidence of this one. Neither
 stage logs anything.
 
-- [x] **Videos + photos store `null` when the date is unknown** — the same value the sync writes,
-      so the upload path and the sync path agree instead of fighting. The UI already renders it as
-      **날짜 없음**, which is honest and prompts someone to set it.
-- [x] **공지사항 / 입양홍보 gained a 촬영 날짜 field** (`forms/RecordingDateField.tsx`), auto-filled
-      from the filename exactly as 집사톡 does — videos take precedence over images, and a typed
-      value is never overwritten. Without it the fix alone would have left those two composers
-      unable to record a date at all.
-- [x] **Deliberately unchanged:** `uploadDate` / `publishedAt` stay `new Date()` — 게시일 genuinely
-      _is_ "now" for a fresh upload, and the album sorts on it (a null there caused a crash once,
-      `DEBUG_LOG` 2026-07-26).
+> 📋 **3 items — 3/3 done — now in the work registry**
+> as `R-0265`…`R-0267`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
+
 - ⏸️ **Still deferred (owner):** that 촬영일 is guessed from the **filename** at all rather than read
   from the file's own metadata. This change only stops the fabrication.
 - 📌 **Existing records:** videos self-heal on the next sync; **photos do not** (no upstream). The
@@ -1697,19 +808,11 @@ pass **different layouts**: photos take the default `layout="overlay"` and pass 
 the caption is drawn over the image; videos use `layout="below"`, whose footer shelf rendered
 **only tags and meta**. `description` was neither passed nor rendered there.
 
-- [x] **`MediaTile` gained a `title` prop** for the `below` shelf (clamped to 2 lines, above the
-      tag chips); the video album passes `video.title`, falling back to `description` for older
-      records and to `''` — which renders no line — rather than a placeholder on every tile.
-      **Titles, not descriptions, by the owner's call:** a YouTube title identifies a clip, a
-      description is prose, and prose on a white shelf would dominate the card.
-- [x] **The `|| '제목 없음'` filler is gone from both places it lived** — it announced a missing
-      _title_ while rendering a _description_, and the second instance sat in `VideoPlayer` under a
-      player already showing the real title.
-- [x] **The modal albums converged onto `MediaTile`.** 🔑 **This was the root cause of both
-      symptoms:** the album _pages_ used the shared tile while the _modal_ albums (opened from a
-      cat's card) hand-rolled their own and drifted — which is why the filler survived there long
-      after the shared tile had dropped it. Converging also gives modal tiles **tag chips** for the
-      first time.
+> 📋 **3 items — 3/3 done — now in the work registry**
+> as `R-0268`…`R-0270`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
+
 - ⚠️ **Side effect, owner call open:** converging removed `PhotoAlbum`'s `설명 없음` filler, which
   had been left alone deliberately (unlike the video one it is correctly labelled). The shared
   tile drops empty-state fillers by design; restoring it should be done **there**, so both
@@ -1770,38 +873,10 @@ in the dashboard, and a new post service adds a row. The 앱 관리 tab is gone 
 **Two defects, one after the other. Both had always been there; only 급식현황 ever reached
 this route, so nobody had seen either.**
 
-- [x] **K1 — a post is addressed by `(type, id)`, not `id` (`c4789c5`).** The four post types
-      live in four collections (`posts_feeding` / `posts_butler` / `posts_announcements` /
-      `posts_adoption`), but `/pages/posts/[id]` hard-coded `getPostService`, i.e.
-      `posts_feeding` — while `PostList` and `AdminPostList` linked **every** type there. A
-      `posts_butler` id looked up in `posts_feeding` simply does not exist.
-      🔑 **A Firestore id is unique only within its collection**, so a route taking an id alone
-      cannot resolve a post — no retry or permission change could have helped.
-  - 📌 **The report named 집사톡; 공지사항 and 입양홍보 were broken identically** in the admin
-    CMS, which links to the same route. Found by tracing rather than by re-reading the report.
-  - **New `src/services/post-types.ts`** — one `PostType` union, `getServiceForPostType()`,
-    `isPostType()`, `postDetailPath()`. That mapping had **three** copies (`AdminPostList`,
-    `EditPostForm`, and this page, which simply lacked it); all now share one. ⚠️ Import it
-    directly, not through `@/services`: it uses the factory getters there to keep the
-    per-tenant singleton cache, so re-exporting would close a cycle.
-  - 🔑 **The type is a path segment (`/pages/posts/{postType}/{id}`), not `?type=`, and has
-    no default.** The first cut used a query param with a `butler_stream` fallback for
-    backward compatibility and was **rejected on review (owner)**: a param can go missing
-    while the route still matches, forcing the page to guess a collection — the original bug,
-    reproduced silently. It also protected nothing, since the only type this route ever
-    resolved is admin-gated. `PostList` now takes a **required** `postType` prop, so a caller
-    that cannot say what it is listing does not compile.
-  - 📌 **Why it survived: the route had no e2e coverage at all** — the one place where a wrong
-    collection is indistinguishable from a deleted post.
-- [x] **K2 — it renders in the shared post shell (`d7c601f`).** The page had its own markup:
-      an unpadded full-bleed `<img>` under English `Video:` / `Images:` headings, with videos
-      as a thumbnail **linking off to youtube.com** instead of an embedded player. It now uses
-      the 공지사항 detail page's shell (back link · title · author • date · white card) and the
-      shared **`PostMedia`** with `layout="full"`, so every surface renders a post's media
-      identically. Per-type back links; 급식현황 included, as asked.
-  - ⚠️ **댓글 is offered on the community types only** (급식현황 / 집사톡). 공지사항 / 입양홍보
-    have never had a reply thread, and this route is where the admin CMS links — reaching them
-    here must not quietly grow one.
+> 📋 **2 items — 2/2 done — now in the work registry**
+> as `R-0271`…`R-0272`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 **Verified:** `tests/e2e/admin/post-detail.spec.ts` (9 tests) — clicking through from the
 집사톡 list, all four types by direct URL, a genuine miss, an unrecognised type resolving
@@ -1822,14 +897,10 @@ announcements/adoption, YouTube for video"_ — true when written, **stale since
 Nothing was left but the divergence, and two implementations of one job is what produced
 §10e's defects.
 
-- [x] **L1 — `useSimpleContentForm` gained an `edit` block** (load · prefill · `updatePost`),
-      and `NewAnnouncementForm` / `NewAdoptionForm` take an optional `postId`.
-- [x] **L2 — `useRichContentForm` gained the same**, and `NewButlerTalkForm` takes a `postId`.
-      집사톡 runs on a **different hook**, which is why L1 did not reach it; the 기존-media
-      helpers were lifted into `forms/existingMedia.ts` rather than copied.
-- [x] **L3 — `MediaItemList` gained `existing` / `onExistingChange`.** Media already on the
-      post shows as `기존` rows with a thumbnail and its own 삭제, and the UI says plainly that
-      삭제 **detaches it from the post** and does not delete the file.
+> 📋 **3 items — 3/3 done — now in the work registry**
+> as `R-0273`…`R-0275`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 🔑 **Four decisions inside this, each of which could have gone wrong quietly:**
 
@@ -1875,31 +946,10 @@ is why "just delete it" needed the photo pipeline moved first.
   CMS. 🔑 **Changing the photo in the CMS did nothing** — a latent bug, invisible only because
   both sources happened to name the same file.
 
-- [x] **M1 — the photo serves live from Storage.** `useAboutPhoto` resolves
-      `about-photos/{mountainId}/{filename}` from the CMS-supplied filename; the `localPath`
-      short-circuit is gone, which fixed the bug and unblocked the deletion in one move.
-- [x] **M2 — no JSON fallback anywhere.** The page and `AboutContentEditor` read Firestore
-      only; a mountain with no doc gets a blank form and a **"아직 소개가 준비되지 않았어요"**
-      page, distinct from the read-failed state.
-- [x] **M3 — `about` deleted** from `mountains.json` (both mountains) along with
-      `MountainAbout` / `AboutMainPhoto` / `AboutSection` / `getMountainAbout` and
-      `MountainConfig.about`.
-- [x] **M4 — the build-time about-photo leg retired.** `fetch-static-assets.js` loses
-      `fetchAboutPhotosFromStorage`, `downloadAndUpdateAboutPhotos`, `verifyAboutPhotosExist`
-      and — with them — its only reason to **write to `mountains.json`**.
-      🔑 **No Firebase media is baked into the build any more**; about photos were the last.
-- [x] **M5 — `scripts/migration/migrate-about-content-to-cms.js`, APPLIED to prod
-      2026-08-02** (snapshot `backups/firestore/2026-08-02T13-15-25-299Z` first). Seeds
-      `about_content/manisan`, strips the `mainPhoto.localPath` build artifact from both docs,
-      and deletes the legacy `about_content/about` (M5.2a left it in place pending exactly this
-      verification). `about_content` now holds **two** docs; a re-run is a clean no-op.
-      📌 manisan's seed carries an **empty `mainPhoto`** — it never declared one, and an
-      invented filename would render as a broken image.
-- [x] **M6 — `next.config.js` allows the Storage emulator's host under the emulator flag.**
-      🔑 **The e2e harness had no remote-image coverage at all** — thumbnail and album fixtures
-      use local `public/` paths, so the about photo became the **first** e2e image served
-      through Storage, and `nav.spec` went red on a `next/image` **400**. Production still
-      resolves to exactly one allowed remote host.
+> 📋 **6 items — 6/6 done — now in the work registry**
+> as `R-0276`…`R-0281`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ⚠️ **Two costs accepted on purpose, not overlooked:**
 
@@ -1940,31 +990,10 @@ always an admin — who could already edit everything. The missing capability wa
 a member saw the link and then met 관리자 권한이 필요합니다. The code said so out loud:
 _"we allow both admin and butler roles"_, directly above `setHasPermission(isAdmin)`.
 
-- [x] **N1 — two permissions**, `write-own-post-butler` / `write-own-post-feeding`, each
-      covering create **and** edit-own on that board. `butler-internet` gets only the 집사톡
-      one, preserving the per-board split the roles already encoded.
-- [x] **N2 — `authorUid`** stamped at creation is what the rules authorize against;
-      `username` is an email, i.e. display. Posts predating it fall back to an email match.
-- [x] **N3 — rules** split into create / update / delete: create must author as self, update
-      requires authorship and cannot rewrite `authorUid`/`username`/`date`/`time`, delete
-      stays `manage-posts`.
-- [x] **N4 — board pages** gate on the `view-post-*` permissions; the `/new` routes gained a
-      gate at all (they had none — reachable by URL, harmless only because the write failed).
-- [x] **N5 — member edit route** `/pages/posts/[postType]/[id]/edit`, author-only, using the
-      composers rather than `EditPostForm`'s raw URL list.
-- [x] **N6 — e2e**: six new member specs. Full suite **220 / 13 / 0**.
-- [x] **N7 — the rules, tested directly (2026-08-03).** `tests/rules/posts.rules.test.ts`,
-      **43 tests** (`npm run test:rules` = 54 with `users.rules.test.ts`, CI-gated), asserting
-      the refusals e2e structurally cannot reach: a post attributed to someone else's
-      `authorUid`, an edit rewriting provenance, a `replyCount` moving by anything but +1 or
-      carrying a second field, a `feeding_spots` write outside the two allowed keys, a delete
-      on `write-own-*`, and `butler-internet` reaching 급식현황.
-      🔑 **It passed on the first run, which proves nothing** — `assertFails` passes for any
-      denial, including a mistyped collection — so four holes were punched in the rules to
-      check the assertions discriminate. **One escaped:** the two boards carry separate,
-      near-identical rule blocks and the provenance cases only ran against `posts_butler`, so
-      gutting `posts_feeding` alone was invisible. Every ownership case now runs against
-      **both** via `describe.each`. ⚠️ Adding a case for one board only re-opens that gap.
+> 📋 **7 items — 7/7 done — now in the work registry**
+> as `R-0282`…`R-0288`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ⚠️ **Two cross-collection consequences found while building, not while planning:**
 
@@ -2022,56 +1051,14 @@ media, not a broken fixture.
 composer). 급식현황 uploads nothing by design (2026-07-27 D1); 공지사항 / 입양홍보 upload but
 stay admin-only.
 
-- [x] **P1 — narrow permissions, not broad ones (owner's call).** `upload-own-photo` /
-      `upload-own-video` granted to both butler roles. 🔑 **Widening to `manage-photo` would
-      have also authorized retagging and deleting anyone's album entries** — the narrow grant
-      exists precisely for what it still refuses.
-- [x] **P2 — `uploadedByUid` is the authorization identity.** Mirrors §10n's `authorUid` for
-      the same reason: `uploadedBy` is free text holding emails **and literals** (`'admin'`,
-      `'user'`, `'system_sync'`, `'youtube_sync'`), so it cannot carry authorization. Derived
-      inside the upload strategy from the same `user` that signs the request, so the display
-      and identity fields can never disagree. No backfill — the member clause is create-only.
-- [x] **P3 — rules:** `cat_images` gains `allow create: if canWrite('upload-own-photo') &&
-uploadingAsSelf()`. 📌 **`cat_videos` deliberately gains nothing** — a member's video
+> 📋 **8 items — 8/8 done — now in the work registry**
+> as `R-0289`…`R-0296`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
+> uploadingAsSelf()`. 📌 **`cat_videos` deliberately gains nothing\*\* — a member's video
+
       record is written by the Admin SDK in `/api/upload-youtube/complete`, which bypasses
       rules, so the route is its gate and a clause there would be dead surface.
-- [x] **P4 — API gates accept any-of.** `requireApiPermission` takes `string | string[]`.
-      ⚠️ **Both permissions stay listed everywhere** — an admin holds only the broad one, a
-      member only the narrow one. §10n shipped exactly this bug once already.
-- [x] **P5 — tests, and mutation-tested.** `tests/rules/media.rules.test.ts` (15) +
-      `tests/unit/requireApiPermission.test.ts` (7) + stamp/gate assertions on the existing
-      upload specs. Three rule mutations and one gate mutation each produced the expected
-      failures.
-- [x] **P6 — the admin UI could not manage the new permissions** (owner-raised: _"we need to
-      update the 권한 tab"_). Both matrices on `/admin/members` **hardcoded their own copy** of
-      the permission list, so `upload-own-*` were granted in config, enforced by the rules, and
-      **invisible to the operator who administers them**. 📌 Saving was at least safe — the
-      matrix posts the _fetched_ object, so unlisted permissions already in Firestore are
-      preserved, not stripped. Root cause fixed rather than patched: **one exported
-      `ALL_PERMISSIONS`** in `src/types/permissions.ts`, with the `Permission` union derived
-      from it (`typeof …[number]`) and all four former copies importing it — including a
-      **fifth** in `src/config/permission-config.ts` that nothing imported and that had
-      **already** drifted. Also in the same pass: the 권한 (nav-visibility) matrix gained the
-      missing **`cats`** row — 냥이들 is gated in `Navigation` and had no row, so it could never
-      be configured — and lost `write-own-post-*`, which are _write_ grants offered as
-      _visibility_ gates (never selected in live config). A dead `PAGES` const in
-      `api/admin/resource-permissions` went too: never read, and wrong in both directions.
-- [x] **P7 — a guard, because a comment is not a constraint.** `tests/smoke` now compares the
-      catalogue against every permission granted in `config/permissions.json`, every permission
-      `firestore.rules` enforces, and every `resourceId` in `Navigation` — and fails if any
-      matrix re-hardcodes the list. Mutation-tested (remove a permission / remove the `cats`
-      row → the right checks go red). 🔴 **It found a real one on its first run:**
-      `view-analytics` is enforced on `permission_logs` reads and held by **no role**, so the
-      audit trail is readable by nobody — see BACKLOG **B2**.
-      🔬 **Verified in a browser, not just compiled** — `tests/e2e/admin/members-permissions.spec.ts`
-      drives both tabs (4 specs); full suite **224 / 13 / 0**, up from 220.
-- [x] **P8 — deployed 2026-08-03** (owner), in the correct order. ✅ **Verified against
-      production 2026-08-04 rather than taken on trust** — the deployed ruleset (release
-      **2026-08-03T12:03:36Z**) contains the `cat_images` create clause and
-      `uploadingAsSelf`, and the live `role_permissions/role-config` grants
-      `upload-own-photo` + `upload-own-video` to **both** butler roles. 🔑 That check is the
-      §10n lesson applied: **read the deployed artifact, not the branch** — and it is what
-      caught §10q still being undeployed.
 
 🔬 **Why both nets missed it, which is the part worth keeping.**
 `tests/e2e/member/butler-authoring.spec.ts` is text-only by an exclusion **inherited from
@@ -2101,40 +1088,15 @@ weighed it and chose to let authors retract their own work anyway.
 permission — the existing author test already resolves to the replier for a reply document.
 `ReplyForm` has stamped `authorUid` since §10n, so the identity is there.
 
-- [x] **Q1 — `delete` opens to the author** on `posts_butler` / `posts_feeding`, still refusing
-      everyone else. Update needed no change: a reply author editing their own reply already
-      satisfied `isPostAuthor() && provenanceUnchanged()`.
-- [x] **Q2 — the cascade needed its own clause.** `deletePost` removes **every reply first**,
-      and those belong to other people — so without `isParentAuthor()` the cascade is denied
-      partway and **an author cannot delete their own post once anyone has replied**. It costs
-      a document read, so it is the last term, after `isPostAuthor()` short-circuits the common
-      case. 📌 **A stamped `parentAuthorUid` field would avoid the read and was rejected:** a
-      reply is client-written, so a crafted one could name the wrong parent author and make a
-      post **undeletable by its own author**.
-- [x] **Q3 — `replyCount` may now move ±1**, not just +1. The services **recount**
-      (`replies.length`) rather than increment, so deleting a reply lands on `old - 1` and the
-      old bound would have denied it. ⚠️ Still exactly one step: anything further apart means
-      the count had already drifted, and correcting drift stays an admin action. Allowing
-      arbitrary values would let any member set any post's reply count to anything.
-- [x] **Q4 — UI.** 삭제 beside the existing 수정 in `PostList`; inline 수정 + 삭제 on a
-      reply's own card in `ReplyItem`. The confirm names the consequence ("댓글 N개가 함께
-      지워져요 · 사진과 영상은 남아요"). The two-era author test moved to
-      `@/utils/postAuthor` so `PostList`, `ReplyItem` and the rules cannot drift apart.
-- [x] **Q5 — tests.** Rules suite +17 (86 total), mutation-tested: removing the author term,
-      the −1 branch, or the parent check each failed exactly the right cases, and M1 in
-      isolation proved the **positive** author-delete test is not vacuous. Plus
-      `tests/unit/postAuthor.test.ts` (9) and `tests/e2e/member/butler-delete.spec.ts` (4,
-      each creating the fixture it destroys). Full e2e **228 / 13 / 0**.
+> 📋 **6 items — 6/6 done — now in the work registry**
+> as `R-0297`…`R-0302`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ✅ **"The media can survive" needed no code.** Verified in both services: `deletePost` /
 `deleteReply` touch only reply documents and the post document — never `cat_images`,
 `cat_videos`, or Storage. A deleted post's photos stay in the 사진첩, which is what the owner
 asked for and what the code already did.
-
-- [x] **Q6 — rules deployed 2026-08-04** (owner). No migration — these ride on the existing
-      `write-own-post-*` grants. ✅ **Verified against production:** the deployed ruleset
-      (release **2026-08-03T15:55:38Z**) is **identical to `config/firebase/firestore.rules`**
-      ignoring comments, so §10n + §10p + §10q are all live.
 
 ⚠️ **It spent a few hours in the exact half-state the deploy order exists to prevent, and that
 is worth recording because the shape recurs.** The **code shipped** (`01d02d7`) while the
@@ -2167,13 +1129,10 @@ content collections.
 ⚠️ **The gap is silent by construction:** a one-shot backfill cannot catch what is written
 after it, and an unstamped document behaves normally until someone tries to write or delete it.
 
-- [x] **O1 — `scripts/migration/stamp-missing-mountain-id.js`** audits every content collection
-      and repairs via the Admin SDK (the only path that bypasses the blocking rule). Applied to
-      prod after a snapshot; re-audit clean. **Re-run it as an audit after any migration or
-      bulk import** — that omission is what produced this.
-- [x] **O2 — `post-service.updateReplyCount` recounts** instead of `increment(1)`.
-      `deleteReply` calls it too, so deleting a 급식현황 reply _raised_ the parent's count;
-      집사톡's service already recounted.
+> 📋 **2 items — 2/2 done — now in the work registry**
+> as `R-0303`…`R-0304`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ✅ **Verified by testing the rules rather than reading them** — `@firebase/rules-unit-testing`
 against the real `firestore.rules`, same admin deleting the same doc twice: **with
@@ -2197,24 +1156,10 @@ correction path: `deletePost` never touches `feeding_spots`, and `NewPostForm` h
 급식소 section on edits since §10n for exactly this reason. The dialog is the only correction
 opportunity the flow has.
 
-- [x] **R1 — 확인 before any write**, listing every ticked 급식소 by name plus the 방문 시간 and
-      the warning that it cannot be undone. Asked **before** `setSubmitting`, so the buttons stay
-      live under the modal. Creation only — an edit touches 제목/내용 and re-stamps nothing.
-- [x] **R2 — the empty branch says something different.** With no spot ticked the dialog reads
-      선택한 급식소가 없어요 rather than warning about a write that is not about to happen. It
-      also catches the opposite mistake: the author who meant to tick and did not.
-- [x] **R3 — the message builder is a pure module** (`src/utils/feedingCheckIn.ts`), not a
-      closure in the form. The spot list, its ordering and its count are pinned by
-      `tests/unit/feedingCheckIn.test.ts` (11); e2e covers the gate itself (dismissing
-      publishes nothing and leaves the draft intact).
-      🔄 **Amended 2026-08-05:** this item used to say the listing was "unreachable from e2e"
-      because `seed-emulators.mjs` seeded no `feeding_spots`. **It is seeded now** (4 spots
-      spanning the freshness ramp), so the 급식소 현황 **table** has e2e cover —
-      `tests/e2e/member/feeding-spots-list.spec.ts`. 📌 The **composer's** picker remains
-      unit-only; the seeding closed the table, not the form.
-- [x] **R4 — time formatting reads the `datetime-local` components literally.** A `Date`
-      round-trip would reinterpret a zoneless value in the browser's zone and could show an hour
-      other than the one in the input beside the dialog.
+> 📋 **4 items — 4/4 done — now in the work registry**
+> as `R-0305`…`R-0308`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 **Verified.** tsc · unit **133** (+11) · smoke **39** · e2e **229/13/0** (+1). Mutation-tested:
 dropping the `checkedSpotIds` filter failed exactly the four cases that assert the listing.
@@ -2243,22 +1188,10 @@ updates none of them. All four fail silently.**
 | Other cats' prose                         | The same tokens sit in any cat's 작명 사유 / 특이사항 / 설명.                                                           |
 | `cats.parents` / `cats.offspring`         | The modal's 엄마/애 rows keep naming a cat that no longer exists. Plain text, so nothing breaks — it just reads wrong.  |
 
-- [x] **S1 — `scripts/migration/rename-cat.js`**, dry-run by default (`APPLY=true` to write),
-      matching the other migration scripts. Refuses rather than guesses: a name another cat in
-      the tenant holds (that ambiguity is what makes `getCatByName`'s first-match-wins
-      unreliable), an `OLD_NAME` matching two cats, a `CAT_ID` from a different mountain than
-      `MOUNTAIN_ID`, a no-op rename.
-- [x] **S2 — token rewriting matches `[catmodal:NAME]` only**, never the bare name (a cat called
-      별이 must not rewrite every 별이 in a post body), with the name regex-escaped so `아롱(2)`
-      cannot compile into a capture group matching another cat's token.
-- [x] **S3 — `parents`/`offspring` added after the owner's dry run (`70e2c60`).** ⚠️⚠️ **Whole
-      members only, never a replace, and the live rename is the proof:** 아들조로 → 조로 makes the
-      **new** name a substring of **two** existing cats, and one cat stores a list
-      (`cats/예쁜이엄마 → "순돌이,예쁜이,블타"`). Separators and spacing round-trip untouched.
-- [x] **S4 — patches merge per document before committing.** A cat can appear in both the prose
-      and family passes (`cats/엄마조로` does), and Firestore rejects two writes to one document
-      in a single commit. Reported separately, written once.
-- [x] **S5 — emulator coverage + a `demo-*` guard** — see §10s-bis below.
+> 📋 **5 items — 5/5 done — now in the work registry**
+> as `R-0309`…`R-0313`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 ⚠️⚠️ **The video half of the cascade does not stick, and this is not fixable here.**
 `/api/refresh-video-metadata` overwrites `cat_videos.tags` from `snippet.tags` on every
@@ -2329,17 +1262,10 @@ They had, and the code recorded it. 공지사항/입양홍보 uploaded a video w
 `item.description || message || '공지사항 동영상'`, so a blank 설명 silently published the **post
 body** as the YouTube description.
 
-- [x] **T1 — `useSimpleContentForm` passes `videoItems` through unchanged.** The comment that
-      argued _for_ the old behaviour is replaced by one recording the **reversal**, so it cannot
-      be restored from the rationale that used to sit there.
-- [x] **T2 — `youtubeDefaults.description` removed** from both composers and from the config
-      type; it had no remaining consumer. **`youtubeDefaults.title` stays by decision (owner):**
-      an untitled video on YouTube is worse than one carrying its post's title.
-- [x] **T3 — the UI changed with the behaviour.** Both forms passed
-      `descriptionHelp="비어 있으면 글 내용이 사용돼요."` — true before, a lie after. The override
-      is **deleted** rather than reworded, so both inherit `MediaItemList`'s own
-      "비어 있으면 YouTube 설명 없이 올라가요." — the string 집사톡 already showed. That left the
-      `descriptionHelp` prop with no callers, so it is gone too.
+> 📋 **3 items — 3/3 done — now in the work registry**
+> as `R-0314`…`R-0316`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 📌 **집사톡 needed no change and never appeared in the diff.** The report named it and was
 accurate — about **production**, which runs `main`, where the old shared hook still does
@@ -2390,41 +1316,10 @@ audit must also grep `rgb(`, `hsl(`, and inline `style={{ color`.**
 
 ### What shipped
 
-- [x] **U1 — the palette is global (supersedes M8).** `theme` deleted from `mountains.json`,
-      `MountainTheme` deleted, and the `[mountain]` layout's injection removed — including its
-      `dangerouslySetInnerHTML` and the hex validation that guarded it. 🔑 **The
-      `--color-primary` indirection is KEPT deliberately**: `globals.css` declares it as
-      `theme('colors.brand.DEFAULT')`, resolved at **build** time, so it is not a copy. It
-      exists because a Tailwind token cannot reach `<style jsx global>` or third-party CSS
-      (`.dsg-*`, Leaflet), which consume variables only. **Deleting it would have looked tidier
-      and been wrong.** Net: **three** hand-copied `#FACC15`s collapse to **one**.
-      📌 **Why removal and not a fuller theming pass:** no preview, no contrast check, and the
-      config is baked — so a mountain "trying a colour" queues a redeploy each time.
-- [x] **U2 — ~30 brand utilities adopt `brand`/`accent`** across 9 files, admin included (D5).
-      **Equivalence proven three ways**, not assumed: every ramp stop is byte-identical to
-      Tailwind's `yellow`/`orange`; each migrated class compiles to the same declaration as its
-      predecessor; old vs new rendered side by side. ✅ **An unplanned completeness proof:** in
-      that comparison the OLD classes rendered **unstyled**, because Tailwind had purged them
-      from the bundle — which happens only when no source file references them.
-- [x] **U3 — 급식현황's freshness ramp goes green→red ⇒ blue→red.** ⚠️ **The only user-visible
-      change in this workstream.** Requested on preference; it fixed three defects. The old
-      fresh end measured **1.37:1** against WCAG AA's 4.5:1 — invisible, and **worst exactly
-      where the news was good**; the new ramp's worst point is **6.47:1**. Green↔red is also the
-      pair most likely to be indistinguishable under colour blindness. And `0h`/`≥60h` were
-      special-cased with classes that did not match the ramp they bookended, so the scale
-      **jumped at the two thresholds an operator watches**; the ratio is clamped now.
-      🔑 **It went undetected because the logic was a closure inside the component and therefore
-      untestable** — extracting it to `src/utils/feedingFreshness.ts` was the precondition for
-      the contrast check, not tidiness. That check now walks every hour 0→60 and carries a
-      **negative control** so it cannot silently stop measuring.
-- [x] **U4 — `feeding_spots` is seeded, so the table has e2e cover for the first time.**
-      ⚠️ Needed a dedicated writer: `seedCollection` turns a fixture's `id` into the _document_
-      id and strips it, but this collection reads `data.id` as a **numeric field** and orders by
-      it. Offsets convert to Timestamps **relative to the seed run** — a fixed date would drift
-      past the clamp and stop exercising the scale. **This closes the caveat §10r R3 recorded.**
-- [x] **U5 — `design.md`'s scope line corrected.** It read _"Admin (`react-admin`) screens are
-      out of scope"_ and had outlived what it described: the subsystem was deleted in `d963d30`
-      (2026-06-29). Owner confirmed admin **is** in scope.
+> 📋 **8 items — 6/8 done — now in the work registry**
+> as `R-0317`…`R-0324`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 **Gates:** `tsc` 0 · unit **196** · smoke **39** · **full e2e 233 passed / 13 skipped / 0
 failed** · `next build` green. ✅ **Both nets proven to have teeth** — inverting the ramp made
@@ -2432,35 +1327,7 @@ the unit hue test _and_ the e2e colour assertion fail while hue-agnostic tests s
 
 ### Phase 4 — hygiene — ✅ DONE 2026-08-06
 
-- [x] **U6 (plan Phase 4) — hygiene.** All three sites resolved.
-      `YouTubeAuthPanelNew`'s status map now returns **Tailwind utility pairs**
-      (`text-emerald-500` + `border-emerald-500/20`, …) as classes instead of four raw hexes in
-      two inline `style` props — and the `/20` is **exact**, since the old `${hex}33` suffix is
-      `0x33 = 51/255 = 0.2`. `Compass` takes `fill-red-500` / `fill-gray-100` (an inline SVG in
-      our own JSX, so `fill-*` reaches it). **`LeafletMountainMap:302` keeps its hex by
-      decision** — Leaflet writes `color` into the SVG `stroke` **presentation attribute**,
-      which takes neither a class nor `var(--…)` — and now carries a comment saying so.
-      ⚠️ **These stay status hues**; tokenizing them to `brand` was the one way this edit could
-      have shipped a regression. ✅ **`design.md` §Colors now opens with the global-palette
-      callout** — a mountain may not differ in colour, **M8 withdrawn, not deferred**, and
-      `--color-primary` is an escape hatch rather than a second definition. 🔑 **That doc edit
-      was the point of the phase:** the decision lived in `AGENTS.md`, this doc and the plan,
-      i.e. everywhere except the one document read before proposing per-tenant theming again.
-      **Verified:** `tsc` 0 · smoke **39** · unit **196** · **e2e 233/13/0** (unchanged from
-      Phase 3, as a no-behaviour-change phase should be); browser pass on the **public** map
-      (compass renders the identical `rgb(239,68,68)` / `rgb(243,244,246)`, and all eight
-      status rules confirmed in the compiled stylesheet). ⚠️ **`/admin` still unseen** — see U8.
-
 ### Open — deferred to a fresh session
-
-- [ ] **U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED.** `design.md` also
-      governs typography, spacing, elevation, shapes and the modal/component specs. Admin
-      screens were exempt from all of it until 2026-08-05 and **nothing has ever checked them
-      against any of it.** Recorded so it is scheduled rather than discovered.
-- [ ] **U8 — one browser confirmation.** The `/admin/*` screens were never seen rendered
-      (auth-gated, no credentials that session): 게시물 / 집사들 / 앱 관리 and 냥이들' grid
-      header. Everything is pixel-identical by construction, so this is a confirmation, not a
-      hunt.
 
 📌 **Naming trap in the plan doc:** it numbers **§4/§5** (analysis, complete) _and_
 **Phase 4/Phase 5** (work, open). Say "Phase N" when you mean work.
@@ -2475,40 +1342,10 @@ the unit hue test _and_ the e2e colour assertion fail while hue-agnostic tests s
 > from the Phase C design restyle. Both also surface in the redesign tasks doc, but
 > the _functional_ fix is the point here.
 
-- [x] **입양홍보 (`/pages/adoption`)** — **built 2026-06-26** as an **입양 가능 냥이
-      갤러리** (adoptable-cats gallery): `Cat.adoptable?` flag (`src/types/index.ts`),
-      admin tagging (checkbox in the cat edit form + table badge,
-      `src/app/admin/cats/page.tsx`), and the public page
-      (`src/app/pages/adoption/page.tsx`) rendering adoptable cats on the shared
-      `CatCircleGrid` (extracted from `CatGallery`) → `CatInfo` on tap, with a friendly
-      해요체 empty state + 동참 CTA. All three 404 entry points now resolve (route 200,
-      `tsc` clean). _Remaining: browser/admin-session visual verification._
-- [x] **동참 (`/pages/contact`) — end-to-end, DONE 2026-06-28** (Variant A). A
-      submission now records in Firestore **and** emails the admin, all on Vercel (no
-      Firebase compute). Decisions/history in
-      [`handoff-5`](../handoff/archive/2026-06-27-handoff-5.md) +
-      [`handoff-7`](../handoff/archive/2026-06-27-handoff-7.md):
-  - **Diagnosed (earlier):** read path was dead (no `getAllContacts`, dashboard count
-    hard-coded `0`, admin "Contact Management" tab disabled) and `contacts` had no
-    Firestore rule. Submissions were invisible — the real gap.
-  - **Built (keepers):** `getAllContacts()` + `Contact` type + dashboard count + the
-    admin **Contact Management** tab (`src/components/admin/ContactManagement.tsx`).
-  - **Variant A route (this session):** `POST /api/contact`
-    (`src/app/api/contact/route.ts`) — verifies the Firebase **ID token**, writes the
-    contact via the **Admin SDK** (bypasses client rules), then emails `adminEmail`
-    (`config/mountains/mountains.json`) over **SMTP/nodemailer**. Body validated +
-    length-capped; email failure logs + returns `{ success, emailDelivered:false }`
-    so a notification miss never loses the recorded submission.
-  - **Form repointed:** `pages/contact/page.tsx` `handleSubmit` now `fetch`es the
-    route with `Authorization: Bearer <idToken>` (was a direct client write).
-  - **Rule tightened:** `contacts` `create → if false` (Admin SDK is the only writer);
-    deployed via `firebase deploy --only firestore:rules`.
-  - **SMTP:** Gmail SMTP (`SMTP_HOST/PORT/USER/PASSWORD/FROM`), set in local `.env`
-    **and** the Vercel dashboard (Production + Preview). Terraform plumbing for these
-    exists but is parked (`_infra/_terraform/`) — env vars are dashboard-managed; see
-    [`../deployment/README.md`](../manuals/deployment/README.md).
-  - **Verified:** local end-to-end — submission writes Firestore, admin sees it in
-    Contact Management, and the notification email arrives (`emailDelivered: true`).
+> 📋 **2 items — 2/2 done — now in the work registry**
+> as `R-0325`…`R-0326`. See
+> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> text in `work_tracking/records/`.
 
 #### 2026-08-06 — the sending account changed, and the silence around it was closed
 

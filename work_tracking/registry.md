@@ -11,12 +11,12 @@
 
 | type | open | in-progress | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- |
-| task | 4 | 0 | 1 | 0 | **5** |
+| task | 23 | 5 | 154 | 5 | **187** |
 | bug | 0 | 0 | 49 | 0 | **49** |
 | change | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 0 | 0 | **0** |
 | question | 1 | 0 | 0 | 0 | **1** |
-| **total** | **5** | **0** | **139** | **0** | **144** |
+| **total** | **24** | **5** | **292** | **5** | **326** |
 
 ## Open work
 
@@ -27,6 +27,30 @@
 | R-0141 | task | open | — | — | `npx eslint <file>` cannot resolve the shared config, so per-file linting is broken | [detail](./records/R-0141.md) |
 | R-0142 | task | open | — | — | Two live login pages, and the one members get bounced to has no 집사등록 and no tests | [detail](./records/R-0142.md) |
 | R-0144 | question | open | — | — | Should the about page render `sections`? | [detail](./records/R-0144.md) |
+| R-0165 | task | open | — | §4 | Performance on mobile networks — image sizes, above-the-fold, the thumbnail | [detail](./records/R-0165.md) |
+| R-0166 | task | in-progress | — | §4 | Sign-in-gated surfaces at mobile widths: butler*talk, butler_stream, mypage. *(mypage + | [detail](./records/R-0166.md) |
+| R-0168 | task | in-progress | — | §5 | Visual/UX consistency — Core done 2026-06-30; folds into the new cross-cutting | [detail](./records/R-0168.md) |
+| R-0174 | task | in-progress | — | §5 | Unified branded design + admin Korean — IN PROGRESS (2026-06-30, handoffs 17–18). | [detail](./records/R-0174.md) |
+| R-0176 | task | open | — | §6 | Decide the mobile-supported admin task set (e.g. announcements, | [detail](./records/R-0176.md) |
+| R-0177 | task | open | — | §6 | Admin nav on mobile — the top nav (대쉬보드/앱관리/고양이/사진/동영상/ | [detail](./records/R-0177.md) |
+| R-0178 | task | open | — | §6 | Tables → cards — list views (posts, members, images, videos) reflow to | [detail](./records/R-0178.md) |
+| R-0179 | task | open | — | §6 | Batch-tagging UIs (tag-images / tag-videos) — the grid + multi-select + CatSelectorModal flow on touch; or explicitly… | [detail](./records/R-0179.md) |
+| R-0180 | task | open | — | §6 | Forms — cat add/edit, announcement create, about-content editor: input | [detail](./records/R-0180.md) |
+| R-0181 | task | open | — | §6 | Inline-style layout makes responsive work harder — coordinate with §5's | [detail](./records/R-0181.md) |
+| R-0189 | task | open | — | §7 | 📄 NEW workstream — per-page admin button spec sheets. First one shipped: | [detail](./records/R-0189.md) |
+| R-0195 | task | open | — | §7 | Error handling — read-paths swallow errors → []/null (silent | [detail](./records/R-0195.md) |
+| R-0196 | task | open | — | §7 | Structured logging — replace ad-hoc console.* with per-module loggers | [detail](./records/R-0196.md) |
+| R-0202 | task | open | — | §7 | Request validation — no zod/schema at API boundaries. | [detail](./records/R-0202.md) |
+| R-0203 | task | open | — | §7 | Upload-on-edit for posts (shared media-upload util). The shared post editor | [detail](./records/R-0203.md) |
+| R-0208 | task | in-progress | — | §7a | Timing: qualitative win proven (zero client cat reads); no ms figure captured. | [detail](./records/R-0208.md) |
+| R-0215 | task | open | — | §8 | Verify Kakao scopes + document received fields (compliance-plan task 8). | [detail](./records/R-0215.md) |
+| R-0216 | task | open | — | §8 | Professional/legal review of the policy text + consent flows before scaling. | [detail](./records/R-0216.md) |
+| R-0217 | task | open | — | §8 | Security audit vs the PIPA safety-measures standard (compliance-plan task 7). | [detail](./records/R-0217.md) |
+| R-0224 | task | in-progress | — | §9 | Per-mountain DB isolation at the service-factory seam. Seam parameterized | [detail](./records/R-0224.md) |
+| R-0246 | task | open | — | §10d | A CMS-controlled toggle for whether multiple upload is allowed | [detail](./records/R-0246.md) |
+| R-0253 | task | open | — | §10d | D3 — align the media-section order across composers (proposed, still not | [detail](./records/R-0253.md) |
+| R-0323 | task | open | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
+| R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
 
 ## Hierarchy
 
@@ -180,3 +204,185 @@ _No records have been broken out into children._
 | R-0142 | task | open | — | — | Two live login pages, and the one members get bounced to has no 집사등록 and no tests | [detail](./records/R-0142.md) |
 | R-0143 | task | done | — | — | `/api/revalidate` never refreshes 냥이들, so cat edits take up to an hour there | [detail](./records/R-0143.md) |
 | R-0144 | question | open | — | — | Should the about page render `sections`? | [detail](./records/R-0144.md) |
+| R-0145 | task | done | — | §4 | Mobile audit pass of the public pages at ≈360 / 390 / 414 px: home/map, about, | [detail](./records/R-0145.md) |
+| R-0146 | task | done | — | §4 | Navigation on mobile — frosted grouped nav + hamburger dropdown audited. Fixed: | [detail](./records/R-0146.md) |
+| R-0147 | task | done | — | §4 | Modals on mobile — shared ui/Modal verified: Lightbox (full-screen, sized image, | [detail](./records/R-0147.md) |
+| R-0148 | task | done | — | §4 | Album grids on mobile — grid-cols-2 density + tile captions/chips legible; | [detail](./records/R-0148.md) |
+| R-0149 | task | done | — | §4 | Forms on mobile — login + contact verified: all inputs computed 16px (no iOS | [detail](./records/R-0149.md) |
+| R-0150 | task | done | — | §4 | Content pages — about / 공지 / FAQ / 입양홍보 / 동참: zero horizontal overflow, good | [detail](./records/R-0150.md) |
+| R-0151 | task | done | — | §4 | Map zoom / orientation / scroll — Pass 2 (2026-07-04). Fixed three owner-reported | [detail](./records/R-0151.md) |
+| R-0152 | task | done | — | §4 | Map pinch-bounce pin loss — S22 (2026-07-05, DEBUG_LOG). ✅ S22-verified by owner. | [detail](./records/R-0152.md) |
+| R-0153 | task | done | — | §4 | Portrait-only mobile map + one-line landscape nav (2026-07-05, FEATURE_MOD_LOG). | [detail](./records/R-0153.md) |
+| R-0154 | task | done | — | §4 | Static clustering — durable fix for the recurring pin loss (2026-07-05, DEBUG_LOG). | [detail](./records/R-0154.md) |
+| R-0155 | task | done | — | §4 | Cleanup: npm uninstall leaflet.markercluster (2026-07-05) — dead dependency | [detail](./records/R-0155.md) |
+| R-0156 | task | done | — | §4 | Per-Point title-label side override (labelSide) — 2026-07-05, FEATURE_MOD_LOG. | [detail](./records/R-0156.md) |
+| R-0157 | task | done | — | §4 | 급식소 관리 (feeding-station points) admin CMS — 2026-07-05, FEATURE_MOD_LOG, | [detail](./records/R-0157.md) |
+| R-0158 | task | done | — | §4 | Mobile lightbox pinch-to-zoom (2026-07-08, off-plan). react-zoom-pan-pinch (v4.0.3) | [detail](./records/R-0158.md) |
+| R-0159 | task | done | — | §4 | Back button / swipe-back closes modals (2026-07-08, off-plan). useModalLayer now | [detail](./records/R-0159.md) |
+| R-0160 | task | done | — | §4 | Page-wide UI scale reduction (2026-07-08–09, off-plan). All public page headers | [detail](./records/R-0160.md) |
+| R-0161 | task | done | — | §4 | Map mobile quirks — DEVICE-OWED (remaining). Clustering aggressiveness | [detail](./records/R-0161.md) |
+| R-0162 | task | done | — | §4 | Map re-fit on resize — mobile. The fit-on-resize fix (2026-07-02, | [detail](./records/R-0162.md) |
+| R-0163 | task | done | — | §4 | Touch-target sizing, hit areas, and hover-only affordances that don't exist on touch | [detail](./records/R-0163.md) |
+| R-0164 | task | done | — | §4 | Mobile nav + auth-flow fixes (2026-07-10, off-plan — DEBUG_LOG ×2, FEATURE_MOD_LOG). | [detail](./records/R-0164.md) |
+| R-0165 | task | open | — | §4 | Performance on mobile networks — image sizes, above-the-fold, the thumbnail | [detail](./records/R-0165.md) |
+| R-0166 | task | in-progress | — | §4 | Sign-in-gated surfaces at mobile widths: butler*talk, butler_stream, mypage. *(mypage + | [detail](./records/R-0166.md) |
+| R-0167 | task | done | — | §5 | ✅ Spreadsheet-grid cat editor (shipped 2026-06-29 — see | [detail](./records/R-0167.md) |
+| R-0168 | task | in-progress | — | §5 | Visual/UX consistency — Core done 2026-06-30; folds into the new cross-cutting | [detail](./records/R-0168.md) |
+| R-0169 | task | done | — | §5 | ✅ AdminAuth hardening (UX side) — DONE (2026-06-29 → 2026-06-30). | [detail](./records/R-0169.md) |
+| R-0170 | task | done | — | §5 | Emergency-bypass buttons removed (commit 0cd9c2c). The "🚨 Emergency Bypass" / | [detail](./records/R-0170.md) |
+| R-0171 | task | done | — | §5 | 10s init-timeout removed (commit dc1d748). Diagnosed as a vestigial guard for | [detail](./records/R-0171.md) |
+| R-0172 | task | done | — | §5 | Dead/duplicate cleanup (routes + example) — ✅ removed in Phase 3A: the 8 | [detail](./records/R-0172.md) |
+| R-0173 | task | done | — | §5 | ✅ react-admin decision — REMOVED (2026-06-29). Investigation showed the | [detail](./records/R-0173.md) |
+| R-0174 | task | in-progress | — | §5 | Unified branded design + admin Korean — IN PROGRESS (2026-06-30, handoffs 17–18). | [detail](./records/R-0174.md) |
+| R-0175 | task | done | — | §5 | ✅ Two auth listeners — CONSOLIDATED (commit dc1d748). AdminAuth no longer runs | [detail](./records/R-0175.md) |
+| R-0176 | task | open | — | §6 | Decide the mobile-supported admin task set (e.g. announcements, | [detail](./records/R-0176.md) |
+| R-0177 | task | open | — | §6 | Admin nav on mobile — the top nav (대쉬보드/앱관리/고양이/사진/동영상/ | [detail](./records/R-0177.md) |
+| R-0178 | task | open | — | §6 | Tables → cards — list views (posts, members, images, videos) reflow to | [detail](./records/R-0178.md) |
+| R-0179 | task | open | — | §6 | Batch-tagging UIs (tag-images / tag-videos) — the grid + multi-select + CatSelectorModal flow on touch; or explicitly… | [detail](./records/R-0179.md) |
+| R-0180 | task | open | — | §6 | Forms — cat add/edit, announcement create, about-content editor: input | [detail](./records/R-0180.md) |
+| R-0181 | task | open | — | §6 | Inline-style layout makes responsive work harder — coordinate with §5's | [detail](./records/R-0181.md) |
+| R-0182 | task | done | — | §7 | ✅ EXECUTED (2026-07-19) — complexity retirement (duplication + local-state sprawl). | [detail](./records/R-0182.md) |
+| R-0183 | task | done | — | §7 | ✅ YouTube credential source unified — the admin "re-authorize" button now fixes | [detail](./records/R-0183.md) |
+| R-0184 | task | done | — | §7 | ✅ manage-playlists POST read a global env var for the channel ID (found + FIXED | [detail](./records/R-0184.md) |
+| R-0185 | task | done | — | §7 | ✅ Admin OAuth flow requested too few scopes (found + FIXED 2026-07-26, 05fdbd9). | [detail](./records/R-0185.md) |
+| R-0186 | task | done | — | §7 | ✅ Three /admin/tag-videos write-path bugs (found + FIXED 2026-07-26 — b5f08b7, | [detail](./records/R-0186.md) |
+| R-0187 | task | done | — | §7 | 🔑 Principle adopted (owner, 2026-07-26): YouTube is the source of truth for video | [detail](./records/R-0187.md) |
+| R-0188 | task | done | — | §7 | ✅ Batch edits reached YouTube but never Firestore (owner-reported + FIXED | [detail](./records/R-0188.md) |
+| R-0189 | task | open | — | §7 | 📄 NEW workstream — per-page admin button spec sheets. First one shipped: | [detail](./records/R-0189.md) |
+| R-0190 | task | done | — | §7 | ✅ SECURITY (FIXED 2026-06-28): the permission-matrix API route is gated. | [detail](./records/R-0190.md) |
+| R-0191 | task | done | — | §7 | ✅ SECURITY (FIXED 2026-06-28): gated the remaining /api/admin/* routes. | [detail](./records/R-0191.md) |
+| R-0192 | task | done | — | §7 | ✅ Admin CMS writes un-blocked (DONE 2026-06-29; deployed + browser-verified). | [detail](./records/R-0192.md) |
+| R-0193 | task | done | — | §7 | ✅ users / role-assignment — FIXED & browser-verified (members page). Interim | [detail](./records/R-0193.md) |
+| R-0194 | task | done | — | §7 | ✅ Deployment-target cleanup (DONE) — Vercel is the deployment target. | [detail](./records/R-0194.md) |
+| R-0195 | task | open | — | §7 | Error handling — read-paths swallow errors → []/null (silent | [detail](./records/R-0195.md) |
+| R-0196 | task | open | — | §7 | Structured logging — replace ad-hoc console.* with per-module loggers | [detail](./records/R-0196.md) |
+| R-0197 | task | done | — | §7 | ✅ 🔴 PII in the auth logs — FIXED 2026-08-01 (found while checking whether the §8 | [detail](./records/R-0197.md) |
+| R-0198 | task | done | — | §7 | ✅ API route auth — DONE. Closed in two passes and re-verified 2026-08-01: the | [detail](./records/R-0198.md) |
+| R-0199 | task | done | — | §7 | ✅ RBAC collection drift — DONE (2026-06-28, 5c096a9). firestore.rules resolved | [detail](./records/R-0199.md) |
+| R-0200 | task | done | — | §7 | Dead code — ✅ route variants + MIGRATION_EXAMPLE.ts removed (Phase 3A). | [detail](./records/R-0200.md) |
+| R-0201 | task | done | — | §7 | Build pipeline — ✅ build no longer exports to GCS (Phase 2 aligned it to | [detail](./records/R-0201.md) |
+| R-0202 | task | open | — | §7 | Request validation — no zod/schema at API boundaries. | [detail](./records/R-0202.md) |
+| R-0203 | task | open | — | §7 | Upload-on-edit for posts (shared media-upload util). The shared post editor | [detail](./records/R-0203.md) |
+| R-0204 | task | done | — | §7a | Cats moved to build/server reads via the Admin SDK (src/lib/server/cat-reads.ts), | [detail](./records/R-0204.md) |
+| R-0205 | task | done | — | §7a | The marker { pointId → cats } map is baked in page.tsx and threaded to the map + | [detail](./records/R-0205.md) |
+| R-0206 | task | done | — | §7a | On-demand path: POST /api/revalidate (ID-token auth) wired to every admin | [detail](./records/R-0206.md) |
+| R-0207 | task | done | — | §7a | Resolved the page.tsx client-Web-SDK-on-server tech-debt (now Admin SDK). | [detail](./records/R-0207.md) |
+| R-0208 | task | in-progress | — | §7a | Timing: qualitative win proven (zero client cat reads); no ms figure captured. | [detail](./records/R-0208.md) |
+| R-0209 | task | done | — | §7a | ✅ Carried follow-up — DONE 2026-06-30. The dead static-data export seam was removed | [detail](./records/R-0209.md) |
+| R-0210 | task | done | — | §8 | Privacy policy + terms content (Korean; PIPA). Done (2026-07-10): | [detail](./records/R-0210.md) |
+| R-0211 | task | done | — | §8 | Data-subject rights: account withdrawal/deletion (탈퇴). Done (2026-07-10): | [detail](./records/R-0211.md) |
+| R-0212 | task | done | — | §8 | Wire the footer legal links to real pages/routes. Done (2026-07-10): | [detail](./records/R-0212.md) |
+| R-0213 | task | done | — | §8 | Consent touchpoints at signup (email path). Done (2026-07-10): | [detail](./records/R-0213.md) |
+| R-0214 | task | done | — | §8 | ✅ Consent capture for the phone / Kakao paths — RESOLVED 2026-08-01, but NOT the way | [detail](./records/R-0214.md) |
+| R-0215 | task | open | — | §8 | Verify Kakao scopes + document received fields (compliance-plan task 8). | [detail](./records/R-0215.md) |
+| R-0216 | task | open | — | §8 | Professional/legal review of the policy text + consent flows before scaling. | [detail](./records/R-0216.md) |
+| R-0217 | task | open | — | §8 | Security audit vs the PIPA safety-measures standard (compliance-plan task 7). | [detail](./records/R-0217.md) |
+| R-0218 | task | done | — | §8 | Stub docs/compliance/ exists (compliance-plan.md). | [detail](./records/R-0218.md) |
+| R-0219 | task | done | — | §9 | ?mountain= switch is a no-op — MountainSelector sets the query but | [detail](./records/R-0219.md) |
+| R-0220 | task | done | — | §9 | Hard-coded service-account path + bucket fallbacks. Partially done (2026-07-10): | [detail](./records/R-0220.md) |
+| R-0221 | task | done | — | §9 | Hard-coded map image path in the map host; source it from mountain config. | [detail](./records/R-0221.md) |
+| R-0222 | task | done | — | §9 | ✅ mountains.json vs permissions.json inconsistency — CLOSED by M5.4a | [detail](./records/R-0222.md) |
+| R-0223 | task | done | — | §9 | ✅ Theme wired through — CLOSED by M8 (a237e8b, 2026-07-25). config.theme was | [detail](./records/R-0223.md) |
+| R-0224 | task | in-progress | — | §9 | Per-mountain DB isolation at the service-factory seam. Seam parameterized | [detail](./records/R-0224.md) |
+| R-0225 | task | done | — | §10 | Test stack bootstrapped (Vitest) — npm test / npm run test:smoke; | [detail](./records/R-0225.md) |
+| R-0226 | task | done | — | §10 | Playwright e2e harness + CI foundation landed (2026-07-11) — the | [detail](./records/R-0226.md) |
+| R-0227 | task | done | — | §10 | All e2e spec suites written & green (2026-07-13 → 2026-07-15) — main-plan | [detail](./records/R-0227.md) |
+| R-0228 | task | done | — | §10 | Phase 7 done + merged to main (2026-07-16) — flake audit green (local | [detail](./records/R-0228.md) |
+| R-0229 | task | done | — | §10 | Test stack decided & built — Vitest for unit + emulator-backed Playwright for e2e; | [detail](./records/R-0229.md) |
+| R-0230 | task | done | — | §10 | Runtime HTTP smoke — subsumed. The e2e suite boots the real app against emulators and | [detail](./records/R-0230.md) |
+| R-0231 | task | done | — | §10 | Mock service implementations — not needed, and deliberately not built. The | [detail](./records/R-0231.md) |
+| R-0232 | task | done | — | §10 | Smoke/UI tests for critical public paths (map loads, gallery opens, login renders) — | [detail](./records/R-0232.md) |
+| R-0233 | task | done | — | §10 | CI wiring beyond tsc/lint — .github/workflows/ci.yml (checks + | [detail](./records/R-0233.md) |
+| R-0234 | task | abandoned | — | §10 | Vercel Preview-URL read-only smoke (post-push; needs secrets). | [detail](./records/R-0234.md) |
+| R-0235 | task | abandoned | — | §10 | WebKit project (iOS Safari) alongside the Chromium/mobile projects. | [detail](./records/R-0235.md) |
+| R-0236 | task | abandoned | — | §10 | Visual-regression screenshots (masked). | [detail](./records/R-0236.md) |
+| R-0237 | task | abandoned | — | §10 | Lighthouse CI / mobile perf budgets — belongs to the separate perf workstream | [detail](./records/R-0237.md) |
+| R-0238 | task | abandoned | — | §10 | YouTube tagging admin flows (external API). | [detail](./records/R-0238.md) |
+| R-0239 | task | done | — | §10a | B1 0f9190f — 집사게시판 drops media upload. It is a 급식소 check-in log. Compose | [detail](./records/R-0239.md) |
+| R-0240 | task | done | — | §10a | B2 c2fc78f — config-driven, per-mountain playlist filing. social | [detail](./records/R-0240.md) |
+| R-0241 | task | done | — | §10a | B3 bd7ce23 — 집사톡 one file per section, each with its own 제목/설명. Empty | [detail](./records/R-0241.md) |
+| R-0242 | task | done | — | §10a | B4 97b72ed + docs — 촬영일 is a calendar date. ⚠️ It was a day early in KST: parsed | [detail](./records/R-0242.md) |
+| R-0243 | task | done | — | §10c | C1 — ?cat=<id> on /pages/cats (DONE). CatsBrowser consumes the param on | [detail](./records/R-0243.md) |
+| R-0244 | task | done | — | §10c | C2 — keyed on the cat id, not the name (DONE). Pinned by | [detail](./records/R-0244.md) |
+| R-0245 | task | done | — | §10c | C3 — the 이 냥이 링크 chip (DONE 2026-08-01, owner-requested). 🔑 The deep link is | [detail](./records/R-0245.md) |
+| R-0246 | task | open | — | §10d | A CMS-controlled toggle for whether multiple upload is allowed | [detail](./records/R-0246.md) |
+| R-0247 | task | done | — | §10d | D1 — per-file media in 공지사항 / 입양홍보 (DONE 2026-07-30). Both forms moved off | [detail](./records/R-0247.md) |
+| R-0248 | task | done | — | §10d | D1c — cat selector on both forms (DONE 2026-07-30, owner-requested). The same | [detail](./records/R-0248.md) |
+| R-0249 | task | done | — | §10d | D1d — pasted-URL lists removed (DONE 2026-07-30, owner's call). Both forms briefly | [detail](./records/R-0249.md) |
+| R-0250 | task | done | — | §10d | D1e — filename collisions prevented (DONE 2026-07-30). The object path is the | [detail](./records/R-0250.md) |
+| R-0251 | task | done | — | §10d | D1b — conspicuous separators (DONE 2026-07-30, owner-requested). With several files | [detail](./records/R-0251.md) |
+| R-0252 | task | done | — | §10d | D2 — the multiple-upload toggle (DONE 2026-08-02) — 🔄 shipped as _static config_, | [detail](./records/R-0252.md) |
+| R-0253 | task | open | — | §10d | D3 — align the media-section order across composers (proposed, still not | [detail](./records/R-0253.md) |
+| R-0254 | task | done | — | §10e | E1 — 입양홍보 expanded post shows the whole post. It rendered ONE 80×20 thumbnail | [detail](./records/R-0254.md) |
+| R-0255 | task | done | — | §10e | E2 — 입양홍보 posts can pop up on a site visit. Toggle on the composer and on | [detail](./records/R-0255.md) |
+| R-0256 | task | done | — | §10e | E3 — each medium shows its 제목 / 설명 / 태그. None of it is on the post (which | [detail](./records/R-0256.md) |
+| R-0257 | task | done | — | §10e | E4 — the announcement detail page joined the shared renderer. It was the third copy | [detail](./records/R-0257.md) |
+| R-0258 | task | done | — | §10f | F1 — photos render at the video's width (be8eb77). Two causes, both from | [detail](./records/R-0258.md) |
+| R-0259 | task | done | — | §10f | F2 — the "중요한 안내사항" banner is gone (6e55463). Static markup on the page | [detail](./records/R-0259.md) |
+| R-0260 | task | done | — | §10f | F3 — the 30-second stall, and pages that lied during it (be36c9e). Two stacked | [detail](./records/R-0260.md) |
+| R-0261 | task | done | — | §10g | G1 — POST /api/admin/video-availability (gated manage-video) asks YouTube with the | [detail](./records/R-0261.md) |
+| R-0262 | task | done | — | §10g | G2 — public reads drop missing/private. ⚠️ Filtered in memory, deliberately not | [detail](./records/R-0262.md) |
+| R-0263 | task | done | — | §10g | G3 — the CMS keeps seeing them. /admin/tag-videos loads with includeUnavailable | [detail](./records/R-0263.md) |
+| R-0264 | task | done | — | §10g | G4 — 동기화 runs the check as a third step; a failure there is logged but never fails | [detail](./records/R-0264.md) |
+| R-0265 | task | done | — | §10h | Videos + photos store null when the date is unknown — the same value the sync writes, | [detail](./records/R-0265.md) |
+| R-0266 | task | done | — | §10h | 공지사항 / 입양홍보 gained a 촬영 날짜 field (forms/RecordingDateField.tsx), auto-filled | [detail](./records/R-0266.md) |
+| R-0267 | task | done | — | §10h | Deliberately unchanged: uploadDate / publishedAt stay new Date() — 게시일 genuinely | [detail](./records/R-0267.md) |
+| R-0268 | task | done | — | §10i | MediaTile gained a title prop for the below shelf (clamped to 2 lines, above the | [detail](./records/R-0268.md) |
+| R-0269 | task | done | — | §10i | The \|\| '제목 없음' filler is gone from both places it lived — it announced a missing | [detail](./records/R-0269.md) |
+| R-0270 | task | done | — | §10i | The modal albums converged onto MediaTile. 🔑 This was the root cause of both | [detail](./records/R-0270.md) |
+| R-0271 | task | done | — | §10k | K1 — a post is addressed by (type, id), not id (c4789c5). The four post types | [detail](./records/R-0271.md) |
+| R-0272 | task | done | — | §10k | K2 — it renders in the shared post shell (d7c601f). The page had its own markup: | [detail](./records/R-0272.md) |
+| R-0273 | task | done | — | §10l | L1 — useSimpleContentForm gained an edit block (load · prefill · updatePost), | [detail](./records/R-0273.md) |
+| R-0274 | task | done | — | §10l | L2 — useRichContentForm gained the same, and NewButlerTalkForm takes a postId. | [detail](./records/R-0274.md) |
+| R-0275 | task | done | — | §10l | L3 — MediaItemList gained existing / onExistingChange. Media already on the | [detail](./records/R-0275.md) |
+| R-0276 | task | done | — | §10m | M1 — the photo serves live from Storage. useAboutPhoto resolves | [detail](./records/R-0276.md) |
+| R-0277 | task | done | — | §10m | M2 — no JSON fallback anywhere. The page and AboutContentEditor read Firestore | [detail](./records/R-0277.md) |
+| R-0278 | task | done | — | §10m | M3 — about deleted from mountains.json (both mountains) along with | [detail](./records/R-0278.md) |
+| R-0279 | task | done | — | §10m | M4 — the build-time about-photo leg retired. fetch-static-assets.js loses | [detail](./records/R-0279.md) |
+| R-0280 | task | done | — | §10m | M5 — scripts/migration/migrate-about-content-to-cms.js, APPLIED to prod | [detail](./records/R-0280.md) |
+| R-0281 | task | done | — | §10m | M6 — next.config.js allows the Storage emulator's host under the emulator flag. | [detail](./records/R-0281.md) |
+| R-0282 | task | done | — | §10n | N1 — two permissions, write-own-post-butler / write-own-post-feeding, each | [detail](./records/R-0282.md) |
+| R-0283 | task | done | — | §10n | N2 — authorUid stamped at creation is what the rules authorize against; | [detail](./records/R-0283.md) |
+| R-0284 | task | done | — | §10n | N3 — rules split into create / update / delete: create must author as self, update | [detail](./records/R-0284.md) |
+| R-0285 | task | done | — | §10n | N4 — board pages gate on the view-post-* permissions; the /new routes gained a | [detail](./records/R-0285.md) |
+| R-0286 | task | done | — | §10n | N5 — member edit route /pages/posts/[postType]/[id]/edit, author-only, using the | [detail](./records/R-0286.md) |
+| R-0287 | task | done | — | §10n | N6 — e2e: six new member specs. Full suite 220 / 13 / 0. | [detail](./records/R-0287.md) |
+| R-0288 | task | done | — | §10n | N7 — the rules, tested directly (2026-08-03). tests/rules/posts.rules.test.ts, | [detail](./records/R-0288.md) |
+| R-0289 | task | done | — | §10p | P1 — narrow permissions, not broad ones (owner's call). upload-own-photo / | [detail](./records/R-0289.md) |
+| R-0290 | task | done | — | §10p | P2 — uploadedByUid is the authorization identity. Mirrors §10n's authorUid for | [detail](./records/R-0290.md) |
+| R-0291 | task | done | — | §10p | P3 — rules: cat_images gains allow create: if canWrite('upload-own-photo') && | [detail](./records/R-0291.md) |
+| R-0292 | task | done | — | §10p | P4 — API gates accept any-of. requireApiPermission takes string \| string[]. | [detail](./records/R-0292.md) |
+| R-0293 | task | done | — | §10p | P5 — tests, and mutation-tested. tests/rules/media.rules.test.ts (15) + | [detail](./records/R-0293.md) |
+| R-0294 | task | done | — | §10p | P6 — the admin UI could not manage the new permissions (owner-raised: _"we need to | [detail](./records/R-0294.md) |
+| R-0295 | task | done | — | §10p | P7 — a guard, because a comment is not a constraint. tests/smoke now compares the | [detail](./records/R-0295.md) |
+| R-0296 | task | done | — | §10p | P8 — deployed 2026-08-03 (owner), in the correct order. ✅ Verified against | [detail](./records/R-0296.md) |
+| R-0297 | task | done | — | §10q | Q1 — delete opens to the author on posts_butler / posts_feeding, still refusing | [detail](./records/R-0297.md) |
+| R-0298 | task | done | — | §10q | Q2 — the cascade needed its own clause. deletePost removes every reply first, | [detail](./records/R-0298.md) |
+| R-0299 | task | done | — | §10q | Q3 — replyCount may now move ±1, not just +1. The services recount | [detail](./records/R-0299.md) |
+| R-0300 | task | done | — | §10q | Q4 — UI. 삭제 beside the existing 수정 in PostList; inline 수정 + 삭제 on a | [detail](./records/R-0300.md) |
+| R-0301 | task | done | — | §10q | Q5 — tests. Rules suite +17 (86 total), mutation-tested: removing the author term, | [detail](./records/R-0301.md) |
+| R-0302 | task | done | — | §10q | Q6 — rules deployed 2026-08-04 (owner). No migration — these ride on the existing | [detail](./records/R-0302.md) |
+| R-0303 | task | done | — | §10o | O1 — scripts/migration/stamp-missing-mountain-id.js audits every content collection | [detail](./records/R-0303.md) |
+| R-0304 | task | done | — | §10o | O2 — post-service.updateReplyCount recounts instead of increment(1). | [detail](./records/R-0304.md) |
+| R-0305 | task | done | — | §10r | R1 — 확인 before any write, listing every ticked 급식소 by name plus the 방문 시간 and | [detail](./records/R-0305.md) |
+| R-0306 | task | done | — | §10r | R2 — the empty branch says something different. With no spot ticked the dialog reads | [detail](./records/R-0306.md) |
+| R-0307 | task | done | — | §10r | R3 — the message builder is a pure module (src/utils/feedingCheckIn.ts), not a | [detail](./records/R-0307.md) |
+| R-0308 | task | done | — | §10r | R4 — time formatting reads the datetime-local components literally. A Date | [detail](./records/R-0308.md) |
+| R-0309 | task | done | — | §10s | S1 — scripts/migration/rename-cat.js, dry-run by default (APPLY=true to write), | [detail](./records/R-0309.md) |
+| R-0310 | task | done | — | §10s | S2 — token rewriting matches [catmodal:NAME] only, never the bare name (a cat called | [detail](./records/R-0310.md) |
+| R-0311 | task | done | — | §10s | S3 — parents/offspring added after the owner's dry run (70e2c60). ⚠️⚠️ Whole | [detail](./records/R-0311.md) |
+| R-0312 | task | done | — | §10s | S4 — patches merge per document before committing. A cat can appear in both the prose | [detail](./records/R-0312.md) |
+| R-0313 | task | done | — | §10s | S5 — emulator coverage + a demo-* guard — see §10s-bis below. | [detail](./records/R-0313.md) |
+| R-0314 | task | done | — | §10t | T1 — useSimpleContentForm passes videoItems through unchanged. The comment that | [detail](./records/R-0314.md) |
+| R-0315 | task | done | — | §10t | T2 — youtubeDefaults.description removed from both composers and from the config | [detail](./records/R-0315.md) |
+| R-0316 | task | done | — | §10t | T3 — the UI changed with the behaviour. Both forms passed | [detail](./records/R-0316.md) |
+| R-0317 | task | done | — | §10u | U1 — the palette is global (supersedes M8). theme deleted from mountains.json, | [detail](./records/R-0317.md) |
+| R-0318 | task | done | — | §10u | U2 — ~30 brand utilities adopt brand/accent across 9 files, admin included (D5). | [detail](./records/R-0318.md) |
+| R-0319 | task | done | — | §10u | U3 — 급식현황's freshness ramp goes green→red ⇒ blue→red. ⚠️ The only user-visible | [detail](./records/R-0319.md) |
+| R-0320 | task | done | — | §10u | U4 — feeding_spots is seeded, so the table has e2e cover for the first time. | [detail](./records/R-0320.md) |
+| R-0321 | task | done | — | §10u | U5 — design.md's scope line corrected. It read _"Admin (react-admin) screens are | [detail](./records/R-0321.md) |
+| R-0322 | task | done | — | §10u | U6 (plan Phase 4) — hygiene. All three sites resolved. | [detail](./records/R-0322.md) |
+| R-0323 | task | open | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
+| R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
+| R-0325 | task | done | — | §11 | 입양홍보 (/pages/adoption) — built 2026-06-26 as an 입양 가능 냥이 | [detail](./records/R-0325.md) |
+| R-0326 | task | done | — | §11 | 동참 (/pages/contact) — end-to-end, DONE 2026-06-28 (Variant A). A | [detail](./records/R-0326.md) |

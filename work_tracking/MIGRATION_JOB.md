@@ -19,7 +19,7 @@
 
 |                      |                                                                          |
 | -------------------- | ------------------------------------------------------------------------ |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source files **3 of 7** done. |
+| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2: source files **4 of 7** done. |
 | **Current phase**    | Phase 2 — next is `docs/planning/BACKLOG.md` (6 rows, needs judgment)    |
 | **Blocked on**       | nothing                                                                  |
 | **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                 |
@@ -30,7 +30,7 @@
 | Phase | What                                         | Status         | Needs owner? |
 | ----- | -------------------------------------------- | -------------- | ------------ |
 | 1     | Tooling — schema, scripts, CI gate           | ✅ 12/12 done  | no           |
-| 2     | Mechanical import (~315 rows)                | 🔄 144/~315    | no           |
+| 2     | Mechanical import (**326** so far)           | ✅ files 1–4   | no           |
 | 2b    | Index 20 companion documents                 | ⬜ not started | no           |
 | 3     | Judgment work — HANDOFF, decisions, dedup    | ⬜ not started | 🔴 **yes**   |
 | 4     | Adjacent fixes — PROJECT_PLAN, HANDOFF size  | ⬜ not started | no           |
@@ -47,15 +47,15 @@ Legend: ⬜ not started · 🔄 in progress · ✅ done · ⛔ blocked
 that added the rows. Counts are the verification gate: extracted must equal the hand-verified
 source count before anything is deleted.
 
-| #   | Source file                            | Items | Extracted | Count verified | Origin cut | Done |
-| --- | -------------------------------------- | ----- | --------- | -------------- | ---------- | ---- |
-| 1   | `log/DEBUG_LOG.md`                     | 49    | ✅ 49/49  | ✅             | ✅         | ✅   |
-| 2   | `log/FEATURE_MOD_LOG.md`               | 89    | ✅ 89/89  | ✅             | ✅         | ✅   |
-| 3   | `docs/planning/BACKLOG.md`             | 6     | ✅ 6/6    | ✅             | ✅         | ✅   |
-| 4   | `docs/planning/PROJECT_PLAN.md`        | 171   | ⬜ 0/171  | ⬜             | ⬜         | ⬜   |
-| 5   | `docs/handoff/HANDOFF.md` — open items | ~9    | ⬜        | ⬜             | ⬜         | ⬜   |
-| 6   | `docs/handoff/HANDOFF.md` — decisions  | ?     | ⬜        | ⬜             | ⬜         | ⬜   |
-| 7   | Companion documents (§2b)              | 20    | ⬜ 0/20   | ⬜             | n/a        | ⬜   |
+| #   | Source file                            | Items | Extracted  | Count verified | Origin cut | Done |
+| --- | -------------------------------------- | ----- | ---------- | -------------- | ---------- | ---- |
+| 1   | `log/DEBUG_LOG.md`                     | 49    | ✅ 49/49   | ✅             | ✅         | ✅   |
+| 2   | `log/FEATURE_MOD_LOG.md`               | 89    | ✅ 89/89   | ✅             | ✅         | ✅   |
+| 3   | `docs/planning/BACKLOG.md`             | 6     | ✅ 6/6     | ✅             | ✅         | ✅   |
+| 4   | `docs/planning/PROJECT_PLAN.md`        | 182   | ✅ 182/182 | ✅             | ✅         | ✅   |
+| 5   | `docs/handoff/HANDOFF.md` — open items | ~9    | ⬜         | ⬜             | ⬜         | ⬜   |
+| 6   | `docs/handoff/HANDOFF.md` — decisions  | ?     | ⬜         | ⬜             | ⬜         | ⬜   |
+| 7   | Companion documents (§2b)              | 20    | ⬜ 0/20    | ⬜             | n/a        | ⬜   |
 
 ⚠️ **Rows 5 and 6 are the hard ones.** `HANDOFF.md` has no standard `- [ ]` markup, so an
 extractor keyed on it returns zero and reports success. Row 6 has no markup at all — those
@@ -111,13 +111,13 @@ these are hard is that they have no markup, so the hand-off must be read end to 
 
 ## Scale — why this is its own job
 
-| Input                        | Volume                                                       |
-| ---------------------------- | ------------------------------------------------------------ |
-| Rows to import               | **~315** (49 bugs · 89 changes · 171 plan boxes · 6 backlog) |
-| Companion documents to index | **20** of 24 (~5,400 lines)                                  |
-| Source prose to read         | **~977 KB** across five files (~250k tokens)                 |
-| Decisions to lift by hand    | unknown — no markup to key on                                |
-| Scripts to write             | 4 (`lib` · `checkout` · `checkin` · `build`) + CI gate       |
+| Input                        | Volume                                                         |
+| ---------------------------- | -------------------------------------------------------------- |
+| Rows to import               | **326 imported** (49 bugs · 89 changes · 182 plan · 6 backlog) |
+| Companion documents to index | **20** of 24 (~5,400 lines)                                    |
+| Source prose to read         | **~977 KB** across five files (~250k tokens)                   |
+| Decisions to lift by hand    | unknown — no markup to key on                                  |
+| Scripts to write             | 4 (`lib` · `checkout` · `checkin` · `build`) + CI gate         |
 
 🔑 **The judgment work, not the row count, is what makes this large.** Phases 1–2 are a day of
 scripting. Phase 3 requires reading `HANDOFF.md` end to end — 3,295 lines that no session can
@@ -239,6 +239,40 @@ Append newest-last. One entry per working session: what moved, what broke, where
   task, a bug, a change and an owner question are one record each separated by `type`, so
   nothing moves between files when it gets scheduled and there is no second place to leave a
   stale copy — which is what the old rule existed to police.
+
+### 2026-08-09 — Phase 2 source file 4 of 7: `docs/planning/PROJECT_PLAN.md` → `R-0145`…`R-0326`
+
+- ✅ **182 rows imported and the boxes cut in the same commit**, pinned to `f66997c`. Each row
+  carries its `§` as `plan`. The file went **2,653 → 1,493 lines**; its prose, all 42 headings
+  and all 45 table rows survive untouched, with each section's box list replaced by a pointer
+  carrying that section's roll-up (`6 items — 0/6 done — now in the work registry`).
+- 🔴 **The plan's count of 171 was wrong, and the `--expect` gate is what caught it.** True
+  total **182**: 153 done · **19** open · **5** in-progress · **5** abandoned. Three separate
+  reasons, all of them the failure mode this migration exists to prevent:
+  1. **The file's own legend defines four box states**, and all four are used. `[~]` ×5 and
+     `[-]` ×5 were simply never counted — the plan counted `[ ]` and `[x]` only.
+  2. **One item is written in prose**, as a backtick-wrapped box inside a numbered paragraph
+     (§10d, "A CMS-controlled toggle…", which says "Not started." in its own text). ⚠️ This is
+     **the same markup trap the plan flagged for `HANDOFF.md`** — it is here too, and a
+     line-anchored extractor misses it silently.
+  3. Two things look like boxes and are not, so they are excluded **by name and by content**
+     (the script throws if the line moves): the legend itself, and a completed item that
+     quotes the notation while describing other entries.
+- 📌 **The §1 snapshot table's 27 status cells are roll-ups, not items.** Importing them would
+  have double-counted every workstream — 27 phantom records that each duplicate a section.
+- 📌 **Judgment recorded: `[-]` maps to `abandoned`.** The legend reads "deferred/out of
+  scope" and the schema has no `deferred`. All five are scope decisions inside §10's Playwright
+  suite (WebKit, visual regression, Lighthouse CI…), so `abandoned` reports them more honestly
+  than `open`, which would put five things nobody intends to do into the open-work list. Their
+  prose still says "deferred" in full. **Flagging it because it is a call, not a fact** — say
+  the word if `open` is wanted instead, and it is a one-line change plus a re-import.
+- 📌 **`split_from` was left null**, including for the 3 nested boxes. The plan puts it in
+  Phase 3 with "link only where the source text says so", and indentation alone is not the
+  source saying so. Each nested record's prose records that it was nested, so Phase 3 has what
+  it needs.
+- **Extraction and the cut share one span computation**, so they cannot disagree about where
+  an item begins and ends, and `--cut` refuses to run unless the store already holds exactly
+  as many records as the source still yields.
 
 ### 🔴 Found during Phase 2 — for the Phase 3 pass: 15 records cross-reference a stubbed file
 

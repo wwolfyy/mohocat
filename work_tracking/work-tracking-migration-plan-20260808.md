@@ -18,7 +18,7 @@
 | ------------------------------- | --------------------------- | ----------------------- | ----------- |
 | `log/DEBUG_LOG.md`              | 49                          | `## YYYY-MM-DD — title` | ✅ yes      |
 | `log/FEATURE_MOD_LOG.md`        | 89                          | `## YYYY-MM-DD — title` | ✅ yes      |
-| `docs/planning/PROJECT_PLAN.md` | 18 open (153 done)          | `- [ ]` / `- [x]`       | ✅ yes      |
+| `docs/planning/PROJECT_PLAN.md` | **182** (see the ⚠️ below)  | four box states + prose | ⚠️ mostly   |
 | `docs/planning/BACKLOG.md`      | 5 open + 1 done             | `## B<n> — title`, `Q1` | ✅ yes      |
 | `docs/handoff/HANDOFF.md`       | ~8 open + prose carry-overs | see the note below      | 🔴 **no**   |
 | `HANDOFF.md` decisions          | unknown                     | prose only, no markup   | 🔴 **no**   |
@@ -102,19 +102,34 @@ one, so `--force` does not become routine.
 
 ---
 
-## Phase 2 — Mechanical import (~315 rows: 161 open/history + 154 already-done boxes)
+## Phase 2 — Mechanical import (**326 rows imported**, not the ~315 estimated)
 
-- [ ] `DEBUG_LOG.md` → 49 rows, `type: bug`, `status: done`, `rev: 1`.
-- [ ] `FEATURE_MOD_LOG.md` → 89 rows, `type: change`, `status: done`, `rev: 1`.
-- [ ] `BACKLOG.md` → `B1`, `B2`, `B4`, `B5` as `type: task, status: open`; **`Q1` as
+- [x] ✅ `DEBUG_LOG.md` → 49 rows, `type: bug`, `status: done`, `rev: 1`. _(`R-0001`…`R-0049`, pinned `20b4c1a`.)_
+- [x] ✅ `FEATURE_MOD_LOG.md` → 89 rows, `type: change`, `status: done`, `rev: 1`. _(`R-0050`…`R-0138`, pinned `df132d0`.)_
+- [x] ✅ `BACKLOG.md` → `B1`, `B2`, `B4`, `B5` as `type: task, status: open`; **`Q1` as
       `type: question`** — `BACKLOG.md`'s own heading says open questions are "not tasks until
       answered", so importing it as a task is the §2.2 category error; **`B3` as `status: done`**
-      (struck through and marked ✅ — do not import it as open).
-- [ ] `PROJECT_PLAN.md` → 18 rows `status: open` with their `§` as `plan`; the 153 ticked boxes
-      as `status: done`.
-- [ ] Prose bodies → `work_tracking/records/R-XXXX.md`, with `detail_ref` pointing at them.
-      **Do not inline prose into the row** (restructure §3).
-- [ ] **Set `source_ref` on every migrated row**, pinned to the commit the content was read from
+      (struck through and marked ✅ — do not import it as open). _(`R-0139`…`R-0144`, pinned
+      `4484234`. All four open items re-verified against the code first; all four still hold.)_
+- [x] ✅ `PROJECT_PLAN.md` → **182 rows**, each with its `§` as `plan`. _(done 2026-08-09 —
+      `R-0145`…`R-0326`.)_ ⚠️ **The count in this plan was wrong, and the gate is what caught
+      it.** It said 18 open + 153 done = 171. The file's own legend defines **four** box
+      states and all four are in use: `[~]` in-progress **×5** and `[-]` deferred **×5** were
+      never counted. There is also **one item written in prose** as a backtick-wrapped box
+      instead of a list item (§10d, "A CMS-controlled toggle…", which says "Not started." in
+      its own text) — the exact markup trap this plan flagged for `HANDOFF.md`, present here
+      too. True total: **153 done · 19 open · 5 in-progress · 5 abandoned**.
+      📌 Two things look like boxes and are not, and are excluded by name: the legend itself,
+      and a completed item that quotes the notation while describing other entries. The §1
+      snapshot table's 27 status cells are workstream roll-ups, not items — importing them
+      would have double-counted every section.
+      📌 `[-]` maps to **`abandoned`**: the legend reads "deferred/out of scope", the schema
+      has no `deferred`, and all five are scope decisions inside §10's Playwright suite.
+      Marking them `open` would put five things nobody intends to do into the open-work list.
+- [x] ✅ Prose bodies → `work_tracking/records/R-XXXX.md`, with `detail_ref` pointing at them.
+      **Do not inline prose into the row** (restructure §3). _(326 files; every body verified as a
+      verbatim substring of its pinned origin.)_
+- [x] ✅ **Set `source_ref` on every migrated row**, pinned to the commit the content was read from
       (e.g. `BACKLOG.md#B1@4484234`). The origin files are deleted in Phase 5, so an unpinned
       reference stops resolving; a pinned one stays readable via `git show`. This is the audit
       trail that proves nothing was lost in a 315-row bulk import.
