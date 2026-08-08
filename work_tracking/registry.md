@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 23 | 8 | 7 | 167 | 0 | **205** |
-| bug | 0 | 0 | 0 | 49 | 0 | **49** |
+| task | 31 | 8 | 9 | 171 | 0 | **219** |
+| bug | 1 | 0 | 0 | 49 | 0 | **50** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 0 | 2 | 0 | **2** |
-| question | 1 | 0 | 0 | 0 | 0 | **1** |
-| **total** | **24** | **8** | **7** | **307** | **0** | **346** |
+| decision | 0 | 0 | 1 | 30 | 7 | **38** |
+| question | 7 | 0 | 0 | 0 | 0 | **7** |
+| **total** | **39** | **8** | **10** | **339** | **7** | **403** |
 
 ## Open work
 
@@ -54,6 +54,21 @@
 | R-0343 | task | in-progress | — | — | Color token centralization — plan — 20260805 | [detail](../docs/planning/pending/color-token-centralization-plan-20260805.md) |
 | R-0344 | task | open | — | — | Prerequisites for a real mountain #2 | [detail](../docs/planning/pending/mountain-2-prerequisites.md) |
 | R-0345 | task | open | — | — | Subdomain → path-based tenancy — execution plan — 20260728 | [detail](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) |
+| R-0347 | bug | open | — | — | Signing out issues an unauthenticated Firestore permission read, and the catch swallows it | [detail](./records/R-0347.md) |
+| R-0348 | task | open | — | — | The orphan-delete path has never been verified in production — the last live PIPA gap | [detail](./records/R-0348.md) |
+| R-0350 | question | open | — | — | Owner call: should the `설명 없음` filler come back on the photo modal? | [detail](./records/R-0350.md) |
+| R-0353 | question | open | — | — | Owner call: a GA4 `page_view` now fires on every cat-modal open | [detail](./records/R-0353.md) |
+| R-0355 | question | open | — | — | Owner call: should the CMS "YouTube에 없는 영상" panel show thumbnails instead of a title list? | [detail](./records/R-0355.md) |
+| R-0356 | question | open | — | — | Owner call: a video's 제목 appears twice — YouTube's player overlay and our caption | [detail](./records/R-0356.md) |
+| R-0357 | question | open | — | — | Owner call: may an 입양홍보 popup displace a 공지사항 one? | [detail](./records/R-0357.md) |
+| R-0358 | task | open | — | — | Local uploads went to the pre-migration Storage bucket, and what landed there is stranded | [detail](./records/R-0358.md) |
+| R-0359 | task | open | — | — | Unverified on Preview: the 입양홍보 popup and the duplicate-filename 409 | [detail](./records/R-0359.md) |
+| R-0360 | task | open | — | — | Four /admin/tag-videos repairs are unverified against real YouTube | [detail](./records/R-0360.md) |
+| R-0361 | task | open | — | — | Per-page admin button spec sheets — the owner wants one for every CMS page | [detail](./records/R-0361.md) |
+| R-0363 | task | open | — | — | M5 post-cutover cleanup — legacy role fields, the superseded about doc, and the local dumps | [detail](./records/R-0363.md) |
+| R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
+| R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
+| R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
 
 ## Deferred — parked, with the condition that would restart it
 
@@ -71,6 +86,12 @@
   - _Deferred — e2e Phase 8: belongs to the separate perf workstream (§4 perf item), not this suite._
 - **R-0238** (§10) — YouTube tagging admin flows (external API).
   - _Deferred — e2e Phase 8 (playwright-ci-plan.md §8), an explicitly-parked extension: external API. Blocks nothing in the completed suite._
+- **R-0362** — 촬영일 is guessed from the filename when it should be read from the file's own metadata
+  - _the owner deferred this explicitly on 2026-07-27 and does not want it picked up — restart only if the owner asks for it. Recorded to explain why 촬영일 comes out empty on an iPhone upload, not to schedule the work_
+- **R-0365** — Compliance carry-overs — legal review, signup consent, a PIPA audit, and Kakao scope verification
+  - _deferred and accepted as such; the restart condition is scaling membership, and the source says to reopen them before that happens. Undated in the source, so the ts is this hand-off's creation date_
+- **R-0377** — Known gap, logged not fixed: the YouTube status panel reports healthy on a token that cannot write
+  - _it validates by refreshing, which succeeds regardless of scope; detecting it means probing a write endpoint, which is a product call the owner has not made. That call is the restart condition_
 
 ## Hierarchy
 
@@ -426,3 +447,60 @@ _No records have been broken out into children._
 | R-0344 | task | open | — | — | Prerequisites for a real mountain #2 | [detail](../docs/planning/pending/mountain-2-prerequisites.md) |
 | R-0345 | task | open | — | — | Subdomain → path-based tenancy — execution plan — 20260728 | [detail](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) |
 | R-0346 | decision | done | adopted | — | Tenancy URL model — subdomains or paths? — Decision doc — 20260728 | [detail](../docs/planning/pending/tenancy-url-model-decision-20260728.md) |
+| R-0347 | bug | open | — | — | Signing out issues an unauthenticated Firestore permission read, and the catch swallows it | [detail](./records/R-0347.md) |
+| R-0348 | task | open | — | — | The orphan-delete path has never been verified in production — the last live PIPA gap | [detail](./records/R-0348.md) |
+| R-0349 | task | done | — | — | Live-verify the auth changes on Preview — Kakao sign-in, its linking fallback, and the orphan delete | [detail](./records/R-0349.md) |
+| R-0350 | question | open | — | — | Owner call: should the `설명 없음` filler come back on the photo modal? | [detail](./records/R-0350.md) |
+| R-0351 | task | done | — | — | Existing photo records carry fabricated 촬영일 — videos self-heal, photos do not | [detail](./records/R-0351.md) |
+| R-0352 | task | done | — | — | Tap the 이 냥이 링크 chip on a real phone — the mobile half proven only by stubs | [detail](./records/R-0352.md) |
+| R-0353 | question | open | — | — | Owner call: a GA4 `page_view` now fires on every cat-modal open | [detail](./records/R-0353.md) |
+| R-0354 | task | done | — | — | Safari pass — confirm the 30-second Firestore stall is gone in production | [detail](./records/R-0354.md) |
+| R-0355 | question | open | — | — | Owner call: should the CMS "YouTube에 없는 영상" panel show thumbnails instead of a title list? | [detail](./records/R-0355.md) |
+| R-0356 | question | open | — | — | Owner call: a video's 제목 appears twice — YouTube's player overlay and our caption | [detail](./records/R-0356.md) |
+| R-0357 | question | open | — | — | Owner call: may an 입양홍보 popup displace a 공지사항 one? | [detail](./records/R-0357.md) |
+| R-0358 | task | open | — | — | Local uploads went to the pre-migration Storage bucket, and what landed there is stranded | [detail](./records/R-0358.md) |
+| R-0359 | task | open | — | — | Unverified on Preview: the 입양홍보 popup and the duplicate-filename 409 | [detail](./records/R-0359.md) |
+| R-0360 | task | open | — | — | Four /admin/tag-videos repairs are unverified against real YouTube | [detail](./records/R-0360.md) |
+| R-0361 | task | open | — | — | Per-page admin button spec sheets — the owner wants one for every CMS page | [detail](./records/R-0361.md) |
+| R-0362 | task | deferred | — | — | 촬영일 is guessed from the filename when it should be read from the file's own metadata | [detail](./records/R-0362.md) |
+| R-0363 | task | open | — | — | M5 post-cutover cleanup — legacy role fields, the superseded about doc, and the local dumps | [detail](./records/R-0363.md) |
+| R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
+| R-0365 | task | deferred | — | — | Compliance carry-overs — legal review, signup consent, a PIPA audit, and Kakao scope verification | [detail](./records/R-0365.md) |
+| R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
+| R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
+| R-0368 | decision | abandoned | rejected | — | Renaming the Firestore database was investigated and dropped | [detail](./records/R-0368.md) |
+| R-0369 | decision | abandoned | rejected | §10k | The `?type=` fallback for post routing was written and rejected on review | [detail](./records/R-0369.md) |
+| R-0370 | decision | done | adopted | §10u | Destructive modals keep a red button, so they are not on `useDialog.confirm()` | [detail](./records/R-0370.md) |
+| R-0371 | decision | abandoned | rejected | §10d | "One video per post" was reversed before it was built — do not implement a cap | [detail](./records/R-0371.md) |
+| R-0372 | decision | done | adopted | §10d | Not a bug: 공지사항's picker refuses videos because it is the image picker | [detail](./records/R-0372.md) |
+| R-0373 | decision | abandoned | rejected | §10c | A per-cat page /pages/cats/[id] was declined on cost — so link previews still do not show the cat | [detail](./records/R-0373.md) |
+| R-0374 | decision | done | adopted | — | YouTube is the source of truth for videos — no UI path may write video data to Firestore | [detail](./records/R-0374.md) |
+| R-0375 | decision | done | adopted | §10s | A cat doc id need not match the cat's name — do not "fix" it | [detail](./records/R-0375.md) |
+| R-0376 | decision | done | adopted | — | The YouTube refresh token lives only in Firestore — an env fallback was rejected | [detail](./records/R-0376.md) |
+| R-0377 | decision | deferred | — | — | Known gap, logged not fixed: the YouTube status panel reports healthy on a token that cannot write | [detail](./records/R-0377.md) |
+| R-0378 | decision | done | adopted | — | Everything gated on "before a real mountain #2" lives in one document — do not re-list it elsewhere | [detail](./records/R-0378.md) |
+| R-0379 | decision | done | superseded | — | The cross-subdomain sign-out defect became structurally impossible, so revokeRefreshTokens is optional hardening | [detail](./records/R-0379.md) |
+| R-0380 | decision | done | adopted | — | generate-youtube-signed-url was deleted rather than gated — it had no caller in any commit | [detail](./records/R-0380.md) |
+| R-0381 | decision | done | adopted | — | The butler post pages keep gating on `isAuthenticated` only — accepted | [detail](./records/R-0381.md) |
+| R-0382 | decision | done | adopted | §10t | A video's YouTube 설명 is taken verbatim on every composer, empty included — reversing an earlier decision | [detail](./records/R-0382.md) |
+| R-0383 | decision | done | adopted | §12 | Auto-detect long polling was discarded as a no-op; the browser is forced onto long polling instead | [detail](./records/R-0383.md) |
+| R-0384 | decision | done | adopted | §10g | `youtubeStatus` is absent on any record never checked, and absent means watchable | [detail](./records/R-0384.md) |
+| R-0385 | decision | done | adopted | — | .env.test declares the SMTP keys blank, and blank is load-bearing | [detail](./records/R-0385.md) |
+| R-0386 | decision | done | adopted | — | /api/contact still returns success when the notification fails — deliberately | [detail](./records/R-0386.md) |
+| R-0387 | decision | done | adopted | — | .env.example is force-added to git — .gitignore had swallowed it entirely | [detail](./records/R-0387.md) |
+| R-0388 | decision | done | adopted | — | The e2e "flake set" advice is retired — a red run means something again | [detail](./records/R-0388.md) |
+| R-0389 | decision | done | adopted | — | Nothing the server could not have known may affect the first client render | [detail](./records/R-0389.md) |
+| R-0390 | decision | done | adopted | §10l | Four things decided inside the edit-composer change, plus 급식현황 staying on the URL editor | [detail](./records/R-0390.md) |
+| R-0391 | decision | done | adopted | — | Standing rule: snapshot before any script writes to prod data | [detail](./records/R-0391.md) |
+| R-0392 | decision | abandoned | rejected | — | A GCS export bucket was considered and rejected | [detail](./records/R-0392.md) |
+| R-0393 | decision | done | adopted | — | Weekly, not daily, backups — deliberate | [detail](./records/R-0393.md) |
+| R-0394 | decision | done | adopted | — | The Firestore shared with a second app is benign — no action needed | [detail](./records/R-0394.md) |
+| R-0395 | decision | done | adopted | §9 | The multi-tenant URL model is path-based, and planning it found an authorization inversion | [detail](./records/R-0395.md) |
+| R-0396 | decision | abandoned | rejected | — | Cross-origin session propagation would multiply the sign-out defect, not fix it | [detail](./records/R-0396.md) |
+| R-0397 | decision | done | adopted | — | Correction: Kakao needs no per-subdomain redirect URI | [detail](./records/R-0397.md) |
+| R-0398 | decision | done | adopted | — | 집사게시판 lost media upload entirely — it is a 급식소 check-in log, not a second composer | [detail](./records/R-0398.md) |
+| R-0399 | decision | abandoned | rejected | — | Replacing Firebase with Supabase to escape vendor lock-in was set aside | [detail](./records/R-0399.md) |
+| R-0400 | decision | done | adopted | §9 | The multi-tenant architecture questions Q1–Q8 were answered | [detail](./records/R-0400.md) |
+| R-0401 | decision | done | adopted | §9 | The role model is a map keyed by mountainId — one account can hold roles on several mountains | [detail](./records/R-0401.md) |
+| R-0402 | decision | done | adopted | §9 | Accepted dev-only caveat: relative links escape a path-prefixed tenant back to the default | [detail](./records/R-0402.md) |
+| R-0403 | decision | done | adopted | — | The same-day auto-commit grant was revoked — every commit is owner-gated again | [detail](./records/R-0403.md) |

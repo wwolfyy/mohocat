@@ -177,19 +177,27 @@ anything.
 
 ## Phase 3 — Judgment work (do not automate)
 
-- [ ] **`HANDOFF.md` open items** — extract by hand or with a markup-specific matcher, then
-      **verify the count against a manual read.**
-- [ ] 🔑 **Lift the decisions.** These are the P2.3 entries and the reason the restructure is
-      worth doing. Read the hand-off end to end once. Known examples: the Firestore-rename
-      investigation, the rejected `?type=` fallback, M8's withdrawal, the decision that a
-      mountain may not differ in colour, the `useDialog`-vs-red-button finding from colour
-      Phase 5, F3's abandoned first fix, and the reversed "one video per post".
-      → `type: decision`, with `outcome` and a rationale in `records/`.
-- [ ] ⚠️ **Verify every open item against the code before importing it as `open`.** The
-      2026-08-02 audit found seven boxes describing work that was already done. Importing those
-      as open launders stale claims into a clean-looking store.
-- [ ] **De-duplicate.** Several items exist in two files with different wording. One row wins;
-      choosing the authoritative wording is a read, not a merge.
+- [x] ✅ **`HANDOFF.md` open items** — done 2026-08-09, `R-0347`…`R-0367`. **21, not the ~8
+      estimated.** The importer anchors on verbatim substrings rather than markup, and a `from`
+      anchor matching more than one line is a hard error — this file describes the same event in
+      the fresh-session box, the TL;DR **and** the changelog, so a loose anchor would silently
+      capture the wrong paragraph.
+- [x] ✅ 🔑 **Lift the decisions.** Done 2026-08-09 — **36 imported** (`R-0368`…`R-0403`) out of
+      **56 candidates** found by reading the hand-off end to end. All seven known examples are
+      accounted for, and **four of them were already in the store** (M8's withdrawal and
+      colour-is-global in `R-0322`, F3 in `R-0050`) — which is the measurement that set the
+      de-duplication rule below.
+- [x] ✅ ⚠️ **Verify every open item against the code before importing it as `open`.** Done, and
+      it earned its keep: **three of the 21 were stale and two more partly stale** — including
+      §10d D2, which the file still called "not started" while `config/media_control.json` had
+      existed since 2026-08-02.
+- [x] ✅ **De-duplicate.** Done for `HANDOFF.md`, by measurement rather than by feel: each of the
+      56 candidates was probed against all 346 existing records for a distinctive phrase of its
+      own reasoning, and **20 came back already covered** — mostly because the same person wrote
+      `DEBUG_LOG.md` and the hand-off about the same event on the same day, and the log entry is
+      the fuller of the two. They stay in the importer's `COVERED_BY_EXISTING` map naming the
+      winning record, so the call is auditable. 📌 **Owner's rule (2026-08-09): import a decision
+      only when its reasoning is recorded nowhere else in the store.**
 - [ ] **Set `split_from` where the history shows a break-out.** Several `PROJECT_PLAN` boxes are
       pieces of a larger workstream rather than independent tasks (§10's admin sub-items, the
       colour plan's phases, the mobile-admin cluster at lines 370–380). ⚠️ Do **not** guess:
@@ -203,8 +211,11 @@ anything.
 - [ ] 🔴 **Break up `PROJECT_PLAN.md`'s mega-cells.** It is **332 KB** — larger than `HANDOFF.md`
       — because single table cells run to thousands of words (the multi-tenant row at line 56
       holds the entire M1–M8 history). Unreadable for a human, unparseable for an agent.
-- [ ] **Shrink `HANDOFF.md` from 3,295 lines to ~150** — current state, what is in flight, and
-      pointers by `id`. This is the single biggest practical win of the restructure.
+- [x] ✅ **Shrink `HANDOFF.md` from 3,295 lines to ~150** — done 2026-08-09, **pulled forward
+      into Phase 3's import** (owner's call). The decisions being lifted were scattered through
+      its narrative rather than gathered in a section, so cutting only the open-items list would
+      have left all 36 duplicated in prose — the half-migrated state this plan forbids. The body
+      is frozen at `docs/handoff/archive/2026-08-09-handoff-living-doc.md`.
 - [ ] **Apply a size policy.** `docs/handoff/archive/` already holds 33 files; the mechanism
       exists and simply stopped being applied to the living doc.
 
