@@ -1,7 +1,9 @@
 # 산냥이집냥이 — Engineering Hand-off (living / continuously updated)
 
-**Last updated:** 2026-08-08 · **Branch:** `dev` — ✅ **`dev` and `main` are LEVEL** (bar
-docs-only commits).
+**Last updated:** 2026-08-09 · **Branch:** `dev` — ⚠️ **NOT pushed.** The work-tracking series
+`6509406` → `298140d` (7 commits) sits on `dev` unpushed, and `dev` was already ahead of
+`origin/dev` before it. **Run `git status -sb`** — per the note below, this line cannot be
+trusted to be current.
 🎉 **PR #9 merged 2026-08-07** (`f570bcc`, by the owner) — 104 commits, 295 files, promoted
 since PR #8. **This is the first promotion since 2026-07-23**, and it is live in production.
 📌 **Don't trust any count written here — run `git rev-list --count origin/main..dev`.** This
@@ -14,29 +16,128 @@ that is why one is no longer quoted. 🔑 **The same applies to any "everything 
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> # ▶️ NEXT UP: the work-tracking restructure. Application work is PAUSED.
+> # ▶️ IN FLIGHT: the work-tracking migration. Application work is still PAUSED.
 >
-> **Owner decision, 2026-08-08.** The next workstream is the restructure of how work is tracked
-> — **not** tenancy T0, and not any feature or bug work. **Application work restarts once the
-> new structure is in place.**
+> **Owner decision, 2026-08-08; execution began 2026-08-09.** The current workstream is the
+> restructure of how work is tracked — **not** tenancy T0, and not any feature or bug work.
+> **Application work restarts once Phase 5 lands.**
 >
-> 📄 **Start here:**
-> [`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md).
-> 🔴 **§4 is blocking** — the storage medium (SQLite vs structured text) is undecided, and it is
-> the first thing to settle. Everything else in that doc is agreed, and §5 carries the migration
-> inventory split into mechanical vs judgment.
+> 📄 **Start here:
+> [`work_tracking/MIGRATION_JOB.md`](../../work_tracking/MIGRATION_JOB.md)** — it is the live
+> tracker and its session log carries the resume point file-by-file. The design and the settled
+> storage decision are in
+> [`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md)
+> (§4 is **settled**, not blocking — that was resolved 2026-08-08); the phase sequence is in
+> [`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md).
+>
+> **Where it stands:** Phase 1 ✅ (tooling + CI gate) · Phase 2 **5 of 7 source files** done ·
+> **346 records** in the store. Only `HANDOFF.md` — **this file** — is left to migrate, and
+> 🔴 **it needs the owner** (see the bottom of this box).
+>
+> ## 🔑 The recording convention has CHANGED for what is already migrated
+>
+> ⚠️ **Do not add entries to `log/DEBUG_LOG.md`, `log/FEATURE_MOD_LOG.md` or
+> `docs/planning/BACKLOG.md`.** All three are now **stubs** — their content lives in the work
+> registry, and each stub says where. `PROJECT_PLAN.md` keeps its prose but **its checkboxes are
+> gone**; each section now carries a pointer with its own roll-up.
+>
+> ⚠️ **`CLAUDE.md` / `AGENTS.md` still describe the OLD structure** — their `docs/` and `log/`
+> orientation bullets still name those files as live sources. Rewriting them is **Phase 5**, so
+> until then the stubs are what redirect you. Trust the stub, not the bullet.
+>
+> **A bug fixed, a change made, or a new task all become one record:**
+>
+> ```bash
+> node work_tracking/scripts/checkout.js --new     # or --id R-0142 / --query "status='open'"
+> #   edit work.json — type: bug | change | task | decision | question
+> #   long prose goes in work_tracking/records/R-XXXX.md, not in the row
+> node work_tracking/scripts/checkin.js
+> node work_tracking/scripts/build.js              # regenerates registry.md
+> ```
+>
+> 📄 **[`work_tracking/SCHEMA.md`](../../work_tracking/SCHEMA.md)** is the field reference and
+> the workflow guide. **[`work_tracking/registry.md`](../../work_tracking/registry.md)** is the
+> human view — open work, parked work with its reason, and every record.
+>
+> ⚠️ **`registry.md` is generated. Never hand-edit it**; CI fails if it does not equal
+> `build(registry.ndjson)`. `work.json` is gitignored and is the merge-conflict recovery file —
+> do not commit it, and do not delete it after a check-in.
+>
+> ## 🔴 What needs the owner next
+>
+> **Migrating this file** (rows 5–6 of the job tracker) is the last of Phase 2 and the plan
+> marks it as needing judgment, for two reasons found by measurement, not guesswork:
+>
+> 1. **Its open items have no standard markup.** They are written as a **bold-wrapped,
+>    backtick-quoted** box, so `grep '^- \[ \]'` returns **zero** and an extractor keyed on it
+>    imports nothing while reporting success.
+> 2. **Its decisions exist only in prose**, with nothing to key on at all — and those are the
+>    highest-value entries in the repo, the ones that stop the next session re-walking a dead
+>    end. Lifting them means reading 3,295 lines end to end once.
 >
 > ⚠️ **Tenancy T0 is deferred, not cancelled** — it was asked for and then stood down in favour
 > of this. **No T0 work exists.** Its context is preserved in the section below so it does not
 > need re-deriving when it resumes.
 >
-> ⚠️ **Until the restructure lands, keep using the current convention** — this box,
-> `PROJECT_PLAN`, `BACKLOG`, and the two logs, exactly as they are. **Do not migrate items
-> piecemeal**: a half-migrated backlog is strictly worse than either end state, and is precisely
-> how the 2026-08-02 audit produced seven rotted claims.
+> 📌 **Migrate a source file and cut its origin in the SAME commit.** A half-migrated backlog is
+> strictly worse than either end state, and is precisely how the 2026-08-02 audit produced seven
+> rotted claims. Five files have followed that rule; do not break it on the sixth.
 >
-> 📌 **`AGENTS.md` carries the same notice** (and `CLAUDE.md` is a symlink to it), so a fresh
-> session sees it before reading the doc map it describes.
+> ---
+>
+> ## 2026-08-09 — the work registry is live: tooling, CI gate, and 346 records imported
+>
+> Seven commits on `dev` (`6509406` → `298140d`), **not pushed**. Application work stayed
+> paused throughout; nothing under `src/` was touched. Full detail, file-by-file, is in
+> [`work_tracking/MIGRATION_JOB.md`](../../work_tracking/MIGRATION_JOB.md)'s session log — this
+> is the summary.
+>
+> ✅ **Phase 1 — the tooling works.** `SCHEMA.md`, four scripts (`lib` · `checkout` · `checkin`
+> · `build`), 77 assertions with no test framework, and a `work-tracking` CI job that fails if
+> the store does not load or if `registry.md` ≠ `build(registry.ndjson)`. **Zero dependencies**
+> — `node:sqlite` is built in — so the job runs no `npm ci` and is independent of the app build.
+> It pins **Node 24**, because the app's jobs run Node 20, which has no `node:sqlite`.
+>
+> ✅ **Phase 2 — 5 of 7 source files migrated, 346 records**, each with its prose in
+> `work_tracking/records/` and a `source_ref` pinned to the commit it was read from. Every
+> origin was cut in the same commit that added its rows.
+>
+> | Source                   | Records     | Origin now                     |
+> | ------------------------ | ----------- | ------------------------------ |
+> | `log/DEBUG_LOG.md`       | 49 `bug`    | stub                           |
+> | `log/FEATURE_MOD_LOG.md` | 89 `change` | stub                           |
+> | `BACKLOG.md`             | 6           | stub                           |
+> | `PROJECT_PLAN.md`        | 182         | prose kept, **boxes cut**      |
+> | 20 companion docs        | 20          | untouched — indexed by pointer |
+>
+> 🔴 **The plan's own counts were wrong twice, and the `--expect` gate is what caught it.**
+> `PROJECT_PLAN.md` held **182** items, not the 171 recorded: the file's legend defines **four**
+> box states and only two were counted (`[~]` ×5 and `[-]` ×5 were missed), and **one item is
+> written in prose** as a backtick-wrapped box — the same markup trap the plan had flagged for
+> _this_ file, present there too. 📌 Its §1 snapshot table's 27 status cells are workstream
+> roll-ups, not items; importing them would have added 27 phantom records.
+>
+> 🔑 **`status: deferred` was added to the schema (owner, 2026-08-09), and it must say why.**
+> `open` and `abandoned` were both holding parked work, so "what is open?" returned items nobody
+> could start. The boundary: **can you name the condition that would restart it?** If yes it is
+> `deferred` and the condition is the `note`; if no, it was decided against. Seven records moved,
+> including two I had imported as `open` without flagging the call. ⚠️ The change also exposed a
+> hard-coded status list in `build.js` that had silently dropped them from the summary — its
+> totals said 187 while the columns summed to 180. `render()` now throws on any unknown value.
+>
+> 📌 **A documentation correction worth keeping.** All three copies of the schema-change policy
+> said "add a `CHECK` to an existing column → breaks history", which would have pushed the new
+> rule into `checkin.js` — the one place a hand-edited `registry.ndjson` bypasses. The real rule
+> is that a change breaks history **iff some stored row violates it**, and a `CHECK` conditioned
+> on a **new enum value** never can. Verified against all 326 rows before adding it.
+>
+> ⚠️ **Left for Phase 3, deliberately not patched:** 18 references across 15 records point at
+> files that are now stubs. Rewriting them would edit prose that `source_ref` pins to a commit,
+> which is the audit trail the whole import rests on.
+>
+> ⚠️ **Watch-out for the archive move:** the 20 companion-doc pointers reference
+> `docs/planning/**` from outside `work_tracking/`. Archiving those folders by hand breaks all
+> 20 links, which must be repointed in the same change.
 >
 > ---
 >
