@@ -1,7 +1,12 @@
 # Work tracking — restructure design — 20260808
 
-> **Status:** 🟡 **DESIGNED, NOT STARTED.** Owner-initiated 2026-08-08 after a session where the
-> cost of the current structure became concrete. The owner will implement in a fresh session.
+> **Status:** ▶️ **ACTIVE — this is the next workstream (owner, 2026-08-08).** Designed, not yet
+> started. Owner-initiated after a session where the cost of the current structure became
+> concrete; to be implemented in a fresh session.
+>
+> ⚠️ **Application work is PAUSED until this lands** — feature and bug work restarts once the new
+> structure is in place. Tenancy **T0** was asked for and then stood down behind this; its
+> context is preserved in `HANDOFF.md` so it does not need re-deriving when it resumes.
 >
 > ⚠️ **One decision is still open and it is the first thing to settle** — §4. Everything else
 > below is agreed.

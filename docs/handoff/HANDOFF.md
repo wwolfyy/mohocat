@@ -14,7 +14,33 @@ that is why one is no longer quoted. 🔑 **The same applies to any "everything 
 
 > ### 🔜 Starting a fresh session? Read this box first.
 >
-> ## 2026-08-08 — colour Phase 5 shipped; tenancy T0 is next; and the docs themselves are being restructured
+> # ▶️ NEXT UP: the work-tracking restructure. Application work is PAUSED.
+>
+> **Owner decision, 2026-08-08.** The next workstream is the restructure of how work is tracked
+> — **not** tenancy T0, and not any feature or bug work. **Application work restarts once the
+> new structure is in place.**
+>
+> 📄 **Start here:**
+> [`work-tracking-restructure-20260808.md`](../planning/pending/work-tracking-restructure-20260808.md).
+> 🔴 **§4 is blocking** — the storage medium (SQLite vs structured text) is undecided, and it is
+> the first thing to settle. Everything else in that doc is agreed, and §5 carries the migration
+> inventory split into mechanical vs judgment.
+>
+> ⚠️ **Tenancy T0 is deferred, not cancelled** — it was asked for and then stood down in favour
+> of this. **No T0 work exists.** Its context is preserved in the section below so it does not
+> need re-deriving when it resumes.
+>
+> ⚠️ **Until the restructure lands, keep using the current convention** — this box,
+> `PROJECT_PLAN`, `BACKLOG`, and the two logs, exactly as they are. **Do not migrate items
+> piecemeal**: a half-migrated backlog is strictly worse than either end state, and is precisely
+> how the 2026-08-02 audit produced seven rotted claims.
+>
+> 📌 **`AGENTS.md` carries the same notice** (and `CLAUDE.md` is a symlink to it), so a fresh
+> session sees it before reading the doc map it describes.
+>
+> ---
+>
+> ## 2026-08-08 — colour Phase 5 shipped; tenancy T0 deferred; and the docs themselves are being restructured
 >
 > Two commits (`20b4c1a`, `df132d0`), both on `dev`, **not pushed**. Gates at the end of the
 > session: `tsc` 0 · smoke 39 · unit 196 · **e2e 233 / 13 skipped / 0 failed**.
@@ -27,10 +53,11 @@ that is why one is no longer quoted. 🔑 **The same applies to any "everything 
 > 🔴 **Only the orphan-delete path is still unverified** — promoted to to-do #2 with its own
 > heading, because it is a PIPA path whose visible half proves nothing.
 >
-> ### ▶️ NEXT: tenancy T0 — asked for, and NOT started
+> ### ⏸️ DEFERRED: tenancy T0 — asked for, then stood down behind the restructure
 >
-> The owner asked to start **T0** and then deferred it to a fresh session. **No T0 work exists**
-> — no spec was written, no fixture touched. Start clean from
+> The owner asked to start **T0**, then made the work-tracking restructure the next workstream
+> instead. **No T0 work exists** — no spec was written, no fixture touched. Everything below is
+> preserved so it does not need re-deriving when T0 resumes. Start clean from
 > [the plan](../planning/pending/tenancy-path-migration-plan-20260728.md) §3.
 >
 > 🔑 **First, a status correction worth keeping: the path-based migration is NOT done, and it

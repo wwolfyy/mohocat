@@ -16,6 +16,25 @@ content doc carries a `mountainId`, and per-mountain config/theme/features come 
 
 ## Where the docs live (orient here first)
 
+> ### 🚧 2026-08-08 — this structure is being replaced, and that is the ACTIVE workstream
+>
+> **Application work is paused.** The next piece of work is a restructure of how work itself is
+> tracked; feature/bug work restarts **after** the new structure is in place. Design, agreed
+> points, the open decision, and the migration inventory:
+> **[`docs/planning/pending/work-tracking-restructure-20260808.md`](./docs/planning/pending/work-tracking-restructure-20260808.md)**.
+>
+> 🔑 **Why**: the five documents below total **~944 KB (~250k tokens)** — they have outgrown
+> their reader — and open items are split **5 in `BACKLOG.md` · 20 in `PROJECT_PLAN.md` · 9 in
+> `HANDOFF.md`**, so the file named for the backlog holds under a sixth of it. Decisions and
+> rejected approaches have no home at all today.
+>
+> ⚠️ **Until that lands, the structure described below is still the live one — use it as
+> written.** Do not start inventing the new layout piecemeal; a half-migrated backlog is worse
+> than either end state.
+>
+> 📌 **This file itself is in scope** — the bullets below name files whose roles are changing, so
+> this section must be rewritten in the same change that moves them.
+
 Before re-deriving context from scratch, check these — they hold the current state and the
 deep detail this file deliberately keeps out:
 
