@@ -1101,7 +1101,7 @@ not accepted`**. Regenerating the App Password fixed the auth, and that same edi
 > When you finish a chunk of work, update the relevant section here in place and add a
 > one-line note to the **Changelog** at the bottom.
 
-**Where the deep detail lives:** [`PROJECT_PLAN.md`](../../planning/PROJECT_PLAN.md)
+**Where the deep detail lives:** [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md)
 (cross-workstream status) · [`log/FEATURE_MOD_LOG.md`](../../../log/FEATURE_MOD_LOG.md) +
 [`log/DEBUG_LOG.md`](../../../log/DEBUG_LOG.md) · the frozen
 [`handoff-28`](./2026-07-11-handoff-28.md) / [`-27`](./2026-07-10-handoff-27.md) ·

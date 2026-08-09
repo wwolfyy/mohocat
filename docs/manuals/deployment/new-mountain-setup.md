@@ -23,7 +23,7 @@
 > `config/mountains/mountains.json` + `config/permissions.json` (per-mountain config) ·
 > `src/lib/tenant.ts` (Host→tenant resolution) · `src/utils/config.ts` (config accessors) ·
 > [`docs/codebase/multi-tenant-config.md`](../../codebase/multi-tenant-config.md) (the model) ·
-> [`docs/planning/PROJECT_PLAN.md`](../../planning/PROJECT_PLAN.md) §9.
+> [`docs/planning/PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §9.
 
 ---
 

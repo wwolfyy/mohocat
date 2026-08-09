@@ -10,9 +10,9 @@ deployed to **Vercel**.
 
 - **[`AGENTS.md`](./AGENTS.md)** (= `CLAUDE.md`) — the agent/contributor guide: architecture
   patterns, working agreements, anti-patterns. **Start here.**
-- **[`docs/handoff/HANDOFF.md`](./docs/handoff/HANDOFF.md)** — current engineering state and
+- **[`docs/handoff/HANDOFF.md`](./work_tracking/HANDOFF.md)** — current engineering state and
   what's next. Read it first when picking work up.
-- **[`docs/planning/PROJECT_PLAN.md`](./docs/planning/PROJECT_PLAN.md)** — cross-workstream
+- **[`docs/planning/PROJECT_PLAN.md`](./work_tracking/PROJECT_PLAN.md)** — cross-workstream
   status tracker · **[`BACKLOG.md`](./docs/planning/BACKLOG.md)** — known, non-urgent gaps.
 - **[`docs/codebase/CODEBASE_OVERVIEW.md`](./docs/codebase/CODEBASE_OVERVIEW.md)** — per-domain
   deep dives (auth, permissions, services, API routes, admin, media, map, multi-tenant).

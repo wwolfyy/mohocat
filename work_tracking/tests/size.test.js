@@ -81,7 +81,7 @@ check('the committed policy passes against the real documents', () => {
 
 check('a document over its LINE budget exits 1', () => {
   const result = runWithPolicy([
-    { path: 'docs/handoff/HANDOFF.md', lines: 5, columns: 9999, remedy: 'archive it' },
+    { path: 'work_tracking/HANDOFF.md', lines: 5, columns: 9999, remedy: 'archive it' },
   ]);
   assert.equal(result.status, 1, `expected 1, got ${result.status}`);
   assert.match(result.stderr, /budget 5/);
@@ -90,7 +90,7 @@ check('a document over its LINE budget exits 1', () => {
 check('a document over its COLUMN budget exits 1 — the failure a line count misses', () => {
   const result = runWithPolicy([
     {
-      path: 'docs/planning/PROJECT_PLAN.md',
+      path: 'work_tracking/PROJECT_PLAN.md',
       lines: 999999,
       columns: 40,
       remedy: 'break the cell up',
@@ -114,7 +114,7 @@ check('the remedy is printed, so the failure says what to do', () => {
 
 check('a governed document that has vanished is a breach, not a silent skip', () => {
   const result = runWithPolicy([
-    { path: 'docs/handoff/MOVED-AWAY.md', lines: 10, columns: 10, remedy: 'update the policy' },
+    { path: 'work_tracking/MOVED-AWAY.md', lines: 10, columns: 10, remedy: 'update the policy' },
   ]);
   assert.equal(result.status, 1, `expected 1, got ${result.status}`);
   assert.match(result.stderr, /does not exist/);

@@ -2,10 +2,10 @@
 
 > **Read this first, then read the registry.** This file is deliberately short. Everything that
 > used to make it long — open items, decisions, the session-by-session narrative — now lives in
-> **[`work_tracking/`](../../work_tracking/)**, one record per item.
+> **[`work_tracking/`](./)**, one record per item.
 >
 > 📁 **The 3,396-line version this replaced is frozen at
-> [`archive/2026-08-09-handoff-living-doc.md`](./archive/2026-08-09-handoff-living-doc.md).**
+> [`archive/2026-08-09-handoff-living-doc.md`](../docs/handoff/archive/2026-08-09-handoff-living-doc.md).**
 > Nothing was thrown away: every item and decision it carried was migrated on 2026-08-09, and
 > each record's `source_ref` pins the exact commit it was read from.
 
@@ -25,41 +25,40 @@ node work_tracking/scripts/checkout.js --query "status = 'open'"
 ```
 
 The design and the settled storage decision are in
-[`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md);
+[`work-tracking-restructure-20260808.md`](./work-tracking-restructure-20260808.md);
 the phase sequence is in
-[`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md).
+[`work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md).
 
-| Phase | What                                                 | State                          |
-| ----- | ---------------------------------------------------- | ------------------------------ |
-| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                        |
-| 2     | Import all seven source files                        | ✅ done — all 7                |
-| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`             |
-| 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`    |
-| 4     | Adjacent fixes — mega-cells, size policy             | ✅ done — `R-0423`, `R-0424`   |
-| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | ⬜ **`R-0425`**, then `R-0426` |
+| Phase | What                                                 | State                        |
+| ----- | ---------------------------------------------------- | ---------------------------- |
+| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                      |
+| 2     | Import all seven source files                        | ✅ done — all 7              |
+| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`           |
+| 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`  |
+| 4     | Adjacent fixes — mega-cells, size policy             | ✅ done — `R-0423`, `R-0424` |
+| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | 🔄 `R-0425` + `R-0428` done  |
 
 ### 🔴 Start here, so you do not have to derive it
 
-**Phase 5 is all that is left, and `R-0425` is next** — rewrite `CLAUDE.md` / `AGENTS.md` to
-describe the new structure, then `R-0426` un-pauses application work. 🔑 **Do `R-0428` in the
-same change**: it moves `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/`, and doing it
-alongside `R-0425` means the orientation rewrite names the final paths once instead of twice.
-📌 Three things the rewrite must carry that `CLAUDE.md` does not mention today: the registry
-workflow, the ⚠️ **do not write to the three stubs** rule, and the 📏 size policy.
+🎯 **One record left: `R-0426` — un-pause application work.** Everything the migration set out
+to do is done. `R-0426` is deliberately its own step and deliberately small: delete the ⏸️ notice
+at the top of `AGENTS.md`, delete this file's "application work is PAUSED" heading, and say what
+resumes. 🔑 **It is an owner decision, not a cleanup** — un-pausing is a statement about what
+happens next, so it does not ride along inside another change.
 
-✅ **Phase 4 is closed.** `R-0423` made `PROJECT_PLAN.md`'s snapshot table an index again
-(**228 KB → 106 KB**, longest line **4,528 → 399**) — half that file was whitespace, because
-prettier pads every table cell to the widest one, so one 4,350-character cell was replayed as
-padding across all 29 other rows. `R-0424` then made the size budgets a **CI gate** rather than a
-rule (see 📏 below). Along the way `R-0423` found `R-0435`, now also done: ten records the Phase 2
-import had truncated mid-sentence are whole again.
+📌 **Tenancy T0 is the work that resumes**, unless the owner picks something else. See the ⚠️
+note further down: no T0 work exists yet, so it starts clean from the plan's §3.
+
+✅ **Phases 1–4 and most of 5 are closed.** `R-0423` made `PROJECT_PLAN.md`'s snapshot table an
+index again (**228 KB → 106 KB**, longest line **4,528 → 399**) — half that file was whitespace,
+because prettier pads every table cell to the widest one, so one 4,350-character cell was replayed
+as padding across all 29 other rows. `R-0424` made the size budgets a **CI gate** rather than a
+rule (📏 below). `R-0425` + `R-0428` rewrote `AGENTS.md` around the registry and moved this file
+and `PROJECT_PLAN.md` into `work_tracking/`. Along the way `R-0423` found `R-0435`, also done: ten
+records the Phase 2 import had truncated mid-sentence are whole again.
 
 ⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which breaks
-20 `detail_ref`s in one move. It is the only piece of the migration not in Phase 5's path.
-
-📌 **`R-0428` was settled by the owner on 2026-08-08 and scheduled by no phase** — it surfaced
-only when the tracker itself was migrated. That is why it is folded into `R-0425` above rather
-than left to be rediscovered.
+20 `detail_ref`s in one move. It is the one piece of the migration outside this sequence.
 
 **Before touching anything**, run the three gates — they take seconds and they prove the store is
 sane: `node work_tracking/tests/run.js` (**4 files**, 104 assertions),
@@ -78,7 +77,7 @@ prose is **complete**, not merely present — but the habit is still the real de
 
 ⚠️ **Tenancy T0 is deferred, not cancelled.** It was asked for and then stood down in favour of
 this. **No T0 work exists** — no spec written, no fixture touched. Start clean from
-[the plan](../planning/pending/tenancy-path-migration-plan-20260728.md) §3 when it resumes;
+[the plan](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) §3 when it resumes;
 its context is `R-0345`, `R-0346` and `R-0395`.
 
 ---
@@ -90,8 +89,9 @@ its context is `R-0345`, `R-0346` and `R-0395`.
 stub says where. `PROJECT_PLAN.md` keeps its prose but its checkboxes are gone; each section
 carries a pointer with its own roll-up.
 
-⚠️ **`CLAUDE.md` / `AGENTS.md` still describe the OLD structure.** Rewriting them is Phase 5, so
-until then the stubs are what redirect you. **Trust the stub, not the bullet.**
+✅ **`AGENTS.md` now describes this structure** (`R-0425`) — its orientation section is the short
+version of what follows, so the two must be changed together or they will drift. 📌 `CLAUDE.md` is
+a **symlink** to `AGENTS.md`; there is one file, not two.
 
 A bug fixed, a change made, a decision reached, a new task, an owner question — each is one
 record:
@@ -110,8 +110,8 @@ node work_tracking/scripts/build.js              # regenerates registry.md (+ re
 `node work_tracking/scripts/db.js` refreshes that file on its own, leaving `registry.md` alone.
 It is generated and gitignored, so deleting it is always safe.
 
-📄 **[`SCHEMA.md`](../../work_tracking/SCHEMA.md)** is the field reference and the workflow
-guide. **[`registry.md`](../../work_tracking/registry.md)** is the human view — open work,
+📄 **[`SCHEMA.md`](./SCHEMA.md)** is the field reference and the workflow
+guide. **[`registry.md`](./registry.md)** is the human view — open work,
 parked work with its reason, and every record.
 
 ⚠️ **`registry.md` is generated. Never hand-edit it**; CI fails if it does not equal
@@ -119,7 +119,7 @@ parked work with its reason, and every record.
 not commit it, and do not delete it after a check-in.
 
 📏 **This file has a size budget, and so do seven others.**
-[`work_tracking/size-policy.json`](../../work_tracking/size-policy.json) holds one per document
+[`work_tracking/size-policy.json`](./size-policy.json) holds one per document
 and CI fails when a document exceeds it — `node work_tracking/scripts/size-check.js --report`
 shows how much room is left. Each budget sits just above the file's real size, so growth needs
 someone to **raise the number in a diff**. That is allowed; doing it by accident is not. 🔑 It is
@@ -166,10 +166,11 @@ production. It was the first promotion since 2026-07-23.
 
 📌 **The 2026-08-09 work-tracking session is committed on `dev` and _not pushed_** (owner will
 push). In order: Phase 3a (`7ac3e1d`), the empty-records repair (`e302471`), Phase 3's three
-passes (`71e89d4`, `c08b0d5`, `89df1eb`), then `R-0423` (`efed947`) and the `R-0435` repair on top
-of it. 📌 **Count them with `git rev-list --count origin/dev..dev`** rather than trusting this
-list — a line cannot count the commit that writes it. The two untracked `code-graph-tooling-*`
-documents belong to a different workstream and are not part of any of them.
+passes (`71e89d4`, `c08b0d5`, `89df1eb`), `R-0423` (`efed947`), the `R-0435` repair (`5ebf4d0`),
+`R-0424` (`31eb638`), then `R-0425` + `R-0428`. 📌 **Count them with
+`git rev-list --count origin/dev..dev`** rather than trusting this list — a line cannot count the
+commit that writes it. The two untracked `code-graph-tooling-*` documents belong to a different
+workstream and are not part of any of them.
 
 **Gates**, as of the last application-code session (2026-08-08): `tsc` 0 · smoke 39 · unit 196 ·
 **e2e 233 / 13 skipped / 0 failed** · rules 86 · scripts 23. The work-tracking store has its own
@@ -183,15 +184,15 @@ tsc/smoke/unit once and broke a spec unnoticed. Run
 
 ## Where the deep detail lives
 
-- **[`work_tracking/registry.md`](../../work_tracking/registry.md)** — every open item, every
+- **[`work_tracking/registry.md`](./registry.md)** — every open item, every
   decision, every bug and change. **This is the source now.**
-- **[`docs/planning/PROJECT_PLAN.md`](../planning/PROJECT_PLAN.md)** — cross-workstream prose;
+- **[`docs/planning/PROJECT_PLAN.md`](./PROJECT_PLAN.md)** — cross-workstream prose;
   its per-section pointers carry the roll-ups.
-- **[`docs/codebase/`](../codebase/)** — per-domain deep dives with watch-outs. Start at
+- **[`docs/codebase/`](../docs/codebase)** — per-domain deep dives with watch-outs. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshots — verify against code before trusting specifics.)_
-- **[`docs/manuals/`](../manuals/)** — operator how-to for `/admin` and for deployments.
-- **[`archive/`](./archive/)** — every frozen hand-off, this file's own history included.
-- **[`testing/2026-07-12-e2e-harness-handoff.md`](./testing/2026-07-12-e2e-harness-handoff.md)**
+- **[`docs/manuals/`](../docs/manuals)** — operator how-to for `/admin` and for deployments.
+- **[`archive/`](../docs/handoff/archive)** — every frozen hand-off, this file's own history included.
+- **[`testing/2026-07-12-e2e-harness-handoff.md`](../docs/handoff/testing/2026-07-12-e2e-harness-handoff.md)**
   — the testing workstream's closed narrative.
 
 ---

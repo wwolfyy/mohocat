@@ -529,7 +529,7 @@ Mostly one-time or infrequent setup. Details live in
     deployment-wide by decision, so a runtime CMS toggle would let **any one mountain's admin
     silently reconfigure every other mountain's composer**; a static file moves that authority
     to whoever can deploy. Rationale recorded in
-    [`PROJECT_PLAN.md`](../../planning/PROJECT_PLAN.md) §10d (D2) so the rejected Firestore
+    [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §10d (D2) so the rejected Firestore
     design isn't re-derived later.
   - ⚠️ **Fail-loud:** a missing key, a typo'd key, or a non-boolean value makes the 집사톡
     composer **throw** rather than quietly pick a behaviour. Keep both keys present and keep

@@ -19,14 +19,14 @@
   ],
   "documents": [
     {
-      "path": "docs/handoff/HANDOFF.md",
+      "path": "work_tracking/HANDOFF.md",
       "lines": 250,
       "columns": 130,
       "was": "201 lines / 107 columns on 2026-08-09",
       "remedy": "Archive it to docs/handoff/archive/<date>-*.md and cut a fresh one. A narrative belongs in a record, not here — see this file's own closing section."
     },
     {
-      "path": "docs/planning/PROJECT_PLAN.md",
+      "path": "work_tracking/PROJECT_PLAN.md",
       "lines": 1600,
       "columns": 450,
       "was": "1,465 lines / 399 columns on 2026-08-09",

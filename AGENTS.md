@@ -16,47 +16,51 @@ content doc carries a `mountainId`, and per-mountain config/theme/features come 
 
 ## Where the docs live (orient here first)
 
-> ### 🚧 2026-08-08 — this structure is being replaced, and that is the ACTIVE workstream
->
-> **Application work is paused.** The next piece of work is a restructure of how work itself is
-> tracked; feature/bug work restarts **after** the new structure is in place.
->
-> 📁 **Everything work-tracking now lives in [`work_tracking/`](./work_tracking/)** (root folder,
-> scripts included — deliberately not under the app's `scripts/`):
->
-> - **[`work-tracking-restructure-20260808.md`](./work_tracking/work-tracking-restructure-20260808.md)**
->   — design + the ✅ **settled** storage decision (§4) with its rejected alternatives.
-> - **[`work-tracking-migration-plan-20260808.md`](./work_tracking/work-tracking-migration-plan-20260808.md)**
->   — the five-phase execution sequence.
-> - **[`MIGRATION_JOB.md`](./work_tracking/MIGRATION_JOB.md)** — 📌 **read this first when
->   resuming**; it tracks progress file-by-file.
->
-> 🔑 **Why**: the five documents below total **~944 KB (~250k tokens)** — they have outgrown
-> their reader — and open items are split **5 in `BACKLOG.md` · 20 in `PROJECT_PLAN.md` · 9 in
-> `HANDOFF.md`**, so the file named for the backlog holds under a sixth of it. Decisions and
-> rejected approaches have no home at all today.
->
-> ⚠️ **Until that lands, the structure described below is still the live one — use it as
-> written.** Do not start inventing the new layout piecemeal; a half-migrated backlog is worse
-> than either end state.
->
-> 📌 **This file itself is in scope** — the bullets below name files whose roles are changing, so
-> this section must be rewritten in the same change that moves them.
+> ⏸️ **Application work is still PAUSED** (owner, 2026-08-08) while the work-tracking
+> restructure finishes. **`work_tracking/HANDOFF.md` says what remains** — one record. Removing
+> this notice is that record's job, not a side effect of some other change.
 
-Before re-deriving context from scratch, check these — they hold the current state and the
-deep detail this file deliberately keeps out:
+### 🔑 Work is tracked in `work_tracking/`, one record per item
 
-- **`docs/handoff/`** — chronological engineering hand-offs. **Read the latest first** for
-  current state and what's next (e.g. what feature is mid-flight).
-- **`docs/planning/PROJECT_PLAN.md`** — the cross-workstream status tracker (what's done,
-  in progress, deferred). Its sibling **`docs/planning/BACKLOG.md`** holds **known gaps that
-  are real but not urgent** — deferred on purpose, no date — plus owner questions awaiting an
-  answer. Check it before proposing "new" work; something may already be written up.
-  Companion plans sit **one level down**, split by state:
-  **`docs/planning/pending/`** (open, in progress, or decided-but-not-executed — start
-  here) and **`docs/planning/completed/`** (executed; historical record). A doc moves
-  from `pending/` to `completed/` when its own status line says it's done, and the links
-  to it are updated in the same change. New companion plans go in `pending/`.
+**Start at [`work_tracking/HANDOFF.md`](./work_tracking/HANDOFF.md)** — current state and what
+is in flight, deliberately short — then query the registry. A bug fixed, a change made, a
+decision reached, a new task, an owner question: **each is one record**, distinguished by a
+`type` field rather than by which file it lives in.
+
+```bash
+node work_tracking/scripts/checkout.js --query "status = 'open'"   # what needs doing
+node work_tracking/scripts/checkout.js --new                       # start a record
+#   edit work_tracking/work.json — type: bug | change | task | decision | question
+#   long prose goes in work_tracking/records/R-XXXX.md, never in the row
+node work_tracking/scripts/checkin.js
+node work_tracking/scripts/build.js                                # regenerates registry.md
+```
+
+- **[`work_tracking/SCHEMA.md`](./work_tracking/SCHEMA.md)** — every field, and the workflow in
+  full. Read it before your first check-in.
+- **[`work_tracking/registry.md`](./work_tracking/registry.md)** — the human view: open work,
+  parked work with its reason, every record. ⚠️ **Generated — never hand-edit it.** CI fails if
+  it does not equal `build(registry.ndjson)`.
+- **[`work_tracking/PROJECT_PLAN.md`](./work_tracking/PROJECT_PLAN.md)** — cross-workstream
+  prose and the §-numbered sections records point back at. Its snapshot table is an **index**:
+  status plus where to read more, never the narrative itself.
+
+⚠️ **Do not add entries to `log/DEBUG_LOG.md`, `log/FEATURE_MOD_LOG.md` or
+`docs/planning/BACKLOG.md`.** All three are **stubs** — their content is in the registry, and
+each stub says so at the top. A bug fix is a record with `type: bug`; an intentional change is
+`type: change`; a deferred gap is `status: deferred` with its reason in `note`. 🔑 **Nothing
+moves between files any more** — a status change is a field, so the old "move the item and
+delete its origin in the same change" rule no longer applies to anything.
+
+📏 **Living documents have size budgets** in
+[`work_tracking/size-policy.json`](./work_tracking/size-policy.json), and **CI fails** when one
+is exceeded — `node work_tracking/scripts/size-check.js --report` shows the room left. Budgets
+sit just above each file's real size, so growth needs someone to raise the number in a diff.
+That is allowed; doing it by accident is what stops. _(This is why a long narrative goes in a
+record and not in the hand-off.)_
+
+Everything else is reference material — check it before re-deriving context from scratch:
+
 - **`docs/codebase/`** — per-domain deep dives (auth, permissions, services, API routes,
   admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshot docs — verify against code before trusting specifics.)_
@@ -65,16 +69,14 @@ deep detail this file deliberately keeps out:
   `/admin` CMS — content link tokens, cat/post fields, config & ops) and `deployment/`
   (how deploys work + new-mountain provisioning). Distinct from `docs/codebase/` (how
   it's built) — manuals are "what do I click/type to do X."
-- **`log/`** — operational logs (repo root, not under `docs/`), newest-first:
-  - `log/DEBUG_LOG.md` — **bug** fixes whose root cause was non-obvious
-    (symptom → root cause → fix → verified); skim it before chasing a bug in case
-    it (or a sibling) was seen before.
-  - `log/FEATURE_MOD_LOG.md` — **intentional product changes** (feature
-    enhancements / small fixes / removals), i.e. changes made by choice rather
-    than bug investigations (what changed → rationale → verified).
-  - `log/doc_updates.log` — codebase-doc refresh runs.
-  - _Which log?_ "X was broken, here's why" → `DEBUG_LOG`; "we decided to
-    add/change/remove X" → `FEATURE_MOD_LOG`.
+- **`docs/planning/pending/` and `completed/`** — companion plans for a single workstream,
+  too long to be a record. Records point at them by `detail_ref`. A doc moves to `completed/`
+  when its own status line says it is done.
+- **`docs/handoff/archive/`** — every frozen hand-off, including the 3,396-line living document
+  this structure replaced. History, not state. ⚠️ **Some of its internal links no longer
+  resolve** — these files have been relocated twice and were never repointed.
+- **`log/doc_updates.log`** — codebase-doc refresh runs. The only live file left in `log/`; its
+  two `.md` neighbours are stubs.
 
 ## Working Agreements
 
@@ -84,9 +86,14 @@ deep detail this file deliberately keeps out:
   over new code blocks for the same need.
 - **Separation of concerns.** Each module/component should hold a single responsibility (or
   one group of closely related ones).
-- **Ask before committing.** Make the edits, run the gates (`npx tsc --noEmit` +
-  `npm run test:smoke`), summarize what's staged — then wait for a go-ahead before
-  `git commit` (and before pushing).
+- **Ask before committing.** Make the edits, run the gates, summarize what's staged — then wait
+  for a go-ahead before `git commit` (and before pushing). **Application gates:**
+  `npx tsc --noEmit` + `npm run test:smoke`. **If you touched `work_tracking/` or any document
+  it governs, also run:** `node work_tracking/tests/run.js`,
+  `node work_tracking/scripts/build.js --check`, and `node work_tracking/scripts/size-check.js`.
+- **Record the work as you finish it, not afterwards.** A record written in the same change as
+  the fix is the one that still knows why. ⚠️ **`work.json` is gitignored — never commit it**,
+  and do not delete it after a check-in; it is the merge-conflict recovery file.
 - **Error handling (per the repo owner's global conventions):** `try/catch` that **logs and
   re-raises** — never silently swallow errors or add fallbacks unless asked. Don't log
   secrets or PII.
@@ -223,12 +230,15 @@ deep detail this file deliberately keeps out:
   `npm test`**, so a script regression is caught only in its own CI job.
 - **Permission inspection**: `PermissionDebug.tsx` (dev-only) resolves a user's effective
   permissions.
-- **Debug log**: after fixing a bug whose root cause was non-obvious, add an entry to
-  `log/DEBUG_LOG.md` (newest first) — symptom, root cause, fix, and how it was verified —
-  so the reasoning survives without re-reading the diff.
-- **Feature mod log**: for intentional changes (feature enhancements / small fixes /
-  removals) rather than bug fixes, add an entry to `log/FEATURE_MOD_LOG.md` (newest first) —
-  what changed, rationale, how it was verified. (See the `log/` bullet above for which log.)
+- **Recording a fix**: after fixing a bug whose root cause was non-obvious, write a **record**
+  with `type: bug` — symptom, root cause, fix, and how it was verified — so the reasoning
+  survives without re-reading the diff. An intentional change (enhancement, small fix, removal)
+  is `type: change`. ⚠️ **Not `log/DEBUG_LOG.md` or `log/FEATURE_MOD_LOG.md`** — both are stubs
+  now; see the orientation section above.
+- **Before you look for a prior sighting of a bug**, query the store rather than grepping the
+  logs: `checkout.js --query "type = 'bug'"`. ⚠️ **Never `grep` the store** — measured, a grep
+  pre-filter found 643 of 1,274 matching rows because serialization is not line-oriented in the
+  way grep assumes. Parse it, always.
 
 ## Anti-Patterns to Avoid
 

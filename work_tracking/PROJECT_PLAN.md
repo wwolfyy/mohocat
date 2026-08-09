@@ -7,12 +7,12 @@
 > testing) and their status in one place.
 >
 > **Companion docs:**
-> [`docs/handoff/2026-06-21-kickoff-3.md`](../handoff/archive/2026-06-21-kickoff-3.md)
+> [`docs/handoff/2026-06-21-kickoff-3.md`](../docs/handoff/archive/2026-06-21-kickoff-3.md)
 > (orientation — read first) ·
-> [`design.md`](../design/design.md) (design source-of-truth) ·
-> [`mohocat-app-redesign-plan.md`](../design/mohocat-app-redesign-plan.md) +
-> [`-tasks.md`](../design/mohocat-app-redesign-tasks.md) (redesign detail) ·
-> token values: [`tailwind.config.js`](../../tailwind.config.js).
+> [`design.md`](../docs/design/design.md) (design source-of-truth) ·
+> [`mohocat-app-redesign-plan.md`](../docs/design/mohocat-app-redesign-plan.md) +
+> [`-tasks.md`](../docs/design/mohocat-app-redesign-tasks.md) (redesign detail) ·
+> token values: [`tailwind.config.js`](../tailwind.config.js).
 >
 > **Status:** 🚧 **SKELETON** — workstreams below are placeholders. Each one's
 > concrete specs/tasks are filled in (and spun into a companion `*-tasks.md`)
@@ -36,39 +36,39 @@
 
 > 📌 **This table is an index, not a record.** A row says the status and where to read the rest —
 > the narrative is in the numbered section the row names, and each individual item is a row in
-> [`work_tracking/registry.md`](../../work_tracking/registry.md). ⚠️ **A cell that grows past a
+> [`work_tracking/registry.md`](./registry.md). ⚠️ **A cell that grows past a
 > couple of sentences has stopped being an index**; move the prose down into its section.
 
-| Workstream                                     | Status                      | Where the detail is                                                                                                                                                                                                                                                                                            |
-| ---------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Landing redesign (Phases 0–2)                  | `[x]` done                  | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                                                                                                               |
-| App redesign — A (Modals)                      | `[x]` done                  | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                   |
-| App redesign — B (Album pages)                 | `[x]` done                  | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                |
-| App redesign — D (Localization)                | `[x]` done                  | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                 |
-| App redesign — C (other pages)                 | `[x]` done                  | Brand audit of the public + 집사 surfaces, **done 2026-07-03**; button convergence closed 2026-07-10 (§12.2). Auth-gated list/pagination checks still owed under **§4**.                                                                                                                                       |
-| Redesign A4 (live-verification)                | `[~]` blocked               | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                        |
-| **Functional: 입양홍보 page missing**          | `[x]` done                  | **§11** — adoptable-cats gallery (`Cat.adoptable` + admin tagging + `/pages/adoption`); every 404 entry point resolved. Browser-verified 2026-06-26.                                                                                                                                                           |
-| **Functional: 동참 form end-to-end**           | `[x]` done                  | **§11** — `POST /api/contact` shipped 2026-06-28; the sending account changed and is verified live — see §11's 2026-08-06 sub-section.                                                                                                                                                                         |
-| **Deployment-target cleanup**                  | `[x]` done                  | **§7** — Vercel-only; Phases 1–3 removed Cloud Run / home-server / Firebase Hosting / Docker and the Cloud Storage static-data push. ([`phase3-cleanup-plan.md`](./completed/phase3-cleanup-plan.md))                                                                                                          |
-| **Perf: bake the data layer**                  | `[x]` done                  | **§7a** — cats read server-side and baked into the home + adoption Server Components (ISR 3600s, on-demand revalidate on admin edits); zero client Firestore queries. Closed 2026-06-30.                                                                                                                       |
-| **Mobile UX optimization**                     | `[~]` in progress           | **§4** — two planned passes plus three off-plan rounds, device-verified on an S22 through 2026-07-11. **Remaining:** mobile perf (not started) and a full audit of the sign-in-gated surfaces.                                                                                                                 |
-| **Firebase Storage → Seoul bucket**            | `[x]` done                  | `us-central1` → `asia-northeast3`, bucket `mountaincats-61543`; URLs rewritten across all 6 collections. Runbook: `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                        |
-| **Admin desktop cleanup**                      | `[~]` in progress           | **§5** — spreadsheet-grid cat editor, react-admin removed, `AdminAuth` hardened (2026-06-29→30). **Remaining:** two owner-deferred consistency items + the `겨울집 관리` stub.                                                                                                                                 |
-| **Admin mobile optimization**                  | 🚧 placeholder              | **§6** — admin usable on phones.                                                                                                                                                                                                                                                                               |
-| Codebase health / tech-debt                    | `[~]` in progress           | **§7** — permissions + admin-API auth (2026-06-28), CMS write rules (2026-06-29), complexity retirement P0–P6 (2026-07-19), media routes gated (2026-07-26). **Remaining:** error handling, structured logging, request validation.                                                                            |
-| **Auth / media integrity (2026-08-02)**        | `[x]` done                  | Not a numbered § — see **§7** (PII in auth logs), **§8** (consent, orphan cleanup, `defaultRole`), **§10h**, **§10i**. Commits `8a50348`…`82d0f07`. 🔑 Two premises were wrong and corrected; `docs/codebase/authentication.md` was rewritten around both.                                                     |
-| Compliance / legal                             | `[x]` done                  | **§8** — CLOSED 2026-07-10: policy + terms, 국외 이전 disclosure, consent capture, self-service 탈퇴. **Still open:** Kakao scope verification, and the legal review + PIPA audit that need an outside professional.                                                                                           |
-| Multi-tenant hardening                         | `[x]` done                  | **§9** — M0–M8 complete, shipped via PR #8 (`366425c`) then PR #9 (`f570bcc`). ⚠️ M8's colour half was withdrawn (**§10u**). What is left is owner-gated ([`mountain-2-prerequisites.md`](./pending/mountain-2-prerequisites.md)) plus path-based tenancy — decided, **not started** (`R-0395`).               |
-| **Data protection / backups**                  | `[x]` done                  | Not a numbered § — PITR (7-day) + weekly backups + `npm run backup:firestore`, round-trip verified lossless; weekly-not-daily and no-GCS-bucket are deliberate. 🔑 **Snapshot before any script writes to prod.** Runbook: [`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner). |
-| Testing & quality gates                        | `[x]` done                  | **§10** — main plan complete, merged via PR #7 (2026-07-16). Vitest + emulator-backed Playwright e2e; `e2e` is a required status check on `main`.                                                                                                                                                              |
-| Member post authoring                          | `[x]` **LIVE** (corrected)  | **§10n** — 집사 roles view / create / edit their own on 집사톡 + 급식현황 (`8334c51`), live in prod since 2026-08-02. 🔑 The ask's premise was false: there was no non-admin author for "let the author edit" to apply to.                                                                                     |
-| Member media upload (집사톡)                   | `[x]` **LIVE** (2026-08-03) | **§10p** — narrow `upload-own-photo` / `upload-own-video` + `uploadedByUid`. 🔴 Before the fix a member lost the **whole post** on attach, and both test nets missed it for mirror-image reasons.                                                                                                              |
-| Author delete + reply edit/delete              | `[x]` **LIVE** (2026-08-04) | **§10q** — authors delete their own posts; a reply's author edits and deletes that reply. The delete **cascade** was the clause that needed care.                                                                                                                                                              |
-| **입양홍보 posts + adoption/modal polish**     | `[x]` done                  | Not a numbered § — 입양홍보 post type, admin post editing, adoption-page polish, cat-modal redesign, inline `[img]`/`[video]` links. See [`handoff-21`](../handoff/archive/2026-07-03-handoff-21.md).                                                                                                          |
-| **Posts: detail route + editing (2026-08-02)** | `[x]` done                  | **§10k / §10l** — a post is addressed by `(type, id)`, not `id`; detail moved onto the 공지사항 shell + `PostMedia`; editing moved onto the create composers (급식현황 excepted by decision).                                                                                                                  |
-| **Colour / design tokens (2026-08-05)**        | `[x]` **done 2026-08-08**   | **§10u** — colour has one source of truth (`tailwind.config.js`) and per-tenant theming is **withdrawn**, superseding M8. Phase 5 closed 2026-08-08 (`df132d0`): the admin CMS was measured against `design.md` for the first time — full account in `R-0050`.                                                 |
-| **Work-tracking restructure (2026-08-08)**     | `[~]` **ACTIVE**            | Not a numbered § — ▶️ the active workstream, and **application work is PAUSED** until it lands. Design, plan and live progress are in [`work_tracking/`](../../work_tracking/); the open records are the resume point.                                                                                         |
-| **Admin manual / operator docs**               | `[x]` started               | Not a numbered § — `docs/manuals/admin-manual/` + [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md) + `deployment/new-mountain-setup.md` (rewritten as a real runbook in M8).                                                                                                             |
+| Workstream                                     | Status                      | Where the detail is                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing redesign (Phases 0–2)                  | `[x]` done                  | Brand tokens, frosted nav, Leaflet migration, mobile clustering.                                                                                                                                                                                                                                                    |
+| App redesign — A (Modals)                      | `[x]` done                  | Shared `ui/Modal` system (commit `5892b43`).                                                                                                                                                                                                                                                                        |
+| App redesign — B (Album pages)                 | `[x]` done                  | Shared `components/album/*` + `useMediaFilter`.                                                                                                                                                                                                                                                                     |
+| App redesign — D (Localization)                | `[x]` done                  | Auth + mypage → Korean (해요체), `strings.ts`.                                                                                                                                                                                                                                                                      |
+| App redesign — C (other pages)                 | `[x]` done                  | Brand audit of the public + 집사 surfaces, **done 2026-07-03**; button convergence closed 2026-07-10 (§12.2). Auth-gated list/pagination checks still owed under **§4**.                                                                                                                                            |
+| Redesign A4 (live-verification)                | `[~]` blocked               | Needs real sign-in / SMS (assistant can't enter creds).                                                                                                                                                                                                                                                             |
+| **Functional: 입양홍보 page missing**          | `[x]` done                  | **§11** — adoptable-cats gallery (`Cat.adoptable` + admin tagging + `/pages/adoption`); every 404 entry point resolved. Browser-verified 2026-06-26.                                                                                                                                                                |
+| **Functional: 동참 form end-to-end**           | `[x]` done                  | **§11** — `POST /api/contact` shipped 2026-06-28; the sending account changed and is verified live — see §11's 2026-08-06 sub-section.                                                                                                                                                                              |
+| **Deployment-target cleanup**                  | `[x]` done                  | **§7** — Vercel-only; Phases 1–3 removed Cloud Run / home-server / Firebase Hosting / Docker and the Cloud Storage static-data push. ([`phase3-cleanup-plan.md`](../docs/planning/completed/phase3-cleanup-plan.md))                                                                                                |
+| **Perf: bake the data layer**                  | `[x]` done                  | **§7a** — cats read server-side and baked into the home + adoption Server Components (ISR 3600s, on-demand revalidate on admin edits); zero client Firestore queries. Closed 2026-06-30.                                                                                                                            |
+| **Mobile UX optimization**                     | `[~]` in progress           | **§4** — two planned passes plus three off-plan rounds, device-verified on an S22 through 2026-07-11. **Remaining:** mobile perf (not started) and a full audit of the sign-in-gated surfaces.                                                                                                                      |
+| **Firebase Storage → Seoul bucket**            | `[x]` done                  | `us-central1` → `asia-northeast3`, bucket `mountaincats-61543`; URLs rewritten across all 6 collections. Runbook: `scripts/migration/README_korea_bucket_migration.md`.                                                                                                                                             |
+| **Admin desktop cleanup**                      | `[~]` in progress           | **§5** — spreadsheet-grid cat editor, react-admin removed, `AdminAuth` hardened (2026-06-29→30). **Remaining:** two owner-deferred consistency items + the `겨울집 관리` stub.                                                                                                                                      |
+| **Admin mobile optimization**                  | 🚧 placeholder              | **§6** — admin usable on phones.                                                                                                                                                                                                                                                                                    |
+| Codebase health / tech-debt                    | `[~]` in progress           | **§7** — permissions + admin-API auth (2026-06-28), CMS write rules (2026-06-29), complexity retirement P0–P6 (2026-07-19), media routes gated (2026-07-26). **Remaining:** error handling, structured logging, request validation.                                                                                 |
+| **Auth / media integrity (2026-08-02)**        | `[x]` done                  | Not a numbered § — see **§7** (PII in auth logs), **§8** (consent, orphan cleanup, `defaultRole`), **§10h**, **§10i**. Commits `8a50348`…`82d0f07`. 🔑 Two premises were wrong and corrected; `docs/codebase/authentication.md` was rewritten around both.                                                          |
+| Compliance / legal                             | `[x]` done                  | **§8** — CLOSED 2026-07-10: policy + terms, 국외 이전 disclosure, consent capture, self-service 탈퇴. **Still open:** Kakao scope verification, and the legal review + PIPA audit that need an outside professional.                                                                                                |
+| Multi-tenant hardening                         | `[x]` done                  | **§9** — M0–M8 complete, shipped via PR #8 (`366425c`) then PR #9 (`f570bcc`). ⚠️ M8's colour half was withdrawn (**§10u**). What is left is owner-gated ([`mountain-2-prerequisites.md`](../docs/planning/pending/mountain-2-prerequisites.md)) plus path-based tenancy — decided, **not started** (`R-0395`).     |
+| **Data protection / backups**                  | `[x]` done                  | Not a numbered § — PITR (7-day) + weekly backups + `npm run backup:firestore`, round-trip verified lossless; weekly-not-daily and no-GCS-bucket are deliberate. 🔑 **Snapshot before any script writes to prod.** Runbook: [`admin-manual` §10](../docs/manuals/admin-manual/README.md#10-backups--recovery-owner). |
+| Testing & quality gates                        | `[x]` done                  | **§10** — main plan complete, merged via PR #7 (2026-07-16). Vitest + emulator-backed Playwright e2e; `e2e` is a required status check on `main`.                                                                                                                                                                   |
+| Member post authoring                          | `[x]` **LIVE** (corrected)  | **§10n** — 집사 roles view / create / edit their own on 집사톡 + 급식현황 (`8334c51`), live in prod since 2026-08-02. 🔑 The ask's premise was false: there was no non-admin author for "let the author edit" to apply to.                                                                                          |
+| Member media upload (집사톡)                   | `[x]` **LIVE** (2026-08-03) | **§10p** — narrow `upload-own-photo` / `upload-own-video` + `uploadedByUid`. 🔴 Before the fix a member lost the **whole post** on attach, and both test nets missed it for mirror-image reasons.                                                                                                                   |
+| Author delete + reply edit/delete              | `[x]` **LIVE** (2026-08-04) | **§10q** — authors delete their own posts; a reply's author edits and deletes that reply. The delete **cascade** was the clause that needed care.                                                                                                                                                                   |
+| **입양홍보 posts + adoption/modal polish**     | `[x]` done                  | Not a numbered § — 입양홍보 post type, admin post editing, adoption-page polish, cat-modal redesign, inline `[img]`/`[video]` links. See [`handoff-21`](../docs/handoff/archive/2026-07-03-handoff-21.md).                                                                                                          |
+| **Posts: detail route + editing (2026-08-02)** | `[x]` done                  | **§10k / §10l** — a post is addressed by `(type, id)`, not `id`; detail moved onto the 공지사항 shell + `PostMedia`; editing moved onto the create composers (급식현황 excepted by decision).                                                                                                                       |
+| **Colour / design tokens (2026-08-05)**        | `[x]` **done 2026-08-08**   | **§10u** — colour has one source of truth (`tailwind.config.js`) and per-tenant theming is **withdrawn**, superseding M8. Phase 5 closed 2026-08-08 (`df132d0`): the admin CMS was measured against `design.md` for the first time — full account in `R-0050`.                                                      |
+| **Work-tracking restructure (2026-08-08)**     | `[~]` **ACTIVE**            | Not a numbered § — ▶️ the active workstream, and **application work is PAUSED** until it lands. Design, plan and live progress are in [`work_tracking/`](./); the open records are the resume point.                                                                                                                |
+| **Admin manual / operator docs**               | `[x]` started               | Not a numbered § — `docs/manuals/admin-manual/` + [`adding-a-mountain.md`](../docs/manuals/admin-manual/adding-a-mountain.md) + `deployment/new-mountain-setup.md` (rewritten as a real runbook in M8).                                                                                                             |
 
 ---
 
@@ -115,7 +115,7 @@ those are the forward plan.
   historical record). A doc **moves from `pending/` to `completed/` when its
   own status line says it is done**, and links to it are updated in the same
   change.
-- **Known gaps that are _not_ scheduled live in [`BACKLOG.md`](./BACKLOG.md)** (added
+- **Known gaps that are _not_ scheduled live in [`BACKLOG.md`](../docs/planning/BACKLOG.md)** (added
   2026-08-02) — real, deferred on purpose, no date — together with owner questions
   awaiting an answer. 🔑 **An item belongs in exactly one of the two:** promoting a
   backlog entry means moving it here (or into a `pending/` plan) and striking it there
@@ -145,7 +145,7 @@ those are the forward plan.
 
 > 📋 **22 items — 20/22 done — now in the work registry**
 > as `R-0145`…`R-0166`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 _(Out of scope here: admin mobile — that's §6.)_
@@ -163,7 +163,7 @@ _(Out of scope here: admin mobile — that's §6.)_
 
 > 📋 **9 items — 7/9 done — now in the work registry**
 > as `R-0167`…`R-0175`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
@@ -182,7 +182,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 > 📋 **6 items — 0/6 done — now in the work registry**
 > as `R-0176`…`R-0181`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ---
@@ -196,7 +196,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 > 📋 **22 items — 17/22 done — now in the work registry**
 > as `R-0182`…`R-0203`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ---
@@ -205,7 +205,7 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 
 > **Surfaced 2026-06-26**, picked up with the user **2026-06-28** and implemented the same
 > session. Full task log + locked design decisions:
-> [`7a-bake-data-layer-tasks.md`](./completed/7a-bake-data-layer-tasks.md). The client cat-query
+> [`7a-bake-data-layer-tasks.md`](../docs/planning/completed/7a-bake-data-layer-tasks.md). The client cat-query
 > waterfall is gone on both baked surfaces. **One follow-up remains:** the mechanical removal
 > of the now-dead static-data export seam (§6 of the tasks doc) — see handoff-9.
 
@@ -236,7 +236,7 @@ reads" from points/images to cat **metadata**.
 
 > 📋 **6 items — 5/6 done — now in the work registry**
 > as `R-0204`…`R-0209`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Inherited from Phase 3B (don't re-investigate from scratch):**
@@ -282,7 +282,7 @@ _Risk/size: architectural, touches the services seam and several pages — hence
 
 > 📋 **9 items — 6/9 done — now in the work registry**
 > as `R-0210`…`R-0218`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Deferred / owner-owed (accepted, out of workstream).** ⚠️ **Split into two kinds
@@ -318,17 +318,17 @@ _Needs an outside professional — cannot be closed in-repo:_
 > actually true. Today several paths are single-mountain hard-coded.
 >
 > **Decision framework (2026-07-18):**
-> [`multi-tenant-architecture-decision-20260718.md`](./completed/multi-tenant-architecture-decision-20260718.md)
+> [`multi-tenant-architecture-decision-20260718.md`](../docs/planning/completed/multi-tenant-architecture-decision-20260718.md)
 > — verified current state, the custody-vs-management gating question, the open
 > deployment/data axes, and open questions Q1–Q8. **Q1–Q8 ANSWERED 2026-07-19**
 > (management-only · B1 one-Firestore-`mountainId` · A1 one-Vercel + subdomains ·
 > visitor-facing selector); ⚠️ **the "subdomains" half of that answer was REVERSED on
 > 2026-07-28** — tenancy goes **path-based** (`mohocats.org/manisan`), see
-> [`tenancy-url-model-decision-20260728.md`](./pending/tenancy-url-model-decision-20260728.md) +
-> [`tenancy-path-migration-plan-20260728.md`](./pending/tenancy-path-migration-plan-20260728.md).
+> [`tenancy-url-model-decision-20260728.md`](../docs/planning/pending/tenancy-url-model-decision-20260728.md) +
+> [`tenancy-path-migration-plan-20260728.md`](../docs/planning/pending/tenancy-path-migration-plan-20260728.md).
 > Q3's substance — one Vercel project, one build serving every mountain — is unaffected;
 > only how the tenant is named in a URL changes. The execution plan is
-> [`multi-mountain-refactor-plan-20260719.md`](./completed/multi-mountain-refactor-plan-20260719.md)
+> [`multi-mountain-refactor-plan-20260719.md`](../docs/planning/completed/multi-mountain-refactor-plan-20260719.md)
 > (phases M0–M8 — supersedes the framework's §10 checklist and this section's
 > candidate-scope list as the tracker; every item below is absorbed into a phase).
 > **✅ M1–M5 DONE & SHIPPED TO PROD (PR #8, merge `366425c`, 2026-07-23); cutover complete.
@@ -369,7 +369,7 @@ _Needs an outside professional — cannot be closed in-repo:_
 > baked local paths. The thumbnail namespacing + migration script + M6 cutover runbook + e2e
 > fixture edits were **reverted/deleted**. The baked-vs-Storage-URL image model is now
 > documented in
-> [`docs/codebase/media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy).
+> [`docs/codebase/media-and-youtube.md`](../docs/codebase/media-and-youtube.md#image-storage--serving-strategy).
 > Gates: tsc 0, unit +2, smoke 30/30, **full e2e 125/13/0**.
 >
 > **✅ M7 DONE & committed (`48f7085`, 2026-07-25) — analytics decoupling.**
@@ -412,10 +412,10 @@ _Needs an outside professional — cannot be closed in-repo:_
 > ✅ Zero visual change — every tenant already resolved to yellow except hidden `manisan`.
 > 📌 M8's other half (geyang-as-one-of-many, provisioning proof) is untouched; only the
 > per-tenant color knob is withdrawn. Plan:
-> [`color-token-centralization-plan-20260805.md`](./pending/color-token-centralization-plan-20260805.md).
+> [`color-token-centralization-plan-20260805.md`](../docs/planning/pending/color-token-centralization-plan-20260805.md).
 >
 > 📁 **Everything still gated on a real mountain #2 lives in one doc** (created 2026-07-28):
-> [`mountain-2-prerequisites.md`](./pending/mountain-2-prerequisites.md) — the blocking code items,
+> [`mountain-2-prerequisites.md`](../docs/planning/pending/mountain-2-prerequisites.md) — the blocking code items,
 > the owner-run provisioning externalities, the should-fixes, and the decided/won't-fix
 > record. This §9 no longer tracks them individually; add new ones there.
 
@@ -442,7 +442,7 @@ field spot-check — `개똥이` 19 fields incl. `adoptable:false`, `깡패` 21 
 overwrite failure mode did **not** recur. Browser pass against the stamped data
 rendered unchanged (map 8 points + avatars, photo album 10).
 
-Full detail: [`multi-mountain-refactor-plan-20260719.md`](./completed/multi-mountain-refactor-plan-20260719.md) §3 M4.
+Full detail: [`multi-mountain-refactor-plan-20260719.md`](../docs/planning/completed/multi-mountain-refactor-plan-20260719.md) §3 M4.
 
 ### ⚠️ This Firestore is shared with a second application — M5 constraint
 
@@ -469,7 +469,7 @@ What M5 accounts for (verified benign):
 
 > 📋 **6 items — 5/6 done — now in the work registry**
 > as `R-0219`…`R-0224`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ---
@@ -490,12 +490,12 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
 
 > 📋 **14 items — 9/14 done — now in the work registry**
 > as `R-0225`…`R-0238`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Plans drafted (2026-07-11):**
 
-- [`playwright-ci-plan.md`](./completed/playwright-ci-plan.md) — the Playwright E2E suite
+- [`playwright-ci-plan.md`](../docs/planning/completed/playwright-ci-plan.md) — the Playwright E2E suite
   (public / auth / member / admin / API-security) against the **Firebase Emulator
   Suite** with seeded fixtures, run in a greenfield GitHub Actions CI. **Phases 0–7
   are DONE + merged to `main`** — harness/CI, `public/`, `auth/`, `member/`, `admin/`,
@@ -504,7 +504,7 @@ firestore:rules` for prod parity on the scoped `users` self-write rule.
   non-admin-login blocker is resolved** — a scoped `users` self-write rule
   (+ `npm run test:rules`, 6/6) now lets non-admins log in. ⚠️ Still to do: deploy the
   rules change to Firebase for prod parity (`firebase deploy --only firestore:rules`).
-- [`playwright-ci-prerequisite-plan.md`](./completed/playwright-ci-prerequisite-plan.md) —
+- [`playwright-ci-prerequisite-plan.md`](../docs/planning/completed/playwright-ci-prerequisite-plan.md) —
   the enabler plan that must land first: adopts the main plan's recommendations
   as decisions (D1–D7), resolves its flags (F1–F12) via 4 spikes + 8 work
   packages (emulator wiring, asset-script compat, fixtures/seed, harness, CI).
@@ -525,11 +525,11 @@ none block the completed workstream.
 > **Goal:** stop 집사게시판 from being a second media composer, move the per-file media work
 > to the one that does the job (집사톡), and make YouTube filing per-mountain instead of
 > title-matched. Plan + decisions:
-> [`butler-media-separation-plan-20260727.md`](./completed/butler-media-separation-plan-20260727.md).
+> [`butler-media-separation-plan-20260727.md`](../docs/planning/completed/butler-media-separation-plan-20260727.md).
 
 > 📋 **4 items — 4/4 done — now in the work registry**
 > as `R-0239`…`R-0242`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 🔑 **Owner-owed:** add the channel's back catalogue to the 계양산 playlist — it holds **4** of
@@ -557,7 +557,7 @@ only** — no credentials in the emulator.
 
 > 📋 **3 items — 3/3 done — now in the work registry**
 > as `R-0243`…`R-0245`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Behaviour, as verified in a production build** (dev and prod were checked separately — see
@@ -624,7 +624,7 @@ contained version won.
    which is the opposite of a cap. **✅ DONE 2026-07-30** (see below).
    > 📋 **8 items — 6/8 done — now in the work registry**
    > as `R-0246`…`R-0253`. See
-   > [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+   > [`work_tracking/registry.md`](./registry.md); each links to its full
    > text in `work_tracking/records/`.
 
 📌 **Not a bug, recorded so it isn't re-investigated:** on 2026-07-29 videos appeared
@@ -651,7 +651,7 @@ drifted — different capabilities, different bugs. They now share **`PostMedia`
 
 > 📋 **4 items — 4/4 done — now in the work registry**
 > as `R-0254`…`R-0257`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 📌 **Open question for the owner, not a defect:** a video's 제목 now appears **twice** — once in
@@ -676,7 +676,7 @@ pass.
 
 > 📋 **3 items — 3/3 done — now in the work registry**
 > as `R-0258`…`R-0260`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 📌 **Why no error was ever logged.** Firestore retries network failures internally rather than
@@ -715,7 +715,7 @@ video to private, which destroys nothing on YouTube's side. Same shape as the 20
 
 > 📋 **4 items — 4/4 done — now in the work registry**
 > as `R-0261`…`R-0264`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ⏳ **Not testable here, and owner-owed:** the classification itself needs real YouTube OAuth,
@@ -752,7 +752,7 @@ stage logs anything.
 
 > 📋 **3 items — 3/3 done — now in the work registry**
 > as `R-0265`…`R-0267`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 - ⏸️ **Still deferred (owner):** that 촬영일 is guessed from the **filename** at all rather than read
@@ -779,7 +779,7 @@ the caption is drawn over the image; videos use `layout="below"`, whose footer s
 
 > 📋 **3 items — 3/3 done — now in the work registry**
 > as `R-0268`…`R-0270`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 - ⚠️ **Side effect, owner call open:** converging removed `PhotoAlbum`'s `설명 없음` filler, which
@@ -844,7 +844,7 @@ this route, so nobody had seen either.**
 
 > 📋 **2 items — 2/2 done — now in the work registry**
 > as `R-0271`…`R-0272`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Verified:** `tests/e2e/admin/post-detail.spec.ts` (9 tests) — clicking through from the
@@ -868,7 +868,7 @@ Nothing was left but the divergence, and two implementations of one job is what 
 
 > 📋 **3 items — 3/3 done — now in the work registry**
 > as `R-0273`…`R-0275`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 🔑 **Four decisions inside this, each of which could have gone wrong quietly:**
@@ -917,7 +917,7 @@ is why "just delete it" needed the photo pipeline moved first.
 
 > 📋 **6 items — 6/6 done — now in the work registry**
 > as `R-0276`…`R-0281`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ⚠️ **Two costs accepted on purpose, not overlooked:**
@@ -929,13 +929,13 @@ is why "just delete it" needed the photo pipeline moved first.
 2. **The 파일 이름 field is free text matched against Storage.** The CMS names the photo but
    cannot upload it, so a typo reads as "사진을 불러오지 못했어요". Making that a real upload
    control is the natural follow-up — **deliberately not folded into this change**, and now
-   tracked as [`BACKLOG.md`](./BACKLOG.md) **B1**, which records why it is not the drop-in
+   tracked as [`BACKLOG.md`](../docs/planning/BACKLOG.md) **B1**, which records why it is not the drop-in
    reuse of `generate-signed-url` it looks like.
 
 📌 **Found on the way, awaiting a decision: `sections` is stored, editable, and never
 rendered.** The public page shows 제목 / 부제 / 대표 사진 / 본문 only; the CMS has offered a
 섹션 editor the whole time. Either the page should render them or the field should go.
-Tracked as [`BACKLOG.md`](./BACKLOG.md) **Q1**.
+Tracked as [`BACKLOG.md`](../docs/planning/BACKLOG.md) **Q1**.
 
 **Verified:** `tsc` clean, smoke 34/34, unit 103/103, full e2e (below). Prod Storage confirmed
 to serve `about-photos/**` to an anonymous reader, which the new path requires.
@@ -961,7 +961,7 @@ _"we allow both admin and butler roles"_, directly above `setHasPermission(isAdm
 
 > 📋 **7 items — 7/7 done — now in the work registry**
 > as `R-0282`…`R-0288`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ⚠️ **Two cross-collection consequences found while building, not while planning:**
@@ -988,7 +988,7 @@ deployed artifact, not the branch.**
 ~~Deploy order: (1) `firebase deploy --only firestore:rules`; (2) `APPLY=true node
 scripts/migration/add-member-post-permissions.js`; (3) push.~~ Done. The remaining deploy
 belongs to **§10p**.
-Plan: [`member-post-authoring-20260802.md`](./completed/member-post-authoring-20260802.md).
+Plan: [`member-post-authoring-20260802.md`](../docs/planning/completed/member-post-authoring-20260802.md).
 
 ---
 
@@ -1022,7 +1022,7 @@ stay admin-only.
 
 > 📋 **8 items — 8/8 done — now in the work registry**
 > as `R-0289`…`R-0296`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 🔬 **Why both nets missed it, which is the part worth keeping.**
@@ -1034,7 +1034,7 @@ reason: **it tested the permissions the feature added, not the ones its user jou
 on.** 🔑 **When a role gains a capability, walk its whole journey and list every permission
 each step needs — the gap is never in the permission you just wrote.**
 
-Plan: [`member-media-upload-permissions-20260803.md`](./completed/member-media-upload-permissions-20260803.md).
+Plan: [`member-media-upload-permissions-20260803.md`](../docs/planning/completed/member-media-upload-permissions-20260803.md).
 
 ---
 
@@ -1055,7 +1055,7 @@ permission — the existing author test already resolves to the replier for a re
 
 > 📋 **6 items — 6/6 done — now in the work registry**
 > as `R-0297`…`R-0302`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ✅ **"The media can survive" needed no code.** Verified in both services: `deletePost` /
@@ -1096,7 +1096,7 @@ after it, and an unstamped document behaves normally until someone tries to writ
 
 > 📋 **2 items — 2/2 done — now in the work registry**
 > as `R-0303`…`R-0304`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ✅ **Verified by testing the rules rather than reading them** — `@firebase/rules-unit-testing`
@@ -1123,7 +1123,7 @@ opportunity the flow has.
 
 > 📋 **4 items — 4/4 done — now in the work registry**
 > as `R-0305`…`R-0308`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Verified.** tsc · unit **133** (+11) · smoke **39** · e2e **229/13/0** (+1). Mutation-tested:
@@ -1155,7 +1155,7 @@ updates none of them. All four fail silently.**
 
 > 📋 **5 items — 5/5 done — now in the work registry**
 > as `R-0309`…`R-0313`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 ⚠️⚠️ **The video half of the cascade does not stick, and this is not fixable here.**
@@ -1229,7 +1229,7 @@ body** as the YouTube description.
 
 > 📋 **3 items — 3/3 done — now in the work registry**
 > as `R-0314`…`R-0316`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 📌 **집사톡 needed no change and never appeared in the diff.** The report named it and was
@@ -1257,7 +1257,7 @@ YouTube, so correcting an old one means editing it there.
 > every tenant use the same colors."_
 >
 > **Full plan, decisions and reasoning:**
-> [`color-token-centralization-plan-20260805.md`](./pending/color-token-centralization-plan-20260805.md).
+> [`color-token-centralization-plan-20260805.md`](../docs/planning/pending/color-token-centralization-plan-20260805.md).
 > Commits `165df61` · `223e3ef` · `b7fef42` · `ae363a1` · `f11c171` · `6618c8b`.
 
 🔑 **The answer to the ask was "you already have it."** `design.md:9` designates
@@ -1283,7 +1283,7 @@ audit must also grep `rgb(`, `hsl(`, and inline `style={{ color`.**
 
 > 📋 **8 items — 7/8 done — now in the work registry**
 > as `R-0317`…`R-0324`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 **Gates:** `tsc` 0 · unit **196** · smoke **39** · **full e2e 233 passed / 13 skipped / 0
@@ -1319,7 +1319,7 @@ browser; they are auth-gated and no session here has had credentials.
 
 > 📋 **2 items — 2/2 done — now in the work registry**
 > as `R-0325`…`R-0326`. See
-> [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
+> [`work_tracking/registry.md`](./registry.md); each links to its full
 > text in `work_tracking/records/`.
 
 #### 2026-08-06 — the sending account changed, and the silence around it was closed
@@ -1351,10 +1351,10 @@ change to either.**
   declares the five SMTP keys **empty** — defined-but-blank beats the backfill.
   ⚠️ **Blank is load-bearing.** 📌 **Generalises: any secret in `.env` that `.env.test` does not
   explicitly blank is reachable from the harness** — the demo-project guarantee covers Firebase
-  only. Full write-up in [`log/DEBUG_LOG.md`](../../log/DEBUG_LOG.md).
+  only. Full write-up in [`log/DEBUG_LOG.md`](../log/DEBUG_LOG.md).
 - ✅ **Doc hygiene done in the same session.** The **Gmail App Password procedure moved** from
   `vercel-terraform-walkthrough.md` §8 into
-  [`docs/manuals/deployment/README.md`](../manuals/deployment/README.md), beside the env vars
+  [`docs/manuals/deployment/README.md`](../docs/manuals/deployment/README.md), beside the env vars
   it configures, with §8 left as a pointer. 🔑 **It had been the only live, routinely-needed
   instruction inside a document whose own banner says it is not the current process.** The
   README copy adds the `smtp:verify` pre-check and the four traps that have bitten.
@@ -1377,12 +1377,12 @@ change to either.**
   `registry.ndjson`** is the source of truth; **SQLite is built in memory on every script run**
   and never written to disk or committed. Decided after ten tests, recorded with the rejected
   alternatives in
-  [`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md) §4.
+  [`work-tracking-restructure-20260808.md`](./work-tracking-restructure-20260808.md) §4.
   🔑 The deciding evidence: merging two branches' `.db` yields a **valid file with one branch's
   rows silently gone**, and the checkout workflow cannot prevent it because the conflict is
   below where that workflow operates. Execution sequence:
-  [`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md);
-  live progress: [`MIGRATION_JOB.md`](../../work_tracking/MIGRATION_JOB.md).
+  [`work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md);
+  live progress: [`MIGRATION_JOB.md`](./MIGRATION_JOB.md).
 - ⚠️ **NOT a decision, but the correction that keeps getting re-asked (2026-08-08): the
   path-based tenancy migration has NOT started.** It looks done from two directions — M1–M8
   multi-tenant hardening **is** live (PR #8, PR #9), and `src/app/[mountain]/` **is** a full
@@ -1393,7 +1393,7 @@ change to either.**
   **zero** `X-Mountain-Id` occurrences repo-wide, `getRequestMountainId` still one Host-only line
   (`src/lib/tenant.ts:62`), **65 un-prefixed navigation sites across 21 files**, and middleware
   that rewrites rather than redirects. ▶️ **T0 is next and unstarted** — see §9's row and
-  [the plan](./pending/tenancy-path-migration-plan-20260728.md).
+  [the plan](../docs/planning/pending/tenancy-path-migration-plan-20260728.md).
 - **✅ SETTLED (owner, 2026-07-03): finalize the shared surface on desktop before the
   §4 mobile pass.** Rationale: shared code paths (markup, brand tokens, shared primitives,
   copy) render identically on both surfaces, so anything un-finalized there gets restyled by
@@ -1451,7 +1451,7 @@ Options.timeoutSeconds`, min 5) instead of skipping it.
 
 ## 13. How to resume
 
-1. Read [`docs/handoff/HANDOFF.md`](../handoff/HANDOFF.md) — the **single, continuously-updated**
+1. Read [`docs/handoff/HANDOFF.md`](./HANDOFF.md) — the **single, continuously-updated**
    hand-off, and the entry point. Start with its 🔜 box, which carries current state, the
    findings worth knowing before touching anything, and the ordered next steps.
    _(Corrected 2026-08-02: this used to point at the archived `handoff-27` from 2026-07-10. The
