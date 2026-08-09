@@ -14,14 +14,13 @@
 ## ▶️ In flight: the work-tracking migration. Application work is PAUSED.
 
 **Owner decision, 2026-08-08.** The current workstream is the restructure of how work is
-tracked — not tenancy T0, and not any feature or bug work. **Application work restarts once
-Phase 5 lands.**
+tracked — not tenancy T0, and not any feature or bug work. **Application work restarts when
+`R-0426` lands**, which is the only migration record still open.
 
-📄 **The registry is the tracker.** `MIGRATION_JOB.md` was migrated into it and stubbed on
-2026-08-09 (Phase 3a — the dogfooding test), so **the open records _are_ the resume point**:
+📄 **The registry is the tracker, so the open records _are_ the resume point:**
 
 ```bash
-node work_tracking/scripts/checkout.js --query "status = 'open'"
+node work_tracking/scripts/checkout.js --query "status = 'open'" --out /tmp/open.json
 ```
 
 The design and the settled storage decision are in
@@ -36,29 +35,37 @@ the phase sequence is in
 | 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`           |
 | 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`  |
 | 4     | Adjacent fixes — mega-cells, size policy             | ✅ done — `R-0423`, `R-0424` |
-| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | 🔄 `R-0425` + `R-0428` done  |
+| 5     | Cut over — rewrite `AGENTS.md`, un-pause             | 🔄 all but **`R-0426`**      |
 
 ### 🔴 Start here, so you do not have to derive it
 
-🎯 **One record left: `R-0426` — un-pause application work.** Everything the migration set out
-to do is done. `R-0426` is deliberately its own step and deliberately small: delete the ⏸️ notice
-at the top of `AGENTS.md`, delete this file's "application work is PAUSED" heading, and say what
-resumes. 🔑 **It is an owner decision, not a cleanup** — un-pausing is a statement about what
-happens next, so it does not ride along inside another change.
+🎯 **The migration is finished except for one record: `R-0426` — un-pause application work.**
+Deliberately its own step and deliberately small: delete the ⏸️ notice near the top of
+`AGENTS.md`, delete this file's "Application work is PAUSED" heading, and say what resumes.
+🔑 **It is an owner decision, not a cleanup** — un-pausing states what happens next, so it must
+not ride along inside some other change. **Ask the owner before doing it.**
 
-📌 **Tenancy T0 is the work that resumes**, unless the owner picks something else. See the ⚠️
-note further down: no T0 work exists yet, so it starts clean from the plan's §3.
+📌 **Tenancy T0 is the presumed answer** unless the owner picks something else — see the ⚠️ note
+below. No T0 work exists yet, so it starts clean from the plan's §3.
 
-✅ **Phases 1–4 and most of 5 are closed.** `R-0423` made `PROJECT_PLAN.md`'s snapshot table an
-index again (**228 KB → 106 KB**, longest line **4,528 → 399**) — half that file was whitespace,
-because prettier pads every table cell to the widest one, so one 4,350-character cell was replayed
-as padding across all 29 other rows. `R-0424` made the size budgets a **CI gate** rather than a
-rule (📏 below). `R-0425` + `R-0428` rewrote `AGENTS.md` around the registry and moved this file
-and `PROJECT_PLAN.md` into `work_tracking/`. Along the way `R-0423` found `R-0435`, also done: ten
-records the Phase 2 import had truncated mid-sentence are whole again.
+✅ **Phases 1–4 and the rest of 5 are closed.** `R-0423` made `PROJECT_PLAN.md`'s snapshot table
+an index again (**228 KB → 106 KB**); `R-0424` made the document size budgets a **CI gate** (📏
+below); `R-0425` rewrote `AGENTS.md` around the registry, and `R-0428` moved this file and
+`PROJECT_PLAN.md` into `work_tracking/`. Two defects surfaced on the way and are also closed —
+`R-0435` (ten records the import had truncated mid-sentence) and `R-0438` (a measured-sounding
+figure that turned out to be unreproducible).
 
-⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which breaks
-20 `detail_ref`s in one move. It is the one piece of the migration outside this sequence.
+🔴 **Three items are open that no phase owns.** None blocks anything, and two want the owner
+rather than an agent:
+
+- **`R-0436`** — 45 record titles trail off mid-phrase; the import used an item's first physical
+  line as its title. ⚠️ **Owner call first:** may a title be **rewritten**, or must it stay
+  verbatim-from-source the way record bodies are? Bodies are verbatim so `source_ref` stays
+  checkable against `git show`; nothing says whether a title carries that contract.
+- **`R-0437`** — 193 relative links across the docs do not resolve. Mostly pre-existing depth
+  errors in `docs/handoff/archive/`, but **29 sit in `records/`** and turn on the same question.
+- ⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which
+  breaks 20 `detail_ref`s in one move.
 
 **Before touching anything**, run the three gates — they take seconds and they prove the store is
 sane: `node work_tracking/tests/run.js` (**4 files**, 104 assertions),
@@ -82,49 +89,31 @@ its context is `R-0345`, `R-0346` and `R-0395`.
 
 ---
 
-## 🔑 How work is recorded now
+## 🔑 How work is recorded — see `AGENTS.md` §A
 
-⚠️ **Do not add entries to `log/DEBUG_LOG.md`, `log/FEATURE_MOD_LOG.md` or
-`docs/planning/BACKLOG.md`.** All three are stubs — their content is in the registry, and each
-stub says where. `PROJECT_PLAN.md` keeps its prose but its checkboxes are gone; each section
-carries a pointer with its own roll-up.
+**The canonical description is [`AGENTS.md`](../AGENTS.md) §A — Tracking work**, which every
+session loads automatically. It has the check-out → check-in → build loop, the record types, the
+size policy, and the rules about `work.json`. ⚠️ **Deliberately not repeated here**: two
+descriptions of one workflow is the drift this restructure exists to stop, and this file is
+supposed to hold only what changes between sessions.
 
-✅ **`AGENTS.md` now describes this structure** (`R-0425`) — its orientation section is the short
-version of what follows, so the two must be changed together or they will drift. 📌 `CLAUDE.md` is
-a **symlink** to `AGENTS.md`; there is one file, not two.
+Three things worth having in front of you while reading the rest of this file:
 
-A bug fixed, a change made, a decision reached, a new task, an owner question — each is one
-record:
+- ⚠️ **`log/DEBUG_LOG.md`, `log/FEATURE_MOD_LOG.md` and `docs/planning/BACKLOG.md` are stubs.**
+  Do not add entries to them. A bug fix is a record with `type: bug`; an intentional change is
+  `type: change`.
+- 📌 **To just look something up**, pass `--out /tmp/x.json` so the query does not overwrite a
+  checkout you have open — or open `registry.db` in a SQLite browser and read `current_records`
+  (`node work_tracking/scripts/db.js` refreshes it alone, and it is gitignored).
+- ⚠️ **`registry.md` is generated. Never hand-edit it**; CI fails if it does not equal
+  `build(registry.ndjson)`.
 
-```bash
-node work_tracking/scripts/checkout.js --new     # or --id R-0142 / --query "status='open'"
-#   edit work.json — type: bug | change | task | decision | question
-#   long prose goes in work_tracking/records/R-XXXX.md, not in the row
-node work_tracking/scripts/checkin.js
-node work_tracking/scripts/build.js              # regenerates registry.md (+ registry.db)
-```
-
-📌 **To just look something up**, either query the store —
-`checkout.js --query "type = 'decision' AND outcome = 'rejected'"` — or open
-**`work_tracking/registry.db`** in a SQLite browser and read the `current_records` view.
-`node work_tracking/scripts/db.js` refreshes that file on its own, leaving `registry.md` alone.
-It is generated and gitignored, so deleting it is always safe.
-
-📄 **[`SCHEMA.md`](./SCHEMA.md)** is the field reference and the workflow
-guide. **[`registry.md`](./registry.md)** is the human view — open work,
-parked work with its reason, and every record.
-
-⚠️ **`registry.md` is generated. Never hand-edit it**; CI fails if it does not equal
-`build(registry.ndjson)`. `work.json` is gitignored and is the merge-conflict recovery file — do
-not commit it, and do not delete it after a check-in.
-
-📏 **This file has a size budget, and so do seven others.**
-[`work_tracking/size-policy.json`](./size-policy.json) holds one per document
-and CI fails when a document exceeds it — `node work_tracking/scripts/size-check.js --report`
-shows how much room is left. Each budget sits just above the file's real size, so growth needs
-someone to **raise the number in a diff**. That is allowed; doing it by accident is not. 🔑 It is
-a gate rather than a paragraph because a paragraph is what failed: the archive mechanism was
-never missing, it stopped being applied (`R-0424`).
+📏 **This file has a size budget of 250 lines and CI enforces it** —
+`node work_tracking/scripts/size-check.js --report` shows the room left. 🔑 **If you are near the
+limit, the fix is to delete what has become history, not to raise the number.** Two sections were
+cut on 2026-08-09 for exactly that reason: a note about three stale imports, and a copy of the
+record workflow that `AGENTS.md` §A already carried. Both were true; neither was still load-bearing
+for a fresh session.
 
 ---
 
@@ -142,15 +131,16 @@ naming:
 - **`R-0347`** — signing out issues an unauthenticated Firestore read whose catch swallows the
   error. Cosmetic today, against the repo's error convention, and ⚠️ **do not "fix" it by
   allow-listing it**.
-- **Six owner questions** are waiting, none blocking: `R-0350` (`설명 없음` filler), `R-0353`
-  (GA4 `page_view` per cat-modal open), `R-0355` (thumbnails in the CMS's missing-video panel),
-  `R-0356`/`R-0357` (the duplicated video 제목; popup precedence), `R-0366` (branch workflow —
-  keep `dev`-promotion or move to GitHub Flow).
+- **Seven owner questions** are waiting, none blocking: `R-0144` (should the about page render
+  `sections`?), `R-0350` (`설명 없음` filler), `R-0353` (GA4 `page_view` per cat-modal open),
+  `R-0355` (thumbnails in the CMS's missing-video panel), `R-0356`/`R-0357` (the duplicated video
+  제목; popup precedence), `R-0366` (branch workflow — keep `dev`-promotion or move to GitHub
+  Flow). 📌 Two more sit above, in **Start here**: `R-0426` (un-pause) and `R-0436` (may a record
+  title be rewritten).
 
-📌 **Three items in the old hand-off were stale and are imported at their true status** —
-the share chip on a phone (`R-0352`), the §10d D2 CMS toggle (covered by `R-0070`), and the
-`.env` storage bucket (`R-0358`). Their boxes had never been ticked. That is the rot this
-restructure exists to stop.
+📊 **Open work today: 48 items — 39 tasks · 7 questions · 2 bugs.** Both bugs are named here
+(`R-0347`, `R-0437`). ⚠️ **That count is a snapshot and will rot** — regenerate it with
+`checkout.js --query "status IN ('open','in-progress')" --out /tmp/o.json`.
 
 ---
 
@@ -164,13 +154,16 @@ count the commit that writes it. **Run `git status -sb` and
 🎉 **PR #9 merged 2026-08-07** (`f570bcc`, by the owner) — 104 commits, 295 files, live in
 production. It was the first promotion since 2026-07-23.
 
-📌 **The 2026-08-09 work-tracking session is committed on `dev` and _not pushed_** (owner will
-push). In order: Phase 3a (`7ac3e1d`), the empty-records repair (`e302471`), Phase 3's three
-passes (`71e89d4`, `c08b0d5`, `89df1eb`), `R-0423` (`efed947`), the `R-0435` repair (`5ebf4d0`),
-`R-0424` (`31eb638`), then `R-0425` + `R-0428`. 📌 **Count them with
-`git rev-list --count origin/dev..dev`** rather than trusting this list — a line cannot count the
-commit that writes it. The two untracked `code-graph-tooling-*` documents belong to a different
-workstream and are not part of any of them.
+📌 **The whole 2026-08-09 work-tracking session is committed on `dev` and _not pushed_** — the
+owner pushes. In order: Phase 3a (`7ac3e1d`), the empty-records repair (`e302471`), Phase 3's
+three passes (`71e89d4`, `c08b0d5`, `89df1eb`), `R-0423` (`efed947`), the `R-0435` repair
+(`5ebf4d0`), `R-0424` (`31eb638`), `R-0425` + `R-0428` (`1cd3eb1`), `R-0438` (`d61da73`), and the
+orientation split (`157b56d`). 📌 **Count them with `git rev-list --count origin/dev..dev`**
+rather than trusting this list — a line cannot count the commit that writes it.
+
+⚠️ **The two untracked `code-graph-tooling-*` files in `docs/planning/pending/` belong to a
+different workstream. Do not sweep them into a commit** — `git add -A` did exactly that once this
+session and had to be undone.
 
 **Gates**, as of the last application-code session (2026-08-08): `tsc` 0 · smoke 39 · unit 196 ·
 **e2e 233 / 13 skipped / 0 failed** · rules 86 · scripts 23. The work-tracking store has its own
@@ -186,8 +179,8 @@ tsc/smoke/unit once and broke a spec unnoticed. Run
 
 - **[`work_tracking/registry.md`](./registry.md)** — every open item, every
   decision, every bug and change. **This is the source now.**
-- **[`docs/planning/PROJECT_PLAN.md`](./PROJECT_PLAN.md)** — cross-workstream prose;
-  its per-section pointers carry the roll-ups.
+- **[`PROJECT_PLAN.md`](./PROJECT_PLAN.md)** — cross-workstream prose, now a sibling of this
+  file; its per-section pointers carry the roll-ups.
 - **[`docs/codebase/`](../docs/codebase)** — per-domain deep dives with watch-outs. Start at
   `CODEBASE_OVERVIEW.md`. _(Snapshots — verify against code before trusting specifics.)_
 - **[`docs/manuals/`](../docs/manuals)** — operator how-to for `/admin` and for deployments.

@@ -4,6 +4,20 @@
 > `.github/copilot-instructions.md` + `.github/instructions/.instructions.md`.)
 > `CLAUDE.md` is a symlink to this file.
 
+## ▶️ First action in a new session
+
+**Read [`work_tracking/HANDOFF.md`](./work_tracking/HANDOFF.md).** It is short by design and it
+says what is in flight, what needs the owner, and where the branch stands. **Do this without
+being asked** — the owner should not have to say "pick up the hand-off" at the start of every
+session. Then, if you are about to do work:
+
+```bash
+node work_tracking/scripts/checkout.js --query "status = 'open'" --out /tmp/open.json
+```
+
+📌 Everything below is orientation you can read on demand. The hand-off is the part that changes
+between sessions, so it is the part you cannot skip.
+
 ## Project Overview
 
 This is a Next.js 14 (App Router, TypeScript strict) multi-tenant platform for tracking
