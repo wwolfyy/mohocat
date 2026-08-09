@@ -14,9 +14,9 @@
 | task | 32 | 7 | 10 | 181 | 0 | **230** |
 | bug | 2 | 0 | 0 | 51 | 0 | **53** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 1 | 49 | 8 | **58** |
+| decision | 0 | 0 | 1 | 50 | 8 | **59** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **41** | **7** | **11** | **370** | **8** | **437** |
+| **total** | **41** | **7** | **11** | **371** | **8** | **438** |
 
 ## Open work
 
@@ -548,3 +548,4 @@
 | R-0435 | bug | done | — | — | The Phase 2 import truncated ten records mid-sentence, and left four of the tails orphaned in `PROJECT_PLAN.md` | [detail](./records/R-0435.md) |
 | R-0436 | task | open | — | — | 45 record titles trail off mid-phrase — the PROJECT_PLAN import used an item's first line as its title | [detail](./records/R-0436.md) |
 | R-0437 | bug | open | — | — | 193 relative links across the docs do not resolve, most of them in docs/handoff/archive/ | [detail](./records/R-0437.md) |
+| R-0438 | decision | done | adopted | — | The "643 of 1,274" grep figure is withdrawn; never-grep-the-store stands on reproducible evidence instead | [detail](./records/R-0438.md) |

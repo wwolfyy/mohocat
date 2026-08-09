@@ -105,7 +105,7 @@ what you want after a `git pull` — it leaves `registry.md` alone, so refreshin
 leave a generated file dirty in `git status`. Because it rebuilds from scratch, a successful run
 is also proof the whole store still loads clean.
 
-📌 **Never `grep` the store** (§3, above). Both paths here parse it.
+📌 **Never `grep` the store** — see the subsection at the end of this §3. Both paths here parse it.
 
 **Check out everything you intend to reference.** Check-in rejects a `split_from` or
 `supersedes` aimed at a record that is not in `work.json` — §7 explains why that is deliberate.
@@ -137,8 +137,49 @@ To recover, **do not hand-edit the conflicted lines**:
    file you just accepted, so your revision lands cleanly above theirs.
 3. Re-run `build`.
 
-📌 **Never `grep` the store.** A grep pre-filter was measured finding 643 of 1,274 matching rows,
-because JSON serialization is not canonical. Parse it, always.
+### ⚠️ Never `grep` the store — query it
+
+`registry.ndjson` is a **log**, not a table of the current state, and its values are
+JSON-escaped. Grep is wrong about it in both directions, silently.
+
+**It misses.** Escaping means the text you read in `registry.md` is not the text stored in
+`registry.ndjson`. `R-0004`'s title displays as `Every 집사톡 post opened on "Post not found."`
+and is stored as `\"Post not found.\"`:
+
+```bash
+grep -c '"Post not found."' work_tracking/registry.ndjson      # -> 0   (as a human types it)
+grep -c '\\"Post not found.\\"' work_tracking/registry.ndjson  # -> 1   (as it is stored)
+```
+
+**It over-counts.** The file is append-only and holds **every revision**. Grep counts superseded
+rows as though they were current; only a reader that folds to the highest `rev` per `id` does not.
+📌 **Numbers deliberately not quoted here — run it, because a figure in a document is exactly
+what `R-0438` is about:**
+
+```bash
+wc -l < work_tracking/registry.ndjson                                    # rows in the log
+node work_tracking/scripts/checkout.js --query "1=1" --out /tmp/n.json   # records that are current
+```
+
+⚠️ **Pass `--out` whenever you are only looking.** Without it a query overwrites `work.json`, and
+it will refuse outright if you have a checkout open — counting something should not disturb work
+in progress.
+
+**And a raw match cannot say which field it hit** — a hit in `note` looks exactly like a hit in
+`title` or `files`.
+
+✅ **Use `checkout.js --query`** (or the `current_records` view in `registry.db`). Both parse,
+both fold to the current revision, and both let you name the field:
+
+```bash
+node work_tracking/scripts/checkout.js --query "type = 'bug' AND title LIKE '%admin%'"
+```
+
+> 📌 **This replaces an earlier statement of the same rule** which cited "a grep pre-filter found
+> 643 of 1,274 matching rows on non-canonical JSON." That figure came from a pre-build experiment
+> whose harness was never committed and cannot be reproduced, and its direction is wrong for the
+> store as built — grep over-counts here, it does not halve. The rule stands; the evidence above
+> is what actually holds. See `R-0438`.
 
 ---
 

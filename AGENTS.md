@@ -236,9 +236,11 @@ Everything else is reference material — check it before re-deriving context fr
   is `type: change`. ⚠️ **Not `log/DEBUG_LOG.md` or `log/FEATURE_MOD_LOG.md`** — both are stubs
   now; see the orientation section above.
 - **Before you look for a prior sighting of a bug**, query the store rather than grepping the
-  logs: `checkout.js --query "type = 'bug'"`. ⚠️ **Never `grep` the store** — measured, a grep
-  pre-filter found 643 of 1,274 matching rows because serialization is not line-oriented in the
-  way grep assumes. Parse it, always.
+  logs: `checkout.js --query "type = 'bug'"`. ⚠️ **Do not `grep` `registry.ndjson`** — it is
+  wrong in both directions, silently. Values are JSON-escaped, so a title shown as
+  `"Post not found."` is stored as `\"Post not found.\"` and a plain grep for it returns **0**;
+  and the file is append-only, so grep counts **superseded** revisions as current. `SCHEMA.md`
+  §3 demonstrates both in two commands.
 
 ## Anti-Patterns to Avoid
 

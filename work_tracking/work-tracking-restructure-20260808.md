@@ -279,18 +279,28 @@ immediately.
 
 Ten scenarios were run before deciding; the results overturned several earlier positions.
 
-| Finding                                                                         | Consequence                                       |
-| ------------------------------------------------------------------------------- | ------------------------------------------------- |
-| jq and SQL returned **identical results on all 8 faceted queries** + group-by   | Query power is not a differentiator. Parity.      |
-| NDJSON ↔ SQLite round-trip is **byte-identical**, ~30 lines each way            | The medium choice is reversible; low stakes.      |
-| grep pre-filter found **643 of 1,274** rows on non-canonical JSON               | ⚠️ Never grep the store. Always parse.            |
-| Typo'd field: jq returns **0 rows silently**; SQLite **errors**                 | Validation must come from a schema, not from jq.  |
-| Merging two branches' `.db` → **valid file, one branch's work gone, no error**  | 🔴 Decisive against SQLite-as-source.             |
-| `merge=union` + in-place edits → **duplicate ids both claiming current**        | Decisive against a stored `stale` flag.           |
-| `merge=union` + pure appends → **0 conflicts, correct fold**                    | Append-only is what makes text safe.              |
-| Per-branch fragment files → 0 conflicts, but **same-item collisions go silent** | 🔴 Rejected — see §4.4.                           |
-| Single file, **no** merge driver → collision **surfaces as a git conflict**     | ✅ The conflict is the safety mechanism. Keep it. |
-| Dry-run insert caught **all 7** malformed-record cases                          | ✅ Schema-as-validator works.                     |
+| Finding                                                                                       | Consequence                                       |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| jq and SQL returned **identical results on all 8 faceted queries** + group-by                 | Query power is not a differentiator. Parity.      |
+| NDJSON ↔ SQLite round-trip is **byte-identical**, ~30 lines each way                          | The medium choice is reversible; low stakes.      |
+| grep pre-filter under-counted rows on non-canonical JSON — ⚠️ **figure withdrawn, see below** | ⚠️ Never grep the store. Always parse.            |
+| Typo'd field: jq returns **0 rows silently**; SQLite **errors**                               | Validation must come from a schema, not from jq.  |
+| Merging two branches' `.db` → **valid file, one branch's work gone, no error**                | 🔴 Decisive against SQLite-as-source.             |
+| `merge=union` + in-place edits → **duplicate ids both claiming current**                      | Decisive against a stored `stale` flag.           |
+| `merge=union` + pure appends → **0 conflicts, correct fold**                                  | Append-only is what makes text safe.              |
+| Per-branch fragment files → 0 conflicts, but **same-item collisions go silent**               | 🔴 Rejected — see §4.4.                           |
+| Single file, **no** merge driver → collision **surfaces as a git conflict**                   | ✅ The conflict is the safety mechanism. Keep it. |
+| Dry-run insert caught **all 7** malformed-record cases                                        | ✅ Schema-as-validator works.                     |
+
+⚠️ **Correction, 2026-08-09 — the grep row's figure is withdrawn.** It read _"643 of 1,274 rows
+on non-canonical JSON."_ The harness behind it was never committed and the number cannot be
+reproduced, and when the claim was re-tested against the store as actually built, its **direction
+was wrong**: grep does not halve the result set here, it **over-counts**, because the file is
+append-only and grep reads superseded revisions as current (470 rows fold to 437 records). The
+conclusion — _never grep, always parse_ — survives on better evidence, now in `SCHEMA.md` §3.
+🔑 **The lesson is about this document, not about grep:** a specific number carries authority that
+outlives the measurement, so a figure whose harness is not committed should not be written down as
+a fact. Full account: `R-0438`.
 
 ⚠️ **No `merge=union` driver, deliberately.** An earlier draft recommended one. It is wrong:
 the union driver silently accepts two rows claiming the same `rev`. A plain git conflict is the
@@ -460,5 +470,8 @@ bullets with no marker at all. ⚠️ **A script keyed on`- [ ]` will silently i
   destroyed the very file the recovery procedure depends on (§4.3).
 - ⚠️ **Do not configure a `merge=union` driver for `registry.ndjson`.** It silently accepts two
   rows claiming the same `rev`. The plain git conflict is wanted — see §4.3.
-- 📌 **Never `grep` the store.** Measured: a grep pre-filter found 643 of 1,274 matching rows
-  when serialization was not canonical. Parse it, always.
+- 📌 **Never `grep` the store — it is wrong in both directions, silently.** Values are
+  JSON-escaped, so a plain grep for a title containing quotes returns **0**; and the file is
+  append-only, so grep counts superseded revisions as current. Parse it, always — `SCHEMA.md` §3
+  has the reproducible demonstration. ⚠️ **The "643 of 1,274" figure this bullet used to cite is
+  withdrawn** — see §4.3 and `R-0438`.

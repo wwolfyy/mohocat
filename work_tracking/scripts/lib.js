@@ -10,8 +10,10 @@
  *
  * Writing to the store is `checkin.js`; rendering it is `build.js`. See SCHEMA.md.
  *
- * ⚠️ Never grep the store. A grep pre-filter was measured finding 643 of 1,274 matching
- * rows, because JSON serialization is not canonical. Parse it, always.
+ * ⚠️ Never grep the store — it is wrong in both directions, silently. Values are JSON-escaped,
+ * so a title displayed as "Post not found." is stored as \"Post not found.\" and a plain grep
+ * for it returns 0. And the file is append-only, so grep counts superseded revisions as
+ * current: 470 rows here fold to 437 records. Parse it, always. See SCHEMA.md §3.
  */
 
 const fs = require('node:fs');
