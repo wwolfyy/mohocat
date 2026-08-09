@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 36 | 8 | 10 | 175 | 0 | **229** |
-| bug | 1 | 0 | 0 | 50 | 0 | **51** |
+| task | 34 | 7 | 10 | 178 | 0 | **229** |
+| bug | 2 | 0 | 0 | 50 | 0 | **52** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 1 | 49 | 8 | **58** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **44** | **8** | **11** | **363** | **8** | **434** |
+| **total** | **43** | **7** | **11** | **366** | **8** | **435** |
 
 ## Open work
 
@@ -47,11 +47,9 @@
 | R-0224 | task | in-progress | — | §9 | Per-mountain DB isolation at the service-factory seam. Seam parameterized | [detail](./records/R-0224.md) |
 | R-0246 | task | open | — | §10d | A CMS-controlled toggle for whether multiple upload is allowed | [detail](./records/R-0246.md) |
 | R-0253 | task | open | — | §10d | D3 — align the media-section order across composers (proposed, still not | [detail](./records/R-0253.md) |
-| R-0323 | task | open | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
 | R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
 | R-0328 | task | in-progress | — | — | Plan — 입양홍보 posts + per-cat 입양정보 | [detail](../docs/planning/completed/adoption-promotion-and-cat-adoption-info-plan.md) |
 | R-0333 | task | in-progress | — | §4 | Plan — 급식소 관리 (feeding-station points) admin CMS | [detail](../docs/planning/completed/feeding-station-points-admin-cms-plan.md) |
-| R-0343 | task | in-progress | — | — | Color token centralization — plan — 20260805 | [detail](../docs/planning/pending/color-token-centralization-plan-20260805.md) |
 | R-0344 | task | open | — | — | Prerequisites for a real mountain #2 | [detail](../docs/planning/pending/mountain-2-prerequisites.md) |
 | R-0345 | task | open | — | — | Subdomain → path-based tenancy — execution plan — 20260728 | [detail](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) |
 | R-0347 | bug | open | — | — | Signing out issues an unauthenticated Firestore permission read, and the catch swallows it | [detail](./records/R-0347.md) |
@@ -69,11 +67,11 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
-| R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
 | R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
 | R-0428 | task | open | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |
+| R-0435 | bug | open | — | — | The Phase 2 import truncated ten records mid-sentence, and left four of the tails orphaned in `PROJECT_PLAN.md` | [detail](./records/R-0435.md) |
 
 ## Deferred — parked, with the condition that would restart it
 
@@ -107,9 +105,9 @@
 - **R-0169** [done] ✅ AdminAuth hardening (UX side) — DONE (2026-06-29 → 2026-06-30). — _(2/2 children done)_
   - R-0170 [done] Emergency-bypass buttons removed (commit 0cd9c2c). The "🚨 Emergency Bypass" /
   - R-0171 [done] 10s init-timeout removed (commit dc1d748). Diagnosed as a vestigial guard for
-- **R-0343** [in-progress] Color token centralization — plan — 20260805 — _(1/2 children done)_
+- **R-0343** [done] Color token centralization — plan — 20260805 — _(2/2 children done)_
   - R-0322 [done] U6 (plan Phase 4) — hygiene. All three sites resolved.
-  - R-0323 [open] U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also
+  - R-0323 [done] U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also
 
 ## All records
 
@@ -437,7 +435,7 @@
 | R-0320 | task | done | — | §10u | U4 — feeding_spots is seeded, so the table has e2e cover for the first time. | [detail](./records/R-0320.md) |
 | R-0321 | task | done | — | §10u | U5 — design.md's scope line corrected. It read _"Admin (react-admin) screens are | [detail](./records/R-0321.md) |
 | R-0322 | task | done | — | §10u | U6 (plan Phase 4) — hygiene. All three sites resolved. | [detail](./records/R-0322.md) |
-| R-0323 | task | open | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
+| R-0323 | task | done | — | §10u | U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also | [detail](./records/R-0323.md) |
 | R-0324 | task | open | — | §10u | U8 — one browser confirmation. The /admin/* screens were never seen rendered | [detail](./records/R-0324.md) |
 | R-0325 | task | done | — | §11 | 입양홍보 (/pages/adoption) — built 2026-06-26 as an 입양 가능 냥이 | [detail](./records/R-0325.md) |
 | R-0326 | task | done | — | §11 | 동참 (/pages/contact) — end-to-end, DONE 2026-06-28 (Variant A). A | [detail](./records/R-0326.md) |
@@ -457,7 +455,7 @@
 | R-0340 | task | done | — | — | Phase 3 Cleanup — Detailed Plan | [detail](../docs/planning/completed/phase3-cleanup-plan.md) |
 | R-0341 | task | done | — | §10 | Playwright E2E Test Suite + CI — Plan (PROJECT_PLAN §10) | [detail](../docs/planning/completed/playwright-ci-plan.md) |
 | R-0342 | task | done | — | — | Playwright CI — Prerequisite Plan (harness enablers, spikes, and flag resolution) | [detail](../docs/planning/completed/playwright-ci-prerequisite-plan.md) |
-| R-0343 | task | in-progress | — | — | Color token centralization — plan — 20260805 | [detail](../docs/planning/pending/color-token-centralization-plan-20260805.md) |
+| R-0343 | task | done | — | — | Color token centralization — plan — 20260805 | [detail](../docs/planning/pending/color-token-centralization-plan-20260805.md) |
 | R-0344 | task | open | — | — | Prerequisites for a real mountain #2 | [detail](../docs/planning/pending/mountain-2-prerequisites.md) |
 | R-0345 | task | open | — | — | Subdomain → path-based tenancy — execution plan — 20260728 | [detail](../docs/planning/pending/tenancy-path-migration-plan-20260728.md) |
 | R-0346 | decision | done | adopted | — | Tenancy URL model — subdomains or paths? — Decision doc — 20260728 | [detail](../docs/planning/pending/tenancy-url-model-decision-20260728.md) |
@@ -537,7 +535,7 @@
 | R-0420 | task | done | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
 | R-0421 | task | done | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
 | R-0422 | task | done | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
-| R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
+| R-0423 | task | done | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
 | R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
@@ -549,3 +547,4 @@
 | R-0432 | decision | done | adopted | §9 | GA4 stays one shared property with a `mountain_id` dimension; per-mountain dual-tagging is deferred | [detail](./records/R-0432.md) |
 | R-0433 | decision | abandoned | rejected | §9 | Closing the cross-subdomain login friction was rejected — both designs mean owning a bearer credential Firebase does not validate | [detail](./records/R-0433.md) |
 | R-0434 | decision | done | adopted | §9 | Path-based tenancy is not a one-way door — the host-rewrite middleware and the `domains` config stay | [detail](./records/R-0434.md) |
+| R-0435 | bug | open | — | — | The Phase 2 import truncated ten records mid-sentence, and left four of the tails orphaned in `PROJECT_PLAN.md` | [detail](./records/R-0435.md) |

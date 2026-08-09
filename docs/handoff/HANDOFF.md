@@ -29,31 +29,50 @@ The design and the settled storage decision are in
 the phase sequence is in
 [`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md).
 
-| Phase | What                                                 | State                             |
-| ----- | ---------------------------------------------------- | --------------------------------- |
-| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                           |
-| 2     | Import all seven source files                        | ✅ done — all 7                   |
-| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0405`…`R-0428`       |
-| 3     | Judgment work — dedup, `split_from`                  | 🔄 `R-0420` · `R-0421` · `R-0422` |
-| 4     | Adjacent fixes — mega-cells, size policy             | ⬜ `R-0423` · `R-0424`            |
-| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | ⬜ `R-0425`, then `R-0426`        |
+| Phase | What                                                 | State                           |
+| ----- | ---------------------------------------------------- | ------------------------------- |
+| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                         |
+| 2     | Import all seven source files                        | ✅ done — all 7                 |
+| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`              |
+| 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`     |
+| 4     | Adjacent fixes — mega-cells, size policy             | 🔄 `R-0423` done · **`R-0424`** |
+| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | ⬜ `R-0425`, then `R-0426`      |
 
 ### 🔴 Start here, so you do not have to derive it
 
-**`R-0420` is next** — lift the decisions held _inside_ the two decision documents (`R-0339`,
-`R-0346`, plus a candidate on `R-0335`) as their own rows. They are indexed as one pointer each,
-which is right for the documents and leaves their conclusions unqueryable. Then `R-0421`,
-`R-0422`, `R-0423`, `R-0424`, and Phase 5 last. ⚠️ **Phase 5 should not start early** — it
-rewrites `CLAUDE.md` / `AGENTS.md` and un-pauses application work, and doing that while Phase 3 is
-open points agents at a structure that is still moving.
+**`R-0424` is next** — a size policy for `docs/handoff/`, so a living document cannot grow back.
+The archive mechanism already exists (33 files in `archive/`) and simply stopped being applied;
+what is missing is the rule that says when to apply it.
+
+✅ **`R-0423` is done** — `PROJECT_PLAN.md`'s snapshot table is an index again, **228 KB → 106 KB**,
+longest line **4,528 → 399 characters**. 🔑 Half the file was whitespace, because prettier pads
+every cell to the widest one, so the multi-tenant cell's 4,350 characters were replayed as padding
+on all 29 other rows. It also corrected two stale claims and found `R-0435` (below).
+
+⚠️ **Phase 5 (`R-0425`, then `R-0426`) is last and should not start early.** It rewrites
+`CLAUDE.md` / `AGENTS.md` and un-pauses application work; doing that while anything earlier is
+open points agents at a structure that is still moving. 📌 Phase 4 itself is independent — the
+plan's own sequencing note says it can slot anywhere after Phase 2.
 
 🔴 **Two records sit outside the phase sequence.** `R-0428` — moving `PROJECT_PLAN.md` and
 `HANDOFF.md` into `work_tracking/` — was **settled by the owner on 2026-08-08 and scheduled by no
-phase**; it surfaced only when the tracker was migrated. `R-0427` is deferred until the owner
-archives `docs/planning/**`, which breaks 20 `detail_ref`s in one move.
+phase**; it surfaced only when the tracker was migrated. Doing it with `R-0425` means the
+orientation rewrite names the final paths once. `R-0427` is deferred until the owner archives
+`docs/planning/**`, which breaks 20 `detail_ref`s in one move.
 
 **Before touching anything**, run the two gates — they take seconds and they prove the store is
-sane: `node work_tracking/tests/run.js` and `node work_tracking/scripts/build.js --check`.
+sane: `node work_tracking/tests/run.js` (**3 files**, 90 assertions) and
+`node work_tracking/scripts/build.js --check`.
+
+⚠️ **Read a record, not just its row. It has now caught the same import twice.** On 2026-08-09 the
+hand-off import was found to have written **all 57 of its record files with an empty body** —
+37,489 characters of prose silently dropped, because `Array.join()` renders `undefined` as an empty
+string. Repaired; full account in **`R-0429`**. Later the same day, `R-0423` found that the import
+**also truncated ten records mid-sentence** — `R-0186` stops at ``(`uploadDate: new`` — and left
+four of the dropped tails behind in `PROJECT_PLAN.md` as orphaned paragraphs. 🔴 **That one is
+still open: `R-0435`**, and it carries the repair steps plus the cheap detector that finds all ten.
+🔑 Both escaped every gate for the same reason: **a truncated record is still a valid record**, so
+counts, determinism and `--check` all stay green. The habit is the real defence.
 
 ⚠️ **Tenancy T0 is deferred, not cancelled.** It was asked for and then stood down in favour of
 this. **No T0 work exists** — no spec written, no fixture touched. Start clean from
@@ -134,6 +153,13 @@ count the commit that writes it. **Run `git status -sb` and
 
 🎉 **PR #9 merged 2026-08-07** (`f570bcc`, by the owner) — 104 commits, 295 files, live in
 production. It was the first promotion since 2026-07-23.
+
+📌 **The 2026-08-09 work-tracking session is committed on `dev` and _not pushed_** (owner will
+push). Five commits, in order: Phase 3a (`7ac3e1d`), the empty-records repair (`e302471`), and
+Phase 3's three passes (`71e89d4`, `c08b0d5`, `89df1eb`). ⚠️ **`R-0423` sits on top of those,
+uncommitted** — `PROJECT_PLAN.md`, this file, the registry and `R-0435` are in the working tree
+awaiting a go-ahead. The two untracked `code-graph-tooling-*` documents belong to a different
+workstream and are not part of it.
 
 **Gates**, as of the last application-code session (2026-08-08): `tsc` 0 · smoke 39 · unit 196 ·
 **e2e 233 / 13 skipped / 0 failed** · rules 86 · scripts 23. The work-tracking store has its own
