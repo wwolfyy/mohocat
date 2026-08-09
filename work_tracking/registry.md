@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 38 | 8 | 10 | 173 | 0 | **229** |
+| task | 37 | 8 | 10 | 174 | 0 | **229** |
 | bug | 1 | 0 | 0 | 50 | 0 | **51** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 1 | 49 | 8 | **58** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **46** | **8** | **11** | **361** | **8** | **434** |
+| **total** | **45** | **8** | **11** | **362** | **8** | **434** |
 
 ## Open work
 
@@ -69,7 +69,6 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
-| R-0421 | task | open | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
 | R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
@@ -104,7 +103,14 @@
 
 ## Hierarchy
 
-_No records have been broken out into children._
+- **R-0154** [done] Static clustering — durable fix for the recurring pin loss (2026-07-05, DEBUG_LOG). — _(1/1 children done)_
+  - R-0155 [done] Cleanup: npm uninstall leaflet.markercluster (2026-07-05) — dead dependency
+- **R-0169** [done] ✅ AdminAuth hardening (UX side) — DONE (2026-06-29 → 2026-06-30). — _(2/2 children done)_
+  - R-0170 [done] Emergency-bypass buttons removed (commit 0cd9c2c). The "🚨 Emergency Bypass" /
+  - R-0171 [done] 10s init-timeout removed (commit dc1d748). Diagnosed as a vestigial guard for
+- **R-0343** [in-progress] Color token centralization — plan — 20260805 — _(1/2 children done)_
+  - R-0322 [done] U6 (plan Phase 4) — hygiene. All three sites resolved.
+  - R-0323 [open] U7 (plan Phase 5) — the audit D5 opened, deliberately UNSIZED. design.md also
 
 ## All records
 
@@ -278,7 +284,7 @@ _No records have been broken out into children._
 | R-0166 | task | in-progress | — | §4 | Sign-in-gated surfaces at mobile widths: butler*talk, butler_stream, mypage. *(mypage + | [detail](./records/R-0166.md) |
 | R-0167 | task | done | — | §5 | ✅ Spreadsheet-grid cat editor (shipped 2026-06-29 — see | [detail](./records/R-0167.md) |
 | R-0168 | task | in-progress | — | §5 | Visual/UX consistency — Core done 2026-06-30; folds into the new cross-cutting | [detail](./records/R-0168.md) |
-| R-0169 | task | done | — | §5 | ✅ AdminAuth hardening (UX side) — DONE (2026-06-29 → 2026-06-30). | [detail](./records/R-0169.md) |
+| R-0169 | task | done | superseded | §5 | ✅ AdminAuth hardening (UX side) — DONE (2026-06-29 → 2026-06-30). | [detail](./records/R-0169.md) |
 | R-0170 | task | done | — | §5 | Emergency-bypass buttons removed (commit 0cd9c2c). The "🚨 Emergency Bypass" / | [detail](./records/R-0170.md) |
 | R-0171 | task | done | — | §5 | 10s init-timeout removed (commit dc1d748). Diagnosed as a vestigial guard for | [detail](./records/R-0171.md) |
 | R-0172 | task | done | — | §5 | Dead/duplicate cleanup (routes + example) — ✅ removed in Phase 3A: the 8 | [detail](./records/R-0172.md) |
@@ -530,7 +536,7 @@ _No records have been broken out into children._
 | R-0418 | decision | done | adopted | — | The work-tracking CI job is independent of the app's jobs | [detail](./records/R-0418.md) |
 | R-0419 | task | done | — | — | Phase 3a — migrate `MIGRATION_JOB.md` into the registry and stub it (the dogfooding test) | [detail](./records/R-0419.md) |
 | R-0420 | task | done | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
-| R-0421 | task | open | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
+| R-0421 | task | done | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
 | R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |

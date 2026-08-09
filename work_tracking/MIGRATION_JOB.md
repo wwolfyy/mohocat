@@ -487,3 +487,25 @@ verify the count before writing to the real registry.
   their code fences (`` `mountain_id` ``, `` `domains` ``) between the record file and the row,
   and the H1 assertion failed the build. Corrected at `rev: 2` rather than by editing the file to
   match the weaker title.
+
+### 2026-08-09 — Phase 3: `split_from` on the `PROJECT_PLAN` break-outs (`R-0421`)
+
+- ✅ **Four links across three parents**, each one a case where the **source text** names the
+  parent rather than the layout implying it: `R-0155`→`R-0154` (the dependency is dead because
+  the parent replaced it), `R-0170`+`R-0171`→`R-0169` (a heading whose record body is literally
+  its own box line — the children are the whole of it), and `R-0322`+`R-0323`→`R-0343` (their
+  titles read "U6 (plan Phase 4)" and "U7 (plan Phase 5)").
+- **Parent revisions written per `SCHEMA.md` §5:** `R-0169` is the entirely-covered case and gets
+  `outcome: superseded`; `R-0154` and `R-0343` are partial, keep their status, and their new
+  revision exists only to record that a break-out happened.
+- 🔑 **`children_progress` has data for the first time.** `registry.md` now renders
+  `R-0343 [in-progress] … (1/2 children done)` — the generated roll-up the schema was designed
+  around, which until today had no rows to compute from.
+- ⚠️ **The colour plan's Phases 1–3 were left null, and the temptation was real.** U1↔Phase 1,
+  U2↔Phase 2, U3↔Phase 3 match by subject matter, but only U6 and U7 spell out "plan Phase N" —
+  and the plan itself warns that it numbers §4/§5 (analysis) _and_ Phase 4/Phase 5 (work), so
+  matching by number rather than by stated text is a documented trap.
+- 📌 **Two of the three expected clusters had no parent to link to.** The mobile-admin items sit
+  under a bold line, not a checkbox, so no parent record exists. And "§10's admin sub-items" did
+  not survive contact with the source: the whole file has **three** nested boxes and none are in
+  §10 — what §10 has is lettered clusters whose grouping the `plan` field already carries.
