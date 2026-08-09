@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 37 | 8 | 10 | 174 | 0 | **229** |
+| task | 36 | 8 | 10 | 175 | 0 | **229** |
 | bug | 1 | 0 | 0 | 50 | 0 | **51** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 1 | 49 | 8 | **58** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **45** | **8** | **11** | **362** | **8** | **434** |
+| **total** | **44** | **8** | **11** | **363** | **8** | **434** |
 
 ## Open work
 
@@ -69,7 +69,6 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
-| R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
@@ -537,7 +536,7 @@
 | R-0419 | task | done | — | — | Phase 3a — migrate `MIGRATION_JOB.md` into the registry and stub it (the dogfooding test) | [detail](./records/R-0419.md) |
 | R-0420 | task | done | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
 | R-0421 | task | done | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
-| R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
+| R-0422 | task | done | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |

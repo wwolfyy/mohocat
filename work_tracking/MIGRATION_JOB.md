@@ -509,3 +509,26 @@ verify the count before writing to the real registry.
   under a bold line, not a checkbox, so no parent record exists. And "§10's admin sub-items" did
   not survive contact with the source: the whole file has **three** nested boxes and none are in
   §10 — what §10 has is lettered clusters whose grouping the `plan` field already carries.
+
+### 2026-08-09 — Phase 3: the cross-references into stubbed files (`R-0422`). **Phase 3 is closed.**
+
+- ✅ **20 references repointed, 4 left alone on purpose.** 16 into `DEBUG_LOG.md`, 3 into
+  `FEATURE_MOD_LOG.md`, 1 into `HANDOFF.md`.
+- 🔑 **The pinned prose was not rewritten — each reference _gained_ a record id.** Every original
+  word survives, so `git show <pin>` still corresponds, and where the date carried information it
+  stayed: ``Full chain: `R-0014` (`DEBUG_LOG.md` 2026-07-30)`` now reads as provenance rather
+  than as a pointer. Adding is the low-risk form of an edit the audit trail depends on.
+- ⚠️ **Left alone, and this is the judgment half.** The three `PROJECT_PLAN.md` references stay:
+  **that file is not a stub** — it kept all its prose and only lost its checkboxes, so they still
+  resolve. And `R-0096`'s `HANDOFF.md` mention sits in a list of the documents that change
+  _updated_, which stays true. **A reference is not always a pointer.**
+- 🔴 **One mapping was wrong and was caught before writing.** `R-0354` and `R-0385` share the
+  identical anchor _"Full write-up in `log/DEBUG_LOG.md`."_ and both were first aimed at `R-0011`;
+  `R-0385` is the SMTP leak, `R-0002`. The script requires every anchor to match **exactly once**
+  and writes nothing otherwise, which is what kept this reviewable line by line.
+- 📌 **The count was 18 across 15; it was 20 across 19** — the tally predates the hand-off import,
+  which added one reference each on `R-0354` and `R-0385`.
+- 📌 **No revisions were written for the repointing itself.** Only prose files changed; the rows
+  are untouched, which is exactly why the schema keeps prose outside the row.
+- **Phase 3 is now closed** (`R-0420`, `R-0421`, `R-0422` all done). Next is Phase 4: `R-0423`
+  then `R-0424`.
