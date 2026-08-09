@@ -460,3 +460,30 @@ verify the count before writing to the real registry.
   trusted on a first green run.
 - 📌 **The previous session's "final gate met" claim was false when written** and is now marked as
   such above. `R-0368.md` was 254 bytes; the gate had been checked by reading the row.
+
+### 2026-08-09 — Phase 3: the decisions inside the three decision documents → `R-0430`…`R-0434`
+
+- ✅ **`R-0420` closed. Fourteen candidates read, five imported, nine dropped as already covered**,
+  pinned to `b77e5af`. All three pointer rows (`R-0335`, `R-0339`, `R-0346`) are at `rev: 2` with
+  a note saying what was lifted and what was left, so nobody repeats the probe.
+- **What went in, and why each survived the de-duplication rule:** the conclusion was often
+  already a row, but the **reasoning** was in none. `R-0430` (management-only, not custody — the
+  PIPA/billing/continuity trade-off behind `R-0400`'s one-line answer) · `R-0431` (B1 makes
+  isolation a correctness property; `hasPermission` had no mountain dimension, so `contacts` PII
+  was readable by any `manage-users` holder) · `R-0432` (GA4 property-level permissions;
+  dual-tagging deferred) · `R-0433` (the login-friction fix rejected — it means owning a bearer
+  credential Firebase does not validate) · `R-0434` (not a one-way door).
+- 🔑 **The candidate flagged on `R-0335` was already covered, and the way it is covered is the
+  finding.** `R-0192` holds the Admin-SDK framing retirement in full — but `R-0192` is a **`task`
+  row** titled "Admin CMS writes un-blocked", so `type = 'decision'` does not return it. The rule
+  is satisfied and the store still cannot answer _"what is our stance on Admin SDK versus Client
+  SDK writes?"_ **Decisions settled inside task rows are invisible to the query that should find
+  them** — worth an owner call, and not specific to this document.
+- 📌 **One item deliberately left out:** the framework's §8 "persist storage _paths_, not absolute
+  URLs". Still true, and it already forced one full-collection rewrite — but §8 is headed
+  _"Historical — do not work from this section"_, so importing it would cut against `R-0378`.
+  Flagged rather than filed.
+- ⚠️ **`store.test.js` earned its keep the day it was written.** Two of the five new rows had lost
+  their code fences (`` `mountain_id` ``, `` `domains` ``) between the record file and the row,
+  and the H1 assertion failed the build. Corrected at `rev: 2` rather than by editing the file to
+  match the weaker title.

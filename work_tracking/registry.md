@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 38 | 9 | 10 | 172 | 0 | **229** |
+| task | 38 | 8 | 10 | 173 | 0 | **229** |
 | bug | 1 | 0 | 0 | 50 | 0 | **51** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 1 | 45 | 7 | **53** |
+| decision | 0 | 0 | 1 | 49 | 8 | **58** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **46** | **9** | **11** | **356** | **7** | **429** |
+| **total** | **46** | **8** | **11** | **361** | **8** | **434** |
 
 ## Open work
 
@@ -69,7 +69,6 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
-| R-0420 | task | in-progress | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
 | R-0421 | task | open | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
 | R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
@@ -530,7 +529,7 @@ _No records have been broken out into children._
 | R-0417 | decision | done | adopted | — | `HANDOFF.md` was cut to ~150 lines in the same commit as its import, ahead of Phase 4 | [detail](./records/R-0417.md) |
 | R-0418 | decision | done | adopted | — | The work-tracking CI job is independent of the app's jobs | [detail](./records/R-0418.md) |
 | R-0419 | task | done | — | — | Phase 3a — migrate `MIGRATION_JOB.md` into the registry and stub it (the dogfooding test) | [detail](./records/R-0419.md) |
-| R-0420 | task | in-progress | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
+| R-0420 | task | done | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
 | R-0421 | task | open | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
 | R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
@@ -540,3 +539,8 @@ _No records have been broken out into children._
 | R-0427 | task | deferred | — | — | Repoint the 20 companion-document `detail_ref`s when the archive move happens | [detail](./records/R-0427.md) |
 | R-0428 | task | open | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |
 | R-0429 | bug | done | — | — | The `HANDOFF.md` import wrote all 57 record files with an empty body, and every count still reported success | [detail](./records/R-0429.md) |
+| R-0430 | decision | done | adopted | §9 | Management only, not custody — the second mountain owner manages content; you hold the data, the bill and the PIPA duty | [detail](./records/R-0430.md) |
+| R-0431 | decision | done | adopted | §9 | Under B1 tenant isolation is a correctness property, and the shared permission check had no mountain dimension | [detail](./records/R-0431.md) |
+| R-0432 | decision | done | adopted | §9 | GA4 stays one shared property with a `mountain_id` dimension; per-mountain dual-tagging is deferred | [detail](./records/R-0432.md) |
+| R-0433 | decision | abandoned | rejected | §9 | Closing the cross-subdomain login friction was rejected — both designs mean owning a bearer credential Firebase does not validate | [detail](./records/R-0433.md) |
+| R-0434 | decision | done | adopted | §9 | Path-based tenancy is not a one-way door — the host-rewrite middleware and the `domains` config stay | [detail](./records/R-0434.md) |
