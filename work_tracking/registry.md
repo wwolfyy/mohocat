@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 31 | 8 | 9 | 171 | 0 | **219** |
+| task | 39 | 8 | 10 | 172 | 0 | **229** |
 | bug | 1 | 0 | 0 | 49 | 0 | **50** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
-| decision | 0 | 0 | 1 | 31 | 7 | **39** |
+| decision | 0 | 0 | 1 | 45 | 7 | **53** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **39** | **8** | **10** | **340** | **7** | **404** |
+| **total** | **47** | **8** | **11** | **355** | **7** | **428** |
 
 ## Open work
 
@@ -69,6 +69,14 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
+| R-0420 | task | open | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
+| R-0421 | task | open | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
+| R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
+| R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
+| R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
+| R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
+| R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
+| R-0428 | task | open | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |
 
 ## Deferred — parked, with the condition that would restart it
 
@@ -92,6 +100,8 @@
   - _deferred and accepted as such; the restart condition is scaling membership, and the source says to reopen them before that happens. Undated in the source, so the ts is this hand-off's creation date_
 - **R-0377** — Known gap, logged not fixed: the YouTube status panel reports healthy on a token that cannot write
   - _it validates by refreshing, which succeeds regardless of scope; detecting it means probing a write endpoint, which is a product call the owner has not made. That call is the restart condition_
+- **R-0427** — Repoint the 20 companion-document `detail_ref`s when the archive move happens
+  - _starts when the owner archives `docs/planning/**` to `docs/archive/` (R-0407); all 20 links go stale in that same change and must be repointed in it_
 
 ## Hierarchy
 
@@ -505,3 +515,27 @@ _No records have been broken out into children._
 | R-0402 | decision | done | adopted | §9 | Accepted dev-only caveat: relative links escape a path-prefixed tenant back to the default | [detail](./records/R-0402.md) |
 | R-0403 | decision | done | adopted | — | The same-day auto-commit grant was revoked — every commit is owner-gated again | [detail](./records/R-0403.md) |
 | R-0404 | decision | done | adopted | — | `build.js` also writes a gitignored `registry.db`, reversing "no .db is ever written" | [detail](./records/R-0404.md) |
+| R-0405 | decision | done | adopted | — | Work tracking lives in a root `work_tracking/` folder, scripts included — not under the app's `scripts/` | [detail](./records/R-0405.md) |
+| R-0406 | decision | done | adopted | — | Companion planning documents are indexed as one pointer row each, never flattened into rows | [detail](./records/R-0406.md) |
+| R-0407 | decision | done | adopted | — | The owner archives superseded artifacts to `docs/archive/` by hand — the migration does not relocate files | [detail](./records/R-0407.md) |
+| R-0408 | decision | done | adopted | — | `PROJECT_PLAN.md` and `HANDOFF.md` move into `work_tracking/` — owner-confirmed, and still not done | [detail](./records/R-0408.md) |
+| R-0409 | decision | done | adopted | — | Source files are migrated one at a time, each ticked off before the next begins | [detail](./records/R-0409.md) |
+| R-0410 | decision | done | adopted | — | The schema is not frozen — change it when changing it is the best fix | [detail](./records/R-0410.md) |
+| R-0411 | decision | done | adopted | — | `status` gains `deferred`, and a deferred row must carry a non-empty `note` | [detail](./records/R-0411.md) |
+| R-0412 | decision | done | adopted | — | `R-0140` and `R-0142` stay `open`, not `deferred` | [detail](./records/R-0412.md) |
+| R-0413 | decision | done | adopted | — | `type` gains `question` — an unanswered owner question is not a task | [detail](./records/R-0413.md) |
+| R-0414 | decision | done | adopted | — | `checkin` stamps `work.json` with `checked_in` and never deletes it | [detail](./records/R-0414.md) |
+| R-0415 | decision | done | adopted | — | Unknown field names are rejected in `lib.js` rather than left to SQLite | [detail](./records/R-0415.md) |
+| R-0416 | decision | done | adopted | — | Import a decision only when its reasoning is recorded nowhere else | [detail](./records/R-0416.md) |
+| R-0417 | decision | done | adopted | — | `HANDOFF.md` was cut to ~150 lines in the same commit as its import, ahead of Phase 4 | [detail](./records/R-0417.md) |
+| R-0418 | decision | done | adopted | — | The work-tracking CI job is independent of the app's jobs | [detail](./records/R-0418.md) |
+| R-0419 | task | done | — | — | Phase 3a — migrate `MIGRATION_JOB.md` into the registry and stub it (the dogfooding test) | [detail](./records/R-0419.md) |
+| R-0420 | task | open | — | — | Phase 3 — lift the decisions held *inside* the two decision documents as their own rows | [detail](./records/R-0420.md) |
+| R-0421 | task | open | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
+| R-0422 | task | open | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
+| R-0423 | task | open | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
+| R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
+| R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
+| R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
+| R-0427 | task | deferred | — | — | Repoint the 20 companion-document `detail_ref`s when the archive move happens | [detail](./records/R-0427.md) |
+| R-0428 | task | open | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |

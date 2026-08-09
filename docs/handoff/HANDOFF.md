@@ -17,36 +17,40 @@
 tracked — not tenancy T0, and not any feature or bug work. **Application work restarts once
 Phase 5 lands.**
 
-📄 **Start at [`work_tracking/MIGRATION_JOB.md`](../../work_tracking/MIGRATION_JOB.md)** — the
-live tracker. Read its **▶️ Resume here** block; it names the next five pieces of work in order
-and why each is where it is. The design and the settled storage decision are in
+📄 **The registry is the tracker.** `MIGRATION_JOB.md` was migrated into it and stubbed on
+2026-08-09 (Phase 3a — the dogfooding test), so **the open records _are_ the resume point**:
+
+```bash
+node work_tracking/scripts/checkout.js --query "status = 'open'"
+```
+
+The design and the settled storage decision are in
 [`work-tracking-restructure-20260808.md`](../../work_tracking/work-tracking-restructure-20260808.md);
 the phase sequence is in
 [`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md).
 
-| Phase  | What                                              | State                       |
-| ------ | ------------------------------------------------- | --------------------------- |
-| 1      | Tooling — schema, scripts, CI gate                | ✅ done                     |
-| 2      | Import all seven source files                     | ✅ done — all 7             |
-| **3a** | 🔴 **Migrate the job tracker itself** (see below) | ⬜ **do this first**        |
-| 3      | Judgment work — dedup, `split_from`               | 🔄 dedup done; splits to go |
-| 4      | Adjacent fixes — `PROJECT_PLAN.md` mega-cells     | ⬜ not started              |
-| 5      | Cut over — rewrite `CLAUDE.md`, un-pause          | ⬜ not started              |
+| Phase | What                                                 | State                             |
+| ----- | ---------------------------------------------------- | --------------------------------- |
+| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                           |
+| 2     | Import all seven source files                        | ✅ done — all 7                   |
+| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0405`…`R-0428`       |
+| 3     | Judgment work — dedup, `split_from`                  | 🔄 `R-0420` · `R-0421` · `R-0422` |
+| 4     | Adjacent fixes — mega-cells, size policy             | ⬜ `R-0423` · `R-0424`            |
+| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | ⬜ `R-0425`, then `R-0426`        |
 
 ### 🔴 Start here, so you do not have to derive it
 
-**Migrate `MIGRATION_JOB.md` itself into the registry, and leave a stub** — Phase 3a. It is the
-dogfooding test the design named on 2026-08-08: _if the registry cannot track its own migration,
-it will not track anything else._ 🔑 **It was mis-sequenced as last and the owner moved it first
-(2026-08-09)**, because a test run at the end discovers nothing — everything is already built on
-the assumption it works, with no budget left if it is not. ⚠️ **Stub the file, do not delete
-it**, the way `BACKLOG.md` and the two logs were.
+**`R-0420` is next** — lift the decisions held _inside_ the two decision documents (`R-0339`,
+`R-0346`, plus a candidate on `R-0335`) as their own rows. They are indexed as one pointer each,
+which is right for the documents and leaves their conclusions unqueryable. Then `R-0421`,
+`R-0422`, `R-0423`, `R-0424`, and Phase 5 last. ⚠️ **Phase 5 should not start early** — it
+rewrites `CLAUDE.md` / `AGENTS.md` and un-pauses application work, and doing that while Phase 3 is
+open points agents at a structure that is still moving.
 
-📌 **What is actually unproven is not "can the store hold rows".** Every record in it is
-historical or settled, so **nothing has yet been carried as live, iterative work** — checked out,
-revised across sessions, re-checked-in. That is the case that matters from Phase 5 on.
-`MIGRATION_JOB.md`'s 14 hand-written decisions and its **Definition of done** are the natural
-first load.
+🔴 **Two records sit outside the phase sequence.** `R-0428` — moving `PROJECT_PLAN.md` and
+`HANDOFF.md` into `work_tracking/` — was **settled by the owner on 2026-08-08 and scheduled by no
+phase**; it surfaced only when the tracker was migrated. `R-0427` is deferred until the owner
+archives `docs/planning/**`, which breaks 20 `detail_ref`s in one move.
 
 **Before touching anything**, run the two gates — they take seconds and they prove the store is
 sane: `node work_tracking/tests/run.js` and `node work_tracking/scripts/build.js --check`.

@@ -1,219 +1,74 @@
 # Work-tracking migration — job tracker
 
-> **Live progress tracker for the work-tracking restructure.** Update it as work happens; it is
-> the file to read first when resuming this job in a new session.
+> ## ➡️ Migrated. This file is no longer the live tracker.
 >
-> - **Design + storage decision:** [`./work-tracking-restructure-20260808.md`](./work-tracking-restructure-20260808.md)
-> - **Execution sequence:** [`./work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md)
+> Its live state — the decisions it had settled and the work it had left — moved into the work
+> registry on **2026-08-09** as **`R-0405` … `R-0428`**, and was deleted from here in the same
+> commit. **The registry is the tracker now.** What is left below is the session log, kept as
+> narrative because a narrative is not state.
 >
-> ✅ Both were relocated into `work_tracking/` on 2026-08-08 (Phase 1, task 1) and all
-> references across `AGENTS.md`, `HANDOFF.md` and `PROJECT_PLAN.md` were repointed.
+> 🙃 **This was the dogfooding test the design named on 2026-08-08** — _if the registry cannot
+> track its own migration, it will not track anything else_ — and it was sequenced **first**
+> rather than last (owner, 2026-08-09), because a test run at the end discovers nothing. See
+> **`R-0419`**.
 >
-> 🙃 **This file is deliberately the last artifact written in the old style.** Once the registry
-> is live its contents belong in it, which doubles as the dogfooding test: if the registry cannot
-> track its own migration, it will not track anything else.
+> ### Where to resume
 >
-> 🔴 **That is now the NEXT piece of work, not the last** (owner, 2026-08-09 — see ▶️ Resume here,
-> item 1). ⚠️ **Stub this file, do not delete it**, the way the other five origins were; the
-> earlier "migrated in and deleted" wording predates that pattern being established.
-
----
-
-## Status
-
-|                      |                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------- |
-| **Overall**          | 🔄 **IN PROGRESS** — Phase 1 ✅ · Phase 2 ✅ **7 of 7**. Counts: `registry.md`. |
-| **Current phase**    | 🔴 **Phase 3a — migrate this tracker itself.** See ▶️ Resume here, item 1.      |
-| **Blocked on**       | nothing                                                                         |
-| **Application work** | ⏸️ PAUSED until Phase 5 lands (tenancy T0 resumes after)                        |
-| **Last updated**     | 2026-08-09                                                                      |
-
-### Phase progress
-
-| Phase | What                                                     | Status          | Needs owner? |
-| ----- | -------------------------------------------------------- | --------------- | ------------ |
-| 1     | Tooling — schema, scripts, CI gate                       | ✅ 12/12 done   | no           |
-| 2     | Mechanical import (**326**)                              | ✅ files 1–4    | no           |
-| 2b    | Index 20 companion documents                             | ✅ 20/20 done   | no           |
-| 2c    | `HANDOFF.md` — open items + decisions (57)               | ✅ done         | ✅ answered  |
-| 3a    | 🔴 **Migrate this tracker itself** — the dogfooding test | ⬜ **do first** | no           |
-| 3     | Judgment work — dedup ✅ · splits · decisions            | 🔄 in progress  | 🔴 partly    |
-| 4     | Adjacent fixes — PROJECT_PLAN mega-cells                 | ⬜ not started  | no           |
-| 5     | Cut over — rewrite CLAUDE.md, un-pause                   | ⬜ not started  | no           |
-
-📌 **Phase 4's "shrink `HANDOFF.md`" was done early, with the 2c import** (owner, 2026-08-09) —
-the decisions being lifted were scattered through its narrative, so cutting only the open-items
-section would have left every one of them duplicated in prose. What remains in Phase 4 is
-`PROJECT_PLAN.md`'s mega-cells.
-
-Legend: ⬜ not started · 🔄 in progress · ✅ done · ⛔ blocked
-
-### ▶️ Resume here — the next five pieces of work, in order
-
-Phases 1, 2, 2b and 2c are closed. **Every origin file has been cut**, so nothing is racing a
-half-migrated document any more and these can be done one at a time, in any session.
-
-1. 🔴 **FIRST — migrate _this file_ into the registry (Phase 3a). It is the dogfooding test, and
-   it has been sequenced wrong until now.**
-
-   This file's own header has said since 2026-08-08 that it should be migrated in and deleted
-   once the registry is live, _"which doubles as the dogfooding test: if the registry cannot
-   track its own migration, it will not track anything else."_ Its **Decisions made during
-   execution** table carries the same instruction in plainer words — _"Migrate these into the
-   registry as `type: decision` once it is live"_ — and there are **14** of them still sitting in
-   a markdown table. The registry went live on 2026-08-09. This is overdue by the document's own
-   terms.
-
-   🔑 **Why it goes first rather than last (owner, 2026-08-09, correcting an earlier
-   mis-sequencing).** The value of a dogfooding test is in _finding out_, and a test run at the
-   end discovers nothing — everything is already built on the assumption it works, with no budget
-   left to change course if it does not. This repo has recorded that lesson twice: the rules suite
-   that **passed on its first run and proved nothing** until four holes were punched in the rules
-   on purpose, and the **P0 characterization net written before the refactor**, because a net
-   written afterwards pins whatever you happened to build.
-
-   📌 **It is already costing something measurable.** The "403 records" rot fixed on 2026-08-09
-   happened _inside this file_, because it hand-maintains a status table, a phase table and a
-   source-file table that are all projections of state the registry already holds. That is the
-   exact failure this workstream exists to remove, living in the workstream's own tracker.
-
-   ⚠️ **Do not delete this file — stub it**, the way `BACKLOG.md`, `DEBUG_LOG.md` and
-   `FEATURE_MOD_LOG.md` were. The resume point then lives in the registry as ordered open
-   records, which cannot drift from the work the way a hand-written list does. What moves: the
-   14 decisions → `decision` rows; the remaining phase work and the **Definition of done** → open
-   `task` rows; the answered owner question → a `question` row, answered. What stays: the session
-   log as narrative, and the design rationale, which already lives in the two design documents.
-
-   🔑 **What this actually tests, and it is not "can the registry hold things".** Every record
-   imported so far is historical or settled. **Nothing in the store has yet been carried as live,
-   iterative work** — checked out, revised across sessions, re-checked-in. That is the case that
-   matters from Phase 5 onward, and it is the one still unproven.
-
-2. **Finish Phase 3 — the decisions _inside_ the two decision documents.** §2b indexed
-   `multi-tenant-architecture-decision-20260718.md` (`R-0339`) and
-   `tenancy-url-model-decision-20260728.md` (`R-0346`) as one pointer row each, which is right
-   for the documents but leaves the decisions they contain unqueryable. A third turned up while
-   reading: `firebase-sdk-usage-inventory.md` (`R-0335`) closes by retiring the blanket "Admin
-   SDK is the eventual target for all writes" framing. 📌 **Apply the same rule as the hand-off
-   pass** — import a decision only where its reasoning is recorded nowhere else — and probe each
-   candidate against the store before writing it, the way `handoff.js` documents.
-3. **Finish Phase 3 — `split_from` on the `PROJECT_PLAN` break-outs.** ⚠️ **Do not guess.** The
-   plan's rule stands: link only where the source text says so, and leave it `null` otherwise. A
-   wrong parent is harder to spot than a missing one, because the hierarchy view will look
-   plausible. Candidates are §10's admin sub-items, the colour plan's phases, and the
-   mobile-admin cluster.
-4. **Finish Phase 3 — the 18 cross-references into stubbed files** (15 records; see the 🔴
-   section below). They still resolve one hop longer than they should. ⚠️ Rewriting them edits
-   prose that `source_ref` pins to a commit, so this is a judgment pass, not a sweep.
-5. **Then Phase 4 — `PROJECT_PLAN.md`'s mega-cells.** It is **332 KB** because single table cells
-   run to thousands of words (the multi-tenant row holds the entire M1–M8 history). Unreadable
-   for a human, unparseable for an agent. Phase 4's other half, shrinking `HANDOFF.md`, is
-   already done.
-
-**Phase 5 is the last step and should not start early** — it rewrites `CLAUDE.md` / `AGENTS.md`
-and un-pauses application work, and doing that while Phase 3 is open would point agents at a
-structure that is still moving.
-
-🔑 **Before touching anything, run the gates** — they are fast and they tell you the store is
-sane: `node work_tracking/tests/run.js` and `node work_tracking/scripts/build.js --check`.
-📌 **To look around**, `node work_tracking/scripts/db.js` then open `registry.db`, or
-`checkout.js --query "status = 'open'"`. **Never grep the store.**
-
----
-
-## Source files — one at a time (owner, 2026-08-08)
-
-🔑 **Work through these one file at a time and tick each column as it completes.** A file is only
-`✅ cut over` when its migrated content has been **deleted from the origin in the same commit**
-that added the rows. Counts are the verification gate: extracted must equal the hand-verified
-source count before anything is deleted.
-
-| #   | Source file                            | Items  | Extracted  | Count verified | Origin cut | Done |
-| --- | -------------------------------------- | ------ | ---------- | -------------- | ---------- | ---- |
-| 1   | `log/DEBUG_LOG.md`                     | 49     | ✅ 49/49   | ✅             | ✅         | ✅   |
-| 2   | `log/FEATURE_MOD_LOG.md`               | 89     | ✅ 89/89   | ✅             | ✅         | ✅   |
-| 3   | `docs/planning/BACKLOG.md`             | 6      | ✅ 6/6     | ✅             | ✅         | ✅   |
-| 4   | `docs/planning/PROJECT_PLAN.md`        | 182    | ✅ 182/182 | ✅             | ✅         | ✅   |
-| 5   | `docs/handoff/HANDOFF.md` — open items | **22** | ✅ 22/22   | ✅             | ✅         | ✅   |
-| 6   | `docs/handoff/HANDOFF.md` — decisions  | **36** | ✅ 36/36   | ✅             | ✅         | ✅   |
-| 7   | Companion documents (§2b)              | 20     | ✅ 20/20   | ✅             | n/a        | ✅   |
-
-✅ **Rows 5 and 6 are done (2026-08-09) — `R-0347`…`R-0403`.** They were the hard ones for the
-reasons the plan predicted, and the counts moved in both directions: **21 open items, not ~9**,
-and **36 decisions after de-duplication, out of 56 candidates**. The origin was cut in the same
-commit — `HANDOFF.md` went **3,396 → ~150 lines** and its body is frozen at
-[`docs/handoff/archive/2026-08-09-handoff-living-doc.md`](../docs/handoff/archive/2026-08-09-handoff-living-doc.md).
-
-### 2b — the 20 companion documents, individually
-
-`docs/planning/completed/` (16):
-
-- [x] `7a-bake-data-layer-tasks.md`\1 → **R-0327**
-- [x] `adoption-promotion-and-cat-adoption-info-plan.md`\1 → **R-0328**
-- [x] `butler-media-separation-plan-20260727.md`\1 → **R-0329**
-- [x] `complexity-retirement-assessment-20260716.md`\1 → **R-0330**
-- [x] `dead-code-removal-assessment-20260711.md`\1 → **R-0331**
-- [x] `deployment-cleanup-plan.md`\1 → **R-0332**
-- [x] `feeding-station-points-admin-cms-plan.md`\1 → **R-0333**
-- [x] `firebase-read-access-inventory.md`\1 → **R-0334**
-- [x] `firebase-sdk-usage-inventory.md`\1 → **R-0335**
-- [x] `member-media-upload-permissions-20260803.md`\1 → **R-0336**
-- [x] `member-post-authoring-20260802.md`\1 → **R-0337**
-- [x] `multi-mountain-refactor-plan-20260719.md`\1 → **R-0338**
-- [x] `multi-tenant-architecture-decision-20260718.md`\1 → **R-0339**
-- [x] `phase3-cleanup-plan.md`\1 → **R-0340**
-- [x] `playwright-ci-plan.md`\1 → **R-0341**
-- [x] `playwright-ci-prerequisite-plan.md`\1 → **R-0342**
-
-`docs/planning/pending/` (4):
-
-- [x] `color-token-centralization-plan-20260805.md`\1 → **R-0343**
-- [x] `mountain-2-prerequisites.md`\1 → **R-0344**
-- [x] `tenancy-path-migration-plan-20260728.md`\1 → **R-0345**
-- [x] `tenancy-url-model-decision-20260728.md`\1 → **R-0346**
-
-**Excluded, deliberately:** `code-graph-tooling-comparison-20260728.md` and
-`code-graph-tooling-evaluation-20260728.md` (different workstream); the two work-tracking design
-docs (they now live in `work_tracking/`, they are not records).
-
-### Phase 3 — decisions to lift by hand
-
-Known from the design work. ⚠️ **This list is a starting point, not the full set** — the reason
-these are hard is that they have no markup, so the hand-off must be read end to end once.
-
-✅ **All seven are now accounted for (2026-08-09), and "others found while reading" turned out to
-be 49 more** — 36 imported, 20 dropped as already covered. Four of the seven were themselves
-already in the store, which is the measurement that set the de-duplication rule:
-
-- [x] The Firestore-rename investigation (considered, dropped) → **`R-0368`**
-- [x] The rejected `?type=` fallback → **`R-0369`**
-- [x] M8's withdrawal — **withdrawn, not deferred** → already `R-0322`, not re-imported
-- [x] A mountain may not differ in colour (theme is global) → already `R-0322`
-- [x] The `useDialog`-vs-red-button finding (colour Phase 5) → **`R-0370`**
-- [x] F3's abandoned first fix → already `R-0050`
-- [x] "One video per post" — reversed before it was built (2026-07-30) → **`R-0371`**
-- [x] _…others found while reading_ → 49 more, of which **32 were imported**
-
-**Still open in Phase 3:** `split_from` on the `PROJECT_PLAN` break-outs, the 18 cross-references
-into stubbed files (below), and §2b's remaining bullet — lifting the decisions **inside** the two
-decision documents (`R-0339`, `R-0346`) as their own rows.
-
----
-
-## Scale — why this is its own job
-
-| Input                        | Volume                                                         |
-| ---------------------------- | -------------------------------------------------------------- |
-| Rows to import               | **326 imported** (49 bugs · 89 changes · 182 plan · 6 backlog) |
-| Companion documents to index | **20** of 24 (~5,400 lines)                                    |
-| Source prose to read         | **~977 KB** across five files (~250k tokens)                   |
-| Decisions to lift by hand    | unknown — no markup to key on                                  |
-| Scripts to write             | 4 (`lib` · `checkout` · `checkin` · `build`) + CI gate         |
-
-🔑 **The judgment work, not the row count, is what makes this large.** Phases 1–2 are a day of
-scripting. Phase 3 requires reading `HANDOFF.md` end to end — 3,295 lines that no session can
-hold at once — and cannot be automated.
+> ```bash
+> node work_tracking/scripts/checkout.js --query "status = 'open'"
+> ```
+>
+> **The open records are the resume point, in id order.** They cannot drift from the work the
+> way the hand-written list here did:
+>
+> | Do this | What                                                                     |
+> | ------- | ------------------------------------------------------------------------ |
+> | 1st     | **`R-0420`** — Phase 3: lift the decisions inside the two decision docs  |
+> | 2nd     | **`R-0421`** — Phase 3: `split_from` on the `PROJECT_PLAN` break-outs    |
+> | 3rd     | **`R-0422`** — Phase 3: repoint the 18 refs into stubbed files           |
+> | 4th     | **`R-0423`** — Phase 4: `PROJECT_PLAN.md`'s mega-cells                   |
+> | 5th     | **`R-0424`** — Phase 4: a size policy, so a living doc cannot grow back  |
+> | last    | **`R-0425`**, then **`R-0426`** — Phase 5: rewrite `CLAUDE.md`, un-pause |
+>
+> Two more sit outside the phase sequence: **`R-0427`** (deferred — repoint 20 `detail_ref`s
+> when the archive move happens) and 🔴 **`R-0428`** (open — moving `PROJECT_PLAN.md` and
+> `HANDOFF.md` into `work_tracking/`, which `R-0408` settled on 2026-08-08 and **no phase ever
+> scheduled**).
+>
+> ⚠️ **Phase 5 is last and should not start early.** It rewrites `CLAUDE.md` / `AGENTS.md` and
+> un-pauses application work; doing that while Phase 3 is open points agents at a structure that
+> is still moving.
+>
+> ### What moved
+>
+> | Was here                                                  | Is now                                         |
+> | --------------------------------------------------------- | ---------------------------------------------- |
+> | 14 rows of **Decisions made during execution**            | `R-0405` … `R-0418` — `decision` · done        |
+> | **▶️ Resume here** + the phase table                      | `R-0419` … `R-0426` — `task`                   |
+> | Phase 2b's archive watch-out                              | `R-0427` — `task` · deferred                   |
+> | The one **answered owner question**                       | folded into `R-0408`, not duplicated           |
+> | **Definition of done**, the two open boxes                | `R-0425` and `R-0426`                          |
+> | **Status** / **Phase progress** / **Source files** tables | gone — they were projections of registry state |
+> | **Scale** table, **Watch-outs**                           | the two design docs below                      |
+>
+> 📌 **The answered owner question is one record, not two.** `SCHEMA.md` §4 says a `question`
+> "becomes something else once it is [answered]", and the de-duplication rule this same pass
+> imported (`R-0416`) forbids a second copy of a settled fact. It is `R-0408`, a decision, and
+> its prose says it began as the question.
+>
+> 📌 **The 20 companion-document mappings are not restated here** — that is what the store is
+> for. `SELECT id, detail_ref FROM current_records WHERE detail_ref LIKE 'docs/planning/%'`, or
+> read [`registry.md`](./registry.md).
+>
+> ### Still the source of truth for the design
+>
+> - **[`work-tracking-restructure-20260808.md`](./work-tracking-restructure-20260808.md)** — the
+>   design, the settled storage decision (§4) and the alternatives that were rejected. The
+>   watch-outs this file used to repeat live there.
+> - **[`work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md)**
+>   — the five-phase execution sequence.
+> - **[`SCHEMA.md`](./SCHEMA.md)** — the field reference and the workflow guide.
+> - **The original:** `git show 44e08fe:work_tracking/MIGRATION_JOB.md`.
 
 ---
 
@@ -494,6 +349,8 @@ Append newest-last. One entry per working session: what moved, what broke, where
 
 ### 🔴 Found during Phase 2 — for the Phase 3 pass: 15 records cross-reference a stubbed file
 
+> 📌 **This is now `R-0422`, open.** The finding stays here as narrative; the work is a record.
+
 **18 references across 15 of the 144 records** point at files that are now stubs, from inside
 migrated prose: `DEBUG_LOG.md` ×10, `PROJECT_PLAN.md` ×3, `FEATURE_MOD_LOG.md` ×3,
 `HANDOFF.md` ×2. They still resolve — the stub names the record range and links to
@@ -549,70 +406,30 @@ verify the count before writing to the real registry.
   `registry.md` instead of quoting a number. Same lesson as the boxes this migration imported —
   do not restate what the store already answers.
 
----
+### 2026-08-09 — Phase 3a: this tracker migrated into the registry → `R-0405`…`R-0428`
 
-## Decisions made during execution
-
-Record anything settled while doing the work, so it does not get re-litigated. Migrate these
-into the registry as `type: decision` once it is live.
-
-| Date       | Decision                                                                  | Why                                                                                                                                                                                                                                                                                                             |
-| ---------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-08 | Root `work_tracking/` folder, scripts separate from app `scripts/`        | Owner — work tracking is not application code                                                                                                                                                                                                                                                                   |
-| 2026-08-08 | Index companion docs, do not flatten them                                 | A 787-line plan is a document, not a row                                                                                                                                                                                                                                                                        |
-| 2026-08-08 | Owner archives old artifacts to `docs/archive/` by hand                   | Migration stops files being the live source; it does not move them                                                                                                                                                                                                                                              |
-| 2026-08-08 | `PROJECT_PLAN.md` + `HANDOFF.md` move into `work_tracking/`               | Owner — they are work-tracking artifacts                                                                                                                                                                                                                                                                        |
-| 2026-08-08 | Work source files **one at a time**, ticking each off here                | Owner — a 315-row import will not finish in one session; phase-level ticks lose the resume point                                                                                                                                                                                                                |
-| 2026-08-09 | The schema is **not frozen** — change it when that is the best fix        | Owner. Additive changes (new nullable column, new enum value) are free; restrictive ones break history and need a migration                                                                                                                                                                                     |
-| 2026-08-09 | `status` gains **`deferred`**, and a deferred row **must** carry a `note` | Owner. `open` and `abandoned` were both holding parked work, so "what is open?" returned items nobody could start. The note separates parked-with-a-condition from quietly forgotten                                                                                                                            |
-| 2026-08-09 | `R-0140` (B2) and `R-0142` (B5) stay `open`, not `deferred`               | Owner. Both wait on an owner decision rather than a dependency, so they are actionable by whoever reads the open list                                                                                                                                                                                           |
-| 2026-08-09 | `type` gains `question` (additive)                                        | `BACKLOG.md`'s Q1 is an owner question, and its own heading says these are "not tasks until answered"                                                                                                                                                                                                           |
-| 2026-08-09 | `checkin` **stamps** `work.json` with `checked_in`; it never deletes it   | Deleting it destroys the §4.3 conflict recovery, which replays the intent still held in that file. The stamp also lets `checkout` distinguish a finished checkout from unfinished work, so `--force` stays rare                                                                                                 |
-| 2026-08-09 | Unknown field names are rejected in `lib.js`, not left to SQLite          | The insert names its columns, so a typo'd field would be dropped in silence — the same silent-zero-rows failure §4.3 measured for jq                                                                                                                                                                            |
-| 2026-08-09 | Import a decision only when its reasoning is recorded **nowhere else**    | Owner. 56 decision-shaped passages were found in `HANDOFF.md`; probing each against the 346 existing records showed 20 already covered, mostly by the `DEBUG_LOG` entry written the same day about the same event. The rule keeps the store answerable without making it a second copy of itself                |
-| 2026-08-09 | `HANDOFF.md` shrinks to ~150 lines in the same commit as its import       | Owner. Its decisions were scattered through the narrative rather than gathered in a section, so cutting only the open-items list would have left all 36 duplicated in prose — the half-migrated state the plan forbids. The body is archived, and `source_ref` pins every record to the commit it was read from |
-| 2026-08-09 | The work-tracking CI job is independent of the app's jobs                 | The tooling has no dependencies and needs Node 24 for `node:sqlite` (app jobs run Node 20); an independent job also reports when the app build is red                                                                                                                                                           |
-
----
-
-## Open questions for the owner
-
-_None currently open._
-
-**Answered:**
-
-| Date       | Question                                                          | Answer                        |
-| ---------- | ----------------------------------------------------------------- | ----------------------------- |
-| 2026-08-08 | Do `PROJECT_PLAN.md` and `HANDOFF.md` move into `work_tracking/`? | ✅ **Yes** — owner-confirmed. |
-
----
-
-## Watch-outs carried from the design
-
-- ⚠️ **`work.json` must be gitignored before the first checkout runs.** Found by testing: when
-  committed, a branch merge filled it with conflict markers and destroyed the file the recovery
-  procedure depends on.
-- ⚠️ **No `merge=union` driver on `registry.ndjson`.** It silently accepts two rows claiming the
-  same `rev`. The plain git conflict is the wanted behaviour.
-- ⚠️ **`HANDOFF.md` has no standard `- [ ]` boxes.** A script keyed on them imports **zero** items
-  and reports success.
-- ⚠️ **Verify every open item against the code before importing it as `open`.** The 2026-08-02
-  audit found seven boxes describing work already done.
-- ⚠️ **Move an item and delete its origin in the same change.** A half-migrated backlog is worse
-  than either end state.
-- 📌 **Never `grep` the store.** Measured: a grep pre-filter found 643 of 1,274 matching rows.
-
----
-
-## Definition of done
-
-- [x] ✅ All five origin files are no longer the live source of any open item. _(2026-08-09 —
-      `HANDOFF.md` was the last.)_
-- [x] ✅ `registry.md` is generated, committed, and matches `build(registry.ndjson)` in CI.
-- [ ] `CLAUDE.md`'s orientation bullets describe the new structure. _(Phase 5.)_
-- [ ] Application work is un-paused.
-- [x] ✅ 🔑 **A cold session can answer _"has renaming the Firestore database been considered?"_
-      from the store alone, without reading `HANDOFF.md`.** `R-0368` — `decision · abandoned ·
-rejected`, with the full reasoning in `records/R-0368.md`, including the note that the
-      useful version of the goal would be _adding_ a database. **This is the gate that actually
-      mattered, and it is met.**
+- ✅ **24 records written and this file stubbed in the same commit**, pinned to `44e08fe`: the
+  **14** decisions from the execution table as `decision · done · adopted`, and **10** open
+  tasks carrying the remaining phase work. The store went 404 → 428 records.
+- 🔑 **The test was whether the store can carry _live_ work, not whether it can hold rows.**
+  Every record imported before this one was historical or settled. `R-0419` was checked in
+  `in-progress`, the stub was written, then it was checked out again and revised to `done` — so
+  the first genuinely iterative record in the store is `rev: 2`, and its earlier revision is
+  still in the log. That path had never been exercised outside the tests.
+- 🔴 **The migration went in with a gap it had never noticed: `R-0428`.** The owner confirmed on
+  2026-08-08 that `PROJECT_PLAN.md` and `HANDOFF.md` move into `work_tracking/`; the move has not
+  happened, and **no phase of the plan schedules it**. It survived because it was recorded as a
+  decision in a table and as an answered question in another, and neither shape is a piece of
+  work anybody reads back. It is an open record now.
+- 📌 **A third Phase 4 item was only in the plan document**, not in this tracker's phase table —
+  the size policy for `docs/handoff/`. Imported as `R-0424`, because an open list that is
+  complete only if you also read a second document is not an open list.
+- 📌 **The answered owner question is `R-0408`, one record.** Filing it as both a `question` row
+  and a decision row would have broken `R-0416`, the de-duplication rule imported in the same
+  pass.
+- ⚠️ **What stayed, deliberately:** this session log. It is narrative — what happened, in order —
+  and the registry holds state. The tables that were **projections of state** (Status, Phase
+  progress, Source files, Scale) are gone; they are what produced the "403 records" rot on
+  2026-08-09, inside this very file.
+- **Gates:** `node work_tracking/tests/run.js` (85 assertions, 2 files) and
+  `node work_tracking/scripts/build.js --check` both green before and after.

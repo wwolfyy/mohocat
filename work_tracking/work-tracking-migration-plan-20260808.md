@@ -198,49 +198,53 @@ anything.
       the fuller of the two. They stay in the importer's `COVERED_BY_EXISTING` map naming the
       winning record, so the call is auditable. 📌 **Owner's rule (2026-08-09): import a decision
       only when its reasoning is recorded nowhere else in the store.**
-- [ ] 🔴 **Phase 3a — migrate `MIGRATION_JOB.md` itself into the registry and stub it. Do this
-      FIRST** (owner, 2026-08-09). It is the dogfooding test the design named: _if the registry
-      cannot track its own migration, it will not track anything else._ ⚠️ **This plan originally
-      left it implicit and it drifted to the end, which is the wrong place** — a dogfooding test
-      run last discovers nothing, because everything is already built on the assumption it works.
-      Same lesson as the mutation-tested rules suite and the P0 characterization net.
-      📌 What is unproven is **not** "can the store hold rows" — all 404 are historical or
-      settled — but whether it carries **live, iterative** work across sessions. The 14 decisions
-      in that file's own table (which it has been telling us to migrate since 2026-08-08) and its
-      Definition of done are the natural first load. **Stub the file, do not delete it.**
-- [ ] **Set `split_from` where the history shows a break-out.** Several `PROJECT_PLAN` boxes are
-      pieces of a larger workstream rather than independent tasks (§10's admin sub-items, the
-      colour plan's phases, the mobile-admin cluster at lines 370–380). ⚠️ Do **not** guess:
-      link only where the source text says so, and leave it `null` otherwise. A wrong parent is
-      harder to spot than a missing one, because the hierarchy view will look plausible.
+- [x] ✅ 🔑 **Phase 3a — migrate `MIGRATION_JOB.md` itself into the registry and stub it.** Done
+      2026-08-09, **first** rather than last (owner, correcting this plan's own drift — a
+      dogfooding test run last discovers nothing). **`R-0405`…`R-0428`**: the 14 decisions from
+      that file's table, and 10 open tasks carrying the rest of this plan. `R-0419` is the record
+      of the pass itself, and it is the **first record in the store carried as live work** —
+      checked in `in-progress`, revised to `done`, `rev: 2`. It also surfaced `R-0428`, work the
+      owner settled on 2026-08-08 that **no phase here ever scheduled**.
+
+> ➡️ **The remaining Phase 3 work is now records, not boxes.** `R-0420` (decisions inside the two
+> decision documents), **`R-0421`** (`split_from` on the `PROJECT_PLAN` break-outs — ⚠️ do **not**
+> guess; §10's admin sub-items, the colour plan's phases and the mobile-admin cluster are the
+> candidates), `R-0422` (the 18 cross-references into stubbed files).
 
 ---
 
 ## Phase 4 — Adjacent fixes (restructure §6)
 
-- [ ] 🔴 **Break up `PROJECT_PLAN.md`'s mega-cells.** It is **332 KB** — larger than `HANDOFF.md`
-      — because single table cells run to thousands of words (the multi-tenant row at line 56
-      holds the entire M1–M8 history). Unreadable for a human, unparseable for an agent.
+- [ ] 🔴 **Break up `PROJECT_PLAN.md`'s mega-cells** → **`R-0423`**. It is **332 KB** — larger
+      than `HANDOFF.md` — because single table cells run to thousands of words (the multi-tenant
+      row at line 56 holds the entire M1–M8 history). Unreadable for a human, unparseable for an
+      agent.
 - [x] ✅ **Shrink `HANDOFF.md` from 3,295 lines to ~150** — done 2026-08-09, **pulled forward
       into Phase 3's import** (owner's call). The decisions being lifted were scattered through
       its narrative rather than gathered in a section, so cutting only the open-items list would
       have left all 36 duplicated in prose — the half-migrated state this plan forbids. The body
       is frozen at `docs/handoff/archive/2026-08-09-handoff-living-doc.md`.
-- [ ] **Apply a size policy.** `docs/handoff/archive/` already holds 33 files; the mechanism
-      exists and simply stopped being applied to the living doc.
+- [ ] **Apply a size policy** → **`R-0424`**. `docs/handoff/archive/` already holds 33 files; the
+      mechanism exists and simply stopped being applied to the living doc.
 
 ---
 
 ## Phase 5 — Cut over
 
-- [ ] Delete the migrated content from all five origin files **in the same commit** that adds
-      its rows. 📌 The owner moves the emptied artifacts to `docs/archive/` by hand afterwards —
-      the migration does not relocate files, it only stops them being the live source.
-- [ ] 📌 **Rewrite `CLAUDE.md`'s orientation bullets** — the `docs/` and `log/` sections name
-      files whose roles are changing. Same change, or agents keep being pointed at files that
-      no longer hold the answer.
-- [ ] Update the pause notice in `CLAUDE.md`; restart application work (tenancy T0).
-- [ ] Run the gates: `npx tsc --noEmit` + `npm run test:smoke`.
+- [x] ✅ Delete the migrated content from all five origin files **in the same commit** that adds
+      its rows. Done — all five, plus `MIGRATION_JOB.md` itself. 📌 The owner moves the emptied
+      artifacts to `docs/archive/` by hand afterwards (`R-0407`); the migration does not relocate
+      files, it only stops them being the live source. ⚠️ That move breaks 20 `detail_ref`s —
+      **`R-0427`**, deferred on exactly that condition.
+- [ ] 📌 **Rewrite `CLAUDE.md`'s orientation bullets** → **`R-0425`**. The `docs/` and `log/`
+      sections name files whose roles are changing. Same change, or agents keep being pointed at
+      files that no longer hold the answer.
+- [ ] Update the pause notice in `CLAUDE.md`; restart application work (tenancy T0) →
+      **`R-0426`**. Run the gates with it: `npx tsc --noEmit` + `npm run test:smoke`.
+- [ ] 🔴 **`R-0428` — move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/`.** The owner
+      settled this on 2026-08-08 and **no phase of this plan ever scheduled it**; it surfaced
+      when the job tracker was migrated. Doing it with `R-0425` means the orientation rewrite
+      names the final paths once.
 
 **Final gate — the one that actually matters.** ⚠️ Restructure §7: _"the store must not become
 write-only."_ Ask a **cold session** a question the store should answer — _"has renaming the
