@@ -198,25 +198,6 @@ _(Security/route-auth hardening overlaps §7 — coordinate so it's done once.)_
 > as `R-0182`…`R-0203`. See
 > [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
 > text in `work_tracking/records/`.
-> Date()`), reordering the **public** 영상첩 as well as the admin grid; now sourced from
-
-      YouTube's `publishedAt`, so mis-stamped records **self-heal, no migration**. Alongside (c):
-      `uploadedBy` no longer clobbered to `'admin'`, and the refresh now writes `updated` (the
-      field the UI reads for 메타데이터 수정) instead of the unread `lastMetadataRefresh` —
-      making that column and its sort work for the first time. ⚠️ The clobber had been masking a
-      latent crash (`syncVideos()` never set `uploadDate`; the album sorts call `.getTime()` on
-      it), so the import sets it now too. Net: 2 e2e tests (one rewritten, one new) →
-      **147/13/0**. ⏳ The 게시일 repair, 메타데이터 수정, `자동 날짜 인식` and the batch playlist
-      save are **stubbed in tests and unverified against real YouTube** — Preview checks listed
-      in the hand-off's fresh-session box.
-
-`requireApiPermission`**; the sole exception is `youtube-auth/callback`, deliberately
-ungated with the reason in a header comment (it is Google's OAuth redirect target — no
-Authorization header exists to verify; it acts only on a valid Google `code`).
-`generate-signed-url`— called out by name here as handing out write URLs without auth —
-is gated on`manage-photo` (`src/app/api/generate-signed-url/route.ts:26`).
-⚠️ **Still open, tracked separately:\*\* `youtube-auth/callback`has no OAuth`state`/PKCE
-CSRF protection (noted in the token-leak follow-up below). _(Overlaps §5.)_
 
 ---
 
@@ -257,16 +238,6 @@ reads" from points/images to cat **metadata**.
 > as `R-0204`…`R-0209`. See
 > [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
 > text in `work_tracking/records/`.
-> `points-static-data.json`/`feeding-spots-static-data.json`in`src/`— the runtime
-> cat path is`src/app/page.tsx`→`getAllCatsServer()` (`src/lib/server/cat-reads.ts`,
-> Admin SDK → Firestore), never the JSON. All readers/writers are in `scripts/`only.
-> Confirmed **firsthand** that the file is dead build output: a`npm run build`(run to
-> gate the react-admin removal) rewrote`src/lib/cats-static-data.json`from live
-> Firestore, yet nothing consumes it — the churn was reverted, harmless. So in **both**
-> prod build and dev server the JSON is never`import`ed/read; webpack never bundles it.
-> Strengthens the REMOVE decision — no new blockers found. Keep the removal in this §7a
-> pass (it untangles `saveStaticDataJson`from the still-needed asset fetcher and wants
-> its own`next build` gate), not in unrelated cleanup branches.
 
 **Inherited from Phase 3B (don't re-investigate from scratch):**
 
@@ -560,13 +531,6 @@ none block the completed workstream.
 > as `R-0239`…`R-0242`. See
 > [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
 > text in `work_tracking/records/`.
-> .youtubePlaylistId`per mountain + a`\_shared` platform block for the one cross-mountain
-
-      입양홍보 playlist. Replaces a lookup that matched the playlist **titled** `집사게시판`
-      (a rename on YouTube stopped filing silently; every mountain filed into one list).
-      `upload-youtube` takes repeated `playlistId` fields, so an 입양홍보 video joins **both**
-      its mountain playlist and the adoption one — keeping the mountain playlist a complete
-      ownership record for §9's deferred `syncVideos` fix.
 
 🔑 **Owner-owed:** add the channel's back catalogue to the 계양산 playlist — it holds **4** of
 **13** videos, and the deferred `syncVideos` fix will treat the rest as unowned.
@@ -1060,10 +1024,6 @@ stay admin-only.
 > as `R-0289`…`R-0296`. See
 > [`work_tracking/registry.md`](../../work_tracking/registry.md); each links to its full
 > text in `work_tracking/records/`.
-> uploadingAsSelf()`. 📌 **`cat_videos` deliberately gains nothing\*\* — a member's video
-
-      record is written by the Admin SDK in `/api/upload-youtube/complete`, which bypasses
-      rules, so the route is its gate and a clause there would be dead surface.
 
 🔬 **Why both nets missed it, which is the part worth keeping.**
 `tests/e2e/member/butler-authoring.spec.ts` is text-only by an exclusion **inherited from

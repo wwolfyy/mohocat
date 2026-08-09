@@ -47,7 +47,11 @@ what is missing is the rule that says when to apply it.
 ✅ **`R-0423` is done** — `PROJECT_PLAN.md`'s snapshot table is an index again, **228 KB → 106 KB**,
 longest line **4,528 → 399 characters**. 🔑 Half the file was whitespace, because prettier pads
 every cell to the widest one, so the multi-tenant cell's 4,350 characters were replayed as padding
-on all 29 other rows. It also corrected two stale claims and found `R-0435` (below).
+on all 29 other rows. It also corrected two stale claims and found `R-0435`.
+
+✅ **`R-0435` is done** — the ten records the Phase 2 import truncated mid-sentence are whole
+again, the four orphaned tails are out of `PROJECT_PLAN.md`, and `store.test.js` gained the two
+assertions that would have caught it. See the ⚠️ note below.
 
 ⚠️ **Phase 5 (`R-0425`, then `R-0426`) is last and should not start early.** It rewrites
 `CLAUDE.md` / `AGENTS.md` and un-pauses application work; doing that while anything earlier is
@@ -61,18 +65,18 @@ orientation rewrite names the final paths once. `R-0427` is deferred until the o
 `docs/planning/**`, which breaks 20 `detail_ref`s in one move.
 
 **Before touching anything**, run the two gates — they take seconds and they prove the store is
-sane: `node work_tracking/tests/run.js` (**3 files**, 90 assertions) and
+sane: `node work_tracking/tests/run.js` (**3 files**, 92 assertions) and
 `node work_tracking/scripts/build.js --check`.
 
-⚠️ **Read a record, not just its row. It has now caught the same import twice.** On 2026-08-09 the
-hand-off import was found to have written **all 57 of its record files with an empty body** —
-37,489 characters of prose silently dropped, because `Array.join()` renders `undefined` as an empty
-string. Repaired; full account in **`R-0429`**. Later the same day, `R-0423` found that the import
-**also truncated ten records mid-sentence** — `R-0186` stops at ``(`uploadDate: new`` — and left
-four of the dropped tails behind in `PROJECT_PLAN.md` as orphaned paragraphs. 🔴 **That one is
-still open: `R-0435`**, and it carries the repair steps plus the cheap detector that finds all ten.
-🔑 Both escaped every gate for the same reason: **a truncated record is still a valid record**, so
-counts, determinism and `--check` all stay green. The habit is the real defence.
+⚠️ **Read a record, not just its row. It caught the same import twice, on the same day.** First,
+the hand-off import had written **all 57 of its record files with an empty body** — 37,489
+characters dropped, because `Array.join()` renders `undefined` as an empty string (**`R-0429`**).
+Then `R-0423` found that the same import had **truncated ten records mid-sentence** — `R-0186`
+stopped at ``(`uploadDate: new`` — and left four of the dropped tails behind in `PROJECT_PLAN.md`
+as orphaned paragraphs (**`R-0435`**). Both are repaired; 4,562 characters were read back out of
+the pinned commits. 🔑 Both escaped every gate for the same reason: **a truncated record is still
+a valid record**, so counts, determinism and `--check` all stay green. `store.test.js` now asserts
+prose is **complete**, not merely present — but the habit is still the real defence.
 
 ⚠️ **Tenancy T0 is deferred, not cancelled.** It was asked for and then stood down in favour of
 this. **No T0 work exists** — no spec written, no fixture touched. Start clean from
@@ -155,11 +159,11 @@ count the commit that writes it. **Run `git status -sb` and
 production. It was the first promotion since 2026-07-23.
 
 📌 **The 2026-08-09 work-tracking session is committed on `dev` and _not pushed_** (owner will
-push). Five commits, in order: Phase 3a (`7ac3e1d`), the empty-records repair (`e302471`), and
-Phase 3's three passes (`71e89d4`, `c08b0d5`, `89df1eb`). ⚠️ **`R-0423` sits on top of those,
-uncommitted** — `PROJECT_PLAN.md`, this file, the registry and `R-0435` are in the working tree
-awaiting a go-ahead. The two untracked `code-graph-tooling-*` documents belong to a different
-workstream and are not part of it.
+push). In order: Phase 3a (`7ac3e1d`), the empty-records repair (`e302471`), Phase 3's three
+passes (`71e89d4`, `c08b0d5`, `89df1eb`), then `R-0423` (`efed947`) and the `R-0435` repair on top
+of it. 📌 **Count them with `git rev-list --count origin/dev..dev`** rather than trusting this
+list — a line cannot count the commit that writes it. The two untracked `code-graph-tooling-*`
+documents belong to a different workstream and are not part of any of them.
 
 **Gates**, as of the last application-code session (2026-08-08): `tsc` 0 · smoke 39 · unit 196 ·
 **e2e 233 / 13 skipped / 0 failed** · rules 86 · scripts 23. The work-tracking store has its own

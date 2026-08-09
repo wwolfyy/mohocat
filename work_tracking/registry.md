@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 34 | 7 | 10 | 178 | 0 | **229** |
-| bug | 2 | 0 | 0 | 50 | 0 | **52** |
+| task | 35 | 7 | 10 | 178 | 0 | **230** |
+| bug | 1 | 0 | 0 | 51 | 0 | **52** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 1 | 49 | 8 | **58** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **43** | **7** | **11** | **366** | **8** | **435** |
+| **total** | **43** | **7** | **11** | **367** | **8** | **436** |
 
 ## Open work
 
@@ -71,7 +71,7 @@
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
 | R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
 | R-0428 | task | open | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |
-| R-0435 | bug | open | — | — | The Phase 2 import truncated ten records mid-sentence, and left four of the tails orphaned in `PROJECT_PLAN.md` | [detail](./records/R-0435.md) |
+| R-0436 | task | open | — | — | 45 record titles trail off mid-phrase — the PROJECT_PLAN import used an item's first line as its title | [detail](./records/R-0436.md) |
 
 ## Deferred — parked, with the condition that would restart it
 
@@ -547,4 +547,5 @@
 | R-0432 | decision | done | adopted | §9 | GA4 stays one shared property with a `mountain_id` dimension; per-mountain dual-tagging is deferred | [detail](./records/R-0432.md) |
 | R-0433 | decision | abandoned | rejected | §9 | Closing the cross-subdomain login friction was rejected — both designs mean owning a bearer credential Firebase does not validate | [detail](./records/R-0433.md) |
 | R-0434 | decision | done | adopted | §9 | Path-based tenancy is not a one-way door — the host-rewrite middleware and the `domains` config stay | [detail](./records/R-0434.md) |
-| R-0435 | bug | open | — | — | The Phase 2 import truncated ten records mid-sentence, and left four of the tails orphaned in `PROJECT_PLAN.md` | [detail](./records/R-0435.md) |
+| R-0435 | bug | done | — | — | The Phase 2 import truncated ten records mid-sentence, and left four of the tails orphaned in `PROJECT_PLAN.md` | [detail](./records/R-0435.md) |
+| R-0436 | task | open | — | — | 45 record titles trail off mid-phrase — the PROJECT_PLAN import used an item's first line as its title | [detail](./records/R-0436.md) |

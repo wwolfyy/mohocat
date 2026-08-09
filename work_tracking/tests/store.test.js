@@ -14,6 +14,13 @@
  * 🔑 **A row that points at empty prose is worse than a missing row**, because everything that
  * counts records reports success. These assertions are the thing that would have caught it.
  *
+ * ⚠️ It happened a second time, in the same import, and the empty-body check did not catch it:
+ * ten records were written **truncated mid-sentence** — `R-0186` stopped at ``(`uploadDate: new``
+ * — because the source markdown indents a list item's continuation lines to column 0, which by
+ * the markdown spec ends the item there. A truncated record is still a **valid** record, so
+ * counts, determinism and `build --check` all stayed green again. See `R-0435`. Hence the
+ * completeness check below: prose that stops mid-sentence is prose that went missing.
+ *
  * Run with `node work_tracking/tests/run.js`.
  */
 
@@ -45,6 +52,25 @@ const owned = records.filter((r) => r.detail_ref && r.detail_ref.startsWith('rec
 function bodyOf(text) {
   const rule = text.indexOf('\n---\n');
   return rule < 0 ? '' : text.slice(rule + 5).trim();
+}
+
+/**
+ * Code spans are stripped before backticks are counted, longest delimiter first, or a record that
+ * legitimately quotes a backtick inside a ``double-tick`` span reads as unbalanced. `R-0435` is
+ * exactly such a record — it quotes the truncation it describes.
+ */
+function strippedOfCode(body) {
+  return body.replace(/```[\s\S]*?```/g, '').replace(/``[\s\S]*?``/g, '');
+}
+
+/** The last line that carries text, with any blockquote marker removed. */
+function lastProseLine(body) {
+  const lines = body.split('\n');
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i].replace(/^>\s?/, '').trim();
+    if (line && line !== '>') return line;
+  }
+  return '';
 }
 
 console.log('\n-- every detail_ref resolves --');
@@ -80,6 +106,32 @@ check('every record file names its own record in the H1', () => {
     .map((r) => r.id);
   assert.deepEqual(wrong, [], `H1 does not match id + title: ${wrong.join(', ')}`);
 });
+
+console.log('\n-- the prose is complete, not just present (2026-08-09) --');
+
+check('no record file ends mid-sentence', () => {
+  // `---` closes a record that ends on a horizontal rule inside its quoted block.
+  const truncated = owned
+    .filter((r) => {
+      const body = bodyOf(fs.readFileSync(path.join(lib.WORK_TRACKING_DIR, r.detail_ref), 'utf8'));
+      const last = lastProseLine(body);
+      return last && last !== '---' && !/[.!?:;)\]`*_"”…-]$/.test(last);
+    })
+    .map((r) => r.id);
+  assert.deepEqual(truncated, [], `record body stops mid-sentence: ${truncated.join(', ')}`);
+});
+
+check('no record file leaves a code span unclosed', () => {
+  const unbalanced = owned
+    .filter((r) => {
+      const body = bodyOf(fs.readFileSync(path.join(lib.WORK_TRACKING_DIR, r.detail_ref), 'utf8'));
+      return (strippedOfCode(body).match(/`/g) || []).length % 2 !== 0;
+    })
+    .map((r) => r.id);
+  assert.deepEqual(unbalanced, [], `odd number of backticks: ${unbalanced.join(', ')}`);
+});
+
+console.log('\n-- no record file is orphaned --');
 
 check('no record file is orphaned — every file in records/ has a record', () => {
   const referenced = new Set(owned.map((r) => path.basename(r.detail_ref)));
