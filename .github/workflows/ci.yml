@@ -32,9 +32,14 @@ jobs:
       - name: Unit + smoke tests
         run: npm test
 
-  # Work registry (work_tracking/). Two gates: the store must load without a constraint
-  # error, and registry.md must equal build(registry.ndjson) — a hand-edited or unrebuilt
-  # registry.md is caught here rather than drifting silently.
+  # Work registry (work_tracking/). Three gates: the store must load without a constraint
+  # error, registry.md must equal build(registry.ndjson) — a hand-edited or unrebuilt
+  # registry.md is caught here rather than drifting silently — and the living documents must
+  # stay inside the budgets in work_tracking/size-policy.json.
+  #
+  # The size gate is here rather than written down as a rule because a rule is what failed:
+  # docs/handoff/archive/ already held 34 files, so the archive mechanism was never missing,
+  # it just stopped being applied and HANDOFF.md regrew to 3,396 lines (R-0424).
   #
   # Deliberately independent of the app: no `npm ci` (this tooling has zero dependencies)
   # and no `needs:`, so it reports even when the app build is red. Node 24 rather than the
@@ -50,6 +55,8 @@ jobs:
         run: node work_tracking/tests/run.js
       - name: registry.md matches registry.ndjson
         run: node work_tracking/scripts/build.js --check
+      - name: Living documents are within budget
+        run: node work_tracking/scripts/size-check.js --report
 
   # Emulator-backed Firestore security-rules tests (mountain-aware role model, M5.2).
   # The default `npm test` excludes tests/rules/** (they need the emulator), so this

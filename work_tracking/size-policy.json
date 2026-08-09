@@ -1,0 +1,78 @@
+{
+  "$comment": [
+    "Budgets for the living work-tracking documents. Read by work_tracking/scripts/size-check.js,",
+    "which the work-tracking CI job runs as a hard gate. See R-0424 for why this is code rather",
+    "than a paragraph: the archive mechanism already existed and simply stopped being applied.",
+    "",
+    "Each budget is a RATCHET, not an aspiration — it is set just above the file's size on",
+    "2026-08-09, so a document cannot grow much without someone consciously raising the number in",
+    "this file. Raising one is a visible, reviewable act in a diff. That is the whole mechanism.",
+    "",
+    "Two measures, because the two failures this workstream was opened over are invisible to each",
+    "other: HANDOFF.md reached 3,396 LINES (R-0417), and PROJECT_PLAN.md reached 4,528 COLUMNS in",
+    "a single table cell while its line count looked healthy (R-0423). A line budget alone would",
+    "have missed the second; a column budget alone would have missed the first.",
+    "",
+    "Not governed, deliberately: registry.md and registry.db are generated and growing is correct",
+    "for them; docs/handoff/archive/** and docs/planning/completed/** are frozen by definition;",
+    "records/*.md are one item each and stay small on their own."
+  ],
+  "documents": [
+    {
+      "path": "docs/handoff/HANDOFF.md",
+      "lines": 250,
+      "columns": 130,
+      "was": "201 lines / 107 columns on 2026-08-09",
+      "remedy": "Archive it to docs/handoff/archive/<date>-*.md and cut a fresh one. A narrative belongs in a record, not here — see this file's own closing section."
+    },
+    {
+      "path": "docs/planning/PROJECT_PLAN.md",
+      "lines": 1600,
+      "columns": 450,
+      "was": "1,465 lines / 399 columns on 2026-08-09",
+      "remedy": "Move the prose into records and leave a pointer. The column budget is high because the snapshot table pads to its widest cell; if it trips, a cell has become a mega-cell again (R-0423)."
+    },
+    {
+      "path": "work_tracking/SCHEMA.md",
+      "lines": 450,
+      "columns": 130,
+      "was": "377 lines / 101 columns on 2026-08-09",
+      "remedy": "The field reference should track the schema, not accumulate commentary. Reasoning about a schema change is a decision record."
+    },
+    {
+      "path": "work_tracking/work-tracking-restructure-20260808.md",
+      "lines": 550,
+      "columns": 170,
+      "was": "464 lines / 142 columns on 2026-08-09",
+      "remedy": "This design is settled. New thinking is a new record, not an appendix here."
+    },
+    {
+      "path": "work_tracking/work-tracking-migration-plan-20260808.md",
+      "lines": 350,
+      "columns": 160,
+      "was": "260 lines / 128 columns on 2026-08-09",
+      "remedy": "The phases are fixed. Progress lives in the records the phases name, not in this file."
+    },
+    {
+      "path": "docs/planning/BACKLOG.md",
+      "lines": 60,
+      "columns": 110,
+      "was": "44 lines / 98 columns on 2026-08-09 — a stub",
+      "remedy": "This is a STUB. Its content is in the registry and HANDOFF.md says not to add entries here. If it grew, someone did anyway — put the item in the registry instead."
+    },
+    {
+      "path": "log/DEBUG_LOG.md",
+      "lines": 60,
+      "columns": 110,
+      "was": "34 lines / 94 columns on 2026-08-09 — a stub",
+      "remedy": "This is a STUB. A bug fix is a record with type=bug, not an entry here."
+    },
+    {
+      "path": "log/FEATURE_MOD_LOG.md",
+      "lines": 60,
+      "columns": 110,
+      "was": "37 lines / 94 columns on 2026-08-09 — a stub",
+      "remedy": "This is a STUB. An intentional change is a record with type=change, not an entry here."
+    }
+  ]
+}

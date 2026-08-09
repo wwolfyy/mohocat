@@ -29,44 +29,42 @@ The design and the settled storage decision are in
 the phase sequence is in
 [`work-tracking-migration-plan-20260808.md`](../../work_tracking/work-tracking-migration-plan-20260808.md).
 
-| Phase | What                                                 | State                           |
-| ----- | ---------------------------------------------------- | ------------------------------- |
-| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                         |
-| 2     | Import all seven source files                        | ✅ done — all 7                 |
-| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`              |
-| 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`     |
-| 4     | Adjacent fixes — mega-cells, size policy             | 🔄 `R-0423` done · **`R-0424`** |
-| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | ⬜ `R-0425`, then `R-0426`      |
+| Phase | What                                                 | State                          |
+| ----- | ---------------------------------------------------- | ------------------------------ |
+| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                        |
+| 2     | Import all seven source files                        | ✅ done — all 7                |
+| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`             |
+| 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`    |
+| 4     | Adjacent fixes — mega-cells, size policy             | ✅ done — `R-0423`, `R-0424`   |
+| 5     | Cut over — rewrite `CLAUDE.md`, un-pause             | ⬜ **`R-0425`**, then `R-0426` |
 
 ### 🔴 Start here, so you do not have to derive it
 
-**`R-0424` is next** — a size policy for `docs/handoff/`, so a living document cannot grow back.
-The archive mechanism already exists (33 files in `archive/`) and simply stopped being applied;
-what is missing is the rule that says when to apply it.
+**Phase 5 is all that is left, and `R-0425` is next** — rewrite `CLAUDE.md` / `AGENTS.md` to
+describe the new structure, then `R-0426` un-pauses application work. 🔑 **Do `R-0428` in the
+same change**: it moves `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/`, and doing it
+alongside `R-0425` means the orientation rewrite names the final paths once instead of twice.
+📌 Three things the rewrite must carry that `CLAUDE.md` does not mention today: the registry
+workflow, the ⚠️ **do not write to the three stubs** rule, and the 📏 size policy.
 
-✅ **`R-0423` is done** — `PROJECT_PLAN.md`'s snapshot table is an index again, **228 KB → 106 KB**,
-longest line **4,528 → 399 characters**. 🔑 Half the file was whitespace, because prettier pads
-every cell to the widest one, so the multi-tenant cell's 4,350 characters were replayed as padding
-on all 29 other rows. It also corrected two stale claims and found `R-0435`.
+✅ **Phase 4 is closed.** `R-0423` made `PROJECT_PLAN.md`'s snapshot table an index again
+(**228 KB → 106 KB**, longest line **4,528 → 399**) — half that file was whitespace, because
+prettier pads every table cell to the widest one, so one 4,350-character cell was replayed as
+padding across all 29 other rows. `R-0424` then made the size budgets a **CI gate** rather than a
+rule (see 📏 below). Along the way `R-0423` found `R-0435`, now also done: ten records the Phase 2
+import had truncated mid-sentence are whole again.
 
-✅ **`R-0435` is done** — the ten records the Phase 2 import truncated mid-sentence are whole
-again, the four orphaned tails are out of `PROJECT_PLAN.md`, and `store.test.js` gained the two
-assertions that would have caught it. See the ⚠️ note below.
+⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which breaks
+20 `detail_ref`s in one move. It is the only piece of the migration not in Phase 5's path.
 
-⚠️ **Phase 5 (`R-0425`, then `R-0426`) is last and should not start early.** It rewrites
-`CLAUDE.md` / `AGENTS.md` and un-pauses application work; doing that while anything earlier is
-open points agents at a structure that is still moving. 📌 Phase 4 itself is independent — the
-plan's own sequencing note says it can slot anywhere after Phase 2.
+📌 **`R-0428` was settled by the owner on 2026-08-08 and scheduled by no phase** — it surfaced
+only when the tracker itself was migrated. That is why it is folded into `R-0425` above rather
+than left to be rediscovered.
 
-🔴 **Two records sit outside the phase sequence.** `R-0428` — moving `PROJECT_PLAN.md` and
-`HANDOFF.md` into `work_tracking/` — was **settled by the owner on 2026-08-08 and scheduled by no
-phase**; it surfaced only when the tracker was migrated. Doing it with `R-0425` means the
-orientation rewrite names the final paths once. `R-0427` is deferred until the owner archives
-`docs/planning/**`, which breaks 20 `detail_ref`s in one move.
-
-**Before touching anything**, run the two gates — they take seconds and they prove the store is
-sane: `node work_tracking/tests/run.js` (**3 files**, 92 assertions) and
-`node work_tracking/scripts/build.js --check`.
+**Before touching anything**, run the three gates — they take seconds and they prove the store is
+sane: `node work_tracking/tests/run.js` (**4 files**, 104 assertions),
+`node work_tracking/scripts/build.js --check`, and
+`node work_tracking/scripts/size-check.js --report`.
 
 ⚠️ **Read a record, not just its row. It caught the same import twice, on the same day.** First,
 the hand-off import had written **all 57 of its record files with an empty body** — 37,489
@@ -119,6 +117,14 @@ parked work with its reason, and every record.
 ⚠️ **`registry.md` is generated. Never hand-edit it**; CI fails if it does not equal
 `build(registry.ndjson)`. `work.json` is gitignored and is the merge-conflict recovery file — do
 not commit it, and do not delete it after a check-in.
+
+📏 **This file has a size budget, and so do seven others.**
+[`work_tracking/size-policy.json`](../../work_tracking/size-policy.json) holds one per document
+and CI fails when a document exceeds it — `node work_tracking/scripts/size-check.js --report`
+shows how much room is left. Each budget sits just above the file's real size, so growth needs
+someone to **raise the number in a diff**. That is allowed; doing it by accident is not. 🔑 It is
+a gate rather than a paragraph because a paragraph is what failed: the archive mechanism was
+never missing, it stopped being applied (`R-0424`).
 
 ---
 

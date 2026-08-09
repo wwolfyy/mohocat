@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 35 | 7 | 10 | 178 | 0 | **230** |
+| task | 34 | 7 | 10 | 179 | 0 | **230** |
 | bug | 1 | 0 | 0 | 51 | 0 | **52** |
 | change | 0 | 0 | 0 | 89 | 0 | **89** |
 | decision | 0 | 0 | 1 | 49 | 8 | **58** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **43** | **7** | **11** | **367** | **8** | **436** |
+| **total** | **42** | **7** | **11** | **368** | **8** | **436** |
 
 ## Open work
 
@@ -67,7 +67,6 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
-| R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
 | R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
 | R-0428 | task | open | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |
@@ -536,7 +535,7 @@
 | R-0421 | task | done | — | — | Phase 3 — set `split_from` on the `PROJECT_PLAN` break-outs | [detail](./records/R-0421.md) |
 | R-0422 | task | done | — | — | Phase 3 — repoint the 18 cross-references that still aim at stubbed files | [detail](./records/R-0422.md) |
 | R-0423 | task | done | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
-| R-0424 | task | open | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
+| R-0424 | task | done | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | open | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
 | R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
 | R-0427 | task | deferred | — | — | Repoint the 20 companion-document `detail_ref`s when the archive move happens | [detail](./records/R-0427.md) |
