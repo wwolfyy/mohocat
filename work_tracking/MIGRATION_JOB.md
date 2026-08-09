@@ -310,7 +310,9 @@ Append newest-last. One entry per working session: what moved, what broke, where
   that ends the span. Ambiguity is a hard error, not "take the first" — this file describes the
   same event in the fresh-session box, the TL;DR **and** the changelog, so a loose anchor would
   quietly capture the wrong paragraph. The script also refuses to run if two spans overlap.
-  All 57 bodies were verified as **verbatim substrings** of the pinned source.
+  All 57 bodies were verified as **verbatim substrings** of the pinned source. 🔴 **Corrected
+  2026-08-09 — that verification ran against the extracted spans, never against the files on
+  disk, and all 57 were written empty. See `R-0429`.**
 - 🔴 **Three open items were stale and two more were partly stale — out of 22.** Verifying
   against the code before importing, per the watch-out, is what caught them:
   - **§10d D2, "a CMS-controlled toggle… not started"** — `config/media_control.json` and
@@ -337,6 +339,8 @@ Append newest-last. One entry per working session: what moved, what broke, where
   structurally impossible (`R-0384`), and the path-based tenancy decision with its authorization
   inversion (`R-0395`). ✅ **The migration's final gate is now passable**: a cold session can
   answer _"has renaming the Firestore database been considered?"_ from `registry.md` alone.
+  🔴 **Corrected 2026-08-09: it was not.** `records/R-0368.md` held no reasoning — the gate was
+  declared met by reading the row rather than the record. True since the repair (`R-0429`).
 - 📌 **Two items were deliberately not imported**, and the importer's header says why: the
   deferred e2e Phase 8 list (already `R-0234`…`R-0238` from `PROJECT_PLAN`), and the
   `mountain-2-prerequisites` line items — re-listing those as rows would reverse the owner's
@@ -433,3 +437,26 @@ verify the count before writing to the real registry.
   2026-08-09, inside this very file.
 - **Gates:** `node work_tracking/tests/run.js` (85 assertions, 2 files) and
   `node work_tracking/scripts/build.js --check` both green before and after.
+
+### 2026-08-09 — the 57 imported records had no prose in them at all → `R-0429`
+
+- 🔴 **Every record file the `HANDOFF.md` import wrote was header-only**, all 36 decisions
+  included. **37,489 characters** of prose were dropped. `renderRecordFile()` read `entry.body`
+  when `locate()` returns the body on the **span** — and `Array.join()` renders `undefined` as an
+  empty string, so the files came out well-formed and nothing threw.
+- ⚠️ **Nothing caught it, and each gate had a defensible reason.** `--expect` counts rows.
+  The fidelity check ran against the extracted spans, never re-read off disk. `build.js --check`
+  compares `registry.md` to the store, and the rows were perfect. The two test files run against
+  a throwaway store, so they never see committed prose.
+- 🔑 **It was found by trying to use the store**, not by testing it: `R-0420` requires probing
+  new candidates against reasoning already recorded, so `R-0395` and `R-0400` were opened to
+  read — and were empty. **That is the argument for doing the judgment passes rather than
+  declaring the import done.**
+- ✅ **Repaired and pinned.** `handoff.js` fixed; `handoff-rerender.js` re-rendered all 57 from
+  the archived body, matching each record to its source entry **by title** with the `source_ref`
+  key cross-checked, and touching neither the store nor `registry.md`. New **`tests/store.test.js`**
+  is the first suite to check the **real** store — detail_refs resolve, no header-only file, every
+  H1 names its own record, no orphaned file — and its assertions were **mutation-tested**, not
+  trusted on a first green run.
+- 📌 **The previous session's "final gate met" claim was false when written** and is now marked as
+  such above. `R-0368.md` was 254 bytes; the gate had been checked by reading the row.

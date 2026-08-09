@@ -1167,6 +1167,9 @@ function trimBody(bodyLines) {
     .trim();
 }
 
+// ⚠️ The body lives on the SPAN, not on the entry. Reading `entry.body` here wrote 57 record
+// files whose prose was silently empty: Array.join() renders undefined as '', so the files
+// looked well-formed and nothing failed. See R-0429.
 function renderRecordFile(record, entry, span) {
   const classification = [record.type, record.status, record.outcome].filter(Boolean).join(' · ');
   return [
@@ -1177,7 +1180,7 @@ function renderRecordFile(record, entry, span) {
     '',
     '---',
     '',
-    entry.body,
+    span.body,
     '',
   ].join('\n');
 }
