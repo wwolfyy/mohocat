@@ -14,13 +14,23 @@ resolved **per request by Host** (production subdomains, `/{id}` path in dev/pre
 content doc carries a `mountainId`, and per-mountain config/theme/features come from
 `config/mountains/mountains.json`.
 
-## Where the docs live (orient here first)
+## Where things live (orient here first)
+
+**Two parts, and the distinction is the point.** [**§A — Tracking work**](#a--tracking-work)
+is the live state: what is open, what was decided, what changed. It is a **store**, and it is
+written to. [**§B — Reference**](#b--reference) is what the codebase already knows about itself.
+It is read. 🔑 **If you are about to write something down, it belongs in §A** unless it is a
+durable explanation of how the system works.
 
 > ⏸️ **Application work is still PAUSED** (owner, 2026-08-08) while the work-tracking
 > restructure finishes. **`work_tracking/HANDOFF.md` says what remains** — one record. Removing
 > this notice is that record's job, not a side effect of some other change.
 
-### 🔑 Work is tracked in `work_tracking/`, one record per item
+---
+
+### A — Tracking work
+
+Everything lives in `work_tracking/`, **one record per item**.
 
 **Start at [`work_tracking/HANDOFF.md`](./work_tracking/HANDOFF.md)** — current state and what
 is in flight, deliberately short — then query the registry. A bug fixed, a change made, a
@@ -52,6 +62,21 @@ each stub says so at the top. A bug fix is a record with `type: bug`; an intenti
 moves between files any more** — a status change is a field, so the old "move the item and
 delete its origin in the same change" rule no longer applies to anything.
 
+🕐 **Write the record in the same change as the work, once the gates are green.** Not before —
+a record written mid-flight asserts outcomes that have not happened yet. Not after either, and
+that is the failure worth understanding: **a diff records what changed, never what you decided
+not to do.** Reconstructing a record later can only recover what left an artifact, so the
+approach you abandoned, the premise that turned out false, and the fix that was approved and
+then disproved are all simply gone — and those are the entries that stop the next session
+re-walking a dead end. 📌 This is not a new rule: `PROJECT_PLAN.md` §1 has said _"tick the box
+in the same change that does the work"_ since the 2026-08-02 audit found seven claims that had
+rotted, and `R-0323` is what happens when it is not followed — colour Phase 5 shipped, its box
+was never ticked, and the migration faithfully imported finished work as open.
+
+⚠️ **`work.json` is gitignored — never commit it**, and do not delete it after a check-in; it is
+the merge-conflict recovery file. 📌 **Pass `--out /tmp/x.json` when you are only looking**, so a
+query does not overwrite a checkout you have open.
+
 📏 **Living documents have size budgets** in
 [`work_tracking/size-policy.json`](./work_tracking/size-policy.json), and **CI fails** when one
 is exceeded — `node work_tracking/scripts/size-check.js --report` shows the room left. Budgets
@@ -59,7 +84,13 @@ sit just above each file's real size, so growth needs someone to raise the numbe
 That is allowed; doing it by accident is what stops. _(This is why a long narrative goes in a
 record and not in the hand-off.)_
 
-Everything else is reference material — check it before re-deriving context from scratch:
+---
+
+### B — Reference
+
+What the codebase knows about itself. Check here before re-deriving context from scratch — but
+⚠️ **nothing here tracks state**; if what you found is a status, it is stale by definition and
+§A is authoritative.
 
 - **`docs/codebase/`** — per-domain deep dives (auth, permissions, services, API routes,
   admin, media, map, multi-tenant, deployment) with diagrams and **watch-outs**. Start at
@@ -91,9 +122,7 @@ Everything else is reference material — check it before re-deriving context fr
   `npx tsc --noEmit` + `npm run test:smoke`. **If you touched `work_tracking/` or any document
   it governs, also run:** `node work_tracking/tests/run.js`,
   `node work_tracking/scripts/build.js --check`, and `node work_tracking/scripts/size-check.js`.
-- **Record the work as you finish it, not afterwards.** A record written in the same change as
-  the fix is the one that still knows why. ⚠️ **`work.json` is gitignored — never commit it**,
-  and do not delete it after a check-in; it is the merge-conflict recovery file.
+  📌 The record for the work goes in the **same** change — see §A.
 - **Error handling (per the repo owner's global conventions):** `try/catch` that **logs and
   re-raises** — never silently swallow errors or add fallbacks unless asked. Don't log
   secrets or PII.
