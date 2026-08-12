@@ -4,7 +4,7 @@
 > `.github/copilot-instructions.md` + `.github/instructions/.instructions.md`.)
 > `CLAUDE.md` is a symlink to this file.
 
-## ▶️ First action in a new session
+## First action in a new session
 
 **Read [`work_tracking/HANDOFF.md`](./work_tracking/HANDOFF.md).** It is short by design and it
 says what is in flight, what needs the owner, and where the branch stands. **Do this without
@@ -15,7 +15,7 @@ session. Then, if you are about to do work:
 node work_tracking/scripts/checkout.js --query "status = 'open'" --out /tmp/open.json
 ```
 
-📌 Everything below is orientation you can read on demand. The hand-off is the part that changes
+Everything below is orientation you can read on demand. The hand-off is the part that changes
 between sessions, so it is the part you cannot skip.
 
 ## Project Overview
@@ -33,7 +33,7 @@ content doc carries a `mountainId`, and per-mountain config/theme/features come 
 **Two parts, and the distinction is the point.** [**§A — Tracking work**](#a--tracking-work)
 is the live state: what is open, what was decided, what changed. It is a **store**, and it is
 written to. [**§B — Reference**](#b--reference) is what the codebase already knows about itself.
-It is read. 🔑 **If you are about to write something down, it belongs in §A** unless it is a
+It is read. **If you are about to write something down, it belongs in §A** unless it is a
 durable explanation of how the system works.
 
 > ⏸️ **Application work is still PAUSED** (owner, 2026-08-08) while the work-tracking
@@ -63,39 +63,39 @@ node work_tracking/scripts/build.js                                # regenerates
 **Four rules bind here. They are the four that fail _silently_** — nothing refuses you, and the
 result looks fine:
 
-- 🔁 **R1 — that loop is the only write path.** Every change to the store is
+- **R1 — that loop is the only write path.** Every change to the store is
   `checkout → edit work.json → checkin → build`. ⚠️ **`registry.ndjson` is written by `checkin.js`
   and by nothing else — never hand-edit it**, and correct a mistake with the **next revision**
-  rather than by editing the line that was wrong. 📌 **A brand-new item goes through the same
-  loop** — `checkout.js --new` opens an empty `work.json` to add to. Having nothing checked out is
-  normal, not a reason to write a row by hand.
-- 🕐 **R2 — finish the work, _then_ check in.** A record has two parts: its **row** in
+  rather than by editing the line that was wrong. A brand-new item goes through the same loop —
+  `checkout.js --new` opens an empty `work.json` to add to. Having nothing checked out is normal,
+  not a reason to write a row by hand.
+- **R2 — finish the work, _then_ check in.** A record has two parts: its **row** in
   `registry.ndjson`, which `checkin.js` versions, and its **prose file** `records/R-XXXX.md`, which
   nothing versions. Check in while the prose is still changing, and the row keeps claiming a
   revision whose text has since moved on, with nothing in the store recording that it did. A
   substantive correction afterwards is a **new revision with a `note`**, not a silent edit.
-- 🔍 **R3 — never `grep` the store; query it.** It is append-only and JSON-escaped, so grep
+- **R3 — never `grep` the store; query it.** It is append-only and JSON-escaped, so grep
   over-counts superseded revisions and misses escaped text — wrong in both directions, and it
-  returns a plausible number either way. Use `checkout.js --query`, and 📌 **pass `--out /tmp/x.json`
-  when you are only looking**, or the query overwrites a checkout you have open.
-- 📝 **R4 — the record goes in the same change as the work.** Not before (that is R2), and not
+  returns a plausible number either way. Use `checkout.js --query`, and pass `--out /tmp/x.json`
+  when you are only looking, or the query overwrites a checkout you have open.
+- **R4 — the record goes in the same change as the work.** Not before (that is R2), and not
   after: **a diff records what changed, never what you decided not to do**, so a record
   reconstructed later has already lost the abandoned approach and the premise that turned out
-  false. 🔑 **Work that no existing record asked for still gets a record** — "nothing was open for
-  it" is not an exemption, and **it does not matter who noticed**. 📌 **A finding you are _not_
-  going to act on gets one too, with `status: open`.** A query returns **rows**; it never returns
-  the prose inside a record's body. So a finding written into the body of whatever record you had
-  open is not findable by any query, and `--query "status = 'open'"` is what the next session runs.
+  false. Work that no existing record asked for still gets a record — "nothing was open for it" is
+  not an exemption, and it does not matter who noticed. A finding you are _not_ going to act on
+  gets one too, with `status: open`. A query returns **rows**; it never returns the prose inside a
+  record's body. So a finding written into the body of whatever record you had open is not findable
+  by any query, and `--query "status = 'open'"` is what the next session runs.
 
-📌 **Why each holds is [`WORKFLOW.md`](./work_tracking/WORKFLOW.md) §2, §5 — ⚠️ do not restate it
-here.** One rule, one statement, one expansion: a copy in two files drifts, and `R-0440` went stale
-inside a day when its prose named a file the content had moved out of.
+**Why each holds is [`WORKFLOW.md`](./work_tracking/WORKFLOW.md) §2, §5 — do not restate it here.**
+One rule, one statement, one expansion: a copy in two files drifts, and `R-0440` went stale inside a
+day when its prose named a file the content had moved out of.
 
-🔑 **This list is not every rule, deliberately.** A rule the tooling **refuses** (check-in rejects a
+**This list is not every rule, deliberately.** A rule the tooling **refuses** (check-in rejects a
 `split_from` you did not check out, and the error says what to do) or one you cannot meet without
 already reading its section (merge-conflict recovery) lives in `WORKFLOW.md` beside its
-explanation. **Only the silent ones are here**, because those are the ones nothing else will tell
-you about.
+explanation. Only the silent ones are here, because those are the ones nothing else will tell you
+about.
 
 - **[`work_tracking/WORKFLOW.md`](./work_tracking/WORKFLOW.md)** — how to operate the store: the
   loop in full, looking things up, `work.json` and its stamp, merge-conflict recovery, and why
@@ -112,14 +112,14 @@ you about.
 ⚠️ **Do not add entries to `log/DEBUG_LOG.md`, `log/FEATURE_MOD_LOG.md` or
 `docs/planning/BACKLOG.md`.** All three are **stubs** — their content is in the registry, and
 each stub says so at the top. A bug fix is a record with `type: bug`; an intentional change is
-`type: change`; a deferred gap is `status: deferred` with its reason in `note`. 🔑 **Nothing
+`type: change`; a deferred gap is `status: deferred` with its reason in `note`. **Nothing
 moves between files any more** — a status change is a field, so the old "move the item and
 delete its origin in the same change" rule no longer applies to anything.
 
 ⚠️ **`work.json` is gitignored — never commit it**, and do not delete it after a check-in; it is
 the merge-conflict recovery file.
 
-📏 **Living documents have size budgets** in
+**Living documents have size budgets** in
 [`work_tracking/size-policy.json`](./work_tracking/size-policy.json), and **CI fails** when one
 is exceeded — `node work_tracking/scripts/size-check.js --report` shows the room left. Budgets
 sit just above each file's real size, so growth needs someone to raise the number in a diff.
@@ -164,9 +164,9 @@ What the codebase knows about itself. Check here before re-deriving context from
   `npx tsc --noEmit` + `npm run test:smoke`. **If you touched `work_tracking/` or any document
   it governs, also run:** `node work_tracking/tests/run.js`,
   `node work_tracking/scripts/build.js --check`, `node work_tracking/scripts/size-check.js`, and
-  `node work_tracking/scripts/link-check.js`. 📌 **`link-check.js` covers every tracked `.md` in
+  `node work_tracking/scripts/link-check.js`. **`link-check.js` covers every tracked `.md` in
   the repo, not only `work_tracking/`** — so run it after any documentation change that moves a
-  file or adds a link. 📌 The record for the work goes in the **same** change — see §A.
+  file or adds a link. The record for the work goes in the **same** change — see §A.
 - **Error handling (per the repo owner's global conventions):** `try/catch` that **logs and
   re-raises** — never silently swallow errors or add fallbacks unless asked. Don't log
   secrets or PII.

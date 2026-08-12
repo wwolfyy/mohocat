@@ -67,7 +67,7 @@ rows that each claim to be current.
 (only `checkin.js` writes the store; finish the prose before checking in), looking things up,
 `work.json` and its stamp, merge-conflict recovery, and why grep is wrong about the store.
 
-🔑 **The split is by kind, not by size.** This file answers _what the store is_ — the fields, the
+**The split is by kind, not by size.** This file answers _what the store is_ — the fields, the
 relationships, the views, what the schema can and cannot enforce. `WORKFLOW.md` answers _what you
 do_. Roughly a third of this document used to be the second thing wearing the first thing's name.
 
@@ -197,7 +197,7 @@ nothing.
 | Replacement            | `supersedes: [ids]`     | **dead**             |
 | Break-out              | `split_from: "R-0142"`  | **alive**            |
 
-🔑 **`split_from` exists because doing more work on an item does not always replace it.**
+**`split_from` exists because doing more work on an item does not always replace it.**
 Breaking a large item into pieces leaves the parent standing. `supersedes` cannot say that — it
 would mark the parent dead — so a second, scalar field carries it. A break-out has exactly one
 origin; a replacement can absorb several records, which is why one is scalar and the other is an
@@ -249,7 +249,7 @@ Two rules matter and neither is expressible in SQL here, so **`checkin.js` owns 
 
 ## 8. Changing the schema
 
-🔑 **The schema is not frozen.** It was designed from what was known at the time, cases nobody
+**The schema is not frozen.** It was designed from what was known at the time, cases nobody
 thought of will turn up, and when changing the schema is the best fix, change it.
 
 ⚠️ **But the two directions are not symmetric,** because the build re-validates the entire store
@@ -267,7 +267,7 @@ history **iff some row already in the store violates it** — and there is one s
 exception worth knowing, because the table above would otherwise talk you out of a correct
 change:
 
-🔑 **A `CHECK` conditioned on a new enum value cannot invalidate history.** No historical row
+**A `CHECK` conditioned on a new enum value cannot invalidate history.** No historical row
 can hold a value that did not exist when it was written, so
 `status <> 'deferred' OR note IS NOT NULL` is vacuously true for every row already stored. That
 was measured against all 326 rows before `deferred` was added. A rule of that shape therefore

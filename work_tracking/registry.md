@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 38 | 7 | 10 | 183 | 0 | **238** |
+| task | 37 | 7 | 10 | 184 | 0 | **238** |
 | bug | 1 | 0 | 0 | 52 | 0 | **53** |
 | change | 0 | 0 | 0 | 93 | 0 | **93** |
 | decision | 0 | 0 | 1 | 52 | 8 | **61** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **46** | **7** | **11** | **380** | **8** | **452** |
+| **total** | **45** | **7** | **11** | **381** | **8** | **452** |
 
 ## Open work
 
@@ -70,7 +70,6 @@
 | R-0426 | task | open | — | — | Phase 5 — un-pause application work; the successor workstream is still unnamed | [detail](./records/R-0426.md) |
 | R-0445 | task | open | — | — | Six record files state a status their row contradicts, and no gate compares the two | [detail](./records/R-0445.md) |
 | R-0446 | task | open | — | — | README.md labels the hand-off with a path it no longer has, and link-check cannot see it | [detail](./records/R-0446.md) |
-| R-0448 | task | open | — | — | Make emoji markers scarce in the four living documents, and gate the density | [detail](./records/R-0448.md) |
 | R-0449 | task | open | — | — | Audit the project-status memories against the registry, which now holds what most of them hold | [detail](./records/R-0449.md) |
 | R-0450 | task | open | — | — | Make the pre-commit hook verify rather than repair, and format on save instead | [detail](./records/R-0450.md) |
 | R-0451 | task | open | — | — | Replace next lint with ESLint directly, and resolve the two competing ESLint configs | [detail](./records/R-0451.md) |
@@ -563,7 +562,7 @@
 | R-0445 | task | open | — | — | Six record files state a status their row contradicts, and no gate compares the two | [detail](./records/R-0445.md) |
 | R-0446 | task | open | — | — | README.md labels the hand-off with a path it no longer has, and link-check cannot see it | [detail](./records/R-0446.md) |
 | R-0447 | change | done | — | — | Seven places in AGENTS.md and WORKFLOW.md explained less than they appeared to | [detail](./records/R-0447.md) |
-| R-0448 | task | open | — | — | Make emoji markers scarce in the four living documents, and gate the density | [detail](./records/R-0448.md) |
+| R-0448 | task | done | — | — | Make emoji markers scarce in the four living documents; the owner declined to gate it | [detail](./records/R-0448.md) |
 | R-0449 | task | open | — | — | Audit the project-status memories against the registry, which now holds what most of them hold | [detail](./records/R-0449.md) |
 | R-0450 | task | open | — | — | Make the pre-commit hook verify rather than repair, and format on save instead | [detail](./records/R-0450.md) |
 | R-0451 | task | open | — | — | Replace next lint with ESLint directly, and resolve the two competing ESLint configs | [detail](./records/R-0451.md) |
