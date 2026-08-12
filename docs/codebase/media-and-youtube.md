@@ -250,7 +250,7 @@ tenant's `storagePrefix` (`generate-signed-url` route + the form image strategy 
 `uploadStrategies.ts`), so a new mountain's uploads land under `mountains/<id>/…` and their URLs
 are naturally scoped. Geyang's prefix is `''` (flat bucket). **No per-cat thumbnail migration is
 needed** — the served values are already Storage URLs. See
-[`multi-mountain-refactor-plan` §3 M6](../planning/multi-mountain-refactor-plan-20260719.md).
+[`multi-mountain-refactor-plan` §3 M6](../planning/completed/multi-mountain-refactor-plan-20260719.md).
 
 ⚠️ **Token fragility.** The Storage URLs carry `?alt=media&token=…` (a download token). Rotating or
 revoking that token breaks the URL. Baked files / a public bucket / signed URLs avoid this — a

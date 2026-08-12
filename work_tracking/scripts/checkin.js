@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * work_tracking/scripts/checkin.js — step 3 of the workflow (SCHEMA.md §3).
+ * work_tracking/scripts/checkin.js — step 3 of the workflow (WORKFLOW.md §1).
  *
  * Reads `work.json`, works out which records actually changed, dry-run inserts the result
  * into a fresh schema'd database, rolls that transaction back, and only then appends the

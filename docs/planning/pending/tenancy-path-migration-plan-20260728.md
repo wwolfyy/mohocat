@@ -19,9 +19,9 @@
 >
 > **Companion docs this will rewrite on completion:**
 > [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) (§1.1, §1.5, §1.6, most of §2,
-> §4's re-login won't-fix) · [`adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md) ·
-> [`new-mountain-setup.md`](../manuals/deployment/new-mountain-setup.md) ·
-> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md) §0.
+> §4's re-login won't-fix) · [`adding-a-mountain.md`](../../manuals/admin-manual/adding-a-mountain.md) ·
+> [`new-mountain-setup.md`](../../manuals/deployment/new-mountain-setup.md) ·
+> [`multi-mountain-refactor-plan-20260719.md`](../completed/multi-mountain-refactor-plan-20260719.md) §0.
 
 ---
 

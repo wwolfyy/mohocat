@@ -10,7 +10,7 @@
 
 > **Audience:** maintainer adopting Terraform to manage the existing Vercel project.
 > **Scope:** `infra/terraform/` (the only deployment target — Vercel; see
-> [`../codebase/deployment-and-build.md`](../codebase/deployment-and-build.md)).
+> [`../codebase/deployment-and-build.md`](../../codebase/deployment-and-build.md)).
 
 ## 0. Read this first — what makes _our_ situation special
 

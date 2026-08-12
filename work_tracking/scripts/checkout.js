@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * work_tracking/scripts/checkout.js — step 1 of the workflow (SCHEMA.md §3).
+ * work_tracking/scripts/checkout.js — step 1 of the workflow (WORKFLOW.md §1).
  *
  * Builds the in-memory index from `registry.ndjson`, runs your query against it, and writes
  * the **current** revision of each matching record to `work.json`. You then edit that file

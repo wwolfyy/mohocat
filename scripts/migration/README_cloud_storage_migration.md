@@ -244,8 +244,8 @@ All export scripts include comprehensive error handling and logging for debuggin
 
 - [Points Migration](./README_points_static_migration.md) - Points-specific migration details
 - [Feeding Spots Migration](./README_feeding_spots_migration.md) - Feeding spots migration
-- [Admin Implementation](../../docs/implementation/ADMIN_IMPLEMENTATION_STATUS.md) - Admin interface details
-- [Platform Architecture](../../PLATFORM_ARCHITECTURE.md) - Overall system architecture
+- [Admin Implementation](../../docs/archive/implementation/ADMIN_IMPLEMENTATION_STATUS.md) - Admin interface details
+- [Platform Architecture](../../docs/archive/architecture/PLATFORM_ARCHITECTURE.md) - Overall system architecture
 
 ---
 

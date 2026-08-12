@@ -130,7 +130,7 @@ If you need real-time updates for points, consider:
 
 - [Cloud Storage Migration](./README_cloud_storage_migration.md) - Complete migration overview
 - [Feeding Spots Migration](./README_feeding_spots_migration.md) - Feeding spots details
-- [Admin Implementation](../../docs/implementation/ADMIN_IMPLEMENTATION_STATUS.md) - Admin interface
+- [Admin Implementation](../../docs/archive/implementation/ADMIN_IMPLEMENTATION_STATUS.md) - Admin interface
 - [Main README](../../README.md) - Project overview with Cloud Storage details
 
 ---

@@ -10,7 +10,7 @@
 >
 > **What this is not:** the how-to. Provisioning steps (DNS, Vercel, console allowlists,
 > config, first admin) live in
-> [`../manuals/deployment/new-mountain-setup.md`](../manuals/deployment/new-mountain-setup.md).
+> [`../manuals/deployment/new-mountain-setup.md`](../../manuals/deployment/new-mountain-setup.md).
 > Read this doc first to know what to fix; read that one to execute.
 >
 > **Why it exists:** these items were scattered across HANDOFF open threads, the
@@ -203,7 +203,7 @@ supported production mode.
 
 **The console work — DNS, Vercel, Firebase authorized domains, the YouTube playlist, seeding
 the first admin — now lives in its own owner-facing checklist:
-[`../manuals/admin-manual/adding-a-mountain.md`](../manuals/admin-manual/adding-a-mountain.md).**
+[`../manuals/admin-manual/adding-a-mountain.md`](../../manuals/admin-manual/adding-a-mountain.md).**
 
 It was carved out of this doc because it is a different kind of thing: those steps are not
 decisions to make or defects to fix, they are a procedure to execute, and they belong where
@@ -310,9 +310,9 @@ per-tenant upload `storagePrefix`, GA4 with `mountain_id` on every event, per-te
 
 Items were lifted from — and these now point back here rather than carrying their own copies:
 
-- [`../handoff/HANDOFF.md`](../handoff/HANDOFF.md) — open threads (`syncVideos`, playlist chore)
-- [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md) — §3 M8 checklist, §6 deferred
-- [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §9 — multi-tenant hardening
-- [`multi-tenant-architecture-decision-20260718.md`](./multi-tenant-architecture-decision-20260718.md) — §8/§10 (historical; the framework is ✅ EXECUTED)
-- [`butler-media-separation-plan-20260727.md`](./butler-media-separation-plan-20260727.md) — the `syncVideos` note
-- [`../manuals/deployment/new-mountain-setup.md`](../manuals/deployment/new-mountain-setup.md) — the runbook (companion, not a source)
+- [`../handoff/HANDOFF.md`](../../../work_tracking/HANDOFF.md) — open threads (`syncVideos`, playlist chore)
+- [`multi-mountain-refactor-plan-20260719.md`](../completed/multi-mountain-refactor-plan-20260719.md) — §3 M8 checklist, §6 deferred
+- [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §9 — multi-tenant hardening
+- [`multi-tenant-architecture-decision-20260718.md`](../completed/multi-tenant-architecture-decision-20260718.md) — §8/§10 (historical; the framework is ✅ EXECUTED)
+- [`butler-media-separation-plan-20260727.md`](../completed/butler-media-separation-plan-20260727.md) — the `syncVideos` note
+- [`../manuals/deployment/new-mountain-setup.md`](../../manuals/deployment/new-mountain-setup.md) — the runbook (companion, not a source)

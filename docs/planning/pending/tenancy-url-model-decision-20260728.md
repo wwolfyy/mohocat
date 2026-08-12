@@ -22,9 +22,9 @@
 >
 > **Companion docs:** [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) (several
 > of its items are deleted outright by this decision — see §8) ·
-> [`multi-mountain-refactor-plan-20260719.md`](./multi-mountain-refactor-plan-20260719.md)
+> [`multi-mountain-refactor-plan-20260719.md`](../completed/multi-mountain-refactor-plan-20260719.md)
 > (§0 Q2/Q3, the decisions this would revisit) ·
-> [`multi-tenant-architecture-decision-20260718.md`](./multi-tenant-architecture-decision-20260718.md)
+> [`multi-tenant-architecture-decision-20260718.md`](../completed/multi-tenant-architecture-decision-20260718.md)
 > (the original framework).
 
 ---

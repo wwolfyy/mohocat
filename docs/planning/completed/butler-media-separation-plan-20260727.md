@@ -26,7 +26,7 @@
 > (§6 deferred items — the `syncVideos` hazard this plan deliberately does **not** close) ·
 > [`complexity-retirement-assessment-20260716.md`](./complexity-retirement-assessment-20260716.md)
 > (§8 P3 — where `useRichContentForm` came from) ·
-> [`media-and-youtube.md`](../codebase/media-and-youtube.md) (image/video serving model).
+> [`media-and-youtube.md`](../../codebase/media-and-youtube.md) (image/video serving model).
 
 **Legend:** `[ ]` todo · `[x]` done · ⚠️ watch-out · 🔑 owner-owed (only the owner can do it)
 
@@ -363,7 +363,7 @@ stage, run gates, summarize, wait for go-ahead.
 
 - The **`syncVideos` cross-tenant hazard** (D6) — still a prerequisite for provisioning a real
   mountain #2, tracked in
-  [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) §1.2 (the single list since
+  [`mountain-2-prerequisites.md`](../pending/mountain-2-prerequisites.md) §1.2 (the single list since
   2026-07-28; it was previously in the multi-mountain plan's deferred list).
 - **공지사항 / 입양홍보 media _input_** — they keep `MediaUploadField` and its multi-file picker.
   ⚠️ Consequence: two media-input patterns coexist after B3. Acceptable for now; converging

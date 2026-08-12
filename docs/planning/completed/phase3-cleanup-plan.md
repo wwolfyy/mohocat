@@ -3,8 +3,8 @@
 **Created:** 2026-06-27 · **Branch:** `dev` · **Baseline commit:** `6b7e005`
 **Supersedes:** the Phase 3 stub in
 [`deployment-cleanup-plan.md`](./deployment-cleanup-plan.md) §Phase 3 ·
-**Companions:** [`handoff-6`](../handoff/2026-06-27-handoff-6.md) (why the first
-attempt was reverted), [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §7 / §7a.
+**Companions:** [`handoff-6`](../../handoff/archive/2026-06-27-handoff-6.md) (why the first
+attempt was reverted), [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §7 / §7a.
 
 ---
 

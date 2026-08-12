@@ -297,7 +297,7 @@ on non-canonical JSON."_ The harness behind it was never committed and the numbe
 reproduced, and when the claim was re-tested against the store as actually built, its **direction
 was wrong**: grep does not halve the result set here, it **over-counts**, because the file is
 append-only and grep reads superseded revisions as current (470 rows fold to 437 records). The
-conclusion — _never grep, always parse_ — survives on better evidence, now in `SCHEMA.md` §3.
+conclusion — _never grep, always parse_ — survives on better evidence, now in `WORKFLOW.md` §5.
 🔑 **The lesson is about this document, not about grep:** a specific number carries authority that
 outlives the measurement, so a figure whose harness is not committed should not be written down as
 a fact. Full account: `R-0438`.
@@ -472,6 +472,6 @@ bullets with no marker at all. ⚠️ **A script keyed on`- [ ]` will silently i
   rows claiming the same `rev`. The plain git conflict is wanted — see §4.3.
 - 📌 **Never `grep` the store — it is wrong in both directions, silently.** Values are
   JSON-escaped, so a plain grep for a title containing quotes returns **0**; and the file is
-  append-only, so grep counts superseded revisions as current. Parse it, always — `SCHEMA.md` §3
+  append-only, so grep counts superseded revisions as current. Parse it, always — `WORKFLOW.md` §5
   has the reproducible demonstration. ⚠️ **The "643 of 1,274" figure this bullet used to cite is
   withdrawn** — see §4.3 and `R-0438`.

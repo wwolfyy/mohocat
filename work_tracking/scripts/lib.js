@@ -13,7 +13,7 @@
  * ⚠️ Never grep the store — it is wrong in both directions, silently. Values are JSON-escaped,
  * so a title displayed as "Post not found." is stored as \"Post not found.\" and a plain grep
  * for it returns 0. And the file is append-only, so grep counts superseded revisions as
- * current: 470 rows here fold to 437 records. Parse it, always. See SCHEMA.md §3.
+ * current: 470 rows here fold to 437 records. Parse it, always. See WORKFLOW.md §5.
  */
 
 const fs = require('node:fs');

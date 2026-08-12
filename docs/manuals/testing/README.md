@@ -4,8 +4,8 @@
 > end-to-end suite. This is the walkthrough + troubleshooting guide; the terse
 > co-located reference is [`tests/e2e/README.md`](../../../tests/e2e/README.md).
 > Design rationale lives in
-> [`docs/planning/playwright-ci-plan.md`](../../planning/playwright-ci-plan.md) and
-> [`…-prerequisite-plan.md`](../../planning/playwright-ci-prerequisite-plan.md).
+> [`docs/planning/playwright-ci-plan.md`](../../planning/completed/playwright-ci-plan.md) and
+> [`…-prerequisite-plan.md`](../../planning/completed/playwright-ci-prerequisite-plan.md).
 
 The e2e tests run the **real production build** (`next build` → `next start`)
 against a **hermetic Firebase Emulator Suite** (Auth + Firestore + Storage) that is

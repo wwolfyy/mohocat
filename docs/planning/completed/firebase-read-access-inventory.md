@@ -129,5 +129,5 @@ the browser?
 ## Cross-links
 
 - Writes: [`firebase-sdk-usage-inventory.md`](./firebase-sdk-usage-inventory.md)
-- Rules: [`config/firebase/firestore.rules`](../../config/firebase/firestore.rules)
-- §7a baked reads / ISR: [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §7a
+- Rules: [`config/firebase/firestore.rules`](../../../config/firebase/firestore.rules)
+- §7a baked reads / ISR: [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §7a

@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * work_tracking/scripts/build.js — step 4 of the workflow (SCHEMA.md §3).
+ * work_tracking/scripts/build.js — step 4 of the workflow (WORKFLOW.md §1).
  *
  * Regenerates `registry.md`: the current revision of every record, rendered for the people
  * who read pull requests. Nobody reads `registry.ndjson` by choice.

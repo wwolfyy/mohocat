@@ -1,8 +1,8 @@
 # Plan — 급식소 관리 (feeding-station points) admin CMS
 
 > Status: **implemented** (gates green; browser-verified; ⚠️ rule deploy owner-owed) · Branch: `dev` · Created 2026-07-05
-> Companion to [`PROJECT_PLAN.md` §4](./PROJECT_PLAN.md) (Mobile UX / map) and the off-plan
-> handoff [`2026-07-05-offplan-bugfixes-and-map-config.md`](../handoff/2026-07-05-offplan-bugfixes-and-map-config.md)
+> Companion to [`PROJECT_PLAN.md` §4](../../../work_tracking/PROJECT_PLAN.md) (Mobile UX / map) and the off-plan
+> handoff [`2026-07-05-offplan-bugfixes-and-map-config.md`](../../handoff/archive/2026-07-05-offplan-bugfixes-and-map-config.md)
 > §4 (the pin-label rework this unblocks).
 
 **Legend:** `[ ]` todo · `[~]` in progress · `[x]` done · `[-]` deferred/out of scope

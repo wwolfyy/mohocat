@@ -30,7 +30,7 @@ See [`mohocat-landing-redesign-tasks.md`](./mohocat-landing-redesign-tasks.md).
   consolidated 3 copies → one `CatSelectorModal`; `parse-date.ts` extracted.
   Codified in `design.md` (`### Modal`, `### Media viewer`). Details +
   verification status in
-  [`docs/handoff/2026-06-21-handoff.md`](../handoff/2026-06-21-handoff.md).
+  [`docs/handoff/2026-06-21-handoff.md`](../handoff/archive/2026-06-21-handoff.md).
 
 **In progress / not yet started — this plan:** Phases B and C below.
 

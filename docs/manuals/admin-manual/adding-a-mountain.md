@@ -6,7 +6,7 @@
 >
 > **Companion docs — you need all three, in this order:**
 >
-> 1. ⛔ [`../../planning/mountain-2-prerequisites.md`](../../planning/mountain-2-prerequisites.md)
+> 1. ⛔ [`../../planning/mountain-2-prerequisites.md`](../../planning/pending/mountain-2-prerequisites.md)
 >    — **the gate.** What must be fixed or decided _before_ a second mountain goes live.
 >    Start there. 🚨 Its §1.1 is a security defect (signing out of one mountain leaves you
 >    signed in on the others) that becomes real the day a second subdomain resolves.

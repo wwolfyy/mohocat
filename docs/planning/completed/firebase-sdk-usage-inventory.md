@@ -3,7 +3,7 @@
 > **Purpose.** Take stock of where the codebase uses the **Firebase Client (Web) SDK**
 > vs the **Firebase Admin SDK**, as a precondition for revisiting the
 > "eventual target = Admin SDK for all writes" conclusion recorded in
-> [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §7.
+> [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §7.
 >
 > **This is a stock-take, not a decision.** It maps the current state and groups the
 > Client-SDK write paths by _why_ they exist, so the migrate-vs-keep analysis can be

@@ -1,9 +1,9 @@
 # 산냥이집냥이 — §7a Bake the Data Layer · Task List
 
-Companion to [`PROJECT_PLAN.md` §7a](./PROJECT_PLAN.md) (the problem statement + hotspots) and
-[handoff-8](../handoff/2026-06-28-handoff-8.md) §3–4 (the resume brief). Deployment mechanics
+Companion to [`PROJECT_PLAN.md` §7a](../../../work_tracking/PROJECT_PLAN.md) (the problem statement + hotspots) and
+[handoff-8](../../handoff/archive/2026-06-28-handoff-8.md) §3–4 (the resume brief). Deployment mechanics
 (how the ISR fallback is configured + where) live in
-[`docs/manuals/deployment/README.md`](../manuals/deployment/README.md).
+[`docs/manuals/deployment/README.md`](../../manuals/deployment/README.md).
 
 **Legend:** `[ ]` todo · `[~]` in progress · `[x]` done · `[-]` deferred/out of scope
 

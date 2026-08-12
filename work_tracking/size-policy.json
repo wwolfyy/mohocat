@@ -34,10 +34,17 @@
     },
     {
       "path": "work_tracking/SCHEMA.md",
-      "lines": 450,
+      "lines": 350,
       "columns": 130,
-      "was": "377 lines / 101 columns on 2026-08-09",
-      "remedy": "The field reference should track the schema, not accumulate commentary. Reasoning about a schema change is a decision record."
+      "was": "312 lines / 100 columns on 2026-08-10, after §3 moved to WORKFLOW.md (R-0441). Budget RATCHETED DOWN from 450, which had been set against the combined document.",
+      "remedy": "The field reference should track the schema, not accumulate commentary. Reasoning about a schema change is a decision record; anything about operating the store belongs in WORKFLOW.md."
+    },
+    {
+      "path": "work_tracking/WORKFLOW.md",
+      "lines": 250,
+      "columns": 130,
+      "was": "179 lines / 100 columns on 2026-08-10, the day it was split out of SCHEMA.md (R-0441)",
+      "remedy": "This is the operating manual, not a changelog of how the loop evolved. A new rule that only matters once is a record; a rule that binds every session belongs in AGENTS.md §A with the mechanism here."
     },
     {
       "path": "work_tracking/work-tracking-restructure-20260808.md",

@@ -55,22 +55,47 @@ below); `R-0425` rewrote `AGENTS.md` around the registry, and `R-0428` moved thi
 `R-0435` (ten records the import had truncated mid-sentence) and `R-0438` (a measured-sounding
 figure that turned out to be unreproducible).
 
-🔴 **Three items are open that no phase owns.** None blocks anything, and two want the owner
-rather than an agent:
+✅ **`R-0436` and `R-0437` closed on 2026-08-09**, both on owner decisions taken that day.
+**`R-0436`** — a title may be rewritten while bodies stay verbatim, so 139 truncated titles were
+rewritten (not the 45 the record claimed; its `LIKE` detection missed every wrap landing mid-noun).
+**`R-0437`** — 52 link depth errors repaired outside `records/`; the 26 inside stay broken because
+record prose is verbatim, and `link-check.js` is now a CI gate that exempts them by name.
+⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which breaks
+20 `detail_ref`s in one move.
 
-- **`R-0436`** — 45 record titles trail off mid-phrase; the import used an item's first physical
-  line as its title. ⚠️ **Owner call first:** may a title be **rewritten**, or must it stay
-  verbatim-from-source the way record bodies are? Bodies are verbatim so `source_ref` stays
-  checkable against `git show`; nothing says whether a title carries that contract.
-- **`R-0437`** — 193 relative links across the docs do not resolve. Mostly pre-existing depth
-  errors in `docs/handoff/archive/`, but **29 sit in `records/`** and turn on the same question.
-- ⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which
-  breaks 20 `detail_ref`s in one move.
+### 🔴 Next session: `R-0448` marker scarcity, then `R-0449` memory audit
 
-**Before touching anything**, run the three gates — they take seconds and they prove the store is
-sane: `node work_tracking/tests/run.js` (**4 files**, 104 assertions),
-`node work_tracking/scripts/build.js --check`, and
-`node work_tracking/scripts/size-check.js --report`.
+**`R-0449` — audit the agent's project-status memories against the registry.** Owner-raised
+2026-08-13. Nine `type: project` memories hold 38 KB at
+`~/.claude/projects/-Users-jp-github-mohocat/memory/`, and most predate the registry, which now
+holds the same state authoritatively. One file is half of that total and its front matter
+contradicts its own index line. ⚠️ **The seven `feedback` memories stay** — that guidance is not
+registry material. 📌 Per file the choice is delete, move to `docs/codebase/`, or keep; the record
+says why it is three options rather than two.
+
+**Owner decision, 2026-08-13, execution deferred to a fresh session on purpose.** Emoji markers are
+to be made scarce in the four documents every session reads — `AGENTS.md`, `WORKFLOW.md`,
+`SCHEMA.md`, `HANDOFF.md` — and the density is to be enforced by a gate, not a convention.
+**Records are out of scope**; there are 440+ of them and imported prose is verbatim.
+
+`R-0448` carries the measurements and the two questions that need answering before any edit: what
+ratio counts as scarce, and whether the ceiling counts distinct or total markers. 📌 **This file is
+the densest in the repository at one marker every 5.1 lines**, so it is both the biggest offender and
+the most valuable to fix.
+
+⚠️ **The style rules came out of `R-0447` and are not only about markers.** Writing "🔑 **X**"
+asserts that X matters, where "X matters because Y" earns it, so the density and the skipped
+reasoning are one habit. Four other rules from the same review: no rhetorical flourish standing where
+an explanation should be; "but" not "and" when the second clause contradicts the first; cause before
+effect rather than a causal chain buried in a trailing clause; define any term coined during the work
+before using it.
+
+**Before touching anything**, run the four gates — they take seconds and they prove the store is
+sane: `node work_tracking/tests/run.js` (**5 files**, 125 assertions — `link.test.js` was added
+2026-08-09),
+`node work_tracking/scripts/build.js --check`,
+`node work_tracking/scripts/size-check.js --report`, and
+`node work_tracking/scripts/link-check.js --report`.
 
 ⚠️ **Read a record, not just its row. It caught the same import twice, on the same day.** First,
 the hand-off import had written **all 57 of its record files with an empty body** — 37,489
@@ -135,11 +160,13 @@ naming:
   `sections`?), `R-0350` (`설명 없음` filler), `R-0353` (GA4 `page_view` per cat-modal open),
   `R-0355` (thumbnails in the CMS's missing-video panel), `R-0356`/`R-0357` (the duplicated video
   제목; popup precedence), `R-0366` (branch workflow — keep `dev`-promotion or move to GitHub
-  Flow). 📌 Two more sit above, in **Start here**: `R-0426` (un-pause) and `R-0436` (may a record
-  title be rewritten).
+  Flow). 📌 One more sits above, in **Start here**: `R-0426` (un-pause).
 
-📊 **Open work today: 48 items — 39 tasks · 7 questions · 2 bugs.** Both bugs are named here
-(`R-0347`, `R-0437`). ⚠️ **That count is a snapshot and will rot** — regenerate it with
+📊 **Open work on 2026-08-13: 49 items — 41 tasks · 7 questions · 1 bug.** The bug is `R-0347`,
+named above. 📌 **Three were opened on 12–13 August rather than found undone**: `R-0445` (six record
+files whose frontmatter contradicts their row), `R-0446` (`README.md` labels the hand-off with a path
+it no longer has), and `R-0448` (marker scarcity). ⚠️ **That count is a snapshot and will rot** —
+regenerate it with
 `checkout.js --query "status IN ('open','in-progress')" --out /tmp/o.json`.
 
 ---
@@ -161,9 +188,18 @@ three passes (`71e89d4`, `c08b0d5`, `89df1eb`), `R-0423` (`efed947`), the `R-043
 orientation split (`157b56d`). 📌 **Count them with `git rev-list --count origin/dev..dev`**
 rather than trusting this list — a line cannot count the commit that writes it.
 
+🔴 **The 2026-08-12/13 session is UNCOMMITTED — roughly 190 changed files sitting in the working
+tree.** `git rev-list --count origin/dev..dev` still reads 30, unchanged since 2026-08-09, because
+nothing from that session was committed. It is a single coherent change and the gates are green on
+it: the `/handoff` skill, `WORKFLOW.md` split out of `SCHEMA.md`, the R1–R4 rules in `AGENTS.md`
+§A, `link-check.js` plus its CI step and tests, 139 rewritten titles with their record files, 52
+repaired links, and records `R-0436` rev 3 through `R-0448`. ⚠️ **Verify with `git status -sb`
+before assuming any of it has landed.**
+
 ⚠️ **The two untracked `code-graph-tooling-*` files in `docs/planning/pending/` belong to a
-different workstream. Do not sweep them into a commit** — `git add -A` did exactly that once this
-session and had to be undone.
+different workstream. Do not sweep them into a commit** — `git add -A` did exactly that once and
+had to be undone. 📌 `R-0447.md` and `R-0448.md` are also untracked but **do** belong to the change;
+they were added with `git add -N` so `link-check.js` would scan them.
 
 **Gates**, as of the last application-code session (2026-08-08): `tsc` 0 · smoke 39 · unit 196 ·
 **e2e 233 / 13 skipped / 0 failed** · rules 86 · scripts 23. The work-tracking store has its own

@@ -348,7 +348,7 @@ Central collection with per-mountain breakdown is achievable and cheap.
 
 > 🗂️ **Historical — do not work from this section.** The framework is ✅ EXECUTED and most
 > of the list below shipped in M0–M8. The **live** list of what still gates a real
-> mountain #2 is [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md)
+> mountain #2 is [`mountain-2-prerequisites.md`](../pending/mountain-2-prerequisites.md)
 > (created 2026-07-28). This section is kept as the record of what was identified in
 > 2026-07-18, not as a to-do.
 
@@ -432,8 +432,8 @@ No tasks are actionable until Q1–Q4 are answered. Sequencing once they are:
 
 ---
 
-_Companion docs: [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §9 (multi-tenant hardening),
-[`../manuals/deployment/new-mountain-setup.md`](../manuals/deployment/new-mountain-setup.md)
-(provisioning stub), [`../codebase/multi-tenant-config.md`](../codebase/multi-tenant-config.md)
-(how the config layer works), [`../codebase/permissions-and-roles.md`](../codebase/permissions-and-roles.md)
+_Companion docs: [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §9 (multi-tenant hardening),
+[`../manuals/deployment/new-mountain-setup.md`](../../manuals/deployment/new-mountain-setup.md)
+(provisioning stub), [`../codebase/multi-tenant-config.md`](../../codebase/multi-tenant-config.md)
+(how the config layer works), [`../codebase/permissions-and-roles.md`](../../codebase/permissions-and-roles.md)
 (the RBAC that §1.3 leans on)._

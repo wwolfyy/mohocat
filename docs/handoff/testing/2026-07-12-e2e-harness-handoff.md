@@ -15,8 +15,8 @@ firestore:rules` for prod parity.
 **Companions:**
 [`docs/manuals/testing/README.md`](../../manuals/testing/README.md) (developer manual — how to run),
 [`tests/e2e/README.md`](../../../tests/e2e/README.md) (terse co-located reference),
-[`docs/planning/playwright-ci-plan.md`](../../planning/playwright-ci-plan.md) (scope) +
-[`…-prerequisite-plan.md`](../../planning/playwright-ci-prerequisite-plan.md) (this harness, ✅ EXECUTED),
+[`docs/planning/playwright-ci-plan.md`](../../planning/completed/playwright-ci-plan.md) (scope) +
+[`…-prerequisite-plan.md`](../../planning/completed/playwright-ci-prerequisite-plan.md) (this harness, ✅ EXECUTED),
 [`log/FEATURE_MOD_LOG.md`](../../../log/FEATURE_MOD_LOG.md) (1 new: harness),
 [`log/DEBUG_LOG.md`](../../../log/DEBUG_LOG.md) (2 new: non-admin login; landing-marker bake).
 

@@ -436,7 +436,7 @@ Mostly one-time or infrequent setup. Details live in
 > [`adding-a-mountain.md`](./adding-a-mountain.md) — DNS, Vercel, Firebase authorized
 > domains, Kakao redirect URIs, the YouTube playlist, and seeding the first admin. ⛔ It
 > starts by sending you to
-> [`mountain-2-prerequisites.md`](../../planning/mountain-2-prerequisites.md), which lists
+> [`mountain-2-prerequisites.md`](../../planning/pending/mountain-2-prerequisites.md), which lists
 > what must be fixed **before** a second mountain goes live — including a security defect
 > (§1.1) that becomes real the day a second subdomain resolves.
 
@@ -637,7 +637,7 @@ collection appears nowhere in this codebase and would be missed by a fixed list.
 _Why this habit exists:_ the 2026-07-20 `mountainId` backfill ran with no snapshot and
 no PITR. It was safe only because the change was additive and exactly reversible. A
 migration that transforms existing values would not have been. See
-[`docs/planning/multi-mountain-refactor-plan-20260719.md`](../../planning/multi-mountain-refactor-plan-20260719.md) §3 M4.
+[`docs/planning/multi-mountain-refactor-plan-20260719.md`](../../planning/completed/multi-mountain-refactor-plan-20260719.md) §3 M4.
 
 ### ⚠️ Treat the dumps like passwords
 

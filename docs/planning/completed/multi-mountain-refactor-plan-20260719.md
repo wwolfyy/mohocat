@@ -481,7 +481,7 @@ AboutContentService()`; it is now created per-tenant through the factory. ⚠️
 >    complete picture of the database.
 >
 > **Snapshot first:** `npm run backup:firestore` before anything in this phase
-> writes to prod ([`admin-manual` §10](../manuals/admin-manual/README.md#10-backups--recovery-owner)).
+> writes to prod ([`admin-manual` §10](../../manuals/admin-manual/README.md#10-backups--recovery-owner)).
 > PITR (7-day) + weekly backups are now in place as of 2026-07-20.
 
 - [x] **M5.1 DONE (uncommitted) — scoped reads + server paths + indexes.** Every
@@ -629,7 +629,7 @@ mountainId)` reading `roles[mountainId]` (permission-service + `admin.ts` +
 are served from **baked local paths** (`/images/thumbnails/…`) — true only in the **e2e
 fixtures**. In **prod**, cat thumbnails (`cats.thumbnailUrl`) **and** album photos
 (`cat_images.imageUrl`) are full Firebase **Storage download URLs**, served live via Next
-`<Image>` (see [`docs/codebase/media-and-youtube.md`](../codebase/media-and-youtube.md#image-storage--serving-strategy)).
+`<Image>` (see [`docs/codebase/media-and-youtube.md`](../../codebase/media-and-youtube.md#image-storage--serving-strategy)).
 So:
 
 - **Thumbnail namespacing + a `cats.thumbnailUrl` migration are unnecessary** — prod values
@@ -721,7 +721,7 @@ So:
       chicken-and-egg → seed `roles[mountainId]` directly), rules/indexes-are-global note,
       shared-GA4 note, about-photos, and a verification checklist.
 - [ ] 🔑 Vercel/DNS and the other provisioning externalities — **moved out of this plan**
-      (2026-07-28) to [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) §2,
+      (2026-07-28) to [`mountain-2-prerequisites.md`](../pending/mountain-2-prerequisites.md) §2,
       which is now the single list of what must be true before a real mountain #2. Steps
       stay in the guide; this plan no longer tracks them.
 - [x] **Docs close-out (2026-07-25).** `multi-tenant-config.md` (Host-resolution + one-Firebase + the "which tenant is request-time, values still BAKED" watch-out + theme/roles-map +
@@ -771,7 +771,7 @@ sequential. Rough total: ~6–8 working sessions at the complexity-retirement ca
 ## 6. Deferred / out of scope (recorded, not lost)
 
 > ⚠️ **Anything here that gates a real mountain #2 has moved** (2026-07-28) to
-> [`mountain-2-prerequisites.md`](./mountain-2-prerequisites.md) — the single list, kept
+> [`mountain-2-prerequisites.md`](../pending/mountain-2-prerequisites.md) — the single list, kept
 > current. Add new mountain-#2 items there, not here. Two entries that used to sit in this
 > list are now resolved rather than deferred: **cross-subdomain SSO** is a recorded
 > **won't-fix** (owner, 2026-07-28), and **multi-role users** shipped in **M5.2** as the

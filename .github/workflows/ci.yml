@@ -32,10 +32,11 @@ jobs:
       - name: Unit + smoke tests
         run: npm test
 
-  # Work registry (work_tracking/). Three gates: the store must load without a constraint
+  # Work registry (work_tracking/). Four gates: the store must load without a constraint
   # error, registry.md must equal build(registry.ndjson) — a hand-edited or unrebuilt
-  # registry.md is caught here rather than drifting silently — and the living documents must
-  # stay inside the budgets in work_tracking/size-policy.json.
+  # registry.md is caught here rather than drifting silently — the living documents must
+  # stay inside the budgets in work_tracking/size-policy.json, and every relative markdown
+  # link must resolve.
   #
   # The size gate is here rather than written down as a rule because a rule is what failed:
   # docs/handoff/archive/ already held 34 files, so the archive mechanism was never missing,
@@ -57,6 +58,11 @@ jobs:
         run: node work_tracking/scripts/build.js --check
       - name: Living documents are within budget
         run: node work_tracking/scripts/size-check.js --report
+      # Turned on only after the 193 pre-existing breakages were dealt with (R-0437) — a gate
+      # that is red on the day it lands teaches everyone to ignore it. The script names its
+      # two exempt trees and why they are exempt.
+      - name: Relative markdown links resolve
+        run: node work_tracking/scripts/link-check.js --report
 
   # Emulator-backed Firestore security-rules tests (mountain-aware role model, M5.2).
   # The default `npm test` excludes tests/rules/** (they need the emulator), so this

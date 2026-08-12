@@ -11,7 +11,7 @@
 > [`docs/manuals/admin-manual/`](../admin-manual/README.md)).
 >
 > ⛔ **Read this first:**
-> [`docs/planning/mountain-2-prerequisites.md`](../../planning/mountain-2-prerequisites.md)
+> [`docs/planning/mountain-2-prerequisites.md`](../../planning/pending/mountain-2-prerequisites.md)
 > — what must be **fixed or decided** before a second mountain goes live. 🚨 Its **§1.1 is a
 > security defect**: `로그아웃` only signs the user out of the origin it runs on, so once a
 > second subdomain resolves, logging out of one mountain leaves the session live on the

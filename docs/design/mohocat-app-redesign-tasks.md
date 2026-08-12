@@ -17,7 +17,7 @@ completed landing work, the precedent for rigor.
 > shell/behavior — "a warm card floating over the map." Theme established from
 > `CatGallery` + `CatInfo`, codified in `design.md` (`### Modal`, `### Media
 viewer`), then propagated. Full narrative + theme spec in
-> [`docs/handoff/2026-06-21-handoff.md`](../handoff/2026-06-21-handoff.md).
+> [`docs/handoff/2026-06-21-handoff.md`](../handoff/archive/2026-06-21-handoff.md).
 
 ### A1. Shared building blocks — `src/components/ui/`
 
@@ -257,7 +257,7 @@ ring-brand-100`, brand-600 icon, gray-700 text). _Browser-verified list +
       state → 해요체 brand card; both clients' "새글 작성" hand-rolled gradients + both
       forms' submit buttons → shared `<Button variant="primary">`; the two forms'
       `bg-yellow` "login required" notices → brand-tinted cards (`bg-brand-50
-    ring-brand-100`) + 해요체; all `focus:ring-blue-500` input rings → `ring-brand-300`,
+ring-brand-100`) + 해요체; all `focus:ring-blue-500` input rings → `ring-brand-300`,
       the `bg-blue-100` "모두 선택" chip → brand, the `text-blue-600` checkbox →
       `accent-brand-500`; stripped stale `data-oid` across all 5 components + 4 page
       wrappers. tsc + smoke 25/25 green. ✅ Browser-verified the logged-out login-notice

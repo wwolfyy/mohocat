@@ -1,7 +1,7 @@
 # Deployment Cleanup Plan — Vercel-only
 
 **Created:** 2026-06-27 · **Owner workstream:** PROJECT_PLAN §7 (tech-debt) ·
-**Context:** [`docs/handoff/2026-06-27-handoff-5.md`](../handoff/2026-06-27-handoff-5.md)
+**Context:** [`docs/handoff/2026-06-27-handoff-5.md`](../../handoff/archive/2026-06-27-handoff-5.md)
 §1–§3.
 
 ## Goal

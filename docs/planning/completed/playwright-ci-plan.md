@@ -7,8 +7,8 @@
 > runs it (today there is **no** `.github/` at all; the only automation is the
 > pre-commit hook + Vitest structural smoke).
 >
-> Companion: [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) §10 ·
-> latest hand-off [`2026-07-11-handoff-28.md`](../handoff/2026-07-11-handoff-28.md)
+> Companion: [`PROJECT_PLAN.md`](../../../work_tracking/PROJECT_PLAN.md) §10 ·
+> latest hand-off [`2026-07-11-handoff-28.md`](../../handoff/archive/2026-07-11-handoff-28.md)
 >
 > **Cross-checked 2026-07-11** against the dead-code removal
 > ([`dead-code-removal-assessment-20260711.md`](./dead-code-removal-assessment-20260711.md),
