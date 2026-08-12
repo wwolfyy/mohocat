@@ -11,12 +11,12 @@
 
 | type | open | in-progress | deferred | done | abandoned | total |
 | --- | --- | --- | --- | --- | --- | --- |
-| task | 35 | 7 | 10 | 183 | 0 | **235** |
+| task | 38 | 7 | 10 | 183 | 0 | **238** |
 | bug | 1 | 0 | 0 | 52 | 0 | **53** |
 | change | 0 | 0 | 0 | 93 | 0 | **93** |
 | decision | 0 | 0 | 1 | 52 | 8 | **61** |
 | question | 7 | 0 | 0 | 0 | 0 | **7** |
-| **total** | **43** | **7** | **11** | **380** | **8** | **449** |
+| **total** | **46** | **7** | **11** | **380** | **8** | **452** |
 
 ## Open work
 
@@ -67,11 +67,14 @@
 | R-0364 | task | open | — | — | Click through the 탈퇴 flow in production with a throwaway account | [detail](./records/R-0364.md) |
 | R-0366 | question | open | — | — | Owner question: keep the dev-promotion model, or move to GitHub Flow? | [detail](./records/R-0366.md) |
 | R-0367 | task | open | — | — | Glance at the admin screens while logged in — the only unverified part of the colour work | [detail](./records/R-0367.md) |
-| R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
+| R-0426 | task | open | — | — | Phase 5 — un-pause application work; the successor workstream is still unnamed | [detail](./records/R-0426.md) |
 | R-0445 | task | open | — | — | Six record files state a status their row contradicts, and no gate compares the two | [detail](./records/R-0445.md) |
 | R-0446 | task | open | — | — | README.md labels the hand-off with a path it no longer has, and link-check cannot see it | [detail](./records/R-0446.md) |
 | R-0448 | task | open | — | — | Make emoji markers scarce in the four living documents, and gate the density | [detail](./records/R-0448.md) |
 | R-0449 | task | open | — | — | Audit the project-status memories against the registry, which now holds what most of them hold | [detail](./records/R-0449.md) |
+| R-0450 | task | open | — | — | Make the pre-commit hook verify rather than repair, and format on save instead | [detail](./records/R-0450.md) |
+| R-0451 | task | open | — | — | Replace next lint with ESLint directly, and resolve the two competing ESLint configs | [detail](./records/R-0451.md) |
+| R-0452 | task | open | — | — | Decide whether ESLint warnings should fail the build, and answer the nine that exist | [detail](./records/R-0452.md) |
 
 ## Deferred — parked, with the condition that would restart it
 
@@ -538,7 +541,7 @@
 | R-0423 | task | done | — | — | Phase 4 — break up `PROJECT_PLAN.md`'s mega-cells | [detail](./records/R-0423.md) |
 | R-0424 | task | done | — | — | Phase 4 — apply a size policy to `docs/handoff/`, so the living document cannot grow back | [detail](./records/R-0424.md) |
 | R-0425 | task | done | — | — | Phase 5 — rewrite `CLAUDE.md` and `AGENTS.md` to describe the new structure | [detail](./records/R-0425.md) |
-| R-0426 | task | open | — | — | Phase 5 — un-pause application work; tenancy T0 resumes | [detail](./records/R-0426.md) |
+| R-0426 | task | open | — | — | Phase 5 — un-pause application work; the successor workstream is still unnamed | [detail](./records/R-0426.md) |
 | R-0427 | task | deferred | — | — | Repoint the 20 companion-document `detail_ref`s when the archive move happens | [detail](./records/R-0427.md) |
 | R-0428 | task | done | — | — | Move `PROJECT_PLAN.md` and `HANDOFF.md` into `work_tracking/` | [detail](./records/R-0428.md) |
 | R-0429 | bug | done | — | — | The `HANDOFF.md` import wrote all 57 record files with an empty body, and every count still reported success | [detail](./records/R-0429.md) |
@@ -562,3 +565,6 @@
 | R-0447 | change | done | — | — | Seven places in AGENTS.md and WORKFLOW.md explained less than they appeared to | [detail](./records/R-0447.md) |
 | R-0448 | task | open | — | — | Make emoji markers scarce in the four living documents, and gate the density | [detail](./records/R-0448.md) |
 | R-0449 | task | open | — | — | Audit the project-status memories against the registry, which now holds what most of them hold | [detail](./records/R-0449.md) |
+| R-0450 | task | open | — | — | Make the pre-commit hook verify rather than repair, and format on save instead | [detail](./records/R-0450.md) |
+| R-0451 | task | open | — | — | Replace next lint with ESLint directly, and resolve the two competing ESLint configs | [detail](./records/R-0451.md) |
+| R-0452 | task | open | — | — | Decide whether ESLint warnings should fail the build, and answer the nine that exist | [detail](./records/R-0452.md) |

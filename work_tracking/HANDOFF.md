@@ -11,11 +11,14 @@
 
 ---
 
-## ▶️ In flight: the work-tracking migration. Application work is PAUSED.
+## ▶️ In flight: work-tracking quality. Application work is still PAUSED.
 
-**Owner decision, 2026-08-08.** The current workstream is the restructure of how work is
-tracked — not tenancy T0, and not any feature or bug work. **Application work restarts when
-`R-0426` lands**, which is the only migration record still open.
+**Owner decision, 2026-08-08, still in force.** The workstream is how work is tracked — not
+tenancy T0, and not any feature or bug work. The migration itself finished; what has continued
+since is quality work on the result, and that is what the open records below are.
+
+⚠️ **Application work restarts only when `R-0426` lands, and `R-0426` needs the owner** — see the
+next section. **An agent picking this file up should start at "Start here", not at `R-0426`.**
 
 📄 **The registry is the tracker, so the open records _are_ the resume point:**
 
@@ -28,42 +31,22 @@ The design and the settled storage decision are in
 the phase sequence is in
 [`work-tracking-migration-plan-20260808.md`](./work-tracking-migration-plan-20260808.md).
 
-| Phase | What                                                 | State                        |
-| ----- | ---------------------------------------------------- | ---------------------------- |
-| 1     | Tooling — schema, scripts, CI gate                   | ✅ done                      |
-| 2     | Import all seven source files                        | ✅ done — all 7              |
-| 3a    | Migrate the job tracker itself — the dogfooding test | ✅ done — `R-0419`           |
-| 3     | Judgment work — dedup, `split_from`, cross-refs      | ✅ done — `R-0420`…`R-0422`  |
-| 4     | Adjacent fixes — mega-cells, size policy             | ✅ done — `R-0423`, `R-0424` |
-| 5     | Cut over — rewrite `AGENTS.md`, un-pause             | 🔄 all but **`R-0426`**      |
+### ⏸️ Waiting on the owner — do NOT start these
 
-### 🔴 Start here, so you do not have to derive it
+**`R-0426` — un-pause application work.** ⚠️ **Not a starting point, and not an agent's to take.**
+Un-pausing states what happens next, so it cannot ride along inside another change.
 
-🎯 **The migration is finished except for one record: `R-0426` — un-pause application work.**
-Deliberately its own step and deliberately small: delete the ⏸️ notice near the top of
-`AGENTS.md`, delete this file's "Application work is PAUSED" heading, and say what resumes.
-🔑 **It is an owner decision, not a cleanup** — un-pausing states what happens next, so it must
-not ride along inside some other change. **Ask the owner before doing it.**
+📌 **The owner half-answered it on 2026-08-09**, and `R-0426` rev 2 records the exchange: yes to
+un-pausing, and **no to tenancy T0**, which this record's original title had assumed. The successor
+workstream was never named, and naming it is the only thing left. ⚠️ **Anything elsewhere in the
+repository still calling T0 "the presumed answer" predates that and is superseded.**
 
-📌 **Tenancy T0 is the presumed answer** unless the owner picks something else — see the ⚠️ note
-below. No T0 work exists yet, so it starts clean from the plan's §3.
+✅ **Every migration phase is closed except `R-0426`.** Phases 1–5 and both owner decisions
+(`R-0436`, `R-0437`) are done and each has its record; query them rather than reading a summary
+here. ⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which
+breaks 20 `detail_ref`s in one move.
 
-✅ **Phases 1–4 and the rest of 5 are closed.** `R-0423` made `PROJECT_PLAN.md`'s snapshot table
-an index again (**228 KB → 106 KB**); `R-0424` made the document size budgets a **CI gate** (📏
-below); `R-0425` rewrote `AGENTS.md` around the registry, and `R-0428` moved this file and
-`PROJECT_PLAN.md` into `work_tracking/`. Two defects surfaced on the way and are also closed —
-`R-0435` (ten records the import had truncated mid-sentence) and `R-0438` (a measured-sounding
-figure that turned out to be unreproducible).
-
-✅ **`R-0436` and `R-0437` closed on 2026-08-09**, both on owner decisions taken that day.
-**`R-0436`** — a title may be rewritten while bodies stay verbatim, so 139 truncated titles were
-rewritten (not the 45 the record claimed; its `LIKE` detection missed every wrap landing mid-noun).
-**`R-0437`** — 52 link depth errors repaired outside `records/`; the 26 inside stay broken because
-record prose is verbatim, and `link-check.js` is now a CI gate that exempts them by name.
-⚠️ **`R-0427` stays deferred** — it waits on the owner archiving `docs/planning/**`, which breaks
-20 `detail_ref`s in one move.
-
-### 🔴 Next session: `R-0448` marker scarcity, then `R-0449` memory audit
+### 🔴 Start here: `R-0448`, then `R-0449`, then `R-0450`–`R-0452`
 
 **`R-0449` — audit the agent's project-status memories against the registry.** Owner-raised
 2026-08-13. Nine `type: project` memories hold 38 KB at
@@ -89,6 +72,13 @@ reasoning are one habit. Four other rules from the same review: no rhetorical fl
 an explanation should be; "but" not "and" when the second clause contradicts the first; cause before
 effect rather than a causal chain buried in a trailing clause; define any term coined during the work
 before using it.
+
+**Then the 2026-08-13 tooling review, which has its own order.** `R-0450` makes the pre-commit hook
+verify rather than repair — `lint-staged` currently rewrites staged content _after_ the gates have
+run, so verified bytes need not be committed bytes. `R-0451` replaces the deprecated `next lint`
+with ESLint directly and resolves two configs that disagree. `R-0452` decides whether warnings
+should fail. ⚠️ **Do `R-0451` before `R-0452`** — it may change which rules run, so making warnings
+fatal first means answering a list that is about to change.
 
 **Before touching anything**, run the four gates — they take seconds and they prove the store is
 sane: `node work_tracking/tests/run.js` (**5 files**, 125 assertions — `link.test.js` was added
@@ -162,11 +152,10 @@ naming:
   제목; popup precedence), `R-0366` (branch workflow — keep `dev`-promotion or move to GitHub
   Flow). 📌 One more sits above, in **Start here**: `R-0426` (un-pause).
 
-📊 **Open work on 2026-08-13: 49 items — 41 tasks · 7 questions · 1 bug.** The bug is `R-0347`,
-named above. 📌 **Three were opened on 12–13 August rather than found undone**: `R-0445` (six record
-files whose frontmatter contradicts their row), `R-0446` (`README.md` labels the hand-off with a path
-it no longer has), and `R-0448` (marker scarcity). ⚠️ **That count is a snapshot and will rot** —
-regenerate it with
+📊 **Open work on 2026-08-13: 53 items — 45 tasks · 7 questions · 1 bug.** The bug is `R-0347`,
+named above. 📌 **Eight were opened on 12–13 August rather than found undone** — `R-0445` through
+`R-0452` — so the count rose while work was being closed. ⚠️ **That count is a snapshot and will
+rot** — regenerate it with
 `checkout.js --query "status IN ('open','in-progress')" --out /tmp/o.json`.
 
 ---
@@ -188,13 +177,13 @@ three passes (`71e89d4`, `c08b0d5`, `89df1eb`), `R-0423` (`efed947`), the `R-043
 orientation split (`157b56d`). 📌 **Count them with `git rev-list --count origin/dev..dev`**
 rather than trusting this list — a line cannot count the commit that writes it.
 
-🔴 **The 2026-08-12/13 session is UNCOMMITTED — roughly 190 changed files sitting in the working
-tree.** `git rev-list --count origin/dev..dev` still reads 30, unchanged since 2026-08-09, because
-nothing from that session was committed. It is a single coherent change and the gates are green on
-it: the `/handoff` skill, `WORKFLOW.md` split out of `SCHEMA.md`, the R1–R4 rules in `AGENTS.md`
-§A, `link-check.js` plus its CI step and tests, 139 rewritten titles with their record files, 52
-repaired links, and records `R-0436` rev 3 through `R-0448`. ⚠️ **Verify with `git status -sb`
-before assuming any of it has landed.**
+✅ **The 2026-08-12/13 work landed as `704020d`** — 192 files, the `/handoff` skill, `WORKFLOW.md`
+split out of `SCHEMA.md`, the R1–R4 rules in `AGENTS.md` §A, `link-check.js` with its CI step and
+tests, 139 rewritten titles, 52 repaired links, and records through `R-0449`.
+
+🔴 **Five files are uncommitted on top of it** — records `R-0450`, `R-0451`, `R-0452`, the registry
+they were checked into, and this file. ⚠️ **Run `git status -sb` rather than trusting this
+paragraph.**
 
 ⚠️ **The two untracked `code-graph-tooling-*` files in `docs/planning/pending/` belong to a
 different workstream. Do not sweep them into a commit** — `git add -A` did exactly that once and
