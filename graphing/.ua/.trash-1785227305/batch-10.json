@@ -1,0 +1,342 @@
+{
+  "nodes": [
+    {
+      "id": "config:config/deployment/cloud-run-service.yaml",
+      "type": "config",
+      "name": "cloud-run-service.yaml",
+      "filePath": "config/deployment/cloud-run-service.yaml",
+      "summary": "Knative/Cloud Run Service manifest for a container named 'mcathcat' (autoscaling 0-10, 2Gi/2vCPU, port 8080, 300s timeout). Legacy artifact from the abandoned Cloud Run deployment path — the project now deploys exclusively to Vercel.",
+      "tags": ["infrastructure", "deployment", "containerization", "legacy", "orchestration"],
+      "complexity": "simple",
+      "languageNotes": "Knative serving.knative.dev/v1 Service with run.googleapis.com annotations for CPU throttling, memory and scaling bounds."
+    },
+    {
+      "id": "config:config/mountains/mountains.json",
+      "type": "config",
+      "name": "mountains.json",
+      "filePath": "config/mountains/mountains.json",
+      "summary": "The multi-tenant source of truth: per-mountain public configuration (branding, Korean about-page copy and photos, host domains, storagePrefix, theme, features, social links) for the 'geyang' and 'manisan' tenants, plus a _shared block and _meta version stamp.",
+      "tags": ["configuration", "multi-tenant", "branding", "feature-flags", "static-data"],
+      "complexity": "moderate",
+      "languageNotes": "Underscore-prefixed keys (_meta, _shared) are reserved and must be excluded when iterating tenant ids; secrets are never stored here — they are merged in from env at read time."
+    },
+    {
+      "id": "config:config/permissions.json",
+      "type": "config",
+      "name": "permissions.json",
+      "filePath": "config/permissions.json",
+      "summary": "Declarative RBAC matrix defining four roles (admin, butler-ground, butler-internet, viewer) with their permission lists, plus a per-mountain block naming admin users and the default role for each tenant.",
+      "tags": ["configuration", "security", "permissions", "rbac", "multi-tenant"],
+      "complexity": "simple",
+      "languageNotes": "The mountains block must stay coherent with config/mountains/mountains.json — a new tenant needs an entry in both files."
+    },
+    {
+      "id": "file:src/app/[mountain]/pages/privacy/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/[mountain]/pages/privacy/page.tsx",
+      "summary": "Tenant-scoped 개인정보처리방침 (Privacy Policy) route — a static prose Server Component implementing the PIPA Art. 30 disclosure, grounded in what the app actually collects.",
+      "tags": ["page", "compliance", "legal", "server-component", "static-content"],
+      "complexity": "complex",
+      "languageNotes": "Next.js App Router page exporting a `metadata` object; a local Section helper composes the repeated heading/body prose blocks."
+    },
+    {
+      "id": "file:src/app/[mountain]/pages/terms/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/[mountain]/pages/terms/page.tsx",
+      "summary": "Tenant-scoped 이용약관 (Terms of Use) route — a static prose Server Component covering service terms and liability disclaimers for member sign-up, community posts and YouTube video uploads.",
+      "tags": ["page", "compliance", "legal", "server-component", "static-content"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/globals.css",
+      "type": "file",
+      "name": "globals.css",
+      "filePath": "src/app/globals.css",
+      "summary": "Global stylesheet: Tailwind layer imports, the :root design tokens (including the --color-primary per-tenant brand variable the [mountain] layout overrides), base heading styles, line-clamp utilities, and the shared keyframe animation library for modals, dropdowns and bubble effects.",
+      "tags": ["styling", "tailwind", "design-tokens", "animation", "theming"],
+      "complexity": "complex",
+      "languageNotes": "Uses Tailwind's @layer base/@layer utilities with @apply, and exposes --color-primary as the single per-tenant theming hook (default #facc15 = geyang yellow)."
+    },
+    {
+      "id": "file:src/app/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/layout.tsx",
+      "summary": "Root App Router layout — the tenant-independent HTML shell providing the Inter font, global CSS, base metadata/viewport, and the conditionally rendered GA4 gtag snippet. All tenant-scoped providers and chrome live in [mountain]/layout.tsx instead.",
+      "tags": ["entry-point", "layout", "analytics", "server-component", "app-router"],
+      "complexity": "simple",
+      "languageNotes": "GA4 loads only when NEXT_PUBLIC_GA_MEASUREMENT_ID is set, and configures send_page_view:false so AnalyticsTracker can attach mountain_id to every page_view."
+    },
+    {
+      "id": "file:src/components/admin/media/CatTagField.tsx",
+      "type": "file",
+      "name": "CatTagField.tsx",
+      "filePath": "src/components/admin/media/CatTagField.tsx",
+      "summary": "Controlled comma-separated cat-tag input for the admin media tagging pages, rendering current tags as removable chips and delegating cat selection to a page-owned CatSelectorModal.",
+      "tags": ["component", "admin", "form-input", "media", "client-component"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/admin/media/MediaGrid.tsx",
+      "type": "file",
+      "name": "MediaGrid.tsx",
+      "filePath": "src/components/admin/media/MediaGrid.tsx",
+      "summary": "Generic card-grid container with an empty state for the admin media tagging pages; the per-item card rendering is injected as a render-prop slot so pages keep ownership of badges, thumbnails and selection wiring.",
+      "tags": ["component", "admin", "layout", "render-prop", "client-component"],
+      "complexity": "simple",
+      "languageNotes": "Generic over `T extends { id: string }`, keeping the grid reusable across image and video item shapes."
+    },
+    {
+      "id": "file:src/components/admin/media/MediaStatsCards.tsx",
+      "type": "file",
+      "name": "MediaStatsCards.tsx",
+      "filePath": "src/components/admin/media/MediaStatsCards.tsx",
+      "summary": "Purely presentational statistics card row (total / untagged / tagged / needs-date-parse) for the admin media tagging pages; the pages compute the numbers and choose each card's accent color.",
+      "tags": ["component", "admin", "presentational", "media", "client-component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/admin/media/PaginationBar.tsx",
+      "type": "file",
+      "name": "PaginationBar.tsx",
+      "filePath": "src/components/admin/media/PaginationBar.tsx",
+      "summary": "Numbered pagination controls with a configurable odd-sized sliding page window (7 for tag-images, 5 for tag-videos), rendering nothing when there is only a single page.",
+      "tags": ["component", "admin", "pagination", "navigation", "client-component"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/admin/media/useDateAutoParse.ts",
+      "type": "file",
+      "name": "useDateAutoParse.ts",
+      "filePath": "src/components/admin/media/useDateAutoParse.ts",
+      "summary": "Shared 자동 날짜 인식 hook for the admin media tagging pages: finds items missing a creation date but with a parseable one, processes them with per-item progress feedback, persists each date through an injected updater, and returns a success/failure report.",
+      "tags": ["hook", "admin", "media", "batch-processing", "client-component"],
+      "complexity": "moderate",
+      "languageNotes": "Dependency-injection style generic hook — needsDate/parse/applyUpdate/mergeParsedDate are all supplied by the caller, so no service-layer coupling leaks into the hook."
+    },
+    {
+      "id": "function:src/app/[mountain]/pages/privacy/page.tsx:PrivacyPolicyPage",
+      "type": "function",
+      "name": "PrivacyPolicyPage",
+      "filePath": "src/app/[mountain]/pages/privacy/page.tsx",
+      "lineRange": [30, 244],
+      "summary": "Default-exported Server Component rendering the full Korean privacy policy document, section by section, including the privacy officer contact and effective date constants.",
+      "tags": ["page-component", "compliance", "server-component", "static-content"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/[mountain]/pages/terms/page.tsx:TermsOfUsePage",
+      "type": "function",
+      "name": "TermsOfUsePage",
+      "filePath": "src/app/[mountain]/pages/terms/page.tsx",
+      "lineRange": [27, 155],
+      "summary": "Default-exported Server Component rendering the full Korean terms-of-use document with its effective date and liability disclaimers.",
+      "tags": ["page-component", "compliance", "server-component", "static-content"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/layout.tsx:RootLayout",
+      "type": "function",
+      "name": "RootLayout",
+      "filePath": "src/app/layout.tsx",
+      "lineRange": [32, 58],
+      "summary": "Renders the html/body shell with the Inter font class and, when a GA4 measurement id is configured, injects the gtag loader and init scripts before the children.",
+      "tags": ["entry-point", "layout", "analytics", "server-component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/admin/media/CatTagField.tsx:CatTagField",
+      "type": "function",
+      "name": "CatTagField",
+      "filePath": "src/components/admin/media/CatTagField.tsx",
+      "lineRange": [19, 80],
+      "summary": "Renders the tag text input plus a cat-selector trigger and chip list, with a removeTag helper that splits, trims, filters and rejoins the comma-separated value on removal.",
+      "tags": ["component", "form-input", "admin", "media"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/admin/media/MediaGrid.tsx:MediaGrid",
+      "type": "function",
+      "name": "MediaGrid",
+      "filePath": "src/components/admin/media/MediaGrid.tsx",
+      "lineRange": [17, 37],
+      "summary": "Maps the item list through the caller-supplied renderCard slot into a responsive grid, falling back to the provided empty message when there are no items.",
+      "tags": ["component", "render-prop", "layout", "admin"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/admin/media/MediaStatsCards.tsx:MediaStatsCards",
+      "type": "function",
+      "name": "MediaStatsCards",
+      "filePath": "src/components/admin/media/MediaStatsCards.tsx",
+      "lineRange": [30, 40],
+      "summary": "Maps the supplied MediaStatCard descriptors into a row of labelled stat cards with optional per-card value coloring and note lines.",
+      "tags": ["component", "presentational", "admin", "media"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/admin/media/PaginationBar.tsx:PaginationBar",
+      "type": "function",
+      "name": "PaginationBar",
+      "filePath": "src/components/admin/media/PaginationBar.tsx",
+      "lineRange": [20, 78],
+      "summary": "Computes the sliding window of page numbers around the current page and renders previous/next plus numbered buttons, clamping page changes with Math.min/Math.max before invoking onPageChange.",
+      "tags": ["component", "pagination", "navigation", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/admin/media/useDateAutoParse.ts:useDateAutoParse",
+      "type": "function",
+      "name": "useDateAutoParse",
+      "filePath": "src/components/admin/media/useDateAutoParse.ts",
+      "lineRange": [44, 119],
+      "summary": "Generic React hook that memoizes the set of parseable-but-undated items, then sequentially parses and persists each date while tracking parsing state and per-item processing ids, returning an aggregated success/failure report.",
+      "tags": ["hook", "batch-processing", "state-management", "admin"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "file:src/app/globals.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/[mountain]/pages/privacy/page.tsx",
+      "target": "function:src/app/[mountain]/pages/privacy/page.tsx:PrivacyPolicyPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/[mountain]/pages/privacy/page.tsx",
+      "target": "function:src/app/[mountain]/pages/privacy/page.tsx:PrivacyPolicyPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/[mountain]/pages/terms/page.tsx",
+      "target": "function:src/app/[mountain]/pages/terms/page.tsx:TermsOfUsePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/[mountain]/pages/terms/page.tsx",
+      "target": "function:src/app/[mountain]/pages/terms/page.tsx:TermsOfUsePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "function:src/app/layout.tsx:RootLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "function:src/app/layout.tsx:RootLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/media/CatTagField.tsx",
+      "target": "function:src/components/admin/media/CatTagField.tsx:CatTagField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/admin/media/CatTagField.tsx",
+      "target": "function:src/components/admin/media/CatTagField.tsx:CatTagField",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/media/MediaGrid.tsx",
+      "target": "function:src/components/admin/media/MediaGrid.tsx:MediaGrid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/admin/media/MediaGrid.tsx",
+      "target": "function:src/components/admin/media/MediaGrid.tsx:MediaGrid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/media/MediaStatsCards.tsx",
+      "target": "function:src/components/admin/media/MediaStatsCards.tsx:MediaStatsCards",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/admin/media/MediaStatsCards.tsx",
+      "target": "function:src/components/admin/media/MediaStatsCards.tsx:MediaStatsCards",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/media/PaginationBar.tsx",
+      "target": "function:src/components/admin/media/PaginationBar.tsx:PaginationBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/admin/media/PaginationBar.tsx",
+      "target": "function:src/components/admin/media/PaginationBar.tsx:PaginationBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/media/useDateAutoParse.ts",
+      "target": "function:src/components/admin/media/useDateAutoParse.ts:useDateAutoParse",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/admin/media/useDateAutoParse.ts",
+      "target": "function:src/components/admin/media/useDateAutoParse.ts:useDateAutoParse",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:config/mountains/mountains.json",
+      "target": "file:src/utils/config.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:config/permissions.json",
+      "target": "file:src/config/permission-config.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/app/[mountain]/pages/privacy/page.tsx",
+      "target": "file:src/app/[mountain]/pages/terms/page.tsx",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

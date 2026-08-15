@@ -1,0 +1,847 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/components/forms/MediaUploadField.tsx",
+   "type": "file",
+   "name": "MediaUploadField.tsx",
+   "filePath": "src/components/forms/MediaUploadField.tsx",
+   "summary": "Presentational media field for the simple-content forms: multi-file selection plus an add-by-URL list, with removal controls for both.",
+   "tags": [
+    "component",
+    "form",
+    "media",
+    "presentational"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/forms/MediaUploadField.tsx:MediaUploadField",
+   "type": "function",
+   "name": "MediaUploadField",
+   "filePath": "src/components/forms/MediaUploadField.tsx",
+   "lineRange": [
+    48,
+    157
+   ],
+   "summary": "Renders the file input and URL entry box for images or videos and reports selections upward via onFilesChange / onUrlsChange.",
+   "tags": [
+    "component",
+    "form",
+    "upload",
+    "controlled"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/forms/uploadStrategies.ts",
+   "type": "file",
+   "name": "uploadStrategies.ts",
+   "filePath": "src/components/forms/uploadStrategies.ts",
+   "summary": "Injectable upload strategies shared by all content forms: direct Firebase Storage image upload, YouTube video upload via the API route, and signed-URL image upload that also records a cat_images Firestore entry.",
+   "tags": [
+    "utility",
+    "upload",
+    "media",
+    "service",
+    "strategy"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Strategies are plain async functions injected into the form hooks, keeping the media components purely presentational."
+  },
+  {
+   "id": "function:src/components/forms/uploadStrategies.ts:uploadImagesToStorage",
+   "type": "function",
+   "name": "uploadImagesToStorage",
+   "filePath": "src/components/forms/uploadStrategies.ts",
+   "lineRange": [
+    39,
+    50
+   ],
+   "summary": "Uploads image files to Firebase Storage under the tenant's storage prefix and returns their download URLs.",
+   "tags": [
+    "upload",
+    "storage",
+    "async",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/forms/uploadStrategies.ts:uploadVideoToYouTube",
+   "type": "function",
+   "name": "uploadVideoToYouTube",
+   "filePath": "src/components/forms/uploadStrategies.ts",
+   "lineRange": [
+    75,
+    113
+   ],
+   "summary": "Posts a single video file with its metadata to the upload-youtube API route and returns the resulting video URL, failing loudly on a malformed response.",
+   "tags": [
+    "upload",
+    "youtube",
+    "async",
+    "api-client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/forms/uploadStrategies.ts:uploadVideosToYouTube",
+   "type": "function",
+   "name": "uploadVideosToYouTube",
+   "filePath": "src/components/forms/uploadStrategies.ts",
+   "lineRange": [
+    116,
+    121
+   ],
+   "summary": "Uploads several videos in parallel by mapping uploadVideoToYouTube over the file list.",
+   "tags": [
+    "upload",
+    "youtube",
+    "async",
+    "batch-operations"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "type": "function",
+   "name": "uploadImagesWithSignedUrls",
+   "filePath": "src/components/forms/uploadStrategies.ts",
+   "lineRange": [
+    156,
+    224
+   ],
+   "summary": "Requests signed upload URLs, PUTs each image, then creates the matching cat_images Firestore record so uploads surface in the album and tagging tools.",
+   "tags": [
+    "upload",
+    "storage",
+    "signed-url",
+    "async"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/forms/useRichContentForm.ts",
+   "type": "file",
+   "name": "useRichContentForm.ts",
+   "filePath": "src/components/forms/useRichContentForm.ts",
+   "summary": "Shared submit/upload flow for the rich-content form family (currently 집사톡): per-item media state with filename date auto-parse, cat-tag selection, YouTube and signed-URL uploads, post assembly and the create/reset/redirect tail, all parameterized by config.",
+   "tags": [
+    "hook",
+    "form",
+    "upload",
+    "shared",
+    "media"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "type": "function",
+   "name": "useRichContentForm",
+   "filePath": "src/components/forms/useRichContentForm.ts",
+   "lineRange": [
+    52,
+    279
+   ],
+   "summary": "Returns the rich form's state, media change handlers and submit handler, injecting the owning form's createPost, title fallbacks and redirect path.",
+   "tags": [
+    "hook",
+    "form",
+    "async",
+    "upload",
+    "state-management"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/forms/useSimpleContentForm.ts",
+   "type": "file",
+   "name": "useSimpleContentForm.ts",
+   "filePath": "src/components/forms/useSimpleContentForm.ts",
+   "summary": "Shared submit/upload flow for the simple-content form family (공지사항 + 입양홍보): title/message and media state, validation, direct-storage image and YouTube video upload, Korea-time stamping, post assembly, success dialog and redirect.",
+   "tags": [
+    "hook",
+    "form",
+    "upload",
+    "shared",
+    "validation"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "type": "function",
+   "name": "useSimpleContentForm",
+   "filePath": "src/components/forms/useSimpleContentForm.ts",
+   "lineRange": [
+    49,
+    197
+   ],
+   "summary": "Returns the simple form's field state and submit handler, adding the tenant playlist and any extra playlists/post data supplied by the owning form.",
+   "tags": [
+    "hook",
+    "form",
+    "async",
+    "upload",
+    "multi-tenant"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/ui/useDialog.tsx",
+   "type": "file",
+   "name": "useDialog.tsx",
+   "filePath": "src/components/ui/useDialog.tsx",
+   "summary": "Promise-based replacement for window.alert/confirm built on the shared ui/Modal system; the owner renders the returned element once and awaits alert/confirm calls.",
+   "tags": [
+    "hook",
+    "ui",
+    "modal",
+    "dialog",
+    "shared"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Resolves a stored promise resolver on close so `await dialog.confirm(...)` preserves the blocking sequencing of native dialogs."
+  },
+  {
+   "id": "function:src/components/ui/useDialog.tsx:useDialog",
+   "type": "function",
+   "name": "useDialog",
+   "filePath": "src/components/ui/useDialog.tsx",
+   "lineRange": [
+    31,
+    92
+   ],
+   "summary": "Manages the alert/confirm dialog state and resolver ref and returns { alert, confirm, element } for the host component to render.",
+   "tags": [
+    "hook",
+    "ui",
+    "modal",
+    "async"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/constants/adminStrings.ts",
+   "type": "file",
+   "name": "adminStrings.ts",
+   "filePath": "src/constants/adminStrings.ts",
+   "summary": "Centralized Korean copy for every admin surface, organized by area (common, nav, cats, points, members, media, migration, ...), keeping admin voice consistent and edits in one place.",
+   "tags": [
+    "constants",
+    "i18n",
+    "admin",
+    "strings",
+    "single-source"
+   ],
+   "complexity": "complex",
+   "languageNotes": "A single deeply nested `as const`-style object rather than an i18n library — the app is Korean-locale only."
+  },
+  {
+   "id": "file:src/lib/auth/authHeader.ts",
+   "type": "file",
+   "name": "authHeader.ts",
+   "filePath": "src/lib/auth/authHeader.ts",
+   "summary": "Tiny auth helper that turns a Firebase user into the Authorization bearer header used by every authenticated admin API call.",
+   "tags": [
+    "utility",
+    "auth",
+    "api-client",
+    "shared"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "function",
+   "name": "authHeader",
+   "filePath": "src/lib/auth/authHeader.ts",
+   "lineRange": [
+    11,
+    14
+   ],
+   "summary": "Fetches the user's Firebase ID token and returns it as an Authorization bearer header object.",
+   "tags": [
+    "auth",
+    "utility",
+    "async",
+    "token"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/utils/dateParser.ts",
+   "type": "file",
+   "name": "dateParser.ts",
+   "filePath": "src/utils/dateParser.ts",
+   "summary": "Date-parsing utilities for media metadata: extracts recording dates from titles and filenames, formats dates for date inputs, and converts calendar dates into UTC instants.",
+   "tags": [
+    "utility",
+    "date",
+    "parsing",
+    "media",
+    "formatting"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/dateParser.ts:parseDateFromText",
+   "type": "function",
+   "name": "parseDateFromText",
+   "filePath": "src/utils/dateParser.ts",
+   "lineRange": [
+    7,
+    78
+   ],
+   "summary": "Core regex-driven extractor that scans text for the supported date/time patterns and returns a validated Date, warning when a match fails to parse.",
+   "tags": [
+    "utility",
+    "parsing",
+    "date",
+    "regex"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/utils/dateParser.ts:parseRecordingDateFromTitle",
+   "type": "function",
+   "name": "parseRecordingDateFromTitle",
+   "filePath": "src/utils/dateParser.ts",
+   "lineRange": [
+    80,
+    81
+   ],
+   "summary": "Thin wrapper extracting the recording date from a media title.",
+   "tags": [
+    "utility",
+    "date",
+    "parsing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/dateParser.ts:parseCreatedDateFromFilename",
+   "type": "function",
+   "name": "parseCreatedDateFromFilename",
+   "filePath": "src/utils/dateParser.ts",
+   "lineRange": [
+    83,
+    84
+   ],
+   "summary": "Thin wrapper extracting the creation date encoded in an uploaded file's name.",
+   "tags": [
+    "utility",
+    "date",
+    "parsing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/dateParser.ts:formatDateForInput",
+   "type": "function",
+   "name": "formatDateForInput",
+   "filePath": "src/utils/dateParser.ts",
+   "lineRange": [
+    98,
+    103
+   ],
+   "summary": "Formats a Date into the yyyy-MM-dd string an <input type=\"date\"> expects.",
+   "tags": [
+    "utility",
+    "date",
+    "formatting"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/dateParser.ts:calendarDateToInstant",
+   "type": "function",
+   "name": "calendarDateToInstant",
+   "filePath": "src/utils/dateParser.ts",
+   "lineRange": [
+    120,
+    141
+   ],
+   "summary": "Converts a calendar date string into a UTC Date instant, validating the parsed components round-trip.",
+   "tags": [
+    "utility",
+    "date",
+    "validation",
+    "timezone"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/components/forms/MediaUploadField.tsx",
+   "target": "function:src/components/forms/MediaUploadField.tsx:MediaUploadField",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/MediaUploadField.tsx",
+   "target": "function:src/components/forms/MediaUploadField.tsx:MediaUploadField",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadImagesToStorage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideoToYouTube",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideosToYouTube",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadImagesToStorage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideoToYouTube",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideosToYouTube",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/uploadStrategies.ts:uploadImagesToStorage",
+   "target": "function:src/services/index.ts:getStorageService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/uploadStrategies.ts:uploadVideoToYouTube",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/uploadStrategies.ts:uploadVideosToYouTube",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideoToYouTube",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "target": "function:src/services/index.ts:getImageService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "target": "function:src/utils/dateParser.ts:calendarDateToInstant",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideoToYouTube",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/components/ui/useDialog.tsx:useDialog",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/utils/dateParser.ts:parseRecordingDateFromTitle",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/utils/dateParser.ts:formatDateForInput",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/utils/config.ts:getMountainName",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/utils/config.ts:getYouTubePlaylistId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadImagesToStorage",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/components/forms/uploadStrategies.ts:uploadVideosToYouTube",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/components/ui/useDialog.tsx:useDialog",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/utils/config.ts:getMountainConfig",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/utils/config.ts:getYouTubePlaylistId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/ui/useDialog.tsx",
+   "target": "function:src/components/ui/useDialog.tsx:useDialog",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ui/useDialog.tsx",
+   "target": "function:src/components/ui/useDialog.tsx:useDialog",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/auth/authHeader.ts",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/auth/authHeader.ts",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:parseDateFromText",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:parseRecordingDateFromTitle",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:parseCreatedDateFromFilename",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:formatDateForInput",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:calendarDateToInstant",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:parseRecordingDateFromTitle",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:parseCreatedDateFromFilename",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:formatDateForInput",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/dateParser.ts",
+   "target": "function:src/utils/dateParser.ts:calendarDateToInstant",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/dateParser.ts:parseRecordingDateFromTitle",
+   "target": "function:src/utils/dateParser.ts:parseDateFromText",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/dateParser.ts:parseCreatedDateFromFilename",
+   "target": "function:src/utils/dateParser.ts:parseDateFromText",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/uploadStrategies.ts",
+   "target": "file:src/utils/dateParser.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/components/forms/MediaItemList.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/components/forms/uploadStrategies.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/components/ui/useDialog.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useRichContentForm.ts",
+   "target": "file:src/utils/dateParser.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "file:src/components/forms/uploadStrategies.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "file:src/components/ui/useDialog.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/forms/useSimpleContentForm.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ui/useDialog.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ui/useDialog.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

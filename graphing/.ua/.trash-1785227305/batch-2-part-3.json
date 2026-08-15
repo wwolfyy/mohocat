@@ -1,0 +1,787 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/components/ui/useModalLayer.ts",
+   "type": "file",
+   "name": "useModalLayer.ts",
+   "filePath": "src/components/ui/useModalLayer.ts",
+   "summary": "Hook managing a global modal layer stack: z-index assignment, top-most escape/arrow key routing and browser back-button dismissal.",
+   "tags": [
+    "hook",
+    "modal",
+    "ui-primitive",
+    "state-management"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Keeps a module-level stack outside React state so only the top-most layer reacts to Escape and popstate."
+  },
+  {
+   "id": "function:src/components/ui/useModalLayer.ts:useModalLayer",
+   "type": "function",
+   "name": "useModalLayer",
+   "filePath": "src/components/ui/useModalLayer.ts",
+   "lineRange": [
+    66,
+    123
+   ],
+   "summary": "Registers an open modal on the shared layer stack, returning its z-index and wiring escape, arrow-key and history-back handlers.",
+   "tags": [
+    "hook",
+    "modal",
+    "event-handler"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/contexts/AnnouncementModalContext.tsx",
+   "type": "file",
+   "name": "AnnouncementModalContext.tsx",
+   "filePath": "src/contexts/AnnouncementModalContext.tsx",
+   "summary": "Context provider that fetches the active announcement for the mountain on first load and shows it once per session in the announcement modal.",
+   "tags": [
+    "context",
+    "provider",
+    "announcement",
+    "modal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/contexts/AnnouncementModalContext.tsx:useAnnouncementModal",
+   "type": "function",
+   "name": "useAnnouncementModal",
+   "filePath": "src/contexts/AnnouncementModalContext.tsx",
+   "lineRange": [
+    17,
+    23
+   ],
+   "summary": "Hook exposing the announcement modal context to consumers, throwing when used outside the provider.",
+   "tags": [
+    "hook",
+    "context",
+    "announcement"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/contexts/AnnouncementModalContext.tsx:AnnouncementModalProvider",
+   "type": "function",
+   "name": "AnnouncementModalProvider",
+   "filePath": "src/contexts/AnnouncementModalContext.tsx",
+   "lineRange": [
+    29,
+    100
+   ],
+   "summary": "Loads the modal announcement via the announcement service, gates repeat display with sessionStorage, and renders the announcement modal.",
+   "tags": [
+    "provider",
+    "context",
+    "announcement"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/hooks/useAboutPhoto.ts",
+   "type": "file",
+   "name": "useAboutPhoto.ts",
+   "filePath": "src/hooks/useAboutPhoto.ts",
+   "summary": "Hook resolving an about-page photo filename to a Firebase Storage download URL for the current mountain.",
+   "tags": [
+    "hook",
+    "media",
+    "storage",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/hooks/useAboutPhoto.ts:useAboutPhoto",
+   "type": "function",
+   "name": "useAboutPhoto",
+   "filePath": "src/hooks/useAboutPhoto.ts",
+   "lineRange": [
+    14,
+    57
+   ],
+   "summary": "Looks up the mountain's about configuration and asks the storage service for the photo's download URL, tracking loading and error state.",
+   "tags": [
+    "hook",
+    "storage",
+    "async"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/hooks/useMediaFilter.ts",
+   "type": "file",
+   "name": "useMediaFilter.ts",
+   "filePath": "src/hooks/useMediaFilter.ts",
+   "summary": "Hook providing the shared album filtering logic: free-text search over description/tags plus a selected-cat name set.",
+   "tags": [
+    "hook",
+    "filtering",
+    "search",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/hooks/useMediaFilter.ts:useMediaFilter",
+   "type": "function",
+   "name": "useMediaFilter",
+   "filePath": "src/hooks/useMediaFilter.ts",
+   "lineRange": [
+    14,
+    56
+   ],
+   "summary": "Memoizes the filtered media list from the current search query and selected cat names, and exposes setters for both.",
+   "tags": [
+    "hook",
+    "filtering",
+    "state-management"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/hooks/useMediaLinks.tsx",
+   "type": "file",
+   "name": "useMediaLinks.tsx",
+   "filePath": "src/hooks/useMediaLinks.tsx",
+   "summary": "Hook that intercepts clicks on inline image and video links inside processed text and opens them in the lightbox or video player.",
+   "tags": [
+    "hook",
+    "media",
+    "event-handler",
+    "linking"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/hooks/useMediaLinks.tsx:useMediaLinks",
+   "type": "function",
+   "name": "useMediaLinks",
+   "filePath": "src/hooks/useMediaLinks.tsx",
+   "lineRange": [
+    40,
+    90
+   ],
+   "summary": "Attaches a delegated click listener to the supplied element ref and renders the lightbox or video player for the clicked media URL.",
+   "tags": [
+    "hook",
+    "event-handler",
+    "media"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/types/media.ts",
+   "type": "file",
+   "name": "media.ts",
+   "filePath": "src/types/media.ts",
+   "summary": "TypeScript interfaces for the media domain: cat images and videos, media collections, tagging sessions and query/upload/update request shapes.",
+   "tags": [
+    "type-definition",
+    "data-model",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/utils/duration.ts",
+   "type": "file",
+   "name": "duration.ts",
+   "filePath": "src/utils/duration.ts",
+   "summary": "Duration helpers converting ISO-8601 YouTube durations and raw second counts into display strings.",
+   "tags": [
+    "utility",
+    "formatting",
+    "media",
+    "duration"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/duration.ts:parseYouTubeDuration",
+   "type": "function",
+   "name": "parseYouTubeDuration",
+   "filePath": "src/utils/duration.ts",
+   "lineRange": [
+    2,
+    14
+   ],
+   "summary": "Parses an ISO-8601 YouTube duration string into a total number of seconds.",
+   "tags": [
+    "utility",
+    "parsing",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/duration.ts:formatDuration",
+   "type": "function",
+   "name": "formatDuration",
+   "filePath": "src/utils/duration.ts",
+   "lineRange": [
+    17,
+    40
+   ],
+   "summary": "Formats a duration given as ISO-8601 text or seconds into an mm:ss / h:mm:ss display string.",
+   "tags": [
+    "utility",
+    "formatting",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/duration.ts:formatDurationFromSeconds",
+   "type": "function",
+   "name": "formatDurationFromSeconds",
+   "filePath": "src/utils/duration.ts",
+   "lineRange": [
+    43,
+    49
+   ],
+   "summary": "Formats a numeric second count into a zero-padded clock string.",
+   "tags": [
+    "utility",
+    "formatting",
+    "duration"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/utils/parse-date.ts",
+   "type": "file",
+   "name": "parse-date.ts",
+   "filePath": "src/utils/parse-date.ts",
+   "summary": "Tolerant date parser normalizing Firestore Timestamps, Date objects, numbers and strings into a Date or null.",
+   "tags": [
+    "utility",
+    "date",
+    "parsing",
+    "serialization"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Duck-types Firestore Timestamps via a toDate() check so it works on both client and server without importing the Firebase SDK."
+  },
+  {
+   "id": "function:src/utils/parse-date.ts:parseDate",
+   "type": "function",
+   "name": "parseDate",
+   "filePath": "src/utils/parse-date.ts",
+   "lineRange": [
+    6,
+    34
+   ],
+   "summary": "Converts any supported date representation into a valid Date, returning null and warning when the value cannot be parsed.",
+   "tags": [
+    "utility",
+    "date",
+    "parsing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/utils/text-processing.ts",
+   "type": "file",
+   "name": "text-processing.ts",
+   "filePath": "src/utils/text-processing.ts",
+   "summary": "Text-to-HTML link processors turning markdown links, cat-name tokens, image/video tokens and bare URLs into anchor and span markup for rendered content.",
+   "tags": [
+    "utility",
+    "text",
+    "linking",
+    "serialization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:convertMarkdownLinks",
+   "type": "function",
+   "name": "convertMarkdownLinks",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    8,
+    15
+   ],
+   "summary": "Rewrites markdown link syntax into anchor tags.",
+   "tags": [
+    "utility",
+    "text",
+    "linking"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:convertCatModalLinks",
+   "type": "function",
+   "name": "convertCatModalLinks",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    20,
+    27
+   ],
+   "summary": "Converts cat-name tokens into clickable spans that the cat modal handlers listen for.",
+   "tags": [
+    "utility",
+    "text",
+    "linking"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:convertImageLinks",
+   "type": "function",
+   "name": "convertImageLinks",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    34,
+    40
+   ],
+   "summary": "Converts image tokens into clickable spans carrying the image URL.",
+   "tags": [
+    "utility",
+    "text",
+    "linking"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:convertVideoLinks",
+   "type": "function",
+   "name": "convertVideoLinks",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    46,
+    52
+   ],
+   "summary": "Converts video tokens into clickable spans carrying the video URL.",
+   "tags": [
+    "utility",
+    "text",
+    "linking"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:autoLinkUrls",
+   "type": "function",
+   "name": "autoLinkUrls",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    57,
+    65
+   ],
+   "summary": "Auto-links bare URLs that are not already inside generated markup.",
+   "tags": [
+    "utility",
+    "text",
+    "linking"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "function",
+   "name": "processTextWithLinks",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    70,
+    99
+   ],
+   "summary": "Runs the full link-conversion pipeline in order, auto-linking only the segments not already wrapped by earlier converters.",
+   "tags": [
+    "utility",
+    "text",
+    "linking",
+    "pipeline"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/text-processing.ts:safeProcessText",
+   "type": "function",
+   "name": "safeProcessText",
+   "filePath": "src/utils/text-processing.ts",
+   "lineRange": [
+    104,
+    108
+   ],
+   "summary": "Guarded wrapper around the link pipeline that tolerates null or non-string input.",
+   "tags": [
+    "utility",
+    "text",
+    "validation"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/components/ui/useModalLayer.ts",
+   "target": "function:src/components/ui/useModalLayer.ts:useModalLayer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "function:src/contexts/AnnouncementModalContext.tsx:useAnnouncementModal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "function:src/contexts/AnnouncementModalContext.tsx:AnnouncementModalProvider",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/useAboutPhoto.ts",
+   "target": "function:src/hooks/useAboutPhoto.ts:useAboutPhoto",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/useMediaFilter.ts",
+   "target": "function:src/hooks/useMediaFilter.ts:useMediaFilter",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/useMediaLinks.tsx",
+   "target": "function:src/hooks/useMediaLinks.tsx:useMediaLinks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/duration.ts",
+   "target": "function:src/utils/duration.ts:parseYouTubeDuration",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/duration.ts",
+   "target": "function:src/utils/duration.ts:formatDuration",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/duration.ts",
+   "target": "function:src/utils/duration.ts:formatDurationFromSeconds",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/parse-date.ts",
+   "target": "function:src/utils/parse-date.ts:parseDate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertMarkdownLinks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertCatModalLinks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertImageLinks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertVideoLinks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:autoLinkUrls",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:safeProcessText",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ui/useModalLayer.ts",
+   "target": "function:src/components/ui/useModalLayer.ts:useModalLayer",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "function:src/contexts/AnnouncementModalContext.tsx:useAnnouncementModal",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "function:src/contexts/AnnouncementModalContext.tsx:AnnouncementModalProvider",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/useAboutPhoto.ts",
+   "target": "function:src/hooks/useAboutPhoto.ts:useAboutPhoto",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/useMediaFilter.ts",
+   "target": "function:src/hooks/useMediaFilter.ts:useMediaFilter",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/useMediaLinks.tsx",
+   "target": "function:src/hooks/useMediaLinks.tsx:useMediaLinks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/duration.ts",
+   "target": "function:src/utils/duration.ts:parseYouTubeDuration",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/duration.ts",
+   "target": "function:src/utils/duration.ts:formatDuration",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/duration.ts",
+   "target": "function:src/utils/duration.ts:formatDurationFromSeconds",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/parse-date.ts",
+   "target": "function:src/utils/parse-date.ts:parseDate",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertMarkdownLinks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertCatModalLinks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertImageLinks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:convertVideoLinks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:autoLinkUrls",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/text-processing.ts",
+   "target": "function:src/utils/text-processing.ts:safeProcessText",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "file:src/components/AnnouncementModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/contexts/AnnouncementModalContext.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useAboutPhoto.ts",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useAboutPhoto.ts",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useAboutPhoto.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useMediaLinks.tsx",
+   "target": "file:src/components/ui/Lightbox.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useMediaLinks.tsx",
+   "target": "file:src/components/ui/VideoPlayer.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useMediaLinks.tsx",
+   "target": "file:src/types/media.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:src/contexts/AnnouncementModalContext.tsx:AnnouncementModalProvider",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/hooks/useAboutPhoto.ts:useAboutPhoto",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "target": "function:src/utils/text-processing.ts:convertMarkdownLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "target": "function:src/utils/text-processing.ts:convertCatModalLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "target": "function:src/utils/text-processing.ts:convertImageLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "target": "function:src/utils/text-processing.ts:convertVideoLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "target": "function:src/utils/text-processing.ts:autoLinkUrls",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/text-processing.ts:safeProcessText",
+   "target": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/utils/duration.ts:formatDuration",
+   "target": "function:src/utils/duration.ts:parseYouTubeDuration",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

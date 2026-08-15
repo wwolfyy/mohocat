@@ -1,0 +1,23 @@
+{
+  "fixedSectionOk": true,
+  "nodesRecovered": 13,
+  "edgesRestored": 25,
+  "crossBatchEdgesAdded": 0,
+  "typesRemapped": 0,
+  "complexityRemapped": 0,
+  "structuralEdgesAdded": 39,
+  "finalNodeCount": 546,
+  "finalEdgeCount": 1536,
+  "notes": [
+    "The merge report printed no 'Fixed' section: input 533 nodes / 1499 edges -> output 533 nodes / 1472 edges, i.e. zero ID normalizations, zero complexity remaps, zero node/edge deduplication across 20 batch files. The only delta was the 27 dropped dangling edges. Batch outputs were already well-formed and file-disjoint.",
+    "Root cause of all 27 drops: the batch analyzers' significance filter skipped short one-line wrapper functions. It omitted the 11 per-tenant service getters in src/services/index.ts (each a one-line `perTenant(...)` binding) and 2 one-line config accessors in src/utils/config.ts (getMountainName, getMountainAbout), while keeping the multi-line siblings in the same files (perTenant, getStorageService, getAuthService, getPermissionService; getMountainConfig, isFeatureEnabled). Recommend relaxing the filter for exported symbols regardless of body length -- exported one-liners are exactly the indirection seams other files call.",
+    "Verified against src/services/index.ts: all 11 missing getters are genuinely exported (getCatService, getPointService, getImageService, getVideoService, getPostService, getButlerTalkService, getAnnouncementService, getAdoptionService, getContactService, getFeedingSpotsService, getAboutContentService). Added as function: nodes with exact lineRanges, complexity 'simple', and 5 tags each, shaped to match the four pre-existing getter nodes.",
+    "Verified against src/utils/config.ts: getMountainName (192-195) and getMountainAbout (270-273) are genuinely exported. Added with the same shape as the existing config accessor nodes.",
+    "All 25 dropped 'calls' edges were restored at weight 0.8; every source node already existed, so nothing was unrecoverable.",
+    "39 supporting structural edges added for the 13 new nodes, each read directly from source rather than inferred: 13 file->function 'contains' (weight 1.0), 13 file->function 'exports' (weight 0.8), and 13 internal 'calls' (the 11 getters -> perTenant, and the 2 config accessors -> getMountainConfig, weight 0.9). These match the edge shapes the batches already emitted for the sibling functions in the same files.",
+    "DECISION on the two dropped 'imports' edges (src/config/permission-config.ts -> config/permissions.json, src/utils/config.ts -> config/mountains/mountains.json): NOT restored. Both JSON files exist in the graph as config: nodes and the surviving 'configures' edges already connect exactly those two node pairs (config: -> file:, the reverse direction of the same relationship). Rewriting the imports edges onto the config: IDs would create duplicate parallel semantics between the same pairs, so 'configures' is left as the sole representation. This is the same pair the merge script logged as 'Skipped 2 importMap target paths with no file: node in graph' -- consistent, not a real gap.",
+    "Cross-batch verification against scan-result.json importMap: all 607 resolved internal import relationships across 208 entries already have a matching file->file 'imports' edge in the assembled graph. Zero gaps, so zero speculative edges added. The only unmatched importMap targets are the two config JSONs covered by the decision above.",
+    "Post-fix integrity checks pass: no duplicate node IDs, no duplicate (source, target, type) edge keys, and zero dangling edge endpoints.",
+    "Remaining data-quality observation (not fixed, no evidence of loss): 'configures' (2) and 'related' (1) are very thin edge types compared with imports (605), contains (325), exports (265) and calls (262). Worth watching in future runs in case the analyzers under-emit those relations, but nothing in this run's report points to dropped instances."
+  ]
+}

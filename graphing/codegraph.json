@@ -1,0 +1,29 @@
+{
+  "_comment": "Scoping for the code-graph tooling evaluation — docs/planning/pending/code-graph-tooling-evaluation-20260728.md. Corpus is src/ + config/ only, matching the Graphify run. CodeGraph's `include` forces gitignored files IN (not an allowlist), so scoping must be an explicit `exclude` list of everything outside the corpus. This file is gitignored; it exists only for the evaluation runs.",
+  "exclude": [
+    "_infra/",
+    "backups/",
+    "docs/",
+    "graphify-out/",
+    "log/",
+    "public/",
+    "scripts/",
+    "test-results/",
+    "tests/",
+    "tmp/",
+    ".github/",
+    ".husky/",
+    ".claude/",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "vitest.rules.config.ts",
+    "next.config.js",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "eslint.config.mjs",
+    ".lintstagedrc.js",
+    "test-kakaotalk-auth.js",
+    "next-env.d.ts",
+    "config/firebase/"
+  ]
+}

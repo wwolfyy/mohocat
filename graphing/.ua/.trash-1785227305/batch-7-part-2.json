@@ -1,0 +1,1080 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/lib/firebase-admin.ts",
+   "type": "file",
+   "name": "firebase-admin.ts",
+   "filePath": "src/lib/firebase-admin.ts",
+   "summary": "Initializes the Firebase Admin SDK singleton \u2014 emulator mode for e2e, service-account credentials in production, default credentials otherwise \u2014 and exports the app, Firestore, Auth, and Storage handles.",
+   "tags": [
+    "firebase",
+    "singleton",
+    "admin-sdk",
+    "server-only",
+    "initialization"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/firebase-admin.ts:initAdmin",
+   "type": "function",
+   "name": "initAdmin",
+   "filePath": "src/lib/firebase-admin.ts",
+   "lineRange": [
+    15,
+    49
+   ],
+   "summary": "Returns the existing Admin app if already initialized, otherwise picks the emulator, service-account, or default-credential initialization path.",
+   "tags": [
+    "firebase",
+    "initialization",
+    "singleton"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/lib/tenant.ts",
+   "type": "file",
+   "name": "tenant.ts",
+   "filePath": "src/lib/tenant.ts",
+   "summary": "Pure request-scoped tenant resolution: maps a Host header or a [mountain] path segment onto a configured mountain id, with a default-tenant fallback for unmapped hosts.",
+   "tags": [
+    "multi-tenant",
+    "routing",
+    "utility",
+    "host-resolution"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Deliberately free of Next.js imports so the same functions work in middleware, server components, API routes, and unit tests."
+  },
+  {
+   "id": "function:src/lib/tenant.ts:resolveMountainIdOrNull",
+   "type": "function",
+   "name": "resolveMountainIdOrNull",
+   "filePath": "src/lib/tenant.ts",
+   "lineRange": [
+    23,
+    28
+   ],
+   "summary": "Validates a candidate mountain id against the configured mountains, returning null so callers can 404 rather than silently falling back.",
+   "tags": [
+    "multi-tenant",
+    "validation",
+    "routing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/tenant.ts:findMountainIdByHost",
+   "type": "function",
+   "name": "findMountainIdByHost",
+   "filePath": "src/lib/tenant.ts",
+   "lineRange": [
+    37,
+    46
+   ],
+   "summary": "Strict Host-to-mountain lookup over each mountain's domains config, ignoring port and case; returns null when no mountain claims the host.",
+   "tags": [
+    "multi-tenant",
+    "host-resolution",
+    "lookup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/tenant.ts:getMountainIdForHost",
+   "type": "function",
+   "name": "getMountainIdForHost",
+   "filePath": "src/lib/tenant.ts",
+   "lineRange": [
+    54,
+    56
+   ],
+   "summary": "Host-to-mountain resolution with a fallback to the default tenant for localhost, previews, and the e2e harness.",
+   "tags": [
+    "multi-tenant",
+    "host-resolution",
+    "fallback"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/tenant.ts:getRequestMountainId",
+   "type": "function",
+   "name": "getRequestMountainId",
+   "filePath": "src/lib/tenant.ts",
+   "lineRange": [
+    62,
+    64
+   ],
+   "summary": "Resolves the tenant for an API route from the incoming Request's Host header.",
+   "tags": [
+    "multi-tenant",
+    "api-handler",
+    "host-resolution"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/lib/youtube/credentials.ts",
+   "type": "file",
+   "name": "credentials.ts",
+   "filePath": "src/lib/youtube/credentials.ts",
+   "summary": "Single source of truth for the shared YouTube OAuth credential, reconciling the env-sourced client identity with the refresh token stored in Firestore under admin_config/youtube_auth.",
+   "tags": [
+    "oauth",
+    "youtube",
+    "credentials",
+    "firestore",
+    "security"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Deliberately has no env refresh-token fallback: a stale env value used to shadow the freshly re-authorized Firestore token."
+  },
+  {
+   "id": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthClient",
+   "type": "function",
+   "name": "getYouTubeOAuthClient",
+   "filePath": "src/lib/youtube/credentials.ts",
+   "lineRange": [
+    60,
+    73
+   ],
+   "summary": "Returns the env-sourced OAuth client identity (client id, secret, redirect URI), or null when the OAuth app is not configured.",
+   "tags": [
+    "oauth",
+    "configuration",
+    "youtube"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/youtube/credentials.ts:getStoredRefreshToken",
+   "type": "function",
+   "name": "getStoredRefreshToken",
+   "filePath": "src/lib/youtube/credentials.ts",
+   "lineRange": [
+    83,
+    100
+   ],
+   "summary": "Reads the current refresh token from the admin_config/youtube_auth Firestore document.",
+   "tags": [
+    "oauth",
+    "firestore",
+    "credentials"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthCredentials",
+   "type": "function",
+   "name": "getYouTubeOAuthCredentials",
+   "filePath": "src/lib/youtube/credentials.ts",
+   "lineRange": [
+    109,
+    121
+   ],
+   "summary": "Combines the env client identity with the Firestore refresh token into a complete credential, returning null when either half is missing.",
+   "tags": [
+    "oauth",
+    "credentials",
+    "youtube"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/middleware.ts",
+   "type": "file",
+   "name": "middleware.ts",
+   "filePath": "src/middleware.ts",
+   "summary": "Next.js middleware implementing host-based tenant routing: passes through paths that already name a mountain and otherwise rewrites the request onto the /[mountain] segment resolved from the Host header.",
+   "tags": [
+    "middleware",
+    "routing",
+    "multi-tenant",
+    "entry-point"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Uses NextResponse.rewrite so the browser URL stays clean while the app tree lives under /[mountain]/."
+  },
+  {
+   "id": "function:src/middleware.ts:middleware",
+   "type": "function",
+   "name": "middleware",
+   "filePath": "src/middleware.ts",
+   "lineRange": [
+    18,
+    30
+   ],
+   "summary": "Inspects the first path segment, and when it is not a configured mountain id, rewrites the URL onto the Host-resolved tenant segment.",
+   "tags": [
+    "middleware",
+    "routing",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/services/permission-service.ts",
+   "type": "file",
+   "name": "permission-service.ts",
+   "filePath": "src/services/permission-service.ts",
+   "summary": "Firestore-backed permission service resolving per-mountain user roles and permission sets, with role history, user-by-role queries, audit log reads, and user record bootstrapping.",
+   "tags": [
+    "service",
+    "permissions",
+    "rbac",
+    "firestore",
+    "multi-tenant"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/services/permission-service.ts:PermissionService",
+   "type": "class",
+   "name": "PermissionService",
+   "filePath": "src/services/permission-service.ts",
+   "lineRange": [
+    21,
+    336
+   ],
+   "summary": "Client-SDK service that loads the role config from Firestore (falling back to the local matrix), resolves a user's role and permissions for a mountain, and reads role history and permission logs.",
+   "tags": [
+    "service",
+    "permissions",
+    "rbac",
+    "firestore"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/role-assignment-service.ts",
+   "type": "file",
+   "name": "role-assignment-service.ts",
+   "filePath": "src/services/role-assignment-service.ts",
+   "summary": "Read-only companion service reporting whether a user still needs a role and what roles and descriptions are available; all role writes moved to the admin API route.",
+   "tags": [
+    "service",
+    "permissions",
+    "rbac",
+    "read-only",
+    "firestore"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Explicitly write-free by design \u2014 the removed client write methods lost their audit trail to Firestore rules."
+  },
+  {
+   "id": "class:src/services/role-assignment-service.ts:RoleAssignmentService",
+   "type": "class",
+   "name": "RoleAssignmentService",
+   "filePath": "src/services/role-assignment-service.ts",
+   "lineRange": [
+    14,
+    88
+   ],
+   "summary": "Exposes needsRoleAssignment, getUserRole, getAvailableRoles, and getRoleDescription over the cached permission config and the users collection.",
+   "tags": [
+    "service",
+    "permissions",
+    "rbac",
+    "read-only"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/services/youtube.ts",
+   "type": "file",
+   "name": "youtube.ts",
+   "filePath": "src/services/youtube.ts",
+   "summary": "YouTube Data API v3 client that fetches a channel's uploads playlist with pagination and batched video-detail lookups, and searches the channel by keyword.",
+   "tags": [
+    "service",
+    "youtube",
+    "api-client",
+    "external-api",
+    "pagination"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/services/youtube.ts:fetchChannelVideos",
+   "type": "function",
+   "name": "fetchChannelVideos",
+   "filePath": "src/services/youtube.ts",
+   "lineRange": [
+    28,
+    197
+   ],
+   "summary": "Walks the channel's uploads playlist page by page, collects video ids up to the requested limit, then fetches full snippets and statistics in batches.",
+   "tags": [
+    "service",
+    "youtube",
+    "pagination",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/services/youtube.ts:searchYouTubeVideos",
+   "type": "function",
+   "name": "searchYouTubeVideos",
+   "filePath": "src/services/youtube.ts",
+   "lineRange": [
+    199,
+    264
+   ],
+   "summary": "Runs a keyword search scoped to the configured channel and hydrates the matching video ids with full details.",
+   "tags": [
+    "service",
+    "youtube",
+    "search",
+    "api-client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/types/permissions.ts",
+   "type": "file",
+   "name": "permissions.ts",
+   "filePath": "src/types/permissions.ts",
+   "summary": "Type definitions for the permission model: user permission records, per-mountain role entries keyed by mountainId, permission config shape, and audit log entries, plus runtime validators.",
+   "tags": [
+    "type-definition",
+    "permissions",
+    "rbac",
+    "validation",
+    "multi-tenant"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Roles are a Record keyed by mountainId rather than an array, so Firestore rules can do an O(1) key lookup."
+  },
+  {
+   "id": "function:src/types/permissions.ts:isValidRole",
+   "type": "function",
+   "name": "isValidRole",
+   "filePath": "src/types/permissions.ts",
+   "lineRange": [
+    69,
+    73
+   ],
+   "summary": "Type guard checking a string against the four known role names.",
+   "tags": [
+    "validation",
+    "type-guard",
+    "rbac"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/types/permissions.ts:isValidPermission",
+   "type": "function",
+   "name": "isValidPermission",
+   "filePath": "src/types/permissions.ts",
+   "lineRange": [
+    75,
+    91
+   ],
+   "summary": "Type guard checking a string against the full list of known permission identifiers.",
+   "tags": [
+    "validation",
+    "type-guard",
+    "permissions"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/utils/config.ts",
+   "type": "file",
+   "name": "config.ts",
+   "filePath": "src/utils/config.ts",
+   "summary": "Central configuration accessor separating per-mountain public settings read from mountains.json from deployment-global secrets read from the environment (Firebase, service account, YouTube, OAuth).",
+   "tags": [
+    "configuration",
+    "multi-tenant",
+    "utility",
+    "secrets",
+    "entry-point"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Every tenant accessor takes an explicit mountainId \u2014 there is no ambient current-mountain on the server."
+  },
+  {
+   "id": "function:src/utils/config.ts:getDefaultMountainId",
+   "type": "function",
+   "name": "getDefaultMountainId",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    157,
+    159
+   ],
+   "summary": "Returns the fallback tenant id from env, defaulting to geyang; only a fallback, never a selector.",
+   "tags": [
+    "configuration",
+    "multi-tenant",
+    "fallback"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getMountainConfig",
+   "type": "function",
+   "name": "getMountainConfig",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    164,
+    170
+   ],
+   "summary": "Returns the full public configuration object for a mountain id, throwing when the id is unknown.",
+   "tags": [
+    "configuration",
+    "multi-tenant",
+    "lookup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:isFeatureEnabled",
+   "type": "function",
+   "name": "isFeatureEnabled",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    184,
+    187
+   ],
+   "summary": "Checks a per-mountain feature flag such as videoAlbum or adminPanel.",
+   "tags": [
+    "configuration",
+    "feature-flag",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getYouTubePlaylistId",
+   "type": "function",
+   "name": "getYouTubePlaylistId",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    231,
+    241
+   ],
+   "summary": "Resolves the YouTube playlist a mountain's uploads should be added to, trimming and validating the configured value.",
+   "tags": [
+    "configuration",
+    "youtube",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getAdoptionPlaylistId",
+   "type": "function",
+   "name": "getAdoptionPlaylistId",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    253,
+    265
+   ],
+   "summary": "Resolves the playlist id backing the adoption video album.",
+   "tags": [
+    "configuration",
+    "youtube",
+    "adoption"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getAllMountains",
+   "type": "function",
+   "name": "getAllMountains",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    278,
+    286
+   ],
+   "summary": "Returns every configured mountain, skipping underscore-prefixed metadata keys in the JSON config.",
+   "tags": [
+    "configuration",
+    "multi-tenant",
+    "enumeration"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getPublicMountains",
+   "type": "function",
+   "name": "getPublicMountains",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    294,
+    296
+   ],
+   "summary": "Returns the mountains that should be listed in the selector, filtering out hidden stub tenants.",
+   "tags": [
+    "configuration",
+    "multi-tenant",
+    "filtering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getFirebaseConfig",
+   "type": "function",
+   "name": "getFirebaseConfig",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    305,
+    327
+   ],
+   "summary": "Assembles the client Firebase config from NEXT_PUBLIC environment variables, warning when required keys are missing.",
+   "tags": [
+    "configuration",
+    "firebase",
+    "secrets"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/config.ts:getFirebaseAdminServiceAccount",
+   "type": "function",
+   "name": "getFirebaseAdminServiceAccount",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    348,
+    361
+   ],
+   "summary": "Parses the service account key JSON out of the environment, normalizing quoting and escaped newlines before use by the Admin SDK.",
+   "tags": [
+    "configuration",
+    "firebase",
+    "secrets",
+    "admin-sdk"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/config.ts:getOAuthProvidersConfig",
+   "type": "function",
+   "name": "getOAuthProvidersConfig",
+   "filePath": "src/utils/config.ts",
+   "lineRange": [
+    366,
+    388
+   ],
+   "summary": "Builds the Google and Kakao OAuth provider settings from environment variables and reports which providers are enabled.",
+   "tags": [
+    "configuration",
+    "oauth",
+    "authentication",
+    "secrets"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/lib/firebase-admin.ts",
+   "target": "function:src/lib/firebase-admin.ts:initAdmin",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:resolveMountainIdOrNull",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:resolveMountainIdOrNull",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:findMountainIdByHost",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:findMountainIdByHost",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:getMountainIdForHost",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:getMountainIdForHost",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:getRequestMountainId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "function:src/lib/tenant.ts:getRequestMountainId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthClient",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthClient",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "function:src/lib/youtube/credentials.ts:getStoredRefreshToken",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "function:src/lib/youtube/credentials.ts:getStoredRefreshToken",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthCredentials",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthCredentials",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/middleware.ts",
+   "target": "function:src/middleware.ts:middleware",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/middleware.ts",
+   "target": "function:src/middleware.ts:middleware",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/permission-service.ts",
+   "target": "class:src/services/permission-service.ts:PermissionService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/permission-service.ts",
+   "target": "class:src/services/permission-service.ts:PermissionService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/role-assignment-service.ts",
+   "target": "class:src/services/role-assignment-service.ts:RoleAssignmentService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/role-assignment-service.ts",
+   "target": "class:src/services/role-assignment-service.ts:RoleAssignmentService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/youtube.ts",
+   "target": "function:src/services/youtube.ts:fetchChannelVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/youtube.ts",
+   "target": "function:src/services/youtube.ts:fetchChannelVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/youtube.ts",
+   "target": "function:src/services/youtube.ts:searchYouTubeVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/youtube.ts",
+   "target": "function:src/services/youtube.ts:searchYouTubeVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/types/permissions.ts",
+   "target": "function:src/types/permissions.ts:isValidRole",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/types/permissions.ts",
+   "target": "function:src/types/permissions.ts:isValidRole",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/types/permissions.ts",
+   "target": "function:src/types/permissions.ts:isValidPermission",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/types/permissions.ts",
+   "target": "function:src/types/permissions.ts:isValidPermission",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getDefaultMountainId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getDefaultMountainId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getMountainConfig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getMountainConfig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:isFeatureEnabled",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:isFeatureEnabled",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getYouTubePlaylistId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getYouTubePlaylistId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getAdoptionPlaylistId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getAdoptionPlaylistId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getAllMountains",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getAllMountains",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getPublicMountains",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getPublicMountains",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getFirebaseConfig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getFirebaseConfig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getFirebaseAdminServiceAccount",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getFirebaseAdminServiceAccount",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getOAuthProvidersConfig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "function:src/utils/config.ts:getOAuthProvidersConfig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/firebase-admin.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/tenant.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/youtube/credentials.ts",
+   "target": "file:src/lib/firebase-admin.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/middleware.ts",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/permission-service.ts",
+   "target": "file:src/config/permission-config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/permission-service.ts",
+   "target": "file:src/types/permissions.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/role-assignment-service.ts",
+   "target": "file:src/config/permission-config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/role-assignment-service.ts",
+   "target": "file:src/types/permissions.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/youtube.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/utils/config.ts",
+   "target": "file:config/mountains/mountains.json",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:src/lib/firebase-admin.ts:initAdmin",
+   "target": "function:src/utils/config.ts:getFirebaseConfig",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/lib/firebase-admin.ts:initAdmin",
+   "target": "function:src/utils/config.ts:getFirebaseAdminServiceAccount",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/lib/tenant.ts:resolveMountainIdOrNull",
+   "target": "function:src/utils/config.ts:getAllMountains",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/lib/tenant.ts:findMountainIdByHost",
+   "target": "function:src/utils/config.ts:getAllMountains",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/lib/tenant.ts:findMountainIdByHost",
+   "target": "function:src/utils/config.ts:getMountainConfig",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/lib/tenant.ts:getMountainIdForHost",
+   "target": "function:src/utils/config.ts:getDefaultMountainId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/middleware.ts:middleware",
+   "target": "function:src/lib/tenant.ts:getMountainIdForHost",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/middleware.ts:middleware",
+   "target": "function:src/lib/tenant.ts:resolveMountainIdOrNull",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/permission-service.ts:PermissionService",
+   "target": "function:src/config/permission-config.ts:loadPermissionConfig",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/permission-service.ts:PermissionService",
+   "target": "function:src/config/permission-config.ts:getPermissionMatrix",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/role-assignment-service.ts:RoleAssignmentService",
+   "target": "function:src/config/permission-config.ts:loadPermissionConfig",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/services/youtube.ts:fetchChannelVideos",
+   "target": "function:src/utils/config.ts:getDefaultMountainId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/services/youtube.ts:searchYouTubeVideos",
+   "target": "function:src/utils/config.ts:getDefaultMountainId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

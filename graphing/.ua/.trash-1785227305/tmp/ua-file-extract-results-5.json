@@ -1,0 +1,3669 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 19,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 19,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 19,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/[mountain]/admin/app-management/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 206,
+      "nonEmptyLines": 185,
+      "functions": [
+        {
+          "name": "AppManagementContent",
+          "startLine": 10,
+          "endLine": 198,
+          "params": []
+        },
+        {
+          "name": "AppManagementPage",
+          "startLine": 200,
+          "endLine": 206,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AppManagementPage",
+          "line": 200,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AppManagementContent",
+          "callee": "useSearchParams",
+          "lineNumber": 11
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useState",
+          "lineNumber": 12
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useState",
+          "lineNumber": 13
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useState",
+          "lineNumber": 16
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useState",
+          "lineNumber": 18
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "localStorage.getItem",
+          "lineNumber": 23
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "setPostsCollectionNames",
+          "lineNumber": 25
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "saved.split('\\n').filter",
+          "lineNumber": 26
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "saved.split",
+          "lineNumber": 26
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "name.trim",
+          "lineNumber": 26
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "console.warn",
+          "lineNumber": 29
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "setPostsCollectionNames",
+          "lineNumber": 34
+        },
+        {
+          "caller": "loadPostsCollectionConfig",
+          "callee": "defaultCollections.join",
+          "lineNumber": 34
+        },
+        {
+          "caller": "savePostsCollectionConfig",
+          "callee": "localStorage.setItem",
+          "lineNumber": 41
+        },
+        {
+          "caller": "savePostsCollectionConfig",
+          "callee": "setPostsCollectionNames",
+          "lineNumber": 42
+        },
+        {
+          "caller": "savePostsCollectionConfig",
+          "callee": "console.error",
+          "lineNumber": 45
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useEffect",
+          "lineNumber": 51
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "searchParams.get",
+          "lineNumber": 53
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setActiveTab",
+          "lineNumber": 55
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setIsInitialized",
+          "lineNumber": 57
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "useEffect",
+          "lineNumber": 63
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "loadPostsCollectionConfig",
+          "lineNumber": 65
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setActiveTab",
+          "lineNumber": 77
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "cn",
+          "lineNumber": 78
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setActiveTab",
+          "lineNumber": 88
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "cn",
+          "lineNumber": 89
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "cn",
+          "lineNumber": 100
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setPostsCollectionNames",
+          "lineNumber": 143
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "cn",
+          "lineNumber": 152
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setConfigLoading",
+          "lineNumber": 154
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setConfigSuccess",
+          "lineNumber": 155
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "savePostsCollectionConfig",
+          "lineNumber": 157
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "postsCollectionNames\n                    .split('\\n')\n                    .map((name) => name.trim())\n                    .filter",
+          "lineNumber": 162
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "postsCollectionNames\n                    .split('\\n')\n                    .map",
+          "lineNumber": 162
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "postsCollectionNames\n                    .split",
+          "lineNumber": 162
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "name.trim",
+          "lineNumber": 164
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setConfigSuccess",
+          "lineNumber": 171
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setTimeout",
+          "lineNumber": 172
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setConfigSuccess",
+          "lineNumber": 173
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "alert",
+          "lineNumber": 174
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "console.error",
+          "lineNumber": 177
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "alert",
+          "lineNumber": 178
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "setConfigLoading",
+          "lineNumber": 180
+        },
+        {
+          "caller": "AppManagementContent",
+          "callee": "loadPostsCollectionConfig",
+          "lineNumber": 188
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 87,
+      "nonEmptyLines": 80,
+      "functions": [
+        {
+          "name": "AdminLayout",
+          "startLine": 8,
+          "endLine": 87,
+          "params": [
+            "{ children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdminLayout",
+          "line": 8,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminLayout",
+          "callee": "usePathname",
+          "lineNumber": 9
+        },
+        {
+          "caller": "isActivePath",
+          "callee": "pathname.startsWith",
+          "lineNumber": 16
+        },
+        {
+          "caller": "getNavItemClasses",
+          "callee": "cn",
+          "lineNumber": 21
+        },
+        {
+          "caller": "getNavItemClasses",
+          "callee": "isActivePath",
+          "lineNumber": 25
+        },
+        {
+          "caller": "handleDisabledClick",
+          "callee": "e.preventDefault",
+          "lineNumber": 32
+        },
+        {
+          "caller": "handleDisabledClick",
+          "callee": "alert",
+          "lineNumber": 33
+        },
+        {
+          "caller": "handleDisabledClick",
+          "callee": "adminStrings.nav.notImplemented",
+          "lineNumber": 33
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 44
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 49
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 53
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 56
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 60
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "handleDisabledClick",
+          "lineNumber": 61
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 65
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 68
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 71
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "getNavItemClasses",
+          "lineNumber": 74
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 289,
+      "nonEmptyLines": 255,
+      "functions": [
+        {
+          "name": "AdminDashboard",
+          "startLine": 34,
+          "endLine": 267,
+          "params": []
+        },
+        {
+          "name": "StatTile",
+          "startLine": 270,
+          "endLine": 289,
+          "params": [
+            "{\n  icon,\n  label,\n  value,\n  subline,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdminDashboard",
+          "line": 34,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminDashboard",
+          "callee": "useMountain",
+          "lineNumber": 35
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "getImageService",
+          "lineNumber": 38
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "getVideoService",
+          "lineNumber": 39
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "getCatService",
+          "lineNumber": 40
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "getContactService",
+          "lineNumber": 41
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "getPostService",
+          "lineNumber": 42
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useState",
+          "lineNumber": 44
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useState",
+          "lineNumber": 54
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useState",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getConfiguredPostsCollections",
+          "callee": "postsCollections.push",
+          "lineNumber": 65
+        },
+        {
+          "caller": "getConfiguredPostsCollections",
+          "callee": "console.warn",
+          "lineNumber": 70
+        },
+        {
+          "caller": "getConfiguredPostsCollections",
+          "callee": "postsCollections.push",
+          "lineNumber": 71
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useEffect",
+          "lineNumber": 80
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "setLoading",
+          "lineNumber": 83
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "setError",
+          "lineNumber": 84
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "localStorage.getItem",
+          "lineNumber": 89
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "saved.split('\\n').filter",
+          "lineNumber": 91
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "saved.split",
+          "lineNumber": 91
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "name.trim",
+          "lineNumber": 91
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "console.warn",
+          "lineNumber": 94
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "Promise.all",
+          "lineNumber": 104
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "imageService.getAllImages",
+          "lineNumber": 105
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "videoService.getAllVideos",
+          "lineNumber": 106
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "catService.getAllCats",
+          "lineNumber": 107
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "contactService.getAllContacts",
+          "lineNumber": 113
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "console.warn",
+          "lineNumber": 116
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "fetch",
+          "lineNumber": 123
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "pointsResponse.json",
+          "lineNumber": 125
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "console.warn",
+          "lineNumber": 129
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "allImages.filter",
+          "lineNumber": 134
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "Array.isArray",
+          "lineNumber": 135
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "allVideos.filter",
+          "lineNumber": 138
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "Array.isArray",
+          "lineNumber": 139
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "getConfiguredPostsCollections",
+          "lineNumber": 143
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "setStats",
+          "lineNumber": 145
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "console.error",
+          "lineNumber": 156
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "setError",
+          "lineNumber": 168
+        },
+        {
+          "caller": "fetchStats",
+          "callee": "setLoading",
+          "lineNumber": 170
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "fetchStats",
+          "lineNumber": 174
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "tileValue",
+          "lineNumber": 210
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "tileValue",
+          "lineNumber": 216
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "tileValue",
+          "lineNumber": 224
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "stats.postsCollections.map",
+          "lineNumber": 246
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "collection.name.replace",
+          "lineNumber": 248
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "tileValue",
+          "lineNumber": 260
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "tileValue",
+          "lineNumber": 263
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/login/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 101,
+      "nonEmptyLines": 91,
+      "functions": [
+        {
+          "name": "LoginContent",
+          "startLine": 12,
+          "endLine": 87,
+          "params": []
+        },
+        {
+          "name": "LoginPage",
+          "startLine": 89,
+          "endLine": 101,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 3,
+          "isDefault": false
+        },
+        {
+          "name": "LoginPage",
+          "line": 89,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LoginContent",
+          "callee": "useSearchParams",
+          "lineNumber": 13
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "useRouter",
+          "lineNumber": 14
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "searchParams.get",
+          "lineNumber": 15
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "useState",
+          "lineNumber": 19
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "useEffect",
+          "lineNumber": 22
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "searchParams.get",
+          "lineNumber": 23
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "setActiveTab",
+          "lineNumber": 25
+        },
+        {
+          "caller": "handleTabChange",
+          "callee": "setActiveTab",
+          "lineNumber": 30
+        },
+        {
+          "caller": "handleTabChange",
+          "callee": "searchParams.toString",
+          "lineNumber": 33
+        },
+        {
+          "caller": "handleTabChange",
+          "callee": "newParams.set",
+          "lineNumber": 34
+        },
+        {
+          "caller": "handleTabChange",
+          "callee": "router.replace",
+          "lineNumber": 35
+        },
+        {
+          "caller": "handleTabChange",
+          "callee": "newParams.toString",
+          "lineNumber": 35
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "handleTabChange",
+          "lineNumber": 52
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "cn",
+          "lineNumber": 53
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "handleTabChange",
+          "lineNumber": 63
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "cn",
+          "lineNumber": 64
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "handleTabChange",
+          "lineNumber": 78
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/mypage/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 15,
+      "functions": [
+        {
+          "name": "MyPageLayout",
+          "startLine": 4,
+          "endLine": 17,
+          "params": [
+            "{ children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "MyPageLayout",
+          "line": 4,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/mypage/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 590,
+      "nonEmptyLines": 548,
+      "functions": [
+        {
+          "name": "MyPage",
+          "startLine": 16,
+          "endLine": 590,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MyPage",
+          "line": 16,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MyPage",
+          "callee": "useAuth",
+          "lineNumber": 31
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useMountain",
+          "lineNumber": 33
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useRef",
+          "lineNumber": 39
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useEffect",
+          "lineNumber": 40
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useEffect",
+          "lineNumber": 50
+        },
+        {
+          "caller": "MyPage",
+          "callee": "window.location.replace",
+          "lineNumber": 52
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 59
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useEffect",
+          "lineNumber": 60
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setCanAccessAdmin",
+          "lineNumber": 62
+        },
+        {
+          "caller": "MyPage",
+          "callee": "(async () => {\n      try {\n        const allowed = await checkIsAdmin(user, mountainId);\n        if (!cancelled) setCanAccessAdmin(allowed);\n      } catch (error) {\n        // `isAdmin` re-raises when the permission read fails (blocked/offline).\n        // This is only a shortcut, so log it and leave the link hidden rather\n        // than offering an entry point we couldn't verify — /admin is still\n        // reachable directly, and it has its own retry UI for this case.\n        console.error('Admin access check failed on mypage:', error);\n        if (!cancelled) setCanAccessAdmin(false);\n      }\n    })",
+          "lineNumber": 67
+        },
+        {
+          "caller": "MyPage",
+          "callee": "checkIsAdmin",
+          "lineNumber": 69
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setCanAccessAdmin",
+          "lineNumber": 70
+        },
+        {
+          "caller": "MyPage",
+          "callee": "console.error",
+          "lineNumber": 76
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setCanAccessAdmin",
+          "lineNumber": 77
+        },
+        {
+          "caller": "handleSignOut",
+          "callee": "signOut",
+          "lineNumber": 88
+        },
+        {
+          "caller": "handleSignOut",
+          "callee": "console.error",
+          "lineNumber": 90
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 95
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 96
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 98
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 100
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 101
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 103
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 104
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 105
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 108
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 110
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 111
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 112
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 113
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useState",
+          "lineNumber": 114
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useRef",
+          "lineNumber": 115
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useEffect",
+          "lineNumber": 118
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setNewNickname",
+          "lineNumber": 120
+        },
+        {
+          "caller": "MyPage",
+          "callee": "useEffect",
+          "lineNumber": 125
+        },
+        {
+          "caller": "initRecaptcha",
+          "callee": "console.error",
+          "lineNumber": 133
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setTimeout",
+          "lineNumber": 140
+        },
+        {
+          "caller": "MyPage",
+          "callee": "recaptchaVerifierRef.current.clear",
+          "lineNumber": 145
+        },
+        {
+          "caller": "MyPage",
+          "callee": "recaptchaVerifierRef.current.clear",
+          "lineNumber": 157
+        },
+        {
+          "caller": "handleUpdateNickname",
+          "callee": "newNickname.trim",
+          "lineNumber": 178
+        },
+        {
+          "caller": "handleUpdateNickname",
+          "callee": "updateProfile",
+          "lineNumber": 180
+        },
+        {
+          "caller": "handleUpdateNickname",
+          "callee": "setEditingNickname",
+          "lineNumber": 181
+        },
+        {
+          "caller": "handleUpdateNickname",
+          "callee": "alert",
+          "lineNumber": 182
+        },
+        {
+          "caller": "handleUpdateNickname",
+          "callee": "alert",
+          "lineNumber": 184
+        },
+        {
+          "caller": "handleUpdateNickname",
+          "callee": "t.profile.nicknameUpdateFailed",
+          "lineNumber": 184
+        },
+        {
+          "caller": "handleEmailReauth",
+          "callee": "reauthenticateWithType",
+          "lineNumber": 191
+        },
+        {
+          "caller": "handleEmailReauth",
+          "callee": "setEmailStep",
+          "lineNumber": 192
+        },
+        {
+          "caller": "handleEmailReauth",
+          "callee": "alert",
+          "lineNumber": 194
+        },
+        {
+          "caller": "handleEmailReauth",
+          "callee": "t.profile.reauthFailed",
+          "lineNumber": 194
+        },
+        {
+          "caller": "handleSendEmailVerification",
+          "callee": "verifyBeforeUpdateEmail",
+          "lineNumber": 201
+        },
+        {
+          "caller": "handleSendEmailVerification",
+          "callee": "setEmailStep",
+          "lineNumber": 202
+        },
+        {
+          "caller": "handleSendEmailVerification",
+          "callee": "alert",
+          "lineNumber": 203
+        },
+        {
+          "caller": "handleSendEmailVerification",
+          "callee": "t.profile.emailVerificationSentAlert",
+          "lineNumber": 203
+        },
+        {
+          "caller": "handleSendEmailVerification",
+          "callee": "alert",
+          "lineNumber": 205
+        },
+        {
+          "caller": "handleSendEmailVerification",
+          "callee": "t.profile.emailVerificationFailed",
+          "lineNumber": 205
+        },
+        {
+          "caller": "handleSendPhoneCode",
+          "callee": "signInWithPhoneNumber",
+          "lineNumber": 213
+        },
+        {
+          "caller": "handleSendPhoneCode",
+          "callee": "setPhoneVerificationId",
+          "lineNumber": 214
+        },
+        {
+          "caller": "handleSendPhoneCode",
+          "callee": "setPhoneStep",
+          "lineNumber": 215
+        },
+        {
+          "caller": "handleSendPhoneCode",
+          "callee": "alert",
+          "lineNumber": 217
+        },
+        {
+          "caller": "handleSendPhoneCode",
+          "callee": "t.profile.phoneCodeFailed",
+          "lineNumber": 217
+        },
+        {
+          "caller": "handleUpdatePhone",
+          "callee": "updatePhoneNumber",
+          "lineNumber": 230
+        },
+        {
+          "caller": "handleUpdatePhone",
+          "callee": "setEditingPhone",
+          "lineNumber": 231
+        },
+        {
+          "caller": "handleUpdatePhone",
+          "callee": "alert",
+          "lineNumber": 232
+        },
+        {
+          "caller": "handleUpdatePhone",
+          "callee": "alert",
+          "lineNumber": 235
+        },
+        {
+          "caller": "handleUpdatePhone",
+          "callee": "alert",
+          "lineNumber": 237
+        },
+        {
+          "caller": "handleUpdatePhone",
+          "callee": "t.profile.phoneUpdateFailed",
+          "lineNumber": 237
+        },
+        {
+          "caller": "MyPage",
+          "callee": "linkedProviders.includes",
+          "lineNumber": 244
+        },
+        {
+          "caller": "MyPage",
+          "callee": "linkedProviders.includes",
+          "lineNumber": 244
+        },
+        {
+          "caller": "toggleKakao",
+          "callee": "confirm",
+          "lineNumber": 249
+        },
+        {
+          "caller": "toggleKakao",
+          "callee": "unlinkProvider",
+          "lineNumber": 250
+        },
+        {
+          "caller": "toggleKakao",
+          "callee": "linkKakaoProvider",
+          "lineNumber": 254
+        },
+        {
+          "caller": "toggleKakao",
+          "callee": "console.error",
+          "lineNumber": 257
+        },
+        {
+          "caller": "toggleKakao",
+          "callee": "alert",
+          "lineNumber": 259
+        },
+        {
+          "caller": "toggleKakao",
+          "callee": "t.linkedAccounts.operationFailed",
+          "lineNumber": 259
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "setIsWithdrawing",
+          "lineNumber": 265
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "user.getIdToken",
+          "lineNumber": 268
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "fetch",
+          "lineNumber": 269
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "res.json().catch",
+          "lineNumber": 274
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "res.json",
+          "lineNumber": 274
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "signOut",
+          "lineNumber": 277
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "console.error",
+          "lineNumber": 279
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "alert",
+          "lineNumber": 280
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "t.withdraw.failed",
+          "lineNumber": 280
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "setIsWithdrawing",
+          "lineNumber": 281
+        },
+        {
+          "caller": "handleWithdraw",
+          "callee": "setIsWithdrawModalOpen",
+          "lineNumber": 282
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setNewNickname",
+          "lineNumber": 300
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingNickname",
+          "lineNumber": 305
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingNickname",
+          "lineNumber": 320
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEmailPassword",
+          "lineNumber": 339
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingEmail",
+          "lineNumber": 344
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setNewEmail",
+          "lineNumber": 361
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingEmail",
+          "lineNumber": 378
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingEmail",
+          "lineNumber": 395
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEmailStep",
+          "lineNumber": 396
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setIsResetModalOpen",
+          "lineNumber": 412
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setNewPhone",
+          "lineNumber": 434
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingPhone",
+          "lineNumber": 439
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setPhoneVerificationCode",
+          "lineNumber": 456
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setEditingPhone",
+          "lineNumber": 475
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setPhoneStep",
+          "lineNumber": 476
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setIsWithdrawModalOpen",
+          "lineNumber": 547
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setIsResetModalOpen",
+          "lineNumber": 556
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setIsWithdrawModalOpen",
+          "lineNumber": 563
+        },
+        {
+          "caller": "MyPage",
+          "callee": "setIsWithdrawModalOpen",
+          "lineNumber": 571
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/announcements/[id]/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 164,
+      "nonEmptyLines": 151,
+      "functions": [
+        {
+          "name": "AnnouncementDetailsPage",
+          "startLine": 9,
+          "endLine": 162,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "useMountain",
+          "lineNumber": 11
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "getAnnouncementService",
+          "lineNumber": 12
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "useState",
+          "lineNumber": 13
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "useRouter",
+          "lineNumber": 14
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "useEffect",
+          "lineNumber": 16
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "window.location.pathname.split('/').pop",
+          "lineNumber": 18
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "window.location.pathname.split",
+          "lineNumber": 18
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "announcementService.getPostById",
+          "lineNumber": 23
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "setPost",
+          "lineNumber": 25
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "setPost",
+          "lineNumber": 27
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "console.error",
+          "lineNumber": 30
+        },
+        {
+          "caller": "fetchPost",
+          "callee": "setPost",
+          "lineNumber": 31
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "fetchPost",
+          "lineNumber": 35
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "router.push",
+          "lineNumber": 43
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "router.push",
+          "lineNumber": 56
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "post.videoUrls.map",
+          "lineNumber": 77
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "url.match",
+          "lineNumber": 78
+        },
+        {
+          "caller": "AnnouncementDetailsPage",
+          "callee": "post.imageUrls.map",
+          "lineNumber": 127
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/contact/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 214,
+      "nonEmptyLines": 194,
+      "functions": [
+        {
+          "name": "Contact",
+          "startLine": 9,
+          "endLine": 214,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Contact",
+          "line": 9,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Contact",
+          "callee": "useAuth",
+          "lineNumber": 12
+        },
+        {
+          "caller": "Contact",
+          "callee": "useState",
+          "lineNumber": 15
+        },
+        {
+          "caller": "Contact",
+          "callee": "useState",
+          "lineNumber": 21
+        },
+        {
+          "caller": "Contact",
+          "callee": "useState",
+          "lineNumber": 22
+        },
+        {
+          "caller": "Contact",
+          "callee": "useState",
+          "lineNumber": 23
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "e.preventDefault",
+          "lineNumber": 26
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsSubmitting",
+          "lineNumber": 29
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setStatusMessage",
+          "lineNumber": 30
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsError",
+          "lineNumber": 31
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "user.getIdToken",
+          "lineNumber": 38
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "fetch",
+          "lineNumber": 40
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "JSON.stringify",
+          "lineNumber": 46
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "response.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setFormData",
+          "lineNumber": 55
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setStatusMessage",
+          "lineNumber": 62
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "console.error",
+          "lineNumber": 64
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsError",
+          "lineNumber": 65
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setStatusMessage",
+          "lineNumber": 66
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsSubmitting",
+          "lineNumber": 68
+        },
+        {
+          "caller": "handleChange",
+          "callee": "setFormData",
+          "lineNumber": 74
+        },
+        {
+          "caller": "Contact",
+          "callee": "cn",
+          "lineNumber": 195
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/faq/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 134,
+      "nonEmptyLines": 127,
+      "functions": [
+        {
+          "name": "FAQPage",
+          "startLine": 7,
+          "endLine": 132,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/login/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 45,
+      "nonEmptyLines": 37,
+      "functions": [
+        {
+          "name": "LoginContent",
+          "startLine": 8,
+          "endLine": 35,
+          "params": []
+        },
+        {
+          "name": "LoginPage",
+          "startLine": 37,
+          "endLine": 43,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LoginContent",
+          "callee": "useRouter",
+          "lineNumber": 9
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "useEffect",
+          "lineNumber": 11
+        },
+        {
+          "caller": "handleLoginSuccess",
+          "callee": "new URLSearchParams(window.location.search).get",
+          "lineNumber": 13
+        },
+        {
+          "caller": "handleLoginSuccess",
+          "callee": "router.push",
+          "lineNumber": 14
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "window.addEventListener",
+          "lineNumber": 18
+        },
+        {
+          "caller": "LoginContent",
+          "callee": "window.removeEventListener",
+          "lineNumber": 21
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/FAQ.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 68,
+      "nonEmptyLines": 62,
+      "functions": [
+        {
+          "name": "FAQAccordion",
+          "startLine": 14,
+          "endLine": 66,
+          "params": [
+            "{ items }"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "FAQAccordion",
+          "callee": "useState",
+          "lineNumber": 15
+        },
+        {
+          "caller": "toggleItem",
+          "callee": "newOpenItems.has",
+          "lineNumber": 19
+        },
+        {
+          "caller": "toggleItem",
+          "callee": "newOpenItems.delete",
+          "lineNumber": 20
+        },
+        {
+          "caller": "toggleItem",
+          "callee": "newOpenItems.add",
+          "lineNumber": 22
+        },
+        {
+          "caller": "toggleItem",
+          "callee": "setOpenItems",
+          "lineNumber": 24
+        },
+        {
+          "caller": "FAQAccordion",
+          "callee": "items.map",
+          "lineNumber": 29
+        },
+        {
+          "caller": "FAQAccordion",
+          "callee": "openItems.has",
+          "lineNumber": 30
+        },
+        {
+          "caller": "FAQAccordion",
+          "callee": "cn",
+          "lineNumber": 34
+        },
+        {
+          "caller": "FAQAccordion",
+          "callee": "cn",
+          "lineNumber": 40
+        },
+        {
+          "caller": "FAQAccordion",
+          "callee": "toggleItem",
+          "lineNumber": 44
+        },
+        {
+          "caller": "FAQAccordion",
+          "callee": "cn",
+          "lineNumber": 48
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/LoginForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 403,
+      "nonEmptyLines": 363,
+      "functions": [
+        {
+          "name": "LoginFormContent",
+          "startLine": 26,
+          "endLine": 393,
+          "params": [
+            "{\n  onLoginSuccess,\n  onLoginError,\n  onSwitchToSignup,\n}"
+          ]
+        },
+        {
+          "name": "LoginForm",
+          "startLine": 395,
+          "endLine": 401,
+          "params": [
+            "props"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LoginFormContent",
+          "callee": "useRouter",
+          "lineNumber": 31
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useSearchParams",
+          "lineNumber": 32
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "searchParams.get",
+          "lineNumber": 33
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 35
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 36
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 37
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 38
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 39
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 40
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 41
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 42
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useState",
+          "lineNumber": 43
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "getPermissionService",
+          "lineNumber": 45
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "useAuth",
+          "lineNumber": 54
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "React.useEffect",
+          "lineNumber": 56
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "handleCheckUser",
+          "lineNumber": 58
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "user.reload",
+          "lineNumber": 68
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "permissionService.checkUserExists",
+          "lineNumber": 73
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "setIsVerificationModalOpen",
+          "lineNumber": 79
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "setIsEmailLoginLoading",
+          "lineNumber": 80
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "permissionService.ensureUserExists",
+          "lineNumber": 87
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "handleSuccess",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "setIsUserNotFoundModalOpen",
+          "lineNumber": 93
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "signOut",
+          "lineNumber": 95
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "console.error",
+          "lineNumber": 103
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "setError",
+          "lineNumber": 104
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "onLoginError",
+          "lineNumber": 105
+        },
+        {
+          "caller": "handleCheckUser",
+          "callee": "setIsEmailLoginLoading",
+          "lineNumber": 106
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "React.useEffect",
+          "lineNumber": 110
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "searchParams.get",
+          "lineNumber": 111
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "sessionStorage.setItem",
+          "lineNumber": 113
+        },
+        {
+          "caller": "handleSuccess",
+          "callee": "window.dispatchEvent",
+          "lineNumber": 120
+        },
+        {
+          "caller": "handleSuccess",
+          "callee": "onLoginSuccess",
+          "lineNumber": 121
+        },
+        {
+          "caller": "handleSuccess",
+          "callee": "sessionStorage.getItem",
+          "lineNumber": 123
+        },
+        {
+          "caller": "handleSuccess",
+          "callee": "searchParams.get",
+          "lineNumber": 124
+        },
+        {
+          "caller": "handleSuccess",
+          "callee": "sessionStorage.removeItem",
+          "lineNumber": 125
+        },
+        {
+          "caller": "handleSuccess",
+          "callee": "router.push",
+          "lineNumber": 127
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "event.preventDefault",
+          "lineNumber": 131
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setError",
+          "lineNumber": 132
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setIsEmailLoginLoading",
+          "lineNumber": 133
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "signInWithEmailAndPassword",
+          "lineNumber": 136
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "handleCheckUser",
+          "lineNumber": 140
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "console.error",
+          "lineNumber": 142
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setError",
+          "lineNumber": 152
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "onLoginError",
+          "lineNumber": 153
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setIsEmailLoginLoading",
+          "lineNumber": 154
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsUserNotFoundModalOpen",
+          "lineNumber": 163
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "signOut",
+          "lineNumber": 164
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsEmailLoginLoading",
+          "lineNumber": 165
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsUserNotFoundModalOpen",
+          "lineNumber": 168
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "signOut",
+          "lineNumber": 184
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "onSwitchToSignup",
+          "lineNumber": 186
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "router.push",
+          "lineNumber": 189
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsVerificationModalOpen",
+          "lineNumber": 198
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "signOut",
+          "lineNumber": 201
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "sendEmailVerification",
+          "lineNumber": 205
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "alert",
+          "lineNumber": 206
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "t.verificationSentAlert",
+          "lineNumber": 206
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "console.error",
+          "lineNumber": 208
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "alert",
+          "lineNumber": 209
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsVerificationModalOpen",
+          "lineNumber": 212
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "signOut",
+          "lineNumber": 213
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsPasswordResetModalOpen",
+          "lineNumber": 219
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsKakaoGuidanceOpen",
+          "lineNumber": 254
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsKakaoGuidanceOpen",
+          "lineNumber": 263
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsKakaoGuidanceOpen",
+          "lineNumber": 265
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "signInWithKakao",
+          "lineNumber": 266
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setEmail",
+          "lineNumber": 296
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "cn",
+          "lineNumber": 298
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setPassword",
+          "lineNumber": 316
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "cn",
+          "lineNumber": 318
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setShowPassword",
+          "lineNumber": 328
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "setIsPasswordResetModalOpen",
+          "lineNumber": 345
+        },
+        {
+          "caller": "LoginFormContent",
+          "callee": "handleCheckUser",
+          "lineNumber": 382
+        }
+      ],
+      "metrics": {
+        "importCount": 12,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/NavDropdown.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 120,
+      "nonEmptyLines": 108,
+      "functions": [
+        {
+          "name": "NavDropdown",
+          "startLine": 21,
+          "endLine": 120,
+          "params": [
+            "{\n  label,\n  children,\n  disabled = false,\n  disabledTooltip,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "NavDropdown",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NavDropdown",
+          "callee": "useState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "useRef",
+          "lineNumber": 28
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "useRef",
+          "lineNumber": 29
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "useEffect",
+          "lineNumber": 31
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "wrapperRef.current.contains",
+          "lineNumber": 35
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "setOpen",
+          "lineNumber": 36
+        },
+        {
+          "caller": "handleKeyDown",
+          "callee": "setOpen",
+          "lineNumber": 40
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "document.addEventListener",
+          "lineNumber": 43
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "document.addEventListener",
+          "lineNumber": 44
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "document.removeEventListener",
+          "lineNumber": 46
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "document.removeEventListener",
+          "lineNumber": 47
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "useEffect",
+          "lineNumber": 51
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "clearTimeout",
+          "lineNumber": 53
+        },
+        {
+          "caller": "openNow",
+          "callee": "clearTimeout",
+          "lineNumber": 60
+        },
+        {
+          "caller": "openNow",
+          "callee": "setOpen",
+          "lineNumber": 61
+        },
+        {
+          "caller": "closeSoon",
+          "callee": "clearTimeout",
+          "lineNumber": 66
+        },
+        {
+          "caller": "closeSoon",
+          "callee": "setTimeout",
+          "lineNumber": 67
+        },
+        {
+          "caller": "closeSoon",
+          "callee": "setOpen",
+          "lineNumber": 67
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "cn",
+          "lineNumber": 87
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "setOpen",
+          "lineNumber": 93
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "cn",
+          "lineNumber": 98
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "cn",
+          "lineNumber": 104
+        },
+        {
+          "caller": "NavDropdown",
+          "callee": "setOpen",
+          "lineNumber": 113
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/Navigation.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 362,
+      "nonEmptyLines": 327,
+      "functions": [
+        {
+          "name": "NavItem",
+          "startLine": 23,
+          "endLine": 68,
+          "params": [
+            "{\n  href,\n  resourceId,\n  label,\n  mobile,\n  onClick,\n  canAccessResource,\n  isLoading,\n}"
+          ]
+        },
+        {
+          "name": "Navigation",
+          "startLine": 76,
+          "endLine": 362,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Navigation",
+          "line": 76,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NavItem",
+          "callee": "canAccessResource",
+          "lineNumber": 32
+        },
+        {
+          "caller": "handleClick",
+          "callee": "e.preventDefault",
+          "lineNumber": 49
+        },
+        {
+          "caller": "handleClick",
+          "callee": "onClick",
+          "lineNumber": 52
+        },
+        {
+          "caller": "NavItem",
+          "callee": "cn",
+          "lineNumber": 57
+        },
+        {
+          "caller": "NavItem",
+          "callee": "cn",
+          "lineNumber": 64
+        },
+        {
+          "caller": "Navigation",
+          "callee": "useState",
+          "lineNumber": 77
+        },
+        {
+          "caller": "Navigation",
+          "callee": "useResourceAccess",
+          "lineNumber": 78
+        },
+        {
+          "caller": "Navigation",
+          "callee": "useAuth",
+          "lineNumber": 79
+        },
+        {
+          "caller": "Navigation",
+          "callee": "usePathname",
+          "lineNumber": 80
+        },
+        {
+          "caller": "closeMobile",
+          "callee": "setIsMobileMenuOpen",
+          "lineNumber": 83
+        },
+        {
+          "caller": "Navigation",
+          "callee": "useEffect",
+          "lineNumber": 92
+        },
+        {
+          "caller": "Navigation",
+          "callee": "setIsMobileMenuOpen",
+          "lineNumber": 93
+        },
+        {
+          "caller": "Navigation",
+          "callee": "useRef",
+          "lineNumber": 100
+        },
+        {
+          "caller": "Navigation",
+          "callee": "useEffect",
+          "lineNumber": 102
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "mobileNavRef.current?.closest",
+          "lineNumber": 106
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "header.contains",
+          "lineNumber": 107
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "target.closest",
+          "lineNumber": 113
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "setIsMobileMenuOpen",
+          "lineNumber": 114
+        },
+        {
+          "caller": "Navigation",
+          "callee": "document.addEventListener",
+          "lineNumber": 116
+        },
+        {
+          "caller": "Navigation",
+          "callee": "document.removeEventListener",
+          "lineNumber": 117
+        },
+        {
+          "caller": "Navigation",
+          "callee": "setIsMobileMenuOpen",
+          "lineNumber": 186
+        },
+        {
+          "caller": "Navigation",
+          "callee": "cn",
+          "lineNumber": 187
+        },
+        {
+          "caller": "Navigation",
+          "callee": "cn",
+          "lineNumber": 306
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/SignupForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 428,
+      "nonEmptyLines": 380,
+      "functions": [
+        {
+          "name": "SignupFormContent",
+          "startLine": 15,
+          "endLine": 420,
+          "params": []
+        },
+        {
+          "name": "SignupForm",
+          "startLine": 422,
+          "endLine": 428,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "SignupForm",
+          "line": 422,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SignupFormContent",
+          "callee": "useRouter",
+          "lineNumber": 16
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useSearchParams",
+          "lineNumber": 17
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "searchParams.get",
+          "lineNumber": 18
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 21
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 24
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 25
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 26
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 28
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 31
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 32
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 35
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 36
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useRef",
+          "lineNumber": 37
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 40
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 41
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useState",
+          "lineNumber": 42
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useAuth",
+          "lineNumber": 51
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "getPermissionService",
+          "lineNumber": 52
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "useEffect",
+          "lineNumber": 54
+        },
+        {
+          "caller": "initSignup",
+          "callee": "signOut",
+          "lineNumber": 57
+        },
+        {
+          "caller": "initSignup",
+          "callee": "clearErrors",
+          "lineNumber": 58
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "initSignup",
+          "lineNumber": 60
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "console.error",
+          "lineNumber": 69
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "e.preventDefault",
+          "lineNumber": 94
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "validateDetails",
+          "lineNumber": 95
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 97
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setIsLoading",
+          "lineNumber": 101
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 102
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "phoneNumber.trim",
+          "lineNumber": 109
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "signInWithPhoneNumber",
+          "lineNumber": 113
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setConfirmationResult",
+          "lineNumber": 117
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setStep",
+          "lineNumber": 118
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "console.error",
+          "lineNumber": 120
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 121
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setIsLoading",
+          "lineNumber": 123
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "e.preventDefault",
+          "lineNumber": 128
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setError",
+          "lineNumber": 130
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setIsLoading",
+          "lineNumber": 134
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setError",
+          "lineNumber": 135
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "confirmPhoneLogin",
+          "lineNumber": 139
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "console.warn",
+          "lineNumber": 153
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "signOut",
+          "lineNumber": 168
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "t.errors.phoneLinkedOther",
+          "lineNumber": 169
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "linkEmailPassword",
+          "lineNumber": 176
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "updateProfile",
+          "lineNumber": 179
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "permissionService.ensureUserExists",
+          "lineNumber": 198
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setIsSuccess",
+          "lineNumber": 201
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setTimeout",
+          "lineNumber": 202
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "router.push",
+          "lineNumber": 203
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "console.error",
+          "lineNumber": 206
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setError",
+          "lineNumber": 207
+        },
+        {
+          "caller": "handleCompleteSignup",
+          "callee": "setIsLoading",
+          "lineNumber": 209
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "t.successWelcome",
+          "lineNumber": 228
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setDisplayName",
+          "lineNumber": 249
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setEmail",
+          "lineNumber": 262
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setPassword",
+          "lineNumber": 278
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setConfirmPassword",
+          "lineNumber": 293
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setPhoneNumber",
+          "lineNumber": 308
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setAgreeTerms",
+          "lineNumber": 322
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setAgreePrivacy",
+          "lineNumber": 342
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setVerificationCode",
+          "lineNumber": 393
+        },
+        {
+          "caller": "SignupFormContent",
+          "callee": "setStep",
+          "lineNumber": 410
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/SocialLoginButton.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 181,
+      "nonEmptyLines": 171,
+      "functions": [
+        {
+          "name": "SocialLoginButton",
+          "startLine": 18,
+          "endLine": 179,
+          "params": [
+            "{\n  provider,\n  onClick,\n  loading = false,\n  disabled = false,\n  className,\n  size = 'md',\n}"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SocialLoginButton",
+          "callee": "cn",
+          "lineNumber": 26
+        },
+        {
+          "caller": "getButtonStyle",
+          "callee": "cn",
+          "lineNumber": 45
+        },
+        {
+          "caller": "getButtonStyle",
+          "callee": "cn",
+          "lineNumber": 52
+        },
+        {
+          "caller": "getButtonStyle",
+          "callee": "cn",
+          "lineNumber": 59
+        },
+        {
+          "caller": "getIcon",
+          "callee": "cn",
+          "lineNumber": 68
+        },
+        {
+          "caller": "SocialLoginButton",
+          "callee": "getButtonStyle",
+          "lineNumber": 166
+        },
+        {
+          "caller": "SocialLoginButton",
+          "callee": "getButtonText",
+          "lineNumber": 169
+        },
+        {
+          "caller": "SocialLoginButton",
+          "callee": "getIcon",
+          "lineNumber": 172
+        },
+        {
+          "caller": "SocialLoginButton",
+          "callee": "getButtonText",
+          "lineNumber": 173
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/AboutContentEditor.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 360,
+      "nonEmptyLines": 326,
+      "functions": [
+        {
+          "name": "AboutContentEditor",
+          "startLine": 15,
+          "endLine": 360,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AboutContentEditor",
+          "line": 15,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useMountain",
+          "lineNumber": 16
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useState",
+          "lineNumber": 18
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useState",
+          "lineNumber": 19
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useState",
+          "lineNumber": 20
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useState",
+          "lineNumber": 21
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "getAboutContentService",
+          "lineNumber": 23
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "useEffect",
+          "lineNumber": 25
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "loadAboutContent",
+          "lineNumber": 26
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "setLoading",
+          "lineNumber": 31
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "setError",
+          "lineNumber": 32
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "aboutContentService.getAboutContent",
+          "lineNumber": 34
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "setContent",
+          "lineNumber": 37
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "getMountainAbout",
+          "lineNumber": 40
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "Array.isArray",
+          "lineNumber": 44
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "jsonConfig.mainContent.join",
+          "lineNumber": 45
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "Array.isArray",
+          "lineNumber": 49
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "jsonConfig.mainPhoto.caption.join",
+          "lineNumber": 50
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "setContent",
+          "lineNumber": 57
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "console.error",
+          "lineNumber": 60
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "setError",
+          "lineNumber": 61
+        },
+        {
+          "caller": "loadAboutContent",
+          "callee": "setLoading",
+          "lineNumber": 63
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSaving",
+          "lineNumber": 71
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setError",
+          "lineNumber": 72
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSuccess",
+          "lineNumber": 73
+        },
+        {
+          "caller": "handleSave",
+          "callee": "aboutContentService.saveAboutContent",
+          "lineNumber": 75
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSuccess",
+          "lineNumber": 77
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setTimeout",
+          "lineNumber": 78
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSuccess",
+          "lineNumber": 78
+        },
+        {
+          "caller": "handleSave",
+          "callee": "console.error",
+          "lineNumber": 80
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setError",
+          "lineNumber": 81
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSaving",
+          "lineNumber": 83
+        },
+        {
+          "caller": "handleInputChange",
+          "callee": "setContent",
+          "lineNumber": 88
+        },
+        {
+          "caller": "handleMainPhotoChange",
+          "callee": "setContent",
+          "lineNumber": 92
+        },
+        {
+          "caller": "handleSectionChange",
+          "callee": "setContent",
+          "lineNumber": 103
+        },
+        {
+          "caller": "addSection",
+          "callee": "setContent",
+          "lineNumber": 112
+        },
+        {
+          "caller": "removeSection",
+          "callee": "setContent",
+          "lineNumber": 123
+        },
+        {
+          "caller": "removeSection",
+          "callee": "prev.sections.filter",
+          "lineNumber": 125
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleInputChange",
+          "lineNumber": 186
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleInputChange",
+          "lineNumber": 199
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleInputChange",
+          "lineNumber": 211
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleMainPhotoChange",
+          "lineNumber": 260
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleMainPhotoChange",
+          "lineNumber": 272
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleMainPhotoChange",
+          "lineNumber": 284
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "content.sections.map",
+          "lineNumber": 300
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "t.fields.sectionTitle",
+          "lineNumber": 304
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "removeSection",
+          "lineNumber": 307
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleSectionChange",
+          "lineNumber": 326
+        },
+        {
+          "caller": "AboutContentEditor",
+          "callee": "handleSectionChange",
+          "lineNumber": 340
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/AdminAuth.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 318,
+      "nonEmptyLines": 286,
+      "functions": [
+        {
+          "name": "AdminAuth",
+          "startLine": 26,
+          "endLine": 318,
+          "params": [
+            "{ children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdminAuth",
+          "line": 26,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 28
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 29
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 30
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 31
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useAuth",
+          "lineNumber": 43
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useMountain",
+          "lineNumber": 45
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "e.preventDefault",
+          "lineNumber": 48
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setLoginError",
+          "lineNumber": 49
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setSessionExpired",
+          "lineNumber": 50
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setIsLoggingIn",
+          "lineNumber": 51
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "signInWithEmailAndPassword",
+          "lineNumber": 55
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "console.error",
+          "lineNumber": 57
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setLoginError",
+          "lineNumber": 58
+        },
+        {
+          "caller": "handleLogin",
+          "callee": "setIsLoggingIn",
+          "lineNumber": 60
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "signOut",
+          "lineNumber": 66
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "setLoginError",
+          "lineNumber": 67
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "setEmail",
+          "lineNumber": 68
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "setPassword",
+          "lineNumber": 69
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "console.error",
+          "lineNumber": 71
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 76
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 77
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 81
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useState",
+          "lineNumber": 82
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useEffect",
+          "lineNumber": 84
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setIsAdmin",
+          "lineNumber": 86
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setAdminCheckFailed",
+          "lineNumber": 87
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setIsAdminLoading",
+          "lineNumber": 88
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setIsAdminLoading",
+          "lineNumber": 93
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setAdminCheckFailed",
+          "lineNumber": 94
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "(async () => {\n      try {\n        const adminStatus = await checkIsAdmin(user, mountainId);\n        if (!cancelled) setIsAdmin(adminStatus);\n      } catch (error) {\n        // Couldn't verify (not \"not an admin\") — surface a retry, don't deny.\n        console.error('Error checking admin status:', error);\n        if (!cancelled) {\n          setIsAdmin(false);\n          setAdminCheckFailed(true);\n        }\n      } finally {\n        if (!cancelled) setIsAdminLoading(false);\n      }\n    })",
+          "lineNumber": 95
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "checkIsAdmin",
+          "lineNumber": 97
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setIsAdmin",
+          "lineNumber": 98
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "console.error",
+          "lineNumber": 101
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setIsAdmin",
+          "lineNumber": 103
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setAdminCheckFailed",
+          "lineNumber": 104
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setIsAdminLoading",
+          "lineNumber": 107
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useCallback",
+          "lineNumber": 118
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "signOut",
+          "lineNumber": 120
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setSessionExpired",
+          "lineNumber": 121
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "console.error",
+          "lineNumber": 125
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "useIdleTimeout",
+          "lineNumber": 129
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setAdminCheckNonce",
+          "lineNumber": 162
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setEmail",
+          "lineNumber": 258
+        },
+        {
+          "caller": "AdminAuth",
+          "callee": "setPassword",
+          "lineNumber": 270
+        }
+      ],
+      "metrics": {
+        "importCount": 11,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/YouTubeAuthPanelNew.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 232,
+      "nonEmptyLines": 207,
+      "functions": [
+        {
+          "name": "YouTubeAuthPanel",
+          "startLine": 30,
+          "endLine": 232,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "YouTubeAuthPanel",
+          "line": 30,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "useAuth",
+          "lineNumber": 31
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "useState",
+          "lineNumber": 32
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "useState",
+          "lineNumber": 33
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "useState",
+          "lineNumber": 34
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "setLoading",
+          "lineNumber": 38
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "fetch",
+          "lineNumber": 39
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "authHeader",
+          "lineNumber": 40
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "response.json",
+          "lineNumber": 42
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "setAuthStatus",
+          "lineNumber": 43
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "console.error",
+          "lineNumber": 45
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "setAuthStatus",
+          "lineNumber": 46
+        },
+        {
+          "caller": "checkAuthStatus",
+          "callee": "setLoading",
+          "lineNumber": 52
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setRefreshing",
+          "lineNumber": 58
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "fetch",
+          "lineNumber": 61
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "authHeader",
+          "lineNumber": 62
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "response.json",
+          "lineNumber": 64
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "alert",
+          "lineNumber": 67
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "window.open",
+          "lineNumber": 72
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setInterval",
+          "lineNumber": 79
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "clearInterval",
+          "lineNumber": 81
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setTimeout",
+          "lineNumber": 83
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "checkAuthStatus",
+          "lineNumber": 84
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setRefreshing",
+          "lineNumber": 85
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setTimeout",
+          "lineNumber": 91
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "clearInterval",
+          "lineNumber": 93
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "authWindow.close",
+          "lineNumber": 95
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setRefreshing",
+          "lineNumber": 97
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "console.error",
+          "lineNumber": 102
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "alert",
+          "lineNumber": 103
+        },
+        {
+          "caller": "handleRefreshToken",
+          "callee": "setRefreshing",
+          "lineNumber": 104
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "useEffect",
+          "lineNumber": 108
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "checkAuthStatus",
+          "lineNumber": 110
+        },
+        {
+          "caller": "formatDate",
+          "callee": "dateString.includes",
+          "lineNumber": 148
+        },
+        {
+          "caller": "formatDate",
+          "callee": "dateString.includes",
+          "lineNumber": 148
+        },
+        {
+          "caller": "formatDate",
+          "callee": "now.getTime",
+          "lineNumber": 155
+        },
+        {
+          "caller": "formatDate",
+          "callee": "date.getTime",
+          "lineNumber": 155
+        },
+        {
+          "caller": "formatDate",
+          "callee": "Math.floor",
+          "lineNumber": 156
+        },
+        {
+          "caller": "formatDate",
+          "callee": "date.toLocaleString",
+          "lineNumber": 158
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "getStatusColor",
+          "lineNumber": 183
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "getStatusEmoji",
+          "lineNumber": 185
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "getStatusColor",
+          "lineNumber": 187
+        },
+        {
+          "caller": "YouTubeAuthPanel",
+          "callee": "formatDate",
+          "lineNumber": 200
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

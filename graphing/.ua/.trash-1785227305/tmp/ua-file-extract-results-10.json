@@ -1,0 +1,617 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 11,
+  "filesSkipped": [
+    "src/app/globals.css"
+  ],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 11,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 8,
+      "failed": 0,
+      "skipped": 3
+    }
+  },
+  "results": [
+    {
+      "path": "config/deployment/cloud-run-service.yaml",
+      "language": "yaml",
+      "fileCategory": "config",
+      "totalLines": 56,
+      "nonEmptyLines": 55,
+      "sections": [
+        {
+          "heading": "apiVersion",
+          "level": 1,
+          "line": 4
+        },
+        {
+          "heading": "kind",
+          "level": 1,
+          "line": 5
+        },
+        {
+          "heading": "metadata",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "spec",
+          "level": 1,
+          "line": 11
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 4
+      }
+    },
+    {
+      "path": "config/mountains/mountains.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 154,
+      "nonEmptyLines": 154,
+      "sections": [
+        {
+          "heading": "_meta",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "_shared",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "geyang",
+          "level": 1,
+          "line": 11
+        },
+        {
+          "heading": "manisan",
+          "level": 1,
+          "line": 87
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 4
+      }
+    },
+    {
+      "path": "config/permissions.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 59,
+      "nonEmptyLines": 59,
+      "sections": [
+        {
+          "heading": "roles",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "mountains",
+          "level": 1,
+          "line": 45
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 2
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/privacy/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 244,
+      "nonEmptyLines": 226,
+      "functions": [
+        {
+          "name": "Section",
+          "startLine": 21,
+          "endLine": 28,
+          "params": [
+            "{ title, children }"
+          ]
+        },
+        {
+          "name": "PrivacyPolicyPage",
+          "startLine": 30,
+          "endLine": 244,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "PrivacyPolicyPage",
+          "line": 30,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/terms/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 155,
+      "nonEmptyLines": 139,
+      "functions": [
+        {
+          "name": "Section",
+          "startLine": 18,
+          "endLine": 25,
+          "params": [
+            "{ title, children }"
+          ]
+        },
+        {
+          "name": "TermsOfUsePage",
+          "startLine": 27,
+          "endLine": 155,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "TermsOfUsePage",
+          "line": 27,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 58,
+      "nonEmptyLines": 53,
+      "functions": [
+        {
+          "name": "RootLayout",
+          "startLine": 32,
+          "endLine": 58,
+          "params": [
+            "{ children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "viewport",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "RootLayout",
+          "line": 32,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/media/CatTagField.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 82,
+      "nonEmptyLines": 75,
+      "functions": [
+        {
+          "name": "CatTagField",
+          "startLine": 19,
+          "endLine": 80,
+          "params": [
+            "{\n  value,\n  onChange,\n  onOpenSelector,\n  placeholder,\n}"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "removeTag",
+          "callee": "onChange",
+          "lineNumber": 26
+        },
+        {
+          "caller": "removeTag",
+          "callee": "value\n        .split(',')\n        .map((tag) => tag.trim())\n        .filter((tag) => tag && tag !== tagToRemove)\n        .join",
+          "lineNumber": 27
+        },
+        {
+          "caller": "removeTag",
+          "callee": "value\n        .split(',')\n        .map((tag) => tag.trim())\n        .filter",
+          "lineNumber": 27
+        },
+        {
+          "caller": "removeTag",
+          "callee": "value\n        .split(',')\n        .map",
+          "lineNumber": 27
+        },
+        {
+          "caller": "removeTag",
+          "callee": "value\n        .split",
+          "lineNumber": 27
+        },
+        {
+          "caller": "removeTag",
+          "callee": "tag.trim",
+          "lineNumber": 29
+        },
+        {
+          "caller": "CatTagField",
+          "callee": "onChange",
+          "lineNumber": 41
+        },
+        {
+          "caller": "CatTagField",
+          "callee": "value.split(',').map",
+          "lineNumber": 57
+        },
+        {
+          "caller": "CatTagField",
+          "callee": "value.split",
+          "lineNumber": 57
+        },
+        {
+          "caller": "CatTagField",
+          "callee": "tag.trim",
+          "lineNumber": 58
+        },
+        {
+          "caller": "CatTagField",
+          "callee": "removeTag",
+          "lineNumber": 68
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/media/MediaGrid.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 39,
+      "nonEmptyLines": 33,
+      "functions": [
+        {
+          "name": "MediaGrid",
+          "startLine": 17,
+          "endLine": 37,
+          "params": [
+            "{\n  items,\n  renderCard,\n  emptyMessage,\n}"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MediaGrid",
+          "callee": "items.map",
+          "lineNumber": 32
+        },
+        {
+          "caller": "MediaGrid",
+          "callee": "renderCard",
+          "lineNumber": 33
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/media/MediaStatsCards.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 42,
+      "nonEmptyLines": 35,
+      "functions": [
+        {
+          "name": "MediaStatsCards",
+          "startLine": 30,
+          "endLine": 40,
+          "params": [
+            "{ cards }"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MediaStatsCards",
+          "callee": "cards.map",
+          "lineNumber": 32
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/media/PaginationBar.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 80,
+      "nonEmptyLines": 70,
+      "functions": [
+        {
+          "name": "PaginationBar",
+          "startLine": 20,
+          "endLine": 78,
+          "params": [
+            "{\n  currentPage,\n  totalPages,\n  onPageChange,\n  previousLabel,\n  nextLabel,\n  windowSize = 7,\n}"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PaginationBar",
+          "callee": "Math.floor",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "onPageChange",
+          "lineNumber": 35
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "Math.max",
+          "lineNumber": 35
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "Array.from",
+          "lineNumber": 42
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "Math.min",
+          "lineNumber": 42
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "onPageChange",
+          "lineNumber": 57
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "onPageChange",
+          "lineNumber": 70
+        },
+        {
+          "caller": "PaginationBar",
+          "callee": "Math.min",
+          "lineNumber": 70
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/media/useDateAutoParse.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 119,
+      "nonEmptyLines": 104,
+      "functions": [
+        {
+          "name": "useDateAutoParse",
+          "startLine": 44,
+          "endLine": 119,
+          "params": [
+            "{\n  items,\n  setItems,\n  needsDate,\n  parse,\n  label,\n  applyUpdate,\n  mergeParsedDate,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "useDateAutoParse",
+          "line": 44,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useDateAutoParse",
+          "callee": "useState",
+          "lineNumber": 53
+        },
+        {
+          "caller": "useDateAutoParse",
+          "callee": "useState",
+          "lineNumber": 54
+        },
+        {
+          "caller": "useDateAutoParse",
+          "callee": "useMemo",
+          "lineNumber": 57
+        },
+        {
+          "caller": "useDateAutoParse",
+          "callee": "items.filter",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useDateAutoParse",
+          "callee": "needsDate",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useDateAutoParse",
+          "callee": "parse",
+          "lineNumber": 58
+        },
+        {
+          "caller": "run",
+          "callee": "setParsing",
+          "lineNumber": 63
+        },
+        {
+          "caller": "run",
+          "callee": "setProcessingIds",
+          "lineNumber": 64
+        },
+        {
+          "caller": "run",
+          "callee": "setProcessingIds",
+          "lineNumber": 74
+        },
+        {
+          "caller": "run",
+          "callee": "new Set(prev).add",
+          "lineNumber": 74
+        },
+        {
+          "caller": "run",
+          "callee": "parse",
+          "lineNumber": 76
+        },
+        {
+          "caller": "run",
+          "callee": "applyUpdate",
+          "lineNumber": 78
+        },
+        {
+          "caller": "run",
+          "callee": "updatedItems.findIndex",
+          "lineNumber": 80
+        },
+        {
+          "caller": "run",
+          "callee": "mergeParsedDate",
+          "lineNumber": 82
+        },
+        {
+          "caller": "run",
+          "callee": "results.push",
+          "lineNumber": 86
+        },
+        {
+          "caller": "run",
+          "callee": "label",
+          "lineNumber": 87
+        },
+        {
+          "caller": "run",
+          "callee": "parsedDate.toISOString().split",
+          "lineNumber": 88
+        },
+        {
+          "caller": "run",
+          "callee": "parsedDate.toISOString",
+          "lineNumber": 88
+        },
+        {
+          "caller": "run",
+          "callee": "console.error",
+          "lineNumber": 93
+        },
+        {
+          "caller": "run",
+          "callee": "label",
+          "lineNumber": 93
+        },
+        {
+          "caller": "run",
+          "callee": "results.push",
+          "lineNumber": 95
+        },
+        {
+          "caller": "run",
+          "callee": "label",
+          "lineNumber": 96
+        },
+        {
+          "caller": "run",
+          "callee": "setProcessingIds",
+          "lineNumber": 101
+        },
+        {
+          "caller": "run",
+          "callee": "next.delete",
+          "lineNumber": 103
+        },
+        {
+          "caller": "run",
+          "callee": "setItems",
+          "lineNumber": 110
+        },
+        {
+          "caller": "run",
+          "callee": "setParsing",
+          "lineNumber": 113
+        },
+        {
+          "caller": "run",
+          "callee": "setProcessingIds",
+          "lineNumber": 114
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,4612 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 25,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 25,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 25,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/[mountain]/admin/cats/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 1142,
+      "nonEmptyLines": 1083,
+      "functions": [
+        {
+          "name": "CatsCMSPage",
+          "startLine": 76,
+          "endLine": 1142,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "CatsCMSPage",
+          "line": 76,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useMountain",
+          "lineNumber": 77
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "getCatService",
+          "lineNumber": 78
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useAuth",
+          "lineNumber": 79
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 81
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 82
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 83
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 84
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 85
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 86
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 87
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 88
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 89
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 90
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 93
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 94
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useRef",
+          "lineNumber": 97
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useRef",
+          "lineNumber": 98
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 101
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 102
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 103
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 104
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 105
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 106
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 107
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 108
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useState",
+          "lineNumber": 109
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "getUniqueLocations",
+          "lineNumber": 112
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "getUniqueStatuses",
+          "lineNumber": 113
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "getUniqueGenders",
+          "lineNumber": 114
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "getUniqueBirthYears",
+          "lineNumber": 115
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "sortCats",
+          "lineNumber": 127
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "filterCats",
+          "lineNumber": 128
+        },
+        {
+          "caller": "handleSort",
+          "callee": "setSortOrder",
+          "lineNumber": 144
+        },
+        {
+          "caller": "handleSort",
+          "callee": "setSortBy",
+          "lineNumber": 146
+        },
+        {
+          "caller": "handleSort",
+          "callee": "setSortOrder",
+          "lineNumber": 147
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setSearchTerm",
+          "lineNumber": 153
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setStatusFilter",
+          "lineNumber": 154
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setLocationFilter",
+          "lineNumber": 155
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setGenderFilter",
+          "lineNumber": 156
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setBirthYearFilter",
+          "lineNumber": 157
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setNeuteredFilter",
+          "lineNumber": 158
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setAdoptableFilter",
+          "lineNumber": 159
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setSortBy",
+          "lineNumber": 160
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setSortOrder",
+          "lineNumber": 161
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useEffect",
+          "lineNumber": 165
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "loadCats",
+          "lineNumber": 166
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "useEffect",
+          "lineNumber": 170
+        },
+        {
+          "caller": "handleClickOutside",
+          "callee": "dwellingRef.current.contains",
+          "lineNumber": 172
+        },
+        {
+          "caller": "handleClickOutside",
+          "callee": "setDwellingDropdownOpen",
+          "lineNumber": 173
+        },
+        {
+          "caller": "handleClickOutside",
+          "callee": "prevDwellingRef.current.contains",
+          "lineNumber": 175
+        },
+        {
+          "caller": "handleClickOutside",
+          "callee": "setPrevDwellingDropdownOpen",
+          "lineNumber": 176
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "document.addEventListener",
+          "lineNumber": 180
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "document.removeEventListener",
+          "lineNumber": 182
+        },
+        {
+          "caller": "loadCats",
+          "callee": "setLoading",
+          "lineNumber": 188
+        },
+        {
+          "caller": "loadCats",
+          "callee": "setError",
+          "lineNumber": 189
+        },
+        {
+          "caller": "loadCats",
+          "callee": "catService.getAllCats",
+          "lineNumber": 190
+        },
+        {
+          "caller": "loadCats",
+          "callee": "setCats",
+          "lineNumber": 191
+        },
+        {
+          "caller": "loadCats",
+          "callee": "setError",
+          "lineNumber": 193
+        },
+        {
+          "caller": "loadCats",
+          "callee": "adminStrings.cats.errors.loadFailed",
+          "lineNumber": 193
+        },
+        {
+          "caller": "loadCats",
+          "callee": "setLoading",
+          "lineNumber": 195
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "e.preventDefault",
+          "lineNumber": 201
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setSaving",
+          "lineNumber": 204
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 205
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "catService.updateCat",
+          "lineNumber": 215
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setCats",
+          "lineNumber": 216
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "cats.map",
+          "lineNumber": 216
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "catService.createCat",
+          "lineNumber": 219
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setCats",
+          "lineNumber": 220
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "triggerPublicRevalidate",
+          "lineNumber": 224
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setFormData",
+          "lineNumber": 227
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setShowForm",
+          "lineNumber": 228
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setEditingCat",
+          "lineNumber": 229
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 231
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "adminStrings.cats.errors.saveFailed",
+          "lineNumber": 231
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setSaving",
+          "lineNumber": 233
+        },
+        {
+          "caller": "handleEdit",
+          "callee": "setEditingCat",
+          "lineNumber": 239
+        },
+        {
+          "caller": "handleEdit",
+          "callee": "setFormData",
+          "lineNumber": 240
+        },
+        {
+          "caller": "handleEdit",
+          "callee": "setShowForm",
+          "lineNumber": 261
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setError",
+          "lineNumber": 267
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "catService.deleteCat",
+          "lineNumber": 268
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setCats",
+          "lineNumber": 269
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "cats.filter",
+          "lineNumber": 269
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setDeleteConfirm",
+          "lineNumber": 270
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "triggerPublicRevalidate",
+          "lineNumber": 272
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setError",
+          "lineNumber": 274
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "adminStrings.cats.errors.deleteFailed",
+          "lineNumber": 274
+        },
+        {
+          "caller": "handleNewCat",
+          "callee": "setEditingCat",
+          "lineNumber": 280
+        },
+        {
+          "caller": "handleNewCat",
+          "callee": "setFormData",
+          "lineNumber": 281
+        },
+        {
+          "caller": "handleNewCat",
+          "callee": "setShowForm",
+          "lineNumber": 282
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "setShowForm",
+          "lineNumber": 287
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "setEditingCat",
+          "lineNumber": 288
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "setFormData",
+          "lineNumber": 289
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setView",
+          "lineNumber": 310
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setView",
+          "lineNumber": 320
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setSearchTerm",
+          "lineNumber": 350
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setShowFilters",
+          "lineNumber": 356
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setStatusFilter",
+          "lineNumber": 379
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "uniqueStatuses.map",
+          "lineNumber": 383
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setLocationFilter",
+          "lineNumber": 396
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "uniqueLocations.map",
+          "lineNumber": 400
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setGenderFilter",
+          "lineNumber": 413
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "uniqueGenders.map",
+          "lineNumber": 417
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setBirthYearFilter",
+          "lineNumber": 430
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "uniqueBirthYears.map",
+          "lineNumber": 434
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "year.toString",
+          "lineNumber": 435
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setNeuteredFilter",
+          "lineNumber": 447
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "neuteredOptions.map",
+          "lineNumber": 451
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setAdoptableFilter",
+          "lineNumber": 464
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "cats.filter",
+          "lineNumber": 489
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 524
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 536
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 547
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 563
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 584
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "parseInt",
+          "lineNumber": 586
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 603
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 620
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 633
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setDwellingDropdownOpen",
+          "lineNumber": 634
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setDwellingDropdownOpen",
+          "lineNumber": 640
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "allDwellingValues\n                              .filter(\n                                (dwelling) =>\n                                  formData.dwelling === '' ||\n                                  dwelling.toLowerCase().includes(formData.dwelling.toLowerCase())\n                              )\n                              .map",
+          "lineNumber": 651
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "allDwellingValues\n                              .filter",
+          "lineNumber": 651
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling.toLowerCase().includes",
+          "lineNumber": 655
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling.toLowerCase",
+          "lineNumber": 655
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "formData.dwelling.toLowerCase",
+          "lineNumber": 655
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 662
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setDwellingDropdownOpen",
+          "lineNumber": 663
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "allDwellingValues.filter",
+          "lineNumber": 670
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling.toLowerCase().includes",
+          "lineNumber": 673
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling.toLowerCase",
+          "lineNumber": 673
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "formData.dwelling.toLowerCase",
+          "lineNumber": 673
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 694
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setPrevDwellingDropdownOpen",
+          "lineNumber": 696
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setPrevDwellingDropdownOpen",
+          "lineNumber": 702
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "allDwellingValues\n                              .filter(\n                                (dwelling) =>\n                                  formData.prev_dwelling === '' ||\n                                  dwelling\n                                    .toLowerCase()\n                                    .includes(formData.prev_dwelling.toLowerCase())\n                              )\n                              .map",
+          "lineNumber": 713
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "allDwellingValues\n                              .filter",
+          "lineNumber": 713
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling\n                                    .toLowerCase()\n                                    .includes",
+          "lineNumber": 717
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling\n                                    .toLowerCase",
+          "lineNumber": 717
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "formData.prev_dwelling.toLowerCase",
+          "lineNumber": 719
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 726
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setPrevDwellingDropdownOpen",
+          "lineNumber": 727
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "allDwellingValues.filter",
+          "lineNumber": 734
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling\n                                  .toLowerCase()\n                                  .includes",
+          "lineNumber": 737
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "dwelling\n                                  .toLowerCase",
+          "lineNumber": 737
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "formData.prev_dwelling.toLowerCase",
+          "lineNumber": 739
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 758
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 770
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 783
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 795
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 809
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 821
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 841
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 860
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 875
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 888
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "handleSort",
+          "lineNumber": 925
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "handleSort",
+          "lineNumber": 939
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "handleSort",
+          "lineNumber": 953
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "handleSort",
+          "lineNumber": 967
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "filteredCats.map",
+          "lineNumber": 985
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "cat.name.charAt",
+          "lineNumber": 998
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "handleEdit",
+          "lineNumber": 1085
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setDeleteConfirm",
+          "lineNumber": 1091
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "setDeleteConfirm",
+          "lineNumber": 1128
+        },
+        {
+          "caller": "CatsCMSPage",
+          "callee": "handleDelete",
+          "lineNumber": 1131
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 39,
+      "nonEmptyLines": 35,
+      "functions": [
+        {
+          "name": "Home",
+          "startLine": 14,
+          "endLine": 39,
+          "params": [
+            "{ params }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "revalidate",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "Home",
+          "line": 14,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Home",
+          "callee": "resolveMountainIdOrNull",
+          "lineNumber": 15
+        },
+        {
+          "caller": "Home",
+          "callee": "notFound",
+          "lineNumber": 17
+        },
+        {
+          "caller": "Home",
+          "callee": "Promise.all",
+          "lineNumber": 22
+        },
+        {
+          "caller": "Home",
+          "callee": "getAllPointsServer",
+          "lineNumber": 23
+        },
+        {
+          "caller": "Home",
+          "callee": "getAllCatsServer",
+          "lineNumber": 24
+        },
+        {
+          "caller": "Home",
+          "callee": "groupCatsByPoint",
+          "lineNumber": 26
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 36,
+      "functions": [
+        {
+          "name": "AdoptionGallery",
+          "startLine": 16,
+          "endLine": 41,
+          "params": [
+            "{ cats }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdoptionGallery",
+          "line": 16,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdoptionGallery",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "useEffect",
+          "lineNumber": 19
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "cats\n      .map((cat) => cat.thumbnailUrl)\n      .filter",
+          "lineNumber": 20
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "cats\n      .map",
+          "lineNumber": 20
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "url.trim",
+          "lineNumber": 22
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "thumbnailPreloader.preloadThumbnails(thumbnailUrls).catch",
+          "lineNumber": 24
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "thumbnailPreloader.preloadThumbnails",
+          "lineNumber": 24
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "console.warn",
+          "lineNumber": 25
+        },
+        {
+          "caller": "AdoptionGallery",
+          "callee": "setSelectedCat",
+          "lineNumber": 35
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/adoption/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 96,
+      "nonEmptyLines": 90,
+      "functions": [
+        {
+          "name": "AdoptionPage",
+          "startLine": 22,
+          "endLine": 96,
+          "params": [
+            "{ params }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "revalidate",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "AdoptionPage",
+          "line": 22,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdoptionPage",
+          "callee": "resolveMountainIdOrNull",
+          "lineNumber": 23
+        },
+        {
+          "caller": "AdoptionPage",
+          "callee": "notFound",
+          "lineNumber": 25
+        },
+        {
+          "caller": "AdoptionPage",
+          "callee": "getAllCatsServer",
+          "lineNumber": 31
+        },
+        {
+          "caller": "AdoptionPage",
+          "callee": "all.filter",
+          "lineNumber": 34
+        },
+        {
+          "caller": "AdoptionPage",
+          "callee": "cat.thumbnailUrl.trim",
+          "lineNumber": 35
+        },
+        {
+          "caller": "AdoptionPage",
+          "callee": "console.error",
+          "lineNumber": 39
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 404,
+      "nonEmptyLines": 378,
+      "functions": [
+        {
+          "name": "sexLabel",
+          "startLine": 37,
+          "endLine": 41,
+          "params": [
+            "sex"
+          ]
+        },
+        {
+          "name": "sexShort",
+          "startLine": 43,
+          "endLine": 47,
+          "params": [
+            "sex"
+          ]
+        },
+        {
+          "name": "birthYearLabel",
+          "startLine": 49,
+          "endLine": 53,
+          "params": [
+            "cat"
+          ]
+        },
+        {
+          "name": "neuteredLabel",
+          "startLine": 55,
+          "endLine": 59,
+          "params": [
+            "isNeutered"
+          ]
+        },
+        {
+          "name": "neuteredShort",
+          "startLine": 61,
+          "endLine": 65,
+          "params": [
+            "isNeutered"
+          ]
+        },
+        {
+          "name": "FilterSelect",
+          "startLine": 83,
+          "endLine": 111,
+          "params": [
+            "{\n  label,\n  value,\n  onChange,\n  options,\n}"
+          ]
+        },
+        {
+          "name": "CatThumb",
+          "startLine": 114,
+          "endLine": 137,
+          "params": [
+            "{ cat, size }"
+          ]
+        },
+        {
+          "name": "CatsBrowser",
+          "startLine": 139,
+          "endLine": 404,
+          "params": [
+            "{\n  cats,\n  dwellingNames,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CatsBrowser",
+          "line": 139,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "FilterSelect",
+          "callee": "onChange",
+          "lineNumber": 99
+        },
+        {
+          "caller": "FilterSelect",
+          "callee": "options.map",
+          "lineNumber": 103
+        },
+        {
+          "caller": "CatThumb",
+          "callee": "cat.thumbnailUrl.trim",
+          "lineNumber": 115
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useState",
+          "lineNumber": 146
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useState",
+          "lineNumber": 147
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useState",
+          "lineNumber": 148
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useState",
+          "lineNumber": 149
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useState",
+          "lineNumber": 150
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useState",
+          "lineNumber": 151
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useEffect",
+          "lineNumber": 154
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "cats.map((c) => c.thumbnailUrl).filter",
+          "lineNumber": 155
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "cats.map",
+          "lineNumber": 155
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "u.trim",
+          "lineNumber": 155
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "thumbnailPreloader.preloadThumbnails(urls).catch",
+          "lineNumber": 157
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "thumbnailPreloader.preloadThumbnails",
+          "lineNumber": 157
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "console.warn",
+          "lineNumber": 158
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useMemo",
+          "lineNumber": 169
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "cats.filter",
+          "lineNumber": 170
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "HIDDEN_STATUSES.includes",
+          "lineNumber": 170
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useMemo",
+          "lineNumber": 173
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "cats.filter",
+          "lineNumber": 174
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "HIDDEN_STATUSES.includes",
+          "lineNumber": 174
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useMemo",
+          "lineNumber": 179
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "getUniqueGenders",
+          "lineNumber": 179
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useMemo",
+          "lineNumber": 180
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "getUniqueBirthYears",
+          "lineNumber": 180
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useMemo",
+          "lineNumber": 181
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "getUniqueLocations",
+          "lineNumber": 181
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "useMemo",
+          "lineNumber": 183
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "filterCats",
+          "lineNumber": 184
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "sortCats",
+          "lineNumber": 185
+        },
+        {
+          "caller": "handleSort",
+          "callee": "setSortOrder",
+          "lineNumber": 190
+        },
+        {
+          "caller": "handleSort",
+          "callee": "setSortKey",
+          "lineNumber": 192
+        },
+        {
+          "caller": "handleSort",
+          "callee": "setSortOrder",
+          "lineNumber": 193
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setFilters",
+          "lineNumber": 197
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "Object.values(filters).some",
+          "lineNumber": 198
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "Object.values",
+          "lineNumber": 198
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setFilters",
+          "lineNumber": 210
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setShowFilters",
+          "lineNumber": 217
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setFilters",
+          "lineNumber": 231
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "uniqueGenders.map",
+          "lineNumber": 232
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "sexLabel",
+          "lineNumber": 232
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setFilters",
+          "lineNumber": 237
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "uniqueBirthYears.map",
+          "lineNumber": 238
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "y.toString",
+          "lineNumber": 238
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setFilters",
+          "lineNumber": 243
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setFilters",
+          "lineNumber": 253
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "uniqueLocations.map",
+          "lineNumber": 254
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "dwellingLabel",
+          "lineNumber": 254
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setFilters",
+          "lineNumber": 259
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setShowAll",
+          "lineNumber": 282
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "displayed.map",
+          "lineNumber": 297
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setSelectedCat",
+          "lineNumber": 301
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "sexLabel",
+          "lineNumber": 316
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "birthYearLabel",
+          "lineNumber": 316
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "neuteredLabel",
+          "lineNumber": 318
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "dwellingLabel",
+          "lineNumber": 319
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "cat.sickness.trim",
+          "lineNumber": 320
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "SORT_COLUMNS.map",
+          "lineNumber": 333
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "handleSort",
+          "lineNumber": 337
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "displayed.map",
+          "lineNumber": 357
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setSelectedCat",
+          "lineNumber": 360
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "sexShort",
+          "lineNumber": 367
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "neuteredShort",
+          "lineNumber": 373
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "dwellingLabel",
+          "lineNumber": 374
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "cat.sickness.trim",
+          "lineNumber": 386
+        },
+        {
+          "caller": "CatsBrowser",
+          "callee": "setSelectedCat",
+          "lineNumber": 398
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 8,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/cats/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 70,
+      "nonEmptyLines": 65,
+      "functions": [
+        {
+          "name": "CatsPage",
+          "startLine": 21,
+          "endLine": 70,
+          "params": [
+            "{ params }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "revalidate",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "CatsPage",
+          "line": 21,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CatsPage",
+          "callee": "resolveMountainIdOrNull",
+          "lineNumber": 22
+        },
+        {
+          "caller": "CatsPage",
+          "callee": "notFound",
+          "lineNumber": 24
+        },
+        {
+          "caller": "CatsPage",
+          "callee": "Promise.all",
+          "lineNumber": 31
+        },
+        {
+          "caller": "CatsPage",
+          "callee": "getAllCatsServer",
+          "lineNumber": 32
+        },
+        {
+          "caller": "CatsPage",
+          "callee": "getAllPointsServer",
+          "lineNumber": 33
+        },
+        {
+          "caller": "CatsPage",
+          "callee": "points.reduce",
+          "lineNumber": 36
+        },
+        {
+          "caller": "CatsPage",
+          "callee": "console.error",
+          "lineNumber": 42
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/CatCircleGrid.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 57,
+      "nonEmptyLines": 54,
+      "functions": [
+        {
+          "name": "CatCircleGrid",
+          "startLine": 20,
+          "endLine": 57,
+          "params": [
+            "{ cats, onSelect, priorityCount = 0 }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CatCircleGrid",
+          "line": 20,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CatCircleGrid",
+          "callee": "cats.map",
+          "lineNumber": 23
+        },
+        {
+          "caller": "CatCircleGrid",
+          "callee": "onSelect",
+          "lineNumber": 27
+        },
+        {
+          "caller": "CatCircleGrid",
+          "callee": "cn",
+          "lineNumber": 28
+        },
+        {
+          "caller": "CatCircleGrid",
+          "callee": "cn",
+          "lineNumber": 34
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/CatGallery.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 90,
+      "nonEmptyLines": 80,
+      "functions": [
+        {
+          "name": "SectionLabel",
+          "startLine": 25,
+          "endLine": 32,
+          "params": [
+            "{ children }"
+          ]
+        },
+        {
+          "name": "CatGridSection",
+          "startLine": 34,
+          "endLine": 45,
+          "params": [
+            "{ title, cats, emptyLabel, priorityCount, onSelect }"
+          ]
+        },
+        {
+          "name": "CatGallery",
+          "startLine": 47,
+          "endLine": 90,
+          "params": [
+            "{ cats, onClose }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CatGallery",
+          "line": 47,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CatGallery",
+          "callee": "useState",
+          "lineNumber": 49
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "useEffect",
+          "lineNumber": 52
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "[...currentResidents, ...formerResidents]\n      .map((cat) => cat.thumbnailUrl)\n      .filter",
+          "lineNumber": 53
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "[...currentResidents, ...formerResidents]\n      .map",
+          "lineNumber": 53
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "url.trim",
+          "lineNumber": 55
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "thumbnailPreloader.preloadThumbnails(thumbnailUrls).catch",
+          "lineNumber": 58
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "thumbnailPreloader.preloadThumbnails",
+          "lineNumber": 58
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "console.warn",
+          "lineNumber": 59
+        },
+        {
+          "caller": "CatGallery",
+          "callee": "setSelectedCat",
+          "lineNumber": 84
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/Compass.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 39,
+      "nonEmptyLines": 38,
+      "functions": [
+        {
+          "name": "Compass",
+          "startLine": 15,
+          "endLine": 39,
+          "params": [
+            "{ portrait = false }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Compass",
+          "line": 15,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/IntroCard.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 71,
+      "nonEmptyLines": 64,
+      "functions": [
+        {
+          "name": "IntroCard",
+          "startLine": 15,
+          "endLine": 71,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "IntroCard",
+          "line": 15,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "IntroCard",
+          "callee": "useState",
+          "lineNumber": 16
+        },
+        {
+          "caller": "IntroCard",
+          "callee": "useEffect",
+          "lineNumber": 19
+        },
+        {
+          "caller": "IntroCard",
+          "callee": "localStorage.getItem",
+          "lineNumber": 21
+        },
+        {
+          "caller": "IntroCard",
+          "callee": "setVisible",
+          "lineNumber": 22
+        },
+        {
+          "caller": "IntroCard",
+          "callee": "console.error",
+          "lineNumber": 27
+        },
+        {
+          "caller": "IntroCard",
+          "callee": "setVisible",
+          "lineNumber": 28
+        },
+        {
+          "caller": "dismiss",
+          "callee": "setVisible",
+          "lineNumber": 33
+        },
+        {
+          "caller": "dismiss",
+          "callee": "localStorage.setItem",
+          "lineNumber": 35
+        },
+        {
+          "caller": "dismiss",
+          "callee": "console.error",
+          "lineNumber": 38
+        },
+        {
+          "caller": "IntroCard",
+          "callee": "cn",
+          "lineNumber": 46
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/LeafletMountainMap.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 556,
+      "nonEmptyLines": 521,
+      "functions": [
+        {
+          "name": "requireMapImage",
+          "startLine": 29,
+          "endLine": 34,
+          "params": [
+            "image",
+            "key"
+          ]
+        },
+        {
+          "name": "getLayout",
+          "startLine": 36,
+          "endLine": 48,
+          "params": [
+            "mobile",
+            "images"
+          ]
+        },
+        {
+          "name": "pointToLatLng",
+          "startLine": 57,
+          "endLine": 68,
+          "params": [
+            "point",
+            "mobile",
+            "images"
+          ]
+        },
+        {
+          "name": "usePointMarkers",
+          "startLine": 89,
+          "endLine": 112,
+          "params": [
+            "points",
+            "catsByPoint"
+          ]
+        },
+        {
+          "name": "escapeHtml",
+          "startLine": 114,
+          "endLine": 120,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "buildMarkerHtml",
+          "startLine": 142,
+          "endLine": 158,
+          "params": [
+            "marker",
+            "animate",
+            "labelAbove"
+          ]
+        },
+        {
+          "name": "buildClusterHtml",
+          "startLine": 165,
+          "endLine": 171,
+          "params": [
+            "count"
+          ]
+        },
+        {
+          "name": "createClusterIcon",
+          "startLine": 173,
+          "endLine": 180,
+          "params": [
+            "count"
+          ]
+        },
+        {
+          "name": "PointMarkersLayer",
+          "startLine": 200,
+          "endLine": 358,
+          "params": [
+            "{\n  markers,\n  onSelect,\n  isMobile,\n  clustering,\n  maxClusterRadius,\n  images,\n}"
+          ]
+        },
+        {
+          "name": "MapViewController",
+          "startLine": 365,
+          "endLine": 468,
+          "params": [
+            "{\n  bounds,\n  isMobile,\n}"
+          ]
+        },
+        {
+          "name": "LeafletMountainMap",
+          "startLine": 495,
+          "endLine": 556,
+          "params": [
+            "{\n  points,\n  catsByPoint,\n  onPointClick,\n  isMobile,\n  clustering,\n  maxClusterRadius,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "LeafletMountainMap",
+          "line": 495,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "usePointMarkers",
+          "callee": "useMemo",
+          "lineNumber": 90
+        },
+        {
+          "caller": "usePointMarkers",
+          "callee": "points.map",
+          "lineNumber": 92
+        },
+        {
+          "caller": "usePointMarkers",
+          "callee": "current.filter",
+          "lineNumber": 94
+        },
+        {
+          "caller": "usePointMarkers",
+          "callee": "cat.thumbnailUrl.trim",
+          "lineNumber": 95
+        },
+        {
+          "caller": "usePointMarkers",
+          "callee": "Math.floor",
+          "lineNumber": 99
+        },
+        {
+          "caller": "usePointMarkers",
+          "callee": "Math.random",
+          "lineNumber": 99
+        },
+        {
+          "caller": "escapeHtml",
+          "callee": "value\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace",
+          "lineNumber": 115
+        },
+        {
+          "caller": "escapeHtml",
+          "callee": "value\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace",
+          "lineNumber": 115
+        },
+        {
+          "caller": "escapeHtml",
+          "callee": "value\n    .replace(/&/g, '&amp;')\n    .replace",
+          "lineNumber": 115
+        },
+        {
+          "caller": "escapeHtml",
+          "callee": "value\n    .replace",
+          "lineNumber": 115
+        },
+        {
+          "caller": "buildMarkerHtml",
+          "callee": "escapeHtml",
+          "lineNumber": 143
+        },
+        {
+          "caller": "buildMarkerHtml",
+          "callee": "escapeHtml",
+          "lineNumber": 149
+        },
+        {
+          "caller": "createClusterIcon",
+          "callee": "L.divIcon",
+          "lineNumber": 174
+        },
+        {
+          "caller": "createClusterIcon",
+          "callee": "buildClusterHtml",
+          "lineNumber": 176
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "useMap",
+          "lineNumber": 215
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "useEffect",
+          "lineNumber": 217
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "L.layerGroup",
+          "lineNumber": 218
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.getSize",
+          "lineNumber": 227
+        },
+        {
+          "caller": "wantsLabelAbove",
+          "callee": "resolveLabelAbove",
+          "lineNumber": 229
+        },
+        {
+          "caller": "makePin",
+          "callee": "L.divIcon",
+          "lineNumber": 236
+        },
+        {
+          "caller": "makePin",
+          "callee": "buildMarkerHtml",
+          "lineNumber": 241
+        },
+        {
+          "caller": "makePin",
+          "callee": "wantsLabelAbove",
+          "lineNumber": 241
+        },
+        {
+          "caller": "makePin",
+          "callee": "L.marker",
+          "lineNumber": 245
+        },
+        {
+          "caller": "makePin",
+          "callee": "leafletMarker.on",
+          "lineNumber": 246
+        },
+        {
+          "caller": "makePin",
+          "callee": "onSelect",
+          "lineNumber": 246
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "markers.forEach",
+          "lineNumber": 254
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "pointToLatLng",
+          "lineNumber": 255
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.addLayer",
+          "lineNumber": 256
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "makePin",
+          "lineNumber": 256
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.addTo",
+          "lineNumber": 258
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.remove",
+          "lineNumber": 260
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.getBoundsZoom",
+          "lineNumber": 268
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "markers.map",
+          "lineNumber": 269
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "pointToLatLng",
+          "lineNumber": 270
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "L.latLng",
+          "lineNumber": 271
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "latlngs.map",
+          "lineNumber": 273
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.project",
+          "lineNumber": 274
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "greedyClusterByRadius",
+          "lineNumber": 277
+        },
+        {
+          "caller": "collapse",
+          "callee": "expanded.collapse",
+          "lineNumber": 283
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "map.latLngToLayerPoint",
+          "lineNumber": 290
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "spiderfyRadius",
+          "lineNumber": 291
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "memberIdx.forEach",
+          "lineNumber": 293
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "L.point",
+          "lineNumber": 295
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "Math.cos",
+          "lineNumber": 296
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "Math.sin",
+          "lineNumber": 297
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "map.layerPointToLatLng",
+          "lineNumber": 299
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "L.polyline",
+          "lineNumber": 300
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "makePin",
+          "lineNumber": 306
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "layer.addLayer",
+          "lineNumber": 307
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "layer.addLayer",
+          "lineNumber": 308
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "added.push",
+          "lineNumber": 309
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "badge.setOpacity",
+          "lineNumber": 311
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "added.forEach",
+          "lineNumber": 315
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "layer.removeLayer",
+          "lineNumber": 315
+        },
+        {
+          "caller": "spiderfy",
+          "callee": "badge.setOpacity",
+          "lineNumber": 316
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "clusters.forEach",
+          "lineNumber": 321
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.addLayer",
+          "lineNumber": 324
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "makePin",
+          "lineNumber": 324
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.unproject",
+          "lineNumber": 327
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "L.point",
+          "lineNumber": 327
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "L.marker",
+          "lineNumber": 329
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "createClusterIcon",
+          "lineNumber": 330
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "badge.on",
+          "lineNumber": 333
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "collapse",
+          "lineNumber": 335
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "spiderfy",
+          "lineNumber": 336
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.addLayer",
+          "lineNumber": 338
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.on",
+          "lineNumber": 344
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.on",
+          "lineNumber": 345
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.addTo",
+          "lineNumber": 347
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.off",
+          "lineNumber": 350
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "map.off",
+          "lineNumber": 351
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "collapse",
+          "lineNumber": 352
+        },
+        {
+          "caller": "PointMarkersLayer",
+          "callee": "layer.remove",
+          "lineNumber": 353
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "useMap",
+          "lineNumber": 372
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "useEffect",
+          "lineNumber": 374
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "map.getBoundsZoom",
+          "lineNumber": 382
+        },
+        {
+          "caller": "applyFit",
+          "callee": "map.getBoundsZoom",
+          "lineNumber": 384
+        },
+        {
+          "caller": "applyFit",
+          "callee": "map.setMinZoom",
+          "lineNumber": 385
+        },
+        {
+          "caller": "applyFit",
+          "callee": "map.fitBounds",
+          "lineNumber": 386
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "applyFit",
+          "lineNumber": 388
+        },
+        {
+          "caller": "syncDrag",
+          "callee": "map.getZoom",
+          "lineNumber": 397
+        },
+        {
+          "caller": "syncDrag",
+          "callee": "map.dragging.enable",
+          "lineNumber": 397
+        },
+        {
+          "caller": "syncDrag",
+          "callee": "map.dragging.disable",
+          "lineNumber": 398
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "syncDrag",
+          "lineNumber": 400
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "map.on",
+          "lineNumber": 401
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "map.getContainer",
+          "lineNumber": 407
+        },
+        {
+          "caller": "onWheel",
+          "callee": "e.preventDefault",
+          "lineNumber": 410
+        },
+        {
+          "caller": "onWheel",
+          "callee": "map.containerPointToLatLng",
+          "lineNumber": 411
+        },
+        {
+          "caller": "onWheel",
+          "callee": "map.mouseEventToContainerPoint",
+          "lineNumber": 411
+        },
+        {
+          "caller": "onWheel",
+          "callee": "map.setZoomAround",
+          "lineNumber": 415
+        },
+        {
+          "caller": "onWheel",
+          "callee": "map.getZoom",
+          "lineNumber": 415
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "container.addEventListener",
+          "lineNumber": 417
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "L.DomUtil.create",
+          "lineNumber": 421
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "L.DomUtil.create",
+          "lineNumber": 422
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "btn.setAttribute",
+          "lineNumber": 425
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "btn.setAttribute",
+          "lineNumber": 426
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "L.DomEvent.disableClickPropagation",
+          "lineNumber": 433
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "L.DomEvent.on",
+          "lineNumber": 434
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "L.DomEvent.preventDefault",
+          "lineNumber": 435
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "applyFit",
+          "lineNumber": 436
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "control.addTo",
+          "lineNumber": 440
+        },
+        {
+          "caller": "onResize",
+          "callee": "clearTimeout",
+          "lineNumber": 450
+        },
+        {
+          "caller": "onResize",
+          "callee": "setTimeout",
+          "lineNumber": 451
+        },
+        {
+          "caller": "onResize",
+          "callee": "map.invalidateSize",
+          "lineNumber": 452
+        },
+        {
+          "caller": "onResize",
+          "callee": "applyFit",
+          "lineNumber": 453
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "window.addEventListener",
+          "lineNumber": 456
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "container.removeEventListener",
+          "lineNumber": 459
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "window.removeEventListener",
+          "lineNumber": 460
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "map.off",
+          "lineNumber": 461
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "clearTimeout",
+          "lineNumber": 462
+        },
+        {
+          "caller": "MapViewController",
+          "callee": "control.remove",
+          "lineNumber": 463
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "usePointMarkers",
+          "lineNumber": 503
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "useMountain",
+          "lineNumber": 504
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "useMemo",
+          "lineNumber": 505
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "getMapConfig",
+          "lineNumber": 506
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "requireMapImage",
+          "lineNumber": 508
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "requireMapImage",
+          "lineNumber": 509
+        },
+        {
+          "caller": "LeafletMountainMap",
+          "callee": "getLayout",
+          "lineNumber": 512
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 11,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/MountainViewer.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 146,
+      "nonEmptyLines": 137,
+      "functions": [
+        {
+          "name": "MountainViewer",
+          "startLine": 39,
+          "endLine": 146,
+          "params": [
+            "{ points, catsByPoint }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "MountainViewer",
+          "line": 39,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MountainViewer",
+          "callee": "useState",
+          "lineNumber": 41
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "useIsMobile",
+          "lineNumber": 47
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "useIsPhoneLandscape",
+          "lineNumber": 48
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "useMountain",
+          "lineNumber": 52
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "getMapConfig",
+          "lineNumber": 53
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "useEffect",
+          "lineNumber": 59
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "Array.from",
+          "lineNumber": 60
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "Object.values(catsByPoint)\n          .flatMap((group) => group.current)\n          .map((cat) => cat.thumbnailUrl)\n          .filter",
+          "lineNumber": 62
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "Object.values(catsByPoint)\n          .flatMap((group) => group.current)\n          .map",
+          "lineNumber": 62
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "Object.values(catsByPoint)\n          .flatMap",
+          "lineNumber": 62
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "Object.values",
+          "lineNumber": 62
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "url.trim",
+          "lineNumber": 65
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "thumbnailPreloader.preloadThumbnails(urls).catch",
+          "lineNumber": 69
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "thumbnailPreloader.preloadThumbnails",
+          "lineNumber": 69
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "console.error",
+          "lineNumber": 70
+        },
+        {
+          "caller": "MountainViewer",
+          "callee": "setSelectedPointId",
+          "lineNumber": 141
+        }
+      ],
+      "metrics": {
+        "importCount": 10,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/cat-grid/CatGrid.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 853,
+      "nonEmptyLines": 784,
+      "functions": [
+        {
+          "name": "coerceBulkValue",
+          "startLine": 180,
+          "endLine": 196,
+          "params": [
+            "spec",
+            "raw"
+          ]
+        },
+        {
+          "name": "SelectionCell",
+          "startLine": 203,
+          "endLine": 217,
+          "params": [
+            "{ rowData, columnData }"
+          ]
+        },
+        {
+          "name": "analyzeRows",
+          "startLine": 239,
+          "endLine": 310,
+          "params": [
+            "rows",
+            "originalById"
+          ]
+        },
+        {
+          "name": "CatGrid",
+          "startLine": 312,
+          "endLine": 760,
+          "params": []
+        },
+        {
+          "name": "FilterSelect",
+          "startLine": 763,
+          "endLine": 791,
+          "params": [
+            "{\n  label,\n  value,\n  onChange,\n  options,\n}"
+          ]
+        },
+        {
+          "name": "BulkValueEditor",
+          "startLine": 793,
+          "endLine": 853,
+          "params": [
+            "{\n  spec,\n  value,\n  onChange,\n  locations,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CatGrid",
+          "line": 312,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "coerceBulkValue",
+          "callee": "parseInt",
+          "lineNumber": 190
+        },
+        {
+          "caller": "coerceBulkValue",
+          "callee": "Number.isNaN",
+          "lineNumber": 191
+        },
+        {
+          "caller": "SelectionCell",
+          "callee": "columnData.toggle",
+          "lineNumber": 211
+        },
+        {
+          "caller": "SelectionCell",
+          "callee": "e.stopPropagation",
+          "lineNumber": 212
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "originalById.get",
+          "lineNumber": 246
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "String",
+          "lineNumber": 260
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "String",
+          "lineNumber": 261
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "invalidCells.add",
+          "lineNumber": 270
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "errorMessages.push",
+          "lineNumber": 271
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "invalidCells.add",
+          "lineNumber": 284
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "errorMessages.push",
+          "lineNumber": 285
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "Object.keys",
+          "lineNumber": 302
+        },
+        {
+          "caller": "analyzeRows",
+          "callee": "updates.push",
+          "lineNumber": 305
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMountain",
+          "lineNumber": 313
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "getCatService",
+          "lineNumber": 314
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useAuth",
+          "lineNumber": 315
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 317
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 318
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 319
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 320
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 321
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 322
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 325
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 326
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 327
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 328
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 329
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 330
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useState",
+          "lineNumber": 331
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useCallback",
+          "lineNumber": 333
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setLoading",
+          "lineNumber": 335
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setError",
+          "lineNumber": 336
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "catService.getAllCats",
+          "lineNumber": 337
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setOriginalCats",
+          "lineNumber": 338
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setRows",
+          "lineNumber": 339
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setError",
+          "lineNumber": 341
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "t.loadFailed",
+          "lineNumber": 341
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setLoading",
+          "lineNumber": 343
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useEffect",
+          "lineNumber": 347
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "loadCats",
+          "lineNumber": 348
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 351
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "originalCats.map",
+          "lineNumber": 352
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 356
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "analyzeRows",
+          "lineNumber": 357
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 362
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "getUniqueStatuses",
+          "lineNumber": 362
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 363
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "getUniqueLocations",
+          "lineNumber": 363
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 364
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "getUniqueGenders",
+          "lineNumber": 364
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 365
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "getUniqueBirthYears",
+          "lineNumber": 365
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 368
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "filterCats",
+          "lineNumber": 369
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "sortCats",
+          "lineNumber": 370
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "sorted.map",
+          "lineNumber": 371
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "selectedIds.has",
+          "lineNumber": 371
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 374
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "displayedRows.map",
+          "lineNumber": 374
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "displayedIds.every",
+          "lineNumber": 376
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "selectedIds.has",
+          "lineNumber": 376
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useCallback",
+          "lineNumber": 379
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setSelectedIds",
+          "lineNumber": 380
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "next.has",
+          "lineNumber": 382
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "next.delete",
+          "lineNumber": 382
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "next.add",
+          "lineNumber": 382
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useCallback",
+          "lineNumber": 387
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setSelectedIds",
+          "lineNumber": 388
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "displayedIds.every",
+          "lineNumber": 390
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "next.has",
+          "lineNumber": 390
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "displayedIds.forEach",
+          "lineNumber": 392
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "next.delete",
+          "lineNumber": 392
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "displayedIds.forEach",
+          "lineNumber": 394
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "next.add",
+          "lineNumber": 394
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useCallback",
+          "lineNumber": 400
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setSortKey",
+          "lineNumber": 401
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setSortOrder",
+          "lineNumber": 403
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setSortOrder",
+          "lineNumber": 406
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useMemo",
+          "lineNumber": 412
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "FIELD_SPECS.map",
+          "lineNumber": 414
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "keyColumn",
+          "lineNumber": 415
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "e.stopPropagation",
+          "lineNumber": 421
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "handleSort",
+          "lineNumber": 422
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useCallback",
+          "lineNumber": 470
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "invalidCells.has",
+          "lineNumber": 473
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "useCallback",
+          "lineNumber": 482
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "newRows.map",
+          "lineNumber": 483
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setRows",
+          "lineNumber": 484
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "prev.map",
+          "lineNumber": 485
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "byId.get",
+          "lineNumber": 486
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "BULK_FIELDS.find",
+          "lineNumber": 494
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "coerceBulkValue",
+          "lineNumber": 495
+        },
+        {
+          "caller": "applyBulkEdit",
+          "callee": "coerceBulkValue",
+          "lineNumber": 498
+        },
+        {
+          "caller": "applyBulkEdit",
+          "callee": "setRows",
+          "lineNumber": 500
+        },
+        {
+          "caller": "applyBulkEdit",
+          "callee": "prev.map",
+          "lineNumber": 501
+        },
+        {
+          "caller": "applyBulkEdit",
+          "callee": "selectedIds.has",
+          "lineNumber": 501
+        },
+        {
+          "caller": "applyBulkEdit",
+          "callee": "setNotice",
+          "lineNumber": 503
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setNotice",
+          "lineNumber": 507
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setError",
+          "lineNumber": 508
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setNotice",
+          "lineNumber": 516
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSaving",
+          "lineNumber": 521
+        },
+        {
+          "caller": "handleSave",
+          "callee": "catService.batchUpdateCats",
+          "lineNumber": 522
+        },
+        {
+          "caller": "handleSave",
+          "callee": "triggerPublicRevalidate",
+          "lineNumber": 524
+        },
+        {
+          "caller": "handleSave",
+          "callee": "loadCats",
+          "lineNumber": 526
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setNotice",
+          "lineNumber": 527
+        },
+        {
+          "caller": "handleSave",
+          "callee": "t.saved",
+          "lineNumber": 527
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setError",
+          "lineNumber": 529
+        },
+        {
+          "caller": "handleSave",
+          "callee": "t.saveFailed",
+          "lineNumber": 529
+        },
+        {
+          "caller": "handleSave",
+          "callee": "setSaving",
+          "lineNumber": 531
+        },
+        {
+          "caller": "handleDiscard",
+          "callee": "setRows",
+          "lineNumber": 536
+        },
+        {
+          "caller": "handleDiscard",
+          "callee": "setNotice",
+          "lineNumber": 537
+        },
+        {
+          "caller": "handleDiscard",
+          "callee": "setError",
+          "lineNumber": 538
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setFilters",
+          "lineNumber": 542
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setSortKey",
+          "lineNumber": 543
+        },
+        {
+          "caller": "clearFilters",
+          "callee": "setSortOrder",
+          "lineNumber": 544
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "t.unsavedRows",
+          "lineNumber": 576
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 615
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setShowFilters",
+          "lineNumber": 619
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "t.count",
+          "lineNumber": 623
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 634
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "uniqueStatuses.map",
+          "lineNumber": 635
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 640
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "uniqueLocations.map",
+          "lineNumber": 641
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 646
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "uniqueGenders.map",
+          "lineNumber": 647
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 655
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "uniqueBirthYears.map",
+          "lineNumber": 656
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "y.toString",
+          "lineNumber": 657
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "t.filters.yearLabel",
+          "lineNumber": 658
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 664
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setFilters",
+          "lineNumber": 674
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "t.bulk.selected",
+          "lineNumber": 692
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setBulkField",
+          "lineNumber": 698
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setBulkValue",
+          "lineNumber": 699
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "BULK_FIELDS.map",
+          "lineNumber": 703
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "setSelectedIds",
+          "lineNumber": 719
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "Array.from(new Set(errorMessages)).map",
+          "lineNumber": 741
+        },
+        {
+          "caller": "CatGrid",
+          "callee": "Array.from",
+          "lineNumber": 741
+        },
+        {
+          "caller": "FilterSelect",
+          "callee": "onChange",
+          "lineNumber": 779
+        },
+        {
+          "caller": "FilterSelect",
+          "callee": "options.map",
+          "lineNumber": 783
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "onChange",
+          "lineNumber": 812
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "onChange",
+          "lineNumber": 828
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "locations.map",
+          "lineNumber": 834
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "onChange",
+          "lineNumber": 844
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "(spec.options ?? []).map",
+          "lineNumber": 846
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "String",
+          "lineNumber": 847
+        },
+        {
+          "caller": "BulkValueEditor",
+          "callee": "String",
+          "lineNumber": 847
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 1,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/cat-grid/selectColumn.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 101,
+      "nonEmptyLines": 92,
+      "functions": [
+        {
+          "name": "SelectComponent",
+          "startLine": 24,
+          "endLine": 80,
+          "params": [
+            "{\n  rowData,\n  setRowData,\n  focus,\n  stopEditing,\n  columnData,\n}"
+          ]
+        },
+        {
+          "name": "selectColumn",
+          "startLine": 84,
+          "endLine": 101,
+          "params": [
+            "options"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "selectColumn",
+          "line": 84,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SelectComponent",
+          "callee": "useRef",
+          "lineNumber": 31
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "useLayoutEffect",
+          "lineNumber": 35
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "ref.current?.focus",
+          "lineNumber": 37
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "ref.current?.blur",
+          "lineNumber": 39
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "String",
+          "lineNumber": 43
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "columnData.options.find",
+          "lineNumber": 67
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "String",
+          "lineNumber": 67
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "setRowData",
+          "lineNumber": 68
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "stopEditing",
+          "lineNumber": 70
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "columnData.options.map",
+          "lineNumber": 73
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "String",
+          "lineNumber": 74
+        },
+        {
+          "caller": "SelectComponent",
+          "callee": "String",
+          "lineNumber": 74
+        },
+        {
+          "caller": "selectColumn",
+          "callee": "String",
+          "lineNumber": 92
+        },
+        {
+          "caller": "selectColumn",
+          "callee": "options.find",
+          "lineNumber": 94
+        },
+        {
+          "caller": "selectColumn",
+          "callee": "String",
+          "lineNumber": 94
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/hooks/useIsMobile.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 27,
+      "nonEmptyLines": 22,
+      "functions": [
+        {
+          "name": "useIsMobile",
+          "startLine": 15,
+          "endLine": 27,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MOBILE_BREAKPOINT",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "useIsMobile",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useIsMobile",
+          "callee": "useState",
+          "lineNumber": 16
+        },
+        {
+          "caller": "useIsMobile",
+          "callee": "useEffect",
+          "lineNumber": 18
+        },
+        {
+          "caller": "useIsMobile",
+          "callee": "window.matchMedia",
+          "lineNumber": 19
+        },
+        {
+          "caller": "update",
+          "callee": "setIsMobile",
+          "lineNumber": 20
+        },
+        {
+          "caller": "useIsMobile",
+          "callee": "update",
+          "lineNumber": 21
+        },
+        {
+          "caller": "useIsMobile",
+          "callee": "mq.addEventListener",
+          "lineNumber": 22
+        },
+        {
+          "caller": "useIsMobile",
+          "callee": "mq.removeEventListener",
+          "lineNumber": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/hooks/useIsPhoneLandscape.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 28,
+      "nonEmptyLines": 24,
+      "functions": [
+        {
+          "name": "useIsPhoneLandscape",
+          "startLine": 16,
+          "endLine": 28,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "useIsPhoneLandscape",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useIsPhoneLandscape",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "useIsPhoneLandscape",
+          "callee": "useEffect",
+          "lineNumber": 19
+        },
+        {
+          "caller": "useIsPhoneLandscape",
+          "callee": "window.matchMedia",
+          "lineNumber": 20
+        },
+        {
+          "caller": "update",
+          "callee": "setIsPhoneLandscape",
+          "lineNumber": 21
+        },
+        {
+          "caller": "useIsPhoneLandscape",
+          "callee": "update",
+          "lineNumber": 22
+        },
+        {
+          "caller": "useIsPhoneLandscape",
+          "callee": "mq.addEventListener",
+          "lineNumber": 23
+        },
+        {
+          "caller": "useIsPhoneLandscape",
+          "callee": "mq.removeEventListener",
+          "lineNumber": 24
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/cache-config.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 18,
+      "nonEmptyLines": 18,
+      "exports": [
+        {
+          "name": "REVALIDATE_SECONDS",
+          "line": 18,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/revalidate-client.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 34,
+      "nonEmptyLines": 33,
+      "functions": [
+        {
+          "name": "triggerPublicRevalidate",
+          "startLine": 14,
+          "endLine": 34,
+          "params": [
+            "user"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "triggerPublicRevalidate",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "triggerPublicRevalidate",
+          "callee": "console.error",
+          "lineNumber": 17
+        },
+        {
+          "caller": "triggerPublicRevalidate",
+          "callee": "user.getIdToken",
+          "lineNumber": 20
+        },
+        {
+          "caller": "triggerPublicRevalidate",
+          "callee": "fetch",
+          "lineNumber": 21
+        },
+        {
+          "caller": "triggerPublicRevalidate",
+          "callee": "console.error",
+          "lineNumber": 26
+        },
+        {
+          "caller": "triggerPublicRevalidate",
+          "callee": "console.error",
+          "lineNumber": 29
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/server/cat-reads.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 56,
+      "nonEmptyLines": 50,
+      "functions": [
+        {
+          "name": "getAllCatsServer",
+          "startLine": 27,
+          "endLine": 38,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "groupCatsByPoint",
+          "startLine": 43,
+          "endLine": 56,
+          "params": [
+            "cats"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getAllCatsServer",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "groupCatsByPoint",
+          "line": 43,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getAllCatsServer",
+          "callee": "db\n      .collection(CATS_COLLECTION)\n      .where('mountainId', '==', mountainId)\n      .get",
+          "lineNumber": 29
+        },
+        {
+          "caller": "getAllCatsServer",
+          "callee": "db\n      .collection(CATS_COLLECTION)\n      .where",
+          "lineNumber": 29
+        },
+        {
+          "caller": "getAllCatsServer",
+          "callee": "db\n      .collection",
+          "lineNumber": 29
+        },
+        {
+          "caller": "getAllCatsServer",
+          "callee": "snapshot.docs.map",
+          "lineNumber": 33
+        },
+        {
+          "caller": "getAllCatsServer",
+          "callee": "doc.data",
+          "lineNumber": 33
+        },
+        {
+          "caller": "getAllCatsServer",
+          "callee": "console.error",
+          "lineNumber": 35
+        },
+        {
+          "caller": "groupCatsByPoint",
+          "callee": "bucket(cat.dwelling).current.push",
+          "lineNumber": 51
+        },
+        {
+          "caller": "groupCatsByPoint",
+          "callee": "bucket",
+          "lineNumber": 51
+        },
+        {
+          "caller": "groupCatsByPoint",
+          "callee": "bucket(cat.prev_dwelling).former.push",
+          "lineNumber": 52
+        },
+        {
+          "caller": "groupCatsByPoint",
+          "callee": "bucket",
+          "lineNumber": 52
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/server/point-reads.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 36,
+      "nonEmptyLines": 34,
+      "functions": [
+        {
+          "name": "getAllPointsServer",
+          "startLine": 25,
+          "endLine": 36,
+          "params": [
+            "mountainId"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getAllPointsServer",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getAllPointsServer",
+          "callee": "db\n      .collection(POINTS_COLLECTION)\n      .where('mountainId', '==', mountainId)\n      .get",
+          "lineNumber": 27
+        },
+        {
+          "caller": "getAllPointsServer",
+          "callee": "db\n      .collection(POINTS_COLLECTION)\n      .where",
+          "lineNumber": 27
+        },
+        {
+          "caller": "getAllPointsServer",
+          "callee": "db\n      .collection",
+          "lineNumber": 27
+        },
+        {
+          "caller": "getAllPointsServer",
+          "callee": "snapshot.docs.map",
+          "lineNumber": 31
+        },
+        {
+          "caller": "getAllPointsServer",
+          "callee": "doc.data",
+          "lineNumber": 31
+        },
+        {
+          "caller": "getAllPointsServer",
+          "callee": "console.error",
+          "lineNumber": 33
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/services/thumbnailPreloader.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 130,
+      "nonEmptyLines": 110,
+      "classes": [
+        {
+          "name": "ThumbnailPreloader",
+          "startLine": 4,
+          "endLine": 127,
+          "methods": [
+            "preloadThumbnailsForPoints",
+            "preloadThumbnails",
+            "preloadThumbnailsPrivate",
+            "preloadSingleThumbnail",
+            "isThumbnailLoaded",
+            "waitForThumbnail",
+            "arePointThumbnailsPreloaded",
+            "clear"
+          ],
+          "properties": [
+            "loadedThumbnails",
+            "loadingPromises",
+            "preloadedPoints"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "thumbnailPreloader",
+          "line": 130,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "getCatService",
+          "lineNumber": 13
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "pointIds.map",
+          "lineNumber": 16
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "catService.getCatsByPointId",
+          "lineNumber": 18
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "current.filter",
+          "lineNumber": 19
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "cat.thumbnailUrl.trim",
+          "lineNumber": 19
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "console.error",
+          "lineNumber": 21
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "Promise.all",
+          "lineNumber": 26
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "allCatsArrays.flat",
+          "lineNumber": 27
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "allCats\n      .map((cat) => cat.thumbnailUrl)\n      .filter",
+          "lineNumber": 30
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "allCats\n      .map",
+          "lineNumber": 30
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "url.trim",
+          "lineNumber": 32
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "Array.from",
+          "lineNumber": 33
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "this.preloadThumbnailsPrivate",
+          "lineNumber": 36
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "pointIds.forEach",
+          "lineNumber": 39
+        },
+        {
+          "caller": "preloadThumbnailsForPoints",
+          "callee": "this.preloadedPoints.add",
+          "lineNumber": 39
+        },
+        {
+          "caller": "preloadThumbnails",
+          "callee": "urls.map",
+          "lineNumber": 46
+        },
+        {
+          "caller": "preloadThumbnails",
+          "callee": "this.preloadSingleThumbnail",
+          "lineNumber": 46
+        },
+        {
+          "caller": "preloadThumbnails",
+          "callee": "Promise.all",
+          "lineNumber": 47
+        },
+        {
+          "caller": "preloadThumbnailsPrivate",
+          "callee": "urls.map",
+          "lineNumber": 54
+        },
+        {
+          "caller": "preloadThumbnailsPrivate",
+          "callee": "this.preloadSingleThumbnail",
+          "lineNumber": 54
+        },
+        {
+          "caller": "preloadThumbnailsPrivate",
+          "callee": "Promise.all",
+          "lineNumber": 55
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadedThumbnails.has",
+          "lineNumber": 62
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadingPromises.has",
+          "lineNumber": 67
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadingPromises.get",
+          "lineNumber": 68
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadedThumbnails.add",
+          "lineNumber": 74
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadingPromises.delete",
+          "lineNumber": 75
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "resolve",
+          "lineNumber": 76
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadingPromises.delete",
+          "lineNumber": 79
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "reject",
+          "lineNumber": 80
+        },
+        {
+          "caller": "preloadSingleThumbnail",
+          "callee": "this.loadingPromises.set",
+          "lineNumber": 85
+        },
+        {
+          "caller": "isThumbnailLoaded",
+          "callee": "this.loadedThumbnails.has",
+          "lineNumber": 93
+        },
+        {
+          "caller": "waitForThumbnail",
+          "callee": "this.loadedThumbnails.has",
+          "lineNumber": 100
+        },
+        {
+          "caller": "waitForThumbnail",
+          "callee": "this.loadingPromises.has",
+          "lineNumber": 104
+        },
+        {
+          "caller": "waitForThumbnail",
+          "callee": "this.loadingPromises.get",
+          "lineNumber": 105
+        },
+        {
+          "caller": "waitForThumbnail",
+          "callee": "this.preloadSingleThumbnail",
+          "lineNumber": 109
+        },
+        {
+          "caller": "arePointThumbnailsPreloaded",
+          "callee": "this.preloadedPoints.has",
+          "lineNumber": 116
+        },
+        {
+          "caller": "clear",
+          "callee": "this.loadedThumbnails.clear",
+          "lineNumber": 123
+        },
+        {
+          "caller": "clear",
+          "callee": "this.loadingPromises.clear",
+          "lineNumber": 124
+        },
+        {
+          "caller": "clear",
+          "callee": "this.preloadedPoints.clear",
+          "lineNumber": 125
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/types/index.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 78,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/utils/cat-filters.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 138,
+      "nonEmptyLines": 118,
+      "functions": [
+        {
+          "name": "filterCats",
+          "startLine": 35,
+          "endLine": 83,
+          "params": [
+            "cats",
+            "f"
+          ]
+        },
+        {
+          "name": "sortCats",
+          "startLine": 91,
+          "endLine": 109,
+          "params": [
+            "cats",
+            "sortKey",
+            "order"
+          ]
+        },
+        {
+          "name": "getUniqueLocations",
+          "startLine": 112,
+          "endLine": 119,
+          "params": [
+            "cats"
+          ]
+        },
+        {
+          "name": "getUniqueStatuses",
+          "startLine": 122,
+          "endLine": 124,
+          "params": [
+            "cats"
+          ]
+        },
+        {
+          "name": "getUniqueGenders",
+          "startLine": 127,
+          "endLine": 129,
+          "params": [
+            "cats"
+          ]
+        },
+        {
+          "name": "getUniqueBirthYears",
+          "startLine": 132,
+          "endLine": 138,
+          "params": [
+            "cats"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "EMPTY_CAT_FILTERS",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "filterCats",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "sortCats",
+          "line": 91,
+          "isDefault": false
+        },
+        {
+          "name": "getUniqueLocations",
+          "line": 112,
+          "isDefault": false
+        },
+        {
+          "name": "getUniqueStatuses",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "getUniqueGenders",
+          "line": 127,
+          "isDefault": false
+        },
+        {
+          "name": "getUniqueBirthYears",
+          "line": 132,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "filterCats",
+          "callee": "f.searchTerm.toLowerCase",
+          "lineNumber": 36
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cats.filter",
+          "lineNumber": 38
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.name.toLowerCase().includes",
+          "lineNumber": 40
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.name.toLowerCase",
+          "lineNumber": 40
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.alt_name?.toLowerCase().includes",
+          "lineNumber": 41
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.alt_name?.toLowerCase",
+          "lineNumber": 41
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.description?.toLowerCase().includes",
+          "lineNumber": 42
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.description?.toLowerCase",
+          "lineNumber": 42
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.character?.toLowerCase().includes",
+          "lineNumber": 43
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.character?.toLowerCase",
+          "lineNumber": 43
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.parents?.toLowerCase().includes",
+          "lineNumber": 44
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.parents?.toLowerCase",
+          "lineNumber": 44
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.offspring?.toLowerCase().includes",
+          "lineNumber": 45
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.offspring?.toLowerCase",
+          "lineNumber": 45
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.note?.toLowerCase().includes",
+          "lineNumber": 46
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.note?.toLowerCase",
+          "lineNumber": 46
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.dob_certainty?.toLowerCase().includes",
+          "lineNumber": 47
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.dob_certainty?.toLowerCase",
+          "lineNumber": 47
+        },
+        {
+          "caller": "filterCats",
+          "callee": "cat.date_of_birth?.toString",
+          "lineNumber": 59
+        },
+        {
+          "caller": "sortCats",
+          "callee": "[...cats].sort",
+          "lineNumber": 92
+        },
+        {
+          "caller": "sortCats",
+          "callee": "String(av || '').localeCompare",
+          "lineNumber": 102
+        },
+        {
+          "caller": "sortCats",
+          "callee": "String",
+          "lineNumber": 102
+        },
+        {
+          "caller": "sortCats",
+          "callee": "String",
+          "lineNumber": 102
+        },
+        {
+          "caller": "getUniqueLocations",
+          "callee": "Array.from(\n    new Set([\n      ...cats.map((cat) => cat.dwelling).filter(Boolean),\n      ...cats.map((cat) => cat.prev_dwelling).filter(Boolean),\n    ])\n  ).sort",
+          "lineNumber": 113
+        },
+        {
+          "caller": "getUniqueLocations",
+          "callee": "Array.from",
+          "lineNumber": 113
+        },
+        {
+          "caller": "getUniqueLocations",
+          "callee": "cats.map((cat) => cat.dwelling).filter",
+          "lineNumber": 115
+        },
+        {
+          "caller": "getUniqueLocations",
+          "callee": "cats.map",
+          "lineNumber": 115
+        },
+        {
+          "caller": "getUniqueLocations",
+          "callee": "cats.map((cat) => cat.prev_dwelling).filter",
+          "lineNumber": 116
+        },
+        {
+          "caller": "getUniqueLocations",
+          "callee": "cats.map",
+          "lineNumber": 116
+        },
+        {
+          "caller": "getUniqueStatuses",
+          "callee": "Array.from(new Set(cats.map((cat) => cat.status).filter(Boolean))).sort",
+          "lineNumber": 123
+        },
+        {
+          "caller": "getUniqueStatuses",
+          "callee": "Array.from",
+          "lineNumber": 123
+        },
+        {
+          "caller": "getUniqueStatuses",
+          "callee": "cats.map((cat) => cat.status).filter",
+          "lineNumber": 123
+        },
+        {
+          "caller": "getUniqueStatuses",
+          "callee": "cats.map",
+          "lineNumber": 123
+        },
+        {
+          "caller": "getUniqueGenders",
+          "callee": "Array.from(new Set(cats.map((cat) => cat.sex).filter(Boolean))).sort",
+          "lineNumber": 128
+        },
+        {
+          "caller": "getUniqueGenders",
+          "callee": "Array.from",
+          "lineNumber": 128
+        },
+        {
+          "caller": "getUniqueGenders",
+          "callee": "cats.map((cat) => cat.sex).filter",
+          "lineNumber": 128
+        },
+        {
+          "caller": "getUniqueGenders",
+          "callee": "cats.map",
+          "lineNumber": 128
+        },
+        {
+          "caller": "getUniqueBirthYears",
+          "callee": "Array.from(\n    new Set(\n      cats.map((cat) => cat.date_of_birth).filter((year): year is number => year !== undefined)\n    )\n  ).sort",
+          "lineNumber": 133
+        },
+        {
+          "caller": "getUniqueBirthYears",
+          "callee": "Array.from",
+          "lineNumber": 133
+        },
+        {
+          "caller": "getUniqueBirthYears",
+          "callee": "cats.map((cat) => cat.date_of_birth).filter",
+          "lineNumber": 135
+        },
+        {
+          "caller": "getUniqueBirthYears",
+          "callee": "cats.map",
+          "lineNumber": 135
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 7,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/utils/mapClustering.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 78,
+      "nonEmptyLines": 69,
+      "functions": [
+        {
+          "name": "greedyClusterByRadius",
+          "startLine": 37,
+          "endLine": 67,
+          "params": [
+            "points",
+            "radiusPx"
+          ]
+        },
+        {
+          "name": "spiderfyRadius",
+          "startLine": 74,
+          "endLine": 78,
+          "params": [
+            "memberCount",
+            "separationPx"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "greedyClusterByRadius",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "spiderfyRadius",
+          "line": 74,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "greedyClusterByRadius",
+          "callee": "new Array<boolean>(points.length).fill",
+          "lineNumber": 39
+        },
+        {
+          "caller": "greedyClusterByRadius",
+          "callee": "memberIndices.push",
+          "lineNumber": 56
+        },
+        {
+          "caller": "greedyClusterByRadius",
+          "callee": "clusters.push",
+          "lineNumber": 63
+        },
+        {
+          "caller": "spiderfyRadius",
+          "callee": "Math.sin",
+          "lineNumber": 76
+        },
+        {
+          "caller": "spiderfyRadius",
+          "callee": "Math.max",
+          "lineNumber": 77
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/utils/mapLabels.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 37,
+      "nonEmptyLines": 34,
+      "functions": [
+        {
+          "name": "resolveLabelAbove",
+          "startLine": 27,
+          "endLine": 37,
+          "params": [
+            "marker",
+            "isMobile",
+            "bottomBand"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "resolveLabelAbove",
+          "line": 27,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

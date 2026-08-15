@@ -1,0 +1,1292 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/tag-images/page.tsx",
+   "summary": "Admin CMS page for tagging, filtering, batch-editing and deleting cat photos stored in Firebase Storage, built on the shared media-list controller and cat-selector modal.",
+   "tags": [
+    "admin",
+    "api-handler",
+    "media",
+    "client-component",
+    "tenant-scoped"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Next.js App Router client page under the [mountain] dynamic tenant segment; all Firestore access goes through the service factory rather than direct Firebase calls."
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/tag-images/page.tsx:TagImagesPage",
+   "type": "function",
+   "name": "TagImagesPage",
+   "filePath": "src/app/[mountain]/admin/tag-images/page.tsx",
+   "lineRange": [
+    41,
+    829
+   ],
+   "summary": "Renders the full image-tagging admin workspace: loads images via the image service, wires the media-list controller for filtering/sorting/pagination, and handles single and batch tag/date updates plus deletion and storage sync.",
+   "tags": [
+    "admin",
+    "component",
+    "media",
+    "batch-edit"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/about/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/about/page.tsx",
+   "summary": "Public 'about' page for the active mountain; loads editable about-content from Firestore with a static config fallback and renders it with cat-link and media-link enrichment.",
+   "tags": [
+    "page",
+    "content",
+    "tenant-scoped",
+    "client-component"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/about/page.tsx:emphasizeCapitals",
+   "type": "function",
+   "name": "emphasizeCapitals",
+   "filePath": "src/app/[mountain]/pages/about/page.tsx",
+   "lineRange": [
+    21,
+    31
+   ],
+   "summary": "Splits text on runs of capital letters and wraps them in emphasis spans so acronyms stand out in the about copy.",
+   "tags": [
+    "utility",
+    "formatting",
+    "text"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "type": "function",
+   "name": "About",
+   "filePath": "src/app/[mountain]/pages/about/page.tsx",
+   "lineRange": [
+    33,
+    265
+   ],
+   "summary": "About-page component that fetches about content, processes inline cat/media links, and opens a cat detail modal when a cat link is clicked.",
+   "tags": [
+    "component",
+    "page",
+    "content",
+    "modal"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/photo-album/page.tsx",
+   "summary": "Public photo-album page listing every image for the active mountain with search/cat filtering and a full-screen lightbox.",
+   "tags": [
+    "page",
+    "media",
+    "gallery",
+    "tenant-scoped"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/photo-album/page.tsx:PhotoAlbumPage",
+   "type": "function",
+   "name": "PhotoAlbumPage",
+   "filePath": "src/app/[mountain]/pages/photo-album/page.tsx",
+   "lineRange": [
+    15,
+    133
+   ],
+   "summary": "Loads all images through the image service, applies the shared media filter hook, and renders a media tile grid backed by the lightbox viewer.",
+   "tags": [
+    "component",
+    "gallery",
+    "media",
+    "filtering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/video-album/page.tsx",
+   "summary": "Public video-album page listing every video for the active mountain with search/cat filtering and an in-page video player overlay.",
+   "tags": [
+    "page",
+    "media",
+    "gallery",
+    "tenant-scoped"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "type": "function",
+   "name": "VideoAlbumPage",
+   "filePath": "src/app/[mountain]/pages/video-album/page.tsx",
+   "lineRange": [
+    16,
+    157
+   ],
+   "summary": "Loads all videos through the video service, applies the shared media filter hook, and renders duration-annotated tiles that open the video player.",
+   "tags": [
+    "component",
+    "gallery",
+    "media",
+    "filtering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/AdoptionPromotionClient.tsx",
+   "type": "file",
+   "name": "AdoptionPromotionClient.tsx",
+   "filePath": "src/components/AdoptionPromotionClient.tsx",
+   "summary": "Client component rendering the adoption-promotion feed: paginated, searchable adoption posts with embedded YouTube previews and Korea-timezone timestamps.",
+   "tags": [
+    "component",
+    "adoption",
+    "feed",
+    "pagination"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/AdoptionPromotionClient.tsx:AdoptionPostCard",
+   "type": "function",
+   "name": "AdoptionPostCard",
+   "filePath": "src/components/AdoptionPromotionClient.tsx",
+   "lineRange": [
+    18,
+    95
+   ],
+   "summary": "Expandable card for a single adoption post showing title, message, images and an embedded YouTube player when the post carries a video link.",
+   "tags": [
+    "component",
+    "card",
+    "adoption",
+    "media"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AdoptionPromotionClient.tsx:formatKoreaDateTime",
+   "type": "function",
+   "name": "formatKoreaDateTime",
+   "filePath": "src/components/AdoptionPromotionClient.tsx",
+   "lineRange": [
+    98,
+    128
+   ],
+   "summary": "Normalizes a date/time pair or Firestore timestamp into a Korea-timezone display string.",
+   "tags": [
+    "utility",
+    "date",
+    "formatting",
+    "timezone"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AdoptionPromotionClient.tsx:AdoptionPromotionClient",
+   "type": "function",
+   "name": "AdoptionPromotionClient",
+   "filePath": "src/components/AdoptionPromotionClient.tsx",
+   "lineRange": [
+    137,
+    252
+   ],
+   "summary": "Fetches adoption posts through the adoption service, applies text search and date sorting, and paginates the resulting card list.",
+   "tags": [
+    "component",
+    "adoption",
+    "search",
+    "pagination"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/AnnouncementModal.tsx",
+   "type": "file",
+   "name": "AnnouncementModal.tsx",
+   "filePath": "src/components/AnnouncementModal.tsx",
+   "summary": "Modal that displays a single announcement with its images, YouTube embeds and Korea-timezone publication time.",
+   "tags": [
+    "component",
+    "modal",
+    "announcement",
+    "media"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AnnouncementModal.tsx:formatKoreaDateTime",
+   "type": "function",
+   "name": "formatKoreaDateTime",
+   "filePath": "src/components/AnnouncementModal.tsx",
+   "lineRange": [
+    14,
+    61
+   ],
+   "summary": "Converts an announcement's date/time fields or Firestore createdAt into a Korea-timezone display string, falling back safely on parse failures.",
+   "tags": [
+    "utility",
+    "date",
+    "formatting",
+    "timezone"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AnnouncementModal.tsx:AnnouncementModal",
+   "type": "function",
+   "name": "AnnouncementModal",
+   "filePath": "src/components/AnnouncementModal.tsx",
+   "lineRange": [
+    63,
+    145
+   ],
+   "summary": "Renders the announcement body inside the shared Modal shell, expanding attached image URLs and YouTube links into embeds.",
+   "tags": [
+    "component",
+    "modal",
+    "announcement"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/CatInfo.tsx",
+   "type": "file",
+   "name": "CatInfo.tsx",
+   "filePath": "src/components/CatInfo.tsx",
+   "summary": "Cat detail panel showing status, biography and metadata, with buttons that open the cat's photo and video albums and inline links to other cats.",
+   "tags": [
+    "component",
+    "data-model",
+    "modal",
+    "cat"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/CatInfo.tsx:getStatusEmoji",
+   "type": "function",
+   "name": "getStatusEmoji",
+   "filePath": "src/components/CatInfo.tsx",
+   "lineRange": [
+    18,
+    27
+   ],
+   "summary": "Maps a cat's status string to the emoji used as its visual badge.",
+   "tags": [
+    "utility",
+    "formatting",
+    "presentation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/CatInfo.tsx:InfoBlock",
+   "type": "function",
+   "name": "InfoBlock",
+   "filePath": "src/components/CatInfo.tsx",
+   "lineRange": [
+    40,
+    50
+   ],
+   "summary": "Renders a headed block of pre-processed HTML content within the cat detail layout.",
+   "tags": [
+    "component",
+    "presentation",
+    "layout"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/CatInfo.tsx:AlbumButton",
+   "type": "function",
+   "name": "AlbumButton",
+   "filePath": "src/components/CatInfo.tsx",
+   "lineRange": [
+    53,
+    72
+   ],
+   "summary": "Styled button that opens one of the cat's media albums, labelled with an emoji and caption.",
+   "tags": [
+    "component",
+    "button",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/CatInfo.tsx:CatInfo",
+   "type": "function",
+   "name": "CatInfo",
+   "filePath": "src/components/CatInfo.tsx",
+   "lineRange": [
+    74,
+    227
+   ],
+   "summary": "Main cat detail component: processes link markup in the cat's text fields, wires media-link previews, and manages nested cat/photo/video modals.",
+   "tags": [
+    "component",
+    "cat",
+    "modal",
+    "media"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/CatLinkedText.tsx",
+   "type": "file",
+   "name": "CatLinkedText.tsx",
+   "filePath": "src/components/CatLinkedText.tsx",
+   "summary": "Renders arbitrary text with cat-name links, image links and video links converted into interactive elements that open the corresponding modals.",
+   "tags": [
+    "component",
+    "text",
+    "linking",
+    "modal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/CatLinkedText.tsx:CatLinkedText",
+   "type": "function",
+   "name": "CatLinkedText",
+   "filePath": "src/components/CatLinkedText.tsx",
+   "lineRange": [
+    24,
+    80
+   ],
+   "summary": "Processes the supplied text through the link converters, attaches a click handler that resolves cat links to a cat detail modal, and mounts media-link previews.",
+   "tags": [
+    "component",
+    "text",
+    "linking",
+    "event-handler"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/CatSelectorModal.tsx",
+   "type": "file",
+   "name": "CatSelectorModal.tsx",
+   "filePath": "src/components/CatSelectorModal.tsx",
+   "summary": "Searchable modal for picking one or more cats; used by admin tagging and album filtering to convert cat selections into tag strings.",
+   "tags": [
+    "component",
+    "modal",
+    "selection",
+    "search"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/CatSelectorModal.tsx:CatSelectorModal",
+   "type": "function",
+   "name": "CatSelectorModal",
+   "filePath": "src/components/CatSelectorModal.tsx",
+   "lineRange": [
+    19,
+    214
+   ],
+   "summary": "Loads the mountain's cats, filters them by name/alt-name search, and synchronizes the selected set back to the caller's tag list.",
+   "tags": [
+    "component",
+    "modal",
+    "selection",
+    "cat"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/MountainProvider.tsx",
+   "type": "file",
+   "name": "MountainProvider.tsx",
+   "filePath": "src/components/MountainProvider.tsx",
+   "summary": "React context provider that carries the resolved tenant (mountain) id down the client tree, plus the useMountain hook consumers read it from.",
+   "tags": [
+    "context",
+    "multi-tenant",
+    "provider",
+    "hook"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Client-side counterpart to the server-side Host-based tenant resolution; components must read the mountain id from here rather than from environment variables."
+  },
+  {
+   "id": "function:src/components/MountainProvider.tsx:MountainProvider",
+   "type": "function",
+   "name": "MountainProvider",
+   "filePath": "src/components/MountainProvider.tsx",
+   "lineRange": [
+    18,
+    26
+   ],
+   "summary": "Provides the active mountain id to descendants, defaulting to the configured default mountain when none is supplied.",
+   "tags": [
+    "provider",
+    "context",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "function",
+   "name": "useMountain",
+   "filePath": "src/components/MountainProvider.tsx",
+   "lineRange": [
+    33,
+    35
+   ],
+   "summary": "Hook returning the current mountain context for client components.",
+   "tags": [
+    "hook",
+    "context",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "function:src/app/[mountain]/admin/tag-images/page.tsx:TagImagesPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "function:src/app/[mountain]/pages/about/page.tsx:emphasizeCapitals",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "function:src/app/[mountain]/pages/photo-album/page.tsx:PhotoAlbumPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "function:src/components/AdoptionPromotionClient.tsx:AdoptionPostCard",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "function:src/components/AdoptionPromotionClient.tsx:formatKoreaDateTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "function:src/components/AdoptionPromotionClient.tsx:AdoptionPromotionClient",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AnnouncementModal.tsx",
+   "target": "function:src/components/AnnouncementModal.tsx:formatKoreaDateTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AnnouncementModal.tsx",
+   "target": "function:src/components/AnnouncementModal.tsx:AnnouncementModal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "function:src/components/CatInfo.tsx:getStatusEmoji",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "function:src/components/CatInfo.tsx:InfoBlock",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "function:src/components/CatInfo.tsx:AlbumButton",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "function:src/components/CatInfo.tsx:CatInfo",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "function:src/components/CatLinkedText.tsx:CatLinkedText",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "function:src/components/CatSelectorModal.tsx:CatSelectorModal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/MountainProvider.tsx",
+   "target": "function:src/components/MountainProvider.tsx:MountainProvider",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/MountainProvider.tsx",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "function:src/app/[mountain]/admin/tag-images/page.tsx:TagImagesPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "function:src/app/[mountain]/pages/photo-album/page.tsx:PhotoAlbumPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "function:src/components/AdoptionPromotionClient.tsx:AdoptionPromotionClient",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/AnnouncementModal.tsx",
+   "target": "function:src/components/AnnouncementModal.tsx:AnnouncementModal",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "function:src/components/CatInfo.tsx:CatInfo",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "function:src/components/CatLinkedText.tsx:CatLinkedText",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "function:src/components/CatSelectorModal.tsx:CatSelectorModal",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/MountainProvider.tsx",
+   "target": "function:src/components/MountainProvider.tsx:MountainProvider",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/MountainProvider.tsx",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/components/CatSelectorModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/components/admin/media/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/components/ui/Lightbox.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/components/ui/useDialog.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/types/media.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/utils/dateParser.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-images/page.tsx",
+   "target": "file:src/utils/parse-date.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/components/CatInfo.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/hooks/useAboutPhoto.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/services/about-content-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/about/page.tsx",
+   "target": "file:src/utils/text-processing.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/components/album/AlbumFilterBar.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/components/album/AlbumStates.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/components/album/MediaTile.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/components/ui/Lightbox.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/hooks/useMediaFilter.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/types/media.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/photo-album/page.tsx",
+   "target": "file:src/utils/parse-date.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/components/album/AlbumFilterBar.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/components/album/AlbumStates.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/components/album/MediaTile.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/components/ui/VideoPlayer.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/hooks/useMediaFilter.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/types/media.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/utils/duration.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/video-album/page.tsx",
+   "target": "file:src/utils/parse-date.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "file:src/components/CatLinkedText.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdoptionPromotionClient.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AnnouncementModal.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AnnouncementModal.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/components/PhotoAlbum.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/components/VideoAlbum.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/hooks/useMediaLinks.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatInfo.tsx",
+   "target": "file:src/utils/text-processing.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/components/CatInfo.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/hooks/useMediaLinks.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatLinkedText.tsx",
+   "target": "file:src/utils/text-processing.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatSelectorModal.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainProvider.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-images/page.tsx:TagImagesPage",
+   "target": "function:src/utils/parse-date.ts:parseDate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "target": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "target": "function:src/hooks/useAboutPhoto.ts:useAboutPhoto",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/about/page.tsx:About",
+   "target": "function:src/app/[mountain]/pages/about/page.tsx:emphasizeCapitals",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/photo-album/page.tsx:PhotoAlbumPage",
+   "target": "function:src/hooks/useMediaFilter.ts:useMediaFilter",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/photo-album/page.tsx:PhotoAlbumPage",
+   "target": "function:src/utils/parse-date.ts:parseDate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/photo-album/page.tsx:PhotoAlbumPage",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "target": "function:src/hooks/useMediaFilter.ts:useMediaFilter",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "target": "function:src/utils/parse-date.ts:parseDate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "target": "function:src/utils/duration.ts:formatDuration",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/video-album/page.tsx:VideoAlbumPage",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/AdoptionPromotionClient.tsx:AdoptionPromotionClient",
+   "target": "function:src/components/AdoptionPromotionClient.tsx:formatKoreaDateTime",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/AnnouncementModal.tsx:AnnouncementModal",
+   "target": "function:src/components/AnnouncementModal.tsx:formatKoreaDateTime",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatInfo.tsx:CatInfo",
+   "target": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatInfo.tsx:CatInfo",
+   "target": "function:src/hooks/useMediaLinks.tsx:useMediaLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatInfo.tsx:CatInfo",
+   "target": "function:src/components/CatInfo.tsx:getStatusEmoji",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatInfo.tsx:CatInfo",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatLinkedText.tsx:CatLinkedText",
+   "target": "function:src/utils/text-processing.ts:processTextWithLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatLinkedText.tsx:CatLinkedText",
+   "target": "function:src/hooks/useMediaLinks.tsx:useMediaLinks",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatLinkedText.tsx:CatLinkedText",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/CatSelectorModal.tsx:CatSelectorModal",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

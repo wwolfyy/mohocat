@@ -1,0 +1,870 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/app/api/upload-youtube/route.ts",
+   "type": "file",
+   "name": "route.ts",
+   "filePath": "src/app/api/upload-youtube/route.ts",
+   "summary": "Admin API route that uploads a video file to the shared YouTube channel with the operator's OAuth credential and writes the matching cat_videos record for the Host-resolved tenant.",
+   "tags": [
+    "api-handler",
+    "youtube",
+    "video-upload",
+    "multi-tenant",
+    "authorization"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Next.js App Router route handler: streams the multipart upload into the googleapis client via a Node Readable."
+  },
+  {
+   "id": "function:src/app/api/upload-youtube/route.ts:POST",
+   "type": "function",
+   "name": "POST",
+   "filePath": "src/app/api/upload-youtube/route.ts",
+   "lineRange": [
+    14,
+    230
+   ],
+   "summary": "Handles the multipart video upload: gates on 'manage-video', resolves the tenant, obtains YouTube OAuth credentials, uploads to YouTube, adds the video to the tenant playlist, and persists the video metadata.",
+   "tags": [
+    "api-handler",
+    "upload",
+    "youtube",
+    "authorization"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/api/youtube-playlists/route.ts",
+   "type": "file",
+   "name": "route.ts",
+   "filePath": "src/app/api/youtube-playlists/route.ts",
+   "summary": "Admin API route that lists the playlists on the shared YouTube channel so the CMS can offer them as upload targets.",
+   "tags": [
+    "api-handler",
+    "youtube",
+    "playlist",
+    "read-only"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/api/youtube-playlists/route.ts:GET",
+   "type": "function",
+   "name": "GET",
+   "filePath": "src/app/api/youtube-playlists/route.ts",
+   "lineRange": [
+    8,
+    89
+   ],
+   "summary": "Verifies the caller's permission, builds an OAuth2 client from the stored credentials, and returns the channel's playlists as id/title pairs.",
+   "tags": [
+    "api-handler",
+    "youtube",
+    "oauth"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/AnalyticsTracker.tsx",
+   "type": "file",
+   "name": "AnalyticsTracker.tsx",
+   "filePath": "src/components/AnalyticsTracker.tsx",
+   "summary": "Client component that emits a GA4 page_view on every route change and stamps every analytics event with the active mountain id so the shared GA property can be segmented per tenant.",
+   "tags": [
+    "component",
+    "analytics",
+    "client-component",
+    "multi-tenant",
+    "event-handler"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Wraps the useSearchParams consumer in Suspense, which Next.js App Router requires to avoid forcing the whole tree into client-side rendering."
+  },
+  {
+   "id": "function:src/components/AnalyticsTracker.tsx:AnalyticsTrackerContent",
+   "type": "function",
+   "name": "AnalyticsTrackerContent",
+   "filePath": "src/components/AnalyticsTracker.tsx",
+   "lineRange": [
+    14,
+    49
+   ],
+   "summary": "Effect body that sets mountain_id as a gtag default parameter and fires an explicit page_view whenever the pathname, query string, or tenant changes.",
+   "tags": [
+    "analytics",
+    "event-handler",
+    "hook-usage"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AnalyticsTracker.tsx:AnalyticsTracker",
+   "type": "function",
+   "name": "AnalyticsTracker",
+   "filePath": "src/components/AnalyticsTracker.tsx",
+   "lineRange": [
+    51,
+    57
+   ],
+   "summary": "Suspense wrapper exported for use in the tenant layout.",
+   "tags": [
+    "component",
+    "analytics",
+    "wrapper"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/Footer.tsx",
+   "type": "file",
+   "name": "Footer.tsx",
+   "filePath": "src/components/Footer.tsx",
+   "summary": "Static site footer showing the site name, non-profit note, current-year copyright, and links to the privacy policy and terms pages.",
+   "tags": [
+    "component",
+    "layout",
+    "ui",
+    "navigation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/Footer.tsx:Footer",
+   "type": "function",
+   "name": "Footer",
+   "filePath": "src/components/Footer.tsx",
+   "lineRange": [
+    11,
+    36
+   ],
+   "summary": "Renders the footer bar with branding, policy links, and a dynamically computed copyright year.",
+   "tags": [
+    "component",
+    "layout",
+    "ui"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/MountainSelector.tsx",
+   "type": "file",
+   "name": "MountainSelector.tsx",
+   "filePath": "src/components/MountainSelector.tsx",
+   "summary": "Dropdown that lets visitors switch between the public mountains, choosing cross-domain or path-based links depending on whether the current host is a mapped production domain.",
+   "tags": [
+    "component",
+    "multi-tenant",
+    "navigation",
+    "client-component",
+    "dropdown"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "type": "function",
+   "name": "MountainSelector",
+   "filePath": "src/components/MountainSelector.tsx",
+   "lineRange": [
+    15,
+    129
+   ],
+   "summary": "Stateful dropdown component: lists public mountains, tracks open/animating state, closes on outside click, and navigates to the selected tenant.",
+   "tags": [
+    "component",
+    "navigation",
+    "multi-tenant",
+    "client-state"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/config/permission-config.ts",
+   "type": "file",
+   "name": "permission-config.ts",
+   "filePath": "src/config/permission-config.ts",
+   "summary": "Loads and caches the static role/permission matrix from config/permissions.json and exposes typed lookups for roles, permissions, per-mountain default roles, and admin users.",
+   "tags": [
+    "configuration",
+    "permissions",
+    "rbac",
+    "multi-tenant",
+    "cache"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/config/permission-config.ts:loadPermissionConfig",
+   "type": "function",
+   "name": "loadPermissionConfig",
+   "filePath": "src/config/permission-config.ts",
+   "lineRange": [
+    40,
+    57
+   ],
+   "summary": "Reads config/permissions.json once and memoizes it in a module-level cache, returning an empty config shape on failure.",
+   "tags": [
+    "configuration",
+    "cache",
+    "permissions"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/config/permission-config.ts:getPermissionMatrix",
+   "type": "function",
+   "name": "getPermissionMatrix",
+   "filePath": "src/config/permission-config.ts",
+   "lineRange": [
+    62,
+    67
+   ],
+   "summary": "Projects the loaded config into a plain role-to-permissions map.",
+   "tags": [
+    "permissions",
+    "rbac",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/config/permission-config.ts:getRoleDetails",
+   "type": "function",
+   "name": "getRoleDetails",
+   "filePath": "src/config/permission-config.ts",
+   "lineRange": [
+    80,
+    94
+   ],
+   "summary": "Returns the permission list and human-readable description for a given role name.",
+   "tags": [
+    "permissions",
+    "rbac",
+    "lookup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/config/permission-config.ts:getDefaultRole",
+   "type": "function",
+   "name": "getDefaultRole",
+   "filePath": "src/config/permission-config.ts",
+   "lineRange": [
+    107,
+    117
+   ],
+   "summary": "Resolves the default role newly registered users receive on a specific mountain.",
+   "tags": [
+    "permissions",
+    "multi-tenant",
+    "rbac"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/config/permission-config.ts:getMountainAdminUsers",
+   "type": "function",
+   "name": "getMountainAdminUsers",
+   "filePath": "src/config/permission-config.ts",
+   "lineRange": [
+    122,
+    127
+   ],
+   "summary": "Returns the configured bootstrap admin user list for a given mountain.",
+   "tags": [
+    "permissions",
+    "multi-tenant",
+    "rbac"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/hooks/usePermissions.ts",
+   "type": "file",
+   "name": "usePermissions.ts",
+   "filePath": "src/hooks/usePermissions.ts",
+   "summary": "React hooks that load the signed-in user's effective permissions for the active mountain through PermissionService and expose synchronous and asynchronous permission checks.",
+   "tags": [
+    "hook",
+    "permissions",
+    "rbac",
+    "client-state",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/hooks/usePermissions.ts:usePermissions",
+   "type": "function",
+   "name": "usePermissions",
+   "filePath": "src/hooks/usePermissions.ts",
+   "lineRange": [
+    6,
+    140
+   ],
+   "summary": "Loads and caches the current user's permission list for the active mountain, exposing loading/error state plus has/hasAny/hasAll helpers.",
+   "tags": [
+    "hook",
+    "permissions",
+    "rbac",
+    "client-state"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/hooks/usePermissions.ts:usePermissionCheck",
+   "type": "function",
+   "name": "usePermissionCheck",
+   "filePath": "src/hooks/usePermissions.ts",
+   "lineRange": [
+    146,
+    198
+   ],
+   "summary": "Convenience hook that resolves a specific required permission set to a boolean grant decision.",
+   "tags": [
+    "hook",
+    "permissions",
+    "authorization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/hooks/useResourceAccess.ts",
+   "type": "file",
+   "name": "useResourceAccess.ts",
+   "filePath": "src/hooks/useResourceAccess.ts",
+   "summary": "Hook that combines the user's permissions with the SWR-cached resource permission config to decide whether a named admin resource is accessible.",
+   "tags": [
+    "hook",
+    "permissions",
+    "authorization",
+    "swr"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/hooks/useResourceAccess.ts:useResourceAccess",
+   "type": "function",
+   "name": "useResourceAccess",
+   "filePath": "src/hooks/useResourceAccess.ts",
+   "lineRange": [
+    17,
+    50
+   ],
+   "summary": "Fetches /api/admin/resource-permissions with SWR and returns a canAccessResource predicate using OR logic over the required permissions.",
+   "tags": [
+    "hook",
+    "authorization",
+    "swr",
+    "caching"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/lib/auth/requireApiPermission.ts",
+   "type": "file",
+   "name": "requireApiPermission.ts",
+   "filePath": "src/lib/auth/requireApiPermission.ts",
+   "summary": "Server-side permission gate for admin API routes: verifies the Firebase ID token, resolves the caller's role for the Host-resolved mountain, and checks it against the role_permissions matrix.",
+   "tags": [
+    "security",
+    "authorization",
+    "api-middleware",
+    "firebase-admin",
+    "multi-tenant"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Returns a discriminated union result instead of throwing, so each route maps failure to its own HTTP status."
+  },
+  {
+   "id": "function:src/lib/auth/requireApiPermission.ts:requireApiPermission",
+   "type": "function",
+   "name": "requireApiPermission",
+   "filePath": "src/lib/auth/requireApiPermission.ts",
+   "lineRange": [
+    25,
+    72
+   ],
+   "summary": "Extracts the Bearer token, verifies it with the Admin SDK, reads users/{uid}.roles[mountainId], and confirms the role grants the requested permission.",
+   "tags": [
+    "security",
+    "authorization",
+    "token-verification",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "function:src/app/api/upload-youtube/route.ts:POST",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "function:src/app/api/upload-youtube/route.ts:POST",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/api/youtube-playlists/route.ts",
+   "target": "function:src/app/api/youtube-playlists/route.ts:GET",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/api/youtube-playlists/route.ts",
+   "target": "function:src/app/api/youtube-playlists/route.ts:GET",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/AnalyticsTracker.tsx",
+   "target": "function:src/components/AnalyticsTracker.tsx:AnalyticsTrackerContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AnalyticsTracker.tsx",
+   "target": "function:src/components/AnalyticsTracker.tsx:AnalyticsTracker",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AnalyticsTracker.tsx",
+   "target": "function:src/components/AnalyticsTracker.tsx:AnalyticsTracker",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/Footer.tsx",
+   "target": "function:src/components/Footer.tsx:Footer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/Footer.tsx",
+   "target": "function:src/components/Footer.tsx:Footer",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/MountainSelector.tsx",
+   "target": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/MountainSelector.tsx",
+   "target": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:loadPermissionConfig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:loadPermissionConfig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getPermissionMatrix",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getPermissionMatrix",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getRoleDetails",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getRoleDetails",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getDefaultRole",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getDefaultRole",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getMountainAdminUsers",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "function:src/config/permission-config.ts:getMountainAdminUsers",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "function:src/hooks/usePermissions.ts:usePermissions",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "function:src/hooks/usePermissions.ts:usePermissions",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "function:src/hooks/usePermissions.ts:usePermissionCheck",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "function:src/hooks/usePermissions.ts:usePermissionCheck",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/useResourceAccess.ts",
+   "target": "function:src/hooks/useResourceAccess.ts:useResourceAccess",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/useResourceAccess.ts",
+   "target": "function:src/hooks/useResourceAccess.ts:useResourceAccess",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/auth/requireApiPermission.ts",
+   "target": "function:src/lib/auth/requireApiPermission.ts:requireApiPermission",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/auth/requireApiPermission.ts",
+   "target": "function:src/lib/auth/requireApiPermission.ts:requireApiPermission",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "file:src/lib/auth/requireApiPermission.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "file:src/lib/youtube/credentials.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/upload-youtube/route.ts",
+   "target": "file:src/utils/dateParser.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/youtube-playlists/route.ts",
+   "target": "file:src/lib/auth/requireApiPermission.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/youtube-playlists/route.ts",
+   "target": "file:src/lib/youtube/credentials.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AnalyticsTracker.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainSelector.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainSelector.tsx",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainSelector.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/config/permission-config.ts",
+   "target": "file:config/permissions.json",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/usePermissions.ts",
+   "target": "file:src/services/permission-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useResourceAccess.ts",
+   "target": "file:src/hooks/usePermissions.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/hooks/useResourceAccess.ts",
+   "target": "file:src/types/permissions.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/auth/requireApiPermission.ts",
+   "target": "file:src/lib/firebase-admin.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/auth/requireApiPermission.ts",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:src/app/api/upload-youtube/route.ts:POST",
+   "target": "function:src/lib/auth/requireApiPermission.ts:requireApiPermission",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/upload-youtube/route.ts:POST",
+   "target": "function:src/lib/tenant.ts:getRequestMountainId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/upload-youtube/route.ts:POST",
+   "target": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthCredentials",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/upload-youtube/route.ts:POST",
+   "target": "function:src/utils/config.ts:getYouTubePlaylistId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/upload-youtube/route.ts:POST",
+   "target": "function:src/services/index.ts:getVideoService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/upload-youtube/route.ts:POST",
+   "target": "function:src/utils/dateParser.ts:calendarDateToInstant",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/youtube-playlists/route.ts:GET",
+   "target": "function:src/lib/auth/requireApiPermission.ts:requireApiPermission",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/api/youtube-playlists/route.ts:GET",
+   "target": "function:src/lib/youtube/credentials.ts:getYouTubeOAuthCredentials",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/AnalyticsTracker.tsx:AnalyticsTrackerContent",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "target": "function:src/utils/config.ts:getPublicMountains",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "target": "function:src/utils/config.ts:getMountainConfig",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "target": "function:src/lib/tenant.ts:findMountainIdByHost",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/MountainSelector.tsx:MountainSelector",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/hooks/usePermissions.ts:usePermissions",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/hooks/usePermissions.ts:usePermissions",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/hooks/usePermissions.ts:usePermissions",
+   "target": "class:src/services/permission-service.ts:PermissionService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/hooks/useResourceAccess.ts:useResourceAccess",
+   "target": "function:src/hooks/usePermissions.ts:usePermissions",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/lib/auth/requireApiPermission.ts:requireApiPermission",
+   "target": "function:src/lib/tenant.ts:getRequestMountainId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

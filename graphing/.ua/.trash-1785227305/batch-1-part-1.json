@@ -1,0 +1,622 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx",
+   "summary": "Tenant-scoped admin route for editing a single post; unwraps the dynamic [postType]/[postId] params and delegates the whole edit experience to the EditPostForm client component.",
+   "tags": [
+    "route",
+    "admin",
+    "app-router",
+    "dynamic-route"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Next.js App Router page under a [mountain] tenant segment plus nested [postType]/[postId] dynamic segments."
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx:EditPostPage",
+   "type": "function",
+   "name": "EditPostPage",
+   "filePath": "src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx",
+   "lineRange": [
+    10,
+    33
+   ],
+   "summary": "Page component that reads the postType and postId route params and renders EditPostForm inside the admin chrome.",
+   "tags": [
+    "route-handler",
+    "admin",
+    "component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/posts/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/posts/page.tsx",
+   "summary": "Admin landing page for post moderation: renders tabbed AdminPostList views for each post type using centralized Korean admin strings.",
+   "tags": [
+    "route",
+    "admin",
+    "app-router",
+    "component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/posts/page.tsx:AdminPosts",
+   "type": "function",
+   "name": "AdminPosts",
+   "filePath": "src/app/[mountain]/admin/posts/page.tsx",
+   "lineRange": [
+    8,
+    72
+   ],
+   "summary": "Admin posts screen that switches between post-type tabs and renders the corresponding AdminPostList, styling tabs via the cn helper.",
+   "tags": [
+    "admin",
+    "component",
+    "tabs",
+    "moderation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/announcements/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/announcements/page.tsx",
+   "summary": "Public tenant-scoped announcements route; a thin server shell that mounts the AnnouncementClient component.",
+   "tags": [
+    "route",
+    "app-router",
+    "announcements",
+    "thin-wrapper"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/announcements/page.tsx:AnnouncementPage",
+   "type": "function",
+   "name": "AnnouncementPage",
+   "filePath": "src/app/[mountain]/pages/announcements/page.tsx",
+   "lineRange": [
+    3,
+    17
+   ],
+   "summary": "Route component that renders the client-side announcement board for the active mountain.",
+   "tags": [
+    "route-handler",
+    "component",
+    "announcements"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "summary": "Public post-detail route that loads a single community post plus its reply thread from the tenant-scoped post service and wires up the reply button, form, and list.",
+   "tags": [
+    "route",
+    "app-router",
+    "posts",
+    "replies",
+    "data-fetching"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Client route using useMountain() to resolve the tenant before calling getPostService(mountainId)."
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/posts/[id]/page.tsx:PostDetailsPage",
+   "type": "function",
+   "name": "PostDetailsPage",
+   "filePath": "src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "lineRange": [
+    12,
+    212
+   ],
+   "summary": "Post detail screen: fetches the post and its replies for the active mountain, manages reply-form visibility, and renders ReplyButton/ReplyForm/ReplyList.",
+   "tags": [
+    "component",
+    "posts",
+    "replies",
+    "state-management"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/api/auth/kakao/callback/route.ts",
+   "type": "file",
+   "name": "route.ts",
+   "filePath": "src/app/api/auth/kakao/callback/route.ts",
+   "summary": "Next.js Route Handler for the KakaoTalk OAuth callback; validates the authorization code and redirects the browser on to Firebase's OIDC auth handler.",
+   "tags": [
+    "api-handler",
+    "authentication",
+    "oauth",
+    "route"
+   ],
+   "complexity": "simple",
+   "languageNotes": "App Router route handler exporting a named GET function that returns NextResponse redirects."
+  },
+  {
+   "id": "function:src/app/api/auth/kakao/callback/route.ts:GET",
+   "type": "function",
+   "name": "GET",
+   "filePath": "src/app/api/auth/kakao/callback/route.ts",
+   "lineRange": [
+    13,
+    50
+   ],
+   "summary": "Handles the Kakao OAuth redirect: extracts code/state from the query string, 400s when the code is missing, and otherwise redirects to the Firebase __/auth/handler endpoint.",
+   "tags": [
+    "api-handler",
+    "oauth",
+    "authentication",
+    "redirect"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/AdminPostList.tsx",
+   "type": "file",
+   "name": "AdminPostList.tsx",
+   "filePath": "src/components/AdminPostList.tsx",
+   "summary": "Admin moderation table for a given post type: lists posts for the active mountain with pagination, inline expansion of reply threads, and delete/edit actions.",
+   "tags": [
+    "admin",
+    "component",
+    "moderation",
+    "posts",
+    "pagination"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/AdminPostList.tsx:formatKoreaDateTime",
+   "type": "function",
+   "name": "formatKoreaDateTime",
+   "filePath": "src/components/AdminPostList.tsx",
+   "lineRange": [
+    19,
+    90
+   ],
+   "summary": "Normalizes the several date/time shapes stored on posts (Firestore Timestamp, string, Date) into a Korea-locale display string.",
+   "tags": [
+    "utility",
+    "date",
+    "formatting",
+    "localization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AdminPostList.tsx:AdminPostList",
+   "type": "function",
+   "name": "AdminPostList",
+   "filePath": "src/components/AdminPostList.tsx",
+   "lineRange": [
+    113,
+    526
+   ],
+   "summary": "Admin list component that loads posts through the tenant-scoped post service, paginates them, and lets moderators expand replies and delete content.",
+   "tags": [
+    "admin",
+    "component",
+    "moderation",
+    "state-management"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/AdminReplyItem.tsx",
+   "type": "file",
+   "name": "AdminReplyItem.tsx",
+   "filePath": "src/components/AdminReplyItem.tsx",
+   "summary": "Renders a single reply in the admin moderation tree, with nested-depth handling plus admin-only delete and inline reply actions.",
+   "tags": [
+    "admin",
+    "component",
+    "replies",
+    "recursive",
+    "moderation"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/AdminReplyItem.tsx:AdminReplyItem",
+   "type": "function",
+   "name": "AdminReplyItem",
+   "filePath": "src/components/AdminReplyItem.tsx",
+   "lineRange": [
+    18,
+    215
+   ],
+   "summary": "Recursive reply row for the admin view: shows author/body/timestamp, toggles a nested ReplyForm, and deletes replies through the injected post service.",
+   "tags": [
+    "admin",
+    "component",
+    "replies",
+    "recursive"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/AdminReplyList.tsx",
+   "type": "file",
+   "name": "AdminReplyList.tsx",
+   "filePath": "src/components/AdminReplyList.tsx",
+   "summary": "Imperative-handle wrapper that loads and renders the reply thread for a post in the admin moderation UI.",
+   "tags": [
+    "admin",
+    "component",
+    "replies",
+    "forward-ref"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Uses forwardRef + useImperativeHandle so parent admin lists can refresh the thread without prop drilling."
+  },
+  {
+   "id": "function:src/components/AdminReplyList.tsx:AdminReplyList",
+   "type": "function",
+   "name": "AdminReplyList",
+   "filePath": "src/components/AdminReplyList.tsx",
+   "lineRange": [
+    21,
+    127
+   ],
+   "summary": "Fetches replies for a post via the injected post service and exposes a ref handle so the parent can trigger a refresh after moderation actions.",
+   "tags": [
+    "admin",
+    "component",
+    "replies",
+    "data-fetching"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/AnnouncementClient.tsx",
+   "type": "file",
+   "name": "AnnouncementClient.tsx",
+   "filePath": "src/components/AnnouncementClient.tsx",
+   "summary": "Client-side announcement board for the active mountain: lists announcements from the announcement service with pagination and expandable detail.",
+   "tags": [
+    "component",
+    "announcements",
+    "client",
+    "pagination"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/AnnouncementClient.tsx:formatKoreaDateTime",
+   "type": "function",
+   "name": "formatKoreaDateTime",
+   "filePath": "src/components/AnnouncementClient.tsx",
+   "lineRange": [
+    10,
+    81
+   ],
+   "summary": "Converts the mixed date/time representations on announcement docs into a Korea-locale display string.",
+   "tags": [
+    "utility",
+    "date",
+    "formatting",
+    "localization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/AnnouncementClient.tsx:AnnouncementClient",
+   "type": "function",
+   "name": "AnnouncementClient",
+   "filePath": "src/components/AnnouncementClient.tsx",
+   "lineRange": [
+    83,
+    301
+   ],
+   "summary": "Loads announcements for the tenant resolved by useMountain(), paginates them, and renders expandable announcement cards.",
+   "tags": [
+    "component",
+    "announcements",
+    "state-management",
+    "pagination"
+   ],
+   "complexity": "complex"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx",
+   "target": "function:src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx:EditPostPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/posts/page.tsx",
+   "target": "function:src/app/[mountain]/admin/posts/page.tsx:AdminPosts",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/announcements/page.tsx",
+   "target": "function:src/app/[mountain]/pages/announcements/page.tsx:AnnouncementPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "function:src/app/[mountain]/pages/posts/[id]/page.tsx:PostDetailsPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/api/auth/kakao/callback/route.ts",
+   "target": "function:src/app/api/auth/kakao/callback/route.ts:GET",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/api/auth/kakao/callback/route.ts",
+   "target": "function:src/app/api/auth/kakao/callback/route.ts:GET",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/AdminPostList.tsx",
+   "target": "function:src/components/AdminPostList.tsx:formatKoreaDateTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdminPostList.tsx",
+   "target": "function:src/components/AdminPostList.tsx:AdminPostList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "function:src/components/AdminReplyItem.tsx:AdminReplyItem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "function:src/components/AdminReplyItem.tsx:AdminReplyItem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/AdminReplyList.tsx",
+   "target": "function:src/components/AdminReplyList.tsx:AdminReplyList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AdminReplyList.tsx",
+   "target": "function:src/components/AdminReplyList.tsx:AdminReplyList",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/AnnouncementClient.tsx",
+   "target": "function:src/components/AnnouncementClient.tsx:formatKoreaDateTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/AnnouncementClient.tsx",
+   "target": "function:src/components/AnnouncementClient.tsx:AnnouncementClient",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx",
+   "target": "file:src/components/EditPostForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/posts/page.tsx",
+   "target": "file:src/components/AdminPostList.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/posts/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/posts/page.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/announcements/page.tsx",
+   "target": "file:src/components/AnnouncementClient.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "file:src/components/ReplyButton.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "file:src/components/ReplyForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "file:src/components/ReplyList.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/posts/[id]/page.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/api/auth/kakao/callback/route.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminPostList.tsx",
+   "target": "file:src/components/AdminReplyList.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminPostList.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminPostList.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminPostList.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "file:src/components/ReplyButton.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "file:src/components/ReplyForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyItem.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyList.tsx",
+   "target": "file:src/components/AdminReplyItem.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyList.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AdminReplyList.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AnnouncementClient.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AnnouncementClient.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/AnnouncementClient.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

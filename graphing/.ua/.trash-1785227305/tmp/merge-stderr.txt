@@ -1,0 +1,60 @@
+Found 20 batch files (10 logical batches, 6 multi-part):
+  batch-1-part-1.json: 20 nodes, 41 edges
+  batch-1-part-2.json: 20 nodes, 48 edges
+  batch-1-part-3.json: 21 nodes, 73 edges
+  batch-1-part-4.json: 32 nodes, 77 edges
+  batch-2-part-1.json: 28 nodes, 118 edges
+  batch-2-part-2.json: 23 nodes, 65 edges
+  batch-2-part-3.json: 26 nodes, 52 edges
+  batch-3-part-1.json: 21 nodes, 87 edges
+  batch-3-part-2.json: 20 nodes, 69 edges
+  batch-3-part-3.json: 22 nodes, 67 edges
+  batch-4-part-1.json: 40 nodes, 140 edges
+  batch-4-part-2.json: 30 nodes, 43 edges
+  batch-5-part-1.json: 23 nodes, 65 edges
+  batch-5-part-2.json: 21 nodes, 85 edges
+  batch-6.json: 45 nodes, 120 edges
+  batch-7-part-1.json: 24 nodes, 67 edges
+  batch-7-part-2.json: 34 nodes, 72 edges
+  batch-8.json: 35 nodes, 99 edges
+  batch-9.json: 28 nodes, 91 edges
+  batch-10.json: 20 nodes, 20 edges
+
+Input: 533 nodes, 1499 edges
+
+Could not fix (27 issues — needs agent review):
+  - Edge function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage → function:src/services/index.ts:getPointService (calls): dropped, missing target 'function:src/services/index.ts:getPointService'
+  - Edge function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage → function:src/services/index.ts:getCatService (calls): dropped, missing target 'function:src/services/index.ts:getCatService'
+  - Edge function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage → function:src/services/index.ts:getVideoService (calls): dropped, missing target 'function:src/services/index.ts:getVideoService'
+  - Edge function:src/components/NewAdoptionForm.tsx:NewAdoptionForm → function:src/services/index.ts:getAdoptionService (calls): dropped, missing target 'function:src/services/index.ts:getAdoptionService'
+  - Edge function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm → function:src/services/index.ts:getAnnouncementService (calls): dropped, missing target 'function:src/services/index.ts:getAnnouncementService'
+  - Edge function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm → function:src/services/index.ts:getButlerTalkService (calls): dropped, missing target 'function:src/services/index.ts:getButlerTalkService'
+  - Edge function:src/components/admin/ContactManagement.tsx:ContactManagement → function:src/services/index.ts:getContactService (calls): dropped, missing target 'function:src/services/index.ts:getContactService'
+  - Edge function:src/components/forms/uploadStrategies.ts:uploadImagesWithSignedUrls → function:src/services/index.ts:getImageService (calls): dropped, missing target 'function:src/services/index.ts:getImageService'
+  - Edge function:src/components/forms/useRichContentForm.ts:useRichContentForm → function:src/utils/config.ts:getMountainName (calls): dropped, missing target 'function:src/utils/config.ts:getMountainName'
+  - Edge function:src/app/[mountain]/admin/page.tsx:AdminDashboard → function:src/services/index.ts:getCatService (calls): dropped, missing target 'function:src/services/index.ts:getCatService'
+  - Edge function:src/app/[mountain]/admin/page.tsx:AdminDashboard → function:src/services/index.ts:getImageService (calls): dropped, missing target 'function:src/services/index.ts:getImageService'
+  - Edge function:src/app/[mountain]/admin/page.tsx:AdminDashboard → function:src/services/index.ts:getVideoService (calls): dropped, missing target 'function:src/services/index.ts:getVideoService'
+  - Edge function:src/app/[mountain]/admin/page.tsx:AdminDashboard → function:src/services/index.ts:getPostService (calls): dropped, missing target 'function:src/services/index.ts:getPostService'
+  - Edge function:src/app/[mountain]/admin/page.tsx:AdminDashboard → function:src/services/index.ts:getContactService (calls): dropped, missing target 'function:src/services/index.ts:getContactService'
+  - Edge function:src/app/[mountain]/pages/announcements/[id]/page.tsx:AnnouncementDetailsPage → function:src/services/index.ts:getAnnouncementService (calls): dropped, missing target 'function:src/services/index.ts:getAnnouncementService'
+  - Edge function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor → function:src/services/index.ts:getAboutContentService (calls): dropped, missing target 'function:src/services/index.ts:getAboutContentService'
+  - Edge function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor → function:src/utils/config.ts:getMountainAbout (calls): dropped, missing target 'function:src/utils/config.ts:getMountainAbout'
+  - Edge function:src/app/api/admin/cats/route.ts:GET → function:src/services/index.ts:getCatService (calls): dropped, missing target 'function:src/services/index.ts:getCatService'
+  - Edge function:src/app/api/points/route.ts:GET → function:src/services/index.ts:getPointService (calls): dropped, missing target 'function:src/services/index.ts:getPointService'
+  - Edge file:src/config/permission-config.ts → file:config/permissions.json (imports): dropped, missing target 'file:config/permissions.json'
+  - Edge function:src/app/api/upload-youtube/route.ts:POST → function:src/services/index.ts:getVideoService (calls): dropped, missing target 'function:src/services/index.ts:getVideoService'
+  - Edge file:src/utils/config.ts → file:config/mountains/mountains.json (imports): dropped, missing target 'file:config/mountains/mountains.json'
+  - Edge function:src/components/ButlerStreamClient.tsx:ButlerStreamClient → function:src/services/index.ts:getPostService (calls): dropped, missing target 'function:src/services/index.ts:getPostService'
+  - Edge function:src/components/ButlerTalkClient.tsx:ButlerTalkClient → function:src/services/index.ts:getButlerTalkService (calls): dropped, missing target 'function:src/services/index.ts:getButlerTalkService'
+  - Edge function:src/components/FeedingSpotsList.tsx:FeedingSpotsList → function:src/services/index.ts:getFeedingSpotsService (calls): dropped, missing target 'function:src/services/index.ts:getFeedingSpotsService'
+  - Edge function:src/components/NewPostForm.tsx:NewPostForm → function:src/services/index.ts:getPostService (calls): dropped, missing target 'function:src/services/index.ts:getPostService'
+  - Edge function:src/components/NewPostForm.tsx:NewPostForm → function:src/services/index.ts:getFeedingSpotsService (calls): dropped, missing target 'function:src/services/index.ts:getFeedingSpotsService'
+
+Output: 533 nodes, 1472 edges
+
+Imports edge recovery:
+  Recovered 0 `imports` edges from importMap (208 entries scanned)
+  Skipped 2 importMap target paths with no `file:` node in graph
+
+Written to /Users/jp/github/mohocat/.ua/intermediate/assembled-graph.json (595 KB)

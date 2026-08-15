@@ -1,0 +1,667 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/components/EditPostForm.tsx",
+   "type": "file",
+   "name": "EditPostForm.tsx",
+   "filePath": "src/components/EditPostForm.tsx",
+   "summary": "Admin form for editing an existing post of any post type; loads the current values through the matching tenant-scoped service and writes the update back.",
+   "tags": [
+    "admin",
+    "component",
+    "form",
+    "posts",
+    "crud"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/EditPostForm.tsx:EditPostForm",
+   "type": "function",
+   "name": "EditPostForm",
+   "filePath": "src/components/EditPostForm.tsx",
+   "lineRange": [
+    35,
+    314
+   ],
+   "summary": "Controlled edit form that resolves the correct service for the given postType, hydrates fields from the loaded post, validates input, and submits the update.",
+   "tags": [
+    "admin",
+    "form",
+    "validation",
+    "crud"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/PostList.tsx",
+   "type": "file",
+   "name": "PostList.tsx",
+   "filePath": "src/components/PostList.tsx",
+   "summary": "Public community post list with pagination, auth-aware reply affordances, and inline reply threads.",
+   "tags": [
+    "component",
+    "posts",
+    "replies",
+    "pagination",
+    "public"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/PostList.tsx:formatKoreaDateTime",
+   "type": "function",
+   "name": "formatKoreaDateTime",
+   "filePath": "src/components/PostList.tsx",
+   "lineRange": [
+    12,
+    83
+   ],
+   "summary": "Shared date/time normalizer that renders post timestamps in a Korea-locale format regardless of the stored representation.",
+   "tags": [
+    "utility",
+    "date",
+    "formatting",
+    "localization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/PostList.tsx:PostList",
+   "type": "function",
+   "name": "PostList",
+   "filePath": "src/components/PostList.tsx",
+   "lineRange": [
+    109,
+    337
+   ],
+   "summary": "Renders a paginated list of posts, gating reply actions behind useAuth() and expanding ReplyList/ReplyForm per post.",
+   "tags": [
+    "component",
+    "posts",
+    "replies",
+    "authentication"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/ReplyButton.tsx",
+   "type": "file",
+   "name": "ReplyButton.tsx",
+   "filePath": "src/components/ReplyButton.tsx",
+   "summary": "Small auth-aware control that toggles the reply thread and reply form for a post, showing the current reply count.",
+   "tags": [
+    "component",
+    "replies",
+    "authentication",
+    "ui"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/ReplyButton.tsx:ReplyButton",
+   "type": "function",
+   "name": "ReplyButton",
+   "filePath": "src/components/ReplyButton.tsx",
+   "lineRange": [
+    15,
+    56
+   ],
+   "summary": "Toggle button that reveals replies or the reply form, disabled/prompting when the user is not signed in.",
+   "tags": [
+    "component",
+    "replies",
+    "authentication",
+    "ui"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/ReplyForm.tsx",
+   "type": "file",
+   "name": "ReplyForm.tsx",
+   "filePath": "src/components/ReplyForm.tsx",
+   "summary": "Reply composer used at every nesting depth: validates the body, stamps the signed-in author, and creates the reply through the injected post service.",
+   "tags": [
+    "component",
+    "form",
+    "replies",
+    "validation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/ReplyForm.tsx:ReplyForm",
+   "type": "function",
+   "name": "ReplyForm",
+   "filePath": "src/components/ReplyForm.tsx",
+   "lineRange": [
+    17,
+    131
+   ],
+   "summary": "Controlled reply textarea with submit/cancel handling that calls createReply on the injected post service and reports success upward.",
+   "tags": [
+    "component",
+    "form",
+    "replies",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/ReplyItem.tsx",
+   "type": "file",
+   "name": "ReplyItem.tsx",
+   "filePath": "src/components/ReplyItem.tsx",
+   "summary": "Public-facing single reply row that renders nested children up to a max depth and hosts an inline ReplyForm.",
+   "tags": [
+    "component",
+    "replies",
+    "recursive",
+    "public"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/ReplyItem.tsx:ReplyItem",
+   "type": "function",
+   "name": "ReplyItem",
+   "filePath": "src/components/ReplyItem.tsx",
+   "lineRange": [
+    16,
+    166
+   ],
+   "summary": "Recursive reply renderer that displays the author and body, tracks its own reply-form visibility, and stops nesting at maxDepth.",
+   "tags": [
+    "component",
+    "replies",
+    "recursive"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/ReplyList.tsx",
+   "type": "file",
+   "name": "ReplyList.tsx",
+   "filePath": "src/components/ReplyList.tsx",
+   "summary": "Loads and renders the reply thread for a public post, exposing a ref handle so parents can refresh after a new reply.",
+   "tags": [
+    "component",
+    "replies",
+    "forward-ref",
+    "data-fetching"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "forwardRef + useImperativeHandle exposes a refresh() handle typed by the exported ReplyListRef interface."
+  },
+  {
+   "id": "function:src/components/ReplyList.tsx:ReplyList",
+   "type": "function",
+   "name": "ReplyList",
+   "filePath": "src/components/ReplyList.tsx",
+   "lineRange": [
+    20,
+    113
+   ],
+   "summary": "Fetches a post's replies through the injected post service and renders them as ReplyItem nodes, refreshable via its imperative handle.",
+   "tags": [
+    "component",
+    "replies",
+    "data-fetching"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/auth/AuthProvider.tsx",
+   "type": "file",
+   "name": "AuthProvider.tsx",
+   "filePath": "src/components/auth/AuthProvider.tsx",
+   "summary": "React context provider that owns the entire client auth session: subscribes to Firebase auth state and exposes sign-in/out, phone and Kakao login, provider linking, and profile/email/password updates.",
+   "tags": [
+    "authentication",
+    "context-provider",
+    "component",
+    "state-management"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Context + hook pair: useAuthContext throws when used outside AuthProvider, the standard React context guard."
+  },
+  {
+   "id": "function:src/components/auth/AuthProvider.tsx:useAuthContext",
+   "type": "function",
+   "name": "useAuthContext",
+   "filePath": "src/components/auth/AuthProvider.tsx",
+   "lineRange": [
+    72,
+    78
+   ],
+   "summary": "Context accessor hook that returns the auth context and throws when called outside an AuthProvider.",
+   "tags": [
+    "hook",
+    "authentication",
+    "context"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/auth/AuthProvider.tsx:AuthProvider",
+   "type": "function",
+   "name": "AuthProvider",
+   "filePath": "src/components/auth/AuthProvider.tsx",
+   "lineRange": [
+    80,
+    473
+   ],
+   "summary": "Provider component that wires the auth service's onAuthStateChanged stream into React state and exposes every auth action to the tree.",
+   "tags": [
+    "authentication",
+    "context-provider",
+    "state-management"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/about-content-service.ts",
+   "type": "file",
+   "name": "about-content-service.ts",
+   "filePath": "src/services/about-content-service.ts",
+   "summary": "Firestore-backed service for the editable About page content, supporting read, create, update, and upsert of a mountain's about document.",
+   "tags": [
+    "service",
+    "firestore",
+    "content",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/services/about-content-service.ts:AboutContentService",
+   "type": "class",
+   "name": "AboutContentService",
+   "filePath": "src/services/about-content-service.ts",
+   "lineRange": [
+    25,
+    95
+   ],
+   "summary": "Reads and writes the About page content document in Firestore, with saveAboutContent acting as a create-or-update upsert.",
+   "tags": [
+    "service",
+    "firestore",
+    "crud",
+    "content"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/services/adoption-service.ts",
+   "type": "file",
+   "name": "adoption-service.ts",
+   "filePath": "src/services/adoption-service.ts",
+   "summary": "Firebase implementation of IPostService for the adoption board, covering posts, threaded replies, and reply-count maintenance.",
+   "tags": [
+    "service",
+    "firestore",
+    "posts",
+    "adoption",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/adoption-service.ts:FirebaseAdoptionService",
+   "type": "class",
+   "name": "FirebaseAdoptionService",
+   "filePath": "src/services/adoption-service.ts",
+   "lineRange": [
+    24,
+    156
+   ],
+   "summary": "Tenant-scoped adoption-post repository implementing the shared IPostService contract over Firestore.",
+   "tags": [
+    "service",
+    "firestore",
+    "crud",
+    "posts"
+   ],
+   "complexity": "complex"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/components/EditPostForm.tsx",
+   "target": "function:src/components/EditPostForm.tsx:EditPostForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "function:src/components/PostList.tsx:formatKoreaDateTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "function:src/components/PostList.tsx:PostList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ReplyButton.tsx",
+   "target": "function:src/components/ReplyButton.tsx:ReplyButton",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ReplyButton.tsx",
+   "target": "function:src/components/ReplyButton.tsx:ReplyButton",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/ReplyForm.tsx",
+   "target": "function:src/components/ReplyForm.tsx:ReplyForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ReplyForm.tsx",
+   "target": "function:src/components/ReplyForm.tsx:ReplyForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/ReplyItem.tsx",
+   "target": "function:src/components/ReplyItem.tsx:ReplyItem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ReplyItem.tsx",
+   "target": "function:src/components/ReplyItem.tsx:ReplyItem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/ReplyList.tsx",
+   "target": "function:src/components/ReplyList.tsx:ReplyList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/ReplyList.tsx",
+   "target": "function:src/components/ReplyList.tsx:ReplyList",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "function:src/components/auth/AuthProvider.tsx:useAuthContext",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "function:src/components/auth/AuthProvider.tsx:AuthProvider",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "function:src/components/auth/AuthProvider.tsx:useAuthContext",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "function:src/components/auth/AuthProvider.tsx:AuthProvider",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/about-content-service.ts",
+   "target": "class:src/services/about-content-service.ts:AboutContentService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/about-content-service.ts",
+   "target": "class:src/services/about-content-service.ts:AboutContentService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/adoption-service.ts",
+   "target": "class:src/services/adoption-service.ts:FirebaseAdoptionService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/adoption-service.ts",
+   "target": "class:src/services/adoption-service.ts:FirebaseAdoptionService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/adoption-service.ts:FirebaseAdoptionService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/components/EditPostForm.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/EditPostForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/EditPostForm.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/components/ReplyButton.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/components/ReplyForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/components/ReplyList.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/PostList.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyButton.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyForm.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyForm.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyItem.tsx",
+   "target": "file:src/components/ReplyButton.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyItem.tsx",
+   "target": "file:src/components/ReplyForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyItem.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyItem.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyList.tsx",
+   "target": "file:src/components/ReplyItem.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyList.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/ReplyList.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/auth/AuthProvider.tsx",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/about-content-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/adoption-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/adoption-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

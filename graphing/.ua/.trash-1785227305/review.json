@@ -1,0 +1,27 @@
+{
+  "issues": [],
+  "warnings": [
+    "Node 'config:config/deployment/cloud-run-service.yaml' has no edges (orphan)"
+  ],
+  "stats": {
+    "totalNodes": 546,
+    "totalEdges": 1536,
+    "totalLayers": 10,
+    "tourSteps": 14,
+    "nodeTypes": {
+      "file": 205,
+      "function": 321,
+      "class": 17,
+      "config": 3
+    },
+    "edgeTypes": {
+      "contains": 338,
+      "exports": 278,
+      "imports": 605,
+      "implements": 12,
+      "calls": 300,
+      "configures": 2,
+      "related": 1
+    }
+  }
+}

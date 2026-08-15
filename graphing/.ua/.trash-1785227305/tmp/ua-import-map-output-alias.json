@@ -1,0 +1,996 @@
+{
+  "scriptCompleted": true,
+  "stats": {
+    "filesScanned": 209,
+    "filesWithImports": 170,
+    "totalEdges": 607
+  },
+  "importMap": {
+    "config/deployment/cloud-run-service.yaml": [],
+    "config/mountains/mountains.json": [],
+    "config/permissions.json": [],
+    "src/app/[mountain]/admin/adoption/new/page.tsx": [
+      "src/components/NewAdoptionForm.tsx",
+      "src/constants/adminStrings.ts"
+    ],
+    "src/app/[mountain]/admin/announcements/new/page.tsx": [
+      "src/components/NewAnnouncementForm.tsx",
+      "src/constants/adminStrings.ts"
+    ],
+    "src/app/[mountain]/admin/app-management/page.tsx": [
+      "src/components/admin/AboutContentEditor.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/cats/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/cat-grid/CatGrid.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/revalidate-client.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cat-filters.ts"
+    ],
+    "src/app/[mountain]/admin/layout.tsx": [
+      "src/components/admin/AdminAuth.tsx",
+      "src/constants/adminStrings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/members/page.tsx": [
+      "src/components/admin/ContactManagement.tsx",
+      "src/components/admin/ResourcePermissionConfig.tsx",
+      "src/components/admin/RoleManagement.tsx",
+      "src/components/admin/RolePermissionConfig.tsx",
+      "src/constants/adminStrings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/migration/page.tsx": [
+      "src/constants/adminStrings.ts"
+    ],
+    "src/app/[mountain]/admin/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/YouTubeAuthPanelNew.tsx",
+      "src/components/ui/Alert.tsx",
+      "src/components/ui/Card.tsx",
+      "src/services/index.ts"
+    ],
+    "src/app/[mountain]/admin/points/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/PointMapPicker.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/revalidate-client.ts",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx": [
+      "src/components/EditPostForm.tsx"
+    ],
+    "src/app/[mountain]/admin/posts/page.tsx": [
+      "src/components/AdminPostList.tsx",
+      "src/constants/adminStrings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/tag-images/page.tsx": [
+      "src/components/CatSelectorModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/media/index.ts",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Lightbox.tsx",
+      "src/components/ui/useDialog.tsx",
+      "src/constants/adminStrings.ts",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/dateParser.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/[mountain]/admin/tag-videos/page.tsx": [
+      "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+      "src/components/CatSelectorModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/media/index.ts",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/useDialog.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/services/index.ts",
+      "src/utils/dateParser.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts": [
+      "src/components/ui/useDialog.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/types/media.ts"
+    ],
+    "src/app/[mountain]/layout.tsx": [
+      "src/components/AnalyticsTracker.tsx",
+      "src/components/Footer.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/MountainSelector.tsx",
+      "src/components/Navigation.tsx",
+      "src/components/auth/AuthProvider.tsx",
+      "src/contexts/AnnouncementModalContext.tsx",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/[mountain]/login/page.tsx": [
+      "src/components/LoginForm.tsx",
+      "src/components/SignupForm.tsx",
+      "src/constants/strings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/mypage/layout.tsx": [
+      "src/constants/strings.ts"
+    ],
+    "src/app/[mountain]/mypage/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/auth/PasswordResetModal.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/admin.ts",
+      "src/services/firebase.ts"
+    ],
+    "src/app/[mountain]/page.tsx": [
+      "src/components/MountainViewer.tsx",
+      "src/lib/cache-config.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/lib/server/point-reads.ts",
+      "src/lib/tenant.ts"
+    ],
+    "src/app/[mountain]/pages/about/page.tsx": [
+      "src/components/CatInfo.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/hooks/useAboutPhoto.ts",
+      "src/services/about-content-service.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/config.ts",
+      "src/utils/text-processing.ts"
+    ],
+    "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx": [
+      "src/components/CatCircleGrid.tsx",
+      "src/components/CatInfo.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/adoption/page.tsx": [
+      "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+      "src/components/AdoptionPromotionClient.tsx",
+      "src/lib/cache-config.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/lib/tenant.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/announcements/[id]/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/app/[mountain]/pages/announcements/page.tsx": [
+      "src/components/AnnouncementClient.tsx"
+    ],
+    "src/app/[mountain]/pages/butler_stream/new/page.tsx": [
+      "src/components/NewPostForm.tsx",
+      "src/services/feeding-spots-admin-service.ts"
+    ],
+    "src/app/[mountain]/pages/butler_stream/page.tsx": [
+      "src/components/ButlerStreamClient.tsx",
+      "src/components/FeedingSpotsList.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/admin.ts",
+      "src/services/feeding-spots-admin-service.ts"
+    ],
+    "src/app/[mountain]/pages/butler_talk/new/page.tsx": [
+      "src/components/NewButlerTalkForm.tsx"
+    ],
+    "src/app/[mountain]/pages/butler_talk/page.tsx": [
+      "src/components/ButlerTalkClient.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/admin.ts"
+    ],
+    "src/app/[mountain]/pages/cats/CatsBrowser.tsx": [
+      "src/components/CatInfo.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts",
+      "src/utils/cat-filters.ts"
+    ],
+    "src/app/[mountain]/pages/cats/page.tsx": [
+      "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+      "src/lib/cache-config.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/lib/server/point-reads.ts",
+      "src/lib/tenant.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/contact/page.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/pages/faq/page.tsx": [
+      "src/components/FAQ.tsx"
+    ],
+    "src/app/[mountain]/pages/login/page.tsx": [
+      "src/components/LoginForm.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/app/[mountain]/pages/photo-album/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/album/AlbumFilterBar.tsx",
+      "src/components/album/AlbumStates.tsx",
+      "src/components/album/MediaTile.tsx",
+      "src/components/ui/Lightbox.tsx",
+      "src/hooks/useMediaFilter.ts",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/[mountain]/pages/posts/[id]/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/components/ReplyList.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/privacy/page.tsx": [],
+    "src/app/[mountain]/pages/terms/page.tsx": [],
+    "src/app/[mountain]/pages/video-album/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/album/AlbumFilterBar.tsx",
+      "src/components/album/AlbumStates.tsx",
+      "src/components/album/MediaTile.tsx",
+      "src/components/ui/VideoPlayer.tsx",
+      "src/hooks/useMediaFilter.ts",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/duration.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/api/account/delete/route.ts": [
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/assign-role/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/app/api/admin/cats/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/tenant.ts",
+      "src/services/index.ts"
+    ],
+    "src/app/api/admin/get-all-user-permissions-client/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/posts-collections/route.ts": [
+      "src/lib/auth/requireApiPermission.ts"
+    ],
+    "src/app/api/admin/resource-permissions/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/role-permissions/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/youtube-auth/auth-url/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/admin/youtube-auth/callback/route.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/admin/youtube-auth/status/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/auth/kakao/callback/route.ts": [
+      "src/services/firebase.ts"
+    ],
+    "src/app/api/contact/route.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/generate-signed-url/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/manage-playlists/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/points/route.ts": [
+      "src/lib/tenant.ts",
+      "src/services/index.ts"
+    ],
+    "src/app/api/refresh-video-metadata/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/revalidate/route.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/update-youtube-video/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/upload-youtube/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/tenant.ts",
+      "src/lib/youtube/credentials.ts",
+      "src/services/index.ts",
+      "src/utils/config.ts",
+      "src/utils/dateParser.ts"
+    ],
+    "src/app/api/youtube-playlists/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/globals.css": [],
+    "src/app/layout.tsx": [
+      "src/app/globals.css"
+    ],
+    "src/components/AdminPostList.tsx": [
+      "src/components/AdminReplyList.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AdminReplyItem.tsx": [
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AdminReplyList.tsx": [
+      "src/components/AdminReplyItem.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/AdoptionPromotionClient.tsx": [
+      "src/components/CatLinkedText.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AnalyticsTracker.tsx": [
+      "src/components/MountainProvider.tsx"
+    ],
+    "src/components/AnnouncementClient.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AnnouncementModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx"
+    ],
+    "src/components/ButlerStreamClient.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/PostList.tsx",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/ButlerTalkClient.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/PostList.tsx",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/CatCircleGrid.tsx": [
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/CatGallery.tsx": [
+      "src/components/CatCircleGrid.tsx",
+      "src/components/CatInfo.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/CatInfo.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/PhotoAlbum.tsx",
+      "src/components/VideoAlbum.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/hooks/useMediaLinks.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/text-processing.ts"
+    ],
+    "src/components/CatLinkedText.tsx": [
+      "src/components/CatInfo.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/hooks/useMediaLinks.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/text-processing.ts"
+    ],
+    "src/components/CatSelectorModal.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/Compass.tsx": [],
+    "src/components/EditPostForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/FAQ.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/FeedingSpotsList.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/Footer.tsx": [],
+    "src/components/IntroCard.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/LeafletMountainMap.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/lib/server/cat-reads.ts",
+      "src/types/index.ts",
+      "src/utils/config.ts",
+      "src/utils/mapClustering.ts",
+      "src/utils/mapLabels.ts"
+    ],
+    "src/components/LoginForm.tsx": [
+      "src/components/SocialLoginButton.tsx",
+      "src/components/auth/EmailVerificationModal.tsx",
+      "src/components/auth/KakaoLoginGuidanceModal.tsx",
+      "src/components/auth/PasswordResetModal.tsx",
+      "src/components/auth/PhoneLoginForm.tsx",
+      "src/components/auth/UserNotFoundModal.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/services/firebase.ts",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/MountainProvider.tsx": [
+      "src/utils/config.ts"
+    ],
+    "src/components/MountainSelector.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/MountainViewer.tsx": [
+      "src/components/CatGallery.tsx",
+      "src/components/Compass.tsx",
+      "src/components/IntroCard.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useIsMobile.ts",
+      "src/hooks/useIsPhoneLandscape.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/NavDropdown.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/Navigation.tsx": [
+      "src/components/NavDropdown.tsx",
+      "src/components/auth/NavigationBarLogin.tsx",
+      "src/components/auth/NavigationBarLogout.tsx",
+      "src/hooks/useAuth.ts",
+      "src/hooks/useResourceAccess.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/NewAdoptionForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaUploadField.tsx",
+      "src/components/forms/useSimpleContentForm.ts",
+      "src/services/index.ts",
+      "src/utils/cn.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/NewAnnouncementForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaUploadField.tsx",
+      "src/components/forms/useSimpleContentForm.ts",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/NewButlerTalkForm.tsx": [
+      "src/components/CatSelectorModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaItemList.tsx",
+      "src/components/forms/useRichContentForm.ts",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/NewPostForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/useDialog.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/index.ts"
+    ],
+    "src/components/PhotoAlbum.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Lightbox.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/PostList.tsx": [
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/components/ReplyList.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/ReplyButton.tsx": [
+      "src/hooks/useAuth.ts"
+    ],
+    "src/components/ReplyForm.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/index.ts"
+    ],
+    "src/components/ReplyItem.tsx": [
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/ReplyList.tsx": [
+      "src/components/ReplyItem.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/SignupForm.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/services/firebase.ts",
+      "src/services/index.ts"
+    ],
+    "src/components/SocialLoginButton.tsx": [
+      "src/constants/strings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/VideoAlbum.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/components/ui/VideoPlayer.tsx",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/duration.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/admin/AboutContentEditor.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Alert.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Input.tsx",
+      "src/constants/adminStrings.ts",
+      "src/services/about-content-service.ts",
+      "src/services/index.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/admin/AdminAuth.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/SocialLoginButton.tsx",
+      "src/components/ui/Alert.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/components/ui/Field.tsx",
+      "src/components/ui/Input.tsx",
+      "src/hooks/useAuth.ts",
+      "src/hooks/useIdleTimeout.ts",
+      "src/lib/auth/admin.ts",
+      "src/services/firebase.ts"
+    ],
+    "src/components/admin/ContactManagement.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/constants/adminStrings.ts",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/admin/PointMapPicker.tsx": [
+      "src/constants/adminStrings.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/admin/ResourcePermissionConfig.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/components/admin/RoleManagement.tsx": [
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/admin/RolePermissionConfig.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/components/admin/YouTubeAuthPanelNew.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts"
+    ],
+    "src/components/admin/cat-grid/CatGrid.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/cat-grid/selectColumn.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/revalidate-client.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cat-filters.ts"
+    ],
+    "src/components/admin/cat-grid/selectColumn.tsx": [],
+    "src/components/admin/media/BatchActionsPanel.tsx": [
+      "src/components/ui/Button.tsx"
+    ],
+    "src/components/admin/media/CatTagField.tsx": [],
+    "src/components/admin/media/MediaFilterBar.tsx": [
+      "src/components/admin/media/useMediaListController.ts",
+      "src/components/ui/Button.tsx"
+    ],
+    "src/components/admin/media/MediaGrid.tsx": [],
+    "src/components/admin/media/MediaStatsCards.tsx": [],
+    "src/components/admin/media/PaginationBar.tsx": [],
+    "src/components/admin/media/index.ts": [],
+    "src/components/admin/media/useDateAutoParse.ts": [],
+    "src/components/admin/media/useMediaListController.ts": [
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/album/AlbumFilterBar.tsx": [
+      "src/components/CatSelectorModal.tsx"
+    ],
+    "src/components/album/AlbumStates.tsx": [],
+    "src/components/album/MediaTile.tsx": [],
+    "src/components/auth/AuthProvider.tsx": [
+      "src/constants/strings.ts",
+      "src/services/firebase.ts",
+      "src/services/index.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/components/auth/EmailVerificationModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/components/auth/KakaoLoginGuidanceModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/components/auth/LogoutModal.tsx": [
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/NavigationBarLogin.tsx": [
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/NavigationBarLogout.tsx": [
+      "src/components/auth/LogoutModal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/PasswordResetModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/PhoneLoginForm.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/services/firebase.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/UserNotFoundModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/components/forms/MediaItemList.tsx": [],
+    "src/components/forms/MediaUploadField.tsx": [],
+    "src/components/forms/uploadStrategies.ts": [
+      "src/lib/auth/authHeader.ts",
+      "src/services/index.ts",
+      "src/utils/dateParser.ts"
+    ],
+    "src/components/forms/useRichContentForm.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaItemList.tsx",
+      "src/components/forms/uploadStrategies.ts",
+      "src/components/ui/useDialog.tsx",
+      "src/hooks/useAuth.ts",
+      "src/utils/config.ts",
+      "src/utils/dateParser.ts"
+    ],
+    "src/components/forms/useSimpleContentForm.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/uploadStrategies.ts",
+      "src/components/ui/useDialog.tsx",
+      "src/hooks/useAuth.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/ui/Alert.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Button.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Card.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Field.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Input.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Lightbox.tsx": [
+      "src/components/ui/useModalLayer.ts",
+      "src/hooks/useIsMobile.ts",
+      "src/types/media.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/ui/Modal.tsx": [
+      "src/components/ui/useModalLayer.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/VideoPlayer.tsx": [
+      "src/components/ui/useModalLayer.ts",
+      "src/types/media.ts",
+      "src/utils/duration.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/ui/useDialog.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx"
+    ],
+    "src/components/ui/useModalLayer.ts": [],
+    "src/config/permission-config.ts": [
+      "config/permissions.json"
+    ],
+    "src/constants/adminStrings.ts": [],
+    "src/constants/strings.ts": [],
+    "src/contexts/AnnouncementModalContext.tsx": [
+      "src/components/AnnouncementModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts"
+    ],
+    "src/hooks/useAboutPhoto.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/config.ts"
+    ],
+    "src/hooks/useAuth.ts": [
+      "src/components/auth/AuthProvider.tsx"
+    ],
+    "src/hooks/useIdleTimeout.ts": [],
+    "src/hooks/useIsMobile.ts": [],
+    "src/hooks/useIsPhoneLandscape.ts": [],
+    "src/hooks/useMediaFilter.ts": [],
+    "src/hooks/useMediaLinks.tsx": [
+      "src/components/ui/Lightbox.tsx",
+      "src/components/ui/VideoPlayer.tsx",
+      "src/types/media.ts"
+    ],
+    "src/hooks/usePermissions.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/permission-service.ts"
+    ],
+    "src/hooks/useResourceAccess.ts": [
+      "src/hooks/usePermissions.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/lib/auth/admin.ts": [
+      "src/services/firebase.ts",
+      "src/services/permission-service.ts",
+      "src/types/admin.ts"
+    ],
+    "src/lib/auth/authHeader.ts": [],
+    "src/lib/auth/requireApiPermission.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts"
+    ],
+    "src/lib/cache-config.ts": [],
+    "src/lib/firebase-admin.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/lib/revalidate-client.ts": [],
+    "src/lib/server/cat-reads.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/types/index.ts"
+    ],
+    "src/lib/server/point-reads.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/types/index.ts"
+    ],
+    "src/lib/tenant.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/lib/youtube/credentials.ts": [
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/middleware.ts": [
+      "src/lib/tenant.ts"
+    ],
+    "src/services/about-content-service.ts": [
+      "src/services/firebase.ts"
+    ],
+    "src/services/adoption-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/announcement-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/auth-service.ts": [
+      "src/constants/strings.ts",
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/utils/config.ts"
+    ],
+    "src/services/butler-talk-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/cat-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/contact-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/feeding-spots-admin-service.ts": [
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/services/feeding-spots-service.ts": [
+      "src/services/firebase.ts"
+    ],
+    "src/services/firebase.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/services/image-service.ts": [
+      "src/services/interfaces.ts",
+      "src/services/media-albums.ts"
+    ],
+    "src/services/index.ts": [
+      "src/services/about-content-service.ts",
+      "src/services/adoption-service.ts",
+      "src/services/announcement-service.ts",
+      "src/services/auth-service.ts",
+      "src/services/butler-talk-service.ts",
+      "src/services/cat-service.ts",
+      "src/services/contact-service.ts",
+      "src/services/feeding-spots-service.ts",
+      "src/services/image-service.ts",
+      "src/services/interfaces.ts",
+      "src/services/permission-service.ts",
+      "src/services/point-service.ts",
+      "src/services/post-service.ts",
+      "src/services/storage-service.ts",
+      "src/services/video-service.ts"
+    ],
+    "src/services/interfaces.ts": [
+      "src/types/index.ts"
+    ],
+    "src/services/media-albums.ts": [
+      "src/services/firebase.ts",
+      "src/types/media.ts"
+    ],
+    "src/services/permission-service.ts": [
+      "src/config/permission-config.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/services/point-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/post-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/role-assignment-service.ts": [
+      "src/config/permission-config.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/services/storage-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/thumbnailPreloader.ts": [
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/video-service.ts": [
+      "src/services/interfaces.ts",
+      "src/services/media-albums.ts"
+    ],
+    "src/services/youtube.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/types/admin.ts": [
+      "src/types/index.ts",
+      "src/types/media.ts"
+    ],
+    "src/types/index.ts": [],
+    "src/types/media.ts": [],
+    "src/types/permissions.ts": [],
+    "src/utils/cat-filters.ts": [
+      "src/types/index.ts"
+    ],
+    "src/utils/cn.ts": [],
+    "src/utils/config.ts": [
+      "config/mountains/mountains.json"
+    ],
+    "src/utils/dateParser.ts": [],
+    "src/utils/duration.ts": [],
+    "src/utils/mapClustering.ts": [],
+    "src/utils/mapLabels.ts": [
+      "src/types/index.ts"
+    ],
+    "src/utils/parse-date.ts": [],
+    "src/utils/text-processing.ts": [],
+    "tsconfig.json": []
+  }
+}

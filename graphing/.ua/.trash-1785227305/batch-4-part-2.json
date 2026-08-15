@@ -1,0 +1,807 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/components/admin/cat-grid/selectColumn.tsx",
+   "type": "file",
+   "name": "selectColumn.tsx",
+   "filePath": "src/components/admin/cat-grid/selectColumn.tsx",
+   "summary": "A native <select> cell implementation for react-datasheet-grid, filling the gap left by the library's built-in column types; one generic component drives both string-valued and boolean enumerated cat columns.",
+   "tags": [
+    "component",
+    "admin",
+    "data-grid",
+    "factory",
+    "ui"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Generic over the cell value type and keys options by `String(value)`, so booleans and strings share one implementation."
+  },
+  {
+   "id": "file:src/hooks/useIsMobile.ts",
+   "type": "file",
+   "name": "useIsMobile.ts",
+   "filePath": "src/hooks/useIsMobile.ts",
+   "summary": "React hook returning whether the viewport is below the 768px mobile breakpoint, re-evaluated on media-query changes; also exports the breakpoint constant used by map behaviours.",
+   "tags": [
+    "hook",
+    "responsive",
+    "utility",
+    "client-component"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Starts `false` and corrects in an effect so server and first client render agree, avoiding a hydration mismatch."
+  },
+  {
+   "id": "file:src/hooks/useIsPhoneLandscape.ts",
+   "type": "file",
+   "name": "useIsPhoneLandscape.ts",
+   "filePath": "src/hooks/useIsPhoneLandscape.ts",
+   "summary": "React hook that detects a phone held in landscape (landscape orientation with a phone-sized max height), used to gate the map's rotate-to-portrait notice.",
+   "tags": [
+    "hook",
+    "responsive",
+    "utility",
+    "client-component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/lib/cache-config.ts",
+   "type": "file",
+   "name": "cache-config.ts",
+   "filePath": "src/lib/cache-config.ts",
+   "summary": "Single source of truth for the ISR fallback revalidate window (1 hour), re-exported as `revalidate` by the baked public route segments as a time-based backstop behind on-demand revalidation.",
+   "tags": [
+    "configuration",
+    "isr",
+    "caching",
+    "constants"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Hardcoded rather than env-driven because Next.js requires a segment's `revalidate` export to be statically analyzable."
+  },
+  {
+   "id": "file:src/lib/revalidate-client.ts",
+   "type": "file",
+   "name": "revalidate-client.ts",
+   "filePath": "src/lib/revalidate-client.ts",
+   "summary": "Client helper that fires a best-effort on-demand revalidation of the baked public pages after an admin mutation, attaching the caller's Firebase ID token to the members-only revalidate API route.",
+   "tags": [
+    "utility",
+    "client-component",
+    "caching",
+    "admin",
+    "api-client"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Deliberately never throws: the preceding mutation has already committed, and the ISR time backstop covers a missed call."
+  },
+  {
+   "id": "file:src/lib/server/cat-reads.ts",
+   "type": "file",
+   "name": "cat-reads.ts",
+   "filePath": "src/lib/server/cat-reads.ts",
+   "summary": "Server-only cat reads through the Firebase Admin SDK: fetches a tenant's cats in one query and groups them by feeding point into current and former residents for the baked landing and adoption pages.",
+   "tags": [
+    "service",
+    "server-component",
+    "data-access",
+    "firebase",
+    "multi-tenant"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Server-only by construction \u2014 importing firebase-admin pulls in the Node Admin SDK, which cannot be bundled for the client."
+  },
+  {
+   "id": "file:src/lib/server/point-reads.ts",
+   "type": "file",
+   "name": "point-reads.ts",
+   "filePath": "src/lib/server/point-reads.ts",
+   "summary": "Server-only feeding-point reads through the Firebase Admin SDK, used so the landing map's marker positions bake deterministically at build/server time instead of via the client Web SDK.",
+   "tags": [
+    "service",
+    "server-component",
+    "data-access",
+    "firebase",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/services/thumbnailPreloader.ts",
+   "type": "file",
+   "name": "thumbnailPreloader.ts",
+   "filePath": "src/services/thumbnailPreloader.ts",
+   "summary": "Singleton image-preloading service that warms cat thumbnail URLs into the browser cache ahead of galleries and map markers, tracking loaded URLs and exposing per-point and per-URL readiness checks.",
+   "tags": [
+    "service",
+    "singleton",
+    "performance",
+    "images",
+    "caching"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/types/index.ts",
+   "type": "file",
+   "name": "index.ts",
+   "filePath": "src/types/index.ts",
+   "summary": "Central TypeScript domain model for the app \u2014 the Point (feeding station) and Cat interfaces plus supporting types such as label placement side \u2014 shared by client components, server reads and the service layer.",
+   "tags": [
+    "type-definition",
+    "data-model",
+    "shared",
+    "domain"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Tenancy is modelled as an optional `mountainId` on every content doc, reflecting an in-progress backfill."
+  },
+  {
+   "id": "file:src/utils/cat-filters.ts",
+   "type": "file",
+   "name": "cat-filters.ts",
+   "filePath": "src/utils/cat-filters.ts",
+   "summary": "Pure, shared filter/sort/unique-value helpers for cat lists, extracted so the admin card editor, the admin spreadsheet grid and the public browser all apply an identical predicate.",
+   "tags": [
+    "utility",
+    "pure-function",
+    "filtering",
+    "shared",
+    "validation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/utils/mapClustering.ts",
+   "type": "file",
+   "name": "mapClustering.ts",
+   "filePath": "src/utils/mapClustering.ts",
+   "summary": "Zoom-independent greedy proximity clustering for map markers plus a spiderfy-radius helper; replaces leaflet.markercluster on mobile with a grouping computed once in a fixed pixel space.",
+   "tags": [
+    "utility",
+    "pure-function",
+    "map",
+    "clustering",
+    "geometry"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Deliberately free of Leaflet and DOM dependencies so the geometry is unit-testable; O(n^2) is acceptable at the scale of a mountain's feeding points."
+  },
+  {
+   "id": "file:src/utils/mapLabels.ts",
+   "type": "file",
+   "name": "mapLabels.ts",
+   "filePath": "src/utils/mapLabels.ts",
+   "summary": "Decides whether a map marker's title label renders above or below the avatar, honouring a per-point authored override and otherwise applying a deterministic bottom-edge flip.",
+   "tags": [
+    "utility",
+    "pure-function",
+    "map",
+    "layout",
+    "labels"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Reads the marker's x or y depending on layout because the mobile map is rotated 90\u00b0 clockwise."
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/selectColumn.tsx:SelectComponent",
+   "type": "function",
+   "name": "SelectComponent",
+   "filePath": "src/components/admin/cat-grid/selectColumn.tsx",
+   "lineRange": [
+    24,
+    80
+   ],
+   "summary": "The datasheet-grid cell renderer backing a select column: focuses and opens the native select when the cell gains focus, commits the chosen option, and stops editing on blur or escape.",
+   "tags": [
+    "component",
+    "data-grid",
+    "ui",
+    "form"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/selectColumn.tsx:selectColumn",
+   "type": "function",
+   "name": "selectColumn",
+   "filePath": "src/components/admin/cat-grid/selectColumn.tsx",
+   "lineRange": [
+    84,
+    101
+   ],
+   "summary": "Factory that builds a react-datasheet-grid Column definition from a list of options, wiring the select cell renderer plus copy/paste and deletion behaviour.",
+   "tags": [
+    "factory",
+    "data-grid",
+    "utility",
+    "admin"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/hooks/useIsMobile.ts:useIsMobile",
+   "type": "function",
+   "name": "useIsMobile",
+   "filePath": "src/hooks/useIsMobile.ts",
+   "lineRange": [
+    15,
+    27
+   ],
+   "summary": "Subscribes to the mobile-breakpoint media query and returns whether the viewport is currently mobile-sized.",
+   "tags": [
+    "hook",
+    "responsive",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/hooks/useIsPhoneLandscape.ts:useIsPhoneLandscape",
+   "type": "function",
+   "name": "useIsPhoneLandscape",
+   "filePath": "src/hooks/useIsPhoneLandscape.ts",
+   "lineRange": [
+    16,
+    28
+   ],
+   "summary": "Subscribes to a landscape-orientation plus short-viewport media query and returns whether the device is a phone in landscape.",
+   "tags": [
+    "hook",
+    "responsive",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/revalidate-client.ts:triggerPublicRevalidate",
+   "type": "function",
+   "name": "triggerPublicRevalidate",
+   "filePath": "src/lib/revalidate-client.ts",
+   "lineRange": [
+    14,
+    34
+   ],
+   "summary": "Posts an authenticated request to the revalidate API route after an admin mutation, logging rather than throwing on any failure.",
+   "tags": [
+    "utility",
+    "caching",
+    "api-client",
+    "admin"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/server/cat-reads.ts:getAllCatsServer",
+   "type": "function",
+   "name": "getAllCatsServer",
+   "filePath": "src/lib/server/cat-reads.ts",
+   "lineRange": [
+    27,
+    38
+   ],
+   "summary": "Reads every cat belonging to the given mountain in one Admin SDK query, logging and re-raising on failure so a bad build read surfaces.",
+   "tags": [
+    "data-access",
+    "server-component",
+    "firebase",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/server/cat-reads.ts:groupCatsByPoint",
+   "type": "function",
+   "name": "groupCatsByPoint",
+   "filePath": "src/lib/server/cat-reads.ts",
+   "lineRange": [
+    43,
+    56
+   ],
+   "summary": "Groups a flat cat list into per-point current (dwelling) and former (prev_dwelling) residents in a single pass.",
+   "tags": [
+    "pure-function",
+    "data-transformation",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/lib/server/point-reads.ts:getAllPointsServer",
+   "type": "function",
+   "name": "getAllPointsServer",
+   "filePath": "src/lib/server/point-reads.ts",
+   "lineRange": [
+    25,
+    36
+   ],
+   "summary": "Reads every feeding point belonging to the given mountain in one Admin SDK query, logging and re-raising on failure.",
+   "tags": [
+    "data-access",
+    "server-component",
+    "firebase",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/services/thumbnailPreloader.ts:ThumbnailPreloader",
+   "type": "class",
+   "name": "ThumbnailPreloader",
+   "filePath": "src/services/thumbnailPreloader.ts",
+   "lineRange": [
+    4,
+    127
+   ],
+   "summary": "Tracks which thumbnail URLs have been fetched and preloads them per point or per URL batch, exposing readiness checks and a wait-for-load promise; instantiated once as a module singleton.",
+   "tags": [
+    "service",
+    "singleton",
+    "performance",
+    "images",
+    "caching"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/cat-filters.ts:filterCats",
+   "type": "function",
+   "name": "filterCats",
+   "filePath": "src/utils/cat-filters.ts",
+   "lineRange": [
+    35,
+    83
+   ],
+   "summary": "Applies the shared cat predicate \u2014 free-text search plus status, location, gender, birth-year, neutered and adoptable facets \u2014 to a cat list.",
+   "tags": [
+    "pure-function",
+    "filtering",
+    "utility",
+    "shared"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/cat-filters.ts:sortCats",
+   "type": "function",
+   "name": "sortCats",
+   "filePath": "src/utils/cat-filters.ts",
+   "lineRange": [
+    91,
+    109
+   ],
+   "summary": "Returns a copy of the cat list sorted by the requested key and direction, with stable handling of missing values.",
+   "tags": [
+    "pure-function",
+    "sorting",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/cat-filters.ts:getUniqueLocations",
+   "type": "function",
+   "name": "getUniqueLocations",
+   "filePath": "src/utils/cat-filters.ts",
+   "lineRange": [
+    112,
+    119
+   ],
+   "summary": "Collects the distinct dwelling locations present in a cat list for populating the location filter.",
+   "tags": [
+    "pure-function",
+    "utility",
+    "filtering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/cat-filters.ts:getUniqueStatuses",
+   "type": "function",
+   "name": "getUniqueStatuses",
+   "filePath": "src/utils/cat-filters.ts",
+   "lineRange": [
+    122,
+    124
+   ],
+   "summary": "Collects the distinct status values present in a cat list for the status filter options.",
+   "tags": [
+    "pure-function",
+    "utility",
+    "filtering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/cat-filters.ts:getUniqueGenders",
+   "type": "function",
+   "name": "getUniqueGenders",
+   "filePath": "src/utils/cat-filters.ts",
+   "lineRange": [
+    127,
+    129
+   ],
+   "summary": "Collects the distinct sex values present in a cat list for the gender filter options.",
+   "tags": [
+    "pure-function",
+    "utility",
+    "filtering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/cat-filters.ts:getUniqueBirthYears",
+   "type": "function",
+   "name": "getUniqueBirthYears",
+   "filePath": "src/utils/cat-filters.ts",
+   "lineRange": [
+    132,
+    138
+   ],
+   "summary": "Collects and orders the distinct birth years present in a cat list for the birth-year filter options.",
+   "tags": [
+    "pure-function",
+    "utility",
+    "filtering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/mapClustering.ts:greedyClusterByRadius",
+   "type": "function",
+   "name": "greedyClusterByRadius",
+   "filePath": "src/utils/mapClustering.ts",
+   "lineRange": [
+    37,
+    67
+   ],
+   "summary": "Greedily groups pixel points so every member lies within a fixed radius of its cluster seed, returning centroids and member indices deterministically in input order.",
+   "tags": [
+    "pure-function",
+    "clustering",
+    "geometry",
+    "map"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/utils/mapClustering.ts:spiderfyRadius",
+   "type": "function",
+   "name": "spiderfyRadius",
+   "filePath": "src/utils/mapClustering.ts",
+   "lineRange": [
+    74,
+    78
+   ],
+   "summary": "Computes the radius at which a cluster's members should be fanned out so they stay visually separated.",
+   "tags": [
+    "pure-function",
+    "geometry",
+    "map"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/utils/mapLabels.ts:resolveLabelAbove",
+   "type": "function",
+   "name": "resolveLabelAbove",
+   "filePath": "src/utils/mapLabels.ts",
+   "lineRange": [
+    27,
+    37
+   ],
+   "summary": "Returns whether a marker's label should render above the avatar, honouring an explicit per-point override and otherwise flipping labels that would clip at the container's bottom edge.",
+   "tags": [
+    "pure-function",
+    "map",
+    "layout",
+    "utility"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/components/admin/cat-grid/selectColumn.tsx",
+   "target": "function:src/components/admin/cat-grid/selectColumn.tsx:SelectComponent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/selectColumn.tsx",
+   "target": "function:src/components/admin/cat-grid/selectColumn.tsx:selectColumn",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/selectColumn.tsx",
+   "target": "function:src/components/admin/cat-grid/selectColumn.tsx:selectColumn",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/useIsMobile.ts",
+   "target": "function:src/hooks/useIsMobile.ts:useIsMobile",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/useIsMobile.ts",
+   "target": "function:src/hooks/useIsMobile.ts:useIsMobile",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/hooks/useIsPhoneLandscape.ts",
+   "target": "function:src/hooks/useIsPhoneLandscape.ts:useIsPhoneLandscape",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/hooks/useIsPhoneLandscape.ts",
+   "target": "function:src/hooks/useIsPhoneLandscape.ts:useIsPhoneLandscape",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/revalidate-client.ts",
+   "target": "function:src/lib/revalidate-client.ts:triggerPublicRevalidate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/revalidate-client.ts",
+   "target": "function:src/lib/revalidate-client.ts:triggerPublicRevalidate",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/server/cat-reads.ts",
+   "target": "function:src/lib/server/cat-reads.ts:getAllCatsServer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/server/cat-reads.ts",
+   "target": "function:src/lib/server/cat-reads.ts:getAllCatsServer",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/server/cat-reads.ts",
+   "target": "function:src/lib/server/cat-reads.ts:groupCatsByPoint",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/server/cat-reads.ts",
+   "target": "function:src/lib/server/cat-reads.ts:groupCatsByPoint",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/server/point-reads.ts",
+   "target": "function:src/lib/server/point-reads.ts:getAllPointsServer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/lib/server/point-reads.ts",
+   "target": "function:src/lib/server/point-reads.ts:getAllPointsServer",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/thumbnailPreloader.ts",
+   "target": "class:src/services/thumbnailPreloader.ts:ThumbnailPreloader",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/thumbnailPreloader.ts",
+   "target": "class:src/services/thumbnailPreloader.ts:ThumbnailPreloader",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:filterCats",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:filterCats",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:sortCats",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:sortCats",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueLocations",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueLocations",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueStatuses",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueStatuses",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueGenders",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueGenders",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueBirthYears",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "function:src/utils/cat-filters.ts:getUniqueBirthYears",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/mapClustering.ts",
+   "target": "function:src/utils/mapClustering.ts:greedyClusterByRadius",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/mapClustering.ts",
+   "target": "function:src/utils/mapClustering.ts:greedyClusterByRadius",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/mapClustering.ts",
+   "target": "function:src/utils/mapClustering.ts:spiderfyRadius",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/mapClustering.ts",
+   "target": "function:src/utils/mapClustering.ts:spiderfyRadius",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/utils/mapLabels.ts",
+   "target": "function:src/utils/mapLabels.ts:resolveLabelAbove",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/utils/mapLabels.ts",
+   "target": "function:src/utils/mapLabels.ts:resolveLabelAbove",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/lib/server/cat-reads.ts",
+   "target": "file:src/lib/firebase-admin.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/server/cat-reads.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/server/point-reads.ts",
+   "target": "file:src/lib/firebase-admin.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/lib/server/point-reads.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/thumbnailPreloader.ts",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/thumbnailPreloader.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/utils/cat-filters.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/utils/mapLabels.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

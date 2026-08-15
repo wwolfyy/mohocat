@@ -1,0 +1,964 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/app/[mountain]/admin/adoption/new/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/adoption/new/page.tsx",
+   "summary": "Admin route page for creating a new adoption-promotion (입양홍보) post; renders a titled shell around NewAdoptionForm.",
+   "tags": [
+    "page",
+    "admin",
+    "entry-point",
+    "adoption",
+    "form-host"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/adoption/new/page.tsx:NewAdoptionPage",
+   "type": "function",
+   "name": "NewAdoptionPage",
+   "filePath": "src/app/[mountain]/admin/adoption/new/page.tsx",
+   "lineRange": [
+    4,
+    22
+   ],
+   "summary": "Client page component that renders the admin heading from adminStrings and mounts the NewAdoptionForm editor.",
+   "tags": [
+    "page",
+    "admin",
+    "component",
+    "adoption"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/announcements/new/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/announcements/new/page.tsx",
+   "summary": "Admin route page for creating a new announcement (공지사항); renders a titled shell around NewAnnouncementForm.",
+   "tags": [
+    "page",
+    "admin",
+    "entry-point",
+    "announcements",
+    "form-host"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/announcements/new/page.tsx:NewAnnouncementPage",
+   "type": "function",
+   "name": "NewAnnouncementPage",
+   "filePath": "src/app/[mountain]/admin/announcements/new/page.tsx",
+   "lineRange": [
+    4,
+    22
+   ],
+   "summary": "Client page component that renders the localized admin heading and mounts the NewAnnouncementForm editor.",
+   "tags": [
+    "page",
+    "admin",
+    "component",
+    "announcements"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/members/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/members/page.tsx",
+   "summary": "Admin member-management page with a four-tab shell (users, roles, resource permissions, contacts) that switches between the corresponding admin panels.",
+   "tags": [
+    "page",
+    "admin",
+    "permissions",
+    "tabs",
+    "entry-point"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/members/page.tsx:MemberManagementPage",
+   "type": "function",
+   "name": "MemberManagementPage",
+   "filePath": "src/app/[mountain]/admin/members/page.tsx",
+   "lineRange": [
+    11,
+    81
+   ],
+   "summary": "Holds the active-tab state and renders RoleManagement, RolePermissionConfig, ResourcePermissionConfig, or ContactManagement accordingly.",
+   "tags": [
+    "admin",
+    "component",
+    "state-management",
+    "permissions"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/migration/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/migration/page.tsx",
+   "summary": "Placeholder admin page for the data-migration surface, rendering only a localized title and explanatory body copy.",
+   "tags": [
+    "page",
+    "admin",
+    "migration",
+    "placeholder"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/migration/page.tsx:MigrationPage",
+   "type": "function",
+   "name": "MigrationPage",
+   "filePath": "src/app/[mountain]/admin/migration/page.tsx",
+   "lineRange": [
+    3,
+    11
+   ],
+   "summary": "Static server-renderable page component showing the migration section title and description from adminStrings.",
+   "tags": [
+    "admin",
+    "component",
+    "migration",
+    "static"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/points/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/points/page.tsx",
+   "summary": "Admin CMS for map points: lists, creates, edits and deletes location points for the active mountain, with a drag-to-place map picker, per-breakpoint label-side settings, and delete blocking when cats still reference a point.",
+   "tags": [
+    "admin",
+    "crud",
+    "map",
+    "points",
+    "cms"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Client component that guards deletes by cross-checking cat dwelling references before calling the point service."
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/points/page.tsx:labelSummary",
+   "type": "function",
+   "name": "labelSummary",
+   "filePath": "src/app/[mountain]/admin/points/page.tsx",
+   "lineRange": [
+    38,
+    47
+   ],
+   "summary": "Renders a short human-readable summary of a point's mobile/desktop label-side configuration for the list view.",
+   "tags": [
+    "utility",
+    "formatting",
+    "admin"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "type": "function",
+   "name": "PointsCMSPage",
+   "filePath": "src/app/[mountain]/admin/points/page.tsx",
+   "lineRange": [
+    57,
+    384
+   ],
+   "summary": "Main admin points screen: loads points and cats from the service layer, manages create/edit form state, blocks deletion of points referenced by cats, and triggers public revalidation after mutations.",
+   "tags": [
+    "admin",
+    "crud",
+    "state-management",
+    "points",
+    "component"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/points/page.tsx:LabelSideSelect",
+   "type": "function",
+   "name": "LabelSideSelect",
+   "filePath": "src/app/[mountain]/admin/points/page.tsx",
+   "lineRange": [
+    387,
+    410
+   ],
+   "summary": "Small controlled select control for choosing a point label's placement side at one breakpoint.",
+   "tags": [
+    "component",
+    "form-control",
+    "admin"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/tag-videos/page.tsx",
+   "summary": "Large admin screen for tagging YouTube videos with cats: filters, sorts and paginates the video library, drives batch tag/date operations, auto-parses recording dates from titles, and syncs edits to YouTube and Firestore via the mutations hook.",
+   "tags": [
+    "admin",
+    "media",
+    "youtube",
+    "tagging",
+    "batch-operations"
+   ],
+   "complexity": "complex",
+   "languageNotes": "The heaviest client component in the repo (1.4k lines); state is split out into useYouTubeVideoMutations and the shared admin/media controller hooks."
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/tag-videos/page.tsx:formatDuration",
+   "type": "function",
+   "name": "formatDuration",
+   "filePath": "src/app/[mountain]/admin/tag-videos/page.tsx",
+   "lineRange": [
+    28,
+    63
+   ],
+   "summary": "Converts an ISO 8601 duration or raw seconds value into a human-friendly mm:ss / hh:mm:ss label for the video grid.",
+   "tags": [
+    "utility",
+    "formatting",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "type": "function",
+   "name": "TagVideosPage",
+   "filePath": "src/app/[mountain]/admin/tag-videos/page.tsx",
+   "lineRange": [
+    77,
+    1453
+   ],
+   "summary": "Orchestrates the video tagging UI: media list controller state, date auto-parse, cat-selector modal, batch panels, pagination and per-video edit form wired to the YouTube mutation hook.",
+   "tags": [
+    "admin",
+    "component",
+    "media",
+    "youtube",
+    "state-management"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "type": "file",
+   "name": "useYouTubeVideoMutations.ts",
+   "filePath": "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "summary": "Hook encapsulating every write path of the video-tagging admin page: single and batch tag/date updates against the YouTube API plus the mirroring Firestore sync, with saving flags and dialog-based feedback.",
+   "tags": [
+    "hook",
+    "admin",
+    "youtube",
+    "mutations",
+    "media"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts:useYouTubeVideoMutations",
+   "type": "function",
+   "name": "useYouTubeVideoMutations",
+   "filePath": "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "lineRange": [
+    40,
+    626
+   ],
+   "summary": "Returns the selected-video editing state and the tag/date mutation callbacks (single + batch), each authenticating with a bearer header, calling the YouTube update route, syncing Firestore and reloading the list.",
+   "tags": [
+    "hook",
+    "mutations",
+    "youtube",
+    "batch-operations",
+    "async"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/butler_talk/new/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/butler_talk/new/page.tsx",
+   "summary": "Public-side route page for composing a new 집사톡 (butler talk) post; a thin wrapper that mounts NewButlerTalkForm.",
+   "tags": [
+    "page",
+    "entry-point",
+    "butler-talk",
+    "form-host"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/butler_talk/new/page.tsx:NewButlerTalkPage",
+   "type": "function",
+   "name": "NewButlerTalkPage",
+   "filePath": "src/app/[mountain]/pages/butler_talk/new/page.tsx",
+   "lineRange": [
+    4,
+    11
+   ],
+   "summary": "Minimal page component rendering the NewButlerTalkForm inside the standard page container.",
+   "tags": [
+    "page",
+    "component",
+    "butler-talk"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/NewAdoptionForm.tsx",
+   "type": "file",
+   "name": "NewAdoptionForm.tsx",
+   "filePath": "src/components/NewAdoptionForm.tsx",
+   "summary": "Adoption-promotion post editor: title/message fields plus image and video upload, delegating the whole submit pipeline to the shared simple-content form hook and the adoption service.",
+   "tags": [
+    "component",
+    "form",
+    "adoption",
+    "upload"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "type": "function",
+   "name": "NewAdoptionForm",
+   "filePath": "src/components/NewAdoptionForm.tsx",
+   "lineRange": [
+    16,
+    101
+   ],
+   "summary": "Renders the adoption post fields and MediaUploadField, configuring useSimpleContentForm with the adoption service write, storage path prefix and the cross-mountain adoption playlist.",
+   "tags": [
+    "component",
+    "form",
+    "adoption",
+    "upload"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/app/[mountain]/admin/adoption/new/page.tsx",
+   "target": "function:src/app/[mountain]/admin/adoption/new/page.tsx:NewAdoptionPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/adoption/new/page.tsx",
+   "target": "function:src/app/[mountain]/admin/adoption/new/page.tsx:NewAdoptionPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/announcements/new/page.tsx",
+   "target": "function:src/app/[mountain]/admin/announcements/new/page.tsx:NewAnnouncementPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/announcements/new/page.tsx",
+   "target": "function:src/app/[mountain]/admin/announcements/new/page.tsx:NewAnnouncementPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "function:src/app/[mountain]/admin/members/page.tsx:MemberManagementPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "function:src/app/[mountain]/admin/members/page.tsx:MemberManagementPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/members/page.tsx:MemberManagementPage",
+   "target": "function:src/utils/cn.ts:cn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/migration/page.tsx",
+   "target": "function:src/app/[mountain]/admin/migration/page.tsx:MigrationPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/migration/page.tsx",
+   "target": "function:src/app/[mountain]/admin/migration/page.tsx:MigrationPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "function:src/app/[mountain]/admin/points/page.tsx:labelSummary",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "function:src/app/[mountain]/admin/points/page.tsx:LabelSideSelect",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "target": "function:src/services/index.ts:getPointService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "target": "function:src/services/index.ts:getCatService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "target": "function:src/lib/revalidate-client.ts:triggerPublicRevalidate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/points/page.tsx:PointsCMSPage",
+   "target": "function:src/app/[mountain]/admin/points/page.tsx:labelSummary",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "function:src/app/[mountain]/admin/tag-videos/page.tsx:formatDuration",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/services/index.ts:getVideoService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/utils/parse-date.ts:parseDate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/utils/dateParser.ts:parseRecordingDateFromTitle",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/components/ui/useDialog.tsx:useDialog",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts:useYouTubeVideoMutations",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/page.tsx:TagVideosPage",
+   "target": "function:src/app/[mountain]/admin/tag-videos/page.tsx:formatDuration",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "function:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts:useYouTubeVideoMutations",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "function:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts:useYouTubeVideoMutations",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts:useYouTubeVideoMutations",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts:useYouTubeVideoMutations",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/butler_talk/new/page.tsx",
+   "target": "function:src/app/[mountain]/pages/butler_talk/new/page.tsx:NewButlerTalkPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/butler_talk/new/page.tsx",
+   "target": "function:src/app/[mountain]/pages/butler_talk/new/page.tsx:NewButlerTalkPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "target": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "target": "function:src/services/index.ts:getAdoptionService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "target": "function:src/utils/config.ts:getAdoptionPlaylistId",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAdoptionForm.tsx:NewAdoptionForm",
+   "target": "function:src/utils/cn.ts:cn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/adoption/new/page.tsx",
+   "target": "file:src/components/NewAdoptionForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/adoption/new/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/announcements/new/page.tsx",
+   "target": "file:src/components/NewAnnouncementForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/announcements/new/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "file:src/components/admin/ContactManagement.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "file:src/components/admin/RoleManagement.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "file:src/components/admin/RolePermissionConfig.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/members/page.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/migration/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/components/admin/PointMapPicker.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/lib/revalidate-client.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/points/page.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/components/CatSelectorModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/components/admin/media/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/components/ui/useDialog.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/utils/dateParser.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/page.tsx",
+   "target": "file:src/utils/parse-date.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "file:src/components/ui/useDialog.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+   "target": "file:src/types/media.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/butler_talk/new/page.tsx",
+   "target": "file:src/components/NewButlerTalkForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "file:src/components/forms/MediaUploadField.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "file:src/components/forms/useSimpleContentForm.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAdoptionForm.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

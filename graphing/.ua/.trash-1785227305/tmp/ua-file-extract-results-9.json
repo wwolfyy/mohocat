@@ -1,0 +1,1569 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 10,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 10,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 10,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/[mountain]/pages/butler_stream/new/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 29,
+      "nonEmptyLines": 24,
+      "functions": [
+        {
+          "name": "NewPostPage",
+          "startLine": 9,
+          "endLine": 27,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NewPostPage",
+          "callee": "getAdminFeedingSpotsService",
+          "lineNumber": 15
+        },
+        {
+          "caller": "NewPostPage",
+          "callee": "feedingSpotsService.getBasicFeedingSpots",
+          "lineNumber": 16
+        },
+        {
+          "caller": "NewPostPage",
+          "callee": "console.error",
+          "lineNumber": 18
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_stream/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 74,
+      "nonEmptyLines": 62,
+      "functions": [
+        {
+          "name": "ButlerStreamContent",
+          "startLine": 11,
+          "endLine": 68,
+          "params": []
+        },
+        {
+          "name": "ButlerStream",
+          "startLine": 70,
+          "endLine": 72,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ButlerStreamContent",
+          "callee": "useAuth",
+          "lineNumber": 12
+        },
+        {
+          "caller": "ButlerStreamContent",
+          "callee": "useMountain",
+          "lineNumber": 13
+        },
+        {
+          "caller": "ButlerStreamContent",
+          "callee": "useState",
+          "lineNumber": 14
+        },
+        {
+          "caller": "ButlerStreamContent",
+          "callee": "useEffect",
+          "lineNumber": 16
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "setHasPermission",
+          "lineNumber": 19
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "checkIsAdmin",
+          "lineNumber": 25
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "setHasPermission",
+          "lineNumber": 28
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "console.error",
+          "lineNumber": 30
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "setHasPermission",
+          "lineNumber": 31
+        },
+        {
+          "caller": "ButlerStreamContent",
+          "callee": "checkPermission",
+          "lineNumber": 35
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_talk/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 70,
+      "nonEmptyLines": 59,
+      "functions": [
+        {
+          "name": "ButlerTalkContent",
+          "startLine": 9,
+          "endLine": 64,
+          "params": []
+        },
+        {
+          "name": "ButlerTalk",
+          "startLine": 66,
+          "endLine": 68,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ButlerTalkContent",
+          "callee": "useAuth",
+          "lineNumber": 10
+        },
+        {
+          "caller": "ButlerTalkContent",
+          "callee": "useMountain",
+          "lineNumber": 11
+        },
+        {
+          "caller": "ButlerTalkContent",
+          "callee": "useState",
+          "lineNumber": 12
+        },
+        {
+          "caller": "ButlerTalkContent",
+          "callee": "useEffect",
+          "lineNumber": 14
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "setHasPermission",
+          "lineNumber": 17
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "checkIsAdmin",
+          "lineNumber": 23
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "setHasPermission",
+          "lineNumber": 26
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "console.error",
+          "lineNumber": 28
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "setHasPermission",
+          "lineNumber": 29
+        },
+        {
+          "caller": "ButlerTalkContent",
+          "callee": "checkPermission",
+          "lineNumber": 33
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ButlerStreamClient.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 125,
+      "nonEmptyLines": 106,
+      "functions": [
+        {
+          "name": "ButlerStreamClient",
+          "startLine": 11,
+          "endLine": 123,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useMountain",
+          "lineNumber": 13
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "getAuthService",
+          "lineNumber": 14
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "getPostService",
+          "lineNumber": 15
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useState",
+          "lineNumber": 18
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useState",
+          "lineNumber": 19
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useState",
+          "lineNumber": 20
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useRouter",
+          "lineNumber": 22
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useEffect",
+          "lineNumber": 24
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "authService.onAuthStateChanged",
+          "lineNumber": 25
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "setIsAuthenticated",
+          "lineNumber": 27
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "router.push",
+          "lineNumber": 29
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "unsubscribe",
+          "lineNumber": 33
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 39
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "postService.getAllPosts",
+          "lineNumber": 41
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 42
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 43
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "allPosts.sort",
+          "lineNumber": 46
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "dateB.getTime",
+          "lineNumber": 72
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "dateA.getTime",
+          "lineNumber": 72
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 75
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "sortedPosts.slice",
+          "lineNumber": 78
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 80
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "setPosts",
+          "lineNumber": 81
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "setTotalPages",
+          "lineNumber": 82
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "Math.ceil",
+          "lineNumber": 82
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.error",
+          "lineNumber": 84
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "useEffect",
+          "lineNumber": 89
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "fetchPosts",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handlePageClick",
+          "callee": "setCurrentPage",
+          "lineNumber": 94
+        },
+        {
+          "caller": "ButlerStreamClient",
+          "callee": "router.push",
+          "lineNumber": 108
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ButlerTalkClient.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 125,
+      "nonEmptyLines": 106,
+      "functions": [
+        {
+          "name": "ButlerTalkClient",
+          "startLine": 11,
+          "endLine": 123,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useMountain",
+          "lineNumber": 13
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "getAuthService",
+          "lineNumber": 14
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "getButlerTalkService",
+          "lineNumber": 15
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useState",
+          "lineNumber": 18
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useState",
+          "lineNumber": 19
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useState",
+          "lineNumber": 20
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useRouter",
+          "lineNumber": 22
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useEffect",
+          "lineNumber": 24
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "authService.onAuthStateChanged",
+          "lineNumber": 25
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "setIsAuthenticated",
+          "lineNumber": 27
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "router.push",
+          "lineNumber": 29
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "unsubscribe",
+          "lineNumber": 33
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 39
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "butlerTalkService.getAllPosts",
+          "lineNumber": 41
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 42
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 43
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "allPosts.sort",
+          "lineNumber": 46
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "dateB.getTime",
+          "lineNumber": 72
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "dateA.getTime",
+          "lineNumber": 72
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 75
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "sortedPosts.slice",
+          "lineNumber": 78
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.log",
+          "lineNumber": 80
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "setPosts",
+          "lineNumber": 81
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "setTotalPages",
+          "lineNumber": 82
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "Math.ceil",
+          "lineNumber": 82
+        },
+        {
+          "caller": "fetchPosts",
+          "callee": "console.error",
+          "lineNumber": 84
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "useEffect",
+          "lineNumber": 89
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "fetchPosts",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handlePageClick",
+          "callee": "setCurrentPage",
+          "lineNumber": 94
+        },
+        {
+          "caller": "ButlerTalkClient",
+          "callee": "router.push",
+          "lineNumber": 108
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/FeedingSpotsList.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 145,
+      "nonEmptyLines": 129,
+      "functions": [
+        {
+          "name": "FeedingSpotsList",
+          "startLine": 7,
+          "endLine": 143,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "useState",
+          "lineNumber": 8
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "useState",
+          "lineNumber": 9
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "useState",
+          "lineNumber": 10
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "useMountain",
+          "lineNumber": 12
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "getFeedingSpotsService",
+          "lineNumber": 13
+        },
+        {
+          "caller": "getColorForHours",
+          "callee": "Math.round",
+          "lineNumber": 26
+        },
+        {
+          "caller": "getColorForHours",
+          "callee": "Math.round",
+          "lineNumber": 27
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "useEffect",
+          "lineNumber": 47
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "setLoading",
+          "lineNumber": 50
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "setError",
+          "lineNumber": 51
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "feedingSpotsService.getAllFeedingSpots",
+          "lineNumber": 52
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "setFeedingSpots",
+          "lineNumber": 53
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "console.error",
+          "lineNumber": 55
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "setError",
+          "lineNumber": 56
+        },
+        {
+          "caller": "fetchFeedingSpots",
+          "callee": "setLoading",
+          "lineNumber": 58
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "fetchFeedingSpots",
+          "lineNumber": 62
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "feedingSpots.map",
+          "lineNumber": 108
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "getColorForHours",
+          "lineNumber": 109
+        },
+        {
+          "caller": "FeedingSpotsList",
+          "callee": "formatHoursAgo",
+          "lineNumber": 126
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/NewPostForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 324,
+      "nonEmptyLines": 288,
+      "functions": [
+        {
+          "name": "NewPostForm",
+          "startLine": 32,
+          "endLine": 322,
+          "params": [
+            "{ feedingSpots }"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "date.getTime",
+          "lineNumber": 37
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "date.getTimezoneOffset",
+          "lineNumber": 37
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "koreaTime.getFullYear",
+          "lineNumber": 40
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String(koreaTime.getMonth() + 1).padStart",
+          "lineNumber": 41
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String",
+          "lineNumber": 41
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "koreaTime.getMonth",
+          "lineNumber": 41
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String(koreaTime.getDate()).padStart",
+          "lineNumber": 42
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String",
+          "lineNumber": 42
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "koreaTime.getDate",
+          "lineNumber": 42
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String(koreaTime.getHours()).padStart",
+          "lineNumber": 43
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String",
+          "lineNumber": 43
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "koreaTime.getHours",
+          "lineNumber": 43
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String(koreaTime.getMinutes()).padStart",
+          "lineNumber": 44
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "String",
+          "lineNumber": 44
+        },
+        {
+          "caller": "formatKoreaTimeForInput",
+          "callee": "koreaTime.getMinutes",
+          "lineNumber": 44
+        },
+        {
+          "caller": "generateDynamicTitle",
+          "callee": "date\n      .toLocaleDateString('ko-KR', {\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n      })\n      .replace(/\\s/g, '')\n      .replace",
+          "lineNumber": 54
+        },
+        {
+          "caller": "generateDynamicTitle",
+          "callee": "date\n      .toLocaleDateString('ko-KR', {\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n      })\n      .replace",
+          "lineNumber": 54
+        },
+        {
+          "caller": "generateDynamicTitle",
+          "callee": "date\n      .toLocaleDateString",
+          "lineNumber": 54
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useMountain",
+          "lineNumber": 66
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "getPostService",
+          "lineNumber": 67
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "getFeedingSpotsService",
+          "lineNumber": 68
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useRouter",
+          "lineNumber": 70
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useDialog",
+          "lineNumber": 71
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useAuth",
+          "lineNumber": 72
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useState",
+          "lineNumber": 74
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useState",
+          "lineNumber": 75
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useState",
+          "lineNumber": 76
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useState",
+          "lineNumber": 79
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useState",
+          "lineNumber": 80
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useEffect",
+          "lineNumber": 83
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "now.setMinutes",
+          "lineNumber": 85
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "formatKoreaTimeForInput",
+          "lineNumber": 86
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "setFeedingVisitTime",
+          "lineNumber": 87
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "setTitle",
+          "lineNumber": 88
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "generateDynamicTitle",
+          "lineNumber": 88
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "useEffect",
+          "lineNumber": 93
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "setTitle",
+          "lineNumber": 95
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "generateDynamicTitle",
+          "lineNumber": 95
+        },
+        {
+          "caller": "handleFeedingSpotToggle",
+          "callee": "setCheckedSpots",
+          "lineNumber": 101
+        },
+        {
+          "caller": "handleFeedingSpotToggle",
+          "callee": "newSet.has",
+          "lineNumber": 103
+        },
+        {
+          "caller": "handleFeedingSpotToggle",
+          "callee": "newSet.delete",
+          "lineNumber": 104
+        },
+        {
+          "caller": "handleFeedingSpotToggle",
+          "callee": "newSet.add",
+          "lineNumber": 106
+        },
+        {
+          "caller": "handleSelectAllFeedingSpots",
+          "callee": "setCheckedSpots",
+          "lineNumber": 113
+        },
+        {
+          "caller": "handleSelectAllFeedingSpots",
+          "callee": "feedingSpots.map",
+          "lineNumber": 113
+        },
+        {
+          "caller": "handleDeselectAllFeedingSpots",
+          "callee": "setCheckedSpots",
+          "lineNumber": 117
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "event.preventDefault",
+          "lineNumber": 121
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setSubmitting",
+          "lineNumber": 122
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "title.trim",
+          "lineNumber": 127
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "generateDynamicTitle",
+          "lineNumber": 127
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString().split",
+          "lineNumber": 129
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString",
+          "lineNumber": 129
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString().split('T')[1].split",
+          "lineNumber": 130
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString().split",
+          "lineNumber": 130
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString",
+          "lineNumber": 130
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "postService.createPost",
+          "lineNumber": 141
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "Array.from",
+          "lineNumber": 147
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "feedingSpotsService.updateFeedingSpots",
+          "lineNumber": 149
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "console.error",
+          "lineNumber": 155
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setMessage",
+          "lineNumber": 159
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setCheckedSpots",
+          "lineNumber": 160
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "resetTime.setMinutes",
+          "lineNumber": 164
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setFeedingVisitTime",
+          "lineNumber": 165
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "formatKoreaTimeForInput",
+          "lineNumber": 165
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 167
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "router.push",
+          "lineNumber": 169
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 171
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setSubmitting",
+          "lineNumber": 175
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "message.trim",
+          "lineNumber": 181
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "title.trim",
+          "lineNumber": 183
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "generateDynamicTitle",
+          "lineNumber": 183
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "dialog.confirm",
+          "lineNumber": 187
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "router.push",
+          "lineNumber": 190
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "setTitle",
+          "lineNumber": 214
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "generateDynamicTitle",
+          "lineNumber": 215
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "feedingSpots.map",
+          "lineNumber": 248
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "checkedSpots.has",
+          "lineNumber": 255
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "handleFeedingSpotToggle",
+          "lineNumber": 256
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "setFeedingVisitTime",
+          "lineNumber": 278
+        },
+        {
+          "caller": "NewPostForm",
+          "callee": "setMessage",
+          "lineNumber": 295
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/auth/admin.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 181,
+      "nonEmptyLines": 158,
+      "functions": [
+        {
+          "name": "isAdmin",
+          "startLine": 11,
+          "endLine": 29,
+          "params": [
+            "user",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getUserRole",
+          "startLine": 34,
+          "endLine": 57,
+          "params": [
+            "user",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "hasPermission",
+          "startLine": 62,
+          "endLine": 76,
+          "params": [
+            "user",
+            "permission",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "createAdminUser",
+          "startLine": 81,
+          "endLine": 130,
+          "params": [
+            "user",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "useAdminAuth",
+          "startLine": 135,
+          "endLine": 143,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "requireAdminAuth",
+          "startLine": 148,
+          "endLine": 159,
+          "params": [
+            "user",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "logAdminAction",
+          "startLine": 164,
+          "endLine": 181,
+          "params": [
+            "adminUser",
+            "action",
+            "resource",
+            "resourceId",
+            "details"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "isAdmin",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "getUserRole",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "hasPermission",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "createAdminUser",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "useAdminAuth",
+          "line": 135,
+          "isDefault": false
+        },
+        {
+          "name": "requireAdminAuth",
+          "line": 148,
+          "isDefault": false
+        },
+        {
+          "name": "logAdminAction",
+          "line": 164,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isAdmin",
+          "callee": "permissionService.getUserPermissions",
+          "lineNumber": 16
+        },
+        {
+          "caller": "isAdmin",
+          "callee": "permissions.some",
+          "lineNumber": 21
+        },
+        {
+          "caller": "isAdmin",
+          "callee": "adminPermissions.includes",
+          "lineNumber": 21
+        },
+        {
+          "caller": "isAdmin",
+          "callee": "console.error",
+          "lineNumber": 26
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "permissionService.getUserPermissions",
+          "lineNumber": 39
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "permissions.includes",
+          "lineNumber": 42
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "permissions.includes",
+          "lineNumber": 44
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "permissions.includes",
+          "lineNumber": 46
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "console.error",
+          "lineNumber": 54
+        },
+        {
+          "caller": "hasPermission",
+          "callee": "permissionService.checkPermission",
+          "lineNumber": 71
+        },
+        {
+          "caller": "hasPermission",
+          "callee": "console.error",
+          "lineNumber": 73
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "isAdmin",
+          "lineNumber": 84
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "getUserRole",
+          "lineNumber": 87
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "permissionService.getUserPermissions",
+          "lineNumber": 91
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "permissions.forEach",
+          "lineNumber": 96
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "adminPermissions.push",
+          "lineNumber": 99
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "adminPermissions.push",
+          "lineNumber": 105
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "adminPermissions.push",
+          "lineNumber": 108
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "adminPermissions.push",
+          "lineNumber": 114
+        },
+        {
+          "caller": "createAdminUser",
+          "callee": "adminPermissions.push",
+          "lineNumber": 115
+        },
+        {
+          "caller": "useAdminAuth",
+          "callee": "auth.onAuthStateChanged",
+          "lineNumber": 137
+        },
+        {
+          "caller": "useAdminAuth",
+          "callee": "createAdminUser",
+          "lineNumber": 138
+        },
+        {
+          "caller": "useAdminAuth",
+          "callee": "resolve",
+          "lineNumber": 139
+        },
+        {
+          "caller": "useAdminAuth",
+          "callee": "unsubscribe",
+          "lineNumber": 140
+        },
+        {
+          "caller": "requireAdminAuth",
+          "callee": "createAdminUser",
+          "lineNumber": 153
+        },
+        {
+          "caller": "logAdminAction",
+          "callee": "console.log",
+          "lineNumber": 173
+        },
+        {
+          "caller": "logAdminAction",
+          "callee": "new Date().toISOString",
+          "lineNumber": 179
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 7,
+        "functionCount": 7,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/services/feeding-spots-admin-service.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 149,
+      "nonEmptyLines": 123,
+      "functions": [
+        {
+          "name": "getAdminFeedingSpotsService",
+          "startLine": 149,
+          "endLine": 149,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "AdminFeedingSpotsService",
+          "startLine": 17,
+          "endLine": 147,
+          "methods": [
+            "formatTimestamp",
+            "calculateHoursAgo",
+            "parseTimestamp",
+            "getAllFeedingSpots",
+            "getBasicFeedingSpots"
+          ],
+          "properties": [
+            "COLLECTION_NAME",
+            "db"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdminFeedingSpotsService",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "getAdminFeedingSpotsService",
+          "line": 149,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "formatTimestamp",
+          "callee": "timestamp.toDate().toLocaleString",
+          "lineNumber": 32
+        },
+        {
+          "caller": "formatTimestamp",
+          "callee": "timestamp.toDate",
+          "lineNumber": 32
+        },
+        {
+          "caller": "formatTimestamp",
+          "callee": "timestamp.toLocaleString",
+          "lineNumber": 44
+        },
+        {
+          "caller": "formatTimestamp",
+          "callee": "console.error",
+          "lineNumber": 56
+        },
+        {
+          "caller": "calculateHoursAgo",
+          "callee": "now.getTime",
+          "lineNumber": 65
+        },
+        {
+          "caller": "calculateHoursAgo",
+          "callee": "lastAttendedDate.getTime",
+          "lineNumber": 65
+        },
+        {
+          "caller": "calculateHoursAgo",
+          "callee": "Math.floor",
+          "lineNumber": 66
+        },
+        {
+          "caller": "parseTimestamp",
+          "callee": "timestamp.toDate",
+          "lineNumber": 77
+        },
+        {
+          "caller": "parseTimestamp",
+          "callee": "isNaN",
+          "lineNumber": 88
+        },
+        {
+          "caller": "parseTimestamp",
+          "callee": "parsed.getTime",
+          "lineNumber": 88
+        },
+        {
+          "caller": "parseTimestamp",
+          "callee": "console.error",
+          "lineNumber": 93
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "this.db.collection",
+          "lineNumber": 100
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "collectionRef.orderBy('id').get",
+          "lineNumber": 101
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "collectionRef.orderBy",
+          "lineNumber": 101
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "snapshot.forEach",
+          "lineNumber": 105
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "doc.data",
+          "lineNumber": 106
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "this.parseTimestamp",
+          "lineNumber": 107
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "feedingSpots.push",
+          "lineNumber": 109
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "this.formatTimestamp",
+          "lineNumber": 112
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "this.calculateHoursAgo",
+          "lineNumber": 114
+        },
+        {
+          "caller": "getAllFeedingSpots",
+          "callee": "console.error",
+          "lineNumber": 121
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "this.db.collection",
+          "lineNumber": 128
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "collectionRef.orderBy('id').get",
+          "lineNumber": 129
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "collectionRef.orderBy",
+          "lineNumber": 129
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "snapshot.forEach",
+          "lineNumber": 133
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "doc.data",
+          "lineNumber": 134
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "basicFeedingSpots.push",
+          "lineNumber": 135
+        },
+        {
+          "caller": "getBasicFeedingSpots",
+          "callee": "console.error",
+          "lineNumber": 143
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/types/admin.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 120,
+      "nonEmptyLines": 106,
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    }
+  ]
+}

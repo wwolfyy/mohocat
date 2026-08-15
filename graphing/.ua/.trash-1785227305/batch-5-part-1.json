@@ -1,0 +1,839 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/app-management/page.tsx",
+   "summary": "Admin \"app management\" route that hosts a tabbed panel for editing the About page content, FAQ, and the list of posts collections, persisting the collection config to localStorage.",
+   "tags": [
+    "admin",
+    "page",
+    "configuration",
+    "tabs",
+    "client-component"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Next.js App Router client page wrapping useSearchParams in a Suspense boundary, which is required for static rendering."
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/app-management/page.tsx:AppManagementContent",
+   "type": "function",
+   "name": "AppManagementContent",
+   "filePath": "src/app/[mountain]/admin/app-management/page.tsx",
+   "lineRange": [
+    10,
+    198
+   ],
+   "summary": "Renders the tabbed admin app-management UI (about / faq / posts-config), reading the initial tab from the query string and loading/saving the newline-separated posts-collection list in localStorage.",
+   "tags": [
+    "admin",
+    "tabs",
+    "local-storage",
+    "configuration"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/app-management/page.tsx:AppManagementPage",
+   "type": "function",
+   "name": "AppManagementPage",
+   "filePath": "src/app/[mountain]/admin/app-management/page.tsx",
+   "lineRange": [
+    200,
+    206
+   ],
+   "summary": "Default-exported page component that wraps AppManagementContent in a Suspense boundary so the useSearchParams hook can be used safely.",
+   "tags": [
+    "page",
+    "suspense",
+    "entry-point"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/layout.tsx",
+   "type": "file",
+   "name": "layout.tsx",
+   "filePath": "src/app/[mountain]/admin/layout.tsx",
+   "summary": "Layout for the tenant-scoped /admin section: gates every admin page behind AdminAuth and renders the admin navigation bar with active-path highlighting.",
+   "tags": [
+    "admin",
+    "layout",
+    "authorization",
+    "navigation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/layout.tsx:AdminLayout",
+   "type": "function",
+   "name": "AdminLayout",
+   "filePath": "src/app/[mountain]/admin/layout.tsx",
+   "lineRange": [
+    8,
+    87
+   ],
+   "summary": "Wraps admin children in AdminAuth and renders the admin nav, computing active/disabled item styling from the current pathname and blocking not-yet-implemented links.",
+   "tags": [
+    "admin",
+    "layout",
+    "navigation",
+    "authorization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/admin/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/page.tsx",
+   "summary": "Admin dashboard landing page that aggregates counts across the service layer (cats, points, images, videos, posts collections, contacts) and renders them as stat tiles plus the YouTube auth panel.",
+   "tags": [
+    "admin",
+    "dashboard",
+    "page",
+    "service-layer",
+    "statistics"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "type": "function",
+   "name": "AdminDashboard",
+   "filePath": "src/app/[mountain]/admin/page.tsx",
+   "lineRange": [
+    34,
+    267
+   ],
+   "summary": "Fetches dashboard statistics in parallel from the cat/image/video/post/contact services plus the points API, then renders stat tiles, quick links, and the YouTube auth panel.",
+   "tags": [
+    "admin",
+    "dashboard",
+    "data-fetching",
+    "service-layer"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/page.tsx:StatTile",
+   "type": "function",
+   "name": "StatTile",
+   "filePath": "src/app/[mountain]/admin/page.tsx",
+   "lineRange": [
+    270,
+    289
+   ],
+   "summary": "Presentational tile rendering a single dashboard metric with an icon, label, value, and optional subline.",
+   "tags": [
+    "component",
+    "presentational",
+    "admin",
+    "statistics"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/login/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/login/page.tsx",
+   "summary": "Tenant-scoped login route that toggles between the login and signup forms via a query-string-backed tab state.",
+   "tags": [
+    "auth",
+    "page",
+    "login",
+    "signup",
+    "client-component"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/login/page.tsx:LoginContent",
+   "type": "function",
+   "name": "LoginContent",
+   "filePath": "src/app/[mountain]/login/page.tsx",
+   "lineRange": [
+    12,
+    87
+   ],
+   "summary": "Renders the login/signup tab switcher and mounts LoginForm or SignupForm, syncing the active tab into the URL query string.",
+   "tags": [
+    "auth",
+    "tabs",
+    "routing",
+    "login"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/login/page.tsx:LoginPage",
+   "type": "function",
+   "name": "LoginPage",
+   "filePath": "src/app/[mountain]/login/page.tsx",
+   "lineRange": [
+    89,
+    101
+   ],
+   "summary": "Default-exported login page that wraps LoginContent in Suspense for the useSearchParams hook.",
+   "tags": [
+    "page",
+    "suspense",
+    "entry-point",
+    "auth"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/mypage/layout.tsx",
+   "type": "file",
+   "name": "layout.tsx",
+   "filePath": "src/app/[mountain]/mypage/layout.tsx",
+   "summary": "Minimal mobile-first layout for the /mypage section, providing a sticky Korean header and a centered content column.",
+   "tags": [
+    "layout",
+    "mypage",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/mypage/layout.tsx:MyPageLayout",
+   "type": "function",
+   "name": "MyPageLayout",
+   "filePath": "src/app/[mountain]/mypage/layout.tsx",
+   "lineRange": [
+    4,
+    17
+   ],
+   "summary": "Wraps my-page children in a max-width card shell with a sticky localized header title.",
+   "tags": [
+    "layout",
+    "presentational",
+    "mypage"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/mypage/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/mypage/page.tsx",
+   "summary": "User account page: profile nickname editing, email/phone change with re-authentication and SMS verification, linked social-provider management, password reset, and account withdrawal.",
+   "tags": [
+    "auth",
+    "account",
+    "profile",
+    "page",
+    "firebase-auth"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Uses Firebase RecaptchaVerifier plus signInWithPhoneNumber for SMS re-verification, held in a ref so it survives re-renders."
+  },
+  {
+   "id": "function:src/app/[mountain]/mypage/page.tsx:MyPage",
+   "type": "function",
+   "name": "MyPage",
+   "filePath": "src/app/[mountain]/mypage/page.tsx",
+   "lineRange": [
+    16,
+    590
+   ],
+   "summary": "Large client component orchestrating profile edits (nickname, email, phone), provider linking/unlinking, admin-link visibility via isAdmin, and account withdrawal through an API call.",
+   "tags": [
+    "account",
+    "profile",
+    "auth",
+    "form",
+    "firebase-auth"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "summary": "Announcement detail route that loads a single announcement by id through the announcement service and renders its body, images, and embedded videos.",
+   "tags": [
+    "page",
+    "announcements",
+    "detail-view",
+    "service-layer"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/announcements/[id]/page.tsx:AnnouncementDetailsPage",
+   "type": "function",
+   "name": "AnnouncementDetailsPage",
+   "filePath": "src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "lineRange": [
+    9,
+    162
+   ],
+   "summary": "Resolves the announcement id from the pathname, fetches the post via getAnnouncementService, and renders its content with image and YouTube-embed rendering.",
+   "tags": [
+    "announcements",
+    "data-fetching",
+    "detail-view",
+    "service-layer"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/contact/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/contact/page.tsx",
+   "summary": "Public contact (\"동참\") form page that posts the visitor message to the contact API route, attaching the signed-in user's ID token when available.",
+   "tags": [
+    "page",
+    "form",
+    "contact",
+    "api-client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/contact/page.tsx:Contact",
+   "type": "function",
+   "name": "Contact",
+   "filePath": "src/app/[mountain]/pages/contact/page.tsx",
+   "lineRange": [
+    9,
+    214
+   ],
+   "summary": "Controlled contact form with submit state, error/success messaging, and an authenticated POST to the contact endpoint using the Firebase ID token.",
+   "tags": [
+    "form",
+    "contact",
+    "validation",
+    "api-client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/faq/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/faq/page.tsx",
+   "summary": "FAQ page holding the hard-coded Korean question/answer content and rendering it through the shared FAQ accordion component.",
+   "tags": [
+    "page",
+    "faq",
+    "documentation",
+    "static-content"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/faq/page.tsx:FAQPage",
+   "type": "function",
+   "name": "FAQPage",
+   "filePath": "src/app/[mountain]/pages/faq/page.tsx",
+   "lineRange": [
+    7,
+    132
+   ],
+   "summary": "Declares the FAQ item list (browser/ad-blocker, upload, and usage questions) as JSX answers and passes them to FAQAccordion.",
+   "tags": [
+    "faq",
+    "static-content",
+    "presentational"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/login/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/login/page.tsx",
+   "summary": "Legacy standalone login route under /pages/login that renders LoginForm and redirects to the `redirect` query param on a loginSuccess window event.",
+   "tags": [
+    "auth",
+    "page",
+    "login",
+    "legacy"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Coordinates with LoginForm through a custom window event rather than props/context."
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/login/page.tsx:LoginContent",
+   "type": "function",
+   "name": "LoginContent",
+   "filePath": "src/app/[mountain]/pages/login/page.tsx",
+   "lineRange": [
+    8,
+    35
+   ],
+   "summary": "Renders LoginForm inside a centered card and listens for the custom `loginSuccess` window event to route to the redirect target.",
+   "tags": [
+    "auth",
+    "login",
+    "event-handler",
+    "routing"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "file:src/components/admin/AboutContentEditor.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "file:src/components/ui/Card.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/layout.tsx",
+   "target": "file:src/components/admin/AdminAuth.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/layout.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/layout.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "file:src/components/ui/Alert.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "file:src/components/ui/Card.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "file:src/components/LoginForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "file:src/components/SignupForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/layout.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/components/auth/PasswordResetModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/lib/auth/admin.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/contact/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/contact/page.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/contact/page.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/faq/page.tsx",
+   "target": "file:src/components/FAQ.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/login/page.tsx",
+   "target": "file:src/components/LoginForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/login/page.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "function:src/app/[mountain]/admin/app-management/page.tsx:AppManagementContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "function:src/app/[mountain]/admin/app-management/page.tsx:AppManagementPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/layout.tsx",
+   "target": "function:src/app/[mountain]/admin/layout.tsx:AdminLayout",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "function:src/app/[mountain]/admin/page.tsx:StatTile",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "function:src/app/[mountain]/login/page.tsx:LoginContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "function:src/app/[mountain]/login/page.tsx:LoginPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/layout.tsx",
+   "target": "function:src/app/[mountain]/mypage/layout.tsx:MyPageLayout",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "function:src/app/[mountain]/mypage/page.tsx:MyPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "target": "function:src/app/[mountain]/pages/announcements/[id]/page.tsx:AnnouncementDetailsPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/contact/page.tsx",
+   "target": "function:src/app/[mountain]/pages/contact/page.tsx:Contact",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/faq/page.tsx",
+   "target": "function:src/app/[mountain]/pages/faq/page.tsx:FAQPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/login/page.tsx",
+   "target": "function:src/app/[mountain]/pages/login/page.tsx:LoginContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/app-management/page.tsx",
+   "target": "function:src/app/[mountain]/admin/app-management/page.tsx:AppManagementPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/layout.tsx",
+   "target": "function:src/app/[mountain]/admin/layout.tsx:AdminLayout",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/page.tsx",
+   "target": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/login/page.tsx",
+   "target": "function:src/app/[mountain]/login/page.tsx:LoginPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/layout.tsx",
+   "target": "function:src/app/[mountain]/mypage/layout.tsx:MyPageLayout",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/mypage/page.tsx",
+   "target": "function:src/app/[mountain]/mypage/page.tsx:MyPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/contact/page.tsx",
+   "target": "function:src/app/[mountain]/pages/contact/page.tsx:Contact",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "target": "function:src/services/index.ts:getCatService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "target": "function:src/services/index.ts:getImageService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "target": "function:src/services/index.ts:getVideoService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "target": "function:src/services/index.ts:getPostService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "target": "function:src/services/index.ts:getContactService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/page.tsx:AdminDashboard",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/announcements/[id]/page.tsx:AnnouncementDetailsPage",
+   "target": "function:src/services/index.ts:getAnnouncementService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/announcements/[id]/page.tsx:AnnouncementDetailsPage",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/mypage/page.tsx:MyPage",
+   "target": "function:src/lib/auth/admin.ts:isAdmin",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/mypage/page.tsx:MyPage",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/contact/page.tsx:Contact",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

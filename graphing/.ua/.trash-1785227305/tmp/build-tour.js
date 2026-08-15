@@ -1,0 +1,217 @@
+'use strict';
+const fs = require('fs');
+
+const tour = [
+  {
+    order: 1,
+    title: 'The App Router Entry Shell',
+    description:
+      'Every request into this Next.js 14 App Router project lands first in the root layout, which is deliberately tenant-independent: it supplies the HTML skeleton, the Inter font, global metadata, and a conditionally loaded GA4 snippet, and nothing else. All per-mountain chrome and providers are pushed one segment deeper, which is the first architectural decision worth internalizing. The global stylesheet alongside it defines the `:root` design tokens, including the `--color-primary` variable that a later step shows being overridden per tenant.',
+    nodeIds: ['file:src/app/layout.tsx', 'file:src/app/globals.css'],
+    languageLesson:
+      "Next.js App Router layouts nest by directory: `app/layout.tsx` wraps every route, and each nested `layout.tsx` wraps its own segment without re-rendering the parent. Layouts are Server Components by default, so anything needing browser APIs or React state must be pushed into a child marked 'use client'.",
+  },
+  {
+    order: 2,
+    title: 'Resolving the Tenant by Host',
+    description:
+      'This is a multi-tenant platform where one deployment serves several mountains, and the active tenant is decided per request rather than per build. The middleware inspects the Host header and rewrites the request onto the internal `/[mountain]` segment, so production visitors see a clean URL while the app tree stays uniformly tenant-scoped. The rewrite logic delegates the actual host-to-mountain mapping to `lib/tenant.ts`, a deliberately framework-free module so the same resolution runs in middleware, server components, API routes, and tests.',
+    nodeIds: ['file:src/middleware.ts', 'file:src/lib/tenant.ts'],
+    languageLesson:
+      '`NextResponse.rewrite()` changes which route renders without changing the browser URL, unlike `redirect()` which sends a 3xx and updates the address bar. Middleware runs on the Edge runtime before routing, making it the natural place for host-based multi-tenancy.',
+  },
+  {
+    order: 3,
+    title: 'The Tenant Configuration Source of Truth',
+    description:
+      "Step 2's resolver needs to know which hosts map to which mountain, and that knowledge lives in `mountains.json` — the declarative record of every tenant's branding, Korean about-page copy, domains, storage prefix, theme, and feature flags. The graph records a `configures` edge from this file into `utils/config.ts`, the single accessor layer that reads it. Note the separation the accessor enforces: public per-mountain settings come from JSON, while secrets (Firebase keys, service accounts, OAuth credentials) come only from the environment and are merged in at read time.",
+    nodeIds: ['config:config/mountains/mountains.json', 'file:src/utils/config.ts'],
+    languageLesson:
+      'Underscore-prefixed keys (`_meta`, `_shared`) are a common JSON convention for reserved, non-entity entries — any code iterating tenant ids must filter them out. Every accessor here takes an explicit `mountainId` parameter rather than reading ambient state, which is what makes concurrent server-side rendering for different tenants safe.',
+  },
+  {
+    order: 4,
+    title: 'The Tenant Layout and Provider Tree',
+    description:
+      "With the tenant resolved, `[mountain]/layout.tsx` is where it becomes real: it validates the mountain from the route param and 404s on unknown tenants, injects that tenant's `--color-primary` onto `:root`, and wraps every page in the Mountain, Auth, announcement-modal, and analytics providers plus the shared Navigation and Footer. `MountainProvider` is the client-side counterpart to Step 2's server-side resolution and carries the mountain id down the React tree — with 43 inbound edges it is one of the most depended-upon modules in the codebase. The rule this enforces: client components read the tenant from context, never from environment variables.",
+    nodeIds: ['file:src/app/[mountain]/layout.tsx', 'file:src/components/MountainProvider.tsx'],
+    languageLesson:
+      'The theme override is emitted as an inline `:root` style rather than a wrapper class so it still applies to modals portaled to `document.body`, which escape the React tree but not the document. `generateStaticParams` pairs with a runtime `notFound()` guard so known tenants prerender while unknown ones still fail cleanly.',
+  },
+  {
+    order: 5,
+    title: 'The Shared Domain Model',
+    description:
+      'Before following the data, learn the vocabulary. These declaration-only modules define the shapes every layer agrees on: `Point` (a feeding station) and `Cat` in the central index, the media domain for photos and videos, and the permission model used from Step 9 onward. Tenancy shows up here too — content documents carry a `mountainId`, which is how per-tenant data stays separated inside shared Firestore collections.',
+    nodeIds: [
+      'file:src/types/index.ts',
+      'file:src/types/media.ts',
+      'file:src/types/permissions.ts',
+    ],
+    languageLesson:
+      'These files contain no runtime code — TypeScript erases them at compile time, so importing them costs nothing at runtime. Note that roles are typed as a `Record` keyed by `mountainId` rather than an array, which lets Firestore security rules do an O(1) key lookup instead of scanning a list.',
+  },
+  {
+    order: 6,
+    title: 'The Service Factory Seam',
+    description:
+      'This is the single most important indirection in the codebase. `services/index.ts` has the highest fan-in of any file (45 inbound edges) and exposes lazy per-tenant getters — `getCatService(mountainId)`, `getPointService(mountainId)`, and so on — alongside tenant-free getters for auth, storage, and permissions. Its `perTenant()` memoizer caches one service instance per mountain, which is precisely where tenancy is enforced at the data boundary. `interfaces.ts` declares the contracts those services satisfy, keeping the rest of the app decoupled from Firebase.',
+    nodeIds: ['file:src/services/index.ts', 'file:src/services/interfaces.ts'],
+    languageLesson:
+      'This is the factory pattern expressed with TypeScript interfaces: callers depend on `ICatService`, never on the Firebase class implementing it. Lazy singletons (instantiate on first call, then cache) avoid paying initialization cost for services a given request never touches — a meaningful win in serverless environments where cold starts are billed.',
+  },
+  {
+    order: 7,
+    title: 'Firebase Behind the Interfaces',
+    description:
+      "Now look at what sits behind Step 6's contracts. `firebase.ts` bootstraps the client SDK once from the mountain config and exports the shared auth, Firestore, and Storage handles; the individual repositories then implement one interface each. `cat-service.ts` and `point-service.ts` are the two that back the landing map you will meet in Step 12, while `media-albums.ts` is the sprawling media data layer (45 outbound edges) that the image and video services wrap. Because every one of these is reached only through the factory, swapping the backend would touch this directory and nothing above it.",
+    nodeIds: [
+      'file:src/services/firebase.ts',
+      'file:src/services/cat-service.ts',
+      'file:src/services/point-service.ts',
+      'file:src/services/media-albums.ts',
+    ],
+  },
+  {
+    order: 8,
+    title: 'The Client Auth Session',
+    description:
+      "`AuthProvider`, mounted back in Step 4's provider tree, owns the entire browser-side auth session: it subscribes to Firebase auth state and exposes sign-in and sign-out, phone (SMS) and Kakao OIDC login, provider linking, and profile updates. Components never import the provider directly — they go through the thin `useAuth` hook, which is why that hook accumulates 29 inbound edges. Knowing *who* the user is sets up the next question the codebase answers: what may they do?",
+    nodeIds: ['file:src/components/auth/AuthProvider.tsx', 'file:src/hooks/useAuth.ts'],
+    languageLesson:
+      'The context-plus-hook pair is the standard React composition here: `useAuthContext` throws when called outside its provider, converting a silent `undefined` into a loud, immediate error. Re-exporting the accessor through a separate hook module keeps consumers from importing the provider and accidentally creating a second one.',
+  },
+  {
+    order: 9,
+    title: 'Declarative Roles and Permissions',
+    description:
+      "Authorization mirrors the tenancy design from Step 3: a declarative JSON matrix plus a typed accessor. `permissions.json` defines four roles (admin, butler-ground, butler-internet, viewer) with their permission lists and a per-mountain block naming admins and default roles; `permission-config.ts` loads and caches it behind typed lookups via a second `configures` edge. The Firestore-backed `permission-service.ts` then resolves a real user's role *for a given mountain*, and `usePermissions` surfaces the effective set to React. The key consequence: one account can hold different roles on different mountains, so every helper takes an explicit `mountainId`.",
+    nodeIds: [
+      'config:config/permissions.json',
+      'file:src/config/permission-config.ts',
+      'file:src/services/permission-service.ts',
+      'file:src/lib/auth/admin.ts',
+      'file:src/hooks/usePermissions.ts',
+    ],
+    languageLesson:
+      'Keeping the RBAC matrix in JSON rather than in code means role changes ship without a code review of logic — but it also means `permissions.json` and `mountains.json` must stay coherent: a new tenant needs an entry in both. Watch for that class of implicit cross-file invariant in any config-driven design.',
+  },
+  {
+    order: 10,
+    title: 'Enforcing Permissions at the API Edge',
+    description:
+      "Client-side permission checks from Step 9 control what the UI *shows*; they cannot be trusted to control what the server *does*. `requireApiPermission` is the server-side gate every admin route calls (14 inbound edges): it verifies the Firebase ID token, resolves the caller's role for the Host-resolved mountain, and checks it against the role matrix. It runs on the Admin SDK singleton in `firebase-admin.ts`, which selects emulator, service-account, or default credentials depending on environment. The admin cats route is the representative consumer — note that it still goes through Step 6's service factory rather than touching Firestore directly.",
+    nodeIds: [
+      'file:src/lib/auth/requireApiPermission.ts',
+      'file:src/lib/firebase-admin.ts',
+      'file:src/app/api/admin/cats/route.ts',
+    ],
+    languageLesson:
+      'The gate returns a discriminated union result instead of throwing, so each route maps a failure to its own HTTP status (401 vs 403 vs 500) rather than collapsing them into one catch block. TypeScript narrows such unions automatically once you check the tag field, giving type-safe access to the success-only fields.',
+  },
+  {
+    order: 11,
+    title: 'The Public Read Path',
+    description:
+      'Follow a real page render end to end. The tenant landing page is a Server Component: it resolves the mountain from the route segment, reads feeding points and cats **in parallel** through the Admin-SDK server read helpers, and hands the result to the client map as props — so the map issues zero client-side Firestore queries. `cat-reads.ts` does the grouping into current and former residents server-side, and `cache-config.ts` centralizes the one-hour ISR window that the page re-exports as `revalidate`.',
+    nodeIds: [
+      'file:src/app/[mountain]/page.tsx',
+      'file:src/lib/server/point-reads.ts',
+      'file:src/lib/server/cat-reads.ts',
+      'file:src/lib/cache-config.ts',
+    ],
+    languageLesson:
+      "Next.js ISR means the page is neither fully static nor fully dynamic: it serves a cached render and regenerates after `revalidate` seconds. The segment's `revalidate` export must stay statically analyzable, which is why it is re-exported from a constant rather than computed — Next.js reads this value at build time, not runtime.",
+  },
+  {
+    order: 12,
+    title: 'Rendering the Interactive Map',
+    description:
+      "The data from Step 11 arrives here. `MountainViewer` is the client shell that dynamically imports the Leaflet map with SSR disabled, overlays the intro card and compass, and opens a per-point gallery on marker click. The map itself renders the mountain image as a `CRS.Simple` overlay and projects feeding points into pixel coordinates, using a hand-rolled clustering utility instead of leaflet.markercluster. `CatGallery` closes the loop back to the domain model, splitting a point's cats into current and former residents.",
+    nodeIds: [
+      'file:src/components/MountainViewer.tsx',
+      'file:src/components/LeafletMountainMap.tsx',
+      'file:src/utils/mapClustering.ts',
+      'file:src/components/CatGallery.tsx',
+    ],
+    languageLesson:
+      "`next/dynamic` with `ssr: false` is the standard escape hatch for libraries that touch `window` at import time — Leaflet does, so importing it during server render would crash. Leaflet's `CRS.Simple` replaces geographic coordinates with the image's own pixel grid, addressed as `[y, x]` rather than the usual `[lat, lng]`.",
+  },
+  {
+    order: 13,
+    title: 'Shared UI Primitives and Korean Copy',
+    description:
+      'The visual layer is deliberately narrow. One `Button` primitive (33 inbound edges) serves both public and admin surfaces with variant and size maps, one portaled `Modal` shell backs every dialog, and `cn` merges conditional Tailwind classes so later utilities correctly override earlier ones. User-facing text is Korean-first and centralized in two string modules — one for public surfaces, one for admin — so wording stays consistent and edits happen in a single place.',
+    nodeIds: [
+      'file:src/components/ui/Button.tsx',
+      'file:src/components/ui/Modal.tsx',
+      'file:src/utils/cn.ts',
+      'file:src/constants/strings.ts',
+      'file:src/constants/adminStrings.ts',
+    ],
+    languageLesson:
+      "Tailwind's compiler scans source text for complete class strings, so variant maps must be written as full literals — `bg-${color}-500` produces no CSS. `tailwind-merge` (wrapped by `cn`) solves the complementary problem: plain concatenation leaves both `p-2` and `p-4` in the class list with the winner decided by stylesheet order, not call order.",
+  },
+  {
+    order: 14,
+    title: 'The Admin Write Path',
+    description:
+      "The capstone ties every previous step together. The `/admin` layout gates all its pages behind `AdminAuth`, which uses Step 9's permission helpers to confirm the user is an admin *for the active mountain* and enforces an idle-timeout session expiry — notably distinguishing 'not an admin' from 'could not verify' so a failed read offers a retry rather than a silent denial. The cats management page then edits records through the Step 6 service factory, and afterwards `revalidate-client.ts` fires a token-authenticated call to the revalidation route so the baked public pages from Step 11 refresh immediately instead of waiting out the one-hour backstop.",
+    nodeIds: [
+      'file:src/app/[mountain]/admin/layout.tsx',
+      'file:src/components/admin/AdminAuth.tsx',
+      'file:src/app/[mountain]/admin/cats/page.tsx',
+      'file:src/lib/revalidate-client.ts',
+      'file:src/app/api/revalidate/route.ts',
+    ],
+    languageLesson:
+      "On-demand ISR (`revalidatePath`) complements time-based revalidation rather than replacing it: the push invalidates immediately after a known mutation, while the `revalidate` window remains a backstop for changes made outside the app. Because the client's revalidation call is best-effort, a failed push degrades to a slower refresh rather than a broken write.",
+  },
+];
+
+// --- validation ---
+const g = JSON.parse(
+  fs.readFileSync('/Users/jp/github/mohocat/.ua/intermediate/assembled-graph.json', 'utf8')
+);
+const valid = new Map(g.nodes.map((n) => [n.id, n.type]));
+
+const problems = [];
+const seenOrders = new Set();
+const allRefs = [];
+for (const step of tour) {
+  if (seenOrders.has(step.order)) problems.push(`duplicate order ${step.order}`);
+  seenOrders.add(step.order);
+  if (!Array.isArray(step.nodeIds) || step.nodeIds.length === 0)
+    problems.push(`step ${step.order}: empty nodeIds`);
+  if (step.nodeIds.length > 5) problems.push(`step ${step.order}: >5 nodeIds`);
+  const keys = Object.keys(step);
+  const allowed = ['order', 'title', 'description', 'nodeIds', 'languageLesson'];
+  keys.forEach((k) => {
+    if (!allowed.includes(k)) problems.push(`step ${step.order}: stray key ${k}`);
+  });
+  for (const id of step.nodeIds) {
+    allRefs.push(id);
+    if (!valid.has(id)) problems.push(`step ${step.order}: MISSING node ${id}`);
+    else if (!['file', 'config'].includes(valid.get(id)))
+      problems.push(`step ${step.order}: non-file node ${id} (${valid.get(id)})`);
+  }
+}
+for (let i = 1; i <= tour.length; i++) {
+  if (!seenOrders.has(i)) problems.push(`missing order ${i}`);
+}
+if (tour.length < 5 || tour.length > 15) problems.push(`step count ${tour.length} out of range`);
+
+const dupes = allRefs.filter((id, i) => allRefs.indexOf(id) !== i);
+if (dupes.length) problems.push(`repeated node refs: ${[...new Set(dupes)].join(', ')}`);
+
+if (problems.length) {
+  problems.forEach((p) => process.stderr.write('FAIL: ' + p + '\n'));
+  process.exit(1);
+}
+
+const outPath = '/Users/jp/github/mohocat/.ua/intermediate/tour.json';
+fs.writeFileSync(outPath, JSON.stringify(tour, null, 2));
+process.stdout.write(
+  `VALID: ${tour.length} steps, ${allRefs.length} node refs, all exist and are file/config level.\n`
+);
+tour.forEach((s) => process.stdout.write(`  ${s.order}. ${s.title} (${s.nodeIds.length})\n`));

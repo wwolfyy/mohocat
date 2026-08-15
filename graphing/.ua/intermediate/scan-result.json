@@ -1,0 +1,2259 @@
+{
+  "name": "mohocat",
+  "description": "A Next.js 14 App Router multi-tenant web platform, written in TypeScript, that tracks stray cat colonies on Korean mountains, with a Korean-language UI, a Leaflet map of colony points, an admin CMS, and Firebase-backed data, auth, and image storage. Note: this project has over 100 source files; consider scoping analysis to a subdirectory for faster results.",
+  "languages": [
+    "css",
+    "json",
+    "typescript",
+    "yaml"
+  ],
+  "frameworks": [
+    "Next.js",
+    "React",
+    "React Leaflet",
+    "Leaflet",
+    "Firebase",
+    "Firebase Admin",
+    "TailwindCSS"
+  ],
+  "files": [
+    {
+      "path": "config/deployment/cloud-run-service.yaml",
+      "language": "yaml",
+      "sizeLines": 56,
+      "fileCategory": "config"
+    },
+    {
+      "path": "config/mountains/mountains.json",
+      "language": "json",
+      "sizeLines": 153,
+      "fileCategory": "config"
+    },
+    {
+      "path": "config/permissions.json",
+      "language": "json",
+      "sizeLines": 58,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/app/[mountain]/admin/adoption/new/page.tsx",
+      "language": "typescript",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/announcements/new/page.tsx",
+      "language": "typescript",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/app-management/page.tsx",
+      "language": "typescript",
+      "sizeLines": 206,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/cats/page.tsx",
+      "language": "typescript",
+      "sizeLines": 1142,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/layout.tsx",
+      "language": "typescript",
+      "sizeLines": 87,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/members/page.tsx",
+      "language": "typescript",
+      "sizeLines": 83,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/migration/page.tsx",
+      "language": "typescript",
+      "sizeLines": 11,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/page.tsx",
+      "language": "typescript",
+      "sizeLines": 289,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/points/page.tsx",
+      "language": "typescript",
+      "sizeLines": 410,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx",
+      "language": "typescript",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/posts/page.tsx",
+      "language": "typescript",
+      "sizeLines": 74,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/tag-images/page.tsx",
+      "language": "typescript",
+      "sizeLines": 829,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/tag-videos/page.tsx",
+      "language": "typescript",
+      "sizeLines": 1453,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+      "language": "typescript",
+      "sizeLines": 626,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/layout.tsx",
+      "language": "typescript",
+      "sizeLines": 124,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/login/page.tsx",
+      "language": "typescript",
+      "sizeLines": 101,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/mypage/layout.tsx",
+      "language": "typescript",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/mypage/page.tsx",
+      "language": "typescript",
+      "sizeLines": 590,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/page.tsx",
+      "language": "typescript",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/about/page.tsx",
+      "language": "typescript",
+      "sizeLines": 267,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+      "language": "typescript",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/adoption/page.tsx",
+      "language": "typescript",
+      "sizeLines": 96,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/announcements/[id]/page.tsx",
+      "language": "typescript",
+      "sizeLines": 164,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/announcements/page.tsx",
+      "language": "typescript",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_stream/new/page.tsx",
+      "language": "typescript",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_stream/page.tsx",
+      "language": "typescript",
+      "sizeLines": 74,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_talk/new/page.tsx",
+      "language": "typescript",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_talk/page.tsx",
+      "language": "typescript",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+      "language": "typescript",
+      "sizeLines": 404,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/cats/page.tsx",
+      "language": "typescript",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/contact/page.tsx",
+      "language": "typescript",
+      "sizeLines": 214,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/faq/page.tsx",
+      "language": "typescript",
+      "sizeLines": 134,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/login/page.tsx",
+      "language": "typescript",
+      "sizeLines": 45,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/photo-album/page.tsx",
+      "language": "typescript",
+      "sizeLines": 133,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/posts/[id]/page.tsx",
+      "language": "typescript",
+      "sizeLines": 214,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/privacy/page.tsx",
+      "language": "typescript",
+      "sizeLines": 244,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/terms/page.tsx",
+      "language": "typescript",
+      "sizeLines": 155,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/[mountain]/pages/video-album/page.tsx",
+      "language": "typescript",
+      "sizeLines": 157,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/account/delete/route.ts",
+      "language": "typescript",
+      "sizeLines": 54,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/assign-role/route.ts",
+      "language": "typescript",
+      "sizeLines": 113,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/cats/route.ts",
+      "language": "typescript",
+      "sizeLines": 53,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/get-all-user-permissions-client/route.ts",
+      "language": "typescript",
+      "sizeLines": 102,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/posts-collections/route.ts",
+      "language": "typescript",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/resource-permissions/route.ts",
+      "language": "typescript",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/role-permissions/route.ts",
+      "language": "typescript",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/youtube-auth/auth-url/route.ts",
+      "language": "typescript",
+      "sizeLines": 60,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/youtube-auth/callback/route.ts",
+      "language": "typescript",
+      "sizeLines": 111,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/admin/youtube-auth/status/route.ts",
+      "language": "typescript",
+      "sizeLines": 127,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/auth/kakao/callback/route.ts",
+      "language": "typescript",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/contact/route.ts",
+      "language": "typescript",
+      "sizeLines": 155,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/generate-signed-url/route.ts",
+      "language": "typescript",
+      "sizeLines": 61,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/manage-playlists/route.ts",
+      "language": "typescript",
+      "sizeLines": 316,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/points/route.ts",
+      "language": "typescript",
+      "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/refresh-video-metadata/route.ts",
+      "language": "typescript",
+      "sizeLines": 299,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/revalidate/route.ts",
+      "language": "typescript",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/update-youtube-video/route.ts",
+      "language": "typescript",
+      "sizeLines": 160,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/upload-youtube/route.ts",
+      "language": "typescript",
+      "sizeLines": 230,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/api/youtube-playlists/route.ts",
+      "language": "typescript",
+      "sizeLines": 89,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/globals.css",
+      "language": "css",
+      "sizeLines": 353,
+      "fileCategory": "markup"
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "language": "typescript",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AdminPostList.tsx",
+      "language": "typescript",
+      "sizeLines": 528,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AdminReplyItem.tsx",
+      "language": "typescript",
+      "sizeLines": 215,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AdminReplyList.tsx",
+      "language": "typescript",
+      "sizeLines": 127,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AdoptionPromotionClient.tsx",
+      "language": "typescript",
+      "sizeLines": 254,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AnalyticsTracker.tsx",
+      "language": "typescript",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AnnouncementClient.tsx",
+      "language": "typescript",
+      "sizeLines": 303,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/AnnouncementModal.tsx",
+      "language": "typescript",
+      "sizeLines": 147,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ButlerStreamClient.tsx",
+      "language": "typescript",
+      "sizeLines": 125,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ButlerTalkClient.tsx",
+      "language": "typescript",
+      "sizeLines": 125,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/CatCircleGrid.tsx",
+      "language": "typescript",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/CatGallery.tsx",
+      "language": "typescript",
+      "sizeLines": 90,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/CatInfo.tsx",
+      "language": "typescript",
+      "sizeLines": 227,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/CatLinkedText.tsx",
+      "language": "typescript",
+      "sizeLines": 80,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/CatSelectorModal.tsx",
+      "language": "typescript",
+      "sizeLines": 216,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/Compass.tsx",
+      "language": "typescript",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/EditPostForm.tsx",
+      "language": "typescript",
+      "sizeLines": 316,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/FAQ.tsx",
+      "language": "typescript",
+      "sizeLines": 68,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/FeedingSpotsList.tsx",
+      "language": "typescript",
+      "sizeLines": 145,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/Footer.tsx",
+      "language": "typescript",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/IntroCard.tsx",
+      "language": "typescript",
+      "sizeLines": 71,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/LeafletMountainMap.tsx",
+      "language": "typescript",
+      "sizeLines": 556,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/LoginForm.tsx",
+      "language": "typescript",
+      "sizeLines": 403,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/MountainProvider.tsx",
+      "language": "typescript",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/MountainSelector.tsx",
+      "language": "typescript",
+      "sizeLines": 129,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/MountainViewer.tsx",
+      "language": "typescript",
+      "sizeLines": 146,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/NavDropdown.tsx",
+      "language": "typescript",
+      "sizeLines": 120,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/Navigation.tsx",
+      "language": "typescript",
+      "sizeLines": 362,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/NewAdoptionForm.tsx",
+      "language": "typescript",
+      "sizeLines": 103,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/NewAnnouncementForm.tsx",
+      "language": "typescript",
+      "sizeLines": 156,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/NewButlerTalkForm.tsx",
+      "language": "typescript",
+      "sizeLines": 242,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/NewPostForm.tsx",
+      "language": "typescript",
+      "sizeLines": 324,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/PhotoAlbum.tsx",
+      "language": "typescript",
+      "sizeLines": 211,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/PostList.tsx",
+      "language": "typescript",
+      "sizeLines": 339,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ReplyButton.tsx",
+      "language": "typescript",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ReplyForm.tsx",
+      "language": "typescript",
+      "sizeLines": 131,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ReplyItem.tsx",
+      "language": "typescript",
+      "sizeLines": 166,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ReplyList.tsx",
+      "language": "typescript",
+      "sizeLines": 113,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/SignupForm.tsx",
+      "language": "typescript",
+      "sizeLines": 428,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/SocialLoginButton.tsx",
+      "language": "typescript",
+      "sizeLines": 181,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/VideoAlbum.tsx",
+      "language": "typescript",
+      "sizeLines": 218,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/AboutContentEditor.tsx",
+      "language": "typescript",
+      "sizeLines": 360,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/AdminAuth.tsx",
+      "language": "typescript",
+      "sizeLines": 318,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/ContactManagement.tsx",
+      "language": "typescript",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/PointMapPicker.tsx",
+      "language": "typescript",
+      "sizeLines": 196,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/ResourcePermissionConfig.tsx",
+      "language": "typescript",
+      "sizeLines": 208,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/RoleManagement.tsx",
+      "language": "typescript",
+      "sizeLines": 251,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/RolePermissionConfig.tsx",
+      "language": "typescript",
+      "sizeLines": 210,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/YouTubeAuthPanelNew.tsx",
+      "language": "typescript",
+      "sizeLines": 232,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/cat-grid/CatGrid.tsx",
+      "language": "typescript",
+      "sizeLines": 853,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/cat-grid/selectColumn.tsx",
+      "language": "typescript",
+      "sizeLines": 101,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/BatchActionsPanel.tsx",
+      "language": "typescript",
+      "sizeLines": 46,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/CatTagField.tsx",
+      "language": "typescript",
+      "sizeLines": 82,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/MediaFilterBar.tsx",
+      "language": "typescript",
+      "sizeLines": 196,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/MediaGrid.tsx",
+      "language": "typescript",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/MediaStatsCards.tsx",
+      "language": "typescript",
+      "sizeLines": 42,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/PaginationBar.tsx",
+      "language": "typescript",
+      "sizeLines": 80,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/index.ts",
+      "language": "typescript",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/useDateAutoParse.ts",
+      "language": "typescript",
+      "sizeLines": 119,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/admin/media/useMediaListController.ts",
+      "language": "typescript",
+      "sizeLines": 260,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/album/AlbumFilterBar.tsx",
+      "language": "typescript",
+      "sizeLines": 104,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/album/AlbumStates.tsx",
+      "language": "typescript",
+      "sizeLines": 61,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/album/MediaTile.tsx",
+      "language": "typescript",
+      "sizeLines": 158,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/AuthProvider.tsx",
+      "language": "typescript",
+      "sizeLines": 473,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/EmailVerificationModal.tsx",
+      "language": "typescript",
+      "sizeLines": 39,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/KakaoLoginGuidanceModal.tsx",
+      "language": "typescript",
+      "sizeLines": 109,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/LogoutModal.tsx",
+      "language": "typescript",
+      "sizeLines": 99,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/NavigationBarLogin.tsx",
+      "language": "typescript",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/NavigationBarLogout.tsx",
+      "language": "typescript",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/PasswordResetModal.tsx",
+      "language": "typescript",
+      "sizeLines": 138,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/PhoneLoginForm.tsx",
+      "language": "typescript",
+      "sizeLines": 229,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/auth/UserNotFoundModal.tsx",
+      "language": "typescript",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/forms/MediaItemList.tsx",
+      "language": "typescript",
+      "sizeLines": 147,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/forms/MediaUploadField.tsx",
+      "language": "typescript",
+      "sizeLines": 159,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/forms/uploadStrategies.ts",
+      "language": "typescript",
+      "sizeLines": 224,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/forms/useRichContentForm.ts",
+      "language": "typescript",
+      "sizeLines": 279,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/forms/useSimpleContentForm.ts",
+      "language": "typescript",
+      "sizeLines": 197,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Alert.tsx",
+      "language": "typescript",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Button.tsx",
+      "language": "typescript",
+      "sizeLines": 54,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Card.tsx",
+      "language": "typescript",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Field.tsx",
+      "language": "typescript",
+      "sizeLines": 30,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Input.tsx",
+      "language": "typescript",
+      "sizeLines": 31,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Lightbox.tsx",
+      "language": "typescript",
+      "sizeLines": 188,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/Modal.tsx",
+      "language": "typescript",
+      "sizeLines": 143,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/VideoPlayer.tsx",
+      "language": "typescript",
+      "sizeLines": 173,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/useDialog.tsx",
+      "language": "typescript",
+      "sizeLines": 92,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/ui/useModalLayer.ts",
+      "language": "typescript",
+      "sizeLines": 123,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/config/permission-config.ts",
+      "language": "typescript",
+      "sizeLines": 134,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/constants/adminStrings.ts",
+      "language": "typescript",
+      "sizeLines": 759,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/constants/strings.ts",
+      "language": "typescript",
+      "sizeLines": 275,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/contexts/AnnouncementModalContext.tsx",
+      "language": "typescript",
+      "sizeLines": 100,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useAboutPhoto.ts",
+      "language": "typescript",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useAuth.ts",
+      "language": "typescript",
+      "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useIdleTimeout.ts",
+      "language": "typescript",
+      "sizeLines": 117,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useIsMobile.ts",
+      "language": "typescript",
+      "sizeLines": 27,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useIsPhoneLandscape.ts",
+      "language": "typescript",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useMediaFilter.ts",
+      "language": "typescript",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useMediaLinks.tsx",
+      "language": "typescript",
+      "sizeLines": 90,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/usePermissions.ts",
+      "language": "typescript",
+      "sizeLines": 198,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/hooks/useResourceAccess.ts",
+      "language": "typescript",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/auth/admin.ts",
+      "language": "typescript",
+      "sizeLines": 181,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/auth/authHeader.ts",
+      "language": "typescript",
+      "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/auth/requireApiPermission.ts",
+      "language": "typescript",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/cache-config.ts",
+      "language": "typescript",
+      "sizeLines": 18,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/firebase-admin.ts",
+      "language": "typescript",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/revalidate-client.ts",
+      "language": "typescript",
+      "sizeLines": 34,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/server/cat-reads.ts",
+      "language": "typescript",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/server/point-reads.ts",
+      "language": "typescript",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/tenant.ts",
+      "language": "typescript",
+      "sizeLines": 64,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/youtube/credentials.ts",
+      "language": "typescript",
+      "sizeLines": 121,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/middleware.ts",
+      "language": "typescript",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/about-content-service.ts",
+      "language": "typescript",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/adoption-service.ts",
+      "language": "typescript",
+      "sizeLines": 156,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/announcement-service.ts",
+      "language": "typescript",
+      "sizeLines": 246,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/auth-service.ts",
+      "language": "typescript",
+      "sizeLines": 727,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/butler-talk-service.ts",
+      "language": "typescript",
+      "sizeLines": 303,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/cat-service.ts",
+      "language": "typescript",
+      "sizeLines": 190,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/contact-service.ts",
+      "language": "typescript",
+      "sizeLines": 42,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/feeding-spots-admin-service.ts",
+      "language": "typescript",
+      "sizeLines": 149,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/feeding-spots-service.ts",
+      "language": "typescript",
+      "sizeLines": 182,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/firebase.ts",
+      "language": "typescript",
+      "sizeLines": 107,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/image-service.ts",
+      "language": "typescript",
+      "sizeLines": 162,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/index.ts",
+      "language": "typescript",
+      "sizeLines": 168,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/interfaces.ts",
+      "language": "typescript",
+      "sizeLines": 147,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/media-albums.ts",
+      "language": "typescript",
+      "sizeLines": 719,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/permission-service.ts",
+      "language": "typescript",
+      "sizeLines": 336,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/point-service.ts",
+      "language": "typescript",
+      "sizeLines": 103,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/post-service.ts",
+      "language": "typescript",
+      "sizeLines": 335,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/role-assignment-service.ts",
+      "language": "typescript",
+      "sizeLines": 88,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/storage-service.ts",
+      "language": "typescript",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/thumbnailPreloader.ts",
+      "language": "typescript",
+      "sizeLines": 130,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/video-service.ts",
+      "language": "typescript",
+      "sizeLines": 162,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/services/youtube.ts",
+      "language": "typescript",
+      "sizeLines": 267,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/types/admin.ts",
+      "language": "typescript",
+      "sizeLines": 120,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/types/index.ts",
+      "language": "typescript",
+      "sizeLines": 83,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/types/media.ts",
+      "language": "typescript",
+      "sizeLines": 88,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/types/permissions.ts",
+      "language": "typescript",
+      "sizeLines": 107,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/cat-filters.ts",
+      "language": "typescript",
+      "sizeLines": 138,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/cn.ts",
+      "language": "typescript",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/config.ts",
+      "language": "typescript",
+      "sizeLines": 420,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/dateParser.ts",
+      "language": "typescript",
+      "sizeLines": 141,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/duration.ts",
+      "language": "typescript",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/mapClustering.ts",
+      "language": "typescript",
+      "sizeLines": 78,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/mapLabels.ts",
+      "language": "typescript",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/parse-date.ts",
+      "language": "typescript",
+      "sizeLines": 34,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/utils/text-processing.ts",
+      "language": "typescript",
+      "sizeLines": 108,
+      "fileCategory": "code"
+    }
+  ],
+  "totalFiles": 208,
+  "filteredByIgnore": 250,
+  "estimatedComplexity": "large",
+  "importMap": {
+    "config/deployment/cloud-run-service.yaml": [],
+    "config/mountains/mountains.json": [],
+    "config/permissions.json": [],
+    "src/app/[mountain]/admin/adoption/new/page.tsx": [
+      "src/components/NewAdoptionForm.tsx",
+      "src/constants/adminStrings.ts"
+    ],
+    "src/app/[mountain]/admin/announcements/new/page.tsx": [
+      "src/components/NewAnnouncementForm.tsx",
+      "src/constants/adminStrings.ts"
+    ],
+    "src/app/[mountain]/admin/app-management/page.tsx": [
+      "src/components/admin/AboutContentEditor.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/cats/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/cat-grid/CatGrid.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/revalidate-client.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cat-filters.ts"
+    ],
+    "src/app/[mountain]/admin/layout.tsx": [
+      "src/components/admin/AdminAuth.tsx",
+      "src/constants/adminStrings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/members/page.tsx": [
+      "src/components/admin/ContactManagement.tsx",
+      "src/components/admin/ResourcePermissionConfig.tsx",
+      "src/components/admin/RoleManagement.tsx",
+      "src/components/admin/RolePermissionConfig.tsx",
+      "src/constants/adminStrings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/migration/page.tsx": [
+      "src/constants/adminStrings.ts"
+    ],
+    "src/app/[mountain]/admin/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/YouTubeAuthPanelNew.tsx",
+      "src/components/ui/Alert.tsx",
+      "src/components/ui/Card.tsx",
+      "src/services/index.ts"
+    ],
+    "src/app/[mountain]/admin/points/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/PointMapPicker.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/revalidate-client.ts",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/admin/posts/edit/[postType]/[postId]/page.tsx": [
+      "src/components/EditPostForm.tsx"
+    ],
+    "src/app/[mountain]/admin/posts/page.tsx": [
+      "src/components/AdminPostList.tsx",
+      "src/constants/adminStrings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/admin/tag-images/page.tsx": [
+      "src/components/CatSelectorModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/media/index.ts",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Lightbox.tsx",
+      "src/components/ui/useDialog.tsx",
+      "src/constants/adminStrings.ts",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/dateParser.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/[mountain]/admin/tag-videos/page.tsx": [
+      "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+      "src/components/CatSelectorModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/media/index.ts",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/useDialog.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/services/index.ts",
+      "src/utils/dateParser.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts": [
+      "src/components/ui/useDialog.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/types/media.ts"
+    ],
+    "src/app/[mountain]/layout.tsx": [
+      "src/components/AnalyticsTracker.tsx",
+      "src/components/Footer.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/MountainSelector.tsx",
+      "src/components/Navigation.tsx",
+      "src/components/auth/AuthProvider.tsx",
+      "src/contexts/AnnouncementModalContext.tsx",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/[mountain]/login/page.tsx": [
+      "src/components/LoginForm.tsx",
+      "src/components/SignupForm.tsx",
+      "src/constants/strings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/mypage/layout.tsx": [
+      "src/constants/strings.ts"
+    ],
+    "src/app/[mountain]/mypage/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/auth/PasswordResetModal.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/admin.ts",
+      "src/services/firebase.ts"
+    ],
+    "src/app/[mountain]/page.tsx": [
+      "src/components/MountainViewer.tsx",
+      "src/lib/cache-config.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/lib/server/point-reads.ts",
+      "src/lib/tenant.ts"
+    ],
+    "src/app/[mountain]/pages/about/page.tsx": [
+      "src/components/CatInfo.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/hooks/useAboutPhoto.ts",
+      "src/services/about-content-service.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/config.ts",
+      "src/utils/text-processing.ts"
+    ],
+    "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx": [
+      "src/components/CatCircleGrid.tsx",
+      "src/components/CatInfo.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/adoption/page.tsx": [
+      "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+      "src/components/AdoptionPromotionClient.tsx",
+      "src/lib/cache-config.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/lib/tenant.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/announcements/[id]/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/app/[mountain]/pages/announcements/page.tsx": [
+      "src/components/AnnouncementClient.tsx"
+    ],
+    "src/app/[mountain]/pages/butler_stream/new/page.tsx": [
+      "src/components/NewPostForm.tsx",
+      "src/services/feeding-spots-admin-service.ts"
+    ],
+    "src/app/[mountain]/pages/butler_stream/page.tsx": [
+      "src/components/ButlerStreamClient.tsx",
+      "src/components/FeedingSpotsList.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/admin.ts",
+      "src/services/feeding-spots-admin-service.ts"
+    ],
+    "src/app/[mountain]/pages/butler_talk/new/page.tsx": [
+      "src/components/NewButlerTalkForm.tsx"
+    ],
+    "src/app/[mountain]/pages/butler_talk/page.tsx": [
+      "src/components/ButlerTalkClient.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/admin.ts"
+    ],
+    "src/app/[mountain]/pages/cats/CatsBrowser.tsx": [
+      "src/components/CatInfo.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts",
+      "src/utils/cat-filters.ts"
+    ],
+    "src/app/[mountain]/pages/cats/page.tsx": [
+      "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+      "src/lib/cache-config.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/lib/server/point-reads.ts",
+      "src/lib/tenant.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/contact/page.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/app/[mountain]/pages/faq/page.tsx": [
+      "src/components/FAQ.tsx"
+    ],
+    "src/app/[mountain]/pages/login/page.tsx": [
+      "src/components/LoginForm.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/app/[mountain]/pages/photo-album/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/album/AlbumFilterBar.tsx",
+      "src/components/album/AlbumStates.tsx",
+      "src/components/album/MediaTile.tsx",
+      "src/components/ui/Lightbox.tsx",
+      "src/hooks/useMediaFilter.ts",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/[mountain]/pages/posts/[id]/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/components/ReplyList.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/app/[mountain]/pages/privacy/page.tsx": [],
+    "src/app/[mountain]/pages/terms/page.tsx": [],
+    "src/app/[mountain]/pages/video-album/page.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/album/AlbumFilterBar.tsx",
+      "src/components/album/AlbumStates.tsx",
+      "src/components/album/MediaTile.tsx",
+      "src/components/ui/VideoPlayer.tsx",
+      "src/hooks/useMediaFilter.ts",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/duration.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/app/api/account/delete/route.ts": [
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/assign-role/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/app/api/admin/cats/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/tenant.ts",
+      "src/services/index.ts"
+    ],
+    "src/app/api/admin/get-all-user-permissions-client/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/posts-collections/route.ts": [
+      "src/lib/auth/requireApiPermission.ts"
+    ],
+    "src/app/api/admin/resource-permissions/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/role-permissions/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/app/api/admin/youtube-auth/auth-url/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/admin/youtube-auth/callback/route.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/admin/youtube-auth/status/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/auth/kakao/callback/route.ts": [
+      "src/services/firebase.ts"
+    ],
+    "src/app/api/contact/route.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/generate-signed-url/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/manage-playlists/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/points/route.ts": [
+      "src/lib/tenant.ts",
+      "src/services/index.ts"
+    ],
+    "src/app/api/refresh-video-metadata/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/revalidate/route.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/utils/config.ts"
+    ],
+    "src/app/api/update-youtube-video/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/api/upload-youtube/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/tenant.ts",
+      "src/lib/youtube/credentials.ts",
+      "src/services/index.ts",
+      "src/utils/config.ts",
+      "src/utils/dateParser.ts"
+    ],
+    "src/app/api/youtube-playlists/route.ts": [
+      "src/lib/auth/requireApiPermission.ts",
+      "src/lib/youtube/credentials.ts"
+    ],
+    "src/app/globals.css": [],
+    "src/app/layout.tsx": [
+      "src/app/globals.css"
+    ],
+    "src/components/AdminPostList.tsx": [
+      "src/components/AdminReplyList.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AdminReplyItem.tsx": [
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AdminReplyList.tsx": [
+      "src/components/AdminReplyItem.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/AdoptionPromotionClient.tsx": [
+      "src/components/CatLinkedText.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AnalyticsTracker.tsx": [
+      "src/components/MountainProvider.tsx"
+    ],
+    "src/components/AnnouncementClient.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/AnnouncementModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx"
+    ],
+    "src/components/ButlerStreamClient.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/PostList.tsx",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/ButlerTalkClient.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/PostList.tsx",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/CatCircleGrid.tsx": [
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/CatGallery.tsx": [
+      "src/components/CatCircleGrid.tsx",
+      "src/components/CatInfo.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/CatInfo.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/PhotoAlbum.tsx",
+      "src/components/VideoAlbum.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/hooks/useMediaLinks.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/text-processing.ts"
+    ],
+    "src/components/CatLinkedText.tsx": [
+      "src/components/CatInfo.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/hooks/useMediaLinks.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/text-processing.ts"
+    ],
+    "src/components/CatSelectorModal.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/Compass.tsx": [],
+    "src/components/EditPostForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/FAQ.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/FeedingSpotsList.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/Footer.tsx": [],
+    "src/components/IntroCard.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/LeafletMountainMap.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/lib/server/cat-reads.ts",
+      "src/types/index.ts",
+      "src/utils/config.ts",
+      "src/utils/mapClustering.ts",
+      "src/utils/mapLabels.ts"
+    ],
+    "src/components/LoginForm.tsx": [
+      "src/components/SocialLoginButton.tsx",
+      "src/components/auth/EmailVerificationModal.tsx",
+      "src/components/auth/KakaoLoginGuidanceModal.tsx",
+      "src/components/auth/PasswordResetModal.tsx",
+      "src/components/auth/PhoneLoginForm.tsx",
+      "src/components/auth/UserNotFoundModal.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/services/firebase.ts",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/MountainProvider.tsx": [
+      "src/utils/config.ts"
+    ],
+    "src/components/MountainSelector.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/lib/tenant.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/MountainViewer.tsx": [
+      "src/components/CatGallery.tsx",
+      "src/components/Compass.tsx",
+      "src/components/IntroCard.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useIsMobile.ts",
+      "src/hooks/useIsPhoneLandscape.ts",
+      "src/lib/server/cat-reads.ts",
+      "src/services/thumbnailPreloader.ts",
+      "src/types/index.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/NavDropdown.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/Navigation.tsx": [
+      "src/components/NavDropdown.tsx",
+      "src/components/auth/NavigationBarLogin.tsx",
+      "src/components/auth/NavigationBarLogout.tsx",
+      "src/hooks/useAuth.ts",
+      "src/hooks/useResourceAccess.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/NewAdoptionForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaUploadField.tsx",
+      "src/components/forms/useSimpleContentForm.ts",
+      "src/services/index.ts",
+      "src/utils/cn.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/NewAnnouncementForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaUploadField.tsx",
+      "src/components/forms/useSimpleContentForm.ts",
+      "src/services/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/NewButlerTalkForm.tsx": [
+      "src/components/CatSelectorModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaItemList.tsx",
+      "src/components/forms/useRichContentForm.ts",
+      "src/components/ui/Button.tsx",
+      "src/services/index.ts"
+    ],
+    "src/components/NewPostForm.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/useDialog.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/index.ts"
+    ],
+    "src/components/PhotoAlbum.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Lightbox.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/PostList.tsx": [
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/components/ReplyList.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/ReplyButton.tsx": [
+      "src/hooks/useAuth.ts"
+    ],
+    "src/components/ReplyForm.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/index.ts"
+    ],
+    "src/components/ReplyItem.tsx": [
+      "src/components/ReplyButton.tsx",
+      "src/components/ReplyForm.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/ReplyList.tsx": [
+      "src/components/ReplyItem.tsx",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/SignupForm.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/services/firebase.ts",
+      "src/services/index.ts"
+    ],
+    "src/components/SocialLoginButton.tsx": [
+      "src/constants/strings.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/VideoAlbum.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/components/ui/VideoPlayer.tsx",
+      "src/services/index.ts",
+      "src/types/media.ts",
+      "src/utils/duration.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/admin/AboutContentEditor.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Alert.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Input.tsx",
+      "src/constants/adminStrings.ts",
+      "src/services/about-content-service.ts",
+      "src/services/index.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/admin/AdminAuth.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/SocialLoginButton.tsx",
+      "src/components/ui/Alert.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/components/ui/Field.tsx",
+      "src/components/ui/Input.tsx",
+      "src/hooks/useAuth.ts",
+      "src/hooks/useIdleTimeout.ts",
+      "src/lib/auth/admin.ts",
+      "src/services/firebase.ts"
+    ],
+    "src/components/admin/ContactManagement.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/constants/adminStrings.ts",
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/admin/PointMapPicker.tsx": [
+      "src/constants/adminStrings.ts",
+      "src/types/index.ts"
+    ],
+    "src/components/admin/ResourcePermissionConfig.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/components/admin/RoleManagement.tsx": [
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/admin/RolePermissionConfig.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/components/admin/YouTubeAuthPanelNew.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/hooks/useAuth.ts",
+      "src/lib/auth/authHeader.ts"
+    ],
+    "src/components/admin/cat-grid/CatGrid.tsx": [
+      "src/components/MountainProvider.tsx",
+      "src/components/admin/cat-grid/selectColumn.tsx",
+      "src/components/ui/Button.tsx",
+      "src/constants/adminStrings.ts",
+      "src/hooks/useAuth.ts",
+      "src/lib/revalidate-client.ts",
+      "src/services/index.ts",
+      "src/types/index.ts",
+      "src/utils/cat-filters.ts"
+    ],
+    "src/components/admin/cat-grid/selectColumn.tsx": [],
+    "src/components/admin/media/BatchActionsPanel.tsx": [
+      "src/components/ui/Button.tsx"
+    ],
+    "src/components/admin/media/CatTagField.tsx": [],
+    "src/components/admin/media/MediaFilterBar.tsx": [
+      "src/components/admin/media/useMediaListController.ts",
+      "src/components/ui/Button.tsx"
+    ],
+    "src/components/admin/media/MediaGrid.tsx": [],
+    "src/components/admin/media/MediaStatsCards.tsx": [],
+    "src/components/admin/media/PaginationBar.tsx": [],
+    "src/components/admin/media/index.ts": [],
+    "src/components/admin/media/useDateAutoParse.ts": [],
+    "src/components/admin/media/useMediaListController.ts": [
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/album/AlbumFilterBar.tsx": [
+      "src/components/CatSelectorModal.tsx"
+    ],
+    "src/components/album/AlbumStates.tsx": [],
+    "src/components/album/MediaTile.tsx": [],
+    "src/components/auth/AuthProvider.tsx": [
+      "src/constants/strings.ts",
+      "src/services/firebase.ts",
+      "src/services/index.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/components/auth/EmailVerificationModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/components/auth/KakaoLoginGuidanceModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/components/auth/LogoutModal.tsx": [
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/NavigationBarLogin.tsx": [
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/NavigationBarLogout.tsx": [
+      "src/components/auth/LogoutModal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/PasswordResetModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/PhoneLoginForm.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/constants/strings.ts",
+      "src/hooks/useAuth.ts",
+      "src/services/firebase.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/auth/UserNotFoundModal.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/constants/strings.ts"
+    ],
+    "src/components/forms/MediaItemList.tsx": [],
+    "src/components/forms/MediaUploadField.tsx": [],
+    "src/components/forms/uploadStrategies.ts": [
+      "src/lib/auth/authHeader.ts",
+      "src/services/index.ts",
+      "src/utils/dateParser.ts"
+    ],
+    "src/components/forms/useRichContentForm.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/MediaItemList.tsx",
+      "src/components/forms/uploadStrategies.ts",
+      "src/components/ui/useDialog.tsx",
+      "src/hooks/useAuth.ts",
+      "src/utils/config.ts",
+      "src/utils/dateParser.ts"
+    ],
+    "src/components/forms/useSimpleContentForm.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/components/forms/uploadStrategies.ts",
+      "src/components/ui/useDialog.tsx",
+      "src/hooks/useAuth.ts",
+      "src/utils/config.ts"
+    ],
+    "src/components/ui/Alert.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Button.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Card.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Field.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Input.tsx": [
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/Lightbox.tsx": [
+      "src/components/ui/useModalLayer.ts",
+      "src/hooks/useIsMobile.ts",
+      "src/types/media.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/ui/Modal.tsx": [
+      "src/components/ui/useModalLayer.ts",
+      "src/utils/cn.ts"
+    ],
+    "src/components/ui/VideoPlayer.tsx": [
+      "src/components/ui/useModalLayer.ts",
+      "src/types/media.ts",
+      "src/utils/duration.ts",
+      "src/utils/parse-date.ts"
+    ],
+    "src/components/ui/useDialog.tsx": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx"
+    ],
+    "src/components/ui/useModalLayer.ts": [],
+    "src/config/permission-config.ts": [
+      "config/permissions.json"
+    ],
+    "src/constants/adminStrings.ts": [],
+    "src/constants/strings.ts": [],
+    "src/contexts/AnnouncementModalContext.tsx": [
+      "src/components/AnnouncementModal.tsx",
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts"
+    ],
+    "src/hooks/useAboutPhoto.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/services/index.ts",
+      "src/utils/config.ts"
+    ],
+    "src/hooks/useAuth.ts": [
+      "src/components/auth/AuthProvider.tsx"
+    ],
+    "src/hooks/useIdleTimeout.ts": [],
+    "src/hooks/useIsMobile.ts": [],
+    "src/hooks/useIsPhoneLandscape.ts": [],
+    "src/hooks/useMediaFilter.ts": [],
+    "src/hooks/useMediaLinks.tsx": [
+      "src/components/ui/Lightbox.tsx",
+      "src/components/ui/VideoPlayer.tsx",
+      "src/types/media.ts"
+    ],
+    "src/hooks/usePermissions.ts": [
+      "src/components/MountainProvider.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/permission-service.ts"
+    ],
+    "src/hooks/useResourceAccess.ts": [
+      "src/hooks/usePermissions.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/lib/auth/admin.ts": [
+      "src/services/firebase.ts",
+      "src/services/permission-service.ts",
+      "src/types/admin.ts"
+    ],
+    "src/lib/auth/authHeader.ts": [],
+    "src/lib/auth/requireApiPermission.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/lib/tenant.ts"
+    ],
+    "src/lib/cache-config.ts": [],
+    "src/lib/firebase-admin.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/lib/revalidate-client.ts": [],
+    "src/lib/server/cat-reads.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/types/index.ts"
+    ],
+    "src/lib/server/point-reads.ts": [
+      "src/lib/firebase-admin.ts",
+      "src/types/index.ts"
+    ],
+    "src/lib/tenant.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/lib/youtube/credentials.ts": [
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/middleware.ts": [
+      "src/lib/tenant.ts"
+    ],
+    "src/services/about-content-service.ts": [
+      "src/services/firebase.ts"
+    ],
+    "src/services/adoption-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/announcement-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/auth-service.ts": [
+      "src/constants/strings.ts",
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/utils/config.ts"
+    ],
+    "src/services/butler-talk-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/cat-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/contact-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/feeding-spots-admin-service.ts": [
+      "src/lib/firebase-admin.ts"
+    ],
+    "src/services/feeding-spots-service.ts": [
+      "src/services/firebase.ts"
+    ],
+    "src/services/firebase.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/services/image-service.ts": [
+      "src/services/interfaces.ts",
+      "src/services/media-albums.ts"
+    ],
+    "src/services/index.ts": [
+      "src/services/about-content-service.ts",
+      "src/services/adoption-service.ts",
+      "src/services/announcement-service.ts",
+      "src/services/auth-service.ts",
+      "src/services/butler-talk-service.ts",
+      "src/services/cat-service.ts",
+      "src/services/contact-service.ts",
+      "src/services/feeding-spots-service.ts",
+      "src/services/image-service.ts",
+      "src/services/interfaces.ts",
+      "src/services/permission-service.ts",
+      "src/services/point-service.ts",
+      "src/services/post-service.ts",
+      "src/services/storage-service.ts",
+      "src/services/video-service.ts"
+    ],
+    "src/services/interfaces.ts": [
+      "src/types/index.ts"
+    ],
+    "src/services/media-albums.ts": [
+      "src/services/firebase.ts",
+      "src/types/media.ts"
+    ],
+    "src/services/permission-service.ts": [
+      "src/config/permission-config.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/services/point-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/post-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/role-assignment-service.ts": [
+      "src/config/permission-config.ts",
+      "src/types/permissions.ts"
+    ],
+    "src/services/storage-service.ts": [
+      "src/services/firebase.ts",
+      "src/services/interfaces.ts"
+    ],
+    "src/services/thumbnailPreloader.ts": [
+      "src/services/index.ts",
+      "src/types/index.ts"
+    ],
+    "src/services/video-service.ts": [
+      "src/services/interfaces.ts",
+      "src/services/media-albums.ts"
+    ],
+    "src/services/youtube.ts": [
+      "src/utils/config.ts"
+    ],
+    "src/types/admin.ts": [
+      "src/types/index.ts",
+      "src/types/media.ts"
+    ],
+    "src/types/index.ts": [],
+    "src/types/media.ts": [],
+    "src/types/permissions.ts": [],
+    "src/utils/cat-filters.ts": [
+      "src/types/index.ts"
+    ],
+    "src/utils/cn.ts": [],
+    "src/utils/config.ts": [
+      "config/mountains/mountains.json"
+    ],
+    "src/utils/dateParser.ts": [],
+    "src/utils/duration.ts": [],
+    "src/utils/mapClustering.ts": [],
+    "src/utils/mapLabels.ts": [
+      "src/types/index.ts"
+    ],
+    "src/utils/parse-date.ts": [],
+    "src/utils/text-processing.ts": []
+  }
+}

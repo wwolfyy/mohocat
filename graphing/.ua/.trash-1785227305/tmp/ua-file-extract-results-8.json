@@ -1,0 +1,1206 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 18,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 18,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 18,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/components/admin/media/BatchActionsPanel.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 46,
+      "nonEmptyLines": 40,
+      "functions": [
+        {
+          "name": "BatchActionsPanel",
+          "startLine": 28,
+          "endLine": 44,
+          "params": [
+            "{\n  title,\n  cancelLabel,\n  onCancel,\n  columns = 2,\n  children,\n}"
+          ]
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/EmailVerificationModal.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 39,
+      "nonEmptyLines": 35,
+      "functions": [
+        {
+          "name": "EmailVerificationModal",
+          "startLine": 13,
+          "endLine": 37,
+          "params": [
+            "{\n  isOpen,\n  onClose,\n  onSend,\n  email,\n}"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "EmailVerificationModal",
+          "callee": "strings.auth.emailVerification.body",
+          "lineNumber": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/KakaoLoginGuidanceModal.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 109,
+      "nonEmptyLines": 99,
+      "functions": [
+        {
+          "name": "KakaoLoginGuidanceModal",
+          "startLine": 16,
+          "endLine": 109,
+          "params": [
+            "{\n  isOpen,\n  onClose,\n  onConfirm,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "KakaoLoginGuidanceModal",
+          "line": 16,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "KakaoLoginGuidanceModal",
+          "callee": "useState",
+          "lineNumber": 21
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setStep",
+          "lineNumber": 26
+        },
+        {
+          "caller": "handleClose",
+          "callee": "onClose",
+          "lineNumber": 27
+        },
+        {
+          "caller": "renderContent",
+          "callee": "setStep",
+          "lineNumber": 43
+        },
+        {
+          "caller": "renderContent",
+          "callee": "handleClose",
+          "lineNumber": 68
+        },
+        {
+          "caller": "renderContent",
+          "callee": "onConfirm",
+          "lineNumber": 69
+        },
+        {
+          "caller": "renderContent",
+          "callee": "setStep",
+          "lineNumber": 75
+        },
+        {
+          "caller": "KakaoLoginGuidanceModal",
+          "callee": "renderContent",
+          "lineNumber": 106
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/LogoutModal.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 99,
+      "nonEmptyLines": 91,
+      "functions": [
+        {
+          "name": "LogoutModal",
+          "startLine": 14,
+          "endLine": 99,
+          "params": [
+            "{ isOpen, onClose }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "LogoutModal",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LogoutModal",
+          "callee": "useAuth",
+          "lineNumber": 15
+        },
+        {
+          "caller": "LogoutModal",
+          "callee": "useState",
+          "lineNumber": 16
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "setIsLoggingOut",
+          "lineNumber": 19
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "signOut",
+          "lineNumber": 21
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "onClose",
+          "lineNumber": 22
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "console.error",
+          "lineNumber": 24
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "alert",
+          "lineNumber": 25
+        },
+        {
+          "caller": "handleLogout",
+          "callee": "setIsLoggingOut",
+          "lineNumber": 27
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "onClose",
+          "lineNumber": 32
+        },
+        {
+          "caller": "LogoutModal",
+          "callee": "cn",
+          "lineNumber": 68
+        },
+        {
+          "caller": "LogoutModal",
+          "callee": "cn",
+          "lineNumber": 80
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/NavigationBarLogin.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 38,
+      "nonEmptyLines": 34,
+      "functions": [
+        {
+          "name": "NavigationBarLogin",
+          "startLine": 11,
+          "endLine": 38,
+          "params": [
+            "{ mobile = false }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "NavigationBarLogin",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NavigationBarLogin",
+          "callee": "useAuth",
+          "lineNumber": 12
+        },
+        {
+          "caller": "NavigationBarLogin",
+          "callee": "usePathname",
+          "lineNumber": 13
+        },
+        {
+          "caller": "NavigationBarLogin",
+          "callee": "encodeURIComponent",
+          "lineNumber": 22
+        },
+        {
+          "caller": "NavigationBarLogin",
+          "callee": "cn",
+          "lineNumber": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/NavigationBarLogout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 69,
+      "nonEmptyLines": 59,
+      "functions": [
+        {
+          "name": "NavigationBarLogout",
+          "startLine": 11,
+          "endLine": 69,
+          "params": [
+            "{ mobile = false }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "NavigationBarLogout",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NavigationBarLogout",
+          "callee": "useAuth",
+          "lineNumber": 12
+        },
+        {
+          "caller": "NavigationBarLogout",
+          "callee": "useState",
+          "lineNumber": 13
+        },
+        {
+          "caller": "handleLogoutClick",
+          "callee": "setShowLogoutModal",
+          "lineNumber": 16
+        },
+        {
+          "caller": "handleCloseModal",
+          "callee": "setShowLogoutModal",
+          "lineNumber": 20
+        },
+        {
+          "caller": "NavigationBarLogout",
+          "callee": "user?.email?.split",
+          "lineNumber": 28
+        },
+        {
+          "caller": "NavigationBarLogout",
+          "callee": "cn",
+          "lineNumber": 32
+        },
+        {
+          "caller": "NavigationBarLogout",
+          "callee": "cn",
+          "lineNumber": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/PasswordResetModal.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 138,
+      "nonEmptyLines": 122,
+      "functions": [
+        {
+          "name": "PasswordResetModal",
+          "startLine": 16,
+          "endLine": 138,
+          "params": [
+            "{\n  isOpen,\n  onClose,\n  email: initialEmail = '',\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PasswordResetModal",
+          "line": 16,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PasswordResetModal",
+          "callee": "useState",
+          "lineNumber": 21
+        },
+        {
+          "caller": "PasswordResetModal",
+          "callee": "useState",
+          "lineNumber": 22
+        },
+        {
+          "caller": "PasswordResetModal",
+          "callee": "useState",
+          "lineNumber": 23
+        },
+        {
+          "caller": "PasswordResetModal",
+          "callee": "useState",
+          "lineNumber": 24
+        },
+        {
+          "caller": "PasswordResetModal",
+          "callee": "useAuth",
+          "lineNumber": 26
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "e.preventDefault",
+          "lineNumber": 31
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsLoading",
+          "lineNumber": 32
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 33
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "sendPasswordResetEmail",
+          "lineNumber": 36
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsSent",
+          "lineNumber": 37
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "console.error",
+          "lineNumber": 39
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsSent",
+          "lineNumber": 50
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 56
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setIsLoading",
+          "lineNumber": 58
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setIsSent",
+          "lineNumber": 63
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setError",
+          "lineNumber": 64
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setIsLoading",
+          "lineNumber": 65
+        },
+        {
+          "caller": "handleClose",
+          "callee": "onClose",
+          "lineNumber": 67
+        },
+        {
+          "caller": "PasswordResetModal",
+          "callee": "setEmail",
+          "lineNumber": 102
+        },
+        {
+          "caller": "PasswordResetModal",
+          "callee": "cn",
+          "lineNumber": 104
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/PhoneLoginForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 229,
+      "nonEmptyLines": 204,
+      "functions": [
+        {
+          "name": "PhoneLoginForm",
+          "startLine": 18,
+          "endLine": 227,
+          "params": [
+            "{ onLoginSuccess, onLoginError }"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useState",
+          "lineNumber": 20
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useState",
+          "lineNumber": 21
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useState",
+          "lineNumber": 22
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useState",
+          "lineNumber": 23
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useState",
+          "lineNumber": 24
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useState",
+          "lineNumber": 25
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useAuth",
+          "lineNumber": 27
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useRef",
+          "lineNumber": 28
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useRef",
+          "lineNumber": 29
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "useEffect",
+          "lineNumber": 32
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "console.log",
+          "lineNumber": 40
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "setError",
+          "lineNumber": 43
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "verifier.render().catch",
+          "lineNumber": 49
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "verifier.render",
+          "lineNumber": 49
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "console.warn",
+          "lineNumber": 51
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "console.error",
+          "lineNumber": 55
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "recaptchaInstanceRef.current.clear",
+          "lineNumber": 62
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "e.preventDefault",
+          "lineNumber": 72
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 73
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setIsLoading",
+          "lineNumber": 74
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 77
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setIsLoading",
+          "lineNumber": 78
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "phoneNumber.trim",
+          "lineNumber": 85
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "formattedPhone.startsWith",
+          "lineNumber": 86
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "signInWithPhoneNumber",
+          "lineNumber": 94
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setConfirmationResult",
+          "lineNumber": 98
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setStep",
+          "lineNumber": 99
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "console.error",
+          "lineNumber": 101
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 104
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 106
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 108
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setError",
+          "lineNumber": 111
+        },
+        {
+          "caller": "handleSendCode",
+          "callee": "setIsLoading",
+          "lineNumber": 114
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "e.preventDefault",
+          "lineNumber": 119
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setError",
+          "lineNumber": 120
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setIsLoading",
+          "lineNumber": 121
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setError",
+          "lineNumber": 124
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setIsLoading",
+          "lineNumber": 125
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "confirmPhoneLogin",
+          "lineNumber": 130
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "onLoginSuccess",
+          "lineNumber": 131
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "console.error",
+          "lineNumber": 133
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setError",
+          "lineNumber": 135
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setError",
+          "lineNumber": 137
+        },
+        {
+          "caller": "handleVerifyCode",
+          "callee": "setIsLoading",
+          "lineNumber": 140
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "setPhoneNumber",
+          "lineNumber": 156
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "cn",
+          "lineNumber": 158
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "setVerificationCode",
+          "lineNumber": 187
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "cn",
+          "lineNumber": 190
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "setStep",
+          "lineNumber": 215
+        },
+        {
+          "caller": "PhoneLoginForm",
+          "callee": "setError",
+          "lineNumber": 216
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/UserNotFoundModal.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 66,
+      "nonEmptyLines": 57,
+      "functions": [
+        {
+          "name": "UserNotFoundModal",
+          "startLine": 14,
+          "endLine": 66,
+          "params": [
+            "{\n  isOpen,\n  onClose,\n  onCreateAccount,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "UserNotFoundModal",
+          "line": 14,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/Alert.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 28,
+      "nonEmptyLines": 24,
+      "functions": [
+        {
+          "name": "Alert",
+          "startLine": 19,
+          "endLine": 28,
+          "params": [
+            "{ variant, className, children, ...props }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Alert",
+          "line": 19,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Alert",
+          "callee": "cn",
+          "lineNumber": 22
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/Button.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 54,
+      "nonEmptyLines": 49,
+      "functions": [
+        {
+          "name": "Button",
+          "startLine": 30,
+          "endLine": 54,
+          "params": [
+            "{\n  variant = 'primary',\n  size = 'md',\n  className,\n  disabled,\n  children,\n  ...props\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Button",
+          "line": 30,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Button",
+          "callee": "cn",
+          "lineNumber": 40
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/Card.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 17,
+      "functions": [
+        {
+          "name": "Card",
+          "startLine": 10,
+          "endLine": 19,
+          "params": [
+            "{ className, children, ...props }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Card",
+          "line": 10,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Card",
+          "callee": "cn",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/Field.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 30,
+      "nonEmptyLines": 28,
+      "functions": [
+        {
+          "name": "Field",
+          "startLine": 19,
+          "endLine": 30,
+          "params": [
+            "{ label, htmlFor, error, help, className, children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Field",
+          "line": 19,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Field",
+          "callee": "cn",
+          "lineNumber": 21
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/Input.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 31,
+      "nonEmptyLines": 28,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/constants/strings.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 275,
+      "nonEmptyLines": 271,
+      "exports": [
+        {
+          "name": "strings",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/hooks/useAuth.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 11,
+      "functions": [
+        {
+          "name": "useAuth",
+          "startLine": 12,
+          "endLine": 14,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AuthState",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "useAuth",
+          "line": 12,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useAuth",
+          "callee": "useAuthContext",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/hooks/useIdleTimeout.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 117,
+      "nonEmptyLines": 105,
+      "functions": [
+        {
+          "name": "useIdleTimeout",
+          "startLine": 45,
+          "endLine": 117,
+          "params": [
+            "{\n  timeoutMs,\n  onTimeout,\n  enabled = true,\n  storageKey,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "useIdleTimeout",
+          "line": 45,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useIdleTimeout",
+          "callee": "useRef",
+          "lineNumber": 51
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "Date.now",
+          "lineNumber": 51
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "useRef",
+          "lineNumber": 52
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "useRef",
+          "lineNumber": 53
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "useEffect",
+          "lineNumber": 56
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "useEffect",
+          "lineNumber": 60
+        },
+        {
+          "caller": "readSharedActivity",
+          "callee": "window.localStorage.getItem",
+          "lineNumber": 69
+        },
+        {
+          "caller": "readSharedActivity",
+          "callee": "parseInt",
+          "lineNumber": 70
+        },
+        {
+          "caller": "readSharedActivity",
+          "callee": "Number.isFinite",
+          "lineNumber": 71
+        },
+        {
+          "caller": "writeSharedActivity",
+          "callee": "window.localStorage.setItem",
+          "lineNumber": 79
+        },
+        {
+          "caller": "writeSharedActivity",
+          "callee": "String",
+          "lineNumber": 79
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "Date.now",
+          "lineNumber": 85
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "writeSharedActivity",
+          "lineNumber": 88
+        },
+        {
+          "caller": "markActivity",
+          "callee": "Date.now",
+          "lineNumber": 92
+        },
+        {
+          "caller": "markActivity",
+          "callee": "writeSharedActivity",
+          "lineNumber": 96
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "ACTIVITY_EVENTS.forEach",
+          "lineNumber": 100
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "window.addEventListener",
+          "lineNumber": 100
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "window.setInterval",
+          "lineNumber": 102
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "Math.max",
+          "lineNumber": 105
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "readSharedActivity",
+          "lineNumber": 105
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "Date.now",
+          "lineNumber": 106
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "onTimeoutRef.current",
+          "lineNumber": 108
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "ACTIVITY_EVENTS.forEach",
+          "lineNumber": 113
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "window.removeEventListener",
+          "lineNumber": 113
+        },
+        {
+          "caller": "useIdleTimeout",
+          "callee": "window.clearInterval",
+          "lineNumber": 114
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/utils/cn.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 6,
+      "nonEmptyLines": 5,
+      "functions": [
+        {
+          "name": "cn",
+          "startLine": 4,
+          "endLine": 6,
+          "params": [
+            "...inputs"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "cn",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "cn",
+          "callee": "twMerge",
+          "lineNumber": 5
+        },
+        {
+          "caller": "cn",
+          "callee": "clsx",
+          "lineNumber": 5
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

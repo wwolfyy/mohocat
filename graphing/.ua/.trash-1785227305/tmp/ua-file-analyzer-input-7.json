@@ -1,0 +1,179 @@
+{
+ "projectRoot": "/Users/jp/github/mohocat",
+ "batchFiles": [
+  {
+   "path": "src/app/api/upload-youtube/route.ts",
+   "language": "typescript",
+   "sizeLines": 230,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/youtube-playlists/route.ts",
+   "language": "typescript",
+   "sizeLines": 89,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/AnalyticsTracker.tsx",
+   "language": "typescript",
+   "sizeLines": 57,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/Footer.tsx",
+   "language": "typescript",
+   "sizeLines": 36,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/MountainSelector.tsx",
+   "language": "typescript",
+   "sizeLines": 129,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/config/permission-config.ts",
+   "language": "typescript",
+   "sizeLines": 134,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/hooks/usePermissions.ts",
+   "language": "typescript",
+   "sizeLines": 198,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/hooks/useResourceAccess.ts",
+   "language": "typescript",
+   "sizeLines": 50,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/lib/auth/requireApiPermission.ts",
+   "language": "typescript",
+   "sizeLines": 72,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/lib/firebase-admin.ts",
+   "language": "typescript",
+   "sizeLines": 56,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/lib/tenant.ts",
+   "language": "typescript",
+   "sizeLines": 64,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/lib/youtube/credentials.ts",
+   "language": "typescript",
+   "sizeLines": 121,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/middleware.ts",
+   "language": "typescript",
+   "sizeLines": 36,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/services/permission-service.ts",
+   "language": "typescript",
+   "sizeLines": 336,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/services/role-assignment-service.ts",
+   "language": "typescript",
+   "sizeLines": 88,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/services/youtube.ts",
+   "language": "typescript",
+   "sizeLines": 267,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/types/permissions.ts",
+   "language": "typescript",
+   "sizeLines": 107,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/utils/config.ts",
+   "language": "typescript",
+   "sizeLines": 420,
+   "fileCategory": "code"
+  }
+ ],
+ "batchImportData": {
+  "src/app/api/upload-youtube/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/tenant.ts",
+   "src/lib/youtube/credentials.ts",
+   "src/services/index.ts",
+   "src/utils/config.ts",
+   "src/utils/dateParser.ts"
+  ],
+  "src/app/api/youtube-playlists/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/youtube/credentials.ts"
+  ],
+  "src/components/AnalyticsTracker.tsx": [
+   "src/components/MountainProvider.tsx"
+  ],
+  "src/components/Footer.tsx": [],
+  "src/components/MountainSelector.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/lib/tenant.ts",
+   "src/utils/config.ts"
+  ],
+  "src/config/permission-config.ts": [
+   "config/permissions.json"
+  ],
+  "src/hooks/usePermissions.ts": [
+   "src/components/MountainProvider.tsx",
+   "src/hooks/useAuth.ts",
+   "src/services/permission-service.ts"
+  ],
+  "src/hooks/useResourceAccess.ts": [
+   "src/hooks/usePermissions.ts",
+   "src/types/permissions.ts"
+  ],
+  "src/lib/auth/requireApiPermission.ts": [
+   "src/lib/firebase-admin.ts",
+   "src/lib/tenant.ts"
+  ],
+  "src/lib/firebase-admin.ts": [
+   "src/utils/config.ts"
+  ],
+  "src/lib/tenant.ts": [
+   "src/utils/config.ts"
+  ],
+  "src/lib/youtube/credentials.ts": [
+   "src/lib/firebase-admin.ts"
+  ],
+  "src/middleware.ts": [
+   "src/lib/tenant.ts"
+  ],
+  "src/services/permission-service.ts": [
+   "src/config/permission-config.ts",
+   "src/types/permissions.ts"
+  ],
+  "src/services/role-assignment-service.ts": [
+   "src/config/permission-config.ts",
+   "src/types/permissions.ts"
+  ],
+  "src/services/youtube.ts": [
+   "src/utils/config.ts"
+  ],
+  "src/types/permissions.ts": [],
+  "src/utils/config.ts": [
+   "config/mountains/mountains.json"
+  ]
+ }
+}

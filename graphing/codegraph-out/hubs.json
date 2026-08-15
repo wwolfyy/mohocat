@@ -1,0 +1,86 @@
+[
+  {
+    "name": "cn",
+    "kind": "function",
+    "file": "src/utils/cn.ts",
+    "degree": 119
+  },
+  {
+    "name": "useMountain",
+    "kind": "function",
+    "file": "src/components/MountainProvider.tsx",
+    "degree": 87
+  },
+  {
+    "name": "Cat",
+    "kind": "interface",
+    "file": "src/types/index.ts",
+    "degree": 73
+  },
+  {
+    "name": "index.ts",
+    "kind": "file",
+    "file": "src/services/index.ts",
+    "degree": 70
+  },
+  {
+    "name": "useAuth",
+    "kind": "function",
+    "file": "src/hooks/useAuth.ts",
+    "degree": 60
+  },
+  {
+    "name": "Button",
+    "kind": "function",
+    "file": "src/components/ui/Button.tsx",
+    "degree": 37
+  },
+  {
+    "name": "Button.tsx",
+    "kind": "file",
+    "file": "src/components/ui/Button.tsx",
+    "degree": 34
+  },
+  {
+    "name": "requireApiPermission",
+    "kind": "function",
+    "file": "src/lib/auth/requireApiPermission.ts",
+    "degree": 32
+  },
+  {
+    "name": "Point",
+    "kind": "interface",
+    "file": "src/types/index.ts",
+    "degree": 31
+  },
+  {
+    "name": "TagVideosPage",
+    "kind": "function",
+    "file": "src/app/[mountain]/admin/tag-videos/page.tsx",
+    "degree": 26
+  },
+  {
+    "name": "IPostService",
+    "kind": "interface",
+    "file": "src/services/interfaces.ts",
+    "degree": 26
+  },
+  {
+    "name": "CatGrid.tsx",
+    "kind": "file",
+    "file": "src/components/admin/cat-grid/CatGrid.tsx",
+    "degree": 25
+  },
+  {
+    "name": "Modal",
+    "kind": "function",
+    "file": "src/components/ui/Modal.tsx",
+    "degree": 24
+  },
+  {
+    "name": "authHeader",
+    "kind": "function",
+    "file": "src/lib/auth/authHeader.ts",
+    "degree": 24
+  }
+]

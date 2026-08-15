@@ -1,0 +1,3020 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 18,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 18,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 18,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/api/upload-youtube/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 230,
+      "nonEmptyLines": 209,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 14,
+          "endLine": 230,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 15
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 17
+        },
+        {
+          "caller": "POST",
+          "callee": "getRequestMountainId",
+          "lineNumber": 23
+        },
+        {
+          "caller": "POST",
+          "callee": "getYouTubeOAuthCredentials",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "POST",
+          "callee": "request.formData",
+          "lineNumber": 35
+        },
+        {
+          "caller": "POST",
+          "callee": "formData.get",
+          "lineNumber": 36
+        },
+        {
+          "caller": "POST",
+          "callee": "formData.get",
+          "lineNumber": 37
+        },
+        {
+          "caller": "POST",
+          "callee": "formData.get",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "formData.get",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "formData.get",
+          "lineNumber": 41
+        },
+        {
+          "caller": "POST",
+          "callee": "formData\n      .getAll('playlistId')\n      .map((value) => String(value).trim())\n      .filter",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "formData\n      .getAll('playlistId')\n      .map",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "formData\n      .getAll",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "String(value).trim",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "String",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 50
+        },
+        {
+          "caller": "POST",
+          "callee": "oauth2Client.setCredentials",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "oauth2Client.getAccessToken",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 65
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "google.youtube",
+          "lineNumber": 75
+        },
+        {
+          "caller": "POST",
+          "callee": "Buffer.from",
+          "lineNumber": 77
+        },
+        {
+          "caller": "POST",
+          "callee": "file.arrayBuffer",
+          "lineNumber": 77
+        },
+        {
+          "caller": "POST",
+          "callee": "Readable.from",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "tags.trim",
+          "lineNumber": 89
+        },
+        {
+          "caller": "POST",
+          "callee": "tags\n        .split(',')\n        .map((tag) => tag.trim())\n        .filter",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "tags\n        .split(',')\n        .map",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "tags\n        .split",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "tag.trim",
+          "lineNumber": 92
+        },
+        {
+          "caller": "POST",
+          "callee": "calendarDateToInstant(createdTime).toISOString",
+          "lineNumber": 103
+        },
+        {
+          "caller": "POST",
+          "callee": "calendarDateToInstant",
+          "lineNumber": 103
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 106
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 124
+        },
+        {
+          "caller": "POST",
+          "callee": "JSON.stringify",
+          "lineNumber": 124
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.videos.insert",
+          "lineNumber": 126
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.insert",
+          "lineNumber": 145
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 158
+        },
+        {
+          "caller": "POST",
+          "callee": "tags.trim",
+          "lineNumber": 167
+        },
+        {
+          "caller": "POST",
+          "callee": "tags\n              .split(',')\n              .map((tag) => tag.trim())\n              .filter",
+          "lineNumber": 168
+        },
+        {
+          "caller": "POST",
+          "callee": "tags\n              .split(',')\n              .map",
+          "lineNumber": 168
+        },
+        {
+          "caller": "POST",
+          "callee": "tags\n              .split",
+          "lineNumber": 168
+        },
+        {
+          "caller": "POST",
+          "callee": "tag.trim",
+          "lineNumber": 170
+        },
+        {
+          "caller": "POST",
+          "callee": "calendarDateToInstant",
+          "lineNumber": 182
+        },
+        {
+          "caller": "POST",
+          "callee": "new Date().toISOString",
+          "lineNumber": 191
+        },
+        {
+          "caller": "POST",
+          "callee": "getYouTubePlaylistId",
+          "lineNumber": 197
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 202
+        },
+        {
+          "caller": "POST",
+          "callee": "getVideoService",
+          "lineNumber": 204
+        },
+        {
+          "caller": "POST",
+          "callee": "videoService.createVideo",
+          "lineNumber": 205
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 206
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 208
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 212
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 219
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 221
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/youtube-playlists/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 89,
+      "nonEmptyLines": 79,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 8,
+          "endLine": 89,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "requireApiPermission",
+          "lineNumber": 9
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 14
+        },
+        {
+          "caller": "GET",
+          "callee": "getYouTubeOAuthCredentials",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "oauth2Client.setCredentials",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GET",
+          "callee": "oauth2Client.getAccessToken",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 42
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GET",
+          "callee": "google.youtube",
+          "lineNumber": 51
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 53
+        },
+        {
+          "caller": "GET",
+          "callee": "youtube.playlists.list",
+          "lineNumber": 56
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 62
+        },
+        {
+          "caller": "GET",
+          "callee": "response.data.items?.map",
+          "lineNumber": 64
+        },
+        {
+          "caller": "GET",
+          "callee": "response.data.items?.map",
+          "lineNumber": 68
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 75
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 77
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 79
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 80
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/AnalyticsTracker.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 57,
+      "nonEmptyLines": 50,
+      "functions": [
+        {
+          "name": "AnalyticsTrackerContent",
+          "startLine": 14,
+          "endLine": 49,
+          "params": []
+        },
+        {
+          "name": "AnalyticsTracker",
+          "startLine": 51,
+          "endLine": 57,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AnalyticsTracker",
+          "line": 51,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AnalyticsTrackerContent",
+          "callee": "usePathname",
+          "lineNumber": 15
+        },
+        {
+          "caller": "AnalyticsTrackerContent",
+          "callee": "useSearchParams",
+          "lineNumber": 16
+        },
+        {
+          "caller": "AnalyticsTrackerContent",
+          "callee": "useMountain",
+          "lineNumber": 17
+        },
+        {
+          "caller": "AnalyticsTrackerContent",
+          "callee": "useEffect",
+          "lineNumber": 19
+        },
+        {
+          "caller": "AnalyticsTrackerContent",
+          "callee": "window.gtag",
+          "lineNumber": 35
+        },
+        {
+          "caller": "AnalyticsTrackerContent",
+          "callee": "window.gtag",
+          "lineNumber": 39
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/Footer.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 36,
+      "nonEmptyLines": 32,
+      "functions": [
+        {
+          "name": "Footer",
+          "startLine": 11,
+          "endLine": 36,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Footer",
+          "line": 11,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Footer",
+          "callee": "new Date().getFullYear",
+          "lineNumber": 12
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/MountainSelector.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 129,
+      "nonEmptyLines": 117,
+      "functions": [
+        {
+          "name": "MountainSelector",
+          "startLine": 15,
+          "endLine": 129,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MountainSelector",
+          "line": 15,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MountainSelector",
+          "callee": "useState",
+          "lineNumber": 16
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "useState",
+          "lineNumber": 17
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "useMountain",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "useRef",
+          "lineNumber": 19
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "getPublicMountains",
+          "lineNumber": 22
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "getMountainName",
+          "lineNumber": 23
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "useEffect",
+          "lineNumber": 26
+        },
+        {
+          "caller": "handleClickOutside",
+          "callee": "dropdownRef.current.contains",
+          "lineNumber": 28
+        },
+        {
+          "caller": "handleClickOutside",
+          "callee": "handleClose",
+          "lineNumber": 29
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "document.addEventListener",
+          "lineNumber": 33
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "document.removeEventListener",
+          "lineNumber": 35
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setIsAnimating",
+          "lineNumber": 40
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setTimeout",
+          "lineNumber": 41
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setIsOpen",
+          "lineNumber": 42
+        },
+        {
+          "caller": "handleClose",
+          "callee": "setIsAnimating",
+          "lineNumber": 43
+        },
+        {
+          "caller": "handleToggle",
+          "callee": "handleClose",
+          "lineNumber": 49
+        },
+        {
+          "caller": "handleToggle",
+          "callee": "setIsOpen",
+          "lineNumber": 51
+        },
+        {
+          "caller": "handleMountainSelect",
+          "callee": "findMountainIdByHost",
+          "lineNumber": 60
+        },
+        {
+          "caller": "handleMountainSelect",
+          "callee": "getMountainConfig",
+          "lineNumber": 61
+        },
+        {
+          "caller": "handleMountainSelect",
+          "callee": "handleClose",
+          "lineNumber": 67
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "mountains.map",
+          "lineNumber": 98
+        },
+        {
+          "caller": "MountainSelector",
+          "callee": "handleMountainSelect",
+          "lineNumber": 101
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/config/permission-config.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 134,
+      "nonEmptyLines": 117,
+      "functions": [
+        {
+          "name": "loadPermissionConfig",
+          "startLine": 40,
+          "endLine": 57,
+          "params": []
+        },
+        {
+          "name": "getPermissionMatrix",
+          "startLine": 62,
+          "endLine": 67,
+          "params": []
+        },
+        {
+          "name": "getAvailableRoles",
+          "startLine": 72,
+          "endLine": 75,
+          "params": []
+        },
+        {
+          "name": "getRoleDetails",
+          "startLine": 80,
+          "endLine": 94,
+          "params": [
+            "role"
+          ]
+        },
+        {
+          "name": "isValidRole",
+          "startLine": 99,
+          "endLine": 102,
+          "params": [
+            "role"
+          ]
+        },
+        {
+          "name": "getDefaultRole",
+          "startLine": 107,
+          "endLine": 117,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getMountainAdminUsers",
+          "startLine": 122,
+          "endLine": 127,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "clearConfigCache",
+          "startLine": 132,
+          "endLine": 134,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "loadPermissionConfig",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "getPermissionMatrix",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "getAvailableRoles",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "getRoleDetails",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "isValidRole",
+          "line": 99,
+          "isDefault": false
+        },
+        {
+          "name": "getDefaultRole",
+          "line": 107,
+          "isDefault": false
+        },
+        {
+          "name": "getMountainAdminUsers",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "clearConfigCache",
+          "line": 132,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "loadPermissionConfig",
+          "callee": "require",
+          "lineNumber": 49
+        },
+        {
+          "caller": "loadPermissionConfig",
+          "callee": "console.error",
+          "lineNumber": 54
+        },
+        {
+          "caller": "getPermissionMatrix",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 63
+        },
+        {
+          "caller": "getPermissionMatrix",
+          "callee": "Object.fromEntries",
+          "lineNumber": 64
+        },
+        {
+          "caller": "getPermissionMatrix",
+          "callee": "Object.entries(config.roles).map",
+          "lineNumber": 65
+        },
+        {
+          "caller": "getPermissionMatrix",
+          "callee": "Object.entries",
+          "lineNumber": 65
+        },
+        {
+          "caller": "getAvailableRoles",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 73
+        },
+        {
+          "caller": "getAvailableRoles",
+          "callee": "Object.keys",
+          "lineNumber": 74
+        },
+        {
+          "caller": "getRoleDetails",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 83
+        },
+        {
+          "caller": "isValidRole",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 100
+        },
+        {
+          "caller": "getDefaultRole",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 108
+        },
+        {
+          "caller": "getMountainAdminUsers",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 123
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 8,
+        "functionCount": 8,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/hooks/usePermissions.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 198,
+      "nonEmptyLines": 170,
+      "functions": [
+        {
+          "name": "usePermissions",
+          "startLine": 6,
+          "endLine": 140,
+          "params": []
+        },
+        {
+          "name": "usePermissionCheck",
+          "startLine": 146,
+          "endLine": 198,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "usePermissions",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "usePermissionCheck",
+          "line": 146,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "usePermissions",
+          "callee": "useAuth",
+          "lineNumber": 7
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useMountain",
+          "lineNumber": 8
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useState",
+          "lineNumber": 9
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useState",
+          "lineNumber": 10
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useState",
+          "lineNumber": 11
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useEffect",
+          "lineNumber": 15
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "setPermissions",
+          "lineNumber": 17
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "setIsLoading",
+          "lineNumber": 18
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "setIsLoading",
+          "lineNumber": 23
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "setError",
+          "lineNumber": 24
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "permissionService.getUserPermissions",
+          "lineNumber": 27
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "setPermissions",
+          "lineNumber": 28
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "console.error",
+          "lineNumber": 30
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "setError",
+          "lineNumber": 31
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "setPermissions",
+          "lineNumber": 32
+        },
+        {
+          "caller": "loadPermissions",
+          "callee": "setIsLoading",
+          "lineNumber": 34
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "loadPermissions",
+          "lineNumber": 38
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useCallback",
+          "lineNumber": 42
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissions.includes",
+          "lineNumber": 43
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useCallback",
+          "lineNumber": 47
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissionList.some",
+          "lineNumber": 49
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissions.includes",
+          "lineNumber": 49
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "useCallback",
+          "lineNumber": 53
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissionList.every",
+          "lineNumber": 55
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissions.includes",
+          "lineNumber": 55
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "hasPermission",
+          "lineNumber": 60
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "hasPermission",
+          "lineNumber": 61
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "hasPermission",
+          "lineNumber": 62
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "hasPermission",
+          "lineNumber": 63
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "hasPermission",
+          "lineNumber": 64
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "hasPermission",
+          "lineNumber": 65
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "requiredPermissions.every",
+          "lineNumber": 124
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissions.includes",
+          "lineNumber": 124
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "permissionService.getUserPermissions",
+          "lineNumber": 130
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "setPermissions",
+          "lineNumber": 131
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "setError",
+          "lineNumber": 132
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "console.error",
+          "lineNumber": 134
+        },
+        {
+          "caller": "usePermissions",
+          "callee": "setError",
+          "lineNumber": 135
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "useAuth",
+          "lineNumber": 147
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "useMountain",
+          "lineNumber": 148
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "useState",
+          "lineNumber": 149
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "useCallback",
+          "lineNumber": 151
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "permissionService.checkPermission",
+          "lineNumber": 156
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "console.error",
+          "lineNumber": 158
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "useCallback",
+          "lineNumber": 165
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "permissionService.hasAnyPermission",
+          "lineNumber": 170
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "console.error",
+          "lineNumber": 172
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "useCallback",
+          "lineNumber": 179
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "permissionService.hasAllPermissions",
+          "lineNumber": 184
+        },
+        {
+          "caller": "usePermissionCheck",
+          "callee": "console.error",
+          "lineNumber": 186
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/hooks/useResourceAccess.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 50,
+      "nonEmptyLines": 41,
+      "functions": [
+        {
+          "name": "fetcher",
+          "startLine": 9,
+          "endLine": 15,
+          "params": [
+            "url"
+          ]
+        },
+        {
+          "name": "useResourceAccess",
+          "startLine": 17,
+          "endLine": 50,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "useResourceAccess",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "fetcher",
+          "callee": "fetch",
+          "lineNumber": 10
+        },
+        {
+          "caller": "fetcher",
+          "callee": "response.json",
+          "lineNumber": 14
+        },
+        {
+          "caller": "useResourceAccess",
+          "callee": "usePermissions",
+          "lineNumber": 18
+        },
+        {
+          "caller": "useResourceAccess",
+          "callee": "useSWR",
+          "lineNumber": 26
+        },
+        {
+          "caller": "canAccessResource",
+          "callee": "requiredPermissions.some",
+          "lineNumber": 42
+        },
+        {
+          "caller": "canAccessResource",
+          "callee": "permissions.includes",
+          "lineNumber": 42
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/auth/requireApiPermission.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 72,
+      "nonEmptyLines": 65,
+      "functions": [
+        {
+          "name": "requireApiPermission",
+          "startLine": 25,
+          "endLine": 72,
+          "params": [
+            "request",
+            "permission"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "requireApiPermission",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "requireApiPermission",
+          "callee": "request.headers.get",
+          "lineNumber": 30
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "authHeader.match",
+          "lineNumber": 31
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "auth.verifyIdToken",
+          "lineNumber": 39
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "console.error",
+          "lineNumber": 44
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "getRequestMountainId",
+          "lineNumber": 51
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "db.collection('users').doc(uid).get",
+          "lineNumber": 53
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "db.collection('users').doc",
+          "lineNumber": 53
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "db.collection",
+          "lineNumber": 53
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "userSnap.data",
+          "lineNumber": 54
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "db.collection('role_permissions').doc('role-config').get",
+          "lineNumber": 59
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 59
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "db.collection",
+          "lineNumber": 59
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "cfgSnap.data",
+          "lineNumber": 60
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "granted.includes",
+          "lineNumber": 63
+        },
+        {
+          "caller": "requireApiPermission",
+          "callee": "console.error",
+          "lineNumber": 69
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/firebase-admin.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 56,
+      "nonEmptyLines": 47,
+      "functions": [
+        {
+          "name": "initAdmin",
+          "startLine": 15,
+          "endLine": 49,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "app",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "db",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "auth",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "storage",
+          "line": 56,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "initAdmin",
+          "callee": "getApps",
+          "lineNumber": 16
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "getApps",
+          "lineNumber": 17
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "getFirebaseConfig",
+          "lineNumber": 20
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "initializeApp",
+          "lineNumber": 32
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "getFirebaseAdminServiceAccount",
+          "lineNumber": 38
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "initializeApp",
+          "lineNumber": 41
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "cert",
+          "lineNumber": 42
+        },
+        {
+          "caller": "initAdmin",
+          "callee": "initializeApp",
+          "lineNumber": 48
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 4,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/tenant.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 64,
+      "nonEmptyLines": 59,
+      "functions": [
+        {
+          "name": "resolveMountainIdOrNull",
+          "startLine": 23,
+          "endLine": 28,
+          "params": [
+            "candidate"
+          ]
+        },
+        {
+          "name": "findMountainIdByHost",
+          "startLine": 37,
+          "endLine": 46,
+          "params": [
+            "host"
+          ]
+        },
+        {
+          "name": "getMountainIdForHost",
+          "startLine": 54,
+          "endLine": 56,
+          "params": [
+            "host"
+          ]
+        },
+        {
+          "name": "getRequestMountainId",
+          "startLine": 62,
+          "endLine": 64,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "resolveMountainIdOrNull",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "findMountainIdByHost",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "getMountainIdForHost",
+          "line": 54,
+          "isDefault": false
+        },
+        {
+          "name": "getRequestMountainId",
+          "line": 62,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "resolveMountainIdOrNull",
+          "callee": "candidate.startsWith",
+          "lineNumber": 24
+        },
+        {
+          "caller": "resolveMountainIdOrNull",
+          "callee": "getAllMountains().some",
+          "lineNumber": 27
+        },
+        {
+          "caller": "resolveMountainIdOrNull",
+          "callee": "getAllMountains",
+          "lineNumber": 27
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "host.split(':')[0].toLowerCase",
+          "lineNumber": 41
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "host.split",
+          "lineNumber": 41
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "getAllMountains().find",
+          "lineNumber": 42
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "getAllMountains",
+          "lineNumber": 42
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "getMountainConfig(mountain.id).domains.some",
+          "lineNumber": 43
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "getMountainConfig",
+          "lineNumber": 43
+        },
+        {
+          "caller": "findMountainIdByHost",
+          "callee": "domain.toLowerCase",
+          "lineNumber": 43
+        },
+        {
+          "caller": "getMountainIdForHost",
+          "callee": "findMountainIdByHost",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getMountainIdForHost",
+          "callee": "getDefaultMountainId",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getRequestMountainId",
+          "callee": "getMountainIdForHost",
+          "lineNumber": 63
+        },
+        {
+          "caller": "getRequestMountainId",
+          "callee": "request.headers.get",
+          "lineNumber": 63
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 4,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/youtube/credentials.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 121,
+      "nonEmptyLines": 109,
+      "functions": [
+        {
+          "name": "getYouTubeOAuthClient",
+          "startLine": 60,
+          "endLine": 73,
+          "params": []
+        },
+        {
+          "name": "getStoredRefreshToken",
+          "startLine": 83,
+          "endLine": 100,
+          "params": []
+        },
+        {
+          "name": "getYouTubeOAuthCredentials",
+          "startLine": 109,
+          "endLine": 121,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "getYouTubeOAuthClient",
+          "line": 60,
+          "isDefault": false
+        },
+        {
+          "name": "getStoredRefreshToken",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "getYouTubeOAuthCredentials",
+          "line": 109,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getStoredRefreshToken",
+          "callee": "db.collection('admin_config').doc('youtube_auth').get",
+          "lineNumber": 85
+        },
+        {
+          "caller": "getStoredRefreshToken",
+          "callee": "db.collection('admin_config').doc",
+          "lineNumber": 85
+        },
+        {
+          "caller": "getStoredRefreshToken",
+          "callee": "db.collection",
+          "lineNumber": 85
+        },
+        {
+          "caller": "getStoredRefreshToken",
+          "callee": "doc.data",
+          "lineNumber": 90
+        },
+        {
+          "caller": "getStoredRefreshToken",
+          "callee": "console.error",
+          "lineNumber": 97
+        },
+        {
+          "caller": "getYouTubeOAuthCredentials",
+          "callee": "getYouTubeOAuthClient",
+          "lineNumber": 110
+        },
+        {
+          "caller": "getYouTubeOAuthCredentials",
+          "callee": "getStoredRefreshToken",
+          "lineNumber": 115
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/middleware.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 36,
+      "nonEmptyLines": 32,
+      "functions": [
+        {
+          "name": "middleware",
+          "startLine": 18,
+          "endLine": 30,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "middleware",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "config",
+          "line": 32,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "middleware",
+          "callee": "pathname.split",
+          "lineNumber": 21
+        },
+        {
+          "caller": "middleware",
+          "callee": "resolveMountainIdOrNull",
+          "lineNumber": 22
+        },
+        {
+          "caller": "middleware",
+          "callee": "NextResponse.next",
+          "lineNumber": 23
+        },
+        {
+          "caller": "middleware",
+          "callee": "getMountainIdForHost",
+          "lineNumber": 26
+        },
+        {
+          "caller": "middleware",
+          "callee": "request.headers.get",
+          "lineNumber": 26
+        },
+        {
+          "caller": "middleware",
+          "callee": "request.nextUrl.clone",
+          "lineNumber": 27
+        },
+        {
+          "caller": "middleware",
+          "callee": "NextResponse.rewrite",
+          "lineNumber": 29
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/services/permission-service.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 336,
+      "nonEmptyLines": 300,
+      "classes": [
+        {
+          "name": "PermissionService",
+          "startLine": 21,
+          "endLine": 336,
+          "methods": [
+            "loadConfig",
+            "getUserRole",
+            "getUserPermissions",
+            "checkPermission",
+            "hasAnyPermission",
+            "hasAllPermissions",
+            "getRoleHistory",
+            "getUsersByRole",
+            "getUsersInMountain",
+            "getUserPermissionLogs",
+            "getAllPermissionLogs",
+            "ensureUserExists",
+            "checkUserExists",
+            "updateUserProviders"
+          ],
+          "properties": [
+            "db",
+            "collectionName",
+            "usersCollection",
+            "config"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PermissionService",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "loadConfig",
+          "callee": "doc",
+          "lineNumber": 36
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "getDoc",
+          "lineNumber": 37
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "configSnap.exists",
+          "lineNumber": 39
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "configSnap.data",
+          "lineNumber": 40
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "console.warn",
+          "lineNumber": 43
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 44
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "console.error",
+          "lineNumber": 47
+        },
+        {
+          "caller": "loadConfig",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 49
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "getDoc",
+          "lineNumber": 60
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "doc",
+          "lineNumber": 60
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "userDoc.exists",
+          "lineNumber": 61
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "userDoc.data",
+          "lineNumber": 65
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "console.error",
+          "lineNumber": 73
+        },
+        {
+          "caller": "getUserPermissions",
+          "callee": "getDoc",
+          "lineNumber": 82
+        },
+        {
+          "caller": "getUserPermissions",
+          "callee": "doc",
+          "lineNumber": 82
+        },
+        {
+          "caller": "getUserPermissions",
+          "callee": "userDoc.exists",
+          "lineNumber": 83
+        },
+        {
+          "caller": "getUserPermissions",
+          "callee": "userDoc.data",
+          "lineNumber": 87
+        },
+        {
+          "caller": "getUserPermissions",
+          "callee": "this.loadConfig",
+          "lineNumber": 97
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "this.getUserPermissions",
+          "lineNumber": 110
+        },
+        {
+          "caller": "checkPermission",
+          "callee": "permissions.includes",
+          "lineNumber": 111
+        },
+        {
+          "caller": "hasAnyPermission",
+          "callee": "this.getUserPermissions",
+          "lineNumber": 122
+        },
+        {
+          "caller": "hasAnyPermission",
+          "callee": "permissions.some",
+          "lineNumber": 123
+        },
+        {
+          "caller": "hasAnyPermission",
+          "callee": "userPermissions.includes",
+          "lineNumber": 123
+        },
+        {
+          "caller": "hasAllPermissions",
+          "callee": "this.getUserPermissions",
+          "lineNumber": 134
+        },
+        {
+          "caller": "hasAllPermissions",
+          "callee": "permissions.every",
+          "lineNumber": 135
+        },
+        {
+          "caller": "hasAllPermissions",
+          "callee": "userPermissions.includes",
+          "lineNumber": 135
+        },
+        {
+          "caller": "getRoleHistory",
+          "callee": "getDoc",
+          "lineNumber": 149
+        },
+        {
+          "caller": "getRoleHistory",
+          "callee": "doc",
+          "lineNumber": 149
+        },
+        {
+          "caller": "getRoleHistory",
+          "callee": "userDoc.exists",
+          "lineNumber": 150
+        },
+        {
+          "caller": "getRoleHistory",
+          "callee": "userDoc.data",
+          "lineNumber": 154
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "query",
+          "lineNumber": 162
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "collection",
+          "lineNumber": 163
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "where",
+          "lineNumber": 164
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "where",
+          "lineNumber": 165
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "getDocs",
+          "lineNumber": 168
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "snapshot.docs.map",
+          "lineNumber": 169
+        },
+        {
+          "caller": "getUsersByRole",
+          "callee": "doc.data",
+          "lineNumber": 173
+        },
+        {
+          "caller": "getUsersInMountain",
+          "callee": "query",
+          "lineNumber": 182
+        },
+        {
+          "caller": "getUsersInMountain",
+          "callee": "collection",
+          "lineNumber": 183
+        },
+        {
+          "caller": "getUsersInMountain",
+          "callee": "where",
+          "lineNumber": 184
+        },
+        {
+          "caller": "getUsersInMountain",
+          "callee": "getDocs",
+          "lineNumber": 187
+        },
+        {
+          "caller": "getUsersInMountain",
+          "callee": "snapshot.docs.map",
+          "lineNumber": 188
+        },
+        {
+          "caller": "getUsersInMountain",
+          "callee": "doc.data",
+          "lineNumber": 192
+        },
+        {
+          "caller": "getUserPermissionLogs",
+          "callee": "query",
+          "lineNumber": 201
+        },
+        {
+          "caller": "getUserPermissionLogs",
+          "callee": "collection",
+          "lineNumber": 202
+        },
+        {
+          "caller": "getUserPermissionLogs",
+          "callee": "where",
+          "lineNumber": 203
+        },
+        {
+          "caller": "getUserPermissionLogs",
+          "callee": "getDocs",
+          "lineNumber": 208
+        },
+        {
+          "caller": "getUserPermissionLogs",
+          "callee": "snapshot.docs.map",
+          "lineNumber": 209
+        },
+        {
+          "caller": "getUserPermissionLogs",
+          "callee": "doc.data",
+          "lineNumber": 213
+        },
+        {
+          "caller": "getAllPermissionLogs",
+          "callee": "query",
+          "lineNumber": 222
+        },
+        {
+          "caller": "getAllPermissionLogs",
+          "callee": "collection",
+          "lineNumber": 223
+        },
+        {
+          "caller": "getAllPermissionLogs",
+          "callee": "getDocs",
+          "lineNumber": 228
+        },
+        {
+          "caller": "getAllPermissionLogs",
+          "callee": "snapshot.docs.map",
+          "lineNumber": 229
+        },
+        {
+          "caller": "getAllPermissionLogs",
+          "callee": "doc.data",
+          "lineNumber": 233
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "doc",
+          "lineNumber": 246
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "getDoc",
+          "lineNumber": 247
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "userDoc.exists",
+          "lineNumber": 261
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "setDoc",
+          "lineNumber": 274
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "console.log",
+          "lineNumber": 275
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "updateDoc",
+          "lineNumber": 286
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "console.log",
+          "lineNumber": 287
+        },
+        {
+          "caller": "ensureUserExists",
+          "callee": "console.error",
+          "lineNumber": 290
+        },
+        {
+          "caller": "checkUserExists",
+          "callee": "doc",
+          "lineNumber": 297
+        },
+        {
+          "caller": "checkUserExists",
+          "callee": "getDoc",
+          "lineNumber": 298
+        },
+        {
+          "caller": "checkUserExists",
+          "callee": "userDoc.exists",
+          "lineNumber": 299
+        },
+        {
+          "caller": "checkUserExists",
+          "callee": "console.error",
+          "lineNumber": 305
+        },
+        {
+          "caller": "updateUserProviders",
+          "callee": "doc",
+          "lineNumber": 316
+        },
+        {
+          "caller": "updateUserProviders",
+          "callee": "providerData.map",
+          "lineNumber": 318
+        },
+        {
+          "caller": "updateUserProviders",
+          "callee": "updateDoc",
+          "lineNumber": 326
+        },
+        {
+          "caller": "updateUserProviders",
+          "callee": "console.log",
+          "lineNumber": 330
+        },
+        {
+          "caller": "updateUserProviders",
+          "callee": "console.error",
+          "lineNumber": 332
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/services/role-assignment-service.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 88,
+      "nonEmptyLines": 78,
+      "classes": [
+        {
+          "name": "RoleAssignmentService",
+          "startLine": 14,
+          "endLine": 88,
+          "methods": [
+            "loadConfig",
+            "needsRoleAssignment",
+            "getUserRole",
+            "getAvailableRoles",
+            "getRoleDescription"
+          ],
+          "properties": [
+            "db",
+            "config"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "RoleAssignmentService",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "loadConfig",
+          "callee": "loadPermissionConfig",
+          "lineNumber": 23
+        },
+        {
+          "caller": "needsRoleAssignment",
+          "callee": "doc",
+          "lineNumber": 33
+        },
+        {
+          "caller": "needsRoleAssignment",
+          "callee": "getDoc",
+          "lineNumber": 34
+        },
+        {
+          "caller": "needsRoleAssignment",
+          "callee": "userDoc.exists",
+          "lineNumber": 36
+        },
+        {
+          "caller": "needsRoleAssignment",
+          "callee": "console.error",
+          "lineNumber": 38
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "doc",
+          "lineNumber": 48
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "getDoc",
+          "lineNumber": 49
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "userDoc.exists",
+          "lineNumber": 51
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "userDoc.data",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getUserRole",
+          "callee": "console.error",
+          "lineNumber": 58
+        },
+        {
+          "caller": "getAvailableRoles",
+          "callee": "this.loadConfig",
+          "lineNumber": 68
+        },
+        {
+          "caller": "getAvailableRoles",
+          "callee": "Object.keys",
+          "lineNumber": 69
+        },
+        {
+          "caller": "getAvailableRoles",
+          "callee": "console.error",
+          "lineNumber": 71
+        },
+        {
+          "caller": "getRoleDescription",
+          "callee": "this.loadConfig",
+          "lineNumber": 81
+        },
+        {
+          "caller": "getRoleDescription",
+          "callee": "console.error",
+          "lineNumber": 84
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/services/youtube.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 267,
+      "nonEmptyLines": 219,
+      "functions": [
+        {
+          "name": "getYouTubeConfig",
+          "startLine": 4,
+          "endLine": 10,
+          "params": []
+        },
+        {
+          "name": "fetchChannelVideos",
+          "startLine": 28,
+          "endLine": 197,
+          "params": [
+            "channelId",
+            "maxResults"
+          ]
+        },
+        {
+          "name": "searchYouTubeVideos",
+          "startLine": 199,
+          "endLine": 264,
+          "params": [
+            "query",
+            "maxResults"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "fetchChannelVideos",
+          "line": 28,
+          "isDefault": false
+        },
+        {
+          "name": "searchYouTubeVideos",
+          "line": 199,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getYouTubeConfig",
+          "callee": "getYouTubeApiKey",
+          "lineNumber": 6
+        },
+        {
+          "caller": "getYouTubeConfig",
+          "callee": "getYouTubeChannelId",
+          "lineNumber": 8
+        },
+        {
+          "caller": "getYouTubeConfig",
+          "callee": "getDefaultMountainId",
+          "lineNumber": 8
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "getYouTubeConfig",
+          "lineNumber": 32
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.error",
+          "lineNumber": 35
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.error",
+          "lineNumber": 43
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 50
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "fetch",
+          "lineNumber": 53
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "channelResponse.json",
+          "lineNumber": 63
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 74
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 84
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "nextPageToken.substring",
+          "lineNumber": 85
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "url.searchParams.set",
+          "lineNumber": 88
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "url.searchParams.set",
+          "lineNumber": 89
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "url.searchParams.set",
+          "lineNumber": 90
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "Math.min(maxPageSize, maxResults - allVideoIds.length).toString",
+          "lineNumber": 92
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "Math.min",
+          "lineNumber": 92
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "url.searchParams.set",
+          "lineNumber": 94
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "url.searchParams.set",
+          "lineNumber": 96
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "fetch",
+          "lineNumber": 99
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "url.toString",
+          "lineNumber": 99
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "playlistResponse.json",
+          "lineNumber": 107
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 110
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "playlistData.items\n        .map((item: any) => item.snippet?.resourceId?.videoId)\n        .filter",
+          "lineNumber": 114
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "playlistData.items\n        .map",
+          "lineNumber": 114
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "allVideoIds.push",
+          "lineNumber": 118
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 119
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 132
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 136
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "allVideoIds.slice",
+          "lineNumber": 145
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "Math.floor",
+          "lineNumber": 146
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "Math.ceil",
+          "lineNumber": 147
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 149
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "fetch",
+          "lineNumber": 152
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "batchIds.join",
+          "lineNumber": 153
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "videosResponse.json",
+          "lineNumber": 162
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "videosData.items?.map",
+          "lineNumber": 165
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "allVideos.push",
+          "lineNumber": 180
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 181
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "setTimeout",
+          "lineNumber": 187
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.log",
+          "lineNumber": 191
+        },
+        {
+          "caller": "fetchChannelVideos",
+          "callee": "console.error",
+          "lineNumber": 194
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "getYouTubeConfig",
+          "lineNumber": 203
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "console.log",
+          "lineNumber": 210
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "fetch",
+          "lineNumber": 212
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "encodeURIComponent",
+          "lineNumber": 213
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "searchResponse.json",
+          "lineNumber": 220
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "searchData.items.map((item: any) => item.id?.videoId).filter",
+          "lineNumber": 226
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "searchData.items.map",
+          "lineNumber": 226
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "fetch",
+          "lineNumber": 231
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "videoIds.join",
+          "lineNumber": 232
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "videosResponse.json",
+          "lineNumber": 241
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "videosData.items?.map",
+          "lineNumber": 244
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "console.log",
+          "lineNumber": 258
+        },
+        {
+          "caller": "searchYouTubeVideos",
+          "callee": "console.error",
+          "lineNumber": 261
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/types/permissions.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 107,
+      "nonEmptyLines": 97,
+      "functions": [
+        {
+          "name": "isValidRole",
+          "startLine": 69,
+          "endLine": 73,
+          "params": [
+            "role"
+          ]
+        },
+        {
+          "name": "isValidPermission",
+          "startLine": 75,
+          "endLine": 91,
+          "params": [
+            "permission"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "isValidRole",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "isValidPermission",
+          "line": 75,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isValidRole",
+          "callee": "['admin', 'butler-ground', 'butler-internet', 'viewer'].includes",
+          "lineNumber": 72
+        },
+        {
+          "caller": "isValidPermission",
+          "callee": "validPermissions.includes",
+          "lineNumber": 90
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/utils/config.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 420,
+      "nonEmptyLines": 379,
+      "functions": [
+        {
+          "name": "getDefaultMountainId",
+          "startLine": 157,
+          "endLine": 159,
+          "params": []
+        },
+        {
+          "name": "getMountainConfig",
+          "startLine": 164,
+          "endLine": 170,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getMapConfig",
+          "startLine": 176,
+          "endLine": 179,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "isFeatureEnabled",
+          "startLine": 184,
+          "endLine": 187,
+          "params": [
+            "feature",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getMountainName",
+          "startLine": 192,
+          "endLine": 195,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getMountainDescription",
+          "startLine": 200,
+          "endLine": 203,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getYouTubeChannelId",
+          "startLine": 208,
+          "endLine": 211,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getYouTubePlaylistId",
+          "startLine": 231,
+          "endLine": 241,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getAdoptionPlaylistId",
+          "startLine": 253,
+          "endLine": 265,
+          "params": []
+        },
+        {
+          "name": "getMountainAbout",
+          "startLine": 270,
+          "endLine": 273,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "getAllMountains",
+          "startLine": 278,
+          "endLine": 286,
+          "params": []
+        },
+        {
+          "name": "getPublicMountains",
+          "startLine": 294,
+          "endLine": 296,
+          "params": []
+        },
+        {
+          "name": "getFirebaseConfig",
+          "startLine": 305,
+          "endLine": 327,
+          "params": []
+        },
+        {
+          "name": "getYouTubeApiKey",
+          "startLine": 332,
+          "endLine": 334,
+          "params": []
+        },
+        {
+          "name": "getFirebaseAdminServiceAccount",
+          "startLine": 348,
+          "endLine": 361,
+          "params": []
+        },
+        {
+          "name": "getOAuthProvidersConfig",
+          "startLine": 366,
+          "endLine": 388,
+          "params": []
+        },
+        {
+          "name": "getGoogleOAuthConfig",
+          "startLine": 393,
+          "endLine": 396,
+          "params": []
+        },
+        {
+          "name": "getKakaoOAuthConfig",
+          "startLine": 401,
+          "endLine": 404,
+          "params": []
+        },
+        {
+          "name": "isGoogleOAuthEnabled",
+          "startLine": 409,
+          "endLine": 412,
+          "params": []
+        },
+        {
+          "name": "isKakaoOAuthEnabled",
+          "startLine": 417,
+          "endLine": 420,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "DEFAULT_MAP_CONFIG",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "getDefaultMountainId",
+          "line": 157,
+          "isDefault": false
+        },
+        {
+          "name": "getMountainConfig",
+          "line": 164,
+          "isDefault": false
+        },
+        {
+          "name": "getMapConfig",
+          "line": 176,
+          "isDefault": false
+        },
+        {
+          "name": "isFeatureEnabled",
+          "line": 184,
+          "isDefault": false
+        },
+        {
+          "name": "getMountainName",
+          "line": 192,
+          "isDefault": false
+        },
+        {
+          "name": "getMountainDescription",
+          "line": 200,
+          "isDefault": false
+        },
+        {
+          "name": "getYouTubeChannelId",
+          "line": 208,
+          "isDefault": false
+        },
+        {
+          "name": "getYouTubePlaylistId",
+          "line": 231,
+          "isDefault": false
+        },
+        {
+          "name": "getAdoptionPlaylistId",
+          "line": 253,
+          "isDefault": false
+        },
+        {
+          "name": "getMountainAbout",
+          "line": 270,
+          "isDefault": false
+        },
+        {
+          "name": "getAllMountains",
+          "line": 278,
+          "isDefault": false
+        },
+        {
+          "name": "getPublicMountains",
+          "line": 294,
+          "isDefault": false
+        },
+        {
+          "name": "getFirebaseConfig",
+          "line": 305,
+          "isDefault": false
+        },
+        {
+          "name": "getYouTubeApiKey",
+          "line": 332,
+          "isDefault": false
+        },
+        {
+          "name": "getFirebaseAdminServiceAccount",
+          "line": 348,
+          "isDefault": false
+        },
+        {
+          "name": "getOAuthProvidersConfig",
+          "line": 366,
+          "isDefault": false
+        },
+        {
+          "name": "getGoogleOAuthConfig",
+          "line": 393,
+          "isDefault": false
+        },
+        {
+          "name": "getKakaoOAuthConfig",
+          "line": 401,
+          "isDefault": false
+        },
+        {
+          "name": "isGoogleOAuthEnabled",
+          "line": 409,
+          "isDefault": false
+        },
+        {
+          "name": "isKakaoOAuthEnabled",
+          "line": 417,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getMountainConfig",
+          "callee": "mountainId.startsWith",
+          "lineNumber": 166
+        },
+        {
+          "caller": "getMapConfig",
+          "callee": "getMountainConfig",
+          "lineNumber": 177
+        },
+        {
+          "caller": "isFeatureEnabled",
+          "callee": "getMountainConfig",
+          "lineNumber": 185
+        },
+        {
+          "caller": "getMountainName",
+          "callee": "getMountainConfig",
+          "lineNumber": 193
+        },
+        {
+          "caller": "getMountainDescription",
+          "callee": "getMountainConfig",
+          "lineNumber": 201
+        },
+        {
+          "caller": "getYouTubeChannelId",
+          "callee": "getMountainConfig",
+          "lineNumber": 209
+        },
+        {
+          "caller": "getYouTubePlaylistId",
+          "callee": "getMountainConfig",
+          "lineNumber": 232
+        },
+        {
+          "caller": "getYouTubePlaylistId",
+          "callee": "playlistId.trim",
+          "lineNumber": 240
+        },
+        {
+          "caller": "getAdoptionPlaylistId",
+          "callee": "playlistId.trim",
+          "lineNumber": 264
+        },
+        {
+          "caller": "getMountainAbout",
+          "callee": "getMountainConfig",
+          "lineNumber": 271
+        },
+        {
+          "caller": "getAllMountains",
+          "callee": "Object.entries(mountainsConfig)\n    .filter(([key]) => !key.startsWith('_'))\n    .map",
+          "lineNumber": 279
+        },
+        {
+          "caller": "getAllMountains",
+          "callee": "Object.entries(mountainsConfig)\n    .filter",
+          "lineNumber": 279
+        },
+        {
+          "caller": "getAllMountains",
+          "callee": "Object.entries",
+          "lineNumber": 279
+        },
+        {
+          "caller": "getAllMountains",
+          "callee": "key.startsWith",
+          "lineNumber": 280
+        },
+        {
+          "caller": "getPublicMountains",
+          "callee": "getAllMountains().filter",
+          "lineNumber": 295
+        },
+        {
+          "caller": "getPublicMountains",
+          "callee": "getAllMountains",
+          "lineNumber": 295
+        },
+        {
+          "caller": "getPublicMountains",
+          "callee": "getMountainConfig",
+          "lineNumber": 295
+        },
+        {
+          "caller": "getFirebaseConfig",
+          "callee": "JSON.parse",
+          "lineNumber": 320
+        },
+        {
+          "caller": "getFirebaseConfig",
+          "callee": "console.warn",
+          "lineNumber": 322
+        },
+        {
+          "caller": "getFirebaseAdminServiceAccount",
+          "callee": "rawStr.replace(/'/g, '\"').replace(/\\n/g, '\\\\n').replace",
+          "lineNumber": 352
+        },
+        {
+          "caller": "getFirebaseAdminServiceAccount",
+          "callee": "rawStr.replace(/'/g, '\"').replace",
+          "lineNumber": 352
+        },
+        {
+          "caller": "getFirebaseAdminServiceAccount",
+          "callee": "rawStr.replace",
+          "lineNumber": 352
+        },
+        {
+          "caller": "getFirebaseAdminServiceAccount",
+          "callee": "JSON.parse",
+          "lineNumber": 353
+        },
+        {
+          "caller": "getFirebaseAdminServiceAccount",
+          "callee": "console.error",
+          "lineNumber": 358
+        },
+        {
+          "caller": "getOAuthProvidersConfig",
+          "callee": "Object.keys",
+          "lineNumber": 387
+        },
+        {
+          "caller": "getGoogleOAuthConfig",
+          "callee": "getOAuthProvidersConfig",
+          "lineNumber": 394
+        },
+        {
+          "caller": "getKakaoOAuthConfig",
+          "callee": "getOAuthProvidersConfig",
+          "lineNumber": 402
+        },
+        {
+          "caller": "isGoogleOAuthEnabled",
+          "callee": "getGoogleOAuthConfig",
+          "lineNumber": 410
+        },
+        {
+          "caller": "isKakaoOAuthEnabled",
+          "callee": "getKakaoOAuthConfig",
+          "lineNumber": 418
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 21,
+        "functionCount": 20,
+        "classCount": 0
+      }
+    }
+  ]
+}

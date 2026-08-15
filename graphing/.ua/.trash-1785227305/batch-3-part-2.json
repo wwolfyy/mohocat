@@ -1,0 +1,818 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/components/NewAnnouncementForm.tsx",
+   "type": "file",
+   "name": "NewAnnouncementForm.tsx",
+   "filePath": "src/components/NewAnnouncementForm.tsx",
+   "summary": "Announcement (공지사항) editor with title/message, media upload and a 팝업 modal-display toggle, submitting through the shared simple-content form hook to the announcement service.",
+   "tags": [
+    "component",
+    "form",
+    "announcements",
+    "upload"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "type": "function",
+   "name": "NewAnnouncementForm",
+   "filePath": "src/components/NewAnnouncementForm.tsx",
+   "lineRange": [
+    16,
+    154
+   ],
+   "summary": "Renders the announcement fields plus the show-in-modal switch and wires useSimpleContentForm with the announcement service write and extra post data.",
+   "tags": [
+    "component",
+    "form",
+    "announcements",
+    "state-management"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/NewButlerTalkForm.tsx",
+   "type": "file",
+   "name": "NewButlerTalkForm.tsx",
+   "filePath": "src/components/NewButlerTalkForm.tsx",
+   "summary": "집사톡 (butler talk) post editor: per-item image/video lists with cat-tag selection and recording-date auto-parse, submitting through the shared rich-content form hook to the butler-talk service.",
+   "tags": [
+    "component",
+    "form",
+    "butler-talk",
+    "upload",
+    "tagging"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm",
+   "type": "function",
+   "name": "NewButlerTalkForm",
+   "filePath": "src/components/NewButlerTalkForm.tsx",
+   "lineRange": [
+    17,
+    240
+   ],
+   "summary": "Renders MediaItemList for images and videos plus the cat selector modal, and configures useRichContentForm with the butler-talk write, dynamic Korean-dated title and redirect target.",
+   "tags": [
+    "component",
+    "form",
+    "butler-talk",
+    "media",
+    "tagging"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/admin/ContactManagement.tsx",
+   "type": "file",
+   "name": "ContactManagement.tsx",
+   "filePath": "src/components/admin/ContactManagement.tsx",
+   "summary": "Admin panel listing 동참/문의 contact submissions for the active mountain, loading them through the contact service and rendering each with a formatted timestamp.",
+   "tags": [
+    "component",
+    "admin",
+    "contacts",
+    "read-only"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/ContactManagement.tsx:formatCreatedAt",
+   "type": "function",
+   "name": "formatCreatedAt",
+   "filePath": "src/components/admin/ContactManagement.tsx",
+   "lineRange": [
+    14,
+    24
+   ],
+   "summary": "Normalizes a Firestore timestamp or date-like value into a locale string, returning a placeholder when it cannot be parsed.",
+   "tags": [
+    "utility",
+    "formatting",
+    "date"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/admin/ContactManagement.tsx:ContactManagement",
+   "type": "function",
+   "name": "ContactManagement",
+   "filePath": "src/components/admin/ContactManagement.tsx",
+   "lineRange": [
+    26,
+    95
+   ],
+   "summary": "Loads contacts for the current mountain on mount with loading/error state and renders the submission cards.",
+   "tags": [
+    "component",
+    "admin",
+    "contacts",
+    "data-fetching"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/admin/PointMapPicker.tsx",
+   "type": "file",
+   "name": "PointMapPicker.tsx",
+   "filePath": "src/components/admin/PointMapPicker.tsx",
+   "summary": "Admin map widget for placing a point: shows existing points as context markers and lets the operator drag a marker or type exact coordinates, clamped to the 0-100 percentage space.",
+   "tags": [
+    "component",
+    "admin",
+    "map",
+    "points",
+    "input"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Uses pointer capture (setPointerCapture/releasePointerCapture) so dragging keeps tracking outside the container."
+  },
+  {
+   "id": "function:src/components/admin/PointMapPicker.tsx:PointMapPicker",
+   "type": "function",
+   "name": "PointMapPicker",
+   "filePath": "src/components/admin/PointMapPicker.tsx",
+   "lineRange": [
+    39,
+    144
+   ],
+   "summary": "Renders the map background with context markers and the draggable target marker, converting pointer positions into clamped percentage coordinates via onChange.",
+   "tags": [
+    "component",
+    "map",
+    "drag-and-drop",
+    "admin"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/PointMapPicker.tsx:CoordInput",
+   "type": "function",
+   "name": "CoordInput",
+   "filePath": "src/components/admin/PointMapPicker.tsx",
+   "lineRange": [
+    155,
+    196
+   ],
+   "summary": "Controlled numeric text input for one coordinate axis that keeps local text state and emits clamped, rounded values.",
+   "tags": [
+    "component",
+    "form-control",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "type": "file",
+   "name": "ResourcePermissionConfig.tsx",
+   "filePath": "src/components/admin/ResourcePermissionConfig.tsx",
+   "summary": "Admin panel editing which permissions each protected resource requires, fetched from and saved back to the permission-config API with bearer auth.",
+   "tags": [
+    "component",
+    "admin",
+    "permissions",
+    "configuration"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/ResourcePermissionConfig.tsx:ResourcePermissionConfig",
+   "type": "function",
+   "name": "ResourcePermissionConfig",
+   "filePath": "src/components/admin/ResourcePermissionConfig.tsx",
+   "lineRange": [
+    36,
+    208
+   ],
+   "summary": "Fetches the permission config, renders a resource-by-permission checkbox matrix, and saves changes with success/error feedback.",
+   "tags": [
+    "component",
+    "admin",
+    "permissions",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/admin/RoleManagement.tsx",
+   "type": "file",
+   "name": "RoleManagement.tsx",
+   "filePath": "src/components/admin/RoleManagement.tsx",
+   "summary": "Admin panel listing platform users grouped by role and letting an admin reassign a user's role through the members API.",
+   "tags": [
+    "component",
+    "admin",
+    "roles",
+    "users",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/admin/RoleManagement.tsx:RoleManagement",
+   "type": "function",
+   "name": "RoleManagement",
+   "filePath": "src/components/admin/RoleManagement.tsx",
+   "lineRange": [
+    11,
+    208
+   ],
+   "summary": "Loads the user list with an auth header, groups users into admin / butler-ground / butler-internet / other buckets, and exposes the role-assignment callback.",
+   "tags": [
+    "component",
+    "admin",
+    "roles",
+    "data-fetching"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/admin/RoleManagement.tsx:UserCard",
+   "type": "function",
+   "name": "UserCard",
+   "filePath": "src/components/admin/RoleManagement.tsx",
+   "lineRange": [
+    211,
+    251
+   ],
+   "summary": "Renders one user's identity and a row of role buttons, plus copy-to-clipboard for the UID.",
+   "tags": [
+    "component",
+    "admin",
+    "roles",
+    "presentational"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/admin/RolePermissionConfig.tsx",
+   "type": "file",
+   "name": "RolePermissionConfig.tsx",
+   "filePath": "src/components/admin/RolePermissionConfig.tsx",
+   "summary": "Admin panel editing the permission set granted to each role, fetched from and persisted to the permission-config API.",
+   "tags": [
+    "component",
+    "admin",
+    "permissions",
+    "roles",
+    "configuration"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/RolePermissionConfig.tsx:RolePermissionConfig",
+   "type": "function",
+   "name": "RolePermissionConfig",
+   "filePath": "src/components/admin/RolePermissionConfig.tsx",
+   "lineRange": [
+    36,
+    210
+   ],
+   "summary": "Fetches the role/permission config, renders a role-by-permission toggle matrix (built-in roles first), and saves updates with feedback state.",
+   "tags": [
+    "component",
+    "admin",
+    "permissions",
+    "api-client"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/admin/media/index.ts",
+   "type": "file",
+   "name": "index.ts",
+   "filePath": "src/components/admin/media/index.ts",
+   "summary": "Barrel for the admin media-tagging toolkit, re-exporting the shared list/auto-parse hooks and the presentational stats, filter, batch, grid and pagination components used by the tag-images and tag-videos pages.",
+   "tags": [
+    "barrel",
+    "entry-point",
+    "admin",
+    "media"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Pure re-export module with `export { default as X }` aliasing and type-only re-exports."
+  },
+  {
+   "id": "file:src/components/forms/MediaItemList.tsx",
+   "type": "file",
+   "name": "MediaItemList.tsx",
+   "filePath": "src/components/forms/MediaItemList.tsx",
+   "summary": "Presentational editor for a list of per-item media entries (file plus title/description), used by the rich-content forms; it never uploads anything itself.",
+   "tags": [
+    "component",
+    "form",
+    "media",
+    "presentational"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/forms/MediaItemList.tsx:MediaItemList",
+   "type": "function",
+   "name": "MediaItemList",
+   "filePath": "src/components/forms/MediaItemList.tsx",
+   "lineRange": [
+    58,
+    145
+   ],
+   "summary": "Renders one row per media item with file picker and metadata fields and emits the updated item array through onItemsChange.",
+   "tags": [
+    "component",
+    "form",
+    "media",
+    "controlled"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "target": "function:src/components/forms/useSimpleContentForm.ts:useSimpleContentForm",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "target": "function:src/services/index.ts:getAnnouncementService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewAnnouncementForm.tsx:NewAnnouncementForm",
+   "target": "function:src/utils/cn.ts:cn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm",
+   "target": "function:src/components/forms/useRichContentForm.ts:useRichContentForm",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm",
+   "target": "function:src/services/index.ts:getButlerTalkService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/NewButlerTalkForm.tsx:NewButlerTalkForm",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "function:src/components/admin/ContactManagement.tsx:formatCreatedAt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "function:src/components/admin/ContactManagement.tsx:ContactManagement",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "function:src/components/admin/ContactManagement.tsx:ContactManagement",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/ContactManagement.tsx:ContactManagement",
+   "target": "function:src/services/index.ts:getContactService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/ContactManagement.tsx:ContactManagement",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/ContactManagement.tsx:ContactManagement",
+   "target": "function:src/components/admin/ContactManagement.tsx:formatCreatedAt",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/PointMapPicker.tsx",
+   "target": "function:src/components/admin/PointMapPicker.tsx:PointMapPicker",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/PointMapPicker.tsx",
+   "target": "function:src/components/admin/PointMapPicker.tsx:CoordInput",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/PointMapPicker.tsx",
+   "target": "function:src/components/admin/PointMapPicker.tsx:PointMapPicker",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "function:src/components/admin/ResourcePermissionConfig.tsx:ResourcePermissionConfig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "function:src/components/admin/ResourcePermissionConfig.tsx:ResourcePermissionConfig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/ResourcePermissionConfig.tsx:ResourcePermissionConfig",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/ResourcePermissionConfig.tsx:ResourcePermissionConfig",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "function:src/components/admin/RoleManagement.tsx:RoleManagement",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "function:src/components/admin/RoleManagement.tsx:UserCard",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "function:src/components/admin/RoleManagement.tsx:RoleManagement",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/RoleManagement.tsx:RoleManagement",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/RoleManagement.tsx:RoleManagement",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/RoleManagement.tsx:UserCard",
+   "target": "function:src/utils/cn.ts:cn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "function:src/components/admin/RolePermissionConfig.tsx:RolePermissionConfig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "function:src/components/admin/RolePermissionConfig.tsx:RolePermissionConfig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/RolePermissionConfig.tsx:RolePermissionConfig",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/RolePermissionConfig.tsx:RolePermissionConfig",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/forms/MediaItemList.tsx",
+   "target": "function:src/components/forms/MediaItemList.tsx:MediaItemList",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/forms/MediaItemList.tsx",
+   "target": "function:src/components/forms/MediaItemList.tsx:MediaItemList",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "file:src/components/forms/MediaUploadField.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "file:src/components/forms/useSimpleContentForm.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewAnnouncementForm.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "file:src/components/CatSelectorModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "file:src/components/forms/MediaItemList.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "file:src/components/forms/useRichContentForm.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NewButlerTalkForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "file:src/components/ui/Card.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ContactManagement.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/PointMapPicker.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/PointMapPicker.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/ResourcePermissionConfig.tsx",
+   "target": "file:src/types/permissions.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RoleManagement.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/RolePermissionConfig.tsx",
+   "target": "file:src/types/permissions.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

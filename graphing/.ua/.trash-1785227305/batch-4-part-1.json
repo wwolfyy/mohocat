@@ -1,0 +1,1681 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/admin/cats/page.tsx",
+   "summary": "Admin Cat Management CMS page \u2014 a client-side card/list editor for a tenant's cats with search, multi-facet filtering, sorting, inline create/edit/delete against the cat service, and a toggle into the spreadsheet CatGrid view.",
+   "tags": [
+    "admin",
+    "api-handler",
+    "crud",
+    "client-component",
+    "cms"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Very large single-component App Router page: all editor state (form, filters, sort, modals) lives in one client component rather than being decomposed."
+  },
+  {
+   "id": "file:src/app/[mountain]/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/page.tsx",
+   "summary": "Tenant landing page (Server Component) that resolves the mountain from the route segment, reads feeding points and cats server-side via the Admin SDK in parallel, and hands them to the client map as props.",
+   "tags": [
+    "entry-point",
+    "server-component",
+    "isr",
+    "multi-tenant",
+    "data-fetching"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Exports `revalidate` from the shared cache-config constant so the segment value stays statically analyzable for Next.js ISR."
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "type": "file",
+   "name": "AdoptionGallery.tsx",
+   "filePath": "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "summary": "Client island for the adoption (\uc785\uc591\ud64d\ubcf4) gallery: renders the shared circular cat-card grid, owns the selected-cat detail modal, and warms thumbnail images into cache.",
+   "tags": [
+    "component",
+    "client-component",
+    "gallery",
+    "modal",
+    "adoption"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/adoption/page.tsx",
+   "summary": "Public adoptable-cats page (Server Component) that reads the tenant's cats server-side, filters to those flagged adoptable with a photo, and renders the AdoptionGallery island plus promotion content with friendly empty/error states.",
+   "tags": [
+    "server-component",
+    "isr",
+    "adoption",
+    "multi-tenant",
+    "page"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "type": "file",
+   "name": "CatsBrowser.tsx",
+   "filePath": "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "summary": "Client island for the public 'browse all cats' view: search and facet filters, a show-all toggle for deceased/missing cats, a responsive card-grid-on-mobile / data-table-on-desktop render, and the cat detail modal.",
+   "tags": [
+    "component",
+    "client-component",
+    "search",
+    "responsive",
+    "browse"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Reuses the shared `@/utils/cat-filters` predicates so the public browser and the admin grid filter identically."
+  },
+  {
+   "id": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "type": "file",
+   "name": "page.tsx",
+   "filePath": "src/app/[mountain]/pages/cats/page.tsx",
+   "summary": "Public cats-listing page (Server Component) that reads every cat and point for the tenant server-side, builds a dwelling-id to point-title lookup, and passes both to the CatsBrowser client island.",
+   "tags": [
+    "server-component",
+    "isr",
+    "multi-tenant",
+    "data-fetching",
+    "page"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/CatCircleGrid.tsx",
+   "type": "file",
+   "name": "CatCircleGrid.tsx",
+   "filePath": "src/components/CatCircleGrid.tsx",
+   "summary": "Shared presentational grid of circular cat avatar cards, each a button that opens the cat's detail; used by both the map gallery and the public adoption gallery so the styling lives in one place.",
+   "tags": [
+    "component",
+    "ui",
+    "gallery",
+    "presentational",
+    "shared"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/CatGallery.tsx",
+   "type": "file",
+   "name": "CatGallery.tsx",
+   "filePath": "src/components/CatGallery.tsx",
+   "summary": "Modal gallery shown when a map marker is clicked: splits a point's cats into current and former residents, renders each section via CatCircleGrid, and opens a CatInfo detail modal on selection.",
+   "tags": [
+    "component",
+    "client-component",
+    "modal",
+    "gallery",
+    "map"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/Compass.tsx",
+   "type": "file",
+   "name": "Compass.tsx",
+   "filePath": "src/components/Compass.tsx",
+   "summary": "Static north-indicator overlay pinned to the map's top-right corner, rotated 90\u00b0 in the portrait (mobile) layout so the needle matches the rotated map imagery.",
+   "tags": [
+    "component",
+    "ui",
+    "map",
+    "overlay",
+    "presentational"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Uses z-[1100] to sit above Leaflet's panes and controls, which bubble into this overlay's stacking context."
+  },
+  {
+   "id": "file:src/components/IntroCard.tsx",
+   "type": "file",
+   "name": "IntroCard.tsx",
+   "filePath": "src/components/IntroCard.tsx",
+   "summary": "Dismissible nudge card floating over the map that invites visitors to tap a cat photo; the dismissal is persisted in localStorage so it only appears once.",
+   "tags": [
+    "component",
+    "client-component",
+    "ui",
+    "onboarding",
+    "map"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/LeafletMountainMap.tsx",
+   "type": "file",
+   "name": "LeafletMountainMap.tsx",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "summary": "The Leaflet map itself: renders per-tenant mountain imagery as a CRS.Simple image overlay, projects feeding points into pixel coordinates, and draws avatar markers with custom clustering, spiderfying and label placement.",
+   "tags": [
+    "component",
+    "map",
+    "leaflet",
+    "client-component",
+    "visualization"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Uses Leaflet's CRS.Simple so the map plane is the image's pixel grid addressed as [y, x]; markers are built as raw HTML DivIcons rather than React nodes."
+  },
+  {
+   "id": "file:src/components/MountainViewer.tsx",
+   "type": "file",
+   "name": "MountainViewer.tsx",
+   "filePath": "src/components/MountainViewer.tsx",
+   "summary": "Client shell around the map: dynamically imports the Leaflet map with SSR disabled, overlays the intro card and compass, gates a rotate-to-portrait notice on phone landscape, and opens the per-point CatGallery.",
+   "tags": [
+    "component",
+    "client-component",
+    "map",
+    "container",
+    "responsive"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Uses `next/dynamic` with `ssr: false` because Leaflet touches `window` at import time."
+  },
+  {
+   "id": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "type": "file",
+   "name": "CatGrid.tsx",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "summary": "Spreadsheet-style bulk cat editor built on react-datasheet-grid: column definitions for every cat field, row-diff analysis of adds/edits/deletes, bulk-value application across selected rows, and a save path that writes through the cat service and triggers public revalidation.",
+   "tags": [
+    "admin",
+    "component",
+    "data-grid",
+    "bulk-edit",
+    "crud"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Diffs edited rows against an id-keyed snapshot of the originals to derive the minimal set of create/update/delete operations before saving."
+  },
+  {
+   "id": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "type": "function",
+   "name": "CatsCMSPage",
+   "filePath": "src/app/[mountain]/admin/cats/page.tsx",
+   "lineRange": [
+    76,
+    1142
+   ],
+   "summary": "The entire admin Cat Management screen: loads cats for the active mountain, holds form/filter/sort/modal state, and performs create, update and delete through the cat service with public revalidation after each save.",
+   "tags": [
+    "admin",
+    "crud",
+    "client-component",
+    "page",
+    "stateful"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/page.tsx:Home",
+   "type": "function",
+   "name": "Home",
+   "filePath": "src/app/[mountain]/page.tsx",
+   "lineRange": [
+    14,
+    39
+   ],
+   "summary": "Async Server Component that validates the mountain route segment, reads points and cats in parallel via the Admin SDK, groups cats by point, and renders the full-bleed MountainViewer.",
+   "tags": [
+    "entry-point",
+    "server-component",
+    "data-fetching",
+    "multi-tenant"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx:AdoptionGallery",
+   "type": "function",
+   "name": "AdoptionGallery",
+   "filePath": "src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "lineRange": [
+    16,
+    41
+   ],
+   "summary": "Client component that renders adoptable cats as circular cards, tracks the selected cat for the detail modal, and preloads their thumbnail images on mount.",
+   "tags": [
+    "component",
+    "client-component",
+    "gallery",
+    "modal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/adoption/page.tsx:AdoptionPage",
+   "type": "function",
+   "name": "AdoptionPage",
+   "filePath": "src/app/[mountain]/pages/adoption/page.tsx",
+   "lineRange": [
+    22,
+    96
+   ],
+   "summary": "Async Server Component that resolves the tenant, reads all cats, filters to adoptable ones with photos, and renders the gallery island plus promotion content with empty and error fallbacks.",
+   "tags": [
+    "server-component",
+    "adoption",
+    "data-fetching",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:FilterSelect",
+   "type": "function",
+   "name": "FilterSelect",
+   "filePath": "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "lineRange": [
+    83,
+    111
+   ],
+   "summary": "Small labelled <select> control used across the public cat browser's filter bar.",
+   "tags": [
+    "component",
+    "ui",
+    "form",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatThumb",
+   "type": "function",
+   "name": "CatThumb",
+   "filePath": "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "lineRange": [
+    114,
+    137
+   ],
+   "summary": "Renders a cat's thumbnail at a given size with a graceful placeholder when no image URL is set.",
+   "tags": [
+    "component",
+    "ui",
+    "images",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "type": "function",
+   "name": "CatsBrowser",
+   "filePath": "src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "lineRange": [
+    139,
+    404
+   ],
+   "summary": "Owns the public cat-browsing interaction: search and facet filter state, sorting, the show-all toggle, the responsive card-grid/table render and the detail modal.",
+   "tags": [
+    "component",
+    "client-component",
+    "search",
+    "responsive",
+    "stateful"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/app/[mountain]/pages/cats/page.tsx:CatsPage",
+   "type": "function",
+   "name": "CatsPage",
+   "filePath": "src/app/[mountain]/pages/cats/page.tsx",
+   "lineRange": [
+    21,
+    70
+   ],
+   "summary": "Async Server Component that reads the tenant's cats and points, builds the dwelling-id to point-title map, and renders the CatsBrowser island with error fallbacks.",
+   "tags": [
+    "server-component",
+    "data-fetching",
+    "multi-tenant",
+    "page"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/CatCircleGrid.tsx:CatCircleGrid",
+   "type": "function",
+   "name": "CatCircleGrid",
+   "filePath": "src/components/CatCircleGrid.tsx",
+   "lineRange": [
+    20,
+    57
+   ],
+   "summary": "Renders a centered wrapping grid of circular cat avatar buttons, marking the first N thumbnails as priority images for eager loading.",
+   "tags": [
+    "component",
+    "ui",
+    "gallery",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/CatGallery.tsx:CatGridSection",
+   "type": "function",
+   "name": "CatGridSection",
+   "filePath": "src/components/CatGallery.tsx",
+   "lineRange": [
+    34,
+    45
+   ],
+   "summary": "Renders one titled section of the marker gallery (current or former residents) with an empty-state label.",
+   "tags": [
+    "component",
+    "ui",
+    "presentational",
+    "gallery"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/CatGallery.tsx:CatGallery",
+   "type": "function",
+   "name": "CatGallery",
+   "filePath": "src/components/CatGallery.tsx",
+   "lineRange": [
+    47,
+    90
+   ],
+   "summary": "Modal component listing a point's current and former resident cats, preloading their thumbnails and opening a CatInfo detail modal on selection.",
+   "tags": [
+    "component",
+    "client-component",
+    "modal",
+    "gallery"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/Compass.tsx:Compass",
+   "type": "function",
+   "name": "Compass",
+   "filePath": "src/components/Compass.tsx",
+   "lineRange": [
+    15,
+    39
+   ],
+   "summary": "Renders the map's north-indicator needle, rotating the whole compass 90\u00b0 and counter-rotating the 'N' label in the portrait layout.",
+   "tags": [
+    "component",
+    "ui",
+    "map",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/IntroCard.tsx:IntroCard",
+   "type": "function",
+   "name": "IntroCard",
+   "filePath": "src/components/IntroCard.tsx",
+   "lineRange": [
+    15,
+    71
+   ],
+   "summary": "Renders the dismissible map intro nudge, reading and writing its dismissal flag in localStorage and degrading gracefully when storage is unavailable.",
+   "tags": [
+    "component",
+    "client-component",
+    "ui",
+    "onboarding"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:getLayout",
+   "type": "function",
+   "name": "getLayout",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    36,
+    48
+   ],
+   "summary": "Picks the landscape or pre-rotated portrait map imagery for the current device and derives the resulting Leaflet bounds.",
+   "tags": [
+    "utility",
+    "map",
+    "layout",
+    "responsive"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:pointToLatLng",
+   "type": "function",
+   "name": "pointToLatLng",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    57,
+    68
+   ],
+   "summary": "Converts a feeding point's percentage-based x/y coordinates into CRS.Simple lat/lng on the active image layout, accounting for the portrait rotation.",
+   "tags": [
+    "utility",
+    "map",
+    "geometry",
+    "projection"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:usePointMarkers",
+   "type": "function",
+   "name": "usePointMarkers",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    89,
+    112
+   ],
+   "summary": "Memoized hook that turns raw points plus their grouped cats into renderable marker descriptors with avatar, title and label metadata.",
+   "tags": [
+    "hook",
+    "map",
+    "data-transformation",
+    "memoization"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:buildMarkerHtml",
+   "type": "function",
+   "name": "buildMarkerHtml",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    142,
+    158
+   ],
+   "summary": "Builds the raw HTML string for a marker's DivIcon \u2014 avatar image, title label and optional animation class \u2014 with escaped user content.",
+   "tags": [
+    "map",
+    "rendering",
+    "html",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:PointMarkersLayer",
+   "type": "function",
+   "name": "PointMarkersLayer",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    200,
+    358
+   ],
+   "summary": "Imperatively manages the Leaflet marker layer: projects markers to pixels, applies the zoom-independent clustering, spiderfies cluster members, wires click handlers and keeps labels correctly placed.",
+   "tags": [
+    "map",
+    "leaflet",
+    "clustering",
+    "component",
+    "imperative"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:MapViewController",
+   "type": "function",
+   "name": "MapViewController",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    365,
+    468
+   ],
+   "summary": "Controls the map viewport \u2014 computes the fill zoom for the image bounds, clamps panning and zoom limits, and keeps the view stable across resizes.",
+   "tags": [
+    "map",
+    "leaflet",
+    "viewport",
+    "component"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/LeafletMountainMap.tsx:LeafletMountainMap",
+   "type": "function",
+   "name": "LeafletMountainMap",
+   "filePath": "src/components/LeafletMountainMap.tsx",
+   "lineRange": [
+    495,
+    556
+   ],
+   "summary": "Top-level map component that resolves per-tenant imagery, sets up the CRS.Simple MapContainer with the image overlay, and mounts the marker layer and view controller.",
+   "tags": [
+    "component",
+    "map",
+    "leaflet",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/MountainViewer.tsx:MountainViewer",
+   "type": "function",
+   "name": "MountainViewer",
+   "filePath": "src/components/MountainViewer.tsx",
+   "lineRange": [
+    39,
+    146
+   ],
+   "summary": "Client container that renders the dynamically imported map with its overlays, shows a rotate-to-portrait notice on landscape phones, and manages the selected point's cat gallery.",
+   "tags": [
+    "component",
+    "client-component",
+    "map",
+    "container",
+    "stateful"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/CatGrid.tsx:coerceBulkValue",
+   "type": "function",
+   "name": "coerceBulkValue",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "lineRange": [
+    180,
+    196
+   ],
+   "summary": "Coerces a raw bulk-edit input into the typed value a given cat column expects (string, number or boolean).",
+   "tags": [
+    "utility",
+    "validation",
+    "serialization",
+    "admin"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/CatGrid.tsx:SelectionCell",
+   "type": "function",
+   "name": "SelectionCell",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "lineRange": [
+    203,
+    217
+   ],
+   "summary": "Row-selection checkbox cell for the datasheet grid, reflecting and toggling a row's selected state.",
+   "tags": [
+    "component",
+    "data-grid",
+    "ui",
+    "admin"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/CatGrid.tsx:analyzeRows",
+   "type": "function",
+   "name": "analyzeRows",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "lineRange": [
+    239,
+    310
+   ],
+   "summary": "Diffs the grid's edited rows against the original id-keyed snapshot to classify creations, updates and deletions and surface validation problems before saving.",
+   "tags": [
+    "admin",
+    "validation",
+    "diff",
+    "data-grid",
+    "pure-function"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "type": "function",
+   "name": "CatGrid",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "lineRange": [
+    312,
+    760
+   ],
+   "summary": "The spreadsheet cat editor component: builds column definitions, loads and filters cats, tracks dirty rows and selection, applies bulk edits, and commits creates/updates/deletes through the cat service.",
+   "tags": [
+    "admin",
+    "component",
+    "data-grid",
+    "crud",
+    "stateful"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/CatGrid.tsx:FilterSelect",
+   "type": "function",
+   "name": "FilterSelect",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "lineRange": [
+    763,
+    791
+   ],
+   "summary": "Labelled <select> control used in the grid's filter bar.",
+   "tags": [
+    "component",
+    "ui",
+    "form",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/admin/cat-grid/CatGrid.tsx:BulkValueEditor",
+   "type": "function",
+   "name": "BulkValueEditor",
+   "filePath": "src/components/admin/cat-grid/CatGrid.tsx",
+   "lineRange": [
+    793,
+    853
+   ],
+   "summary": "Renders the appropriate input for the bulk-edit value of the chosen column \u2014 text, number, location picker or enumerated select.",
+   "tags": [
+    "component",
+    "admin",
+    "ui",
+    "bulk-edit",
+    "form"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "function:src/app/[mountain]/page.tsx:Home",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "function:src/app/[mountain]/page.tsx:Home",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "function:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx:AdoptionGallery",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "function:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx:AdoptionGallery",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "function:src/app/[mountain]/pages/adoption/page.tsx:AdoptionPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "function:src/app/[mountain]/pages/adoption/page.tsx:AdoptionPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:FilterSelect",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatThumb",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "function:src/app/[mountain]/pages/cats/page.tsx:CatsPage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "function:src/app/[mountain]/pages/cats/page.tsx:CatsPage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/CatCircleGrid.tsx",
+   "target": "function:src/components/CatCircleGrid.tsx:CatCircleGrid",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatCircleGrid.tsx",
+   "target": "function:src/components/CatCircleGrid.tsx:CatCircleGrid",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "function:src/components/CatGallery.tsx:CatGridSection",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "function:src/components/CatGallery.tsx:CatGallery",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "function:src/components/CatGallery.tsx:CatGallery",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/Compass.tsx",
+   "target": "function:src/components/Compass.tsx:Compass",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/Compass.tsx",
+   "target": "function:src/components/Compass.tsx:Compass",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/IntroCard.tsx",
+   "target": "function:src/components/IntroCard.tsx:IntroCard",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/IntroCard.tsx",
+   "target": "function:src/components/IntroCard.tsx:IntroCard",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:getLayout",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:pointToLatLng",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:usePointMarkers",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:buildMarkerHtml",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:PointMarkersLayer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:MapViewController",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:LeafletMountainMap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "function:src/components/LeafletMountainMap.tsx:LeafletMountainMap",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "function:src/components/MountainViewer.tsx:MountainViewer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "function:src/components/MountainViewer.tsx:MountainViewer",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:coerceBulkValue",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:SelectionCell",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:analyzeRows",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:FilterSelect",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "function:src/components/admin/cat-grid/CatGrid.tsx:BulkValueEditor",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/lib/revalidate-client.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/admin/cats/page.tsx",
+   "target": "file:src/utils/cat-filters.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "file:src/components/MountainViewer.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "file:src/lib/cache-config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "file:src/lib/server/cat-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "file:src/lib/server/point-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/page.tsx",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "file:src/components/CatCircleGrid.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "file:src/components/CatInfo.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "file:src/services/thumbnailPreloader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "file:src/app/[mountain]/pages/adoption/AdoptionGallery.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "file:src/components/AdoptionPromotionClient.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "file:src/lib/cache-config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "file:src/lib/server/cat-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/adoption/page.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "file:src/components/CatInfo.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "file:src/services/thumbnailPreloader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "target": "file:src/utils/cat-filters.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "file:src/app/[mountain]/pages/cats/CatsBrowser.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "file:src/lib/cache-config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "file:src/lib/server/cat-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "file:src/lib/server/point-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "file:src/lib/tenant.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/app/[mountain]/pages/cats/page.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatCircleGrid.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatCircleGrid.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "file:src/components/CatCircleGrid.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "file:src/components/CatInfo.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "file:src/components/ui/Modal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "file:src/services/thumbnailPreloader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/CatGallery.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/IntroCard.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "file:src/lib/server/cat-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "file:src/utils/mapClustering.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LeafletMountainMap.tsx",
+   "target": "file:src/utils/mapLabels.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/components/CatGallery.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/components/Compass.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/components/IntroCard.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/hooks/useIsMobile.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/hooks/useIsPhoneLandscape.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/lib/server/cat-reads.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/services/thumbnailPreloader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/MountainViewer.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/components/admin/cat-grid/selectColumn.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/lib/revalidate-client.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/cat-grid/CatGrid.tsx",
+   "target": "file:src/utils/cat-filters.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:src/app/[mountain]/page.tsx:Home",
+   "target": "function:src/lib/server/point-reads.ts:getAllPointsServer",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/page.tsx:Home",
+   "target": "function:src/lib/server/cat-reads.ts:getAllCatsServer",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/page.tsx:Home",
+   "target": "function:src/lib/server/cat-reads.ts:groupCatsByPoint",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/adoption/page.tsx:AdoptionPage",
+   "target": "function:src/lib/server/cat-reads.ts:getAllCatsServer",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/page.tsx:CatsPage",
+   "target": "function:src/lib/server/cat-reads.ts:getAllCatsServer",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/page.tsx:CatsPage",
+   "target": "function:src/lib/server/point-reads.ts:getAllPointsServer",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "target": "function:src/utils/cat-filters.ts:filterCats",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "target": "function:src/utils/cat-filters.ts:sortCats",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "target": "function:src/utils/cat-filters.ts:getUniqueLocations",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "target": "function:src/utils/cat-filters.ts:getUniqueGenders",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/pages/cats/CatsBrowser.tsx:CatsBrowser",
+   "target": "function:src/utils/cat-filters.ts:getUniqueBirthYears",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/utils/cat-filters.ts:filterCats",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/utils/cat-filters.ts:filterCats",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/utils/cat-filters.ts:sortCats",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/utils/cat-filters.ts:sortCats",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/utils/cat-filters.ts:getUniqueLocations",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/utils/cat-filters.ts:getUniqueLocations",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/utils/cat-filters.ts:getUniqueStatuses",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/utils/cat-filters.ts:getUniqueStatuses",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/utils/cat-filters.ts:getUniqueGenders",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/utils/cat-filters.ts:getUniqueGenders",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/utils/cat-filters.ts:getUniqueBirthYears",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/utils/cat-filters.ts:getUniqueBirthYears",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/app/[mountain]/admin/cats/page.tsx:CatsCMSPage",
+   "target": "function:src/lib/revalidate-client.ts:triggerPublicRevalidate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/lib/revalidate-client.ts:triggerPublicRevalidate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/cat-grid/CatGrid.tsx:CatGrid",
+   "target": "function:src/components/admin/cat-grid/selectColumn.tsx:selectColumn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/LeafletMountainMap.tsx:PointMarkersLayer",
+   "target": "function:src/utils/mapClustering.ts:greedyClusterByRadius",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/LeafletMountainMap.tsx:PointMarkersLayer",
+   "target": "function:src/utils/mapClustering.ts:spiderfyRadius",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/LeafletMountainMap.tsx:PointMarkersLayer",
+   "target": "function:src/utils/mapLabels.ts:resolveLabelAbove",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/LeafletMountainMap.tsx:LeafletMountainMap",
+   "target": "function:src/components/LeafletMountainMap.tsx:getLayout",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

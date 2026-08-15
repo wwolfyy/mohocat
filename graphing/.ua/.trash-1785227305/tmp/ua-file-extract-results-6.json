@@ -1,0 +1,2753 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 18,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 18,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 18,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/[mountain]/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 124,
+      "nonEmptyLines": 119,
+      "functions": [
+        {
+          "name": "tenantPrimaryColorStyle",
+          "startLine": 22,
+          "endLine": 30,
+          "params": [
+            "mountainId"
+          ]
+        },
+        {
+          "name": "generateStaticParams",
+          "startLine": 40,
+          "endLine": 42,
+          "params": []
+        },
+        {
+          "name": "MountainLayout",
+          "startLine": 44,
+          "endLine": 124,
+          "params": [
+            "{\n  children,\n  params,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "generateStaticParams",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "MountainLayout",
+          "line": 44,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "tenantPrimaryColorStyle",
+          "callee": "getMountainConfig",
+          "lineNumber": 23
+        },
+        {
+          "caller": "tenantPrimaryColorStyle",
+          "callee": "/^#[0-9a-fA-F]{6}$/.test",
+          "lineNumber": 24
+        },
+        {
+          "caller": "generateStaticParams",
+          "callee": "getAllMountains().map",
+          "lineNumber": 41
+        },
+        {
+          "caller": "generateStaticParams",
+          "callee": "getAllMountains",
+          "lineNumber": 41
+        },
+        {
+          "caller": "MountainLayout",
+          "callee": "resolveMountainIdOrNull",
+          "lineNumber": 51
+        },
+        {
+          "caller": "MountainLayout",
+          "callee": "notFound",
+          "lineNumber": 53
+        },
+        {
+          "caller": "MountainLayout",
+          "callee": "tenantPrimaryColorStyle",
+          "lineNumber": 58
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/account/delete/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 54,
+      "nonEmptyLines": 48,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 21,
+          "endLine": 54,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "request.headers.get",
+          "lineNumber": 25
+        },
+        {
+          "caller": "POST",
+          "callee": "authHeader.match",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "POST",
+          "callee": "auth.verifyIdToken",
+          "lineNumber": 36
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 40
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection(USERS_COLLECTION).doc(uid).delete",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection(USERS_COLLECTION).doc",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "auth.deleteUser",
+          "lineNumber": 47
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 52
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/assign-role/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 113,
+      "nonEmptyLines": 100,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 21,
+          "endLine": 113,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 22
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 24
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 30
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 34
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection('role_permissions').doc('role-config').get",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "cfgSnap.data",
+          "lineNumber": 45
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "getRequestMountainId",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection('users').doc",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection('permission_logs').doc",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "db.runTransaction",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "tx.get",
+          "lineNumber": 67
+        },
+        {
+          "caller": "POST",
+          "callee": "userSnap.data",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "roleHistory.push",
+          "lineNumber": 77
+        },
+        {
+          "caller": "POST",
+          "callee": "tx.set",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "tx.set",
+          "lineNumber": 93
+        },
+        {
+          "caller": "POST",
+          "callee": "tx.set",
+          "lineNumber": 97
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 108
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 110
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 111
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/cats/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 53,
+      "nonEmptyLines": 48,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 8,
+          "endLine": 37,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 39,
+          "endLine": 53,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 39,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 9
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 11
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "getCatService",
+          "lineNumber": 15
+        },
+        {
+          "caller": "POST",
+          "callee": "getRequestMountainId",
+          "lineNumber": 15
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 20
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 31
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 32
+        },
+        {
+          "caller": "GET",
+          "callee": "getCatService",
+          "lineNumber": 41
+        },
+        {
+          "caller": "GET",
+          "callee": "getRequestMountainId",
+          "lineNumber": 41
+        },
+        {
+          "caller": "GET",
+          "callee": "catService.getAllCats",
+          "lineNumber": 42
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 44
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 51
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/get-all-user-permissions-client/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 102,
+      "nonEmptyLines": 89,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 8,
+          "endLine": 102,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "requireApiPermission",
+          "lineNumber": 9
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 11
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 15
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('users').get",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "snapshot.forEach",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GET",
+          "callee": "doc.data",
+          "lineNumber": 42
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 46
+        },
+        {
+          "caller": "GET",
+          "callee": "users.push",
+          "lineNumber": 52
+        },
+        {
+          "caller": "GET",
+          "callee": "data.email?.split",
+          "lineNumber": 56
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 63
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 67
+        },
+        {
+          "caller": "GET",
+          "callee": "users.sort",
+          "lineNumber": 77
+        },
+        {
+          "caller": "GET",
+          "callee": "a.email.localeCompare",
+          "lineNumber": 82
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 85
+        },
+        {
+          "caller": "GET",
+          "callee": "users.forEach",
+          "lineNumber": 86
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 87
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 90
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 92
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 93
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/posts-collections/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 33,
+      "nonEmptyLines": 31,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 5,
+          "endLine": 16,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 19,
+          "endLine": 33,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 19,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 8
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 13
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 20
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 22
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 30
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 31
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/resource-permissions/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 75,
+      "nonEmptyLines": 65,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 22,
+          "endLine": 48,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 50,
+          "endLine": 75,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 50,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "db.collection('role_permissions').doc('resource-config').get",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "configDoc.data",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 31
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 45
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 56
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "configRef.set",
+          "lineNumber": 68
+        },
+        {
+          "caller": "POST",
+          "callee": "new Date().toISOString",
+          "lineNumber": 68
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 72
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 73
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/role-permissions/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 95,
+      "nonEmptyLines": 78,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 17,
+          "endLine": 45,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 47,
+          "endLine": 95,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 47,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "requireApiPermission",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('role_permissions').doc('role-config').get",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "configDoc.data",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "fs.existsSync",
+          "lineNumber": 30
+        },
+        {
+          "caller": "GET",
+          "callee": "fs.readFileSync",
+          "lineNumber": 31
+        },
+        {
+          "caller": "GET",
+          "callee": "JSON.parse",
+          "lineNumber": 32
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('role_permissions').doc('role-config').set",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 42
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 43
+        },
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 50
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 57
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection('role_permissions').doc",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "configRef.get",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "configSnap.data",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "fs.existsSync",
+          "lineNumber": 67
+        },
+        {
+          "caller": "POST",
+          "callee": "fs.readFileSync",
+          "lineNumber": 69
+        },
+        {
+          "caller": "POST",
+          "callee": "JSON.parse",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "configRef.set",
+          "lineNumber": 83
+        },
+        {
+          "caller": "POST",
+          "callee": "fs.existsSync",
+          "lineNumber": 86
+        },
+        {
+          "caller": "POST",
+          "callee": "fs.writeFileSync",
+          "lineNumber": 87
+        },
+        {
+          "caller": "POST",
+          "callee": "JSON.stringify",
+          "lineNumber": 87
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 92
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 93
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/youtube-auth/auth-url/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 60,
+      "nonEmptyLines": 55,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 7,
+          "endLine": 60,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "requireApiPermission",
+          "lineNumber": 8
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 10
+        },
+        {
+          "caller": "GET",
+          "callee": "getYouTubeOAuthClient",
+          "lineNumber": 15
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "oauth2Client.generateAuthUrl",
+          "lineNumber": 33
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 51
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 52
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/youtube-auth/callback/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 111,
+      "nonEmptyLines": 101,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 10,
+          "endLine": 111,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 10,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 13
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 14
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "getYouTubeOAuthClient",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "oauth2Client.getToken",
+          "lineNumber": 39
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('admin_config').doc('youtube_auth').set",
+          "lineNumber": 61
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection('admin_config').doc",
+          "lineNumber": 61
+        },
+        {
+          "caller": "GET",
+          "callee": "db.collection",
+          "lineNumber": 61
+        },
+        {
+          "caller": "GET",
+          "callee": "new Date().toISOString",
+          "lineNumber": 64
+        },
+        {
+          "caller": "GET",
+          "callee": "new Date().toISOString",
+          "lineNumber": 66
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 94
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/youtube-auth/status/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 127,
+      "nonEmptyLines": 113,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 17,
+          "endLine": 96,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "checkToken",
+          "startLine": 98,
+          "endLine": 127,
+          "params": [
+            "oauthConfig",
+            "source"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "requireApiPermission",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "getYouTubeOAuthClient",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "getStoredRefreshToken",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 45
+        },
+        {
+          "caller": "GET",
+          "callee": "checkToken",
+          "lineNumber": 53
+        },
+        {
+          "caller": "GET",
+          "callee": "tokens.push",
+          "lineNumber": 55
+        },
+        {
+          "caller": "GET",
+          "callee": "tokens.filter",
+          "lineNumber": 59
+        },
+        {
+          "caller": "GET",
+          "callee": "tokens.find",
+          "lineNumber": 62
+        },
+        {
+          "caller": "GET",
+          "callee": "tokens.map",
+          "lineNumber": 66
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 68
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 85
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 86
+        },
+        {
+          "caller": "checkToken",
+          "callee": "oauth2Client.setCredentials",
+          "lineNumber": 105
+        },
+        {
+          "caller": "checkToken",
+          "callee": "oauth2Client.refreshAccessToken",
+          "lineNumber": 110
+        },
+        {
+          "caller": "checkToken",
+          "callee": "new Date(credentials.expiry_date).toISOString",
+          "lineNumber": 116
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/contact/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 155,
+      "nonEmptyLines": 136,
+      "functions": [
+        {
+          "name": "parseBody",
+          "startLine": 35,
+          "endLine": 59,
+          "params": [
+            "raw"
+          ]
+        },
+        {
+          "name": "sendNotification",
+          "startLine": 62,
+          "endLine": 103,
+          "params": [
+            "contact",
+            "mountainId"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 105,
+          "endLine": 155,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "runtime",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 105,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "parseBody",
+          "callee": "body.name.trim",
+          "lineNumber": 41
+        },
+        {
+          "caller": "parseBody",
+          "callee": "body.phone.trim",
+          "lineNumber": 42
+        },
+        {
+          "caller": "parseBody",
+          "callee": "body.email.trim",
+          "lineNumber": 43
+        },
+        {
+          "caller": "parseBody",
+          "callee": "body.message.trim",
+          "lineNumber": 44
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "Number",
+          "lineNumber": 66
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "console.warn",
+          "lineNumber": 72
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "getMountainConfig",
+          "lineNumber": 76
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "nodemailer.createTransport",
+          "lineNumber": 81
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "[\n    `이름: ${contact.name}`,\n    `전화번호: ${contact.phone}`,\n    `이메일: ${contact.email ?? '-'}`,\n    '',\n    '메시지:',\n    contact.message,\n  ].join",
+          "lineNumber": 88
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "transporter.sendMail",
+          "lineNumber": 97
+        },
+        {
+          "caller": "POST",
+          "callee": "request.headers.get",
+          "lineNumber": 108
+        },
+        {
+          "caller": "POST",
+          "callee": "authHeader.match",
+          "lineNumber": 109
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 111
+        },
+        {
+          "caller": "POST",
+          "callee": "auth.verifyIdToken",
+          "lineNumber": 117
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 119
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 120
+        },
+        {
+          "caller": "POST",
+          "callee": "parseBody",
+          "lineNumber": 124
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 124
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 126
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection(COLLECTION_NAME).add",
+          "lineNumber": 131
+        },
+        {
+          "caller": "POST",
+          "callee": "db.collection",
+          "lineNumber": 131
+        },
+        {
+          "caller": "POST",
+          "callee": "getRequestMountainId",
+          "lineNumber": 133
+        },
+        {
+          "caller": "POST",
+          "callee": "FieldValue.serverTimestamp",
+          "lineNumber": 134
+        },
+        {
+          "caller": "POST",
+          "callee": "sendNotification",
+          "lineNumber": 141
+        },
+        {
+          "caller": "POST",
+          "callee": "getRequestMountainId",
+          "lineNumber": 141
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 144
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 147
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 149
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 150
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/generate-signed-url/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 61,
+      "nonEmptyLines": 52,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 25,
+          "endLine": 61,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 32
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 35
+        },
+        {
+          "caller": "POST",
+          "callee": "getMountainConfig",
+          "lineNumber": 42
+        },
+        {
+          "caller": "POST",
+          "callee": "storage.file",
+          "lineNumber": 45
+        },
+        {
+          "caller": "POST",
+          "callee": "file.getSignedUrl",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "Date.now",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "encodeURIComponent",
+          "lineNumber": 54
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 56
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 59
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/manage-playlists/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 316,
+      "nonEmptyLines": 273,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 9,
+          "endLine": 86,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 90,
+          "endLine": 316,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 9,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 90,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "requireApiPermission",
+          "lineNumber": 10
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 12
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "getYouTubeChannelId",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "getYouTubeOAuthCredentials",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "oauth2Client.setCredentials",
+          "lineNumber": 41
+        },
+        {
+          "caller": "GET",
+          "callee": "google.youtube",
+          "lineNumber": 45
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 47
+        },
+        {
+          "caller": "GET",
+          "callee": "youtube.playlists.list",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GET",
+          "callee": "console.log",
+          "lineNumber": 58
+        },
+        {
+          "caller": "GET",
+          "callee": "playlists.map",
+          "lineNumber": 61
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 72
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 77
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 91
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 93
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 97
+        },
+        {
+          "caller": "POST",
+          "callee": "getYouTubeOAuthCredentials",
+          "lineNumber": 100
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 102
+        },
+        {
+          "caller": "POST",
+          "callee": "oauth2Client.setCredentials",
+          "lineNumber": 117
+        },
+        {
+          "caller": "POST",
+          "callee": "google.youtube",
+          "lineNumber": 121
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 123
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 128
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.insert",
+          "lineNumber": 134
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 147
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 155
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.list",
+          "lineNumber": 162
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistItemsResponse.data.items?.find",
+          "lineNumber": 168
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 173
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.delete",
+          "lineNumber": 176
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 180
+        },
+        {
+          "caller": "POST",
+          "callee": "Array.isArray",
+          "lineNumber": 186
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 187
+        },
+        {
+          "caller": "POST",
+          "callee": "getYouTubeChannelId",
+          "lineNumber": 197
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 199
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlists.list",
+          "lineNumber": 202
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.list",
+          "lineNumber": 211
+        },
+        {
+          "caller": "POST",
+          "callee": "itemsResponse.data.items?.some",
+          "lineNumber": 217
+        },
+        {
+          "caller": "POST",
+          "callee": "currentVideoPlaylists.push",
+          "lineNumber": 221
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 225
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 226
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistIds.filter",
+          "lineNumber": 229
+        },
+        {
+          "caller": "POST",
+          "callee": "currentVideoPlaylists.includes",
+          "lineNumber": 230
+        },
+        {
+          "caller": "POST",
+          "callee": "currentVideoPlaylists.filter",
+          "lineNumber": 232
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistIds.includes",
+          "lineNumber": 232
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.insert",
+          "lineNumber": 239
+        },
+        {
+          "caller": "POST",
+          "callee": "results.push",
+          "lineNumber": 251
+        },
+        {
+          "caller": "POST",
+          "callee": "results.push",
+          "lineNumber": 253
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.list",
+          "lineNumber": 266
+        },
+        {
+          "caller": "POST",
+          "callee": "itemsResponse.data.items?.find",
+          "lineNumber": 272
+        },
+        {
+          "caller": "POST",
+          "callee": "youtube.playlistItems.delete",
+          "lineNumber": 277
+        },
+        {
+          "caller": "POST",
+          "callee": "results.push",
+          "lineNumber": 280
+        },
+        {
+          "caller": "POST",
+          "callee": "results.push",
+          "lineNumber": 283
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 292
+        },
+        {
+          "caller": "POST",
+          "callee": "results.filter",
+          "lineNumber": 297
+        },
+        {
+          "caller": "POST",
+          "callee": "results.filter",
+          "lineNumber": 298
+        },
+        {
+          "caller": "POST",
+          "callee": "results.filter",
+          "lineNumber": 299
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 304
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 307
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 308
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/points/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 13,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 5,
+          "endLine": 14,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "getPointService",
+          "lineNumber": 7
+        },
+        {
+          "caller": "GET",
+          "callee": "getRequestMountainId",
+          "lineNumber": 7
+        },
+        {
+          "caller": "GET",
+          "callee": "pointService.getAllPoints",
+          "lineNumber": 8
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 9
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 11
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 12
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/refresh-video-metadata/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 299,
+      "nonEmptyLines": 256,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 13,
+          "endLine": 299,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "requireApiPermission",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 16
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 20
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 21
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 22
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 23
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 24
+        },
+        {
+          "caller": "POST",
+          "callee": "Array.isArray",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 27
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 32
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 33
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 36
+        },
+        {
+          "caller": "POST",
+          "callee": "fetch",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "videoIds.join",
+          "lineNumber": 40
+        },
+        {
+          "caller": "POST",
+          "callee": "videosResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 61
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 62
+        },
+        {
+          "caller": "POST",
+          "callee": "new Date(expectedRecordingDate).getTime",
+          "lineNumber": 65
+        },
+        {
+          "caller": "POST",
+          "callee": "new Date(currentRecordingDate).getTime",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 71
+        },
+        {
+          "caller": "POST",
+          "callee": "setTimeout",
+          "lineNumber": 74
+        },
+        {
+          "caller": "POST",
+          "callee": "POST",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "JSON.stringify",
+          "lineNumber": 85
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 95
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 99
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 104
+        },
+        {
+          "caller": "POST",
+          "callee": "getYouTubeChannelId",
+          "lineNumber": 107
+        },
+        {
+          "caller": "POST",
+          "callee": "getRequestMountainId",
+          "lineNumber": 107
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 113
+        },
+        {
+          "caller": "POST",
+          "callee": "videoIds.forEach",
+          "lineNumber": 114
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistMap.set",
+          "lineNumber": 114
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 116
+        },
+        {
+          "caller": "POST",
+          "callee": "fetch",
+          "lineNumber": 117
+        },
+        {
+          "caller": "POST",
+          "callee": "channelPlaylistsResponse.json",
+          "lineNumber": 123
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 125
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 127
+        },
+        {
+          "caller": "POST",
+          "callee": "videoIds.map",
+          "lineNumber": 131
+        },
+        {
+          "caller": "POST",
+          "callee": "fetch",
+          "lineNumber": 136
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistItemsResponse.json",
+          "lineNumber": 141
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistItemsData.items?.some",
+          "lineNumber": 142
+        },
+        {
+          "caller": "POST",
+          "callee": "videoPlaylists.push",
+          "lineNumber": 147
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 154
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 158
+        },
+        {
+          "caller": "POST",
+          "callee": "videoPlaylists.map((p) => `${p.title} (${p.id})`).join",
+          "lineNumber": 161
+        },
+        {
+          "caller": "POST",
+          "callee": "videoPlaylists.map",
+          "lineNumber": 161
+        },
+        {
+          "caller": "POST",
+          "callee": "Promise.all",
+          "lineNumber": 167
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistResults.forEach",
+          "lineNumber": 168
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistMap.set",
+          "lineNumber": 169
+        },
+        {
+          "caller": "POST",
+          "callee": "refreshedVideos.map",
+          "lineNumber": 174
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 176
+        },
+        {
+          "caller": "POST",
+          "callee": "db\n        .collection('cat_videos')\n        .where('youtubeId', '==', videoId)\n        .get",
+          "lineNumber": 179
+        },
+        {
+          "caller": "POST",
+          "callee": "db\n        .collection('cat_videos')\n        .where",
+          "lineNumber": 179
+        },
+        {
+          "caller": "POST",
+          "callee": "db\n        .collection",
+          "lineNumber": 179
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 183
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 189
+        },
+        {
+          "caller": "POST",
+          "callee": "docRef.data",
+          "lineNumber": 194
+        },
+        {
+          "caller": "POST",
+          "callee": "playlistMap.get",
+          "lineNumber": 202
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 261
+        },
+        {
+          "caller": "POST",
+          "callee": "docRef.ref.update",
+          "lineNumber": 262
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 263
+        },
+        {
+          "caller": "POST",
+          "callee": "Promise.all",
+          "lineNumber": 273
+        },
+        {
+          "caller": "POST",
+          "callee": "results.filter",
+          "lineNumber": 274
+        },
+        {
+          "caller": "POST",
+          "callee": "results.filter",
+          "lineNumber": 275
+        },
+        {
+          "caller": "POST",
+          "callee": "console.log",
+          "lineNumber": 277
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 279
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 290
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 291
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/revalidate/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 58,
+      "nonEmptyLines": 53,
+      "functions": [
+        {
+          "name": "bakedPaths",
+          "startLine": 23,
+          "endLine": 26,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 28,
+          "endLine": 58,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "runtime",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 28,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "bakedPaths",
+          "callee": "getAllMountains().flatMap",
+          "lineNumber": 24
+        },
+        {
+          "caller": "bakedPaths",
+          "callee": "getAllMountains",
+          "lineNumber": 24
+        },
+        {
+          "caller": "bakedPaths",
+          "callee": "BAKED_SUBPATHS.map",
+          "lineNumber": 25
+        },
+        {
+          "caller": "POST",
+          "callee": "request.headers.get",
+          "lineNumber": 33
+        },
+        {
+          "caller": "POST",
+          "callee": "authHeader.match",
+          "lineNumber": 34
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 36
+        },
+        {
+          "caller": "POST",
+          "callee": "auth.verifyIdToken",
+          "lineNumber": 42
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 45
+        },
+        {
+          "caller": "POST",
+          "callee": "bakedPaths",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "revalidatePath",
+          "lineNumber": 50
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 55
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 56
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/update-youtube-video/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 160,
+      "nonEmptyLines": 135,
+      "functions": [
+        {
+          "name": "PUT",
+          "startLine": 8,
+          "endLine": 160,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PUT",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PUT",
+          "callee": "requireApiPermission",
+          "lineNumber": 9
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 11
+        },
+        {
+          "caller": "PUT",
+          "callee": "request.json",
+          "lineNumber": 15
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 18
+        },
+        {
+          "caller": "PUT",
+          "callee": "Object.keys",
+          "lineNumber": 21
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 22
+        },
+        {
+          "caller": "PUT",
+          "callee": "getYouTubeOAuthCredentials",
+          "lineNumber": 26
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "PUT",
+          "callee": "oauth2Client.setCredentials",
+          "lineNumber": 43
+        },
+        {
+          "caller": "PUT",
+          "callee": "oauth2Client.getAccessToken",
+          "lineNumber": 49
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.log",
+          "lineNumber": 50
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 52
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "PUT",
+          "callee": "google.youtube",
+          "lineNumber": 63
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.log",
+          "lineNumber": 65
+        },
+        {
+          "caller": "PUT",
+          "callee": "youtube.videos.list",
+          "lineNumber": 68
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 74
+        },
+        {
+          "caller": "PUT",
+          "callee": "parts.push",
+          "lineNumber": 104
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.log",
+          "lineNumber": 107
+        },
+        {
+          "caller": "PUT",
+          "callee": "youtube.videos.update",
+          "lineNumber": 110
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.log",
+          "lineNumber": 119
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 121
+        },
+        {
+          "caller": "PUT",
+          "callee": "Object.keys",
+          "lineNumber": 124
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 128
+        },
+        {
+          "caller": "PUT",
+          "callee": "error.message.includes",
+          "lineNumber": 137
+        },
+        {
+          "caller": "PUT",
+          "callee": "error.message.includes",
+          "lineNumber": 140
+        },
+        {
+          "caller": "PUT",
+          "callee": "error.message.includes",
+          "lineNumber": 143
+        },
+        {
+          "caller": "PUT",
+          "callee": "error.message.includes",
+          "lineNumber": 146
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 152
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

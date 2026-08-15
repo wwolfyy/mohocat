@@ -1,0 +1,5986 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 26,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 26,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 26,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/[mountain]/admin/adoption/new/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 24,
+      "nonEmptyLines": 21,
+      "functions": [
+        {
+          "name": "NewAdoptionPage",
+          "startLine": 4,
+          "endLine": 22,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/announcements/new/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 24,
+      "nonEmptyLines": 21,
+      "functions": [
+        {
+          "name": "NewAnnouncementPage",
+          "startLine": 4,
+          "endLine": 22,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/members/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 74,
+      "functions": [
+        {
+          "name": "MemberManagementPage",
+          "startLine": 11,
+          "endLine": 81,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MemberManagementPage",
+          "callee": "useState",
+          "lineNumber": 12
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "setActiveTab",
+          "lineNumber": 26
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "cn",
+          "lineNumber": 27
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "setActiveTab",
+          "lineNumber": 37
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "cn",
+          "lineNumber": 38
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "setActiveTab",
+          "lineNumber": 48
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "cn",
+          "lineNumber": 49
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "setActiveTab",
+          "lineNumber": 59
+        },
+        {
+          "caller": "MemberManagementPage",
+          "callee": "cn",
+          "lineNumber": 60
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/migration/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 11,
+      "nonEmptyLines": 10,
+      "functions": [
+        {
+          "name": "MigrationPage",
+          "startLine": 3,
+          "endLine": 11,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MigrationPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/points/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 410,
+      "nonEmptyLines": 374,
+      "functions": [
+        {
+          "name": "labelSummary",
+          "startLine": 38,
+          "endLine": 47,
+          "params": [
+            "labelSide"
+          ]
+        },
+        {
+          "name": "buildLabelSide",
+          "startLine": 50,
+          "endLine": 55,
+          "params": [
+            "mobile",
+            "desktop"
+          ]
+        },
+        {
+          "name": "PointsCMSPage",
+          "startLine": 57,
+          "endLine": 384,
+          "params": []
+        },
+        {
+          "name": "LabelSideSelect",
+          "startLine": 387,
+          "endLine": 410,
+          "params": [
+            "{\n  label,\n  value,\n  onChange,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PointsCMSPage",
+          "line": 57,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "labelSummary",
+          "callee": "sideText",
+          "lineNumber": 42
+        },
+        {
+          "caller": "labelSummary",
+          "callee": "sideText",
+          "lineNumber": 43
+        },
+        {
+          "caller": "labelSummary",
+          "callee": "parts.push",
+          "lineNumber": 44
+        },
+        {
+          "caller": "labelSummary",
+          "callee": "parts.push",
+          "lineNumber": 45
+        },
+        {
+          "caller": "labelSummary",
+          "callee": "parts.join",
+          "lineNumber": 46
+        },
+        {
+          "caller": "buildLabelSide",
+          "callee": "Object.keys",
+          "lineNumber": 54
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useMountain",
+          "lineNumber": 58
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "getPointService",
+          "lineNumber": 59
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "getCatService",
+          "lineNumber": 60
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useAuth",
+          "lineNumber": 61
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 63
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 64
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 65
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 66
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 68
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 69
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 70
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useState",
+          "lineNumber": 74
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "useEffect",
+          "lineNumber": 76
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "loadData",
+          "lineNumber": 77
+        },
+        {
+          "caller": "loadData",
+          "callee": "setLoading",
+          "lineNumber": 83
+        },
+        {
+          "caller": "loadData",
+          "callee": "setError",
+          "lineNumber": 84
+        },
+        {
+          "caller": "loadData",
+          "callee": "Promise.all",
+          "lineNumber": 85
+        },
+        {
+          "caller": "loadData",
+          "callee": "pointService.getAllPoints",
+          "lineNumber": 86
+        },
+        {
+          "caller": "loadData",
+          "callee": "catService.getAllCats",
+          "lineNumber": 87
+        },
+        {
+          "caller": "loadData",
+          "callee": "setPoints",
+          "lineNumber": 89
+        },
+        {
+          "caller": "loadData",
+          "callee": "setCats",
+          "lineNumber": 90
+        },
+        {
+          "caller": "loadData",
+          "callee": "setError",
+          "lineNumber": 92
+        },
+        {
+          "caller": "loadData",
+          "callee": "S.errors.loadFailed",
+          "lineNumber": 92
+        },
+        {
+          "caller": "loadData",
+          "callee": "setLoading",
+          "lineNumber": 94
+        },
+        {
+          "caller": "referencingCats",
+          "callee": "cats.filter",
+          "lineNumber": 100
+        },
+        {
+          "caller": "handleNew",
+          "callee": "setEditingPoint",
+          "lineNumber": 103
+        },
+        {
+          "caller": "handleNew",
+          "callee": "setFormData",
+          "lineNumber": 104
+        },
+        {
+          "caller": "handleNew",
+          "callee": "setShowForm",
+          "lineNumber": 105
+        },
+        {
+          "caller": "handleEdit",
+          "callee": "setEditingPoint",
+          "lineNumber": 109
+        },
+        {
+          "caller": "handleEdit",
+          "callee": "setFormData",
+          "lineNumber": 110
+        },
+        {
+          "caller": "handleEdit",
+          "callee": "setShowForm",
+          "lineNumber": 118
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "setShowForm",
+          "lineNumber": 122
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "setEditingPoint",
+          "lineNumber": 123
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "setFormData",
+          "lineNumber": 124
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "e.preventDefault",
+          "lineNumber": 128
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "formData.title.trim",
+          "lineNumber": 129
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 130
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 134
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setSaving",
+          "lineNumber": 139
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 140
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "buildLabelSide",
+          "lineNumber": 142
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "formData.title.trim",
+          "lineNumber": 147
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "formData.description.trim",
+          "lineNumber": 148
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "pointService.updatePoint",
+          "lineNumber": 155
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setPoints",
+          "lineNumber": 156
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "prev.map",
+          "lineNumber": 157
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "pointService.createPoint",
+          "lineNumber": 160
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setPoints",
+          "lineNumber": 161
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "triggerPublicRevalidate",
+          "lineNumber": 166
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "handleCancel",
+          "lineNumber": 168
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setError",
+          "lineNumber": 170
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "S.errors.saveFailed",
+          "lineNumber": 170
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setSaving",
+          "lineNumber": 172
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "referencingCats",
+          "lineNumber": 179
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setError",
+          "lineNumber": 181
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "pointService.deletePoint",
+          "lineNumber": 182
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setPoints",
+          "lineNumber": 183
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "prev.filter",
+          "lineNumber": 183
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setDeleteTarget",
+          "lineNumber": 184
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "triggerPublicRevalidate",
+          "lineNumber": 185
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setError",
+          "lineNumber": 187
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "S.errors.deleteFailed",
+          "lineNumber": 187
+        },
+        {
+          "caller": "handleDelete",
+          "callee": "setDeleteTarget",
+          "lineNumber": 188
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "referencingCats",
+          "lineNumber": 192
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "points.map",
+          "lineNumber": 230
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "S.picker.coords",
+          "lineNumber": 233
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "labelSummary",
+          "lineNumber": 234
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "handleEdit",
+          "lineNumber": 238
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setDeleteTarget",
+          "lineNumber": 245
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 283
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 295
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 313
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 326
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setFormData",
+          "lineNumber": 331
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "S.delete.blockedBody",
+          "lineNumber": 357
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "blockingCats.map((c) => c.name).join",
+          "lineNumber": 357
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "blockingCats.map",
+          "lineNumber": 357
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setDeleteTarget",
+          "lineNumber": 360
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "setDeleteTarget",
+          "lineNumber": 370
+        },
+        {
+          "caller": "PointsCMSPage",
+          "callee": "handleDelete",
+          "lineNumber": 373
+        },
+        {
+          "caller": "LabelSideSelect",
+          "callee": "onChange",
+          "lineNumber": 401
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 1,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/tag-videos/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 1453,
+      "nonEmptyLines": 1338,
+      "functions": [
+        {
+          "name": "formatDuration",
+          "startLine": 28,
+          "endLine": 63,
+          "params": [
+            "duration"
+          ]
+        },
+        {
+          "name": "sortDate",
+          "startLine": 67,
+          "endLine": 75,
+          "params": [
+            "video",
+            "sortBy"
+          ]
+        },
+        {
+          "name": "TagVideosPage",
+          "startLine": 77,
+          "endLine": 1453,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "TagVideosPage",
+          "line": 77,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "formatDuration",
+          "callee": "duration.match",
+          "lineNumber": 37
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "parseInt",
+          "lineNumber": 42
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "parseInt",
+          "lineNumber": 43
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "parseInt",
+          "lineNumber": 44
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "Math.floor",
+          "lineNumber": 52
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "Math.floor",
+          "lineNumber": 53
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "minutes.toString().padStart",
+          "lineNumber": 57
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "minutes.toString",
+          "lineNumber": 57
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "seconds.toString().padStart",
+          "lineNumber": 57
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "seconds.toString",
+          "lineNumber": 57
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "seconds.toString().padStart",
+          "lineNumber": 59
+        },
+        {
+          "caller": "formatDuration",
+          "callee": "seconds.toString",
+          "lineNumber": 59
+        },
+        {
+          "caller": "sortDate",
+          "callee": "parseDate",
+          "lineNumber": 69
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useMountain",
+          "lineNumber": 78
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useAuth",
+          "lineNumber": 82
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "getVideoService",
+          "lineNumber": 85
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useDialog",
+          "lineNumber": 88
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useCallback",
+          "lineNumber": 91
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "videoService.getAllVideos",
+          "lineNumber": 92
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "allVideos.map",
+          "lineNumber": 93
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useMediaListController",
+          "lineNumber": 96
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useYouTubeVideoMutations",
+          "lineNumber": 105
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 116
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 117
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 122
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 125
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 126
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 127
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 130
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useState",
+          "lineNumber": 131
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useRef",
+          "lineNumber": 138
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useDateAutoParse",
+          "lineNumber": 140
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "parseRecordingDateFromTitle",
+          "lineNumber": 144
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "[\n        date.getFullYear(),\n        String(date.getMonth() + 1).padStart(2, '0'),\n        String(date.getDate()).padStart(2, '0'),\n      ].join",
+          "lineNumber": 159
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.getFullYear",
+          "lineNumber": 160
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "String(date.getMonth() + 1).padStart",
+          "lineNumber": 161
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "String",
+          "lineNumber": 161
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.getMonth",
+          "lineNumber": 161
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "String(date.getDate()).padStart",
+          "lineNumber": 162
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "String",
+          "lineNumber": 162
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.getDate",
+          "lineNumber": 162
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "fetch",
+          "lineNumber": 165
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "authHeader",
+          "lineNumber": 169
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "JSON.stringify",
+          "lineNumber": 171
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "response.json",
+          "lineNumber": 178
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "autoParsedYoutubeIds.current.push",
+          "lineNumber": 182
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "useEffect",
+          "lineNumber": 187
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "loadPlaylists",
+          "lineNumber": 188
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "setLoadingPlaylists",
+          "lineNumber": 194
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "console.log",
+          "lineNumber": 195
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "fetch",
+          "lineNumber": 197
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "authHeader",
+          "lineNumber": 198
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "response.json",
+          "lineNumber": 204
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "setAllPlaylists",
+          "lineNumber": 206
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "console.log",
+          "lineNumber": 207
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "console.error",
+          "lineNumber": 212
+        },
+        {
+          "caller": "loadPlaylists",
+          "callee": "setLoadingPlaylists",
+          "lineNumber": 215
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "dialog.alert",
+          "lineNumber": 222
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "dialog.confirm",
+          "lineNumber": 226
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "t.alerts.autoParseConfirm",
+          "lineNumber": 226
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "c.setError",
+          "lineNumber": 229
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "autoParse.run",
+          "lineNumber": 231
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "setTimeout",
+          "lineNumber": 237
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "fetch",
+          "lineNumber": 238
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "authHeader",
+          "lineNumber": 242
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "JSON.stringify",
+          "lineNumber": 244
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "console.warn",
+          "lineNumber": 248
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "c.reload",
+          "lineNumber": 251
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "t.alerts.successLine",
+          "lineNumber": 255
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "t.alerts.failLine",
+          "lineNumber": 257
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "report.results.forEach",
+          "lineNumber": 260
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "dialog.alert",
+          "lineNumber": 265
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "console.error",
+          "lineNumber": 267
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "c.setError",
+          "lineNumber": 268
+        },
+        {
+          "caller": "handleAutomaticDateParsing",
+          "callee": "t.alerts.parseFailed",
+          "lineNumber": 268
+        },
+        {
+          "caller": "clearSelection",
+          "callee": "c.clearSelection",
+          "lineNumber": 274
+        },
+        {
+          "caller": "clearSelection",
+          "callee": "ytm.setBatchTags",
+          "lineNumber": 275
+        },
+        {
+          "caller": "clearSelection",
+          "callee": "ytm.setBatchYoutubeCreatedTime",
+          "lineNumber": 276
+        },
+        {
+          "caller": "clearSelection",
+          "callee": "setSelectedPlaylists",
+          "lineNumber": 277
+        },
+        {
+          "caller": "handleBatchTagsInputClick",
+          "callee": "setCatSelectorContext",
+          "lineNumber": 283
+        },
+        {
+          "caller": "handleBatchTagsInputClick",
+          "callee": "setShowCatSelector",
+          "lineNumber": 284
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "ytm.youtubeTags\n      .split(',')\n      .map((tag) => tag.trim())\n      .filter",
+          "lineNumber": 288
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "ytm.youtubeTags\n      .split(',')\n      .map",
+          "lineNumber": 288
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "ytm.youtubeTags\n      .split",
+          "lineNumber": 288
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "tag.trim",
+          "lineNumber": 290
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "currentTags.filter",
+          "lineNumber": 292
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "ytm.setYoutubeTags",
+          "lineNumber": 293
+        },
+        {
+          "caller": "removeYoutubeTag",
+          "callee": "updatedTags.join",
+          "lineNumber": 293
+        },
+        {
+          "caller": "handleYoutubeTagsInputClick",
+          "callee": "setCatSelectorContext",
+          "lineNumber": 297
+        },
+        {
+          "caller": "handleYoutubeTagsInputClick",
+          "callee": "setShowCatSelector",
+          "lineNumber": 298
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(catSelectorContext === 'batch' ? ytm.batchTags : ytm.youtubeTags)\n    .split(',')\n    .map((tag) => tag.trim())\n    .filter",
+          "lineNumber": 301
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(catSelectorContext === 'batch' ? ytm.batchTags : ytm.youtubeTags)\n    .split(',')\n    .map",
+          "lineNumber": 301
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(catSelectorContext === 'batch' ? ytm.batchTags : ytm.youtubeTags)\n    .split",
+          "lineNumber": 301
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "tag.trim",
+          "lineNumber": 303
+        },
+        {
+          "caller": "handleCatSelectorTagsChange",
+          "callee": "ytm.setBatchTags",
+          "lineNumber": 308
+        },
+        {
+          "caller": "handleCatSelectorTagsChange",
+          "callee": "selectedCatNames.join",
+          "lineNumber": 308
+        },
+        {
+          "caller": "handleCatSelectorTagsChange",
+          "callee": "ytm.setYoutubeTags",
+          "lineNumber": 310
+        },
+        {
+          "caller": "handleCatSelectorTagsChange",
+          "callee": "selectedCatNames.join",
+          "lineNumber": 310
+        },
+        {
+          "caller": "handlePlaylistSelectorClick",
+          "callee": "setPlaylistSelectorContext",
+          "lineNumber": 316
+        },
+        {
+          "caller": "handlePlaylistSelectorClick",
+          "callee": "setShowPlaylistSelector",
+          "lineNumber": 317
+        },
+        {
+          "caller": "handlePlaylistSelectorClick",
+          "callee": "videoPlaylists.map",
+          "lineNumber": 320
+        },
+        {
+          "caller": "handlePlaylistSelectorClick",
+          "callee": "setSelectedPlaylists",
+          "lineNumber": 321
+        },
+        {
+          "caller": "handlePlaylistToggle",
+          "callee": "newSelectedPlaylists.has",
+          "lineNumber": 327
+        },
+        {
+          "caller": "handlePlaylistToggle",
+          "callee": "newSelectedPlaylists.delete",
+          "lineNumber": 328
+        },
+        {
+          "caller": "handlePlaylistToggle",
+          "callee": "newSelectedPlaylists.add",
+          "lineNumber": 330
+        },
+        {
+          "caller": "handlePlaylistToggle",
+          "callee": "setSelectedPlaylists",
+          "lineNumber": 332
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "c.items.filter",
+          "lineNumber": 345
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "c.selectedIds.has",
+          "lineNumber": 346
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "dialog.alert",
+          "lineNumber": 350
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "dialog.confirm",
+          "lineNumber": 355
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "t.alerts.batchPlaylistConfirm",
+          "lineNumber": 355
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "setSavingPlaylists",
+          "lineNumber": 360
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "Array.from",
+          "lineNumber": 361
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "fetch",
+          "lineNumber": 370
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "authHeader",
+          "lineNumber": 374
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "JSON.stringify",
+          "lineNumber": 376
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "succeededIds.push",
+          "lineNumber": 384
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "response.json",
+          "lineNumber": 387
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "console.error",
+          "lineNumber": 388
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "console.error",
+          "lineNumber": 392
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "setTimeout",
+          "lineNumber": 397
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "fetch",
+          "lineNumber": 398
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "authHeader",
+          "lineNumber": 402
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "JSON.stringify",
+          "lineNumber": 404
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "console.warn",
+          "lineNumber": 408
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "c.reload",
+          "lineNumber": 412
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "setShowPlaylistSelector",
+          "lineNumber": 413
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "dialog.alert",
+          "lineNumber": 414
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "t.alerts.batchPlaylistDone",
+          "lineNumber": 414
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "console.error",
+          "lineNumber": 416
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "dialog.alert",
+          "lineNumber": 417
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "t.alerts.playlistSaveFailed",
+          "lineNumber": 418
+        },
+        {
+          "caller": "saveBatchPlaylistChanges",
+          "callee": "setSavingPlaylists",
+          "lineNumber": 421
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "saveBatchPlaylistChanges",
+          "lineNumber": 430
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "setSavingPlaylists",
+          "lineNumber": 439
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "ytm.selectedVideo.allPlaylists?.map",
+          "lineNumber": 442
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.log",
+          "lineNumber": 445
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.log",
+          "lineNumber": 446
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "Array.from",
+          "lineNumber": 446
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.log",
+          "lineNumber": 447
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "Array.from",
+          "lineNumber": 447
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "fetch",
+          "lineNumber": 450
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "authHeader",
+          "lineNumber": 454
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "JSON.stringify",
+          "lineNumber": 456
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "Array.from",
+          "lineNumber": 459
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "response.json",
+          "lineNumber": 464
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.error",
+          "lineNumber": 465
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "response.json",
+          "lineNumber": 469
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.log",
+          "lineNumber": 470
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.warn",
+          "lineNumber": 474
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "result.results.filter",
+          "lineNumber": 475
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "failedOperations.map",
+          "lineNumber": 476
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.warn",
+          "lineNumber": 479
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.log",
+          "lineNumber": 483
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.log",
+          "lineNumber": 490
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "fetch",
+          "lineNumber": 491
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "authHeader",
+          "lineNumber": 495
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "JSON.stringify",
+          "lineNumber": 497
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "refreshResponse.json",
+          "lineNumber": 503
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.warn",
+          "lineNumber": 504
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "c.reload",
+          "lineNumber": 509
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "videoService.getAllVideos",
+          "lineNumber": 512
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "updatedVideos.find",
+          "lineNumber": 513
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "ytm.setSelectedVideo",
+          "lineNumber": 515
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "setShowPlaylistSelector",
+          "lineNumber": 519
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "t.alerts.playlistSaved",
+          "lineNumber": 522
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "t.alerts.playlistSavedFailures",
+          "lineNumber": 527
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "dialog.alert",
+          "lineNumber": 530
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "console.error",
+          "lineNumber": 532
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "dialog.alert",
+          "lineNumber": 533
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "t.alerts.playlistSaveFailed",
+          "lineNumber": 534
+        },
+        {
+          "caller": "savePlaylistChanges",
+          "callee": "setSavingPlaylists",
+          "lineNumber": 537
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setError",
+          "lineNumber": 566
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.reload",
+          "lineNumber": 603
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setShowTagged",
+          "lineNumber": 639
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.filters.showTagged",
+          "lineNumber": 643
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setShowUntagged",
+          "lineNumber": 650
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.filters.showUntagged",
+          "lineNumber": 654
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setEnableDateFilter",
+          "lineNumber": 665
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setDateFilterFrom",
+          "lineNumber": 677
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setDateFilterTo",
+          "lineNumber": 691
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setDateFilterFrom",
+          "lineNumber": 701
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setDateFilterTo",
+          "lineNumber": 702
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setShowWithoutTimestamp",
+          "lineNumber": 713
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.filters.showWithoutTimestamp",
+          "lineNumber": 717
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.filters.clearSelection",
+          "lineNumber": 730
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setSortBy",
+          "lineNumber": 737
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setSortOrder",
+          "lineNumber": 746
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.setPerPage",
+          "lineNumber": 757
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "Number",
+          "lineNumber": 757
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.filters.showingRange",
+          "lineNumber": 766
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "Math.min",
+          "lineNumber": 768
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.batch.title",
+          "lineNumber": 779
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.batchUpdateTags",
+          "lineNumber": 797
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.batchTags.trim",
+          "lineNumber": 798
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.setBatchYoutubeCreatedTime",
+          "lineNumber": 814
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.batchUpdateDate",
+          "lineNumber": 819
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.batchYoutubeCreatedTime.trim",
+          "lineNumber": 820
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "Array.from(selectedPlaylists)\n                    .slice(0, 2)\n                    .map",
+          "lineNumber": 836
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "Array.from(selectedPlaylists)\n                    .slice",
+          "lineNumber": 836
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "Array.from",
+          "lineNumber": 836
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "allPlaylists.find",
+          "lineNumber": 839
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.batch.moreCount",
+          "lineNumber": 848
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setPlaylistSelectorContext",
+          "lineNumber": 859
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setSelectedPlaylists",
+          "lineNumber": 864
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setShowPlaylistSelector",
+          "lineNumber": 865
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "autoParse.processingIds.has",
+          "lineNumber": 889
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "autoParse.processingIds.has",
+          "lineNumber": 897
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.selectedIds.has",
+          "lineNumber": 909
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "c.toggleSelection",
+          "lineNumber": 910
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "e.stopPropagation",
+          "lineNumber": 912
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.selectVideo",
+          "lineNumber": 940
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "getVideoThumbnail",
+          "lineNumber": 944
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.grid.published",
+          "lineNumber": 961
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(() => {\n                            try {\n                              const date = new Date(video.uploadDate);\n                              if (!isNaN(date.getTime())) {\n                                return date.toLocaleDateString();\n                              }\n                              return t.grid.invalidDate;\n                            } catch (e) {\n                              return t.grid.invalidDate;\n                            }\n                          })",
+          "lineNumber": 962
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "isNaN",
+          "lineNumber": 965
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.getTime",
+          "lineNumber": 965
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.toLocaleDateString",
+          "lineNumber": 966
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.grid.created",
+          "lineNumber": 977
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(() => {\n                              const date = parseDate(video.createdTime);\n                              return date ? date.toLocaleDateString() : t.grid.invalidDate;\n                            })",
+          "lineNumber": 979
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "parseDate",
+          "lineNumber": 980
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.toLocaleDateString",
+          "lineNumber": 981
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.grid.duration",
+          "lineNumber": 993
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "formatDuration",
+          "lineNumber": 993
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "video.tags.slice(0, 3).map",
+          "lineNumber": 998
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "video.tags.slice",
+          "lineNumber": 998
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.grid.moreCount",
+          "lineNumber": 1008
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "getVideoThumbnail",
+          "lineNumber": 1037
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(() => {\n                      try {\n                        const date = ytm.selectedVideo.uploadDate\n                          ? new Date(ytm.selectedVideo.uploadDate)\n                          : null;\n                        return date && !isNaN(date.getTime())\n                          ? date.toLocaleDateString()\n                          : t.form.unknown;\n                      } catch (e) {\n                        return t.form.unknown;\n                      }\n                    })",
+          "lineNumber": 1048
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "isNaN",
+          "lineNumber": 1053
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.getTime",
+          "lineNumber": 1053
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.toLocaleDateString",
+          "lineNumber": 1054
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(() => {\n                          const date = parseDate(ytm.selectedVideo.createdTime);\n                          return date ? date.toLocaleDateString() : t.form.invalidDate;\n                        })",
+          "lineNumber": 1064
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "parseDate",
+          "lineNumber": 1065
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.toLocaleDateString",
+          "lineNumber": 1066
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "(() => {\n                          try {\n                            const date = new Date(ytm.selectedVideo.updated);\n                            return !isNaN(date.getTime())\n                              ? date.toLocaleDateString()\n                              : t.form.unknown;\n                          } catch (e) {\n                            return t.form.unknown;\n                          }\n                        })",
+          "lineNumber": 1073
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "isNaN",
+          "lineNumber": 1076
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.getTime",
+          "lineNumber": 1076
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "date.toLocaleDateString",
+          "lineNumber": 1077
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.setYoutubeTitle",
+          "lineNumber": 1120
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.setYoutubeTags",
+          "lineNumber": 1138
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.youtubeTags.split(',').map",
+          "lineNumber": 1155
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.youtubeTags.split",
+          "lineNumber": 1155
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "tag.trim",
+          "lineNumber": 1156
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "removeYoutubeTag",
+          "lineNumber": 1166
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.setYoutubeDescription",
+          "lineNumber": 1189
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.setYoutubeCreatedTime",
+          "lineNumber": 1208
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "parseRecordingDateFromTitle",
+          "lineNumber": 1216
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "parsedDate.getTime",
+          "lineNumber": 1221
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "utcPlus9Time.toISOString().split",
+          "lineNumber": 1223
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "utcPlus9Time.toISOString",
+          "lineNumber": 1223
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.setYoutubeCreatedTime",
+          "lineNumber": 1224
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "dialog.alert",
+          "lineNumber": 1225
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.alerts.parsedFromTitle",
+          "lineNumber": 1225
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "dialog.alert",
+          "lineNumber": 1227
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "ytm.selectedVideo.allPlaylists.map",
+          "lineNumber": 1304
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setShowCatSelector",
+          "lineNumber": 1353
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.catSelector.title",
+          "lineNumber": 1356
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.playlistSelector.title",
+          "lineNumber": 1365
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setShowPlaylistSelector",
+          "lineNumber": 1368
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "allPlaylists.map",
+          "lineNumber": 1394
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "selectedPlaylists.has",
+          "lineNumber": 1398
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "selectedPlaylists.has",
+          "lineNumber": 1405
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "handlePlaylistToggle",
+          "lineNumber": 1406
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.playlistSelector.videoCount",
+          "lineNumber": 1415
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setShowPlaylistSelector",
+          "lineNumber": 1428
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "setSelectedPlaylists",
+          "lineNumber": 1435
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "videoPlaylists.map",
+          "lineNumber": 1435
+        },
+        {
+          "caller": "TagVideosPage",
+          "callee": "t.playlistSelector.saveChanges",
+          "lineNumber": 1445
+        }
+      ],
+      "metrics": {
+        "importCount": 12,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/admin/tag-videos/useYouTubeVideoMutations.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 626,
+      "nonEmptyLines": 544,
+      "functions": [
+        {
+          "name": "useYouTubeVideoMutations",
+          "startLine": 40,
+          "endLine": 626,
+          "params": [
+            "{\n  videos,\n  setVideos,\n  reloadVideos,\n  setError,\n  videoService,\n  dialog,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "useYouTubeVideoMutations",
+          "line": 40,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useAuth",
+          "lineNumber": 50
+        },
+        {
+          "caller": "jsonAuthHeaders",
+          "callee": "authHeader",
+          "lineNumber": 53
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 57
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 60
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 61
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 62
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 63
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 66
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 67
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 68
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 69
+        },
+        {
+          "caller": "useYouTubeVideoMutations",
+          "callee": "useState",
+          "lineNumber": 70
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "setSelectedVideo",
+          "lineNumber": 73
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "setYoutubeTitle",
+          "lineNumber": 76
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "setYoutubeTags",
+          "lineNumber": 77
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "video.tags?.join",
+          "lineNumber": 77
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "setYoutubeDescription",
+          "lineNumber": 78
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "isNaN",
+          "lineNumber": 101
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "date.getTime",
+          "lineNumber": 101
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "date.toISOString().split",
+          "lineNumber": 103
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "date.toISOString",
+          "lineNumber": 103
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "console.log",
+          "lineNumber": 104
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "console.warn",
+          "lineNumber": 107
+        },
+        {
+          "caller": "selectVideo",
+          "callee": "setYoutubeCreatedTime",
+          "lineNumber": 110
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "dialog.alert",
+          "lineNumber": 118
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setSaving",
+          "lineNumber": 123
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setUpdatingYoutube",
+          "lineNumber": 124
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "(selectedVideo.tags || []).join",
+          "lineNumber": 142
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "youtubeTags\n          .split(',')\n          .map((tag) => tag.trim())\n          .filter",
+          "lineNumber": 144
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "youtubeTags\n          .split(',')\n          .map",
+          "lineNumber": 144
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "youtubeTags\n          .split",
+          "lineNumber": 144
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "tag.trim",
+          "lineNumber": 146
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "isNaN",
+          "lineNumber": 169
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "date.getTime",
+          "lineNumber": 169
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "date.toISOString().split",
+          "lineNumber": 170
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "date.toISOString",
+          "lineNumber": 170
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.warn",
+          "lineNumber": 173
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "createdTime.toISOString",
+          "lineNumber": 180
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "Object.keys",
+          "lineNumber": 184
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "dialog.alert",
+          "lineNumber": 185
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 189
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "fetch",
+          "lineNumber": 192
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "jsonAuthHeaders",
+          "lineNumber": 194
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "JSON.stringify",
+          "lineNumber": 195
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "updateResponse.json",
+          "lineNumber": 202
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "updateResponse.json",
+          "lineNumber": 206
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 207
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setUpdatingYoutube",
+          "lineNumber": 209
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 214
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setTimeout",
+          "lineNumber": 215
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 218
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 226
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "fetch",
+          "lineNumber": 229
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "jsonAuthHeaders",
+          "lineNumber": 231
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "JSON.stringify",
+          "lineNumber": 232
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "refreshResponse.json",
+          "lineNumber": 236
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "refreshResponse.json",
+          "lineNumber": 240
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 241
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "reloadVideos",
+          "lineNumber": 244
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setTimeout",
+          "lineNumber": 247
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setVideos",
+          "lineNumber": 248
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "currentVideos.find",
+          "lineNumber": 249
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.log",
+          "lineNumber": 251
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setSelectedVideo",
+          "lineNumber": 252
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setYoutubeTitle",
+          "lineNumber": 254
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setYoutubeDescription",
+          "lineNumber": 255
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setYoutubeTags",
+          "lineNumber": 256
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "(updatedVideo.tags || []).join",
+          "lineNumber": 256
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "isNaN",
+          "lineNumber": 277
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "date.getTime",
+          "lineNumber": 277
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "date.toISOString().split",
+          "lineNumber": 278
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "date.toISOString",
+          "lineNumber": 278
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.warn",
+          "lineNumber": 281
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setYoutubeCreatedTime",
+          "lineNumber": 284
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "dialog.alert",
+          "lineNumber": 290
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "console.error",
+          "lineNumber": 292
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "dialog.alert",
+          "lineNumber": 293
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "t.alerts.updateFailed",
+          "lineNumber": 293
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setSaving",
+          "lineNumber": 295
+        },
+        {
+          "caller": "saveVideoMetadata",
+          "callee": "setUpdatingYoutube",
+          "lineNumber": 296
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "setTimeout",
+          "lineNumber": 314
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "fetch",
+          "lineNumber": 317
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "jsonAuthHeaders",
+          "lineNumber": 319
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "JSON.stringify",
+          "lineNumber": 320
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "console.log",
+          "lineNumber": 328
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "refreshResponse.json().catch",
+          "lineNumber": 332
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "refreshResponse.json",
+          "lineNumber": 332
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "console.error",
+          "lineNumber": 333
+        },
+        {
+          "caller": "syncToFirestore",
+          "callee": "console.error",
+          "lineNumber": 339
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "batchTags.trim",
+          "lineNumber": 345
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "setSavingTags",
+          "lineNumber": 348
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "setError",
+          "lineNumber": 349
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "Array.from",
+          "lineNumber": 351
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "console.log",
+          "lineNumber": 364
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "console.log",
+          "lineNumber": 365
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "videos.find",
+          "lineNumber": 368
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "batchTags\n          .split(',')\n          .map((tag) => tag.trim())\n          .filter",
+          "lineNumber": 373
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "batchTags\n          .split(',')\n          .map",
+          "lineNumber": 373
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "batchTags\n          .split",
+          "lineNumber": 373
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "tag.trim",
+          "lineNumber": 375
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "newTags.every",
+          "lineNumber": 381
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "fetch",
+          "lineNumber": 385
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "jsonAuthHeaders",
+          "lineNumber": 387
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "JSON.stringify",
+          "lineNumber": 388
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults.push",
+          "lineNumber": 395
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "console.log",
+          "lineNumber": 396
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeResponse.json",
+          "lineNumber": 398
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults.push",
+          "lineNumber": 399
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "console.error",
+          "lineNumber": 404
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults.push",
+          "lineNumber": 407
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "console.error",
+          "lineNumber": 412
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults\n        .filter((r) => r.success)\n        .map",
+          "lineNumber": 418
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults\n        .filter",
+          "lineNumber": 418
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "syncToFirestore",
+          "lineNumber": 422
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "reloadVideos",
+          "lineNumber": 425
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults.filter",
+          "lineNumber": 426
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "youtubeUpdateResults.filter",
+          "lineNumber": 427
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "dialog.alert",
+          "lineNumber": 429
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "t.alerts.batchTagsDone",
+          "lineNumber": 430
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "setBatchTags",
+          "lineNumber": 433
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "console.error",
+          "lineNumber": 435
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "setError",
+          "lineNumber": 436
+        },
+        {
+          "caller": "batchUpdateTags",
+          "callee": "setSavingTags",
+          "lineNumber": 438
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "batchYoutubeCreatedTime.trim",
+          "lineNumber": 443
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "setSavingDate",
+          "lineNumber": 446
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "setError",
+          "lineNumber": 447
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "Array.from",
+          "lineNumber": 449
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "console.log",
+          "lineNumber": 457
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "console.log",
+          "lineNumber": 458
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "videos.find",
+          "lineNumber": 464
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "new Date(batchYoutubeCreatedTime).toISOString",
+          "lineNumber": 468
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "new Date(newCreatedTime).getTime",
+          "lineNumber": 471
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "new Date(currentCreatedTime as any).getTime",
+          "lineNumber": 473
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "fetch",
+          "lineNumber": 478
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "jsonAuthHeaders",
+          "lineNumber": 480
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "JSON.stringify",
+          "lineNumber": 481
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults.push",
+          "lineNumber": 488
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "console.log",
+          "lineNumber": 489
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeResponse.json",
+          "lineNumber": 491
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults.push",
+          "lineNumber": 492
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "console.error",
+          "lineNumber": 497
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults.push",
+          "lineNumber": 500
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "console.error",
+          "lineNumber": 505
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults\n        .filter((r) => r.success)\n        .map",
+          "lineNumber": 511
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults\n        .filter",
+          "lineNumber": 511
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "syncToFirestore",
+          "lineNumber": 516
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "new Date(batchYoutubeCreatedTime).toISOString",
+          "lineNumber": 518
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "reloadVideos",
+          "lineNumber": 523
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults.filter",
+          "lineNumber": 524
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "youtubeUpdateResults.filter",
+          "lineNumber": 525
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "dialog.alert",
+          "lineNumber": 527
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "t.alerts.batchDateDone",
+          "lineNumber": 528
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "setBatchYoutubeCreatedTime",
+          "lineNumber": 531
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "console.error",
+          "lineNumber": 533
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "setError",
+          "lineNumber": 534
+        },
+        {
+          "caller": "batchUpdateDate",
+          "callee": "setSavingDate",
+          "lineNumber": 536
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "dialog.confirm",
+          "lineNumber": 541
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "setBatchSaving",
+          "lineNumber": 544
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "console.log",
+          "lineNumber": 547
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "videoService.syncWithYouTube",
+          "lineNumber": 549
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "console.log",
+          "lineNumber": 550
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "console.log",
+          "lineNumber": 552
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "videoService.getAllVideos",
+          "lineNumber": 556
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "allVideos.filter",
+          "lineNumber": 557
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "youtubeVideos\n        .map((video) => video.youtubeId || video.id)\n        .filter",
+          "lineNumber": 558
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "youtubeVideos\n        .map",
+          "lineNumber": 558
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "dialog.alert",
+          "lineNumber": 563
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "console.log",
+          "lineNumber": 567
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "fetch",
+          "lineNumber": 570
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "jsonAuthHeaders",
+          "lineNumber": 572
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "JSON.stringify",
+          "lineNumber": 573
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "response.json",
+          "lineNumber": 579
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "response.json",
+          "lineNumber": 583
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "console.log",
+          "lineNumber": 584
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "reloadVideos",
+          "lineNumber": 587
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "dialog.alert",
+          "lineNumber": 589
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "t.alerts.syncDone",
+          "lineNumber": 589
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "console.error",
+          "lineNumber": 591
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "dialog.alert",
+          "lineNumber": 592
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "t.alerts.syncFailed",
+          "lineNumber": 592
+        },
+        {
+          "caller": "syncWithYouTube",
+          "callee": "setBatchSaving",
+          "lineNumber": 594
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/[mountain]/pages/butler_talk/new/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 11,
+      "functions": [
+        {
+          "name": "NewButlerTalkPage",
+          "startLine": 4,
+          "endLine": 11,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/NewAdoptionForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 103,
+      "nonEmptyLines": 94,
+      "functions": [
+        {
+          "name": "NewAdoptionForm",
+          "startLine": 16,
+          "endLine": 101,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "useMountain",
+          "lineNumber": 17
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "getAdoptionService",
+          "lineNumber": 18
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "useSimpleContentForm",
+          "lineNumber": 20
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "adoptionService.createPost",
+          "lineNumber": 27
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "getAdoptionPlaylistId",
+          "lineNumber": 31
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "form.setTitle",
+          "lineNumber": 43
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "form.setMessage",
+          "lineNumber": 54
+        },
+        {
+          "caller": "NewAdoptionForm",
+          "callee": "cn",
+          "lineNumber": 82
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/NewAnnouncementForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 156,
+      "nonEmptyLines": 146,
+      "functions": [
+        {
+          "name": "NewAnnouncementForm",
+          "startLine": 16,
+          "endLine": 154,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "useMountain",
+          "lineNumber": 17
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "useState",
+          "lineNumber": 18
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "getAnnouncementService",
+          "lineNumber": 19
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "useSimpleContentForm",
+          "lineNumber": 21
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "announcementService.createPost",
+          "lineNumber": 28
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "setShowInModal",
+          "lineNumber": 30
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "form.setTitle",
+          "lineNumber": 42
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "form.setMessage",
+          "lineNumber": 53
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "setShowInModal",
+          "lineNumber": 72
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "cn",
+          "lineNumber": 73
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "cn",
+          "lineNumber": 82
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "cn",
+          "lineNumber": 89
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "cn",
+          "lineNumber": 99
+        },
+        {
+          "caller": "NewAnnouncementForm",
+          "callee": "cn",
+          "lineNumber": 135
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/NewButlerTalkForm.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 242,
+      "nonEmptyLines": 221,
+      "functions": [
+        {
+          "name": "NewButlerTalkForm",
+          "startLine": 17,
+          "endLine": 240,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "generateDynamicTitle",
+          "callee": "date\n      .toLocaleDateString('ko-KR', {\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n      })\n      .replace(/\\s/g, '')\n      .replace",
+          "lineNumber": 23
+        },
+        {
+          "caller": "generateDynamicTitle",
+          "callee": "date\n      .toLocaleDateString('ko-KR', {\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n      })\n      .replace",
+          "lineNumber": 23
+        },
+        {
+          "caller": "generateDynamicTitle",
+          "callee": "date\n      .toLocaleDateString",
+          "lineNumber": 23
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "useMountain",
+          "lineNumber": 35
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "getButlerTalkService",
+          "lineNumber": 36
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "useRichContentForm",
+          "lineNumber": 38
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "butlerTalkService.createPost",
+          "lineNumber": 41
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setTitle",
+          "lineNumber": 74
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setMessage",
+          "lineNumber": 87
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.selectedVideoTags.join",
+          "lineNumber": 115
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setShowVideoTagSelector",
+          "lineNumber": 116
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setCreatedTime",
+          "lineNumber": 135
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.selectedImageTags.join",
+          "lineNumber": 190
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setShowImageTagSelector",
+          "lineNumber": 191
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setShowVideoTagSelector",
+          "lineNumber": 224
+        },
+        {
+          "caller": "NewButlerTalkForm",
+          "callee": "form.setShowImageTagSelector",
+          "lineNumber": 232
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/ContactManagement.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 95,
+      "nonEmptyLines": 85,
+      "functions": [
+        {
+          "name": "formatCreatedAt",
+          "startLine": 14,
+          "endLine": 24,
+          "params": [
+            "createdAt"
+          ]
+        },
+        {
+          "name": "ContactManagement",
+          "startLine": 26,
+          "endLine": 95,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "ContactManagement",
+          "line": 26,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "formatCreatedAt",
+          "callee": "date.toLocaleString",
+          "lineNumber": 23
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "useMountain",
+          "lineNumber": 27
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "useState",
+          "lineNumber": 28
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "useState",
+          "lineNumber": 29
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "useState",
+          "lineNumber": 30
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "useCallback",
+          "lineNumber": 32
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "setLoading",
+          "lineNumber": 33
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "setError",
+          "lineNumber": 34
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "getContactService(mountainId).getAllContacts",
+          "lineNumber": 36
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "getContactService",
+          "lineNumber": 36
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "setContacts",
+          "lineNumber": 37
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "console.error",
+          "lineNumber": 39
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "setError",
+          "lineNumber": 40
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "setLoading",
+          "lineNumber": 42
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "useEffect",
+          "lineNumber": 46
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "loadContacts",
+          "lineNumber": 47
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "contacts.map",
+          "lineNumber": 78
+        },
+        {
+          "caller": "ContactManagement",
+          "callee": "formatCreatedAt",
+          "lineNumber": 81
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/PointMapPicker.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 196,
+      "nonEmptyLines": 178,
+      "functions": [
+        {
+          "name": "clampRound",
+          "startLine": 30,
+          "endLine": 30,
+          "params": [
+            "n"
+          ]
+        },
+        {
+          "name": "PointMapPicker",
+          "startLine": 39,
+          "endLine": 144,
+          "params": [
+            "{\n  points,\n  value,\n  editingId,\n  onChange,\n}"
+          ]
+        },
+        {
+          "name": "CoordInput",
+          "startLine": 155,
+          "endLine": 196,
+          "params": [
+            "{\n  label,\n  value,\n  onChange,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PointMapPicker",
+          "line": 39,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "clampRound",
+          "callee": "Math.min",
+          "lineNumber": 30
+        },
+        {
+          "caller": "clampRound",
+          "callee": "Math.max",
+          "lineNumber": 30
+        },
+        {
+          "caller": "clampRound",
+          "callee": "Math.round",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "useRef",
+          "lineNumber": 45
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "useState",
+          "lineNumber": 46
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "useCallback",
+          "lineNumber": 48
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "containerRef.current?.getBoundingClientRect",
+          "lineNumber": 50
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "onChange",
+          "lineNumber": 52
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "clampRound",
+          "lineNumber": 53
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "clampRound",
+          "lineNumber": 54
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "e.preventDefault",
+          "lineNumber": 61
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "(e.currentTarget as HTMLDivElement).setPointerCapture",
+          "lineNumber": 62
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "setDragging",
+          "lineNumber": 63
+        },
+        {
+          "caller": "handlePointerDown",
+          "callee": "setFromEvent",
+          "lineNumber": 64
+        },
+        {
+          "caller": "handlePointerMove",
+          "callee": "setFromEvent",
+          "lineNumber": 69
+        },
+        {
+          "caller": "endDrag",
+          "callee": "setDragging",
+          "lineNumber": 74
+        },
+        {
+          "caller": "endDrag",
+          "callee": "el.hasPointerCapture",
+          "lineNumber": 76
+        },
+        {
+          "caller": "endDrag",
+          "callee": "el.releasePointerCapture",
+          "lineNumber": 76
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "points.filter",
+          "lineNumber": 79
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "contextPoints.map",
+          "lineNumber": 104
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "onChange",
+          "lineNumber": 134
+        },
+        {
+          "caller": "PointMapPicker",
+          "callee": "onChange",
+          "lineNumber": 139
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "useState",
+          "lineNumber": 164
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "String",
+          "lineNumber": 164
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "useEffect",
+          "lineNumber": 169
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "text.trim",
+          "lineNumber": 170
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "clampRound",
+          "lineNumber": 170
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "parseFloat",
+          "lineNumber": 170
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "setText",
+          "lineNumber": 171
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "String",
+          "lineNumber": 171
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "setText",
+          "lineNumber": 185
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "e.target.value.trim",
+          "lineNumber": 186
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "parseFloat",
+          "lineNumber": 187
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "Number.isNaN",
+          "lineNumber": 188
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "onChange",
+          "lineNumber": 189
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "clampRound",
+          "lineNumber": 189
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "setText",
+          "lineNumber": 191
+        },
+        {
+          "caller": "CoordInput",
+          "callee": "String",
+          "lineNumber": 191
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/ResourcePermissionConfig.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 208,
+      "nonEmptyLines": 186,
+      "functions": [
+        {
+          "name": "ResourcePermissionConfig",
+          "startLine": 36,
+          "endLine": 208,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "ResourcePermissionConfig",
+          "line": 36,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useAuth",
+          "lineNumber": 37
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 38
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 39
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 40
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 41
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 42
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "useEffect",
+          "lineNumber": 44
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "fetchConfig",
+          "lineNumber": 45
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setLoading",
+          "lineNumber": 49
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setError",
+          "lineNumber": 50
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "fetch",
+          "lineNumber": 52
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "response.json",
+          "lineNumber": 56
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setConfig",
+          "lineNumber": 59
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "console.error",
+          "lineNumber": 61
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setError",
+          "lineNumber": 62
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setLoading",
+          "lineNumber": 64
+        },
+        {
+          "caller": "handleToggle",
+          "callee": "currentPermissions.includes",
+          "lineNumber": 72
+        },
+        {
+          "caller": "handleToggle",
+          "callee": "currentPermissions.filter",
+          "lineNumber": 76
+        },
+        {
+          "caller": "handleToggle",
+          "callee": "setConfig",
+          "lineNumber": 81
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSaving",
+          "lineNumber": 93
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setError",
+          "lineNumber": 94
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSuccessMessage",
+          "lineNumber": 95
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "fetch",
+          "lineNumber": 98
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "authHeader",
+          "lineNumber": 102
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "JSON.stringify",
+          "lineNumber": 104
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSuccessMessage",
+          "lineNumber": 111
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setTimeout",
+          "lineNumber": 112
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSuccessMessage",
+          "lineNumber": 112
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "console.error",
+          "lineNumber": 114
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setError",
+          "lineNumber": 115
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSaving",
+          "lineNumber": 117
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "common.error",
+          "lineNumber": 128
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "ALL_PERMISSIONS.map",
+          "lineNumber": 166
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "RESOURCES.map",
+          "lineNumber": 177
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "ALL_PERMISSIONS.map",
+          "lineNumber": 183
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "config.resources[resource.id]?.includes",
+          "lineNumber": 184
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "handleToggle",
+          "lineNumber": 193
+        },
+        {
+          "caller": "ResourcePermissionConfig",
+          "callee": "t.requiresTitle",
+          "lineNumber": 195
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/RoleManagement.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 251,
+      "nonEmptyLines": 232,
+      "functions": [
+        {
+          "name": "RoleManagement",
+          "startLine": 11,
+          "endLine": 208,
+          "params": []
+        },
+        {
+          "name": "UserCard",
+          "startLine": 211,
+          "endLine": 251,
+          "params": [
+            "{\n  userItem,\n  assignRole,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "RoleManagement",
+          "line": 11,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RoleManagement",
+          "callee": "useAuth",
+          "lineNumber": 12
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "useState",
+          "lineNumber": 13
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "useState",
+          "lineNumber": 14
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "useState",
+          "lineNumber": 15
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "setLoading",
+          "lineNumber": 21
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "setMessage",
+          "lineNumber": 22
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "fetch",
+          "lineNumber": 26
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "authHeader",
+          "lineNumber": 30
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "usersCollection.json().catch",
+          "lineNumber": 35
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "usersCollection.json",
+          "lineNumber": 35
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "usersCollection.json",
+          "lineNumber": 39
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "setUsers",
+          "lineNumber": 40
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "setMessage",
+          "lineNumber": 41
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "t.messages.loaded",
+          "lineNumber": 41
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "console.error",
+          "lineNumber": 43
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "setMessage",
+          "lineNumber": 44
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "t.messages.loadError",
+          "lineNumber": 44
+        },
+        {
+          "caller": "loadUsers",
+          "callee": "setLoading",
+          "lineNumber": 46
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "useEffect",
+          "lineNumber": 50
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "loadUsers",
+          "lineNumber": 51
+        },
+        {
+          "caller": "assignRole",
+          "callee": "setMessage",
+          "lineNumber": 58
+        },
+        {
+          "caller": "assignRole",
+          "callee": "t.messages.assigning",
+          "lineNumber": 58
+        },
+        {
+          "caller": "assignRole",
+          "callee": "fetch",
+          "lineNumber": 61
+        },
+        {
+          "caller": "assignRole",
+          "callee": "authHeader",
+          "lineNumber": 65
+        },
+        {
+          "caller": "assignRole",
+          "callee": "JSON.stringify",
+          "lineNumber": 67
+        },
+        {
+          "caller": "assignRole",
+          "callee": "res.json().catch",
+          "lineNumber": 70
+        },
+        {
+          "caller": "assignRole",
+          "callee": "res.json",
+          "lineNumber": 70
+        },
+        {
+          "caller": "assignRole",
+          "callee": "setMessage",
+          "lineNumber": 73
+        },
+        {
+          "caller": "assignRole",
+          "callee": "t.messages.assigned",
+          "lineNumber": 73
+        },
+        {
+          "caller": "assignRole",
+          "callee": "loadUsers",
+          "lineNumber": 74
+        },
+        {
+          "caller": "assignRole",
+          "callee": "console.error",
+          "lineNumber": 76
+        },
+        {
+          "caller": "assignRole",
+          "callee": "setMessage",
+          "lineNumber": 77
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 112
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter((u) => u.role === 'admin')\n                  .map",
+          "lineNumber": 118
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter",
+          "lineNumber": 118
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 123
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 135
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter((u) => u.role === 'butler-ground')\n                  .map",
+          "lineNumber": 141
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter",
+          "lineNumber": 141
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 146
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 158
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter((u) => u.role === 'butler-internet')\n                  .map",
+          "lineNumber": 164
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter",
+          "lineNumber": 164
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 169
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 182
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "['admin', 'butler-ground', 'butler-internet'].includes",
+          "lineNumber": 183
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter((u) => !['admin', 'butler-ground', 'butler-internet'].includes(u.role))\n                  .map",
+          "lineNumber": 191
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users\n                  .filter",
+          "lineNumber": 191
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "['admin', 'butler-ground', 'butler-internet'].includes",
+          "lineNumber": 192
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "users.filter",
+          "lineNumber": 196
+        },
+        {
+          "caller": "RoleManagement",
+          "callee": "['admin', 'butler-ground', 'butler-internet'].includes",
+          "lineNumber": 197
+        },
+        {
+          "caller": "UserCard",
+          "callee": "userItem.uid.substring",
+          "lineNumber": 223
+        },
+        {
+          "caller": "UserCard",
+          "callee": "navigator.clipboard.writeText",
+          "lineNumber": 225
+        },
+        {
+          "caller": "UserCard",
+          "callee": "['admin', 'butler-ground', 'butler-internet', 'viewer'].map",
+          "lineNumber": 234
+        },
+        {
+          "caller": "UserCard",
+          "callee": "assignRole",
+          "lineNumber": 237
+        },
+        {
+          "caller": "UserCard",
+          "callee": "cn",
+          "lineNumber": 239
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/RolePermissionConfig.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 210,
+      "nonEmptyLines": 187,
+      "functions": [
+        {
+          "name": "RolePermissionConfig",
+          "startLine": 36,
+          "endLine": 210,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RolePermissionConfig",
+          "line": 36,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useAuth",
+          "lineNumber": 37
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 38
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 39
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 40
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 41
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useState",
+          "lineNumber": 42
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "useEffect",
+          "lineNumber": 44
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "fetchConfig",
+          "lineNumber": 46
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setLoading",
+          "lineNumber": 51
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setError",
+          "lineNumber": 52
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "fetch",
+          "lineNumber": 54
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "authHeader",
+          "lineNumber": 55
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "response.json",
+          "lineNumber": 60
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setConfig",
+          "lineNumber": 61
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "console.error",
+          "lineNumber": 63
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setError",
+          "lineNumber": 64
+        },
+        {
+          "caller": "fetchConfig",
+          "callee": "setLoading",
+          "lineNumber": 66
+        },
+        {
+          "caller": "handlePermissionToggle",
+          "callee": "currentPermissions.includes",
+          "lineNumber": 74
+        },
+        {
+          "caller": "handlePermissionToggle",
+          "callee": "currentPermissions.filter",
+          "lineNumber": 78
+        },
+        {
+          "caller": "handlePermissionToggle",
+          "callee": "setConfig",
+          "lineNumber": 83
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSaving",
+          "lineNumber": 98
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setError",
+          "lineNumber": 99
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSuccessMessage",
+          "lineNumber": 100
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "fetch",
+          "lineNumber": 103
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "authHeader",
+          "lineNumber": 107
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "JSON.stringify",
+          "lineNumber": 109
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSuccessMessage",
+          "lineNumber": 116
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setTimeout",
+          "lineNumber": 117
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSuccessMessage",
+          "lineNumber": 117
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "console.error",
+          "lineNumber": 119
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setError",
+          "lineNumber": 120
+        },
+        {
+          "caller": "saveConfig",
+          "callee": "setSaving",
+          "lineNumber": 122
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "common.error",
+          "lineNumber": 133
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "Object.keys(config.roles).filter",
+          "lineNumber": 143
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "Object.keys",
+          "lineNumber": 143
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "['admin', 'butler-ground', 'butler-internet', 'viewer'].includes",
+          "lineNumber": 144
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "roles.map",
+          "lineNumber": 175
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "ALL_PERMISSIONS.map",
+          "lineNumber": 186
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "roles.map",
+          "lineNumber": 189
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "config.roles[role]?.permissions.includes",
+          "lineNumber": 190
+        },
+        {
+          "caller": "RolePermissionConfig",
+          "callee": "handlePermissionToggle",
+          "lineNumber": 196
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/media/index.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 28,
+      "nonEmptyLines": 27,
+      "exports": [
+        {
+          "name": "useMediaListController",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "MediaListItem",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "MediaListController",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "UseMediaListControllerOptions",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "useDateAutoParse",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "AutoParseReport",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "AutoParseResult",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "UseDateAutoParseOptions",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "MediaStatsCards",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "MediaStatCard",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "MediaFilterBar",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "MediaFilterBarLabels",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "SortOption",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "BatchActionsPanel",
+          "line": 25,
+          "isDefault": false
+        },
+        {
+          "name": "CatTagField",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "MediaGrid",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "PaginationBar",
+          "line": 28,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 17,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/forms/MediaItemList.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 147,
+      "nonEmptyLines": 132,
+      "functions": [
+        {
+          "name": "MediaItemList",
+          "startLine": 58,
+          "endLine": 145,
+          "params": [
+            "{ kind, items, onItemsChange, disabled = false }"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "selectFile",
+          "callee": "onItemsChange",
+          "lineNumber": 65
+        },
+        {
+          "caller": "updateField",
+          "callee": "onItemsChange",
+          "lineNumber": 71
+        },
+        {
+          "caller": "removeItem",
+          "callee": "onItemsChange",
+          "lineNumber": 75
+        },
+        {
+          "caller": "removeItem",
+          "callee": "items.filter",
+          "lineNumber": 75
+        },
+        {
+          "caller": "MediaItemList",
+          "callee": "items.map",
+          "lineNumber": 83
+        },
+        {
+          "caller": "MediaItemList",
+          "callee": "removeItem",
+          "lineNumber": 89
+        },
+        {
+          "caller": "MediaItemList",
+          "callee": "updateField",
+          "lineNumber": 103
+        },
+        {
+          "caller": "MediaItemList",
+          "callee": "updateField",
+          "lineNumber": 116
+        },
+        {
+          "caller": "MediaItemList",
+          "callee": "selectFile",
+          "lineNumber": 139
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/forms/MediaUploadField.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 159,
+      "nonEmptyLines": 146,
+      "functions": [
+        {
+          "name": "MediaUploadField",
+          "startLine": 48,
+          "endLine": 157,
+          "params": [
+            "{\n  kind,\n  files,\n  onFilesChange,\n  urls,\n  onUrlsChange,\n}"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MediaUploadField",
+          "callee": "useState",
+          "lineNumber": 56
+        },
+        {
+          "caller": "handleFilesChange",
+          "callee": "onFilesChange",
+          "lineNumber": 60
+        },
+        {
+          "caller": "handleFilesChange",
+          "callee": "Array.from",
+          "lineNumber": 60
+        },
+        {
+          "caller": "removeFile",
+          "callee": "onFilesChange",
+          "lineNumber": 65
+        },
+        {
+          "caller": "removeFile",
+          "callee": "files.filter",
+          "lineNumber": 65
+        },
+        {
+          "caller": "addUrl",
+          "callee": "currentUrl.trim",
+          "lineNumber": 69
+        },
+        {
+          "caller": "addUrl",
+          "callee": "onUrlsChange",
+          "lineNumber": 70
+        },
+        {
+          "caller": "addUrl",
+          "callee": "currentUrl.trim",
+          "lineNumber": 70
+        },
+        {
+          "caller": "addUrl",
+          "callee": "setCurrentUrl",
+          "lineNumber": 71
+        },
+        {
+          "caller": "removeUrl",
+          "callee": "onUrlsChange",
+          "lineNumber": 76
+        },
+        {
+          "caller": "removeUrl",
+          "callee": "urls.filter",
+          "lineNumber": 76
+        },
+        {
+          "caller": "MediaUploadField",
+          "callee": "files.map",
+          "lineNumber": 96
+        },
+        {
+          "caller": "MediaUploadField",
+          "callee": "removeFile",
+          "lineNumber": 104
+        },
+        {
+          "caller": "MediaUploadField",
+          "callee": "setCurrentUrl",
+          "lineNumber": 122
+        },
+        {
+          "caller": "MediaUploadField",
+          "callee": "urls.map",
+          "lineNumber": 137
+        },
+        {
+          "caller": "MediaUploadField",
+          "callee": "removeUrl",
+          "lineNumber": 145
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/forms/uploadStrategies.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 224,
+      "nonEmptyLines": 204,
+      "functions": [
+        {
+          "name": "uploadImagesToStorage",
+          "startLine": 39,
+          "endLine": 50,
+          "params": [
+            "files",
+            "pathPrefix",
+            "storagePrefix"
+          ]
+        },
+        {
+          "name": "uploadVideoToYouTube",
+          "startLine": 75,
+          "endLine": 113,
+          "params": [
+            "file",
+            "options"
+          ]
+        },
+        {
+          "name": "uploadVideosToYouTube",
+          "startLine": 116,
+          "endLine": 121,
+          "params": [
+            "files",
+            "options"
+          ]
+        },
+        {
+          "name": "uploadImagesWithSignedUrls",
+          "startLine": 156,
+          "endLine": 224,
+          "params": [
+            "uploads",
+            "context"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "uploadImagesToStorage",
+          "line": 39,
+          "isDefault": false
+        },
+        {
+          "name": "uploadVideoToYouTube",
+          "line": 75,
+          "isDefault": false
+        },
+        {
+          "name": "uploadVideosToYouTube",
+          "line": 116,
+          "isDefault": false
+        },
+        {
+          "name": "uploadImagesWithSignedUrls",
+          "line": 156,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "uploadImagesToStorage",
+          "callee": "getStorageService",
+          "lineNumber": 44
+        },
+        {
+          "caller": "uploadImagesToStorage",
+          "callee": "files.map",
+          "lineNumber": 45
+        },
+        {
+          "caller": "uploadImagesToStorage",
+          "callee": "Date.now",
+          "lineNumber": 46
+        },
+        {
+          "caller": "uploadImagesToStorage",
+          "callee": "storageService.uploadFile",
+          "lineNumber": 47
+        },
+        {
+          "caller": "uploadImagesToStorage",
+          "callee": "Promise.all",
+          "lineNumber": 49
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "formData.append",
+          "lineNumber": 80
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "formData.append",
+          "lineNumber": 81
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "formData.append",
+          "lineNumber": 82
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "formData.append",
+          "lineNumber": 84
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "formData.append",
+          "lineNumber": 87
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "formData.append",
+          "lineNumber": 91
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "fetch",
+          "lineNumber": 95
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "authHeader",
+          "lineNumber": 97
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "response.text",
+          "lineNumber": 102
+        },
+        {
+          "caller": "uploadVideoToYouTube",
+          "callee": "response.json",
+          "lineNumber": 106
+        },
+        {
+          "caller": "uploadVideosToYouTube",
+          "callee": "Promise.all",
+          "lineNumber": 120
+        },
+        {
+          "caller": "uploadVideosToYouTube",
+          "callee": "files.map",
+          "lineNumber": 120
+        },
+        {
+          "caller": "uploadVideosToYouTube",
+          "callee": "uploadVideoToYouTube",
+          "lineNumber": 120
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "getImageService",
+          "lineNumber": 160
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "authHeader",
+          "lineNumber": 161
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "Promise.all",
+          "lineNumber": 163
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "uploads.map",
+          "lineNumber": 164
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "fetch",
+          "lineNumber": 165
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "JSON.stringify",
+          "lineNumber": 171
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "response.json",
+          "lineNumber": 178
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "fetch",
+          "lineNumber": 180
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "calendarDateToInstant",
+          "lineNumber": 206
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "imageService.createImage",
+          "lineNumber": 216
+        },
+        {
+          "caller": "uploadImagesWithSignedUrls",
+          "callee": "console.error",
+          "lineNumber": 218
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 4,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/forms/useRichContentForm.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 279,
+      "nonEmptyLines": 253,
+      "functions": [
+        {
+          "name": "useRichContentForm",
+          "startLine": 52,
+          "endLine": 279,
+          "params": [
+            "config"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "useRichContentForm",
+          "line": 52,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useRichContentForm",
+          "callee": "useMountain",
+          "lineNumber": 53
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 54
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 55
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 56
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 57
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 60
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 61
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 62
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useState",
+          "lineNumber": 63
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useRouter",
+          "lineNumber": 65
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useDialog",
+          "lineNumber": 66
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "useAuth",
+          "lineNumber": 67
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "getYouTubePlaylistId",
+          "lineNumber": 74
+        },
+        {
+          "caller": "useRichContentForm",
+          "callee": "getMountainName",
+          "lineNumber": 75
+        },
+        {
+          "caller": "autoParseCreatedTime",
+          "callee": "parseRecordingDateFromTitle",
+          "lineNumber": 85
+        },
+        {
+          "caller": "autoParseCreatedTime",
+          "callee": "setCreatedTime",
+          "lineNumber": 87
+        },
+        {
+          "caller": "autoParseCreatedTime",
+          "callee": "formatDateForInput",
+          "lineNumber": 87
+        },
+        {
+          "caller": "handleVideoItemsChange",
+          "callee": "setVideoItems",
+          "lineNumber": 94
+        },
+        {
+          "caller": "handleVideoItemsChange",
+          "callee": "autoParseCreatedTime",
+          "lineNumber": 95
+        },
+        {
+          "caller": "handleImageItemsChange",
+          "callee": "setImageItems",
+          "lineNumber": 99
+        },
+        {
+          "caller": "handleImageItemsChange",
+          "callee": "autoParseCreatedTime",
+          "lineNumber": 102
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "title.trim",
+          "lineNumber": 113
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "message.trim",
+          "lineNumber": 114
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "dialog.confirm",
+          "lineNumber": 119
+        },
+        {
+          "caller": "handleCancel",
+          "callee": "router.push",
+          "lineNumber": 122
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "event.preventDefault",
+          "lineNumber": 126
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setUploading",
+          "lineNumber": 127
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "title.trim",
+          "lineNumber": 138
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.buildDefaultTitle",
+          "lineNumber": 138
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "videoItems.filter",
+          "lineNumber": 142
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "item.title.trim",
+          "lineNumber": 142
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "Promise.all",
+          "lineNumber": 145
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "videoItems.map",
+          "lineNumber": 146
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "item.title.trim",
+          "lineNumber": 147
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "uploadVideoToYouTube",
+          "lineNumber": 155
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "selectedVideoTags.join",
+          "lineNumber": 159
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 168
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "uploadImagesWithSignedUrls",
+          "lineNumber": 178
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "imageItems.map",
+          "lineNumber": 179
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 192
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "title.trim",
+          "lineNumber": 203
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "(config.buildPostTitleFallback ?? config.buildDefaultTitle)",
+          "lineNumber": 203
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString().split",
+          "lineNumber": 208
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString",
+          "lineNumber": 208
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString().split('T')[1].split",
+          "lineNumber": 209
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString().split",
+          "lineNumber": 209
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.toISOString",
+          "lineNumber": 209
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.createPost",
+          "lineNumber": 223
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.afterCreate",
+          "lineNumber": 225
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setVideoItems",
+          "lineNumber": 228
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setImageItems",
+          "lineNumber": 229
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setTitle",
+          "lineNumber": 230
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setMessage",
+          "lineNumber": 231
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.onResetExtras",
+          "lineNumber": 233
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 235
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "router.push",
+          "lineNumber": 237
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 239
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setUploading",
+          "lineNumber": 243
+        }
+      ],
+      "metrics": {
+        "importCount": 7,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/forms/useSimpleContentForm.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 197,
+      "nonEmptyLines": 176,
+      "functions": [
+        {
+          "name": "useSimpleContentForm",
+          "startLine": 49,
+          "endLine": 197,
+          "params": [
+            "config"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "useSimpleContentForm",
+          "line": 49,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 50
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 51
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 52
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 53
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 54
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 55
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useState",
+          "lineNumber": 56
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useRouter",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useAuth",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useDialog",
+          "lineNumber": 60
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "useMountain",
+          "lineNumber": 61
+        },
+        {
+          "caller": "useSimpleContentForm",
+          "callee": "getMountainConfig",
+          "lineNumber": 62
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "e.preventDefault",
+          "lineNumber": 65
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setUploading",
+          "lineNumber": 66
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "title.trim",
+          "lineNumber": 69
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 70
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "message.trim",
+          "lineNumber": 74
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 75
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 80
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "imageUrls.filter",
+          "lineNumber": 85
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "url.trim",
+          "lineNumber": 85
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "videoUrls.filter",
+          "lineNumber": 86
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "url.trim",
+          "lineNumber": 86
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "uploadImagesToStorage",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 97
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "[\n            getYouTubePlaylistId(mountainId),\n            ...(config.extraPlaylistIds?.() ?? []),\n          ].filter",
+          "lineNumber": 109
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "getYouTubePlaylistId",
+          "lineNumber": 110
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.extraPlaylistIds",
+          "lineNumber": 111
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "Boolean",
+          "lineNumber": 112
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "uploadVideosToYouTube",
+          "lineNumber": 114
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 123
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "now.getTime",
+          "lineNumber": 132
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "title.trim",
+          "lineNumber": 135
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "message.trim",
+          "lineNumber": 136
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "koreaTime.toISOString().split",
+          "lineNumber": 138
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "koreaTime.toISOString",
+          "lineNumber": 138
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "koreaTime.toLocaleTimeString",
+          "lineNumber": 139
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.extraPostData",
+          "lineNumber": 149
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.createPost",
+          "lineNumber": 152
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setTitle",
+          "lineNumber": 155
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setMessage",
+          "lineNumber": 156
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setImageFiles",
+          "lineNumber": 157
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setVideoFiles",
+          "lineNumber": 158
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setImageUrls",
+          "lineNumber": 159
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setVideoUrls",
+          "lineNumber": 160
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "config.onResetExtras",
+          "lineNumber": 161
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 163
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "router.push",
+          "lineNumber": 165
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "dialog.alert",
+          "lineNumber": 167
+        },
+        {
+          "caller": "handleSubmit",
+          "callee": "setUploading",
+          "lineNumber": 171
+        },
+        {
+          "caller": "cancel",
+          "callee": "router.push",
+          "lineNumber": 176
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/useDialog.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 92,
+      "nonEmptyLines": 81,
+      "functions": [
+        {
+          "name": "useDialog",
+          "startLine": 31,
+          "endLine": 92,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "useDialog",
+          "line": 31,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "useDialog",
+          "callee": "useState",
+          "lineNumber": 32
+        },
+        {
+          "caller": "useDialog",
+          "callee": "useRef",
+          "lineNumber": 33
+        },
+        {
+          "caller": "useDialog",
+          "callee": "useCallback",
+          "lineNumber": 35
+        },
+        {
+          "caller": "useDialog",
+          "callee": "resolverRef.current",
+          "lineNumber": 38
+        },
+        {
+          "caller": "useDialog",
+          "callee": "setState",
+          "lineNumber": 40
+        },
+        {
+          "caller": "useDialog",
+          "callee": "useCallback",
+          "lineNumber": 44
+        },
+        {
+          "caller": "useDialog",
+          "callee": "setState",
+          "lineNumber": 47
+        },
+        {
+          "caller": "useDialog",
+          "callee": "setTimeout",
+          "lineNumber": 54
+        },
+        {
+          "caller": "useDialog",
+          "callee": "resolve",
+          "lineNumber": 54
+        },
+        {
+          "caller": "useDialog",
+          "callee": "useCallback",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useDialog",
+          "callee": "open('alert', message, title).then",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useDialog",
+          "callee": "open",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useDialog",
+          "callee": "useCallback",
+          "lineNumber": 63
+        },
+        {
+          "caller": "useDialog",
+          "callee": "open",
+          "lineNumber": 64
+        },
+        {
+          "caller": "useDialog",
+          "callee": "close",
+          "lineNumber": 71
+        },
+        {
+          "caller": "useDialog",
+          "callee": "close",
+          "lineNumber": 80
+        },
+        {
+          "caller": "useDialog",
+          "callee": "close",
+          "lineNumber": 84
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/constants/adminStrings.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 759,
+      "nonEmptyLines": 741,
+      "exports": [
+        {
+          "name": "adminStrings",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/auth/authHeader.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 13,
+      "functions": [
+        {
+          "name": "authHeader",
+          "startLine": 11,
+          "endLine": 14,
+          "params": [
+            "user"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "authHeader",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "authHeader",
+          "callee": "user.getIdToken",
+          "lineNumber": 12
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/utils/dateParser.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 141,
+      "nonEmptyLines": 123,
+      "functions": [
+        {
+          "name": "parseDateFromText",
+          "startLine": 7,
+          "endLine": 78,
+          "params": [
+            "text",
+            "sourceLabel"
+          ]
+        },
+        {
+          "name": "parseRecordingDateFromTitle",
+          "startLine": 80,
+          "endLine": 81,
+          "params": [
+            "title"
+          ]
+        },
+        {
+          "name": "parseCreatedDateFromFilename",
+          "startLine": 83,
+          "endLine": 84,
+          "params": [
+            "filename"
+          ]
+        },
+        {
+          "name": "formatDateForInput",
+          "startLine": 98,
+          "endLine": 103,
+          "params": [
+            "date"
+          ]
+        },
+        {
+          "name": "calendarDateToInstant",
+          "startLine": 120,
+          "endLine": 141,
+          "params": [
+            "calendarDate"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "parseRecordingDateFromTitle",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "parseCreatedDateFromFilename",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "formatDateForInput",
+          "line": 98,
+          "isDefault": false
+        },
+        {
+          "name": "calendarDateToInstant",
+          "line": 120,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "parseDateFromText",
+          "callee": "text.match",
+          "lineNumber": 11
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.replace(/\\s+/, 'T').replace",
+          "lineNumber": 16
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.replace",
+          "lineNumber": 16
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "isNaN",
+          "lineNumber": 18
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "date.getTime",
+          "lineNumber": 18
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "text.match",
+          "lineNumber": 25
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.substring",
+          "lineNumber": 30
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.substring",
+          "lineNumber": 31
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.substring",
+          "lineNumber": 32
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.substring",
+          "lineNumber": 33
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.substring",
+          "lineNumber": 34
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateTimeStr.substring",
+          "lineNumber": 35
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "isNaN",
+          "lineNumber": 39
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "date.getTime",
+          "lineNumber": 39
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "text.match",
+          "lineNumber": 46
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "isNaN",
+          "lineNumber": 51
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "date.getTime",
+          "lineNumber": 51
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "text.match",
+          "lineNumber": 58
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateStr.substring",
+          "lineNumber": 62
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateStr.substring",
+          "lineNumber": 63
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "dateStr.substring",
+          "lineNumber": 64
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "isNaN",
+          "lineNumber": 68
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "date.getTime",
+          "lineNumber": 68
+        },
+        {
+          "caller": "parseDateFromText",
+          "callee": "console.warn",
+          "lineNumber": 75
+        },
+        {
+          "caller": "parseRecordingDateFromTitle",
+          "callee": "parseDateFromText",
+          "lineNumber": 81
+        },
+        {
+          "caller": "parseCreatedDateFromFilename",
+          "callee": "parseDateFromText",
+          "lineNumber": 84
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "date.getFullYear",
+          "lineNumber": 99
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "String(date.getMonth() + 1).padStart",
+          "lineNumber": 100
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "String",
+          "lineNumber": 100
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "date.getMonth",
+          "lineNumber": 100
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "String(date.getDate()).padStart",
+          "lineNumber": 101
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "String",
+          "lineNumber": 101
+        },
+        {
+          "caller": "formatDateForInput",
+          "callee": "date.getDate",
+          "lineNumber": 101
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "calendarDate.match",
+          "lineNumber": 121
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "instant.getUTCFullYear",
+          "lineNumber": 133
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "Number",
+          "lineNumber": 133
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "instant.getUTCMonth",
+          "lineNumber": 134
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "Number",
+          "lineNumber": 134
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "instant.getUTCDate",
+          "lineNumber": 135
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "Number",
+          "lineNumber": 135
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "isNaN",
+          "lineNumber": 137
+        },
+        {
+          "caller": "calendarDateToInstant",
+          "callee": "instant.getTime",
+          "lineNumber": 137
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 5,
+        "classCount": 0
+      }
+    }
+  ]
+}

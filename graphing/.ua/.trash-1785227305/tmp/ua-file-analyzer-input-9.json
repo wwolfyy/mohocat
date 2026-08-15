@@ -1,0 +1,120 @@
+{
+ "projectRoot": "/Users/jp/github/mohocat",
+ "batchFiles": [
+  {
+   "path": "src/app/[mountain]/pages/butler_stream/new/page.tsx",
+   "language": "typescript",
+   "sizeLines": 29,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/butler_stream/page.tsx",
+   "language": "typescript",
+   "sizeLines": 74,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/butler_talk/page.tsx",
+   "language": "typescript",
+   "sizeLines": 70,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/ButlerStreamClient.tsx",
+   "language": "typescript",
+   "sizeLines": 125,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/ButlerTalkClient.tsx",
+   "language": "typescript",
+   "sizeLines": 125,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/FeedingSpotsList.tsx",
+   "language": "typescript",
+   "sizeLines": 145,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/NewPostForm.tsx",
+   "language": "typescript",
+   "sizeLines": 324,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/lib/auth/admin.ts",
+   "language": "typescript",
+   "sizeLines": 181,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/services/feeding-spots-admin-service.ts",
+   "language": "typescript",
+   "sizeLines": 149,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/types/admin.ts",
+   "language": "typescript",
+   "sizeLines": 120,
+   "fileCategory": "code"
+  }
+ ],
+ "batchImportData": {
+  "src/app/[mountain]/pages/butler_stream/new/page.tsx": [
+   "src/components/NewPostForm.tsx",
+   "src/services/feeding-spots-admin-service.ts"
+  ],
+  "src/app/[mountain]/pages/butler_stream/page.tsx": [
+   "src/components/ButlerStreamClient.tsx",
+   "src/components/FeedingSpotsList.tsx",
+   "src/components/MountainProvider.tsx",
+   "src/hooks/useAuth.ts",
+   "src/lib/auth/admin.ts",
+   "src/services/feeding-spots-admin-service.ts"
+  ],
+  "src/app/[mountain]/pages/butler_talk/page.tsx": [
+   "src/components/ButlerTalkClient.tsx",
+   "src/components/MountainProvider.tsx",
+   "src/hooks/useAuth.ts",
+   "src/lib/auth/admin.ts"
+  ],
+  "src/components/ButlerStreamClient.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/PostList.tsx",
+   "src/components/ui/Button.tsx",
+   "src/services/index.ts"
+  ],
+  "src/components/ButlerTalkClient.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/PostList.tsx",
+   "src/components/ui/Button.tsx",
+   "src/services/index.ts"
+  ],
+  "src/components/FeedingSpotsList.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/services/index.ts"
+  ],
+  "src/components/NewPostForm.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/ui/Button.tsx",
+   "src/components/ui/useDialog.tsx",
+   "src/hooks/useAuth.ts",
+   "src/services/index.ts"
+  ],
+  "src/lib/auth/admin.ts": [
+   "src/services/firebase.ts",
+   "src/services/permission-service.ts",
+   "src/types/admin.ts"
+  ],
+  "src/services/feeding-spots-admin-service.ts": [
+   "src/lib/firebase-admin.ts"
+  ],
+  "src/types/admin.ts": [
+   "src/types/index.ts",
+   "src/types/media.ts"
+  ]
+ }
+}

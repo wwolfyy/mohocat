@@ -1,0 +1,243 @@
+{
+ "projectRoot": "/Users/jp/github/mohocat",
+ "batchFiles": [
+  {
+   "path": "src/app/[mountain]/admin/app-management/page.tsx",
+   "language": "typescript",
+   "sizeLines": 206,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/admin/layout.tsx",
+   "language": "typescript",
+   "sizeLines": 87,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/admin/page.tsx",
+   "language": "typescript",
+   "sizeLines": 289,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/login/page.tsx",
+   "language": "typescript",
+   "sizeLines": 101,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/mypage/layout.tsx",
+   "language": "typescript",
+   "sizeLines": 17,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/mypage/page.tsx",
+   "language": "typescript",
+   "sizeLines": 590,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/announcements/[id]/page.tsx",
+   "language": "typescript",
+   "sizeLines": 164,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/contact/page.tsx",
+   "language": "typescript",
+   "sizeLines": 214,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/faq/page.tsx",
+   "language": "typescript",
+   "sizeLines": 134,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/login/page.tsx",
+   "language": "typescript",
+   "sizeLines": 45,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/FAQ.tsx",
+   "language": "typescript",
+   "sizeLines": 68,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/LoginForm.tsx",
+   "language": "typescript",
+   "sizeLines": 403,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/NavDropdown.tsx",
+   "language": "typescript",
+   "sizeLines": 120,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/Navigation.tsx",
+   "language": "typescript",
+   "sizeLines": 362,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/SignupForm.tsx",
+   "language": "typescript",
+   "sizeLines": 428,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/SocialLoginButton.tsx",
+   "language": "typescript",
+   "sizeLines": 181,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/AboutContentEditor.tsx",
+   "language": "typescript",
+   "sizeLines": 360,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/AdminAuth.tsx",
+   "language": "typescript",
+   "sizeLines": 318,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/YouTubeAuthPanelNew.tsx",
+   "language": "typescript",
+   "sizeLines": 232,
+   "fileCategory": "code"
+  }
+ ],
+ "batchImportData": {
+  "src/app/[mountain]/admin/app-management/page.tsx": [
+   "src/components/admin/AboutContentEditor.tsx",
+   "src/components/ui/Button.tsx",
+   "src/components/ui/Card.tsx",
+   "src/utils/cn.ts"
+  ],
+  "src/app/[mountain]/admin/layout.tsx": [
+   "src/components/admin/AdminAuth.tsx",
+   "src/constants/adminStrings.ts",
+   "src/utils/cn.ts"
+  ],
+  "src/app/[mountain]/admin/page.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/admin/YouTubeAuthPanelNew.tsx",
+   "src/components/ui/Alert.tsx",
+   "src/components/ui/Card.tsx",
+   "src/services/index.ts"
+  ],
+  "src/app/[mountain]/login/page.tsx": [
+   "src/components/LoginForm.tsx",
+   "src/components/SignupForm.tsx",
+   "src/constants/strings.ts",
+   "src/utils/cn.ts"
+  ],
+  "src/app/[mountain]/mypage/layout.tsx": [
+   "src/constants/strings.ts"
+  ],
+  "src/app/[mountain]/mypage/page.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/auth/PasswordResetModal.tsx",
+   "src/components/ui/Button.tsx",
+   "src/components/ui/Modal.tsx",
+   "src/constants/strings.ts",
+   "src/hooks/useAuth.ts",
+   "src/lib/auth/admin.ts",
+   "src/services/firebase.ts"
+  ],
+  "src/app/[mountain]/pages/announcements/[id]/page.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/ui/Button.tsx",
+   "src/services/index.ts"
+  ],
+  "src/app/[mountain]/pages/contact/page.tsx": [
+   "src/components/ui/Button.tsx",
+   "src/hooks/useAuth.ts",
+   "src/utils/cn.ts"
+  ],
+  "src/app/[mountain]/pages/faq/page.tsx": [
+   "src/components/FAQ.tsx"
+  ],
+  "src/app/[mountain]/pages/login/page.tsx": [
+   "src/components/LoginForm.tsx",
+   "src/constants/strings.ts"
+  ],
+  "src/components/FAQ.tsx": [
+   "src/utils/cn.ts"
+  ],
+  "src/components/LoginForm.tsx": [
+   "src/components/SocialLoginButton.tsx",
+   "src/components/auth/EmailVerificationModal.tsx",
+   "src/components/auth/KakaoLoginGuidanceModal.tsx",
+   "src/components/auth/PasswordResetModal.tsx",
+   "src/components/auth/PhoneLoginForm.tsx",
+   "src/components/auth/UserNotFoundModal.tsx",
+   "src/components/ui/Button.tsx",
+   "src/constants/strings.ts",
+   "src/hooks/useAuth.ts",
+   "src/services/firebase.ts",
+   "src/services/index.ts",
+   "src/utils/cn.ts"
+  ],
+  "src/components/NavDropdown.tsx": [
+   "src/utils/cn.ts"
+  ],
+  "src/components/Navigation.tsx": [
+   "src/components/NavDropdown.tsx",
+   "src/components/auth/NavigationBarLogin.tsx",
+   "src/components/auth/NavigationBarLogout.tsx",
+   "src/hooks/useAuth.ts",
+   "src/hooks/useResourceAccess.ts",
+   "src/utils/cn.ts"
+  ],
+  "src/components/SignupForm.tsx": [
+   "src/components/ui/Button.tsx",
+   "src/constants/strings.ts",
+   "src/hooks/useAuth.ts",
+   "src/services/firebase.ts",
+   "src/services/index.ts"
+  ],
+  "src/components/SocialLoginButton.tsx": [
+   "src/constants/strings.ts",
+   "src/utils/cn.ts"
+  ],
+  "src/components/admin/AboutContentEditor.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/ui/Alert.tsx",
+   "src/components/ui/Button.tsx",
+   "src/components/ui/Input.tsx",
+   "src/constants/adminStrings.ts",
+   "src/services/about-content-service.ts",
+   "src/services/index.ts",
+   "src/utils/config.ts"
+  ],
+  "src/components/admin/AdminAuth.tsx": [
+   "src/components/MountainProvider.tsx",
+   "src/components/SocialLoginButton.tsx",
+   "src/components/ui/Alert.tsx",
+   "src/components/ui/Button.tsx",
+   "src/components/ui/Card.tsx",
+   "src/components/ui/Field.tsx",
+   "src/components/ui/Input.tsx",
+   "src/hooks/useAuth.ts",
+   "src/hooks/useIdleTimeout.ts",
+   "src/lib/auth/admin.ts",
+   "src/services/firebase.ts"
+  ],
+  "src/components/admin/YouTubeAuthPanelNew.tsx": [
+   "src/components/ui/Button.tsx",
+   "src/components/ui/Card.tsx",
+   "src/hooks/useAuth.ts",
+   "src/lib/auth/authHeader.ts"
+  ]
+ }
+}

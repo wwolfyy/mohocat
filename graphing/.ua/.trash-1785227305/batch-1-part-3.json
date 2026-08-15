@@ -1,0 +1,859 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/services/announcement-service.ts",
+   "type": "file",
+   "name": "announcement-service.ts",
+   "filePath": "src/services/announcement-service.ts",
+   "summary": "Firebase implementation of IPostService for announcements, adding modal-announcement selection and toggling on top of the standard post/reply operations.",
+   "tags": [
+    "service",
+    "firestore",
+    "announcements",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/announcement-service.ts:FirebaseAnnouncementService",
+   "type": "class",
+   "name": "FirebaseAnnouncementService",
+   "filePath": "src/services/announcement-service.ts",
+   "lineRange": [
+    25,
+    246
+   ],
+   "summary": "Announcement repository implementing IPostService and extending it with getModalAnnouncement/toggleModalDisplay for the site-wide announcement modal.",
+   "tags": [
+    "service",
+    "firestore",
+    "announcements",
+    "crud"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/auth-service.ts",
+   "type": "file",
+   "name": "auth-service.ts",
+   "filePath": "src/services/auth-service.ts",
+   "summary": "The Firebase Auth implementation behind IAuthService: email/password, phone SMS, and Kakao OIDC sign-in, plus provider linking, reauthentication, and profile/email/phone updates.",
+   "tags": [
+    "service",
+    "authentication",
+    "firebase",
+    "security"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Largest service in the layer; wraps Firebase Auth's provider linking and reauthentication flows behind a single interface."
+  },
+  {
+   "id": "class:src/services/auth-service.ts:FirebaseAuthService",
+   "type": "class",
+   "name": "FirebaseAuthService",
+   "filePath": "src/services/auth-service.ts",
+   "lineRange": [
+    46,
+    727
+   ],
+   "summary": "Concrete auth service covering sign-in/out across email, phone, and Kakao, credential linking/unlinking, verification emails, and password resets.",
+   "tags": [
+    "service",
+    "authentication",
+    "firebase",
+    "security"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/butler-talk-service.ts",
+   "type": "file",
+   "name": "butler-talk-service.ts",
+   "filePath": "src/services/butler-talk-service.ts",
+   "summary": "Firebase implementation of IPostService for the '집사 talk' community board, handling posts, nested replies, and reply counts.",
+   "tags": [
+    "service",
+    "firestore",
+    "posts",
+    "community",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/butler-talk-service.ts:FirebaseButlerTalkService",
+   "type": "class",
+   "name": "FirebaseButlerTalkService",
+   "filePath": "src/services/butler-talk-service.ts",
+   "lineRange": [
+    25,
+    303
+   ],
+   "summary": "Tenant-scoped butler-talk post repository implementing IPostService over Firestore collections.",
+   "tags": [
+    "service",
+    "firestore",
+    "crud",
+    "posts"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/cat-service.ts",
+   "type": "file",
+   "name": "cat-service.ts",
+   "filePath": "src/services/cat-service.ts",
+   "summary": "Firestore repository for cat records scoped to a mountain: lookups by id, name, and dwelling point plus single and batch mutations.",
+   "tags": [
+    "service",
+    "firestore",
+    "data-model",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/cat-service.ts:FirebaseCatService",
+   "type": "class",
+   "name": "FirebaseCatService",
+   "filePath": "src/services/cat-service.ts",
+   "lineRange": [
+    24,
+    190
+   ],
+   "summary": "ICatService implementation providing cat CRUD, name/point lookups, and batched updates against the tenant's Firestore collection.",
+   "tags": [
+    "service",
+    "firestore",
+    "crud",
+    "data-model"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/services/contact-service.ts",
+   "type": "file",
+   "name": "contact-service.ts",
+   "filePath": "src/services/contact-service.ts",
+   "summary": "Minimal Firestore service exposing the stored contact/inquiry submissions for a mountain.",
+   "tags": [
+    "service",
+    "firestore",
+    "contact",
+    "read-only"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/services/contact-service.ts:FirebaseContactService",
+   "type": "class",
+   "name": "FirebaseContactService",
+   "filePath": "src/services/contact-service.ts",
+   "lineRange": [
+    13,
+    42
+   ],
+   "summary": "IContactService implementation whose single responsibility is reading all contact submissions for the tenant.",
+   "tags": [
+    "service",
+    "firestore",
+    "read-only"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/services/feeding-spots-service.ts",
+   "type": "file",
+   "name": "feeding-spots-service.ts",
+   "filePath": "src/services/feeding-spots-service.ts",
+   "summary": "Service for cat feeding-spot records, including timestamp normalization and 'hours ago' derivation used by the feeding-status UI.",
+   "tags": [
+    "service",
+    "firestore",
+    "feeding",
+    "date"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/feeding-spots-service.ts:FirebaseFeedingSpotsService",
+   "type": "class",
+   "name": "FirebaseFeedingSpotsService",
+   "filePath": "src/services/feeding-spots-service.ts",
+   "lineRange": [
+    27,
+    182
+   ],
+   "summary": "IFeedingSpotsService implementation that reads and updates feeding spots and derives freshness from Firestore timestamps.",
+   "tags": [
+    "service",
+    "firestore",
+    "date",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/services/firebase.ts",
+   "type": "file",
+   "name": "firebase.ts",
+   "filePath": "src/services/firebase.ts",
+   "summary": "Firebase SDK bootstrap: initializes the app from the mountain config and exports the shared auth, firestore, and storage handles used by every service.",
+   "tags": [
+    "infrastructure",
+    "firebase",
+    "singleton",
+    "initialization"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Single module-level initialization so the Firebase app is created once and reused across the service layer."
+  },
+  {
+   "id": "function:src/services/firebase.ts:uploadImageToFirebase",
+   "type": "function",
+   "name": "uploadImageToFirebase",
+   "filePath": "src/services/firebase.ts",
+   "lineRange": [
+    91,
+    107
+   ],
+   "summary": "Uploads a File to Firebase Storage and returns its public download URL.",
+   "tags": [
+    "storage",
+    "upload",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/services/image-service.ts",
+   "type": "file",
+   "name": "image-service.ts",
+   "filePath": "src/services/image-service.ts",
+   "summary": "IImageService implementation that adapts the tenant-agnostic media-albums helpers into the service-layer contract for cat photos.",
+   "tags": [
+    "service",
+    "media",
+    "images",
+    "adapter"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/image-service.ts:FirebaseImageService",
+   "type": "class",
+   "name": "FirebaseImageService",
+   "filePath": "src/services/image-service.ts",
+   "lineRange": [
+    22,
+    162
+   ],
+   "summary": "Thin adapter class binding the active mountainId to the media-albums image functions (list, tag, add, sync, batch update/delete).",
+   "tags": [
+    "service",
+    "media",
+    "images",
+    "adapter"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/services/index.ts",
+   "type": "file",
+   "name": "index.ts",
+   "filePath": "src/services/index.ts",
+   "summary": "The service-factory barrel: exposes per-tenant lazy singleton getters for every content service plus tenant-free getters for auth, storage, and permissions, and re-exports the service interfaces.",
+   "tags": [
+    "service",
+    "factory",
+    "barrel",
+    "entry-point",
+    "multi-tenant"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "perTenant() memoizes one service instance per mountainId, which is how tenancy is enforced at the service boundary."
+  },
+  {
+   "id": "function:src/services/index.ts:perTenant",
+   "type": "function",
+   "name": "perTenant",
+   "filePath": "src/services/index.ts",
+   "lineRange": [
+    36,
+    46
+   ],
+   "summary": "Higher-order helper that wraps a service constructor in a per-mountainId Map cache, yielding one lazy singleton per tenant.",
+   "tags": [
+    "factory",
+    "singleton",
+    "multi-tenant",
+    "caching"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/index.ts:getStorageService",
+   "type": "function",
+   "name": "getStorageService",
+   "filePath": "src/services/index.ts",
+   "lineRange": [
+    132,
+    137
+   ],
+   "summary": "Returns the tenant-free Firebase storage service, instantiating it on first use.",
+   "tags": [
+    "factory",
+    "singleton",
+    "storage"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/index.ts:getAuthService",
+   "type": "function",
+   "name": "getAuthService",
+   "filePath": "src/services/index.ts",
+   "lineRange": [
+    142,
+    147
+   ],
+   "summary": "Returns the tenant-free Firebase auth service, instantiating it on first use.",
+   "tags": [
+    "factory",
+    "singleton",
+    "authentication"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/index.ts:getPermissionService",
+   "type": "function",
+   "name": "getPermissionService",
+   "filePath": "src/services/index.ts",
+   "lineRange": [
+    150,
+    152
+   ],
+   "summary": "Returns the permission service used for role and capability checks.",
+   "tags": [
+    "factory",
+    "permissions",
+    "singleton"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/services/announcement-service.ts",
+   "target": "class:src/services/announcement-service.ts:FirebaseAnnouncementService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/announcement-service.ts",
+   "target": "class:src/services/announcement-service.ts:FirebaseAnnouncementService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/announcement-service.ts:FirebaseAnnouncementService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/auth-service.ts",
+   "target": "class:src/services/auth-service.ts:FirebaseAuthService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/auth-service.ts",
+   "target": "class:src/services/auth-service.ts:FirebaseAuthService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/auth-service.ts:FirebaseAuthService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/butler-talk-service.ts",
+   "target": "class:src/services/butler-talk-service.ts:FirebaseButlerTalkService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/butler-talk-service.ts",
+   "target": "class:src/services/butler-talk-service.ts:FirebaseButlerTalkService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/butler-talk-service.ts:FirebaseButlerTalkService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/cat-service.ts",
+   "target": "class:src/services/cat-service.ts:FirebaseCatService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/cat-service.ts",
+   "target": "class:src/services/cat-service.ts:FirebaseCatService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/cat-service.ts:FirebaseCatService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/contact-service.ts",
+   "target": "class:src/services/contact-service.ts:FirebaseContactService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/contact-service.ts",
+   "target": "class:src/services/contact-service.ts:FirebaseContactService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/contact-service.ts:FirebaseContactService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/feeding-spots-service.ts",
+   "target": "class:src/services/feeding-spots-service.ts:FirebaseFeedingSpotsService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/feeding-spots-service.ts",
+   "target": "class:src/services/feeding-spots-service.ts:FirebaseFeedingSpotsService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/feeding-spots-service.ts:FirebaseFeedingSpotsService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/firebase.ts",
+   "target": "function:src/services/firebase.ts:uploadImageToFirebase",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/firebase.ts",
+   "target": "function:src/services/firebase.ts:uploadImageToFirebase",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/image-service.ts",
+   "target": "class:src/services/image-service.ts:FirebaseImageService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/image-service.ts",
+   "target": "class:src/services/image-service.ts:FirebaseImageService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:perTenant",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:getStorageService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:getAuthService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:getPermissionService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:getStorageService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:getAuthService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "function:src/services/index.ts:getPermissionService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:getAllImages",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:getCatImages",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:updateImageTags",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:addImageRecord",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:getImageById",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:updateImageRecord",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:deleteImageRecord",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:batchUpdateImages",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:batchDeleteImages",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/image-service.ts:FirebaseImageService",
+   "target": "function:src/services/media-albums.ts:syncImages",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/announcement-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/announcement-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/auth-service.ts",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/auth-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/auth-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/auth-service.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/butler-talk-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/butler-talk-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/cat-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/cat-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/cat-service.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/contact-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/contact-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/contact-service.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/feeding-spots-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/firebase.ts",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/image-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/image-service.ts",
+   "target": "file:src/services/media-albums.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/about-content-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/adoption-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/announcement-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/auth-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/butler-talk-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/cat-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/contact-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/feeding-spots-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/image-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/permission-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/point-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/post-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/storage-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/index.ts",
+   "target": "file:src/services/video-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

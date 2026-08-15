@@ -1,0 +1,953 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/components/FAQ.tsx",
+   "type": "file",
+   "name": "FAQ.tsx",
+   "filePath": "src/components/FAQ.tsx",
+   "summary": "Reusable FAQ accordion component that expands and collapses arbitrary question/answer items.",
+   "tags": [
+    "component",
+    "accordion",
+    "faq",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/FAQ.tsx:FAQAccordion",
+   "type": "function",
+   "name": "FAQAccordion",
+   "filePath": "src/components/FAQ.tsx",
+   "lineRange": [
+    14,
+    66
+   ],
+   "summary": "Accordion list that tracks open indices in a Set and toggles each answer panel with a chevron indicator.",
+   "tags": [
+    "component",
+    "accordion",
+    "ui",
+    "presentational"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/LoginForm.tsx",
+   "type": "file",
+   "name": "LoginForm.tsx",
+   "filePath": "src/components/LoginForm.tsx",
+   "summary": "Primary login component: email/password sign-in, Kakao social login, phone login, plus modals for email verification, password reset, unknown users, and Kakao guidance.",
+   "tags": [
+    "auth",
+    "component",
+    "login",
+    "form",
+    "firebase-auth"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Uses sessionStorage to carry post-login intent across the social-login redirect round trip."
+  },
+  {
+   "id": "function:src/components/LoginForm.tsx:LoginFormContent",
+   "type": "function",
+   "name": "LoginFormContent",
+   "filePath": "src/components/LoginForm.tsx",
+   "lineRange": [
+    26,
+    393
+   ],
+   "summary": "Implements the full login flow — credential sign-in, verification-state checks, permission-service user provisioning, social/phone alternatives, and modal orchestration — then routes or emits success.",
+   "tags": [
+    "auth",
+    "login",
+    "form",
+    "service-layer",
+    "modal"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/LoginForm.tsx:LoginForm",
+   "type": "function",
+   "name": "LoginForm",
+   "filePath": "src/components/LoginForm.tsx",
+   "lineRange": [
+    395,
+    401
+   ],
+   "summary": "Exported wrapper that renders LoginFormContent inside a Suspense boundary for useSearchParams.",
+   "tags": [
+    "auth",
+    "suspense",
+    "component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/NavDropdown.tsx",
+   "type": "file",
+   "name": "NavDropdown.tsx",
+   "filePath": "src/components/NavDropdown.tsx",
+   "summary": "Hover/click dropdown primitive used by the main navigation bar, with outside-click dismissal and a disabled state tooltip.",
+   "tags": [
+    "component",
+    "navigation",
+    "dropdown",
+    "ui"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/NavDropdown.tsx:NavDropdown",
+   "type": "function",
+   "name": "NavDropdown",
+   "filePath": "src/components/NavDropdown.tsx",
+   "lineRange": [
+    21,
+    120
+   ],
+   "summary": "Renders a labeled dropdown trigger and panel, closing on outside click or a delayed mouse-leave and rendering a tooltip when disabled.",
+   "tags": [
+    "component",
+    "dropdown",
+    "navigation",
+    "event-handler"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/Navigation.tsx",
+   "type": "file",
+   "name": "Navigation.tsx",
+   "filePath": "src/components/Navigation.tsx",
+   "summary": "Global site navigation bar: desktop dropdown menus, a mobile drawer, permission-gated links via useResourceAccess, and the login/logout controls.",
+   "tags": [
+    "navigation",
+    "component",
+    "layout",
+    "authorization"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/Navigation.tsx:NavItem",
+   "type": "function",
+   "name": "NavItem",
+   "filePath": "src/components/Navigation.tsx",
+   "lineRange": [
+    23,
+    68
+   ],
+   "summary": "Single navigation link that consults canAccessResource to render an enabled link, a locked placeholder, or a loading state.",
+   "tags": [
+    "navigation",
+    "authorization",
+    "component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/components/Navigation.tsx:Navigation",
+   "type": "function",
+   "name": "Navigation",
+   "filePath": "src/components/Navigation.tsx",
+   "lineRange": [
+    76,
+    362
+   ],
+   "summary": "Top-level nav bar wiring auth state and resource access into desktop dropdowns and a mobile menu, closing the drawer on outside clicks and route changes.",
+   "tags": [
+    "navigation",
+    "component",
+    "authorization",
+    "responsive"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/SignupForm.tsx",
+   "type": "file",
+   "name": "SignupForm.tsx",
+   "filePath": "src/components/SignupForm.tsx",
+   "summary": "Multi-step signup component covering phone SMS verification, account detail validation, email/password linking, and user provisioning through the permission service.",
+   "tags": [
+    "auth",
+    "signup",
+    "form",
+    "component",
+    "validation"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/SignupForm.tsx:SignupFormContent",
+   "type": "function",
+   "name": "SignupFormContent",
+   "filePath": "src/components/SignupForm.tsx",
+   "lineRange": [
+    15,
+    420
+   ],
+   "summary": "Drives the staged signup flow (phone verification then account details), validating input, linking email/password credentials, and ensuring the user record exists before routing on success.",
+   "tags": [
+    "auth",
+    "signup",
+    "multi-step-form",
+    "validation",
+    "service-layer"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/SignupForm.tsx:SignupForm",
+   "type": "function",
+   "name": "SignupForm",
+   "filePath": "src/components/SignupForm.tsx",
+   "lineRange": [
+    422,
+    428
+   ],
+   "summary": "Exported wrapper rendering SignupFormContent inside a Suspense boundary for useSearchParams.",
+   "tags": [
+    "auth",
+    "suspense",
+    "component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/components/SocialLoginButton.tsx",
+   "type": "file",
+   "name": "SocialLoginButton.tsx",
+   "filePath": "src/components/SocialLoginButton.tsx",
+   "summary": "Branded social login button rendering provider-specific icon, label, and styling (e.g. Kakao) with loading and disabled states.",
+   "tags": [
+    "component",
+    "auth",
+    "button",
+    "ui",
+    "presentational"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/components/SocialLoginButton.tsx:SocialLoginButton",
+   "type": "function",
+   "name": "SocialLoginButton",
+   "filePath": "src/components/SocialLoginButton.tsx",
+   "lineRange": [
+    18,
+    179
+   ],
+   "summary": "Selects the provider icon, label, and brand styling by provider and size, then renders a button with loading/disabled handling.",
+   "tags": [
+    "component",
+    "auth",
+    "button",
+    "presentational"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/components/admin/AboutContentEditor.tsx",
+   "type": "file",
+   "name": "AboutContentEditor.tsx",
+   "filePath": "src/components/admin/AboutContentEditor.tsx",
+   "summary": "Admin editor for the per-mountain About page content, loading and saving sections, main content, and the main photo through the about-content service with a JSON-config fallback.",
+   "tags": [
+    "admin",
+    "editor",
+    "form",
+    "content-management",
+    "service-layer"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor",
+   "type": "function",
+   "name": "AboutContentEditor",
+   "filePath": "src/components/admin/AboutContentEditor.tsx",
+   "lineRange": [
+    15,
+    360
+   ],
+   "summary": "Loads about content for the active mountain (falling back to getMountainAbout from the static config), edits sections/main content/photo in local state, and persists via aboutContentService.saveAboutContent.",
+   "tags": [
+    "admin",
+    "editor",
+    "content-management",
+    "service-layer",
+    "multi-tenant"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/admin/AdminAuth.tsx",
+   "type": "file",
+   "name": "AdminAuth.tsx",
+   "filePath": "src/components/admin/AdminAuth.tsx",
+   "summary": "Authorization gate for the admin area: verifies the signed-in user is an admin for the active mountain, renders an inline login form otherwise, and enforces an idle-timeout session expiry.",
+   "tags": [
+    "admin",
+    "authorization",
+    "auth-gate",
+    "component",
+    "security"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Distinguishes \"not an admin\" from \"could not verify\" so a failed permission read shows a retry instead of silently denying access."
+  },
+  {
+   "id": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "type": "function",
+   "name": "AdminAuth",
+   "filePath": "src/components/admin/AdminAuth.tsx",
+   "lineRange": [
+    26,
+    318
+   ],
+   "summary": "Checks admin status per mountain via isAdmin, exposes retry on verification failure, signs users in inline with email/password, and signs them out after idle timeout.",
+   "tags": [
+    "admin",
+    "authorization",
+    "auth-gate",
+    "security",
+    "multi-tenant"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "type": "file",
+   "name": "YouTubeAuthPanelNew.tsx",
+   "filePath": "src/components/admin/YouTubeAuthPanelNew.tsx",
+   "summary": "Admin panel showing the YouTube OAuth connection status and token expiry, with actions to start the OAuth popup flow and refresh the stored token.",
+   "tags": [
+    "admin",
+    "oauth",
+    "youtube",
+    "component",
+    "integration"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/components/admin/YouTubeAuthPanelNew.tsx:YouTubeAuthPanel",
+   "type": "function",
+   "name": "YouTubeAuthPanel",
+   "filePath": "src/components/admin/YouTubeAuthPanelNew.tsx",
+   "lineRange": [
+    30,
+    232
+   ],
+   "summary": "Polls the YouTube auth status API with an auth header, formats token expiry, and drives connect/refresh actions through a popup OAuth window.",
+   "tags": [
+    "admin",
+    "oauth",
+    "youtube",
+    "api-client",
+    "polling"
+   ],
+   "complexity": "complex"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/components/FAQ.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/SocialLoginButton.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/auth/EmailVerificationModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/auth/KakaoLoginGuidanceModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/auth/PasswordResetModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/auth/PhoneLoginForm.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/auth/UserNotFoundModal.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/NavDropdown.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "file:src/components/NavDropdown.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "file:src/components/auth/NavigationBarLogin.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "file:src/components/auth/NavigationBarLogout.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "file:src/hooks/useResourceAccess.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SocialLoginButton.tsx",
+   "target": "file:src/constants/strings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/SocialLoginButton.tsx",
+   "target": "file:src/utils/cn.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/components/ui/Alert.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/components/ui/Input.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/constants/adminStrings.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/services/about-content-service.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/services/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "file:src/utils/config.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/MountainProvider.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/SocialLoginButton.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/ui/Alert.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/ui/Card.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/ui/Field.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/components/ui/Input.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/hooks/useIdleTimeout.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/lib/auth/admin.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "target": "file:src/components/ui/Button.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "target": "file:src/components/ui/Card.tsx",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "target": "file:src/hooks/useAuth.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "target": "file:src/lib/auth/authHeader.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/components/FAQ.tsx",
+   "target": "function:src/components/FAQ.tsx:FAQAccordion",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "function:src/components/LoginForm.tsx:LoginFormContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "function:src/components/LoginForm.tsx:LoginForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/NavDropdown.tsx",
+   "target": "function:src/components/NavDropdown.tsx:NavDropdown",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "function:src/components/Navigation.tsx:NavItem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "function:src/components/Navigation.tsx:Navigation",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "function:src/components/SignupForm.tsx:SignupFormContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "function:src/components/SignupForm.tsx:SignupForm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/SocialLoginButton.tsx",
+   "target": "function:src/components/SocialLoginButton.tsx:SocialLoginButton",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "target": "function:src/components/admin/YouTubeAuthPanelNew.tsx:YouTubeAuthPanel",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/components/LoginForm.tsx",
+   "target": "function:src/components/LoginForm.tsx:LoginForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/NavDropdown.tsx",
+   "target": "function:src/components/NavDropdown.tsx:NavDropdown",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/Navigation.tsx",
+   "target": "function:src/components/Navigation.tsx:Navigation",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/SignupForm.tsx",
+   "target": "function:src/components/SignupForm.tsx:SignupForm",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/AboutContentEditor.tsx",
+   "target": "function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/AdminAuth.tsx",
+   "target": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/components/admin/YouTubeAuthPanelNew.tsx",
+   "target": "function:src/components/admin/YouTubeAuthPanelNew.tsx:YouTubeAuthPanel",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/LoginForm.tsx:LoginFormContent",
+   "target": "function:src/services/index.ts:getPermissionService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/LoginForm.tsx:LoginFormContent",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/SignupForm.tsx:SignupFormContent",
+   "target": "function:src/services/index.ts:getPermissionService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/SignupForm.tsx:SignupFormContent",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/Navigation.tsx:Navigation",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/Navigation.tsx:Navigation",
+   "target": "function:src/hooks/useResourceAccess.ts:useResourceAccess",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "target": "function:src/lib/auth/admin.ts:isAdmin",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "target": "function:src/hooks/useIdleTimeout.ts:useIdleTimeout",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AdminAuth.tsx:AdminAuth",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor",
+   "target": "function:src/services/index.ts:getAboutContentService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor",
+   "target": "function:src/utils/config.ts:getMountainAbout",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/AboutContentEditor.tsx:AboutContentEditor",
+   "target": "function:src/components/MountainProvider.tsx:useMountain",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/YouTubeAuthPanelNew.tsx:YouTubeAuthPanel",
+   "target": "function:src/lib/auth/authHeader.ts:authHeader",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/admin/YouTubeAuthPanelNew.tsx:YouTubeAuthPanel",
+   "target": "function:src/hooks/useAuth.ts:useAuth",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/components/FAQ.tsx:FAQAccordion",
+   "target": "function:src/utils/cn.ts:cn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

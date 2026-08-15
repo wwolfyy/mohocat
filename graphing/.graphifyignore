@@ -1,0 +1,15 @@
+# Scope for the code-graph tooling evaluation:
+#   docs/planning/pending/code-graph-tooling-evaluation-20260728.md
+# Corpus is src/ + config/ only. scripts/ is deliberately out of scope.
+# This file is gitignored — it exists only for the evaluation runs.
+
+# Exclude everything at the repo root...
+/*
+
+# ...then re-admit only the two in-scope trees.
+!/src/
+!/config/
+
+# Never index the Firebase service-account private key (present on disk, gitignored).
+# Explicit belt-and-braces: do not rely on the tool's own secret heuristics.
+/config/firebase/

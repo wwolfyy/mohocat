@@ -1,0 +1,199 @@
+{
+ "projectRoot": "/Users/jp/github/mohocat",
+ "batchFiles": [
+  {
+   "path": "src/app/[mountain]/layout.tsx",
+   "language": "typescript",
+   "sizeLines": 124,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/account/delete/route.ts",
+   "language": "typescript",
+   "sizeLines": 54,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/assign-role/route.ts",
+   "language": "typescript",
+   "sizeLines": 113,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/cats/route.ts",
+   "language": "typescript",
+   "sizeLines": 53,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/get-all-user-permissions-client/route.ts",
+   "language": "typescript",
+   "sizeLines": 102,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/posts-collections/route.ts",
+   "language": "typescript",
+   "sizeLines": 33,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/resource-permissions/route.ts",
+   "language": "typescript",
+   "sizeLines": 75,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/role-permissions/route.ts",
+   "language": "typescript",
+   "sizeLines": 95,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/youtube-auth/auth-url/route.ts",
+   "language": "typescript",
+   "sizeLines": 60,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/youtube-auth/callback/route.ts",
+   "language": "typescript",
+   "sizeLines": 111,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/admin/youtube-auth/status/route.ts",
+   "language": "typescript",
+   "sizeLines": 127,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/contact/route.ts",
+   "language": "typescript",
+   "sizeLines": 155,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/generate-signed-url/route.ts",
+   "language": "typescript",
+   "sizeLines": 61,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/manage-playlists/route.ts",
+   "language": "typescript",
+   "sizeLines": 316,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/points/route.ts",
+   "language": "typescript",
+   "sizeLines": 14,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/refresh-video-metadata/route.ts",
+   "language": "typescript",
+   "sizeLines": 299,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/revalidate/route.ts",
+   "language": "typescript",
+   "sizeLines": 58,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/api/update-youtube-video/route.ts",
+   "language": "typescript",
+   "sizeLines": 160,
+   "fileCategory": "code"
+  }
+ ],
+ "batchImportData": {
+  "src/app/[mountain]/layout.tsx": [
+   "src/components/AnalyticsTracker.tsx",
+   "src/components/Footer.tsx",
+   "src/components/MountainProvider.tsx",
+   "src/components/MountainSelector.tsx",
+   "src/components/Navigation.tsx",
+   "src/components/auth/AuthProvider.tsx",
+   "src/contexts/AnnouncementModalContext.tsx",
+   "src/lib/tenant.ts",
+   "src/utils/config.ts"
+  ],
+  "src/app/api/account/delete/route.ts": [
+   "src/lib/firebase-admin.ts"
+  ],
+  "src/app/api/admin/assign-role/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/firebase-admin.ts",
+   "src/lib/tenant.ts",
+   "src/types/permissions.ts"
+  ],
+  "src/app/api/admin/cats/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/tenant.ts",
+   "src/services/index.ts"
+  ],
+  "src/app/api/admin/get-all-user-permissions-client/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/firebase-admin.ts"
+  ],
+  "src/app/api/admin/posts-collections/route.ts": [
+   "src/lib/auth/requireApiPermission.ts"
+  ],
+  "src/app/api/admin/resource-permissions/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/firebase-admin.ts"
+  ],
+  "src/app/api/admin/role-permissions/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/firebase-admin.ts"
+  ],
+  "src/app/api/admin/youtube-auth/auth-url/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/youtube/credentials.ts"
+  ],
+  "src/app/api/admin/youtube-auth/callback/route.ts": [
+   "src/lib/firebase-admin.ts",
+   "src/lib/youtube/credentials.ts"
+  ],
+  "src/app/api/admin/youtube-auth/status/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/youtube/credentials.ts"
+  ],
+  "src/app/api/contact/route.ts": [
+   "src/lib/firebase-admin.ts",
+   "src/lib/tenant.ts",
+   "src/utils/config.ts"
+  ],
+  "src/app/api/generate-signed-url/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/utils/config.ts"
+  ],
+  "src/app/api/manage-playlists/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/youtube/credentials.ts",
+   "src/utils/config.ts"
+  ],
+  "src/app/api/points/route.ts": [
+   "src/lib/tenant.ts",
+   "src/services/index.ts"
+  ],
+  "src/app/api/refresh-video-metadata/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/firebase-admin.ts",
+   "src/lib/tenant.ts",
+   "src/utils/config.ts"
+  ],
+  "src/app/api/revalidate/route.ts": [
+   "src/lib/firebase-admin.ts",
+   "src/utils/config.ts"
+  ],
+  "src/app/api/update-youtube-video/route.ts": [
+   "src/lib/auth/requireApiPermission.ts",
+   "src/lib/youtube/credentials.ts"
+  ]
+ }
+}

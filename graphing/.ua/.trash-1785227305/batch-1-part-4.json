@@ -1,0 +1,1088 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/services/interfaces.ts",
+   "type": "file",
+   "name": "interfaces.ts",
+   "filePath": "src/services/interfaces.ts",
+   "summary": "Declares the service-layer contracts (ICatService, IPointService, IPostService, IImageService, IVideoService, IStorageService, IAuthService, IContactService, IFeedingSpotsService) that the Firebase implementations satisfy.",
+   "tags": [
+    "type-definition",
+    "interface",
+    "service",
+    "contract"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Interface-only module: the abstraction seam that keeps the app decoupled from Firebase."
+  },
+  {
+   "id": "file:src/services/media-albums.ts",
+   "type": "file",
+   "name": "media-albums.ts",
+   "filePath": "src/services/media-albums.ts",
+   "summary": "The tenant-aware media data layer for cat photos and videos: Firestore CRUD, tag updates, batch operations, and Storage/YouTube sync routines that the image and video services wrap.",
+   "tags": [
+    "media",
+    "firestore",
+    "data-access",
+    "images",
+    "video"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Function-per-operation module rather than a class; the mountainId is passed explicitly on every read so tenant scoping is never implicit."
+  },
+  {
+   "id": "function:src/services/media-albums.ts:parseDate",
+   "type": "function",
+   "name": "parseDate",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    20,
+    54
+   ],
+   "summary": "Coerces the several stored date representations (Firestore Timestamp, ISO string, Date) into a JS Date, returning null when unparseable.",
+   "tags": [
+    "utility",
+    "date",
+    "parsing"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getCatImages",
+   "type": "function",
+   "name": "getCatImages",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    64,
+    92
+   ],
+   "summary": "Fetches all photos tagged with a given cat name within a mountain, sorted by date.",
+   "tags": [
+    "media",
+    "images",
+    "query"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getCatVideos",
+   "type": "function",
+   "name": "getCatVideos",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    95,
+    123
+   ],
+   "summary": "Fetches all videos tagged with a given cat name within a mountain, sorted by date.",
+   "tags": [
+    "media",
+    "video",
+    "query"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getAllImages",
+   "type": "function",
+   "name": "getAllImages",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    126,
+    180
+   ],
+   "summary": "Lists a mountain's image records with optional filtering and ordering options.",
+   "tags": [
+    "media",
+    "images",
+    "query"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getAllVideos",
+   "type": "function",
+   "name": "getAllVideos",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    183,
+    237
+   ],
+   "summary": "Lists a mountain's video records with optional filtering and ordering options.",
+   "tags": [
+    "media",
+    "video",
+    "query"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:updateImageTags",
+   "type": "function",
+   "name": "updateImageTags",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    240,
+    252
+   ],
+   "summary": "Replaces the cat tags on a single image record.",
+   "tags": [
+    "media",
+    "images",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:updateVideoTags",
+   "type": "function",
+   "name": "updateVideoTags",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    256,
+    270
+   ],
+   "summary": "Replaces the cat tags on a single video record.",
+   "tags": [
+    "media",
+    "video",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:addImageRecord",
+   "type": "function",
+   "name": "addImageRecord",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    273,
+    293
+   ],
+   "summary": "Creates a new image document stamped with the owning mountainId.",
+   "tags": [
+    "media",
+    "images",
+    "crud",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:addVideoRecord",
+   "type": "function",
+   "name": "addVideoRecord",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    296,
+    316
+   ],
+   "summary": "Creates a new video document stamped with the owning mountainId.",
+   "tags": [
+    "media",
+    "video",
+    "crud",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getStorageFileUrl",
+   "type": "function",
+   "name": "getStorageFileUrl",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    319,
+    328
+   ],
+   "summary": "Resolves a Firebase Storage path into a public download URL.",
+   "tags": [
+    "storage",
+    "utility",
+    "media"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getImageById",
+   "type": "function",
+   "name": "getImageById",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    332,
+    367
+   ],
+   "summary": "Loads a single image record and verifies it belongs to the requested mountain.",
+   "tags": [
+    "media",
+    "images",
+    "query",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:updateImageRecord",
+   "type": "function",
+   "name": "updateImageRecord",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    369,
+    382
+   ],
+   "summary": "Applies a partial update to an image document.",
+   "tags": [
+    "media",
+    "images",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:deleteImageRecord",
+   "type": "function",
+   "name": "deleteImageRecord",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    384,
+    393
+   ],
+   "summary": "Deletes a single image document from Firestore.",
+   "tags": [
+    "media",
+    "images",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:batchUpdateImages",
+   "type": "function",
+   "name": "batchUpdateImages",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    395,
+    413
+   ],
+   "summary": "Applies many image updates in one Firestore write batch.",
+   "tags": [
+    "media",
+    "images",
+    "batch",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:batchDeleteImages",
+   "type": "function",
+   "name": "batchDeleteImages",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    415,
+    430
+   ],
+   "summary": "Deletes many image documents in one Firestore write batch.",
+   "tags": [
+    "media",
+    "images",
+    "batch",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:syncImages",
+   "type": "function",
+   "name": "syncImages",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    432,
+    533
+   ],
+   "summary": "Reconciles the mountain's image collection against the files actually present in Firebase Storage, adding missing records and reporting orphans.",
+   "tags": [
+    "media",
+    "images",
+    "sync",
+    "data-pipeline"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:getVideoById",
+   "type": "function",
+   "name": "getVideoById",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    537,
+    573
+   ],
+   "summary": "Loads a single video record and verifies it belongs to the requested mountain.",
+   "tags": [
+    "media",
+    "video",
+    "query",
+    "multi-tenant"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:updateVideoRecord",
+   "type": "function",
+   "name": "updateVideoRecord",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    575,
+    588
+   ],
+   "summary": "Applies a partial update to a video document.",
+   "tags": [
+    "media",
+    "video",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:deleteVideoRecord",
+   "type": "function",
+   "name": "deleteVideoRecord",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    590,
+    599
+   ],
+   "summary": "Deletes a single video document from Firestore.",
+   "tags": [
+    "media",
+    "video",
+    "crud"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:batchUpdateVideos",
+   "type": "function",
+   "name": "batchUpdateVideos",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    601,
+    619
+   ],
+   "summary": "Applies many video updates in one Firestore write batch.",
+   "tags": [
+    "media",
+    "video",
+    "batch",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:batchDeleteVideos",
+   "type": "function",
+   "name": "batchDeleteVideos",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    621,
+    636
+   ],
+   "summary": "Deletes many video documents in one Firestore write batch.",
+   "tags": [
+    "media",
+    "video",
+    "batch",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/services/media-albums.ts:syncVideos",
+   "type": "function",
+   "name": "syncVideos",
+   "filePath": "src/services/media-albums.ts",
+   "lineRange": [
+    638,
+    719
+   ],
+   "summary": "Reconciles the mountain's video collection against the upstream YouTube/source listing, adding missing records and reporting drift.",
+   "tags": [
+    "media",
+    "video",
+    "sync",
+    "data-pipeline"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/point-service.ts",
+   "type": "file",
+   "name": "point-service.ts",
+   "filePath": "src/services/point-service.ts",
+   "summary": "Firestore repository for map points (cat dwelling locations) scoped to a mountain, backing the landing-page map.",
+   "tags": [
+    "service",
+    "firestore",
+    "map",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/point-service.ts:FirebasePointService",
+   "type": "class",
+   "name": "FirebasePointService",
+   "filePath": "src/services/point-service.ts",
+   "lineRange": [
+    23,
+    103
+   ],
+   "summary": "IPointService implementation providing CRUD over the tenant's map point documents.",
+   "tags": [
+    "service",
+    "firestore",
+    "map",
+    "crud"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/services/post-service.ts",
+   "type": "file",
+   "name": "post-service.ts",
+   "filePath": "src/services/post-service.ts",
+   "summary": "The canonical Firebase IPostService implementation for general community posts, including threaded replies and denormalized reply counts.",
+   "tags": [
+    "service",
+    "firestore",
+    "posts",
+    "replies",
+    "crud"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/services/post-service.ts:FirebasePostService",
+   "type": "class",
+   "name": "FirebasePostService",
+   "filePath": "src/services/post-service.ts",
+   "lineRange": [
+    25,
+    335
+   ],
+   "summary": "Tenant-scoped post repository handling top-level posts, nested replies, and reply-count bookkeeping in Firestore.",
+   "tags": [
+    "service",
+    "firestore",
+    "posts",
+    "replies"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/services/storage-service.ts",
+   "type": "file",
+   "name": "storage-service.ts",
+   "filePath": "src/services/storage-service.ts",
+   "summary": "Thin IStorageService wrapper over Firebase Storage for uploading, deleting, and resolving download URLs for files.",
+   "tags": [
+    "service",
+    "storage",
+    "firebase",
+    "upload"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/services/storage-service.ts:FirebaseStorageService",
+   "type": "class",
+   "name": "FirebaseStorageService",
+   "filePath": "src/services/storage-service.ts",
+   "lineRange": [
+    12,
+    43
+   ],
+   "summary": "Tenant-free storage adapter exposing uploadFile, deleteFile, and getDownloadUrl.",
+   "tags": [
+    "service",
+    "storage",
+    "upload"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/services/video-service.ts",
+   "type": "file",
+   "name": "video-service.ts",
+   "filePath": "src/services/video-service.ts",
+   "summary": "IVideoService implementation that adapts the tenant-agnostic media-albums video helpers into the service-layer contract, including YouTube sync.",
+   "tags": [
+    "service",
+    "media",
+    "video",
+    "adapter"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/services/video-service.ts:FirebaseVideoService",
+   "type": "class",
+   "name": "FirebaseVideoService",
+   "filePath": "src/services/video-service.ts",
+   "lineRange": [
+    22,
+    162
+   ],
+   "summary": "Adapter class binding the active mountainId to the media-albums video functions (list, tag, add, sync, batch update/delete).",
+   "tags": [
+    "service",
+    "media",
+    "video",
+    "adapter"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:parseDate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getCatImages",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getCatImages",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getCatVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getCatVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getAllImages",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getAllImages",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getAllVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getAllVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateImageTags",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateImageTags",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateVideoTags",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateVideoTags",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:addImageRecord",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:addImageRecord",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:addVideoRecord",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:addVideoRecord",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getStorageFileUrl",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getStorageFileUrl",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getImageById",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getImageById",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateImageRecord",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateImageRecord",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:deleteImageRecord",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:deleteImageRecord",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchUpdateImages",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchUpdateImages",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchDeleteImages",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchDeleteImages",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:syncImages",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:syncImages",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getVideoById",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:getVideoById",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateVideoRecord",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:updateVideoRecord",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:deleteVideoRecord",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:deleteVideoRecord",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchUpdateVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchUpdateVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchDeleteVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:batchDeleteVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:syncVideos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "function:src/services/media-albums.ts:syncVideos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/point-service.ts",
+   "target": "class:src/services/point-service.ts:FirebasePointService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/point-service.ts",
+   "target": "class:src/services/point-service.ts:FirebasePointService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/point-service.ts:FirebasePointService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/post-service.ts",
+   "target": "class:src/services/post-service.ts:FirebasePostService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/post-service.ts",
+   "target": "class:src/services/post-service.ts:FirebasePostService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/post-service.ts:FirebasePostService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/storage-service.ts",
+   "target": "class:src/services/storage-service.ts:FirebaseStorageService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/storage-service.ts",
+   "target": "class:src/services/storage-service.ts:FirebaseStorageService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/storage-service.ts:FirebaseStorageService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/services/video-service.ts",
+   "target": "class:src/services/video-service.ts:FirebaseVideoService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/services/video-service.ts",
+   "target": "class:src/services/video-service.ts:FirebaseVideoService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "file:src/services/interfaces.ts",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:getAllVideos",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:getCatVideos",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:updateVideoTags",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:addVideoRecord",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:getVideoById",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:updateVideoRecord",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:deleteVideoRecord",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:batchUpdateVideos",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:batchDeleteVideos",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/services/video-service.ts:FirebaseVideoService",
+   "target": "function:src/services/media-albums.ts:syncVideos",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/services/interfaces.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/media-albums.ts",
+   "target": "file:src/types/media.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/point-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/point-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/point-service.ts",
+   "target": "file:src/types/index.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/post-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/post-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/storage-service.ts",
+   "target": "file:src/services/firebase.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/storage-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/video-service.ts",
+   "target": "file:src/services/interfaces.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/services/video-service.ts",
+   "target": "file:src/services/media-albums.ts",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

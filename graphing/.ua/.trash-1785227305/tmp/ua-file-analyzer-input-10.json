@@ -1,0 +1,93 @@
+{
+ "projectRoot": "/Users/jp/github/mohocat",
+ "batchFiles": [
+  {
+   "path": "config/deployment/cloud-run-service.yaml",
+   "language": "yaml",
+   "sizeLines": 56,
+   "fileCategory": "config"
+  },
+  {
+   "path": "config/mountains/mountains.json",
+   "language": "json",
+   "sizeLines": 153,
+   "fileCategory": "config"
+  },
+  {
+   "path": "config/permissions.json",
+   "language": "json",
+   "sizeLines": 58,
+   "fileCategory": "config"
+  },
+  {
+   "path": "src/app/[mountain]/pages/privacy/page.tsx",
+   "language": "typescript",
+   "sizeLines": 244,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/[mountain]/pages/terms/page.tsx",
+   "language": "typescript",
+   "sizeLines": 155,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/app/globals.css",
+   "language": "css",
+   "sizeLines": 353,
+   "fileCategory": "markup"
+  },
+  {
+   "path": "src/app/layout.tsx",
+   "language": "typescript",
+   "sizeLines": 58,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/media/CatTagField.tsx",
+   "language": "typescript",
+   "sizeLines": 82,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/media/MediaGrid.tsx",
+   "language": "typescript",
+   "sizeLines": 39,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/media/MediaStatsCards.tsx",
+   "language": "typescript",
+   "sizeLines": 42,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/media/PaginationBar.tsx",
+   "language": "typescript",
+   "sizeLines": 80,
+   "fileCategory": "code"
+  },
+  {
+   "path": "src/components/admin/media/useDateAutoParse.ts",
+   "language": "typescript",
+   "sizeLines": 119,
+   "fileCategory": "code"
+  }
+ ],
+ "batchImportData": {
+  "config/deployment/cloud-run-service.yaml": [],
+  "config/mountains/mountains.json": [],
+  "config/permissions.json": [],
+  "src/app/[mountain]/pages/privacy/page.tsx": [],
+  "src/app/[mountain]/pages/terms/page.tsx": [],
+  "src/app/globals.css": [],
+  "src/app/layout.tsx": [
+   "src/app/globals.css"
+  ],
+  "src/components/admin/media/CatTagField.tsx": [],
+  "src/components/admin/media/MediaGrid.tsx": [],
+  "src/components/admin/media/MediaStatsCards.tsx": [],
+  "src/components/admin/media/PaginationBar.tsx": [],
+  "src/components/admin/media/useDateAutoParse.ts": []
+ }
+}
